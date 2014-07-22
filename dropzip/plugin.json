@@ -1,0 +1,5 @@
+{
+    "name": "DropZip plugin",
+    "description": "adds a watch to the drop zip collection and unzips anthing that gets uploaded",
+    "dependencies": [""]
+}
