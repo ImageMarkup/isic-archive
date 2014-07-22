@@ -1,0 +1,5 @@
+{
+    "name": "(MSKCC) IIP Image adapter",
+    "description": "Exposes IIP image through girder API",
+    "dependencies": [""]
+}

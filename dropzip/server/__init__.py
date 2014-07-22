@@ -92,23 +92,51 @@ def load(info):
 
 
 def createFileInternal(assetstore, filehandle_to_read, file_name):
+    '''
 
+    :param assetstore:
+    :param filehandle_to_read:
+    :param file_name:
+    :return:
+    '''
 
     tempDir = os.path.join(assetstore['root'], 'temp')
 
     fd, tmppath = tempfile.mkstemp(dir=tempDir)
+    ft, tmptiffpath = tempfile.mkstemp(dir=tempDir)
+
+    os.close(ft)
     os.close(fd)
+
+    tmppath += '.jpg'
+    tmptiffpath += '.tif'
+
+    # write jpeg from zip
 
     fout = open(tmppath, 'w')
 
-    checksum = sha512()
-
     buf = filehandle_to_read.read()
-    checksum.update(buf)
     fout.write(buf)
-
     fout.close()
     filehandle_to_read.close()
+
+    cmdstr = '/usr/local/bin/vips im_vips2tiff %s %s:jpeg:75,tile:256x256,pyramid,,,,8' % (tmppath, tmptiffpath)
+
+    pipe = os.popen(cmdstr)
+    for p in pipe:
+        print p
+
+    forCheck = open(tmptiffpath, 'r')
+    hashBuf = forCheck.read()
+
+    newfileize = len(hashBuf)
+
+    checksum = sha512()
+    checksum.update(hashBuf)
+
+    forCheck.close()
+
+    # vips im_vips2tiff %s %s:jpeg:75,tile:256x256,pyramid,,,,8
 
     hash = checksum.hexdigest()
     dir = os.path.join(hash[0:2], hash[2:4])
@@ -124,16 +152,27 @@ def createFileInternal(assetstore, filehandle_to_read, file_name):
         # Already have this file stored, just delete temp file.
         print 'already exists, removing %s' % (tmppath)
         os.remove(tmppath)
+        os.remove(tmptiffpath)
 
     else:
         # Move the temp file to permanent location in the assetstore.
-        print 'new file, moving and removing temp %s' % (tmppath)
-        os.rename(tmppath, abspath)
+        print 'new file, moving and removing temp %s' % (tmptiffpath)
+
+        os.remove(tmppath)
+        os.rename(tmptiffpath, abspath)
+
+        # make a .tif symlink
+
+        tiffsymlink = abspath + '.tif'
+
+        os.symlink(abspath, tiffsymlink)
+
         os.chmod(abspath, stat.S_IRUSR | stat.S_IWUSR)
 
     return {
         'sha512' : hash,
-        'path' : path
+        'path' : path,
+        'size' : newfileize
     }
 
 
@@ -162,7 +201,6 @@ def uploadHandler(event):
 
     if folder['name'] == 'dropzip':
 
-
         if file_info['mimeType'] == 'application/zip':
 
             full_file_path = os.path.join(asset_store_info['root'], file_info['path'])
@@ -182,21 +220,25 @@ def uploadHandler(event):
 
                     guessed_mime = mimetypes.guess_type(zfile.filename)
 
-                    # if guessed_mime[0] == 'image/jpeg':
-                    #
+                    meta_dict = {}
+                    meta_dict['originalMimeType'] = guessed_mime[0]
+                    meta_dict['convertedMimeType'] = 'image/tiff'
+                    meta_dict['originalFilename'] = zfile.filename
+                    meta_dict['convertedFilename'] = zfile.filename.replace('.jpg', '.tif')
+
                     z = zf.open(zfile)
                     new_file_dict = createFileInternal(assetstore, z, zfile.filename)
 
                     newitem = m.model('item').createItem(
-                        name=zfile.filename, creator=uda_user,
+                        name=meta_dict['convertedFilename'], creator=uda_user,
                         folder=newfolder[0])
 
-                    print guessed_mime
+                    newitem = m.model('item').setMetadata(newitem, metadata=meta_dict)
 
                     file_entry= m.model('file').createFile(
-                        item=newitem, name=zfile.filename, size=zfile.file_size,
+                        item=newitem, name=meta_dict['convertedFilename'], size=new_file_dict['size'],
                         creator=uda_user, assetstore=assetstore,
-                        mimeType=guessed_mime[0])
+                        mimeType=meta_dict['convertedMimeType'])
 
                     file_entry['sha512'] = new_file_dict['sha512']
                     file_entry['path'] = new_file_dict['path']
@@ -210,20 +252,27 @@ def uploadHandler(event):
 
                 for zfile in zf.infolist():
 
+                    guessed_mime = mimetypes.guess_type(zfile.filename)
+
+                    meta_dict = {}
+                    meta_dict['originalMimeType'] = guessed_mime[0]
+                    meta_dict['convertedMimeType'] = 'image/tiff'
+                    meta_dict['originalFilename'] = zfile.filename
+                    meta_dict['convertedFilename'] = zfile.filename.replace('.jpg', '.tif')
+
                     z = zf.open(zfile)
                     new_file_dict = createFileInternal(assetstore, z, zfile.filename)
 
                     newitem = m.model('item').createItem(
-                        name=zfile.filename, creator=uda_user,
-                        folder=createdfolder)
+                        name=meta_dict['convertedFilename'], creator=uda_user,
+                        folder=newfolder[0])
 
-                    guessed_mime = mimetypes.guess_type(zfile.filename)
-                    print guessed_mime
+                    newitem = m.model('item').setMetadata(newitem, metadata=meta_dict)
 
                     file_entry= m.model('file').createFile(
-                        item=newitem, name=zfile.filename, size=zfile.file_size,
+                        item=newitem, name=meta_dict['convertedFilename'], size=new_file_dict['size'],
                         creator=uda_user, assetstore=assetstore,
-                        mimeType=guessed_mime[0])
+                        mimeType=meta_dict['convertedMimeType'])
 
                     file_entry['sha512'] = new_file_dict['sha512']
                     file_entry['path'] = new_file_dict['path']
@@ -263,26 +312,15 @@ def uploadHandler(event):
                         id_index = col_headers.index('isic_id')
 
                         possible_item = m.model('item').find({
-                            'name' : row[id_index] + '.jpg'
+                            'name' : row[id_index] + '.tif'
                         })
 
                         if possible_item.count() > 0:
-                            #
-                            # print possible_item[0]
 
                             new_metadata = dict(zip(col_headers, row))
-
                             m.model('item').setMetadata(possible_item[0], new_metadata)
 
-
-
-                        # print row[id_index]
-
-
-
-
         m.model('item').remove(item)
-
 
 
 
