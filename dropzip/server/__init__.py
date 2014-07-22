@@ -265,7 +265,7 @@ def uploadHandler(event):
 
                     newitem = m.model('item').createItem(
                         name=meta_dict['convertedFilename'], creator=uda_user,
-                        folder=newfolder[0])
+                        folder=createdfolder[0])
 
                     newitem = m.model('item').setMetadata(newitem, metadata=meta_dict)
 
