@@ -1,0 +1,5 @@
+{
+    "name": "(MSKCC) Gallery Application",
+    "description": "Shows thumbnail gallery of images in folder",
+    "dependencies": [""]
+}

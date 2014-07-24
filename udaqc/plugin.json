@@ -1,0 +1,5 @@
+{
+    "name": "(MSKCC) QC application",
+    "description": "Reviews images after initial upload and submits to Phase 1a for initial review",
+    "dependencies": [""]
+}
