@@ -1,5 +1,0 @@
-{
-    "name": "(MSKCC) DropZip plugin",
-    "description": "adds a watch to the drop zip collection and unzips & converts images within the zip file",
-    "dependencies": [""]
-}

@@ -1,149 +1,53 @@
+__author__ = 'stonerri'
 
-
-from girder import events
 from girder.constants import TerminalColor, AccessType
 from girder.utility.model_importer import ModelImporter
-
-from pprint import pprint as pp
-import zipfile
-import mimetypes
-
-from hashlib import sha512
-import os
-import tempfile
-import stat
+from model_utility import *
 
 
-# what does the girder configuration look like when all is said and done
+def initialSetup():
+    '''
 
-    # UDA study phase 1
-    #
-    # 3 user groups, each with an example user
+    what does the girder configuration look like when all is said and done
 
-    # Phase I - Initial reviewers
-    # udanovice -> udanovice
+    UDA study phase 1
 
-    # Phase I - Trained reviewers
-    # udamike -> udamike
+    3 user groups, each with an example user
 
-    # Phase I - Expert reviewers
-    # udaexpert -> udaexpert
+    Phase I - Initial reviewers
+    udanovice -> udanovice
 
+    Phase I - Trained reviewers
+    udamike -> udamike
 
-    # 3 collections for phase I
-
-    # Phase Ia -> initial markup
-
-    # Phase Ib -> initial review
-
-    # Phase Ic -> final review
-
-    # Phase Id -> complete images
+    Phase I - Expert reviewers
+    udaexpert -> udaexpert
 
 
-    # def createUser(self, login, password, firstName, lastName, email,
-    #                admin=False, public=True):
-def makeUserIfNotPresent(username, password, firstName, lastName, email):
+    3 collections for phase I
 
-    m = ModelImporter()
+    Phase Ia -> initial markup
 
-    user_query = m.model('user').find({'firstName' : firstName})
+    Phase Ib -> initial review
 
-    user = None
+    Phase Ic -> final review
 
-    if user_query.count() == 0:
-        # user doens't exist, create
-        user = m.model('user').createUser(username, password, firstName, lastName, email)
+    Phase Id -> complete images
 
-    elif user_query.count() == 1:
-        user = user_query[0]
-
-    else:
-        print TerminalColor.error('More than one user with same first name, returning first')
-        user = user_query[0]
-
-    return user
-
-
-
-def makeFolderIfNotPresent(collection, folderName, folderDescription, parentType, public, creator):
-
-    m = ModelImporter()
-
-    folder_query = m.model('folder').find(
-        { '$and' : [
-            {'parentId': collection['_id']},
-            {'name': folderName}
-        ]})
-
-    folder = None
-
-    if folder_query.count() == 0:
-
-        folder = m.model('folder').createFolder(collection, folderName, folderDescription, parentType=parentType, public=public, creator=creator)
-
-    else:
-
-        folder = folder_query[0]
-
-
-
-    return folder
-
-
-
-def makeGroupIfNotPresent(groupName, creator, description):
-
-    m = ModelImporter()
-
-    group_query = m.model('group').find({'name' : groupName})
-    group = None
-
-    if group_query.count() == 0:
-        group = m.model('group').createGroup(groupName, creator, description)
-
-    elif group_query.count() == 1:
-        group = group_query[0]
-
-    else:
-        print TerminalColor.error('More than one group with this name, returning first')
-        group = group_query[0]
-
-    return group
-
-
-def makeCollectionIfNotPresent(collectionName, creator, description):
-
-    m = ModelImporter()
-
-    collection_query = m.model('collection').find({'name' : collectionName})
-    collection = None
-
-    if collection_query.count() == 0:
-        collection = m.model('collection').createCollection(collectionName, creator, description, public=False)
-
-    elif collection_query.count() == 1:
-        collection = collection_query[0]
-
-    else:
-        print TerminalColor.error('More than one collection with this name, returning first')
-        collection = collection_query[0]
-
-    return collection
-
-
-
-
-# zip file upload of packed images
-
-def load(info):
+    :return:
+    '''
 
     m = ModelImporter()
 
     # create users if needed
 
+
+
     # the admin user
     uda_user = makeUserIfNotPresent('udastudy', 'udastudy', 'uda admin', 'testuser', 'admin@uda2study.org')
+
+
+
 
     # the user that uploads images & metadata
     uda_steve = makeUserIfNotPresent('udasteve', 'udasteve', 'uda steve', 'testuser', 'steve@uda2study.org')
@@ -154,7 +58,7 @@ def load(info):
     uda_expert = makeUserIfNotPresent('udaexpert', 'udaexpert', 'uda expert', 'testuser', 'expert@uda2study.org')
 
     # create groups and add users
-    phase0_group = makeGroupIfNotPresent('Phase 0', uda_user, 'These users are responsible for setting the normal and lesion boundaries, as well as defining the paint-by-number threshold.')
+    phase0_group = makeGroupIfNotPresent('Phase 0', uda_user, 'These users are responsible for uploading raw images & metadata, and doing initial QC')
     m.model('group').addUser(phase0_group, uda_steve)
     m.model('group').updateGroup(phase0_group)
 
@@ -173,19 +77,34 @@ def load(info):
 
     # create collections and assign group read permissions
 
-
     phase0_collection =  makeCollectionIfNotPresent('Phase 0', uda_user, 'Images to QC')
+
+    # only steve (or equivalent) can write to it
+    # setUserAccess(self, doc, user, level, save=False):
+
+
+    dropzipfolder = makeFolderIfNotPresent(phase0_collection, 'dropzip', 'upload zip folder of images here', 'collection', False, uda_user)
+    dropcsv = makeFolderIfNotPresent(phase0_collection, 'dropcsv', 'upload image metadata as csv here', 'collection', False, uda_user)
     phase0_images = makeFolderIfNotPresent(phase0_collection, 'images', '', 'collection', False, uda_user)
     phase0_flagged_images = makeFolderIfNotPresent(phase0_collection, 'flagged', '', 'collection', False, uda_user)
 
+    folders = [dropzipfolder, dropcsv, phase0_flagged_images, phase0_images]
+
+    for folder in folders:
+        m.model('folder').setUserAccess(folder, uda_steve, AccessType.ADMIN, save=True)
+
+    # everyone in phase 1 can read phase 0 content
+    m.model('collection').setGroupAccess(phase0_collection, phase0_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase0_collection, phase1a_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase0_collection, phase1b_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase0_collection, phase1c_group, AccessType.READ, save=True)
 
-    # give steve write access
-    m.model('collection').setGroupAccess(phase0_collection, phase0_group, AccessType.WRITE, save=True)
+
+
+
 
     phase1a_collection = makeCollectionIfNotPresent('Phase 1a', uda_user, 'Images that have passed initial QC review')
+    phase1a_images = makeFolderIfNotPresent(phase1a_collection, 'images', '', 'collection', False, uda_user)
     m.model('collection').setGroupAccess(phase1a_collection, phase1a_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1a_collection, phase1b_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1a_collection, phase1c_group, AccessType.READ, save=True)
@@ -204,5 +123,4 @@ def load(info):
     m.model('collection').setGroupAccess(phase1d_collection, phase1a_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1d_collection, phase1b_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1d_collection, phase1c_group, AccessType.READ, save=True)
-
 

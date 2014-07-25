@@ -1,5 +1,0 @@
-{
-    "name": "(MSKCC) UDA Study 2",
-    "description": "Configures girder collections, users, and groups",
-    "dependencies": [""]
-}

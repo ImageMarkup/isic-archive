@@ -11,7 +11,7 @@ girder.wrap(girder.views.HierarchyWidget, 'render', function (render) {
 girder.views.HierarchyWidget.prototype.events['click a.gallery-link'] = function () {
 
     window.open(
-      '/gallery/' + this.parentModel.get('_id'),
+      '/uda/gallery/' + this.parentModel.get('_id'),
       '_blank'
     );
 };

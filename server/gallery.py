@@ -1,8 +1,9 @@
+__author__ = 'stonerri'
 
 import cherrypy
 import os
 
-class GalleryClass(object):
+class GalleryHandler(object):
     exposed = True
     def __init__(self):
         pass
@@ -21,8 +22,7 @@ class GalleryClass(object):
     def GET(self, id=None):
 
         app_base = os.path.join(os.curdir, os.pardir)
-        qc_app_path = os.path.join(app_base, 'qcapp')
-
+        qc_app_path = os.path.join(app_base, 'udaapp')
         gallery_html = os.path.abspath(os.path.join(qc_app_path, u'gallery.html'))
 
         fid = open(gallery_html, 'r')
@@ -40,7 +40,3 @@ class GalleryClass(object):
         cherrypy.response.headers['Access-Control-Allow-Headers'] = cherrypy.request.headers['ACCESS-CONTROL-REQUEST-HEADERS']
 
 
-
-def load(info):
-
-    info['serverRoot'].gallery = GalleryClass()

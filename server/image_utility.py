@@ -1,11 +1,11 @@
+__author__ = 'stonerri'
+
+
 
 from girder.utility.model_importer import ModelImporter
 from girder.api.describe import Description
 import cherrypy
 import os
-
-
-## returns a standard thumbnail
 
 def thumbnailhandler(id, params):
 
@@ -57,18 +57,3 @@ zoomifyhandler.description = (
     .param('id', 'The item ID', paramType='path')
     .errorResponse())
 
-
-
-def load(info):
-    info['apiRoot'].item.route('GET', (':id', 'thumbnail'), thumbnailhandler)
-    info['apiRoot'].item.route('GET', (':id', 'zoomify'), zoomifyhandler)
-
-    # add the base directory to serve
-
-    app_base = os.path.join(os.curdir, os.pardir)
-    qc_app_path = os.path.join(app_base, 'qcapp')
-
-    info['config']['/uda'] = {
-        'tools.staticdir.on': 'True',
-        'tools.staticdir.dir': qc_app_path
-    }

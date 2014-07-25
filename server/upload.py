@@ -1,3 +1,6 @@
+__author__ = 'stonerri'
+
+
 
 from girder import events
 from girder.constants import TerminalColor
@@ -12,91 +15,6 @@ import os
 import tempfile
 import stat
 
-
-def makeUserIfNotPresent(username, password, firstName, lastName, email):
-
-    m = ModelImporter()
-
-    user_query = m.model('user').find({'firstName' : firstName})
-
-    user = None
-
-    if user_query.count() == 0:
-        # user doens't exist, create
-        user = m.model('user').createUser(username, password, firstName, lastName, email)
-
-    elif user_query.count() == 1:
-        user = user_query[0]
-
-    else:
-        print TerminalColor.error('More than one user with same first name, returning first')
-        user = user_query[0]
-
-    return user
-
-
-def makeCollectionIfNotPresent(collectionName, creator, description):
-
-    m = ModelImporter()
-
-    collection_query = m.model('collection').find({'name' : collectionName})
-    collection = None
-
-    if collection_query.count() == 0:
-        collection = m.model('collection').createCollection(collectionName, creator, description, public=False)
-
-    elif collection_query.count() == 1:
-        collection = collection_query[0]
-
-    else:
-        print TerminalColor.error('More than one collection with this name, returning first')
-        collection = collection_query[0]
-
-    return collection
-
-
-
-
-def makeFolderIfNotPresent(collection, folderName, folderDescription, parentType, public, creator):
-
-    m = ModelImporter()
-
-    folder_query = m.model('folder').find(
-        { '$and' : [
-            {'parentId': collection['_id']},
-            {'name': folderName}
-        ]})
-
-    folder = None
-
-    if folder_query.count() == 0:
-
-        folder = m.model('folder').createFolder(collection, folderName, folderDescription, parentType=parentType, public=public, creator=creator)
-
-    else:
-
-        folder = folder_query[0]
-
-
-
-    return folder
-
-
-
-# zip file upload of packed images
-
-def load(info):
-
-    m = ModelImporter()
-
-    # if uda study collection not present, create
-    uda_user = m.model('user').find({'firstName' : 'uda'})
-
-    uda_user = makeUserIfNotPresent('udastudy', 'udastudy', 'uda admin', 'testuser', 'admin@uda2study.org')
-    uda_coll = makeCollectionIfNotPresent('UDA upload', uda_user, 'Upload folders')
-
-    dropzipfolder = makeFolderIfNotPresent(uda_coll, 'dropzip', 'upload zip folder of images here', 'collection', False, uda_user)
-    dropcsv = makeFolderIfNotPresent(uda_coll, 'dropcsv', 'upload image metadata as csv here', 'collection', False, uda_user)
 
 
 def createFileInternal(assetstore, filehandle_to_read, file_name):
@@ -314,14 +232,5 @@ def uploadHandler(event):
                             m.model('file').save(new_file)
                             # addItemToPhase0(possible_item[0], new_metadata)
 
-
-
-                            # m.model('item').setMetadata(possible_item[0], new_metadata)
-
         # not deleting original for archival purposes
         # m.model('item').remove(item)
-
-
-
-
-events.bind('data.process', 'uploadHandler', uploadHandler)
