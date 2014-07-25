@@ -6,8 +6,8 @@ from provision_utility import initialSetup
 from gallery import GalleryHandler
 from upload import uploadHandler
 from image_utility import zoomifyhandler, thumbnailhandler
-from qc import QCHandler, tasklisthandler, taskCompleteHandler
-
+from qc import QCHandler
+from task_utility import tasklisthandler, taskCompleteHandler, TaskHandler
 
 
 
@@ -50,6 +50,10 @@ def load(info):
     # 	uda/view/:itemId -> simple zoomable viewer for an image
     #
     # 	uda/task/:userId -> redirects to appropriate task view for the user
+
+    uda_root.task = TaskHandler()
+
+
     #
     # 	uda/annotator ->
 

@@ -14,6 +14,53 @@ def getUDAuser():
     return real_user
 
 
+def getFoldersForCollection(collection, excludeFlagged=True):
+
+    m = ModelImporter()
+    folder_query = m.model('folder').find({'parentId': collection['_id']})
+    folders = []
+    if folder_query.count() > 0:
+        for f in folder_query:
+            if not (f['name'] == 'flagged' and excludeFlagged):
+                folders.append(f)
+
+
+    return folders
+
+
+def getItemsInFolder(folder):
+
+    m = ModelImporter()
+    item_query = m.model('item').find({'folderId': folder['_id']})
+    items = []
+
+    if item_query.count() > 0:
+
+        for item in item_query:
+            items.append(item)
+    else:
+        print 'no items in folder', folder['name']
+
+
+    return items
+
+
+
+def countImagesInCollection(collectionName):
+
+    collection = getCollection(collectionName)
+
+    folders = getFoldersForCollection(collection)
+
+    total_len = 0
+
+    for folder in folders:
+        items = getItemsInFolder(folder)
+        total_len += len(items)
+
+    return total_len
+
+
 
 def getCollection(collectionName):
 
