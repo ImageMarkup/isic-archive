@@ -15,6 +15,8 @@ import os
 import tempfile
 import stat
 
+from model_utility import *
+
 
 
 def createFileInternal(assetstore, filehandle_to_read, file_name):
@@ -112,16 +114,18 @@ def uploadHandler(event):
 
     file_info = event.info['file']
     asset_store_info = event.info['assetstore']
-
     assetstore = m.model('assetstore').load(asset_store_info['_id'])
 
     item = m.model('item').load(file_info['itemId'], force=True)
     folder = m.model('folder').load(item['folderId'], force=True)
 
-    uda_user = makeUserIfNotPresent('udastudy', 'udastudy', 'uda admin', 'testuser', 'admin@uda2study.org')
-    uda_coll = makeCollectionIfNotPresent('UDA upload', uda_user, 'Upload folders')
+    file_creator = m.model('user').load(item['creatorId'], force=True)
+
+    uda_user = getUser('udastudy')
+    phase0_collection = getCollection('Phase 0')
 
     if folder['name'] == 'dropzip':
+
 
         if file_info['mimeType'] == 'application/zip':
 
@@ -129,9 +133,14 @@ def uploadHandler(event):
 
             zf = zipfile.ZipFile(open(full_file_path))
             base_file_name = file_info['name'].split('.')[0]
+
             print TerminalColor.info('Creating folder %s' % base_file_name)
 
-            zipfolder = makeFolderIfNotPresent(uda_coll, base_file_name, '', 'collection', False, uda_user)
+            # create the folder as udaadmin
+            zipfolder = makeFolderIfNotPresent(phase0_collection, base_file_name, '', 'collection', False, uda_user)
+
+            # give the file uploader admin access
+            m.model('folder').setUserAccess(zipfolder, file_creator, AccessType.ADMIN, save=True)
 
             for zfile in zf.infolist():
 
@@ -147,7 +156,7 @@ def uploadHandler(event):
                 new_file_dict = createFileInternal(assetstore, z, zfile.filename)
 
                 newitem = m.model('item').createItem(
-                    name=meta_dict['convertedFilename'], creator=uda_user,
+                    name=meta_dict['convertedFilename'], creator=file_creator,
                     folder=zipfolder)
 
                 newitem = m.model('item').setMetadata(newitem, metadata=meta_dict)
@@ -174,62 +183,70 @@ def uploadHandler(event):
 
             import csv
             firstRow = True
-
             col_headers = []
-
-            phase0_collection =  makeCollectionIfNotPresent('Phase 0', uda_user, 'Images to QC')
-            phase0_images = makeFolderIfNotPresent(phase0_collection, 'images', '', 'collection', False, uda_user)
-
 
             with open(full_file_path, 'rU') as csvfile:
                 csvread = csv.reader(csvfile, delimiter=',', quotechar='"')
                 for row in csvread:
 
+                    # populate headers
                     if firstRow:
                         col_headers = row
                         firstRow = False
 
+                    # get each image stored as a csv
                     else:
 
                         id_index = col_headers.index('isic_id')
-
                         possible_item = m.model('item').find({
                             'name' : row[id_index] + '.tif'
                         })
 
                         if possible_item.count() > 0:
 
-
                             new_metadata = dict(zip(col_headers, row))
 
                             item = possible_item[0]
 
-                            print item
+                            # todo: decide if we need to move when we map via csv
+                            move_item = False
 
-                            files = m.model('item').childFiles(item, limit=1)
-                            firstFile = None
-                            for f in files:
-                                firstFile = f
+                            if move_item:
 
-                            print firstFile
+                                phase0_images = makeFolderIfNotPresent(phase0_collection, 'images to qc', '', 'collection', False, uda_user)
+                                m.model('folder').setUserAccess(phase0_images, file_creator, AccessType.ADMIN, save=True)
 
-                            assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
+                                files = m.model('item').childFiles(item, limit=1)
+                                firstFile = None
+                                for f in files:
+                                    firstFile = f
 
-                            newitem = m.model('item').createItem(
-                                name=item['name'], creator=uda_user,
-                                folder=phase0_images)
+                                print firstFile
 
-                            new_file= m.model('file').createFile(
-                                item=newitem, name=item['meta']['convertedFilename'], size=firstFile['size'],
-                                creator=uda_user, assetstore=assetstore,
-                                mimeType=item['meta']['convertedMimeType'])
+                                assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
 
-                            new_file['sha512'] = firstFile['sha512']
-                            new_file['path'] = firstFile['path']
+                                newitem = m.model('item').createItem(
+                                    name=item['name'], creator=uda_user,
+                                    folder=phase0_images)
 
-                            newitem = m.model('item').setMetadata(newitem, metadata=new_metadata)
+                                new_file= m.model('file').createFile(
+                                    item=newitem, name=item['meta']['convertedFilename'], size=firstFile['size'],
+                                    creator=uda_user, assetstore=assetstore,
+                                    mimeType=item['meta']['convertedMimeType'])
 
-                            m.model('file').save(new_file)
+                                new_file['sha512'] = firstFile['sha512']
+                                new_file['path'] = firstFile['path']
+
+                                newitem = m.model('item').setMetadata(newitem, metadata=new_metadata)
+
+                                m.model('file').save(new_file)
+
+                            else:
+
+                                # just update the image
+                                newitem = m.model('item').setMetadata(item, metadata=new_metadata)
+
+
                             # addItemToPhase0(possible_item[0], new_metadata)
 
         # not deleting original for archival purposes

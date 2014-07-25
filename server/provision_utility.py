@@ -52,15 +52,33 @@ def initialSetup():
     # the user that uploads images & metadata
     uda_steve = makeUserIfNotPresent('udasteve', 'udasteve', 'uda steve', 'testuser', 'steve@uda2study.org')
 
-    # reviewers
-    uda_novice = makeUserIfNotPresent('udanovice', 'udanovice', 'uda novice', 'testuser', 'novice@uda2study.org')
-    uda_mike = makeUserIfNotPresent('udamike', 'udamike', 'uda trained', 'testuser', 'trained@uda2study.org')
-    uda_expert = makeUserIfNotPresent('udaexpert', 'udaexpert', 'uda expert', 'testuser', 'expert@uda2study.org')
-
     # create groups and add users
     phase0_group = makeGroupIfNotPresent('Phase 0', uda_user, 'These users are responsible for uploading raw images & metadata, and doing initial QC')
     m.model('group').addUser(phase0_group, uda_steve)
     m.model('group').updateGroup(phase0_group)
+
+    phase0_collection =  makeCollectionIfNotPresent('Phase 0', uda_user, 'Images to QC')
+    m.model('collection').setGroupAccess(phase0_collection, phase0_group, AccessType.ADMIN, save=True)
+
+    # todo: fix this workaround in girder (needed for upload support into folders within collection)
+    m.model('collection').setUserAccess(phase0_collection, uda_steve, AccessType.ADMIN, save=True)
+
+    dropzipfolder = makeFolderIfNotPresent(phase0_collection, 'dropzip', 'upload zip folder of images here', 'collection', False, uda_user)
+    dropcsv = makeFolderIfNotPresent(phase0_collection, 'dropcsv', 'upload image metadata as csv here', 'collection', False, uda_user)
+    phase0_flagged_images = makeFolderIfNotPresent(phase0_collection, 'flagged', '', 'collection', False, uda_user)
+
+    folders = [dropzipfolder, dropcsv, phase0_flagged_images]
+
+    for folder in folders:
+        m.model('folder').setUserAccess(folder, uda_steve, AccessType.ADMIN, save=True)
+
+
+
+
+    # reviewers
+    uda_novice = makeUserIfNotPresent('udanovice', 'udanovice', 'uda novice', 'testuser', 'novice@uda2study.org')
+    uda_mike = makeUserIfNotPresent('udamike', 'udamike', 'uda trained', 'testuser', 'trained@uda2study.org')
+    uda_expert = makeUserIfNotPresent('udaexpert', 'udaexpert', 'uda expert', 'testuser', 'expert@uda2study.org')
 
 
     phase1a_group = makeGroupIfNotPresent('Phase 1a', uda_user, 'These users are responsible for setting the normal and lesion boundaries, as well as defining the paint-by-number threshold.')
@@ -77,24 +95,14 @@ def initialSetup():
 
     # create collections and assign group read permissions
 
-    phase0_collection =  makeCollectionIfNotPresent('Phase 0', uda_user, 'Images to QC')
 
     # only steve (or equivalent) can write to it
     # setUserAccess(self, doc, user, level, save=False):
 
 
-    dropzipfolder = makeFolderIfNotPresent(phase0_collection, 'dropzip', 'upload zip folder of images here', 'collection', False, uda_user)
-    dropcsv = makeFolderIfNotPresent(phase0_collection, 'dropcsv', 'upload image metadata as csv here', 'collection', False, uda_user)
-    phase0_images = makeFolderIfNotPresent(phase0_collection, 'images', '', 'collection', False, uda_user)
-    phase0_flagged_images = makeFolderIfNotPresent(phase0_collection, 'flagged', '', 'collection', False, uda_user)
-
-    folders = [dropzipfolder, dropcsv, phase0_flagged_images, phase0_images]
-
-    for folder in folders:
-        m.model('folder').setUserAccess(folder, uda_steve, AccessType.ADMIN, save=True)
 
     # everyone in phase 1 can read phase 0 content
-    m.model('collection').setGroupAccess(phase0_collection, phase0_group, AccessType.READ, save=True)
+    m.model('collection').setGroupAccess(phase0_collection, phase0_group, AccessType.ADMIN, save=True)
     m.model('collection').setGroupAccess(phase0_collection, phase1a_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase0_collection, phase1b_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase0_collection, phase1c_group, AccessType.READ, save=True)
@@ -104,7 +112,8 @@ def initialSetup():
 
 
     phase1a_collection = makeCollectionIfNotPresent('Phase 1a', uda_user, 'Images that have passed initial QC review')
-    phase1a_images = makeFolderIfNotPresent(phase1a_collection, 'images', '', 'collection', False, uda_user)
+    # phase1a_images = makeFolderIfNotPresent(phase1a_collection, 'images', '', 'collection', False, uda_user)
+
     m.model('collection').setGroupAccess(phase1a_collection, phase1a_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1a_collection, phase1b_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1a_collection, phase1c_group, AccessType.READ, save=True)

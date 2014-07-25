@@ -60,6 +60,8 @@ def taskCompleteHandler(id, params):
     # todo: posting as a dictionary, but content is a key?
     # print cherrypy.request.body.read()
 
+
+
     try:
 
         # TODO we should do some access control on this, but for now going straight through
@@ -80,11 +82,13 @@ def taskCompleteHandler(id, params):
         # not needed, calculated automatically by model update
         datestr = contents['date']
 
+        # folder info
+        folder_info = contents['folder']
 
         # get folder for flagged images
         phase0_collection =  getCollection('Phase 0')
-        phase0_flagged_images = getFolder(phase0_collection, 'flagged')
 
+        phase0_flagged_images = getFolder(phase0_collection, 'flagged')
 
         # move flagged images into flagged folder, set QC metadata
         for image_key, image in flagged_images.iteritems():
@@ -92,21 +96,22 @@ def taskCompleteHandler(id, params):
             m_image = m.model('item').load(image['_id'], force=True)
 
             qc_metadata = {
-                'qc_by' : user_info['_id'],
-                'qc_value' : 'flagged'
+                'qc_user' : user_info['_id'],
+                'qc_result' :  'flagged',
+                'qc_folder_id' : folder_info['_id']
             }
 
             m.model('item').setMetadata(m_image, qc_metadata)
-
             m_image['folderId'] = phase0_flagged_images['_id']
             m.model('item').updateItem(m_image)
 
 
 
 
-        # get folder for phase 1a (next step)
-        phase1a_collection =  getCollection('Phase 1a')
-        phase1a_images = getFolder(phase1a_collection, 'images')
+        uda_user = getUDAuser()
+        phase1a_collection = getCollection('Phase 1a')
+
+        phase1a_images = makeFolderIfNotPresent(phase1a_collection, folder_info['name'], '', 'collection', False, uda_user)
 
         # move good images into phase 1a folder
         for image in good_images:
@@ -114,8 +119,9 @@ def taskCompleteHandler(id, params):
             m_image = m.model('item').load(image['_id'], force=True)
 
             qc_metadata = {
-                'qc_by' : user_info['_id'],
-                'qc_value' : 'ok'
+                'qc_user' : user_info['_id'],
+                'qc_result' :  'ok',
+                'qc_folder_id' : folder_info['_id']
             }
 
             m.model('item').setMetadata(m_image, qc_metadata)

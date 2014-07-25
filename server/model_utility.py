@@ -1,8 +1,17 @@
 
 from girder.utility.model_importer import ModelImporter
 from girder.constants import TerminalColor, AccessType
+import cherrypy
+from bson.objectid import ObjectId, InvalidId
+import json
+from girder import events
+import datetime
 
-
+def getUDAuser():
+    m = ModelImporter()
+    uda_user = getUser('udastudy')
+    real_user = m.model('user').load(uda_user['_id'], force=True)
+    return real_user
 
 
 
@@ -15,10 +24,25 @@ def getCollection(collectionName):
 
     if collection_query.count() != 0:
         collection = collection_query[0]
+    else:
+        print 'no collection found'
 
     return collection
 
 
+def getUser(login):
+
+    m = ModelImporter()
+
+    user_query = m.model('user').find({'login' : login})
+    user = None
+
+    if user_query.count() == 1:
+        user = user_query[0]
+    else:
+        print 'no user found'
+
+    return user
 
 
 def getFolder(collection, folderName):
@@ -29,9 +53,14 @@ def getFolder(collection, folderName):
             {'parentId': collection['_id']},
             {'name': folderName}
         ]})
+
+    print folder_query.count()
+
     folder = None
     if folder_query.count() != 0:
         folder = folder_query[0]
+    else:
+        print 'no folder found'
 
     return folder
 
@@ -62,6 +91,7 @@ def makeUserIfNotPresent(username, password, firstName, lastName, email):
 
 def makeFolderIfNotPresent(collection, folderName, folderDescription, parentType, public, creator):
 
+
     m = ModelImporter()
 
     folder_query = m.model('folder').find(
@@ -73,11 +103,9 @@ def makeFolderIfNotPresent(collection, folderName, folderDescription, parentType
     folder = None
 
     if folder_query.count() == 0:
-
         folder = m.model('folder').createFolder(collection, folderName, folderDescription, parentType=parentType, public=public, creator=creator)
 
     else:
-
         folder = folder_query[0]
 
 
