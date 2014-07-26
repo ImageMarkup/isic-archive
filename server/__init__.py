@@ -5,11 +5,11 @@ from girder import events
 from provision_utility import initialSetup
 from gallery import GalleryHandler
 from upload import uploadHandler
-from image_utility import zoomifyhandler, thumbnailhandler
+from image_utility import zoomifyhandler, thumbnailhandler, fifHandler
 from qc import QCHandler
 from task_utility import tasklisthandler, taskCompleteHandler, TaskHandler
 
-
+from annotate import AnnotateHandler
 
 
 def load(info):
@@ -39,25 +39,42 @@ def load(info):
 
     uda_root = Root()
 
+
+
     # 	uda/gallery/:folderId -> returns a single page gallery
 
     uda_root.gallery = GalleryHandler()
+
+
 
     # 	uda/qc/:folderId -> returns a QC page where user can move images to
 
     uda_root.qc = QCHandler()
 
+
+
     # 	uda/view/:itemId -> simple zoomable viewer for an image
-    #
+
+    # TODO
+
+
+
     # 	uda/task/:userId -> redirects to appropriate task view for the user
 
     uda_root.task = TaskHandler()
 
 
-    #
-    # 	uda/annotator ->
+
+    # 	uda/annotator -> the reconfigurable image annotator
+
+    uda_root.annotate = AnnotateHandler()
+
+
+    # add route to root route '/'
 
     info['serverRoot'].uda = uda_root
+
+
 
 
 
@@ -69,7 +86,14 @@ def load(info):
 
     # item/:id/zoomify -> returns a zoomify xml if available
 
-    info['apiRoot'].item.route('GET', (':id', 'zoomify'), zoomifyhandler)
+    info['apiRoot'].item.route('GET', (':id', 'zoomify', ':p1'), zoomifyhandler)
+    info['apiRoot'].item.route('GET', (':id', 'zoomify', ':p1', ':p2'), zoomifyhandler)
+
+
+    # item/:id/fif -> returns the IIP FIF endpoint for an item
+
+    info['apiRoot'].item.route('GET', (':id', 'fif', ':p1'), fifHandler)
+    info['apiRoot'].item.route('GET', (':id', 'fif', ':p1', ':p2'), fifHandler)
 
     # user/:userId/tasklist -> returns a list of images and any UI configuration
 

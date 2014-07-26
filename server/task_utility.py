@@ -26,24 +26,6 @@ class TaskHandler(object):
 
 
 
-    def getWeightForGroup(self, groupName):
-
-        # count number of images in phase 0 collection, not including flagged folder
-        count = countImagesInCollection(groupName)
-        weight = 0
-
-        # assign a weight to phase
-        if groupName == 'Phase 0':
-            weight = 10
-        elif groupName == 'Phase 1a':
-            weight = 20
-        elif groupName == 'Phase 1b':
-            weight = 30
-        elif groupName == 'Phase 1c':
-            weight = 40
-
-        print 'weight for', groupName, weight, count
-        return (count, weight)
 
 
     def urlForPhase(self, phaseName, param=None):
@@ -72,7 +54,7 @@ class TaskHandler(object):
 
         for groupId in user['groups']:
             group = m.model('group').load(groupId, force=True)
-            group_count, group_weight = self.getWeightForGroup(group['name'])
+            group_count, group_weight = getWeightForGroup(group['name'])
 
             task_list.append({
                  'name': group['name'],
@@ -91,8 +73,6 @@ class TaskHandler(object):
 
 
 
-
-
         phase_folders = getFoldersForCollection(getCollection(final_task['name']))
 
         target_folder = None
@@ -105,8 +85,6 @@ class TaskHandler(object):
                 target_count = len(items_in_folder)
 
 
-        redirect_url = ''
-
         if target_folder:
 
             redirect_url = self.urlForPhase(final_task['name'], target_folder['_id'])
@@ -118,31 +96,7 @@ class TaskHandler(object):
             return 'no tasks for user'
 
 
-        #
-        #
-        #
-        # return_dict = {
-        #     'allTasksForUser' : task_list,
-        #     'nextTask' : final_task,
-        # }
-        #
-        #
-        #
-        #
-        #
-        #
-        #
-        # # app_base = os.path.join(os.curdir, os.pardir)
-        # # qc_app_path = os.path.join(app_base, 'udaapp')
-        # # gallery_html = os.path.abspath(os.path.join(qc_app_path, u'gallery.html'))
-        # #
-        # # fid = open(gallery_html, 'r')
-        # # gallery_content = fid.read()
-        # # fid.close()
-        #
-        # return json.dumps(redirect_url, sort_keys=True, indent=4)
 
-        # return gallery_content
 
 
     # HTML5
@@ -161,40 +115,64 @@ class TaskHandler(object):
 def tasklisthandler(id, params):
 
     m = ModelImporter()
-
     user = m.model('user').load(id, force=True)
+    task_list = []
 
-    #todo branch based on user information
+    for groupId in user['groups']:
+        group = m.model('group').load(groupId, force=True)
+        group_count, group_weight = getWeightForGroup(group['name'])
 
+        task_list.append({
+             'name': group['name'],
+             'count' : group_count,
+             'weight' : group_weight
+        })
 
-    phase0_collection =  m.model('collection').find({'name':'Phase 0'})[0]
-    phase0_folder_query = m.model('folder').find(
-    { '$and' : [
-        {'parentId': phase0_collection['_id']},
-        {'name': 'images'}
-    ]})
+    final_task = {'weight': 0}
 
-    phase0_images = phase0_folder_query[0]
-
-    # switch depending on user,
-
-    images = m.model('item').find({'folderId': phase0_images['_id']})
-
-    tasklist = {}
-    imagelist = []
-
-    for image in images:
-
-        imagelist.append(image)
-
-    tasklist['description'] = 'Task list for Phase 0'
-    tasklist['images'] = imagelist
-    tasklist['date'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    for task in task_list:
+        print task
+        if(task['count'] > 0 and task['weight'] > final_task['weight']):
+            final_task = task
 
 
-    return tasklist
+    phase_folders = getFoldersForCollection(getCollection(final_task['name']))
 
-    # raise cherrypy.HTTPRedirect(thumbnail_url)
+    target_folder = None
+    target_count = 0
+    target_items = []
+
+    for folder in phase_folders:
+        items_in_folder = getItemsInFolder(folder)
+        if len(items_in_folder) > target_count:
+            target_folder = folder
+            target_count = len(items_in_folder)
+            target_items = items_in_folder
+
+
+    return_dict = {}
+
+
+    # todo: branch for configs
+
+    app_base = os.path.join(os.curdir, os.pardir)
+    qc_app_path = os.path.join(app_base, 'udaapp', 'config')
+    config_json = os.path.abspath(os.path.join(qc_app_path, u'phase1a.json'))
+
+    fid = open(config_json, 'r')
+    config_list = json.load(fid)
+    fid.close()
+
+
+    return_dict['items'] = target_items
+    return_dict['folder'] = target_folder
+    return_dict['phase'] = final_task['name']
+
+    # the UI json to provide
+    return_dict['decision_tree'] = config_list
+
+
+    return return_dict
 
 
 tasklisthandler.description = (

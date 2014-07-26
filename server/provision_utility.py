@@ -114,21 +114,25 @@ def initialSetup():
     phase1a_collection = makeCollectionIfNotPresent('Phase 1a', uda_user, 'Images that have passed initial QC review')
     # phase1a_images = makeFolderIfNotPresent(phase1a_collection, 'images', '', 'collection', False, uda_user)
 
+    m.model('collection').setGroupAccess(phase1a_collection, phase0_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1a_collection, phase1a_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1a_collection, phase1b_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1a_collection, phase1c_group, AccessType.READ, save=True)
 
     phase1b_collection = makeCollectionIfNotPresent('Phase 1b', uda_user, 'Images that have passed novice review')
+    m.model('collection').setGroupAccess(phase1b_collection, phase0_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1b_collection, phase1a_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1b_collection, phase1b_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1b_collection, phase1c_group, AccessType.READ, save=True)
 
     phase1c_collection = makeCollectionIfNotPresent('Phase 1c', uda_user, 'Images that have passed trained review')
+    m.model('collection').setGroupAccess(phase1c_collection, phase0_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1c_collection, phase1a_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1c_collection, phase1b_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1c_collection, phase1c_group, AccessType.READ, save=True)
 
     phase1d_collection = makeCollectionIfNotPresent('Phase 1d', uda_user, 'Images that have completed Phase 1')
+    m.model('collection').setGroupAccess(phase1d_collection, phase0_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1d_collection, phase1a_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1d_collection, phase1b_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1d_collection, phase1c_group, AccessType.READ, save=True)

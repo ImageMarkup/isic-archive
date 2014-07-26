@@ -46,6 +46,25 @@ def getItemsInFolder(folder):
 
 
 
+def getWeightForGroup(groupName):
+
+    # count number of images in phase 0 collection, not including flagged folder
+    count = countImagesInCollection(groupName)
+    weight = 0
+
+    # assign a weight to phase
+    if groupName == 'Phase 0':
+        weight = 10
+    elif groupName == 'Phase 1a':
+        weight = 20
+    elif groupName == 'Phase 1b':
+        weight = 30
+    elif groupName == 'Phase 1c':
+        weight = 40
+
+    print 'weight for', groupName, weight, count
+    return (count, weight)
+
 def countImagesInCollection(collectionName):
 
     collection = getCollection(collectionName)
