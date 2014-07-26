@@ -1,6 +1,5 @@
 __author__ = 'stonerri'
 
-__author__ = 'stonerri'
 
 from girder.utility.model_importer import ModelImporter
 from girder.api.describe import Description
@@ -8,6 +7,8 @@ import cherrypy
 import os
 import datetime
 from model_utility import *
+
+from image_processing import *
 
 
 class AnnotateHandler(object):
@@ -25,9 +26,6 @@ class AnnotateHandler(object):
     # @cherrypy.propargs('arg1', 'arg2', 'argn')
     # def GET(self, arg1, arg2, argn)
 
-
-
-
     @cherrypy.popargs('id')
     def GET(self, id=None):
 
@@ -40,3 +38,54 @@ class AnnotateHandler(object):
         fid.close()
 
         return gallery_content
+
+
+
+
+    # HTML5
+    def OPTIONS(self):
+        cherrypy.response.headers['Access-Control-Allow-Credentials'] = True
+        cherrypy.response.headers['Access-Control-Allow-Origin'] = cherrypy.request.headers['ORIGIN']
+        cherrypy.response.headers['Access-Control-Allow-Methods'] = 'POST'
+        cherrypy.response.headers['Access-Control-Allow-Headers'] = cherrypy.request.headers['ACCESS-CONTROL-REQUEST-HEADERS']
+
+
+
+
+
+
+
+class FillHandler(object):
+    exposed = True
+    def __init__(self):
+        pass
+
+    @cherrypy.popargs('id')
+    def POST(self, id=None):
+
+        post_body = cherrypy.request.body.read()
+
+        # print post_body
+        # print type(post_body)
+
+        import json
+
+        params = json.loads(post_body)
+        print params
+
+        results = fillImageGeoJSON(params)
+
+        # print type(results)
+
+        return json.dumps(results)
+
+        #
+        # app_base = os.path.join(os.curdir, os.pardir)
+        # qc_app_path = os.path.join(app_base, 'udaapp')
+        # gallery_html = os.path.abspath(os.path.join(qc_app_path, u'annotate.html'))
+        #
+        # fid = open(gallery_html, 'r')
+        # gallery_content = fid.read()
+        # fid.close()
+        #
+        # return gallery_content

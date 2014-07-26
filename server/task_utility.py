@@ -23,11 +23,6 @@ class TaskHandler(object):
     # @cherrypy.propargs('arg1', 'arg2', 'argn')
     # def GET(self, arg1, arg2, argn)
 
-
-
-
-
-
     def urlForPhase(self, phaseName, param=None):
 
         url = '/'

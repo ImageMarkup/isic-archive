@@ -73,7 +73,9 @@ zoomifyhandler.description = (
 
 def fifHandler(id, params, **kwargs):
 
-    zsplit = cherrypy.url().split('FIF')
+    zsplit = cherrypy.url().split('fif/')
+
+    print zsplit
 
     if len(zsplit) > 1:
 
@@ -88,7 +90,7 @@ def fifHandler(id, params, **kwargs):
 
         # have to fake it for IIP to place nice
         file_path = os.path.join(assetstore['root'], firstFile['path'] + '.tif')
-        zoomify_url = '/fcgi-bin/iipsrv.fcgi?FIF=%s' % (file_path)
+        zoomify_url = '/fcgi-bin/iipsrv.fcgi?FIF=%s%s' % (file_path, zsplit[1])
 
         raise cherrypy.HTTPRedirect(zoomify_url)
 

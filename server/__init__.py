@@ -9,7 +9,7 @@ from image_utility import zoomifyhandler, thumbnailhandler, fifHandler
 from qc import QCHandler
 from task_utility import tasklisthandler, taskCompleteHandler, TaskHandler
 
-from annotate import AnnotateHandler
+from annotate import AnnotateHandler, FillHandler
 
 
 def load(info):
@@ -68,6 +68,7 @@ def load(info):
     # 	uda/annotator -> the reconfigurable image annotator
 
     uda_root.annotate = AnnotateHandler()
+    uda_root.fill = FillHandler()
 
 
     # add route to root route '/'
@@ -92,8 +93,9 @@ def load(info):
 
     # item/:id/fif -> returns the IIP FIF endpoint for an item
 
+    info['apiRoot'].item.route('GET', (':id', 'fif'), fifHandler)
     info['apiRoot'].item.route('GET', (':id', 'fif', ':p1'), fifHandler)
-    info['apiRoot'].item.route('GET', (':id', 'fif', ':p1', ':p2'), fifHandler)
+    info['apiRoot'].item.route('GET', (':id', 'fif', ':p1', ':p2', ':p3'), fifHandler)
 
     # user/:userId/tasklist -> returns a list of images and any UI configuration
 
