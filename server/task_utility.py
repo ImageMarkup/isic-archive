@@ -5,6 +5,7 @@ from girder.api.describe import Description
 import cherrypy
 import os
 import datetime
+import json
 from model_utility import *
 
 
@@ -65,8 +66,6 @@ class TaskHandler(object):
                 final_task = task
 
         # this is where we'd return something if it was an API, instead we're going one step farther and redirecting to the task
-
-
 
         phase_folders = getFoldersForCollection(getCollection(final_task['name']))
 
@@ -181,93 +180,109 @@ tasklisthandler.description = (
 
 
 
+def updateQCStatus(contents):
 
-
-
-
-
-
-def taskCompleteHandler(id, params):
 
     m = ModelImporter()
+
+
+    # TODO we should do some access control on this, but for now going straight through
+
+    # arrive as a list
+    good_images = contents['good']
+
+    # arrives as a dict
+    flagged_images = contents['flagged']
+
+    # arrives as a dict
+    user_info = contents['user']
+
+    # not needed, calculated automatically by model update
+    datestr = contents['date']
+
+    # folder info
+    folder_info = contents['folder']
+
+    # get folder for flagged images
+    phase0_collection =  getCollection('Phase 0')
+
+    phase0_flagged_images = getFolder(phase0_collection, 'flagged')
+
+    # move flagged images into flagged folder, set QC metadata
+    for image_key, image in flagged_images.iteritems():
+
+        m_image = m.model('item').load(image['_id'], force=True)
+
+        qc_metadata = {
+            'qc_user' : user_info['_id'],
+            'qc_result' :  'flagged',
+            'qc_folder_id' : folder_info['_id']
+        }
+
+        m.model('item').setMetadata(m_image, qc_metadata)
+        m_image['folderId'] = phase0_flagged_images['_id']
+        m.model('item').updateItem(m_image)
+
+
+    uda_user = getUDAuser()
+    phase1a_collection = getCollection('Phase 1a')
+
+    phase1a_images = makeFolderIfNotPresent(phase1a_collection, folder_info['name'], '', 'collection', False, uda_user)
+
+    # move good images into phase 1a folder
+    for image in good_images:
+
+        m_image = m.model('item').load(image['_id'], force=True)
+
+        qc_metadata = {
+            'qc_user' : user_info['_id'],
+            'qc_result' :  'ok',
+            'qc_folder_id' : folder_info['_id']
+        }
+
+        m.model('item').setMetadata(m_image, qc_metadata)
+
+        m_image['folderId'] = phase1a_images['_id']
+        m.model('item').updateItem(m_image)
+
+
+
+
+def taskCompleteHandler(id, tasktype, params):
 
     # todo: posting as a dictionary, but content is a key?
     # print cherrypy.request.body.read()
 
-    try:
+    # branch on task type
 
-        # TODO we should do some access control on this, but for now going straight through
+    status = {'status' : 'failed'}
 
-        import json
+    if tasktype == 'qc':
 
-        contents = json.loads(params.keys()[0])
+        qc_contents = json.loads(params.keys()[0])
+        if qc_contents:
+            updateQCStatus(qc_contents)
+            status = {'status' : 'success'}
 
-        # arrive as a list
-        good_images = contents['good']
+    if tasktype == 'markup':
 
-        # arrives as a dict
-        flagged_images = contents['flagged']
+        markup_str = cherrypy.request.body.read()
+        markup_dict = json.loads(markup_str)
 
-        # arrives as a dict
-        user_info = contents['user']
+        # print type(markup_dict)
+        # print markup_dict.keys()
 
-        # not needed, calculated automatically by model update
-        datestr = contents['date']
+        from pprint import pprint as pp
+        pp(markup_dict)
 
-        # folder info
-        folder_info = contents['folder']
-
-        # get folder for flagged images
-        phase0_collection =  getCollection('Phase 0')
-
-        phase0_flagged_images = getFolder(phase0_collection, 'flagged')
-
-        # move flagged images into flagged folder, set QC metadata
-        for image_key, image in flagged_images.iteritems():
-
-            m_image = m.model('item').load(image['_id'], force=True)
-
-            qc_metadata = {
-                'qc_user' : user_info['_id'],
-                'qc_result' :  'flagged',
-                'qc_folder_id' : folder_info['_id']
-            }
-
-            m.model('item').setMetadata(m_image, qc_metadata)
-            m_image['folderId'] = phase0_flagged_images['_id']
-            m.model('item').updateItem(m_image)
+        # print params
 
 
-        uda_user = getUDAuser()
-        phase1a_collection = getCollection('Phase 1a')
 
-        phase1a_images = makeFolderIfNotPresent(phase1a_collection, folder_info['name'], '', 'collection', False, uda_user)
-
-        # move good images into phase 1a folder
-        for image in good_images:
-
-            m_image = m.model('item').load(image['_id'], force=True)
-
-            qc_metadata = {
-                'qc_user' : user_info['_id'],
-                'qc_result' :  'ok',
-                'qc_folder_id' : folder_info['_id']
-            }
-
-            m.model('item').setMetadata(m_image, qc_metadata)
-
-            m_image['folderId'] = phase1a_images['_id']
-            m.model('item').updateItem(m_image)
+    return status
 
 
-        return {'status' : 'success'}
 
-    except:
-
-        return {
-            'status' : 'error in post',
-            'received' : params
-        }
 
 
 taskCompleteHandler.description = (

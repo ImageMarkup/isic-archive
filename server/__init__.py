@@ -103,7 +103,7 @@ def load(info):
 
     # user/:userId/taskcomplete -> POSTable endpoint to handle completed task content
 
-    info['apiRoot'].user.route('POST', (':id', 'taskcomplete'), taskCompleteHandler)
+    info['apiRoot'].user.route('POST', (':id', 'taskcomplete', ':tasktype'), taskCompleteHandler)
 
 
 

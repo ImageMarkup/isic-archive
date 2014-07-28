@@ -65,27 +65,27 @@ class FillHandler(object):
 
         post_body = cherrypy.request.body.read()
 
-        # print post_body
-        # print type(post_body)
-
         import json
-
         params = json.loads(post_body)
-        print params
-
         results = fillImageGeoJSON(params)
-
-        # print type(results)
 
         return json.dumps(results)
 
-        #
-        # app_base = os.path.join(os.curdir, os.pardir)
-        # qc_app_path = os.path.join(app_base, 'udaapp')
-        # gallery_html = os.path.abspath(os.path.join(qc_app_path, u'annotate.html'))
-        #
-        # fid = open(gallery_html, 'r')
-        # gallery_content = fid.read()
-        # fid.close()
-        #
-        # return gallery_content
+
+class SegmentationHandler(object):
+    exposed = True
+    def __init__(self):
+        pass
+
+    @cherrypy.popargs('id')
+    def POST(self, id=None):
+
+        post_body = cherrypy.request.body.read()
+
+        import json
+        params = json.loads(post_body)
+        results = segmentImage(params)
+
+        return json.dumps(results)
+
+

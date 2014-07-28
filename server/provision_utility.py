@@ -45,7 +45,8 @@ def initialSetup():
 
     # the admin user
     uda_user = makeUserIfNotPresent('udastudy', 'udastudy', 'uda admin', 'testuser', 'admin@uda2study.org')
-
+    uda_user['admin'] = True
+    m.model('user').save(uda_user)
 
 
 
