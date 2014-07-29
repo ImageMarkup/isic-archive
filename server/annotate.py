@@ -32,7 +32,7 @@ class AnnotateHandler(object):
         # app_base = os.path.join(os.curdir, os.pardir)
         # qc_app_path = os.path.join(app_base, 'uda')
         app_base = os.path.join(os.curdir, os.pardir)
-        app_path = os.path.join(app_base, 'plugins', 'uda', 'custom')
+        app_path = os.path.join(app_base, 'girder', 'plugins', 'uda', 'custom')
 
         gallery_html = os.path.abspath(os.path.join(app_path, u'annotate.html'))
 
