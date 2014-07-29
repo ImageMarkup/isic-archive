@@ -596,7 +596,7 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
                 self.segmentation_list = [];
 
                 self.zoomify_url = base_url + '/zoomify';
-                self.data_url = 'http://localhost' +  base_url + '/fif';
+                self.data_url = window.location.protocol + window.location.hostname +  base_url + '/fif';
 
                 var image_properties_xml = self.zoomify_url  + '/ImageProperties.xml';
 
