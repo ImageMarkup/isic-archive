@@ -30,7 +30,7 @@ class AnnotateHandler(object):
     def GET(self, id=None):
 
         app_base = os.path.join(os.curdir, os.pardir)
-        qc_app_path = os.path.join(app_base, 'udaapp')
+        qc_app_path = os.path.join(app_base, 'uda')
         gallery_html = os.path.abspath(os.path.join(qc_app_path, u'annotate.html'))
 
         fid = open(gallery_html, 'r')

@@ -11,11 +11,16 @@ def thumbnailhandler(id, params):
 
     m = ModelImporter()
     item = m.model('item').load(id, force=True)
-    files = m.model('item').childFiles(item, limit=1)
+    files = m.model('item').childFiles(item)
 
     firstFile = None
     for f in files:
-        firstFile = f
+        # print f
+        if f['exts'][0] == 'tif':
+            firstFile = f
+
+    print firstFile
+
     assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
 
     # have to fake it for IIP to place nice
@@ -46,11 +51,15 @@ def zoomifyhandler(id, params, **kwargs):
 
         m = ModelImporter()
         item = m.model('item').load(id, force=True)
-        files = m.model('item').childFiles(item, limit=1)
+        files = m.model('item').childFiles(item)
 
         firstFile = None
         for f in files:
-            firstFile = f
+            # print f
+            if f['exts'][0] == 'tif':
+                firstFile = f
+        print firstFile
+
         assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
 
         # have to fake it for IIP to place nice
@@ -81,11 +90,16 @@ def fifHandler(id, params, **kwargs):
 
         m = ModelImporter()
         item = m.model('item').load(id, force=True)
-        files = m.model('item').childFiles(item, limit=1)
+        files = m.model('item').childFiles(item)
 
         firstFile = None
         for f in files:
-            firstFile = f
+            # print f
+            if f['exts'][0] == 'tif':
+                firstFile = f
+        print firstFile
+
+
         assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
 
         # have to fake it for IIP to place nice

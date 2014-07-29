@@ -7,7 +7,7 @@ from gallery import GalleryHandler
 from upload import uploadHandler
 from image_utility import zoomifyhandler, thumbnailhandler, fifHandler
 from qc import QCHandler
-from task_utility import tasklisthandler, taskCompleteHandler, TaskHandler
+from task_utility import tasklisthandler, taskCompleteHandler, TaskHandler, devNullEndpoint
 
 from annotate import AnnotateHandler, FillHandler
 
@@ -23,7 +23,7 @@ def load(info):
     # add static file serving
 
     app_base = os.path.join(os.curdir, os.pardir)
-    app_path = os.path.join(app_base, 'udaapp')
+    app_path = os.path.join(app_base, 'uda')
 
     info['config']['/uda'] = {
         'tools.staticdir.on': 'True',
@@ -105,6 +105,9 @@ def load(info):
 
     info['apiRoot'].user.route('POST', (':id', 'taskcomplete', ':tasktype'), taskCompleteHandler)
 
+    # debug
+
+    info['apiRoot'].user.route('POST', (':id', 'devnull'), devNullEndpoint)
 
 
 

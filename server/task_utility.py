@@ -150,7 +150,7 @@ def tasklisthandler(id, params):
     # todo: branch for configs
 
     app_base = os.path.join(os.curdir, os.pardir)
-    qc_app_path = os.path.join(app_base, 'udaapp', 'config')
+    qc_app_path = os.path.join(app_base, 'uda', 'config')
     config_json = os.path.abspath(os.path.join(qc_app_path, u'phase1a.json'))
 
     fid = open(config_json, 'r')
@@ -158,7 +158,12 @@ def tasklisthandler(id, params):
     fid.close()
 
 
-    return_dict['items'] = target_items
+    # if len(target_items) > 1:
+    #     return_dict['items'] = target_items[0:10]
+    # else:
+    #     return_dict['items'] = target_items[0:10]
+
+    return_dict['items'] = [target_items[0]]
     return_dict['folder'] = target_folder
     return_dict['phase'] = final_task['name']
 
@@ -226,7 +231,6 @@ def updateQCStatus(contents):
 
     uda_user = getUDAuser()
     phase1a_collection = getCollection('Phase 1a')
-
     phase1a_images = makeFolderIfNotPresent(phase1a_collection, folder_info['name'], '', 'collection', False, uda_user)
 
     # move good images into phase 1a folder
@@ -255,31 +259,210 @@ def taskCompleteHandler(id, tasktype, params):
 
     # branch on task type
 
-    status = {'status' : 'failed'}
+    result = 'invalid post'
 
     if tasktype == 'qc':
 
         qc_contents = json.loads(params.keys()[0])
         if qc_contents:
             updateQCStatus(qc_contents)
-            status = {'status' : 'success'}
+            result = 'success'
 
     if tasktype == 'markup':
 
         markup_str = cherrypy.request.body.read()
         markup_dict = json.loads(markup_str)
 
-        # print type(markup_dict)
-        # print markup_dict.keys()
+        print 'id', id
+        print 'body', type(cherrypy.request.body.read())
+        print 'params', type(params)
+        print 'markup', type(markup_dict)
 
-        from pprint import pprint as pp
-        pp(markup_dict)
+        for input in [id, params, markup_dict]:
+
+            if type(input) == dict:
+                print input.keys()
+
+
+        # print markup_dict['steps']
+        # print type(markup_dict['steps'])
+        # print markup_dict['steps'].keys()
+
+        if 'phase' in markup_dict.keys():
+
+            if markup_dict['phase'].lower() == 'phase 1a':
+
+                result = handlePhase1a(markup_dict)
+
+            else:
+
+                result = 'not implemented yet'
+
+
+
+
+    return {'status' : result}
+
+        # debug step 2
+
+
+
+
+
+def handlePhase1a(markup_dict):
+
+    item_name_base = markup_dict['image']['name'].split('.t')[0]
+
+    item_metadata = {
+        'p1a_user' : markup_dict['user']['_id'],
+        'p1a_result' :  'ok',
+        'p1a_folder_id' : markup_dict['image']['folderId'],
+        'p1a_start_time' : markup_dict['taskstart'],
+        'p1a_stop_time' : markup_dict['taskend'],
+    }
+
+
+    dictionary_to_create = {}
+    dictionary_to_create['p1a'] = {}
+    dictionary_to_create['p1a']['user'] = markup_dict['user']
+    dictionary_to_create['p1a']['image'] = markup_dict['image']
+    dictionary_to_create['p1a']['steps'] = markup_dict['steps']
+    dictionary_to_create['p1a']['result'] = item_metadata
+
+
+
+    # grab the b64 png from the dictionary
+    png_b64string = markup_dict['steps']['2']['markup']['features'][0]['properties']['parameters']['rgb']
+    # remote the initial data uri details
+    png_b64string_trim = png_b64string[22:]
+
+    # make sure it's not in the final project
+    del dictionary_to_create['p1a']['steps']['2']['markup']['features'][0]['properties']['parameters']['rgb']
+
+
+
+    m = ModelImporter()
+
+
+
+    # add to existing item
+
+    annotated_image = m.model('item').load(markup_dict['image']['_id'], force=True)
+
+    assetstore = getAssetStoreForItem(annotated_image)
+
+    m.model('item').setMetadata(annotated_image, item_metadata)
+
+
+    #move item to folder in phase 1b collection
+
+    uda_user = getUDAuser()
+    original_folder = m.model('folder').load(markup_dict['image']['folderId'], force=True)
+    phase1b_collection = getCollection('Phase 1b')
+    phase1b_images = makeFolderIfNotPresent(phase1b_collection, original_folder['name'], '', 'collection', False, uda_user)
+
+    annotated_image['folderId'] = phase1b_images['_id']
+    m.model('item').updateItem(annotated_image)
+
+
+    # add new files to the item
+
+    text_annotation_name = item_name_base + '-p1a.json'
+    text_annotation_data = json.dumps(dictionary_to_create)
+
+    json_file = createFileObjectFromData(text_annotation_name, annotated_image, assetstore, text_annotation_data, 'w')
+
+
+
+    png_annotation_name = item_name_base + '-p1a.png'
+    png_annotation_data = png_b64string_trim.decode('base64')
+
+    png_file = createFileObjectFromData(png_annotation_name, annotated_image, assetstore, png_annotation_data, 'wb')
+
+
+
+    return 'success'
+
+
+    # file_entry= m.model('file').createFile(
+    #     item=newitem, name=meta_dict['convertedFilename'], size=new_file_dict['size'],
+    #     creator=uda_user, assetstore=assetstore,
+    #     mimeType=meta_dict['convertedMimeType'])
+    #
+    # file_entry['sha512'] = new_file_dict['sha512']
+    # file_entry['path'] = new_file_dict['path']
+    #
+    # m.model('file').save(file_entry)
+
+
+
+
+
+# "wb"
+    # saveDebugImage = True
+    # if saveDebugImage:
+    #     fh = open("imageToSave.png", "wb")
+    #     fh.write(step_2[22:].decode('base64'))
+    #     fh.close()
+
+
+
+
+
+        # what do we want to do
+
+        # save annotation to png
+
+
+
+
+        # save annotation metadata to json
+
+        # create item that links to these two files
+
+        # put new item into phase1b collection, folder
+
+
+        # add phase1 metadata to original image item
+
+        # move original image item to phase 1b folder
+
+        # return success & new task
+        #
+        #
+        #
+        #
+        # # such a hack.
+        # print prevent
+        #
+
+
+
+
+        # from pprint import pprint as pp
+        # pp(markup_dict)
 
         # print params
 
 
 
-    return status
+def devNullEndpoint(id, params):
+
+    # for input in [id, params, cherrypy.request.body.read()]:
+
+    #
+    print 'id', id
+    print 'body', type(cherrypy.request.body.read()),
+    print 'params', type(params)
+
+    return {'status', 'success'}
+
+
+
+
+
+
+
 
 
 
