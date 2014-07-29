@@ -22,8 +22,8 @@ class GalleryHandler(object):
     def GET(self, id=None):
 
         app_base = os.path.join(os.curdir, os.pardir)
-        qc_app_path = os.path.join(app_base, 'uda')
-        gallery_html = os.path.abspath(os.path.join(qc_app_path, u'gallery.html'))
+        app_path = os.path.join(app_base, 'plugins', 'uda', 'custom')
+        gallery_html = os.path.abspath(os.path.join(app_path, u'gallery.html'))
 
         fid = open(gallery_html, 'r')
         gallery_content = fid.read()

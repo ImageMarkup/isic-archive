@@ -150,8 +150,8 @@ def tasklisthandler(id, params):
     # todo: branch for configs
 
     app_base = os.path.join(os.curdir, os.pardir)
-    qc_app_path = os.path.join(app_base, 'uda', 'config')
-    config_json = os.path.abspath(os.path.join(qc_app_path, u'phase1a.json'))
+    app_path = os.path.join(app_base, 'plugins', 'uda', 'custom', 'config')
+    config_json = os.path.abspath(os.path.join(app_path, u'phase1a.json'))
 
     fid = open(config_json, 'r')
     config_list = json.load(fid)

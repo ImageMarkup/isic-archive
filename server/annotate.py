@@ -29,9 +29,12 @@ class AnnotateHandler(object):
     @cherrypy.popargs('id')
     def GET(self, id=None):
 
+        # app_base = os.path.join(os.curdir, os.pardir)
+        # qc_app_path = os.path.join(app_base, 'uda')
         app_base = os.path.join(os.curdir, os.pardir)
-        qc_app_path = os.path.join(app_base, 'uda')
-        gallery_html = os.path.abspath(os.path.join(qc_app_path, u'annotate.html'))
+        app_path = os.path.join(app_base, 'plugins', 'uda', 'custom')
+
+        gallery_html = os.path.abspath(os.path.join(app_path, u'annotate.html'))
 
         fid = open(gallery_html, 'r')
         gallery_content = fid.read()
