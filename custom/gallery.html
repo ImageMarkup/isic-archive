@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+
+<html lang="en" ng-app="DermApp">
+
+<head>
+	<meta charset="utf-8">
+	<title>ISIC Dermoscopic Annotation Tool</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+	<meta name="description" content="ISIC Image annotator">
+	<meta name="author" content="Rich Stoner, David Gutman">
+
+    <link rel=stylesheet type=text/css
+          href="/uda/static/bower_components/flatstrap/dist/css/bootstrap.min.css">
+    <link rel=stylesheet type=text/css href="/uda/static/bower_components/font-awesome/css/font-awesome.min.css">
+
+
+    <!--[if lt IE 9]>
+        <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <script src="/uda/static/bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="/uda/static/bower_components/flatstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/uda/static/bower_components/angular/angular.min.js"></script>
+    <script src="/uda/static/bower_components/angular-sanitize/angular-sanitize.js"></script>
+    <script src="/uda/static/bower_components/mousetrap/mousetrap.min.js"></script>
+    <script src="/uda/static/bower_components/angular-mousetrap/src/keypress.js"></script>
+    <script src="/uda/static/bower_components/FileSaver/FileSaver.js"></script>
+
+    <script src="/uda/static/js/image-gallery.js"></script>
+
+<style>
+    
+
+    * {
+      border-radius: 0  !important;
+    }
+
+    body {
+        color: #fff;
+        background: #000000 !important;
+        font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; 
+        font-weight: 300;
+        margin: 0px;
+        padding: 0px;
+
+    }
+
+    .imagewrap {
+        float:left;
+        margin-bottom: 1px;
+        background: #000;
+    }
+
+
+
+    .imagethumb {
+        width: inherit;
+        height: 200px;
+        margin-left: 2px;
+        margin-bottom: 2px;
+    }
+
+
+    .imgcontainer {
+        -moz-column-count: 6;
+        -moz-column-gap: 10px;
+
+        -webkit-column-count: 6;
+        -webkit-column-gap: 10px;
+
+
+        column-count: 6;
+        column-gap: 5px;
+        column-width: 250px;
+        /*width: 100%;*/
+
+    }
+
+
+    @media (max-width: 1100px) {
+
+        /*this is the narrow version*/
+
+        .imgcontainer {
+            -moz-column-count: 4;
+            -moz-column-gap: 10px;
+            -webkit-column-count: 4;
+            -webkit-column-gap: 10px;
+
+            column-count: 4;
+            column-gap: 10px;
+            /*column-width: 250px;*/
+            /*width: 100%;*/
+
+        }
+
+        .imagethumb {
+            width: inherit;
+           height: 155px;
+        }
+    }
+    
+
+    .imgcontainer div {
+        /*display: inline-block;*/
+        width: 100%;
+
+        /*min-height: 200px;*/
+        background-color: black;
+    }
+
+    #overlayImage {
+        width: 400px;
+        position: absolute;
+        border: 1px solid #666;
+    }
+
+    .previewimage {
+        width: 398px;
+    }
+
+    .imageflagged {
+        opacity:0.4;
+        filter:alpha(opacity=40); /* For IE8 and earlier */
+    }
+
+    .navbar {
+        margin-bottom: 0px !important;
+    }
+
+    .bigrow {
+        padding: 10px;
+    }
+
+    .whitetext {
+        color: #fff;
+    }
+
+    #gridcontainer > ul {
+          padding:0 0 0 0;
+          margin:0 0 0 0;
+      }
+
+    #gridcontainer >  ul li {
+          list-style:none;
+          margin-bottom:5px;
+      }
+
+    #gridcontainer > ul li img {
+          cursor: pointer;
+    }
+
+	div.wrapper{
+		float:left; /* important */
+		position:relative; /* important(so we can absolutely position the description div */
+		}
+
+    div.description{
+        position:absolute; /* absolute position (so we can position it where we want)*/
+
+        bottom:0px; /* position will be on bottom */
+
+        left:10px;
+        width:100%;
+
+        background-color:black;/
+        font-family: 'verdana';
+        font-size:11px;
+        color:white;
+        /*opacity:1.0; *//* transparency */
+        /*filter:alpha(opacity=60); *//* IE transparency */
+    }
+
+    /*div.description:hover {*/
+        /*opacity:1.0; *//* transparency */
+    /*}*/
+
+    p.description_content{
+        /*padding:10px;*/
+
+        margin:0px;
+    }
+
+
+
+</style>
+
+</head>
+
+<body>
+
+    <div id="angular_id" ng-controller="ApplicationController">
+
+        <div id="overlayImage" ng-show="hover_image">
+            <img class="previewimage" src="{{hover_image}}"/>
+        </div>
+
+        <div class="container-fluid">
+            <div class="row bigrow">
+
+                <div class="col-md-12">
+
+                    <div class="btn-group">
+
+                        <div class="btn" ng-show="folder_details" disabled>
+                            <i class="glyphicon glyphicon-folder-open"></i>&nbsp;&nbsp; name: <b>{{folder_details.name}}</b>
+                        </div>
+                        <div class="btn" ng-show="folder_details" disabled>
+                            Created: <b>{{folder_details.created}}</b>
+                        </div>
+                        <div class="btn" ng-show="folder_details" disabled>
+                            Updated <b>{{folder_details.updated}}</b>
+                        </div>
+                    </div>
+
+                    <!--<div class="btn-group">-->
+                        <!--<div class="btn btn-success" ng-click="acceptQCandgetNext()">Accept this list</div>-->
+                    <!--</div>-->
+
+                    <!--<div class="btn-group pull-right">-->
+
+                        <!--&lt;!&ndash;<button class="btn btn-success"&ndash;&gt;-->
+                                <!--&lt;!&ndash;ng-click="download()">Download list</button>&ndash;&gt;-->
+
+                    <!--</div>-->
+                </div>
+            </div>
+
+            <div class="row">
+
+                <div id="gridcontainer" class="col-md-12">
+
+                    <ul class="row">
+
+                        <li class="col-lg-2 col-md-2 col-sm-3 col-xs-4 wrapper" ng-repeat="image in image_list">
+
+                            <div class='description' ng-show="selectedImage == image">
+                                <span class='description_content'>{{image.title}}</span>
+                            </div>
+
+                            <img id={{$index}}
+                                 class="img-responsive"
+                                 ng-src="{{image.thumbnail}}"
+                                 ng-mouseover="selectImage(image)"
+
+                                    />
+                        </li>
+
+
+                    </div>
+                </div>
+
+             </div>
+
+            <div class="row" ng-show="selectedImage">
+                <div class="col-md-12">
+                    <hr>
+                    <small>{{ selectedImage | json }}</small>
+                </div>
+            </div>
+
+            <span mousetrap-keypress="mouse"></span>
+        </div>
+
+    </div>
+
+</body>
+
+</html>
+
+

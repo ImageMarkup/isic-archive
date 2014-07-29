@@ -1,0 +1,20 @@
+{
+  "name": "angular-xml",
+  "version": "1.0.2",
+  "main": "angular-xml.js",
+  "ignore": [
+    "**/*.swp",
+    ".gitignore",
+    "components",
+    "git-hooks",
+    "Gruntfile.js",
+    "node_modules",
+    "package.json",
+    "README.md",
+    "test"
+  ],
+  "devDependencies": {
+    "angular": "~1.2.0-rc.3",
+    "angular-mocks": "~1.2.0-rc.3"
+  }
+}

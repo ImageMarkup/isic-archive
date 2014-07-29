@@ -1,0 +1,12 @@
+{
+  "author": "Krzysztof Hasiński",
+  "name": "angular-mousetrap",
+  "description": "Angular Mousetrap directives, based on Angular UI Keypress",
+  "version": "1.0.0",
+  "homepage": "https://github.com/khasinski/angular-mousetrap",
+  "main": "./src/keypress.js",
+  "dependencies": {
+    "angular": ">= 1.0.2",
+    "mousetrap": ">= 1.4.4"
+  }
+}

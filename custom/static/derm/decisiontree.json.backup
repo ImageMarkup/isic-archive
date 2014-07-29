@@ -1,0 +1,1001 @@
+[
+  {
+    "count": 10, 
+    "hasannotation": false, 
+    "title": "Select image", 
+    "random": true, 
+    "next": 1, 
+    "step": 0, 
+    "type": "image", 
+    "options": []
+  }, 
+  {
+    "classification": "lesion", 
+    "title": "Identify lesion", 
+    "default": "autofill", 
+    "next": 2, 
+    "step": 1, 
+    "type": "mwdefine", 
+    "options": []
+  }, 
+  {
+    "classification": "normal", 
+    "title": "Identify normal skin", 
+    "default": "pointlist", 
+    "next": 3, 
+    "step": 2, 
+    "type": "pldefine", 
+    "options": []
+  }, 
+  {
+    "classification": "lesion", 
+    "title": "Is lesion entirely composed of one structure and one color?", 
+    "zoom": "lesion", 
+    "next": 4, 
+    "step": 3, 
+    "type": "select", 
+    "options": [
+      {
+        "longtitle": "Lines, Reticular", 
+        "icon": "static/derm/images/3-lines-reticular.jpg", 
+        "type": "dropchoice", 
+        "options": [
+          {
+            "type": "choice", 
+            "options": [
+              {
+                "type": "gotostep", 
+                "value": 5, 
+                "title": "Yes"
+              }, 
+              {
+                "type": "gotostep", 
+                "value": 6, 
+                "title": "No"
+              }, 
+              {
+                "type": "gotostep", 
+                "value": 3, 
+                "title": "Go Back"
+              }
+            ], 
+            "title": "Are there any additional details you would like to add?"
+          }
+        ], 
+        "title": "Lines, Reticular"
+      }, 
+      {
+        "longtitle": "Lines, Parallel", 
+        "icon": "static/derm/images/3-lines-parallel.jpg", 
+        "type": "drop", 
+        "options": [
+          {
+            "longtitle": "Lines, Parallel: Furrow", 
+            "icon": "static/derm/images/3-lines-parallel_furrow.jpg", 
+            "type": "dropchoice", 
+            "options": [
+              {
+                "type": "choice", 
+                "options": [
+                  {
+                    "type": "gotostep", 
+                    "value": 5, 
+                    "title": "Yes"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 6, 
+                    "title": "No"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 3, 
+                    "title": "Go Back"
+                  }
+                ], 
+                "title": "Are there any additional details you would like to add?"
+              }
+            ], 
+            "title": "Furrow"
+          }, 
+          {
+            "longtitle": "Lines, Parallel: Ridge", 
+            "icon": "static/derm/images/3-lines-parallel_ridge.jpg", 
+            "type": "dropchoice", 
+            "options": [
+              {
+                "type": "choice", 
+                "options": [
+                  {
+                    "type": "gotostep", 
+                    "value": 5, 
+                    "title": "Yes"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 6, 
+                    "title": "No"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 3, 
+                    "title": "Go Back"
+                  }
+                ], 
+                "title": "Are there any additional details you would like to add?"
+              }
+            ], 
+            "title": "Ridge"
+          }, 
+          {
+            "longtitle": "Lines, Parallel: Fibrillar", 
+            "icon": "static/derm/images/3-lines-parallel_fibrillar.jpg", 
+            "type": "dropchoice", 
+            "options": [
+              {
+                "type": "choice", 
+                "options": [
+                  {
+                    "type": "gotostep", 
+                    "value": 5, 
+                    "title": "Yes"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 6, 
+                    "title": "No"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 3, 
+                    "title": "Go Back"
+                  }
+                ], 
+                "title": "Are there any additional details you would like to add?"
+              }
+            ], 
+            "title": "Fibrillar"
+          }
+        ], 
+        "title": "Lines, Parallel"
+      }, 
+      {
+        "longtitle": "Clods", 
+        "icon": "static/derm/images/3-clods.jpg", 
+        "type": "drop", 
+        "options": [
+          {
+            "longtitle": "Clods: Cobblestone Clods", 
+            "icon": "static/derm/images/3-clods_cobblestoneclods.jpg", 
+            "type": "dropchoice", 
+            "options": [
+              {
+                "type": "choice", 
+                "options": [
+                  {
+                    "type": "gotostep", 
+                    "value": 5, 
+                    "title": "Yes"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 6, 
+                    "title": "No"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 3, 
+                    "title": "Go Back"
+                  }
+                ], 
+                "title": "Are there any additional details you would like to add?"
+              }
+            ], 
+            "title": "Cobblestone Clods"
+          }, 
+          {
+            "longtitle": "Clods: Regular (Round / Oval) Clods", 
+            "icon": "static/derm/images/3-clods_regular-round-oval-clods.jpg", 
+            "type": "dropchoice", 
+            "options": [
+              {
+                "type": "choice", 
+                "options": [
+                  {
+                    "type": "gotostep", 
+                    "value": 5, 
+                    "title": "Yes"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 6, 
+                    "title": "No"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 3, 
+                    "title": "Go Back"
+                  }
+                ], 
+                "title": "Are there any additional details you would like to add?"
+              }
+            ], 
+            "title": "Regular (Round / Oval) Clods"
+          }
+        ], 
+        "title": "Clods"
+      }, 
+      {
+        "longtitle": "Homogeneous", 
+        "icon": "static/derm/images/3-homogeneous.jpg", 
+        "type": "dropchoice", 
+        "options": [
+          {
+            "type": "choice", 
+            "options": [
+              {
+                "type": "gotostep", 
+                "value": 5, 
+                "title": "Yes"
+              }, 
+              {
+                "type": "gotostep", 
+                "value": 6, 
+                "title": "No"
+              }, 
+              {
+                "type": "gotostep", 
+                "value": 3, 
+                "title": "Go Back"
+              }
+            ], 
+            "title": "Are there any additional details you would like to add?"
+          }
+        ], 
+        "title": "Homogeneous"
+      }, 
+      {
+        "icon": "static/derm/images/no.jpg", 
+        "type": "gotostep", 
+        "options": [], 
+        "value": 4, 
+        "title": "No"
+      }
+    ]
+  }, 
+  {
+    "title": "Do you see another recognizable pattern?", 
+    "zoom": "lesion", 
+    "next": 5, 
+    "step": 4, 
+    "type": "select", 
+    "options": [
+      {
+        "longtitle": "Peripheral reticular", 
+        "icon": "static/derm/images/4-peripheralreticular.jpg", 
+        "type": "drop", 
+        "options": [
+          {
+            "longtitle": "Peripheral reticular: Central clods", 
+            "icon": "static/derm/images/4-peripheralreticular_centralclods.jpg", 
+            "type": "dropchoice", 
+            "options": [
+              {
+                "type": "choice", 
+                "options": [
+                  {
+                    "type": "gotostep", 
+                    "value": 5, 
+                    "title": "Yes"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 6, 
+                    "title": "No"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 4, 
+                    "title": "Go Back"
+                  }
+                ], 
+                "title": "Are there any additional details you would like to add?"
+              }
+            ], 
+            "title": "Central clods"
+          }, 
+          {
+            "longtitle": "Peripheral reticular: Central hyperpigmentation", 
+            "icon": "static/derm/images/4-peripheralreticular_centralhyperpigmentation.jpg", 
+            "type": "dropchoice", 
+            "options": [
+              {
+                "type": "choice", 
+                "options": [
+                  {
+                    "type": "gotostep", 
+                    "value": 5, 
+                    "title": "Yes"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 6, 
+                    "title": "No"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 4, 
+                    "title": "Go Back"
+                  }
+                ], 
+                "title": "Are there any additional details you would like to add?"
+              }
+            ], 
+            "title": "Central hyperpigmentation"
+          }, 
+          {
+            "classification": "lesion", 
+            "title": "Central Hypopigmentation", 
+            "longtitle": "Peripheral reticular: Central Hypopigmentation", 
+            "type": "dropchoice", 
+            "options": [
+              {
+                "type": "choice", 
+                "options": [
+                  {
+                    "type": "gotostep", 
+                    "value": 5, 
+                    "title": "Yes"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 6, 
+                    "title": "No"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 4, 
+                    "title": "Go Back"
+                  }
+                ], 
+                "title": "Are there any additional details you would like to add?"
+              }
+            ], 
+            "icon": "static/derm/images/4-peripheralreticular_centralhypopigmentation.jpg"
+          }
+        ], 
+        "title": "Peripheral reticular"
+      }, 
+      {
+        "longtitle": "Peripheral clods", 
+        "icon": "static/derm/images/4-peripheralclods.jpg", 
+        "type": "drop", 
+        "options": [
+          {
+            "longtitle": "Peripheral clods: Peripheral clods, central retricular", 
+            "icon": "static/derm/images/4-peripheralclods_peripheralclods-centralretricular.jpg", 
+            "type": "dropchoice", 
+            "options": [
+              {
+                "type": "choice", 
+                "options": [
+                  {
+                    "type": "gotostep", 
+                    "value": 5, 
+                    "title": "Yes"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 6, 
+                    "title": "No"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 4, 
+                    "title": "Go Back"
+                  }
+                ], 
+                "title": "Are there any additional details you would like to add?"
+              }
+            ], 
+            "title": "Peripheral clods, central retricular"
+          }, 
+          {
+            "longtitle": "Peripheral clods: Peripheral clods, central structureless", 
+            "icon": "static/derm/images/4-peripheralclods_peripheralclods-centralstructureless.jpg", 
+            "type": "dropchoice", 
+            "options": [
+              {
+                "type": "choice", 
+                "options": [
+                  {
+                    "type": "gotostep", 
+                    "value": 5, 
+                    "title": "Yes"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 6, 
+                    "title": "No"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 4, 
+                    "title": "Go Back"
+                  }
+                ], 
+                "title": "Are there any additional details you would like to add?"
+              }
+            ], 
+            "title": "Peripheral clods, central structureless"
+          }, 
+          {
+            "longtitle": "Peripheral clods: Peripheral clods, central clods", 
+            "icon": "static/derm/images/4-peripheralclods_peripheralclods-centralclods.jpg", 
+            "type": "dropchoice", 
+            "options": [
+              {
+                "type": "choice", 
+                "options": [
+                  {
+                    "type": "gotostep", 
+                    "value": 5, 
+                    "title": "Yes"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 6, 
+                    "title": "No"
+                  }, 
+                  {
+                    "type": "gotostep", 
+                    "value": 4, 
+                    "title": "Go Back"
+                  }
+                ], 
+                "title": "Are there any additional details you would like to add?"
+              }
+            ], 
+            "title": "Peripheral clods, central clods"
+          }
+        ], 
+        "title": "Peripheral clods"
+      }, 
+      {
+        "longtitle": "Starbust", 
+        "icon": "static/derm/images/4-starbust.jpg", 
+        "type": "dropchoice", 
+        "options": [
+          {
+            "type": "choice", 
+            "options": [
+              {
+                "type": "gotostep", 
+                "value": 5, 
+                "title": "Yes"
+              }, 
+              {
+                "type": "gotostep", 
+                "value": 6, 
+                "title": "No"
+              }, 
+              {
+                "type": "gotostep", 
+                "value": 4, 
+                "title": "Go Back"
+              }
+            ], 
+            "title": "Are there any additional details you would like to add?"
+          }
+        ], 
+        "title": "Starbust"
+      }, 
+      {
+        "icon": "static/derm/images/no.jpg", 
+        "type": "gotostep", 
+        "options": [], 
+        "value": 5, 
+        "title": "No"
+      }
+    ]
+  }, 
+  {
+    "classification": "lesion", 
+    "title": "Annotate details", 
+    "zoom": "lesion", 
+    "next": 6, 
+    "step": 5, 
+    "type": "selectpbn", 
+    "options": [
+      {
+        "classification": "lesion", 
+        "title": "Lines", 
+        "value": 10, 
+        "longtitle": "Lines", 
+        "type": "dropoption", 
+        "options": [
+          {
+            "classification": "lesion", 
+            "title": "Reticular", 
+            "value": 20, 
+            "longtitle": "Lines: Reticular", 
+            "type": "dropoption", 
+            "options": [
+              {
+                "classification": "lesion", 
+                "title": "Regular", 
+                "value": 21, 
+                "longtitle": "Lines: Reticular: Regular", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-lines_reticular_regular.jpg"
+              }, 
+              {
+                "classification": "lesion", 
+                "title": "Thick", 
+                "value": 22, 
+                "longtitle": "Lines: Reticular: Thick", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-lines_reticular_thick.jpg"
+              }, 
+              {
+                "classification": "lesion", 
+                "title": "Thin", 
+                "value": 23, 
+                "longtitle": "Lines: Reticular: Thin", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-lines_reticular_thin.jpg"
+              }, 
+              {
+                "classification": "lesion", 
+                "title": "Atypical", 
+                "value": 24, 
+                "longtitle": "Lines: Reticular: Atypical", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-lines_reticular_atypical.jpg"
+              }, 
+              {
+                "classification": "lesion", 
+                "title": "Negative Network", 
+                "value": 25, 
+                "longtitle": "Lines: Reticular: Negative Network", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-lines_reticular_negativenetwork.jpg"
+              }
+            ], 
+            "icon": "static/derm/images/5-lines_reticular.jpg"
+          }, 
+          {
+            "classification": "lesion", 
+            "title": "Radial", 
+            "value": 30, 
+            "longtitle": "Lines: Radial", 
+            "type": "dropoption", 
+            "options": [
+              {
+                "classification": "lesion", 
+                "title": "Radial lines connected to a common base", 
+                "value": 31, 
+                "longtitle": "Lines: Radial: Radial lines connected to a common base", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-lines_radial_radiallinesconnectedtoacommonbase.jpg"
+              }, 
+              {
+                "classification": "lesion", 
+                "title": "Radial lines converging to a central dot", 
+                "value": 32, 
+                "longtitle": "Lines: Radial: Radial lines converging to a central dot", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-lines_radial_radiallinesconvergingtoacentraldot.jpg"
+              }, 
+              {
+                "classification": "lesion", 
+                "title": "Radial lines, peripheral", 
+                "value": 33, 
+                "longtitle": "Lines: Radial: Radial lines, peripheral", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-lines_radial_radiallines-peripheral.jpg"
+              }
+            ], 
+            "icon": "static/derm/images/5-lines_radial.jpg"
+          }, 
+          {
+            "classification": "lesion", 
+            "title": "Branched", 
+            "value": 40, 
+            "longtitle": "Lines: Branched", 
+            "type": "dropoption", 
+            "options": [], 
+            "icon": "static/derm/images/5-lines_branched.jpg"
+          }, 
+          {
+            "classification": "lesion", 
+            "title": "Parallel and straight", 
+            "value": 50, 
+            "longtitle": "Lines: Parallel and straight", 
+            "type": "dropoption", 
+            "options": [
+              {
+                "classification": "lesion", 
+                "title": "Furrows", 
+                "value": 51, 
+                "longtitle": "Lines: Parallel and straight: Furrows", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-lines_parallelandstraight_furrows.jpg"
+              }, 
+              {
+                "classification": "lesion", 
+                "title": "Ridges", 
+                "value": 52, 
+                "longtitle": "Lines: Parallel and straight: Ridges", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-lines_parallelandstraight_ridges.jpg"
+              }, 
+              {
+                "classification": "lesion", 
+                "title": "Fibrallar", 
+                "value": 53, 
+                "longtitle": "Lines: Parallel and straight: Fibrallar", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-lines_parallelandstraight_fibrallar.jpg"
+              }
+            ], 
+            "icon": "static/derm/images/5-lines_parallelandstraight.jpg"
+          }, 
+          {
+            "classification": "lesion", 
+            "title": "Curved", 
+            "value": 60, 
+            "longtitle": "Lines: Curved", 
+            "type": "dropoption", 
+            "options": [
+              {
+                "classification": "lesion", 
+                "title": "Thick", 
+                "value": 61, 
+                "longtitle": "Lines: Curved: Thick", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-lines_curved_thick.jpg"
+              }, 
+              {
+                "classification": "lesion", 
+                "title": "Thin", 
+                "value": 62, 
+                "longtitle": "Lines: Curved: Thin", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-lines_curved_thin.jpg"
+              }
+            ], 
+            "icon": "static/derm/images/5-lines_curved.jpg"
+          }, 
+          {
+            "classification": "lesion", 
+            "title": "Zig Zag", 
+            "value": 41, 
+            "longtitle": "Lines: Zig Zag", 
+            "type": "dropoption", 
+            "options": [], 
+            "icon": "static/derm/images/5-lines_zigzag.jpg"
+          }
+        ], 
+        "icon": "static/derm/images/5-lines.jpg"
+      }, 
+      {
+        "classification": "lesion", 
+        "title": "Dots & Clods", 
+        "value": 70, 
+        "longtitle": "Dots & Clods", 
+        "type": "dropoption", 
+        "options": [
+          {
+            "classification": "lesion", 
+            "title": "Dots", 
+            "value": 71, 
+            "longtitle": "Dots & Clods: Dots", 
+            "type": "dropoption", 
+            "options": [
+              {
+                "classification": "lesion", 
+                "title": "Atypical Dots", 
+                "value": 72, 
+                "longtitle": "Dots & Clods: Dots: Atypical Dots", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-dots-clods_dots_atypicaldots.jpg"
+              }, 
+              {
+                "classification": "lesion", 
+                "title": "Dots, Four square", 
+                "value": 73, 
+                "longtitle": "Dots & Clods: Dots: Dots, Four square", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-dots-clods_dots_dots-foursquare.jpg"
+              }, 
+              {
+                "classification": "lesion", 
+                "title": "Dots, Circle", 
+                "value": 74, 
+                "longtitle": "Dots & Clods: Dots: Dots, Circle", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-dots-clods_dots_dots-circle.jpg"
+              }, 
+              {
+                "classification": "lesion", 
+                "title": "Dots, Lines", 
+                "value": 75, 
+                "longtitle": "Dots & Clods: Dots: Dots, Lines", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-dots-clods_dots_dots-lines.jpg"
+              }
+            ], 
+            "icon": "static/derm/images/5-dots-clods_dots.jpg"
+          }, 
+          {
+            "classification": "lesion", 
+            "title": "Clods", 
+            "value": 76, 
+            "longtitle": "Dots & Clods: Clods", 
+            "type": "dropoption", 
+            "options": [
+              {
+                "classification": "lesion", 
+                "title": "Atypical Clods", 
+                "value": 77, 
+                "longtitle": "Dots & Clods: Clods: Atypical Clods", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-dots-clods_clods_atypicalclods.jpg"
+              }
+            ], 
+            "icon": "static/derm/images/5-dots-clods_clods.jpg"
+          }
+        ], 
+        "icon": "static/derm/images/5-dots-clods.jpg"
+      }, 
+      {
+        "classification": "lesion", 
+        "title": "Structureless", 
+        "value": 80, 
+        "longtitle": "Structureless", 
+        "type": "dropoption", 
+        "options": [
+          {
+            "classification": "lesion", 
+            "title": "Blue-White Veil", 
+            "value": 81, 
+            "longtitle": "Structureless: Blue-White Veil", 
+            "type": "dropoption", 
+            "options": [], 
+            "icon": "static/derm/images/5-structureless_blue-whiteveil.jpg"
+          }, 
+          {
+            "classification": "lesion", 
+            "title": "Pseudonetwork", 
+            "value": 82, 
+            "longtitle": "Structureless: Pseudonetwork", 
+            "type": "dropoption", 
+            "options": [], 
+            "icon": "static/derm/images/5-structureless_pseudonetwork.jpg"
+          }, 
+          {
+            "classification": "lesion", 
+            "title": "Peripheral brown structureless area", 
+            "value": 83, 
+            "longtitle": "Structureless: Peripheral brown structureless area", 
+            "type": "dropoption", 
+            "options": [], 
+            "icon": "static/derm/images/5-structureless_peripheralbrownstructurelessarea.jpg"
+          }, 
+          {
+            "title": "Off-centered blotch", 
+            "value": 84, 
+            "longtitle": "Structureless: Off-centered blotch", 
+            "classfiication": "lesion", 
+            "type": "dropoption", 
+            "options": [], 
+            "icon": "static/derm/images/5-structureless_off-centeredblotch.jpg"
+          }
+        ], 
+        "icon": "static/derm/images/5-structureless.jpg"
+      }, 
+      {
+        "classification": "lesion", 
+        "title": "Vessels", 
+        "value": 100, 
+        "longtitle": "Vessels", 
+        "type": "dropoption", 
+        "options": [
+          {
+            "classification": "lesion", 
+            "title": "Lines", 
+            "value": 110, 
+            "longtitle": "Vessels: Lines", 
+            "type": "dropoption", 
+            "options": [
+              {
+                "classification": "lesion", 
+                "title": "Straight", 
+                "value": 111, 
+                "longtitle": "Vessels: Lines: Straight", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-vessels_lines_straight.jpg"
+              }, 
+              {
+                "classification": "lesion", 
+                "title": "Looped", 
+                "value": 112, 
+                "longtitle": "Vessels: Lines: Looped", 
+                "type": "dropoption", 
+                "options": [
+                  {
+                    "classification": "lesion", 
+                    "title": "Looped with white Halo", 
+                    "value": 113, 
+                    "longtitle": "Vessels: Lines: Looped: Looped with white Halo", 
+                    "type": "dropoption", 
+                    "options": [], 
+                    "icon": "static/derm/images/5-vessels_lines_looped_loopedwithwhitehalo.jpg"
+                  }
+                ], 
+                "icon": "static/derm/images/5-vessels_lines_looped.jpg"
+              }, 
+              {
+                "classification": "lesion", 
+                "title": "Curved", 
+                "value": 114, 
+                "longtitle": "Vessels: Lines: Curved", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-vessels_lines_curved.jpg"
+              }, 
+              {
+                "classification": "lesion", 
+                "title": "Serpentine", 
+                "value": 115, 
+                "longtitle": "Vessels: Lines: Serpentine", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-vessels_lines_serpentine.jpg"
+              }, 
+              {
+                "classification": "lesion", 
+                "title": "Helical", 
+                "value": 116, 
+                "longtitle": "Vessels: Lines: Helical", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-vessels_lines_helical.jpg"
+              }, 
+              {
+                "classification": "lesion", 
+                "title": "Coiled", 
+                "value": 117, 
+                "longtitle": "Vessels: Lines: Coiled", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-vessels_lines_coiled.jpg"
+              }, 
+              {
+                "classification": "lesion", 
+                "title": "Branched", 
+                "value": 118, 
+                "longtitle": "Vessels: Lines: Branched", 
+                "type": "dropoption", 
+                "options": [], 
+                "icon": "static/derm/images/5-vessels_lines_branched.jpg"
+              }
+            ], 
+            "icon": "static/derm/images/5-vessels_lines.jpg"
+          }, 
+          {
+            "classification": "lesion", 
+            "title": "Dots", 
+            "value": 101, 
+            "longtitle": "Vessels: Dots", 
+            "type": "dropoption", 
+            "options": [], 
+            "icon": "static/derm/images/5-vessels_dots.jpg"
+          }, 
+          {
+            "classification": "lesion", 
+            "title": "Clods", 
+            "value": 102, 
+            "longtitle": "Vessels: Clods", 
+            "type": "dropoption", 
+            "options": [], 
+            "icon": "static/derm/images/5-vessels_clods.jpg"
+          }, 
+          {
+            "classification": "lesion", 
+            "title": "Milky-red area", 
+            "value": 120, 
+            "longtitle": "Vessels: Milky-red area", 
+            "type": "dropoption", 
+            "options": [], 
+            "icon": "static/derm/images/5-vessels_milky-redarea.jpg"
+          }, 
+          {
+            "classification": "lesion", 
+            "title": "Polymorphous vessels", 
+            "value": 130, 
+            "longtitle": "Vessels: Polymorphous vessels", 
+            "type": "dropoption", 
+            "options": [], 
+            "icon": "static/derm/images/5-vessels_polymorphousvessels.jpg"
+          }
+        ], 
+        "icon": "static/derm/images/5-vessels.jpg"
+      }, 
+      {
+        "classification": "lesion", 
+        "title": "Other", 
+        "value": 140, 
+        "longtitle": "Other", 
+        "type": "dropoption", 
+        "options": [
+          {
+            "classification": "lesion", 
+            "title": "Shiny white lines", 
+            "value": 150, 
+            "longtitle": "Other: Shiny white lines", 
+            "type": "dropoption", 
+            "options": [], 
+            "icon": "static/derm/images/5-other_shinywhitelines.jpg"
+          }, 
+          {
+            "classification": "lesion", 
+            "title": "Circles", 
+            "value": 151, 
+            "longtitle": "Other: Circles", 
+            "type": "dropoption", 
+            "options": [], 
+            "icon": "static/derm/images/5-other_circles.jpg"
+          }, 
+          {
+            "classification": "lesion", 
+            "title": "Pseudopods", 
+            "value": 152, 
+            "longtitle": "Other: Pseudopods", 
+            "type": "dropoption", 
+            "options": [], 
+            "icon": "static/derm/images/5-other_pseudopods.jpg"
+          }, 
+          {
+            "classification": "lesion", 
+            "title": "Sharply demarcated scalloped border", 
+            "value": 153, 
+            "longtitle": "Other: Sharply demarcated scalloped border", 
+            "type": "dropoption", 
+            "options": [], 
+            "icon": "static/derm/images/5-other_sharplydemarcatedscallopedborder.jpg"
+          }
+        ], 
+        "icon": "static/derm/images/5-other.jpg"
+      }
+    ]
+  }, 
+  {
+    "title": "Review", 
+    "default": "", 
+    "next": 7, 
+    "step": 6, 
+    "type": "end", 
+    "options": []
+  }
+]

@@ -1,0 +1,59 @@
+<!doctype html>
+
+<html>
+
+  <head>
+    <title>Angular mousetrap directive demo</title>
+    <meta charset="utf-8" />
+  </head>
+
+  <body ng-app="mousetrapApp">
+    <ul ng-controller="TestCtrl">
+      <li mousetrap-keypress="testKeypress">Press and release 'a' (keypress): {{testKeypressStr}}</li>
+      <li mousetrap-keydown="testKeydown" mousetrap-keyup="resetKeydown">Press and hold 'b' (keydown): {{testKeydownStr}}</li>
+      <li mousetrap-keyup="testKeyup">Press and hold, than release 'c' (keyup): {{testKeyupStr}}</li>
+      <li mousetrap-keypress="testKeycombo">Press 'd', then press ctrl+e or command+e (keycombo): {{testKeycomboStr}}</li>
+      <li mousetrap-keypress="reset">Press 'r' to reset the state of the above tests</li>
+    </ul>
+  </body>
+  <script src="../bower_components/angular/angular.min.js"></script>
+  <script src="../bower_components/mousetrap/mousetrap.min.js"></script>
+  <script src="../src/keypress.js"></script>
+  <script>
+    var mousetrapApp = angular.module('mousetrapApp', ['mousetrap']);
+    mousetrapApp.controller('TestCtrl', ['$scope', function($scope) {
+    
+      $scope.testKeypressStr = '';
+      $scope.testKeypress = {
+	'a': function(){ $scope.testKeypressStr = 'It works!'; },
+      };
+      
+      $scope.testKeydownStr = '';
+      $scope.testKeydown = {
+	'b': function(){ $scope.testKeydownStr = 'It works!'; },
+      };
+      $scope.resetKeydown = {
+	'b': function(){ $scope.testKeydownStr = ''; },
+      };
+      
+      $scope.testKeyupStr = '';
+      $scope.testKeyup = {
+	'c': function(){ $scope.testKeyupStr = 'It works!'; },
+      };
+
+      $scope.testKeycomboStr = '';
+      $scope.testKeycombo = {
+        'd mod+e': function(e, combo) { $scope.testKeycomboStr = 'It works! You pressed "' + combo + '"'; e.preventDefault(); },
+      };
+      
+      $scope.reset = {
+	'r': function(){ 
+	   $scope.testKeypressStr = ''; 
+	   $scope.testKeydownStr = ''; 
+	   $scope.testKeyupStr = '';
+           $scope.testKeycomboStr = '';
+	 },
+      };  
+    }]);
+  </script>
+</html>
