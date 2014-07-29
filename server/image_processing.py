@@ -35,6 +35,9 @@ def fillImageGeoJSON(params):
 
     # loading image from url into memory, first as np array then opencv image
     req = urllib.urlopen(params['image']['url'])
+
+    print params['image']['url']
+
     arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
     img = cv2.imdecode(arr,-1) # 'load it as it is'
 
