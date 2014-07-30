@@ -57,7 +57,14 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
                 $scope.tasklist_url = '/api/v1/user/' + newUser['_id'] + '/tasklist';
 
-                $http.get($scope.tasklist_url).then(function(response){
+                $scope.loadTasklist();
+
+            }
+        });
+
+        $scope.loadTasklist = function(){
+
+             $http.get($scope.tasklist_url).then(function(response){
 
                     console.log(response);
 
@@ -65,7 +72,6 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                     $scope.phase = response.data.phase;
                     $scope.totalSteps = $scope.decision_tree.length;
                     $scope.image_list = response.data.items;
-
 
                     $scope.selectImage(0);
 
@@ -77,8 +83,8 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                     $scope.nextStep();
 
                 })
-            }
-        });
+
+        };
 
         // Accessors
 
@@ -716,21 +722,26 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
                 }
 
-                console.log(annotation_to_store);
+//                console.log(annotation_to_store);
 
                 var self = this;
                 var annotation_url = '/api/v1/user/' + $rootScope.user['_id'] + '/taskcomplete/markup';
+
                 $http.post(annotation_url, annotation_to_store).success(function(response){
 
-                    console.log('Post succesful', response)
+//                    console.log('Post succesful', response);
 
-                	$scope.step = 0;
+                	$scope.step = -1;
+
                     $scope.step_config = undefined;
                     $scope.review_mode = false;
 
                     $scope.clearAnnotation();
                     $scope.clearStep();
-                    $scope.loadStep();
+
+                    $scope.loadTasklist();
+
+//                    $scope.loadStep();
 
                 });
             }
