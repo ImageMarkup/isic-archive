@@ -1,12 +1,9 @@
 
 'use strict';
 
-
 // Initialization of angular root application
 var derm_app = angular.module('DermApp', ['ui.bootstrap', 'ngSanitize', 'xml']);
-
 derm_app.value( "ol", ol );
-
 
 // Initialization of angular app controller with necessary scope variables. Inline declaration of external variables
 // needed within the controller's scope. State variables (available between controllers using $rootScope). Necessary to
@@ -16,12 +13,8 @@ var appController = derm_app.controller('ApplicationController', ['$scope', '$ro
 
         // global ready state variable
         $rootScope.applicationReady = false; // a hack to know when the rest has loaded (since ol3 won't init until dom does)
-
         $rootScope.imageviewer = undefined; // the ol3 viewer
-
         $scope.active_image = undefined; // image metedata for currently viewed image
-
-
 
         var api_user_url = '/api/v1/user/me';
         $rootScope.user = {};
@@ -37,7 +30,6 @@ var appController = derm_app.controller('ApplicationController', ['$scope', '$ro
             $rootScope.ApplicationInit();
         }, 10);
 
-
         // main application, gives a bit of a delay before loading everything
         $rootScope.ApplicationInit = function() {
 
@@ -47,17 +39,13 @@ var appController = derm_app.controller('ApplicationController', ['$scope', '$ro
 
         };
 
-
         $rootScope.$watch('active_image', function(newImage, oldValue){
 
             if ($rootScope.applicationReady){
 
                 $rootScope.task_start = Date.now(); // global start time for this task
-
                 $rootScope.imageviewer.clearCurrentImage();
-
                 var image_url = '/api/v1/item/' + newImage['_id'];
-
                 $rootScope.imageviewer.loadImageWithURL(image_url);
 
             }

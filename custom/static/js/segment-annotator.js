@@ -5,6 +5,7 @@
 
 // SegmentAnnotator constructor.
 SegmentAnnotator = function(segmentation, options) {
+
   if (typeof options === 'undefined') options = {};
   this.backgroundColor = options.backgroundColor;
   this.highlightAlpha = options.highlightAlpha;
@@ -12,7 +13,6 @@ SegmentAnnotator = function(segmentation, options) {
   this.boundaryAlpha = options.boundaryAlpha;
 
  console.log('segmentation options', this);
-
 
   // Variables.
   this.width = segmentation.width;
@@ -39,9 +39,11 @@ SegmentAnnotator = function(segmentation, options) {
   this._initializeBackgroundLayer();
   this._initializeColorMap(options.labels);
   this._initializeAnnotations(options.annotationURL, function() {
+
     this._initializeImageLayer();
     this._initializeAnnotationLayer();
     this._initializeHighlightLayer();
+
     if (options.onload)
       options.onload.call(this);
   });
@@ -368,6 +370,36 @@ SegmentAnnotator.prototype._initializeColorMap = function(newLabels) {
   return this;
 };
 
+//
+//SegmentAnnotator.prototype.importFullPNGSegmentation = function(pngurl) {
+//
+//  var image = new Image(),
+//    _this = this;
+//    image.src = url;
+//    image.onload = function(){
+//
+//        canvas.width = _this.width;
+//        canvas.height = _this.height;
+//        var context = canvas.getContext('2d');
+//        context.drawImage(image, 0, 0, _this.width, _this.height);
+//        var sourceData = context.getImageData(0, 0, _this.width, _this.height).data;
+//
+//         for (var i = 0; i < this.indexMap.length; ++i) {
+//
+//
+//
+//            data[4 * i + 0] = this.rgbData[4 * i + 0];
+//            data[4 * i + 1] = this.rgbData[4 * i + 1];
+//            data[4 * i + 2] = this.rgbData[4 * i + 2];
+//            data[4 * i + 3] = this.indexMap[i];
+//
+//
+//
+//
+//    }
+//
+//};
+
 // Import existing annotation data.
 SegmentAnnotator.prototype._importAnnotation = function(url, callback) {
   var image = new Image(),
@@ -591,6 +623,112 @@ SegmentAnnotator.prototype._initializeContainer = function(container) {
   return this;
 };
 
+
+window.UDASegment = function(imageURL, options) {
+
+    console.log("UDA Segment started");
+
+    if (typeof options === 'undefined') {
+      options = {};
+    }
+
+
+    // When image is loaded.
+    function onSuccessImageLoad(image, options) {
+
+        var canvas = document.createElement('canvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
+        var context = canvas.getContext('2d');
+        context.drawImage(image, 0, 0);
+
+        var imageData = context.getImageData(0, 0, image.width, image.height);
+
+//        console.log(imageData);
+
+        var sourceData = new Uint8Array(imageData.data);
+
+        var indexMap = new Uint8Array(sourceData.length / 4);
+
+        var numSegments = 0;
+
+        for(var i=0;i < indexMap.length; i++){
+
+            var indexValue = sourceData[i*4 + 3];
+
+            if (indexValue > numSegments){
+                numSegments = indexValue;
+            }
+
+            // copy index to indexmap from Alpha channel
+            indexMap[i] = indexValue;
+
+            // set alpha channel to full opacity
+            sourceData[i*4 + 3] = 255
+
+        }
+
+        options.callback({
+            width: imageData.width,
+            height: imageData.height,
+            size: numSegments + 1,
+            indexMap: indexMap,
+            rgbData: sourceData
+            });
+    }
+
+      // When image is invalid.
+    function onErrorImageLoad() {
+        alert('Failed to load an image: ' + image.src);
+    }
+
+    console.log(imageURL);
+
+    var image = new Image();
+    image.src = imageURL;
+    image.crossOrigin = null;
+    image.onerror = function() { onErrorImageLoad(image); };
+    image.onload = function() { onSuccessImageLoad(image, options); };
+
+
+
+
+//    options.callback(this);
+    // the lateral side of a rectangle superpixel in pixels.
+
+
+  };
+
+
+
+
+UDASegmentAnnotator = function(segmentation_url, options) {
+  var _this = this;
+
+  UDASegment(segmentation_url, {
+    callback: function(result) {
+      SegmentAnnotator.call(_this, result, options);
+    }
+  });
+
+};
+
+
+UDASegmentAnnotator.prototype = Object.create(SegmentAnnotator.prototype);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /** Create an annotation tool based on PFSegmentation.
  *
  * Include pf-segmentation.js before use.
@@ -609,6 +747,17 @@ PFSegmentAnnotator = function(imageURL, options) {
 
 // Set up inheritance.
 PFSegmentAnnotator.prototype = Object.create(SegmentAnnotator.prototype);
+
+
+
+
+
+
+
+
+
+
+
 
 /** Create an annotation tool based on SLIC segmentation.
  *

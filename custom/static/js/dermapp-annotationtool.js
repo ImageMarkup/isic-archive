@@ -47,6 +47,8 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
         $scope.runningSegmentation = false;
 
+        $rootScope.showingSegmentation = false;
+
 
 
         $rootScope.$watch('user', function(newUser, oldUser){
@@ -65,14 +67,18 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                     $scope.image_list = response.data.items;
 
 
-                    $scope.nextStep();
-
                     $scope.selectImage(0);
+
+                    if(response.data.loadAnnotation){
+                        $scope.current_annotation.steps = response.data.annotation;
+                        console.log($scope.current_annotation);
+                    }
+
+                    $scope.nextStep();
 
                 })
             }
         });
-
 
         // Accessors
 
@@ -185,7 +191,6 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             else if (option.type == 'dropoption') {
 
                 console.log('valid paint selection');
-
                 $scope.selectDetail(option);
 
             }
@@ -283,7 +288,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             // just making things explicit for readability's sake
             var features = $rootScope.imageviewer.getFeatures();
 
-            //
+            console.log('current step features', features);
 
             var submitTime = Date.now();
 
@@ -291,7 +296,38 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
             if (features.length){
 
-                if(current_step in Object.keys($scope.current_annotation.steps)){
+                if ($scope.step_config && $scope.step_config.type){
+
+                    // if we're in teh superpixel mode, discard the placehold feature and make your own from the external parameters
+                    // ugly but it should work.
+                    if ($scope.step_config.type == 'superpixel'){
+
+
+
+                        var segmentationPackage = $rootScope.imageviewer.getSegmentationPackage();
+
+                        var feature = new ol.Feature({
+                            title: 'superpixel',
+                            longtitle: 'superpixel region',
+                            icon: '',
+                            source: $scope.phase,
+                            parameters: segmentationPackage
+                        });
+
+                        // set the geometry of this feature to be the screen extents
+                        feature.setGeometry(new ol.geom.Point([0, 0]));
+
+                        var geojsonfeatures = $scope.formatter.writeFeatures([feature]);
+
+                        var singleAnnotation = {
+                            markup : geojsonfeatures,
+                            startTime : $scope.step_start,
+                            submitTime : submitTime
+                        };
+
+                        $scope.current_annotation.steps[current_step] = singleAnnotation;
+                    }
+                    else if(current_step in Object.keys($scope.current_annotation.steps)){
 
                     // we have an existing annotation, just update the features and modify date
 //                    var stepAnnotation = currentAnnotation.steps[current_step]
@@ -310,44 +346,13 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
                     $scope.current_annotation.steps[current_step] = singleAnnotation;
 
-                }
-                else
-                {
-                    // this is the first instance of the annotation, set the create date and field of view as well
-                    console.log('this is the first annotation for this step, creating');
+                    }
+                    else
+                    {
+                        // this is the first instance of the annotation, set the create date and field of view as well
+                        console.log('this is the first annotation for this step, creating');
 
-                    var geojsonfeatures = $scope.formatter.writeFeatures(features);
-
-                    var singleAnnotation = {
-                        markup : geojsonfeatures,
-                        startTime : $scope.step_start,
-                        submitTime : submitTime
-                    };
-
-                    $scope.current_annotation.steps[current_step] = singleAnnotation;
-                }
-            }
-            else
-            {
-                if ($scope.step_config && $scope.step_config.type){
-
-                    if ($scope.step_config.type == 'superpixel'){
-
-                        var segmentationPackage = $rootScope.imageviewer.getSegmentationPackage();
-
-                        var feature = new ol.Feature({
-                            title: 'superpixel',
-                            longtitle: 'superpixel region',
-                            icon: '',
-                            source: $scope.phase,
-                            parameters: segmentationPackage
-                        });
-
-                        // set the geometry of this feature to be the screen extents
-                        feature.setGeometry(new ol.geom.Point([0, 0]));
-
-                        var geojsonfeatures = $scope.formatter.writeFeatures([feature]);
-
+                        var geojsonfeatures = $scope.formatter.writeFeatures(features);
 
                         var singleAnnotation = {
                             markup : geojsonfeatures,
@@ -359,6 +364,10 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                     }
 
                 }
+            }
+            else
+            {
+                console.log('dont show up here');
             }
 
             console.log($scope.current_annotation);
@@ -523,7 +532,6 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             // get current step configuration
             $scope.step_config = $scope.getCurrentStepConfig();
 
-
             // clear viewer current and temporary annotations
             $scope.clearStep();
 
@@ -553,6 +561,9 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                         olFeatures.push($scope.formatter.readFeature(stepAnnotation.markup.features[i]))
                     }
 
+
+
+
                     $rootScope.imageviewer.setAnnotations(olFeatures);
                 }
                 else {
@@ -563,16 +574,38 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
 
             // load previous annotations if there are any
-            $rootScope.imageviewer.hidePaintLayerIfVisible();
+//            $rootScope.imageviewer.hidePaintLayerIfVisible();
 
+            $rootScope.showingSegmentation = false;
 
             if($scope.step_config){
-
 
                 // set imageviewer to current step configuration
                 if ($scope.step_config.default != "") {
 
-                    $scope.setDrawMode($scope.step_config.default, $scope.step_config.classification);
+                    if ($scope.step_config.default == 'preloadseg'){
+
+                        var segmentation_url = '/api/v1/item/' + $scope.current_image['_id'] + '/segmentation';
+
+                        $rootScope.showingSegmentation = true;
+
+                        $rootScope.imageviewer.loadPainting(segmentation_url);
+
+                        $scope.setDrawMode('superpixel', $scope.step_config.classification);
+
+
+                    }
+                    else if ($rootScope.imageviewer.hasSegmentation() && $scope.step_config.default == 'superpixel'){
+
+                        $rootScope.showingSegmentation = true;
+
+                        $scope.setDrawMode($scope.step_config.default, $scope.step_config.classification);
+
+                    }
+                    else {
+
+                        $scope.setDrawMode($scope.step_config.default, $scope.step_config.classification);
+                    }
                 }
                 else {
                     $scope.setDrawMode('navigate', '');
@@ -587,6 +620,8 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                     $rootScope.imageviewer.moveToFeature(olFeature);
 
                 }
+
+
 
 
                 // set some UI helpers
@@ -747,6 +782,8 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
 
             $scope.runningSegmentation = false;
+
+            $rootScope.showingSegmentation = true;
         };
 
 
@@ -763,12 +800,17 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
         	$rootScope.imageviewer.startPainting();
 
             $scope.runningSegmentation = false;
+
+            $rootScope.showingSegmentation = true;
         };
 
         $scope.finishRegionPaint = function(){
 
 			$scope.tool_bar_state = 'rpreview';
+
             $rootScope.imageviewer.acceptPainting();
+
+            $rootScope.showingSegmentation = false;
 
         }
 
@@ -776,14 +818,17 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
         	$rootScope.imageviewer.acceptPainting();
 
-//        	$rootScope.imageviewer.clearTemporary();
+            $rootScope.showingSegmentation = false;
 
         	$scope.resetStep();
         };
 
         $scope.navMode = function(){
 
-            $rootScope.imageviewer.hidePaintLayerIfVisible()
+            $rootScope.imageviewer.hidePaintLayerIfVisible();
+
+            $rootScope.showingSegmentation = false;
+
             $scope.setDrawMode('navigate', '');
 
         };
@@ -794,7 +839,10 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             var olFeature = $scope.formatter.readFeature(feature);
             $rootScope.imageviewer.moveToFeature(olFeature);
 
-            $rootScope.imageviewer.showPaintLayerIfVisible();
+            $scope.showingSegmentation = true;
+
+//            $rootScope.imageviewer.showPaintLayerIfVisible();
+
             $scope.setDrawMode('paintbrush', '');
 
 
@@ -815,20 +863,15 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
             $scope.base = options;
             $scope.selectOption = function(opt){
-
                 $modalInstance.close(opt);
-
             }
-
         };
 
 
 
         $scope.openModalWithOptions = function(options){
 
-//            console.log(options)
-
-            $scope.modal_options = options.options[0]
+            $scope.modal_options = options.options[0];
 
             var modalInstance = $modal.open({
               templateUrl: 'myModalContent.html',
@@ -847,7 +890,6 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                 console.log('Selected option', selectedOption);
 
                 // assuming we have steps to go to
-
                 $scope.gotoStep(selectedOption.value);
 
             }, function () {

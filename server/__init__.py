@@ -5,7 +5,7 @@ from girder import events
 from provision_utility import initialSetup
 from gallery import GalleryHandler
 from upload import uploadHandler
-from image_utility import zoomifyhandler, thumbnailhandler, fifHandler
+from image_utility import zoomifyhandler, thumbnailhandler, fifHandler, annotationHandler, segmentationHandler
 from qc import QCHandler
 from task_utility import tasklisthandler, taskCompleteHandler, TaskHandler, devNullEndpoint
 
@@ -85,6 +85,15 @@ def load(info):
 
     info['apiRoot'].item.route('GET', (':id', 'thumbnail'), thumbnailhandler)
 
+    # item/:id/annotation -> returns the json annotation
+
+    info['apiRoot'].item.route('GET', (':id', 'annotation'), annotationHandler)
+
+
+    # item/:id/annotation -> returns the png segmentation (index map as alpha channel)
+
+    info['apiRoot'].item.route('GET', (':id', 'segmentation'), segmentationHandler)
+
     # item/:id/zoomify -> returns a zoomify xml if available
 
     info['apiRoot'].item.route('GET', (':id', 'zoomify', ':p1'), zoomifyhandler)
@@ -93,9 +102,7 @@ def load(info):
 
     # item/:id/fif -> returns the IIP FIF endpoint for an item
 
-    info['apiRoot'].item.route('GET', (':id', 'fif'), fifHandler)
-    info['apiRoot'].item.route('GET', (':id', 'fif', ':p1'), fifHandler)
-    info['apiRoot'].item.route('GET', (':id', 'fif', ':p1', ':p2', ':p3'), fifHandler)
+    info['apiRoot'].item.route('GET', (':id', 'fif', ':fifparams'), fifHandler)
 
     # user/:userId/tasklist -> returns a list of images and any UI configuration
 

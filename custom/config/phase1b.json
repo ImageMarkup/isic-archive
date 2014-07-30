@@ -1,0 +1,39 @@
+[
+    {
+        "step": 0,
+        "title": "Review lesion boundary",
+        "classification": "lesion",
+        "type": "mwdefine",
+        "default" : "autofill",
+        "next": 1,
+        "options" : []
+    },
+    {
+        "step": 1,
+        "title": "Review normal skin",
+        "classification": "normal",
+        "type": "pldefine",
+        "default" : "pointlist",
+        "next": 2,
+        "options" : []
+    },
+    {
+        "step": 2,
+        "title": "Confirm superpixel size",
+        "classification": "tile",
+        "type": "superpixel",
+        "default" : "preloadseg",
+        "zoom": "lesion",
+        "next": 3,
+        "options" : []
+    },
+    {
+        "step": 3,
+        "title": "Review",
+        "type": "end",
+        "zoom": "lesion",
+        "next": 4,
+        "default": "",
+        "options": []
+    }
+]

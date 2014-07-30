@@ -250,6 +250,14 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
             getFeatures : function(){
                 return this.vector_source.getFeatures();
+//                var vector_features = this.vector_source.getFeatures();
+//
+//                if (vector_features.length){
+//                    return vector_features;
+//                }
+//                else{
+//                    return this.getSegmentationPackage();
+//                }
             },
 
             setAnnotations : function(features){
@@ -317,7 +325,9 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
                     }
 
-                    $("#annotatorcontainer").hide();
+//                    $("#annotatorcontainer").hide();
+
+
 //                    self.segmentannotator.container.hidden = true;
 
                     // manually request an updated frame async
@@ -336,7 +346,7 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
                 if(this.segmentannotator){
 
-                    $("#annotatorcontainer").hide();
+//                    $("#annotatorcontainer").hide();
                 }
             },
 
@@ -344,8 +354,11 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
                 if(this.segmentannotator){
 
-                    $("#annotatorcontainer").show();
-                    this.map.render();
+//                    $("#annotatorcontainer").show();
+
+//                    $("#map").hide();
+//                    this.map.render();
+
                     return true;
                 }
                 return false;
@@ -368,6 +381,25 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
                 }
             },
 
+            loadPainting : function(segmentURL){
+
+                var self = this;
+
+
+                self.segmentannotator = new UDASegmentAnnotator(segmentURL, {
+                    regionSize: self.paint_size,
+                    backgroundColor: [0,0,0],
+                    container: document.getElementById('annotatorcontainer'),
+                    fillAlpha: 0,
+                    highlightAlpha: 0,
+                    boundaryAlpha: 190,
+                    labels: _labels,
+                    onload: function() {
+//                        $("#annotatorcontainer").show();
+                    }
+                });
+            },
+
             startPainting : function(){
 
                 var self = this;
@@ -378,7 +410,8 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
                     if(self.segmentannotator){
 
-                        self.showPaintLayerIfVisible()
+//
+//                        self.showPaintLayerIfVisible()
                     }
                     else {
 
@@ -392,14 +425,31 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
                             highlightAlpha: 0,
                             boundaryAlpha: 190,
                             labels: _labels,
-                            onload: function() {
-                                $("#annotatorcontainer").show();
+                            onload: function(self) {
+
+
+
                             }
-                          });
+                      });
 
                     }
 
+                    var feature = new ol.Feature({
+                                    title: 'superpixel placeholder',
+                                    longtitle: 'superpixel region',
+                                    icon: ''
+                                });
+
+                    // set the geometry of this feature to be the screen extents
+                    feature.setGeometry(new ol.geom.Point([0, 0]));
+
+                    self.vector_source.clear();
+                    self.vector_source.addFeature(feature);
+
                     self.segmentannotator.setCurrentLabel(0);
+
+                    externalApply();
+
 
                 });
             },
@@ -410,6 +460,12 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
             setPaintParameter : function(new_paint_size){
                 this.paint_size = new_paint_size;
+            },
+
+            hasSegmentation : function(){
+
+              return this.segmentannotator != undefined;
+
             },
 
             regenerateFill : function(){

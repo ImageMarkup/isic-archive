@@ -149,23 +149,54 @@ def tasklisthandler(id, params):
 
     # todo: branch for configs
 
+
+
+
+
     app_base = os.path.join(os.curdir, os.pardir)
     app_path = os.path.join(app_base, 'girder', 'plugins', 'uda', 'custom', 'config')
-    config_json = os.path.abspath(os.path.join(app_path, u'phase1a.json'))
+
+    # get the appropriate jsno
+    phasejson = final_task['name'].replace(" ", "").lower() + '.json'
+
+    config_json = os.path.abspath(os.path.join(app_path, phasejson))
 
     fid = open(config_json, 'r')
     config_list = json.load(fid)
     fid.close()
 
 
-    # if len(target_items) > 1:
-    #     return_dict['items'] = target_items[0:10]
-    # else:
-    #     return_dict['items'] = target_items[0:10]
-
     return_dict['items'] = [target_items[0]]
     return_dict['folder'] = target_folder
     return_dict['phase'] = final_task['name']
+
+
+    # non permanent
+    if final_task['name'] == 'Phase 1b':
+
+        item = m.model('item').load(target_items[0]['_id'], force=True)
+        files = m.model('item').childFiles(item)
+
+        firstFile = None
+        for f in files:
+            print f
+            if f['exts'][0] == 'json':
+                firstFile = f
+
+        assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
+        file_path = os.path.join(assetstore['root'], firstFile['path'])
+        json_content = open(file_path, 'r')
+        annotation_str = json.load(json_content)
+        json_content.close()
+
+        return_dict['loadAnnotation'] = True
+        return_dict['annotation'] = annotation_str['p1a']['steps']
+
+
+    else:
+
+
+        return_dict['loadAnnotation'] = False
 
     # the UI json to provide
     return_dict['decision_tree'] = config_list

@@ -97,7 +97,7 @@
 
 
                 <div class="isichead">
-                    <div class="isictitle">ISIC Annotation Tool v6</div>
+                    <div class="isictitle">ISIC Annotation Tool v6 {{showingSegmentation}}</div>
 
                     <div class="btn-group btn-group-block">
                         <div class="btn">User: {{ user.login }}</div>
@@ -321,13 +321,15 @@
                         </div>
 
 
-                        <div class="btn-group pull-right content-group" ng-show="compareState('superpixel', tool_bar_state)">
-                            <div class="btn btn-inverse" ng-show="runningSegmentation">
-                                <i class="fa fa-spinner fa-spin"></i>
-                            </div>
+                        <div class="btn-group content-group" ng-show="compareState('superpixel', tool_bar_state)">
+
 
                             <div class="btn btn-inverse" ng-click="runRegionPaintConfigure()">
                                 Click to begin
+                            </div>
+
+                            <div class="btn btn-inverse" ng-show="runningSegmentation">
+                                <i class="fa fa-spinner fa-spin"></i>
                             </div>
                         </div>
 
@@ -338,9 +340,9 @@
                                 <i class="fa fa-spinner fa-spin"></i>
                             </div>
 
-                            <div class="btn btn-success" ng-click="nextStep()">
-                                Next
-                            </div>
+                            <!--<div class="btn btn-success" ng-click="nextStep()">-->
+                                <!--Next-->
+                            <!--</div>-->
                         </div>
 
 
@@ -380,8 +382,11 @@
             </div>
 
             <div class="col-sm-9 nopad">
-                <div id="map" class="map"></div>
-                <div id="annotatorcontainer"></div>
+
+
+                <div id="map" class="map" ng-hide="showingSegmentation"></div>
+
+                <div id="annotatorcontainer" ng-show="showingSegmentation"></div>
 
             </div>
 
