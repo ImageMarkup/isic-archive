@@ -41,6 +41,8 @@ thumbnailhandler.description = (
 
 def annotationHandler(id, params):
 
+    # todo : have it pull the appropriate annotation, it current pulls the last one
+
     m = ModelImporter()
     item = m.model('item').load(id, force=True)
     files = m.model('item').childFiles(item)
@@ -68,6 +70,8 @@ annotationHandler.description = (
 
 
 def segmentationHandler(id, params):
+
+    # todo : have it pull the appropriate annotation, it current pulls the last one
 
     m = ModelImporter()
     item = m.model('item').load(id, force=True)

@@ -509,10 +509,11 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
                 if(- bl[1] < this.nativeSize.h) {
                     newHeight = -bl[1];
                 };
+
                 if(tl[1] < 0) {
                     newHeight += tl[1];
                     origin_y = -tl[1];
-                }
+                };
 
                 console.log(origin_x, origin_y, newWidth, newHeight);
 
