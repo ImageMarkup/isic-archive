@@ -1,0 +1,591 @@
+{
+    "author": "sd",
+    "filemadeby": "rs",
+    "groups": [
+        {
+            "header": "Pattern",
+            "questions": [
+                {
+                    "name": "Pattern",
+                    "type": "select",
+                    "options": [
+                        {
+                            "key": "diff_reticular",
+                            "label": "Pattern- Diffuse reticular"
+                        },
+                        {
+                            "key": "patchy_reticular",
+                            "label": "Pattern- Patchy reticular"
+                        },
+                        {
+                            "key": "periretic_centhypo",
+                            "label": "Pattern- Peripheral reticular central hypopigmented"
+                        },
+                        {
+                            "key": "periretic_centhyper",
+                            "label": "Pattern- Peripheral reticular central hyperpigmented"
+                        },
+                        {
+                            "key": "periretic_centglob",
+                            "label": "Pattern- Peripheral reticular central globular"
+                        },
+                        {
+                            "key": "homogen",
+                            "label": "Pattern- Homogeneous"
+                        },
+                        {
+                            "key": "peri_globules",
+                            "label": "Pattern- Peripheral globular"
+                        },
+                        {
+                            "key": "globular",
+                            "label": "Pattern- Globular"
+                        },
+                        {
+                            "key": "multi_comp",
+                            "label": "Pattern- Multi-component symmetric"
+                        },
+                        {
+                            "key": "two_comp_sym",
+                            "label": "Pattern- Two component symmetric"
+                        },
+                        {
+                            "key": "other",
+                            "label": "Pattern- Other"
+                        },
+                        {
+                            "key": "pattern_unable",
+                            "label": "Pattern- Unable to determine"
+                        }
+                    ]
+                },
+                {
+                    "name": "Pattern comments",
+                    "type": "textarea",
+                    "key": "other_txt"
+                }
+            ]
+        },
+        {
+            "header": "Organization",
+            "questions": [
+                {
+                    "name": "Organization",
+                    "type": "select",
+                    "option": [
+                        {
+                            "key": "org_yes",
+                            "label": "Organized- Yes"
+                        },
+                        {
+                            "key": "org_no",
+                            "label": "Organized- No"
+                        },
+                        {
+                            "key": "org_un",
+                            "label": "Organized- Unsure"
+                        }
+                    ]
+                },
+                {
+                    "name": "Shape Symmetry",
+                    "type": "select",
+                    "option": [
+                        {
+                            "key": "sym_twoaxes",
+                            "label": "Symmetry- two axes"
+                        },
+                        {
+                            "key": "sym_oneaxis",
+                            "label": "Symmetry- one axis"
+                        },
+                        {
+                            "key": "sym_none",
+                            "label": "Symmetry- no axes"
+                        },
+                        {
+                            "key": "sym_un",
+                            "label": "Symmetry- Unsure"
+                        }
+                    ]
+                },
+                {
+                    "name": "Pattern Symmetry",
+                    "type": "select",
+                    "option": [
+                        {
+                            "key": "symp_twoaxes",
+                            "label": "Pattern Symmetry- two axes"
+                        },
+                        {
+                            "key": "symp_oneaxis",
+                            "label": "Pattern Symmetry- one axis"
+                        },
+                        {
+                            "key": "symp_none",
+                            "label": "Pattern Symmetry- no axes"
+                        },
+                        {
+                            "key": "symp_un",
+                            "label": "Pattern Symmetry- Unsure"
+                        }
+                    ]
+                },
+                {
+                    "name": "Architectural Disorder",
+                    "type": "select",
+                    "option": [
+                        {
+                            "key": "arch_mild",
+                            "label": "Architectural disorder- mild"
+                        },
+                        {
+                            "key": "arch_mod",
+                            "label": "Architectural disorder- moderate"
+                        },
+                        {
+                            "key": "arch_marked",
+                            "label": "Architectural disorder- marked"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "header": "Border",
+            "questions": [
+                {
+                    "name": "Border Sharpness",
+                    "type": "select",
+                    "option": [
+                        {
+                            "key": "bord_none",
+                            "label": "Border- none"
+                        },
+                        {
+                            "key": "bord_one",
+                            "label": "Border- one"
+                        },
+                        {
+                            "key": "bord_two",
+                            "label": "Border- two"
+                        },
+                        {
+                            "key": "bord_three",
+                            "label": "Border- three"
+                        },
+                        {
+                            "key": "bord_four",
+                            "label": "Border- four"
+                        },
+                        {
+                            "key": "bord_five",
+                            "label": "Border- five"
+                        },
+                        {
+                            "key": "bord_six",
+                            "label": "Border- six"
+                        },
+                        {
+                            "key": "bord_seven",
+                            "label": "Border- seven"
+                        },
+                        {
+                            "key": "bord_eight",
+                            "label": "Border- eight"
+                        },
+                        {
+                            "key": "bord_unable",
+                            "label": "Border- unable to tell"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "header": "Color",
+            "questions": [
+                {
+                    "type": "check",
+                    "key": "c_lbrown",
+                    "label": "Color- Light brown"
+                },
+                {
+                    "type": "check",
+                    "key": "c_dbrown",
+                    "label": "Color- Dark brown"
+                },
+                {
+                    "type": "check",
+                    "key": "c_white",
+                    "label": "Color- White"
+                },
+                {
+                    "type": "check",
+                    "key": "c_gray",
+                    "label": "Color- Gray"
+                },
+                {
+                    "type": "check",
+                    "key": "c_blue",
+                    "label": "Color- Blue"
+                },
+                {
+                    "type": "check",
+                    "key": "c_black",
+                    "label": "Color- Black"
+                },
+                {
+                    "type": "check",
+                    "key": "c_red",
+                    "label": "Color- Red"
+                },
+                {
+                    "type": "check",
+                    "key": "c_bluegray",
+                    "label": "Color- Blue/gray"
+                },
+                {
+                    "type": "check",
+                    "key": "c_bluewhite",
+                    "label": "Color- Blue/white"
+                }
+            ]
+        },
+        {
+            "header": "Network",
+            "questions": [
+                {
+                    "type": "check",
+                    "key": "net_typ",
+                    "label": "Network- Typical"
+                },
+                {
+                    "type": "check",
+                    "key": "net_atyp",
+                    "label": "Network- Atypical"
+                },
+                {
+                    "type": "check",
+                    "key": "net_pseudo",
+                    "label": "Network- Pseudonetwork"
+                },
+                {
+                    "type": "check",
+                    "key": "net_neg",
+                    "label": "Network- Negative"
+                },
+                {
+                    "type": "check",
+                    "key": "net_targ",
+                    "label": "Network- Target"
+                }
+            ]
+        },
+        {
+            "header": "Structures",
+            "questions": [
+                {
+                    "type": "check",
+                    "key": "str_strless",
+                    "label": "Structures- Structureless"
+                },
+                {
+                    "type": "check",
+                    "key": "str_hypo_areas",
+                    "label": "Structures- Hypo-pigented areas"
+                },
+                {
+                    "type": "check",
+                    "key": "str_reg_blotch",
+                    "label": "Structures- Regular blotch"
+                },
+                {
+                    "type": "check",
+                    "key": "str_irreg_blotch",
+                    "label": "Structures- Irregular blotch"
+                },
+                {
+                    "type": "check",
+                    "key": "str_bluewhite",
+                    "label": "Structures- Blue/white veil"
+                },
+                {
+                    "type": "check",
+                    "key": "str_bluegraygran",
+                    "label": "Structures- Blue/gray granules"
+                },
+                {
+                    "type": "check",
+                    "key": "str_scar",
+                    "label": "Structures- Scar"
+                },
+                {
+                    "type": "check",
+                    "key": "str_peribrown",
+                    "label": "Structures- peripheral brown structureless areas"
+                },
+                {
+                    "type": "check",
+                    "key": "str_bluegraydots",
+                    "label": "Structures- Blue/Gray dots"
+                },
+                {
+                    "type": "check",
+                    "key": "str_streaks",
+                    "label": "Structures- Streaks"
+                },
+                {
+                    "type": "check",
+                    "key": "str_pseudo",
+                    "label": "Structures- Pseudopods"
+                },
+                {
+                    "type": "check",
+                    "key": "str_radialstream",
+                    "label": "Structures- Radial streaming"
+                },
+                {
+                    "type": "check",
+                    "key": "str_irrstreaks",
+                    "label": "Structures - Irregular streaks"
+                },
+                {
+                    "type": "check",
+                    "key": "str_lines",
+                    "label": "Structures- Lines"
+                },
+                {
+                    "type": "check",
+                    "key": "str_circle",
+                    "label": "Structures- Circles"
+                },
+                {
+                    "type": "check",
+                    "key": "str_clod",
+                    "label": "Structures- Clods"
+                },
+                {
+                    "type": "check",
+                    "key": "str_chrys",
+                    "label": "Structures- Chrysalis"
+                },
+                {
+                    "type": "check",
+                    "key": "str_rhomb",
+                    "label": "Structures- Rhomboid"
+                },
+                {
+                    "type": "check",
+                    "key": "str_regress",
+                    "label": "Structures- Regresssion"
+                },
+                {
+                    "type": "check",
+                    "key": "str_regblackdots",
+                    "label": "Structures- Regular black dots"
+                },
+                {
+                    "type": "check",
+                    "key": "str_regbrdots",
+                    "label": "Structures- Regular brown dots"
+                },
+                {
+                    "type": "check",
+                    "key": "str_irrblackdots",
+                    "label": "Structures- Irregular black dots"
+                },
+                {
+                    "type": "check",
+                    "key": "str_periblack",
+                    "label": "Structures- Peripheral black dots/globules"
+                },
+                {
+                    "type": "check",
+                    "key": "str_irrbrdots",
+                    "label": "Structures- Irregular brown dots"
+                },
+                {
+                    "type": "check",
+                    "key": "str_irrbluedots",
+                    "label": "Structures- Irregular blue dots"
+                },
+                {
+                    "type": "check",
+                    "key": "str_irrred",
+                    "label": "Structures- Irregular red"
+                },
+                {
+                    "type": "check",
+                    "key": "str_regblackglob",
+                    "label": "Structures- Regular black globules"
+                },
+                {
+                    "type": "check",
+                    "key": "str_regbrglob",
+                    "label": "Structures- Regular brown globules"
+                },
+                {
+                    "type": "check",
+                    "key": "str_regblueglob",
+                    "label": "Structures- Regular blue globules"
+                },
+                {
+                    "type": "check",
+                    "key": "str_irrblackglob",
+                    "label": "Structures- Irregular black globules"
+                },
+                {
+                    "type": "check",
+                    "key": "str_irrbrglob",
+                    "label": "Structures- Irregular brown globules"
+                },
+                {
+                    "type": "check",
+                    "key": "str_irrblueglob",
+                    "label": "Structures- Irregular blue globules"
+                },
+                {
+                    "type": "check",
+                    "key": "str_irrbluered",
+                    "label": "Structures- Irregular blue/red"
+                }
+            ]
+        },
+        {
+            "header": "Vessels",
+            "questions": [
+                {
+                    "type": "check",
+                    "key": "ves_comma",
+                    "label": "Vessels- Comma"
+                },
+                {
+                    "type": "check",
+                    "key": "ves_atyp",
+                    "label": "Vessels- Atypical"
+                },
+                {
+                    "type": "check",
+                    "key": "ves_pinkveil",
+                    "label": "Vessels- Pink veil (vascular blush or milky red area)"
+                },
+                {
+                    "type": "check",
+                    "key": "ves_polymorph",
+                    "label": "Vessels- Polymorphous"
+                },
+                {
+                    "type": "check",
+                    "key": "ves_dotted",
+                    "label": "Vessels- Dotted"
+                },
+                {
+                    "type": "check",
+                    "key": "ves_linearbranch",
+                    "label": "Vessels- Linear-branched (arborizing)"
+                },
+                {
+                    "type": "check",
+                    "key": "ves_serp",
+                    "label": "Vessels- Serpentine"
+                },
+                {
+                    "type": "check",
+                    "key": "ves_hel",
+                    "label": "Vessels- Helical/Corkscrew"
+                },
+                {
+                    "type": "check",
+                    "key": "ves_hairpin",
+                    "label": "Vessels- Hairpin/Looped"
+                },
+                {
+                    "type": "check",
+                    "key": "ves_coil",
+                    "label": "Vessels- Coiled/Glomelular"
+                },
+                {
+                    "type": "check",
+                    "key": "ves_milky",
+                    "label": "Vessels- Milky Red Globules"
+                },
+                {
+                    "type": "check",
+                    "key": "ves_clods",
+                    "label": "Vessels- Clods"
+                },
+                {
+                    "type": "check",
+                    "key": "ves_linear",
+                    "label": "Vessels-Linear/Straight"
+                }
+            ]
+        },
+        {
+            "header": "Other",
+            "questions": [
+                {
+                    "type": "check",
+                    "key": "oth_lacuna",
+                    "label": "Other- Lacuna"
+                },
+                {
+                    "type": "check",
+                    "key": "oth_milia",
+                    "label": "Other- Milia cycts"
+                },
+                {
+                    "type": "check",
+                    "key": "oth_comedo",
+                    "label": "Other- Comedo-like openings"
+                },
+                {
+                    "type": "check",
+                    "key": "oth_cereb",
+                    "label": "Other- Cerebriform"
+                },
+                {
+                    "type": "check",
+                    "key": "oth_sharpdemarc",
+                    "label": "Other- Sharp demarcaedborder"
+                },
+                {
+                    "type": "check",
+                    "key": "oth_spoke",
+                    "label": "Other- Spoke wheel"
+                },
+                {
+                    "type": "check",
+                    "key": "oth_moth",
+                    "label": "Other- Moth eaten border"
+                },
+                {
+                    "type": "check",
+                    "key": "oth_finger",
+                    "label": "Other- fingerprint "
+                },
+                {
+                    "type": "check",
+                    "key": "oth_leaf",
+                    "label": "Other- Maple leaf"
+                },
+                {
+                    "type": "check",
+                    "key": "oth_ovoids",
+                    "label": "Other- Ovoids"
+                },
+                {
+                    "type": "check",
+                    "key": "oth_blgrayglob",
+                    "label": "Other- Blue/gray globules"
+                },
+                {
+                    "type": "check",
+                    "key": "oth_ulcer",
+                    "label": "Other- Ulcer"
+                }
+            ]
+        }
+    ]
+}

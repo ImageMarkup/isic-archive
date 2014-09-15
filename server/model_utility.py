@@ -43,7 +43,7 @@ def getAssetStoreForItem(item):
     for f in files:
         firstFile = f
 
-    print firstFile
+    # print firstFile
 
     assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
 
@@ -175,6 +175,11 @@ def getWeightForGroup(groupName):
         weight = 30
     elif groupName == 'Phase 1c':
         weight = 40
+    elif groupName == 'Phase 1d':
+        weight = 50
+    elif groupName == 'Phase 2':
+        weight = 60
+
 
     print 'weight for', groupName, weight, count
     return (count, weight)

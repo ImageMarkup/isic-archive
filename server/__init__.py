@@ -5,11 +5,11 @@ from girder import events
 from provision_utility import initialSetup
 from gallery import GalleryHandler
 from upload import uploadHandler
-from image_utility import zoomifyhandler, thumbnailhandler, fifHandler, annotationHandler, segmentationHandler
+from image_utility import zoomifyhandler, thumbnailhandler, fifHandler, annotationHandler, segmentationSourceHandler, segmentationTileHandler
 from qc import QCHandler
 from task_utility import tasklisthandler, taskCompleteHandler, TaskHandler, devNullEndpoint
 
-from annotate import AnnotateHandler, FillHandler
+from annotate import AnnotateHandler, FillHandler, MapHandler
 
 
 def load(info):
@@ -68,6 +68,9 @@ def load(info):
     # 	uda/annotator -> the reconfigurable image annotator
 
     uda_root.annotate = AnnotateHandler()
+
+    uda_root.map = MapHandler()
+
     uda_root.fill = FillHandler()
 
 
@@ -92,7 +95,10 @@ def load(info):
 
     # item/:id/annotation -> returns the png segmentation (index map as alpha channel)
 
-    info['apiRoot'].item.route('GET', (':id', 'segmentation'), segmentationHandler)
+    info['apiRoot'].item.route('GET', (':id', 'segmentationSource'), segmentationSourceHandler)
+
+    info['apiRoot'].item.route('GET', (':id', 'segmentationTiles'), segmentationTileHandler)
+
 
     # item/:id/zoomify -> returns a zoomify xml if available
 

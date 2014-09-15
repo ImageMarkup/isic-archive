@@ -94,6 +94,10 @@ def initialSetup():
     m.model('group').addUser(phase1c_group, uda_expert)
     m.model('group').updateGroup(phase1c_group)
 
+    phase2_group = makeGroupIfNotPresent('Phase 2', uda_user, 'Per feature annotation')
+    m.model('group').addUser(phase2_group, uda_user)
+    m.model('group').updateGroup(phase2_group)
+
     # create collections and assign group read permissions
 
 
@@ -126,6 +130,7 @@ def initialSetup():
     m.model('collection').setGroupAccess(phase1b_collection, phase1b_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1b_collection, phase1c_group, AccessType.READ, save=True)
 
+
     phase1c_collection = makeCollectionIfNotPresent('Phase 1c', uda_user, 'Images that have passed trained review')
     m.model('collection').setGroupAccess(phase1c_collection, phase0_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1c_collection, phase1a_group, AccessType.READ, save=True)
@@ -137,4 +142,12 @@ def initialSetup():
     m.model('collection').setGroupAccess(phase1d_collection, phase1a_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1d_collection, phase1b_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1d_collection, phase1c_group, AccessType.READ, save=True)
+
+
+    phase2_collection = makeCollectionIfNotPresent('Phase 2', uda_user, 'Images that have completed Phase 1')
+    m.model('collection').setGroupAccess(phase2_collection, phase0_group, AccessType.READ, save=True)
+    m.model('collection').setGroupAccess(phase2_collection, phase1a_group, AccessType.READ, save=True)
+    m.model('collection').setGroupAccess(phase2_collection, phase1b_group, AccessType.READ, save=True)
+    m.model('collection').setGroupAccess(phase2_collection, phase1c_group, AccessType.READ, save=True)
+    m.model('collection').setGroupAccess(phase2_collection, phase2_group,  AccessType.READ, save=True)
 

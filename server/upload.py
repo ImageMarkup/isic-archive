@@ -41,6 +41,9 @@ def createFileInternal(assetstore, filehandle_to_read, file_name):
 
     # write jpeg from zip
 
+    print tmptiffpath
+    print tmppath
+
     fout = open(tmppath, 'w')
 
     buf = filehandle_to_read.read()
@@ -49,10 +52,12 @@ def createFileInternal(assetstore, filehandle_to_read, file_name):
     filehandle_to_read.close()
 
     cmdstr = '/usr/local/bin/vips im_vips2tiff %s %s:jpeg:75,tile:256x256,pyramid,,,,8' % (tmppath, tmptiffpath)
-
+    print cmdstr
     pipe = os.popen(cmdstr)
     for p in pipe:
         print p
+
+
 
     forCheck = open(tmptiffpath, 'r')
     hashBuf = forCheck.read()
@@ -126,7 +131,6 @@ def uploadHandler(event):
 
     if folder['name'] == 'dropzip':
 
-
         if file_info['mimeType'] == 'application/zip':
 
             full_file_path = os.path.join(asset_store_info['root'], file_info['path'])
@@ -142,9 +146,15 @@ def uploadHandler(event):
             # give the file uploader admin access
             m.model('folder').setUserAccess(zipfolder, file_creator, AccessType.ADMIN, save=True)
 
+            print zf.infolist()
+
             for zfile in zf.infolist():
 
+                print zfile.filename
+
                 guessed_mime = mimetypes.guess_type(zfile.filename)
+
+                print '### guessed_mime', guessed_mime
 
                 meta_dict = {}
                 meta_dict['originalMimeType'] = guessed_mime[0]

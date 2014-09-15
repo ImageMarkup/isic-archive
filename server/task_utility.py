@@ -38,6 +38,8 @@ class TaskHandler(object):
             url = '/uda/annotate'
         elif phaseName == 'Phase 1c':
             url = '/uda/annotate'
+        elif phaseName == 'Phase 2':
+            url = '/uda/map'
 
         return url
 
@@ -62,7 +64,7 @@ class TaskHandler(object):
         final_task = {'weight': 0}
 
         for task in task_list:
-            print task
+            # print task
             if(task['count'] > 0 and task['weight'] > final_task['weight']):
                 final_task = task
 
@@ -126,7 +128,7 @@ def tasklisthandler(id, params):
     final_task = {'weight': 0}
 
     for task in task_list:
-        print task
+        # print task
         if(task['count'] > 0 and task['weight'] > final_task['weight']):
             final_task = task
 
@@ -139,6 +141,7 @@ def tasklisthandler(id, params):
 
     for folder in phase_folders:
         items_in_folder = getItemsInFolder(folder)
+        # print '###', folder
         if len(items_in_folder) > target_count:
             target_folder = folder
             target_count = len(items_in_folder)
@@ -154,7 +157,9 @@ def tasklisthandler(id, params):
 
 
 
-    app_base = os.path.join(os.curdir, os.pardir)
+    # app_base = os.path.join(os.curdir, os.pardir)
+    app_base = '/applications'
+
     app_path = os.path.join(app_base, 'girder', 'plugins', 'uda', 'custom', 'config')
 
     # get the appropriate jsno
@@ -180,7 +185,7 @@ def tasklisthandler(id, params):
 
         firstFile = None
         for f in files:
-            print f
+            # print f
             if 'p1a.json' in f['name']:
                 firstFile = f
 
@@ -200,7 +205,7 @@ def tasklisthandler(id, params):
 
         firstFile = None
         for f in files:
-            print f
+            # print f
             if 'p1b.json' in f['name']:
                 firstFile = f
 
@@ -212,6 +217,39 @@ def tasklisthandler(id, params):
 
         return_dict['loadAnnotation'] = True
         return_dict['annotation'] = annotation_str['p1b']['steps']
+
+
+    elif final_task['name'] == 'Phase 2':
+
+        item = m.model('item').load(target_items[0]['_id'], force=True)
+        files = m.model('item').childFiles(item)
+
+        # add annotations
+        firstFile = None
+        for f in files:
+            # print f
+            if 'p1c.json' in f['name']:
+                firstFile = f
+
+        assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
+        file_path = os.path.join(assetstore['root'], firstFile['path'])
+        json_content = open(file_path, 'r')
+        annotation_str = json.load(json_content)
+        json_content.close()
+
+        vars_path = os.path.abspath(os.path.join(app_path, 'phase2-variables.json'))
+
+        fvars = open(vars_path, 'r')
+        fvarlist  = json.load(fvars)
+        fvars.close()
+
+
+
+
+        return_dict['loadAnnotation'] = True
+        return_dict['variables'] = fvarlist
+        return_dict['annotation'] = annotation_str['p1c']['steps']
+
 
 
     else:
@@ -353,6 +391,12 @@ def taskCompleteHandler(id, tasktype, params):
 
                 result = handlePhase1c(markup_dict)
 
+
+            # elif markup_dict['phase'].lower() == 'phase 1d':
+            #
+            #     result = handlePhase1c(markup_dict)
+
+
             else:
 
                 print markup_dict
@@ -449,9 +493,8 @@ def handlePhase1b(markup_dict):
     return handePhaseCore(markup_dict, 'p1b', 'Phase 1c')
 
 def handlePhase1c(markup_dict):
-    return handePhaseCore(markup_dict, 'p1c', 'Phase 1d')
-
-
+    # return handePhaseCore(markup_dict, 'p1c', 'Phase 1d')
+    return handePhaseCore(markup_dict, 'p1c', 'Phase 2')
 
 
 def handePhaseCore(markup_dict, phase_acronym, next_phase_full):
@@ -484,6 +527,18 @@ def handePhaseCore(markup_dict, phase_acronym, next_phase_full):
 
     # make sure it's not in the final project
     del dictionary_to_create[phs]['steps']['2']['markup']['features'][0]['properties']['parameters']['rgb']
+
+
+    # grab the b64 png from the dictionary
+    png_tiles_b64string = markup_dict['steps']['2']['markup']['features'][0]['properties']['parameters']['tiles']
+    # remote the initial data uri details
+    png_tiles_b64string_trim = png_tiles_b64string[22:]
+
+    # make sure it's not in the final project
+    del dictionary_to_create[phs]['steps']['2']['markup']['features'][0]['properties']['parameters']['tiles']
+
+
+
 
     m = ModelImporter()
 
@@ -518,6 +573,13 @@ def handePhaseCore(markup_dict, phase_acronym, next_phase_full):
     png_annotation_data = png_b64string_trim.decode('base64')
 
     png_file = createFileObjectFromData(png_annotation_name, annotated_image, assetstore, png_annotation_data, 'wb')
+
+
+    png_tile_annotation_name = item_name_base + '-tile-%s.png' % (phs)
+    png_tile_annotation_data = png_tiles_b64string_trim.decode('base64')
+
+    png_tile_file = createFileObjectFromData(png_tile_annotation_name, annotated_image, assetstore, png_tile_annotation_data, 'wb')
+
 
 
 

@@ -1,0 +1,10 @@
+[
+    {
+        "step": 0,
+        "title": "Exhaustive variables",
+        "classification": "lesion",
+        "type": "variables",
+        "next": 1,
+        "options" : []
+    }
+]

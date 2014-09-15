@@ -221,11 +221,48 @@ SegmentAnnotator.prototype.getCanvasAsPNG = function(){
     data[4 * i + 0] = this.rgbData[4 * i + 0];
     data[4 * i + 1] = this.rgbData[4 * i + 1];
     data[4 * i + 2] = this.rgbData[4 * i + 2];
+    data[4 * i + 3] = 255;
 
 //    data[4 * i + 0] = label & 255;
 //    data[4 * i + 1] = (label >>> 8) & 255;
 //    data[4 * i + 2] = (label >>> 16) & 255;
-    data[4 * i + 3] = this.indexMap[i];
+//    data[4 * i + 3] = this.indexMap[i];
+  }
+  context.putImageData(imageData, 0, 0);
+  return canvas.toDataURL();
+
+};
+
+SegmentAnnotator.prototype.getTilesAsPNG = function(){
+
+  var canvas = document.createElement('canvas');
+  canvas.width = this.width;
+  canvas.height = this.height;
+
+  var context = canvas.getContext('2d');
+//  var imageData = this.rgbData;
+
+  var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      data = imageData.data;
+
+ console.log('within get segment', this.indexMap.length);
+
+ for (var i = 0; i < this.indexMap.length; ++i) {
+
+//    var label = this.annotations[this.indexMap[i]];
+
+
+//    data[4 * i + 0] = this.rgbData[4 * i + 0];
+//    data[4 * i + 1] = this.rgbData[4 * i + 1];
+//    data[4 * i + 2] = this.rgbData[4 * i + 2];
+
+//    data[4 * i + 0] = label & 255;
+//    data[4 * i + 1] = (label >>> 8) & 255;
+//    data[4 * i + 2] = (label >>> 16) & 255;
+     data[4 * i + 0] = this.indexMap[i];
+     data[4 * i + 1] = this.indexMap[i];
+     data[4 * i + 2] = this.indexMap[i];
+     data[4 * i + 3] = 255;
   }
   context.putImageData(imageData, 0, 0);
   return canvas.toDataURL();
@@ -296,8 +333,12 @@ SegmentAnnotator.prototype._updateAnnotation = function(index, render) {
 SegmentAnnotator.prototype._initializePixelsIndex = function() {
   var i;
   this.pixelsMap = new Array(this.segments);
-  for (i = 0; i < this.segments; ++i)
+
+  console.log('There are ' + this.segments.length + 'segments');
+
+    for (i = 0; i < this.segments; ++i)
     this.pixelsMap[i] = [];
+
   for (i = 0; i < this.indexMap.length; ++i)
     this.pixelsMap[this.indexMap[i]].push(i);
   return this;
@@ -423,6 +464,7 @@ SegmentAnnotator.prototype._importAnnotation = function(url, callback) {
         label = sourceData[offset + 0] |
                 (sourceData[offset + 1] << 8) |
                 (sourceData[offset + 2] << 16);
+
         var count = histogram[label] || 0;
         histogram[label] = ++count;
       }
@@ -628,25 +670,47 @@ window.UDASegment = function(imageURL, options) {
 
     console.log("UDA Segment started");
 
+    var src_image = new Image();
+    var tile_image = new Image();
+
     if (typeof options === 'undefined') {
       options = {};
     }
 
 
+    function onSourceSuccessLoad(_image, options){
+
+
+        tile_image.src = imageURL + "Tiles";
+        tile_image.crossOrigin = null;
+        tile_image.onerror = function() { onErrorImageLoad(_image); };
+        tile_image.onload = function(){ onSuccessImageLoad(_image, tile_image, options); };
+
+
+
+    }
+
     // When image is loaded.
-    function onSuccessImageLoad(image, options) {
+    function onSuccessImageLoad(rgb_image, t_image, options) {
 
+        console.log('tile load');
+
+        // create canvas
         var canvas = document.createElement('canvas');
-        canvas.width = image.width;
-        canvas.height = image.height;
+        canvas.width = rgb_image.width;
+        canvas.height = rgb_image.height;
+
+        // draw rgb to canvas and grab rgb data
         var context = canvas.getContext('2d');
-        context.drawImage(image, 0, 0);
+        context.drawImage(rgb_image, 0, 0);
+        var imageData = context.getImageData(0, 0, rgb_image.width, rgb_image.height);
+        var rgbData = new Uint8Array(imageData.data);
 
-        var imageData = context.getImageData(0, 0, image.width, image.height);
+        // draw tile data to canvas
+        context.drawImage(t_image, 0,0);
+        var tileData = context.getImageData(0, 0, t_image.width, t_image.height);
 
-//        console.log(imageData);
-
-        var sourceData = new Uint8Array(imageData.data);
+        var sourceData = new Uint8Array(tileData.data);
 
         var indexMap = new Uint8Array(sourceData.length / 4);
 
@@ -654,47 +718,47 @@ window.UDASegment = function(imageURL, options) {
 
         for(var i=0;i < indexMap.length; i++){
 
-            var indexValue = sourceData[i*4 + 3];
+            var indexValue = sourceData[i*4 + 0];
+
+
 
             if (indexValue > numSegments){
                 numSegments = indexValue;
             }
-
+//
             // copy index to indexmap from Alpha channel
             indexMap[i] = indexValue;
-
+//
             // set alpha channel to full opacity
-            sourceData[i*4 + 3] = 255
+//            sourceData[i*4 + 3] = 255
 
         }
+
+
+//        console.log(indexMap)
+
+//        console.log(sourceData);;
 
         options.callback({
             width: imageData.width,
             height: imageData.height,
             size: numSegments + 1,
             indexMap: indexMap,
-            rgbData: sourceData
+            rgbData: rgbData
             });
     }
 
       // When image is invalid.
-    function onErrorImageLoad() {
+    function onErrorImageLoad(image) {
         alert('Failed to load an image: ' + image.src);
     }
 
-    console.log(imageURL);
 
-    var image = new Image();
-    image.src = imageURL;
-    image.crossOrigin = null;
-    image.onerror = function() { onErrorImageLoad(image); };
-    image.onload = function() { onSuccessImageLoad(image, options); };
-
-
-
-
-//    options.callback(this);
-    // the lateral side of a rectangle superpixel in pixels.
+    src_image.src = imageURL + "Source";
+    src_image.crossOrigin = null;
+    src_image.onerror = function() { onErrorImageLoad(src_image); };
+    src_image.onload = function(){ onSourceSuccessLoad(src_image, options); };
+//    image.onload = function() { onSuccessImageLoad(image, options); };
 
 
   };

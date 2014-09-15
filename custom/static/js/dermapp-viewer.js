@@ -385,6 +385,7 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
                 var self = this;
 
+                console.log('segment url', segmentURL);
 
                 self.segmentannotator = new UDASegmentAnnotator(segmentURL, {
                     regionSize: self.paint_size,
@@ -637,6 +638,7 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
                         'height' : this.segmentannotator.height
                     },
                     rgb : this.segmentannotator.getCanvasAsPNG(),
+                    tiles : this.segmentannotator.getTilesAsPNG(),
                     regionsize: this.paint_size
                 };
 

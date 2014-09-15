@@ -50,8 +50,11 @@ function rgbToHex(r, g, b) {
 // handle window resize events
 function updateLayout() {
 
+
+
     $("#angular_id").height(window.innerHeight);
     $("#annotationView").height(window.innerHeight);
+    $("#toolContainer").height(window.innerHeight);
 
     var scope = angular.element($("#angular_id")).scope();
     scope.safeApply(function(){
@@ -84,6 +87,7 @@ function toggleDebug() {
 }
 
 window.onresize = updateLayout;
+
 
 
 

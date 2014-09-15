@@ -69,7 +69,7 @@ annotationHandler.description = (
 
 
 
-def segmentationHandler(id, params):
+def segmentationSourceHandler(id, params):
 
     # todo : have it pull the appropriate annotation, it current pulls the last one
 
@@ -81,7 +81,34 @@ def segmentationHandler(id, params):
     for f in files:
         # print f
         if f['exts'][0] == 'png':
-            firstFile = f
+            if 'tile' not in f['name']:
+                firstFile = f
+
+    assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
+    file_path = os.path.join(assetstore['root'], firstFile['path'])
+
+    from cherrypy.lib import file_generator
+    cherrypy.response.headers['Content-Type'] = "image/png"
+    png_handle = open(file_path, 'rb')
+    return file_generator(png_handle)
+
+
+def segmentationTileHandler(id, params):
+
+    # todo : have it pull the appropriate annotation, it current pulls the last one
+
+    m = ModelImporter()
+    item = m.model('item').load(id, force=True)
+    files = m.model('item').childFiles(item)
+
+    firstFile = None
+    for f in files:
+        # print f
+        if f['exts'][0] == 'png':
+            print f.keys()
+            if 'tile' in f['name']:
+                firstFile = f
+
 
     assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
     file_path = os.path.join(assetstore['root'], firstFile['path'])
@@ -99,7 +126,14 @@ def segmentationHandler(id, params):
 
 
 
-segmentationHandler.description = (
+segmentationTileHandler.description = (
+    Description('Retrieve the annotation json for a given item.')
+    .param('id', 'The item ID', paramType='path')
+    .errorResponse())
+
+
+
+segmentationSourceHandler.description = (
     Description('Retrieve the annotation json for a given item.')
     .param('id', 'The item ID', paramType='path')
     .errorResponse())

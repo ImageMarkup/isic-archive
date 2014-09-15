@@ -12,16 +12,13 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
         $scope.step = -1; // current step
         $scope.totalSteps = 0; // total number of steps
-
         $scope.step_config = undefined; // current step configuration
-
         $scope.tool_bar_state = undefined; // current toolbar configuration (nested under step)
-
         $scope.step_options = undefined; // list of options to select (if step has any)
 
+        $scope.variables = undefined;
 
         $scope.formatter = new ol.format.GeoJSON();
-
 
         $scope.clearAnnotation = function(){
             $scope.review_mode = false;
@@ -31,33 +28,22 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
         };
         $scope.clearAnnotation();
 
-        // annotation instance variables
-
-        $scope.image_index = -1;
-
         $scope.current_image = $rootScope.active_image;
 
         // annotation tool parameters
-
         $scope.draw_mode = 'navigate'; //
 
         $scope.magicwand_tolerance = 50;
-
         $scope.regionpaint_size = 70;
 
         $scope.runningSegmentation = false;
-
         $rootScope.showingSegmentation = false;
-
 
         $rootScope.$watch('user', function(newUser, oldUser){
 
             if(newUser['_id']){
-
                 $scope.tasklist_url = '/api/v1/user/' + newUser['_id'] + '/tasklist';
-
                 $scope.loadTasklist();
-
             }
         });
 
@@ -79,6 +65,11 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                         $scope.current_annotation.steps = response.data.annotation;
                         console.log($scope.current_annotation);
                     }
+
+
+                    $scope.variables = response.data.variables;
+
+                    console.log($scope.variables);
 
                     $scope.nextStep();
 
