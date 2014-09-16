@@ -2,7 +2,7 @@
 'use strict';
 
 // Initialization of angular root application
-var derm_app = angular.module('DermApp', ['ui.bootstrap', 'ngSanitize', 'xml']);
+var derm_app = angular.module('DermApp', ['ui.bootstrap', 'ngSanitize', 'xml', 'ui.multiselect']);
 derm_app.value( "ol", ol );
 
 // Initialization of angular app controller with necessary scope variables. Inline declaration of external variables

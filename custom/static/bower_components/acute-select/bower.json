@@ -1,0 +1,25 @@
+{
+  "author": "bitsofalex",
+  "name": "acute-select",
+  "description": "Fork of acute-select by john-oc",
+  "version": "0.1.0",
+  "homepage": "https://github.com/bitsofalex/acute-select",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/bitsofalex/acute-select.git"
+  },
+  "main": [
+    "./acute.select/acute.select.js",
+    "./acute.select/acute.select.div.css",
+    "./acute.select/div-template/acute.select.htm"
+  ],
+  "dependencies": {
+    "angular": "1.2.7",
+    "angular-touch": "1.2.7"
+  },
+  "devDependencies": {
+    "angular": "1.2.7",
+    "angular-touch": "1.2.7",
+    "angular-mocks": "1.2.7"
+  }
+}

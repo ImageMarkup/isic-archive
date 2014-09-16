@@ -1,0 +1,29 @@
+{
+  "name": "amitava82/angular-multiselect",
+  "main": "src/multiselect.js",
+  "description": "Native AngularJS multiselect directive",
+  "license": "MIT",
+  "ignore": [
+    ".jshintrc",
+    "**/*.txt"
+  ],
+  "dependencies": {
+    "angular": ">=1.0.4"
+  },
+  "keywords": [
+    "angularjs",
+    "multiselect",
+    "select"
+  ],
+  "homepage": "https://github.com/amitava82/angular-multiselect",
+  "_release": "bac4ab42f3",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "bac4ab42f3255233c84de06722df88fbfb1fdc35"
+  },
+  "_source": "git://github.com/amitava82/angular-multiselect.git",
+  "_target": "*",
+  "_originalSource": "amitava82-angular-multiselect",
+  "_direct": true
+}

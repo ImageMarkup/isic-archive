@@ -3,8 +3,10 @@
  */
 
 var _labels = [
-    { name: 'background', color: [255, 255, 255]},
-    { name: 'foreground', color: [255, 255, 255]},
+    { name : 'background', color: [255, 255, 255]},
+    { name : 'foreground', color: [255, 255, 255]},
+    { name : 'definite', color: [200, 0, 0]},
+    { name : 'possible', color: [0, 200, 0]},
     { name : '10', color: [251, 17, 13], icon: "static/derm/images/5-lines.jpg", title: 'Lines' },
     { name : '20', color: [251, 18, 13], icon: "static/derm/images/5-lines_reticular.jpg", title: 'Reticular' },
     { name : '21', color: [251, 19, 13], icon: "static/derm/images/5-lines_reticular_regular.jpg", title: 'Regular' },

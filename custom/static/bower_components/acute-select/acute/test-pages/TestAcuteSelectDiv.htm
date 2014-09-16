@@ -1,0 +1,123 @@
+﻿<!DOCTYPE html>
+<html id="ng-app" ng-app="acuteSelectTest">
+<head>
+    <title></title>
+    <!--[if lte IE 8]>
+      <script type="text/javascript" src="/Scripts/json2.js"></script>
+        document.createElement('ac-select');
+      </script>
+    <![endif]-->
+
+    <script type="text/javascript" src="../lib/angular.1.2.1.js"></script>
+    <script type="text/javascript" src="../acute.select/acute.select.js"></script>
+    <link href="../acute.select/acute.select.div.css" rel="stylesheet" />
+    <script type="text/javascript" src="TestAcuteSelectDiv.js"></script>
+    <style>
+        body {
+            padding: 10px;
+        }
+        body, input, select {
+            font-family: Arial;
+            font-size: 12px;
+        }
+        .stateList {
+            width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div ng-controller="MainCtrl">
+
+        <p>{{message}}</p>
+
+        Basic mode without search<br />
+        <!-- N.B. don't use self-closing select as this results in spurious mark-up! -->
+        <select class="ac-select" ac-model="selectedColour" ac-options="c.name for c in colours" 
+            ac-settings="{ showSearchBox: false }" ac-change="colourChanged(value)"></select>  Colour selected: {{selectedColour}}
+        <br /><br />
+
+        No items<br />
+        <select class="ac-select" ac-model="selectedThing" ac-options="thing for thing in things" 
+            ac-settings="{ showSearchBox: false, noItemsText: 'No data.' }" ac-change="colourChanged(value)"></select>
+        <br /><br />
+
+        Combo mode. Model object separate from data source. LoadOnOpen<br />
+        <select class="ac-select" ac-model="disconnectedColour" ac-options="c.name for c in getColours()" 
+            ac-settings="{ comboMode: true, loadOnOpen: true }" ac-key="name"></select>  Colour selected: {{disconnectedColour.name}}
+        <br /><br />
+
+        Inside an ng-switch<br />
+        <div ng-switch="ngSwitchValue">
+            <div ng-switch-when="value">
+                <select class="ac-select stateList" ac-model="state2" ac-options="s.name for s in getAllStates()" 
+                    ac-settings="{loadOnOpen: true, comboMode:false, minWidth: '300px' }"></select><br/>State selected: {{state2.name}}
+            </div>
+        </div>
+        <br /><br />
+
+        Allow custom text<br />
+        <select class="ac-select" ac-model="selectedColour" ac-options="c.name for c in colours" ac-settings="{ allowCustomText: true }"></select>  Colour selected: {{selectedColour}}
+        <br /><br />
+
+        Search mode with load when created<br />
+        <select class="ac-select stateList" ac-model="state1" ac-options="s.name for s in getAllStates()" 
+            ac-settings="{loadOnCreate: true, comboMode:false, minWidth: '300px' }"></select><br/>State selected: {{state1.name}}
+        <br /><br />
+
+        Search mode with load when created and selecting by key<br />
+        <select class="ac-select stateList" ac-model="independentState" ac-options="s.name for s in getAllStates()" ac-key="id" 
+            ac-settings="{loadOnCreate: true, comboMode:false, minWidth: '300px' }"></select><br/>State selected: {{independentState.name}}
+        <br /><br />
+
+        Search mode with load on open<br />
+        <select class="ac-select stateList" ac-model="state2" ac-options="s.name for s in getAllStates()" 
+            ac-settings="{loadOnOpen: true, comboMode:false, minWidth: '300px' }"></select><br/>State selected: {{state2.name}}
+        <br /><br />
+
+        Combo mode - load when user types<br />
+        <select class="ac-select stateList" ac-model="state3" ac-options="s.name for s in getStates()" 
+            ac-settings="{comboMode:true, noItemsText:'No matches found', minWidth: '300px'}"></select><br/>State selected: {{state3.name}}
+        <br /><br />
+
+        Combo mode with initial selection and load on open; allowClear = false; filter mode: contains<br />
+        <select class="ac-select stateList" ac-model="state4" ac-options="s.name for s in getAllStates()" 
+            ac-settings="{ initialText: '{{state4.name}}', comboMode:true, loadOnOpen: true, minWidth: '300px', allowClear: false }"></select><br/>State selected: {{state4.name}}
+
+        <br /><br />
+        Paging:<br />
+        <select class="ac-select stateList" ac-model="state5" ac-options="s.name for s in getStatesPaged()" 
+            ac-settings="{noItemsText:'No matches found', minWidth: '300px', itemsInView: 10, minSearchLength: 0 }"></select><br/>State selected: {{state5.name}}
+        <br /><br />
+
+        Paging with first page of data loading when dropdown opens:<br />
+        <select class="ac-select stateList" ac-model="state6" ac-options="s.name for s in getStatesPaged()" 
+            ac-settings="{noItemsText:'No matches found', minWidth: '300px', itemsInView: 10, minSearchLength: 0, loadOnOpen: true }"></select><br/>State selected: {{state6.name}}
+        <br /><br />
+
+        Search mode with load on open - as a custom element. allowClear = false<br />
+        <ac-select class="stateList" ac-model="state7" ac-options="s.name for s in getAllStates()" 
+            ac-settings="{  initialText: '{{state7.name}}', allowClear: false, loadOnOpen: true, comboMode:false, minWidth: '300px' }"></ac-select><br/>State selected: {{state7.name}}
+        <br /><br />
+
+
+        Search mode with load on create - as a custom element<br />
+        <ac-select class="stateList" ac-model="state8" ac-options="s.name for s in getAllStates()" 
+            ac-settings="{loadOnCreate: true, comboMode: false, minWidth: '300px' }"></ac-select><br/>State selected: {{state8.name}}
+        <br /><br />
+
+    </div>
+    <div>
+        <select>
+            <option>Normal Select Box 1</option>
+            <option>red</option>
+            <option>black</option>
+            <option>yellow</option>
+            <option>orange</option>
+            <option>blue</option>
+            <option>brown</option>
+            <option>green</option>
+            <option>white</option>
+        </select>
+    </div>
+</body>
+</html>

@@ -139,13 +139,9 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
                     self.last_click_location = click_coords;
 
-//                    featuresAtPoint(pixel);
-
                 } else if (self.draw_mode == 'pointlist') {
 
                     self.last_click_location = evt.coordinate;
-
-//                    self.addPoint(evt.coordinate);
 
                 } else if (self.draw_mode == 'autofill') {
 
@@ -164,7 +160,6 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
               var pixel = self.map.getEventPixel(evt.originalEvent);
               self.featuresAtPoint(pixel);
             });
-
         }
 
 
@@ -173,13 +168,10 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
         olViewer.prototype = {
 
             clearCurrentImage : function(){
-
                 if(this.image_layer){
                     this.map.removeLayer(this.image_layer);
                 }
-
             },
-
 
             hasLayerAnnotations : function() {
                 return this.vector_source.getFeatures().length > 0;
@@ -195,13 +187,9 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
                         constrainResolution: false
                     }
                 );
-
-//                this.map.getView().fitExtent(featuresExtent, this.map.getSize());
             },
 
             featuresAtPoint: function(pixel){
-
-//                console.log(pixel);
 
                   var feature = this.map.forEachFeatureAtPixel(pixel, function(feature, layer) {
                     return feature;
@@ -259,14 +247,6 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
             getFeatures : function(){
                 return this.vector_source.getFeatures();
-//                var vector_features = this.vector_source.getFeatures();
-//
-//                if (vector_features.length){
-//                    return vector_features;
-//                }
-//                else{
-//                    return this.getSegmentationPackage();
-//                }
             },
 
             setAnnotations : function(features){
@@ -275,14 +255,6 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
             	}
             },
 
-//            clearTemporaryAnnotations : function(){
-//
-//                // temporary annotations are created
-//				this.temporary_annotations = {
-//                    features : [],
-//	                polygons : []
-//	            };
-//            },
 
             clearLayerAnnotations : function(step){
                 this.vector_source.clear();
@@ -294,11 +266,11 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
                 var extent = this.map.getView().calculateExtent(this.map.getSize());
                 var tr = ol.extent.getTopRight(extent);
                 var bl = ol.extent.getBottomLeft(extent);
-                var segmenturl = 'segment'
+                var segmenturl = 'segment';
 
                 var msg = {};
-                msg['image'] = annotation
-                msg['extent'] = [tr, bl]
+                msg['image'] = annotation;
+                msg['extent'] = [tr, bl];
 
                 var self = this;
                 // interesting hack to get the UI to update without external scopy applys
@@ -308,14 +280,14 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
                     self.vector_source.clear();
 
-                    var f = new ol.format.GeoJSON()
+                    var f = new ol.format.GeoJSON();
 
                     for(var i=0;i<response.features.length;i++){
 
-                        var jsObject = JSON.parse(response.features[i])
+                        var jsObject = JSON.parse(response.features[i]);
 
-                        var label = _labels[parseInt(jsObject['properties']['labelindex'])]
-                        jsObject['properties']['label'] = label
+                        var label = _labels[parseInt(jsObject['properties']['labelindex'])];
+                        jsObject['properties']['label'] = label;
 
                         var hexcolor = rgbToHex(label['color'][0], label['color'][1], label['color'][2])
                         var rgbcolor = 'rgba(' + label['color'][0] + ',' + label['color'][1] + ',' + label['color'][2] + ',0.0)';
@@ -327,17 +299,9 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
                         var featobj = f.readFeature(jsObject);
 
-//                        console.log(featobj)
-//                        console.log(featobj.getProperties())
-
                         self.vector_source.addFeature(featobj)
 
                     }
-
-//                    $("#annotatorcontainer").hide();
-
-
-//                    self.segmentannotator.container.hidden = true;
 
                     // manually request an updated frame async
                     self.map.render()
@@ -586,25 +550,13 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
                         var iconpath = "static/derm/images/lesion.jpg";
 
-                        console.log(featobj);
-
-
                         featobj.setProperties({
                             'title' : self.draw_label,
                             'icon' : iconpath
                         });
 
-                        console.log(featobj);
-//
-//                        featobj.setValues({
-//                            'title' : self.draw_label,
-//                            'icon' : iconpath
-//                        });
-
                         self.vector_source.addFeature(featobj)
-
                     }
-
                     // manually request an updated frame async
                     self.map.render()
 

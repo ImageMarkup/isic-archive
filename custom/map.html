@@ -14,7 +14,7 @@
 
     <link rel=stylesheet type=text/css href="/uda/static/bower_components/flatstrap/dist/css/bootstrap.min.css">
     <link rel=stylesheet type=text/css href="/uda/static/bower_components/font-awesome/css/font-awesome.min.css">
-
+    <!--<link rel=stylesheet type=text/css href="/uda/static/bower_components/amitava82-angular-multiselect/src/style.css">-->
 
     <!--[if lt IE 9]>
 <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -28,6 +28,8 @@
     <script src="/uda/static/bower_components/angular-sanitize/angular-sanitize.min.js"></script>
     <script src="/uda/static/bower_components/angular-xml/angular-xml.min.js"></script>
     <script src="/uda/static/bower_components/mousetrap/mousetrap.min.js"></script>
+
+    <script src="/uda/static/bower_components/amitava82-angular-multiselect/src/multiselect-tpls.js"></script>
 
 
     <script type="text/javascript" src="/uda/static/js/ol.js"></script>
@@ -58,6 +60,14 @@
 
             height: 600px;
             overflow: scroll;;
+        }
+
+        .panel-body {
+            background-color: #333;
+        }
+
+        .selected {
+            color: #cc0000;
         }
 
     </style>
@@ -91,57 +101,12 @@
                 </script>
 
 
-                 <script type="text/ng-template" id="field_renderer.html">
-
-                     <h3>{{group.header}}</h3>
-
-                     <div ng-repeat="question in group.questions">
-
-                         <div ng-switch="question.type">
-                             <div ng-switch-when="select">
-
-                                 <div>Select {{question.name}}</div>
-
-
-                             </div>
-
-                             <div ng-switch-when="textarea">
-
-                                <div>Textarea {{question.name}}</div>
-                                 <textarea class="form-control" rows="3"></textarea>
-
-                             </div>
-
-                             <div ng-switch-when="check">
-
-                                 <!--<div class="form-group">-->
-                                    <!--<div class="col-sm-offset-1 col-sm-10">-->
-                                      <!--<div class="checkbox">-->
-                                        <!--<label>-->
-                                          <input type="checkbox">{{question.label}}
-                                        <!--</label>-->
-                                      <!--</div>-->
-                                    <!--</div>-->
-                                  <!--</div>-->
-
-                             </div>
-
-                             <div ng-switch-default>
-                                <div>{{question.type}}</div>
-
-                             </div>
-
-                         </div>
-                     </div>
-
-
-                </script>
 
 
 
 
                 <div class="isichead">
-                    <div class="isictitle">ISIC Annotation Tool : Phase 2</div>
+                    <div class="isictitle">ISIC Annotation Tool : Exhaustive Annotation</div>
 
                     <div class="btn-group btn-group-block">
                         <div class="btn">User: {{ user.login }}</div>
@@ -156,180 +121,89 @@
 
                 <!-- Step content -->
 
-                <div class="" ng-repeat="(key, value) in decision_tree">
+                <div class="step-header">
 
-                    <div ng-show="smartShowHeader(key)" class="">
-
-                        <div class="step-header">
-
-                            <div class="btn-group">
-
-                                <div ng-click="gotoStep(key)" ng-class="stepHasAnnotations(key) ? 'btn labelgreen' : 'btn'">
-                                    {{value.title}}
-                                </div>
-
-                            </div>
-
-                        <!--<div class="btn-group pull-right">-->
-                            <!--<div ng-click="deleteSaved(key)" class="btn" ng-show="stepHasAnnotations(key)">-->
-                                <!--<i class="fa fa-trash-o fawhite" tooltip-placement="left" tooltip="Delete step-->
-                            <!--annotations"></i>-->
-                            <!--</div>&nbsp;-->
-                        <!--</div>-->
-
-                            <!--<div ng-show="current_annotation.steps[key]" class="markupwell">-->
-                                <!--<div class="btn-group">-->
-                                    <!--<div class="hideli markupsmalllabel btn btn-sm" ng-repeat="feature in current_annotation.steps[key].markup.features">-->
-                                    <!--<span class="label label-default">{{feature.geometry.type}}&nbsp;</span><span class="label label-info">&nbsp;{{feature.properties.title}}</span>-->
-                                    <!--</div>-->
-                                <!--</div>-->
-                            <!--</div>-->
-                        </div>
-
-
-
-
-
-                    </div>
-
-
-
-                    <div ng-show="smartShowContent(key)" class="step-content">
-
-                        <div class="btn-group content-group">
-
-                            <div ng-repeat="group in variables.groups" ng-include="'field_renderer.html'"></div>
-
-                        </div>
-
-
-                        <!--<div class="btn-group content-group" ng-show="compareState('spconfirm', tool_bar_state)">-->
-
-                            <!--<div class="btn btn-primary" ng-click="increaseParameter()">-->
-                                <!--<i class="fa fa-chevron-up"></i>-->
-                            <!--</div>-->
-                            <!--<div class="btn btn-primary" ng-click="decreaseParameter()">-->
-                                <!--<i class="fa fa-chevron-down"></i>-->
-                            <!--</div>-->
-
-                            <!--<div class="btn" disabled>Tolerance:-->
-                                <!--<b>{{regionpaint_size}}</b>-->
-                            <!--</div>-->
-                        <!--</div>-->
-
-
-                        <!--<div class="btn-group content-group" ng-show="compareState('rppaint', tool_bar_state)">-->
-
-                            <!--<div class="btn" ng-show="drawModeIs('paintbrush')" ng-click="navMode()">-->
-                                <!--Hide contours-->
-                            <!--</div>-->
-                            <!--<div class="btn" ng-show="drawModeIs('navigate')" ng-click="drawMode()">-->
-                                <!--Show contours-->
-                            <!--</div>-->
-
-                            <!--<div class="btn btn-inverse" disabled style="max-width: 200px;">-->
-                                <!--{{select_detail.title}}-->
-                            <!--</div>-->
-
-                            <!--<div class="btncontainer">-->
-                                <!--<img class="btnimage" ng-src="{{select_detail.url}}" />-->
-                            <!--</div>-->
-                        <!--</div>-->
-
-                        <!--<div class="btn-group content-group" ng-show="compareState('rpreview', tool_bar_state)">-->
-
-                            <!--<div class="btn" ng-click="runRegionPaint()" ng-show="select_detail">-->
-                                <!--Edit labels-->
-                            <!--</div>-->
-                        <!--</div>-->
-
-
-                        <!--<div class="btn-group content-group" ng-show="compareState('selectpbn', tool_bar_state)">-->
-                            <!--<div class="btn btn-inverse" ng-click="nextStep()">-->
-                                <!--<i class="fa fa-check-square" tooltip-placement="right" tooltip="No details to-->
-                               <!--annotate"></i>-->
-                            <!--</div>-->
-                        <!--</div>-->
-
-
-
-
-
-                        <!--<div class="btn-group pull-right content-group" ng-show="compareState('rppaint', tool_bar_state)">-->
-
-                            <!--<div class="btn btn-inverse" ng-click="finishRegionPaint()">-->
-                                <!--Fill contours-->
-                            <!--</div>-->
-                        <!--</div>-->
-
-                        <!--<div class="btn-group pull-right content-group" ng-show="compareState('mwdefine', tool_bar_state)">-->
-                            <!--<div class="btn btn-inverse" ng-click="manualEdit()">-->
-                                <!--<i class="fa fa-edit" tooltip-placement="left" tooltip="Manual edit"></i>-->
-                            <!--</div>-->
-                        <!--</div>-->
-
-
-                        <!--<div class="btn-group pull-right content-group" ng-show="compareState('selectpbn', tool_bar_state)">-->
-                            <!--<div class="btn btn-inverse" ng-show="runningSegmentation">-->
-                                <!--<i class="fa fa-spinner fa-spin"></i>-->
-                            <!--</div>-->
-
-                            <!--<div class="btn btn-inverse" ng-click="runRegionPaint()">-->
-                                <!--Click to begin-->
-                            <!--</div>-->
-                        <!--</div>-->
-
-
-                        <!--<div class="btn-group content-group" ng-show="compareState('superpixel', tool_bar_state)">-->
-
-
-                            <!--<div class="btn btn-inverse" ng-click="runRegionPaintConfigure()">-->
-                                <!--Click to begin-->
-                            <!--</div>-->
-
-                            <!--<div class="btn btn-inverse" ng-show="runningSegmentation">-->
-                                <!--<i class="fa fa-spinner fa-spin"></i>-->
-                            <!--</div>-->
-                        <!--</div>-->
-
-
-                        <!--<div class="btn-group pull-right content-group" ng-show="compareState('spconfirm', tool_bar_state)">-->
-
-                            <!--<div class="btn btn-inverse" ng-show="runningSegmentation">-->
-                                <!--<i class="fa fa-spinner fa-spin"></i>-->
-                            <!--</div>-->
-
-                            <!--<!--<div class="btn btn-success" ng-click="nextStep()">-->
-                                <!--<!--Next-->
-                            <!--<!--</div>-->
-                        <!--</div>-->
-
-
-
-
-
-
-
+                    <div class="btn-group">
+                        <div class="btn">Lesion-level</div>
                     </div>
                 </div>
 
 
+                <!-- this is messy, could be refactored but the nested models werent' playing nicely-->
+                <div class="step-content">
+
+                     <multiselect class=""
+                        ng-model="annotation_model.pattern"
+                        ms-header="Pattern"
+                        options="c.name for c in annotation_options.lesionlevel[0].questions[0].options"
+                        change="selected()" >
+                        </multiselect>
+
+                    <div class="btn btn-sm pull-right" ng-show="annotation_model.pattern">√</div>
+
+                    <br>
+                     <multiselect class=""
+                        ms-header="Organization"
+                        ng-model="annotation_model.organization"
+                        options="c.name for c in annotation_options.lesionlevel[1].questions[0].options"
+                        change="selected()" >
+                        </multiselect>
+                    <div class="btn btn-sm pull-right" ng-show="annotation_model.organization">√</div>
+
+                    <br>
+                     <multiselect class=""
+                                  ms-header="Shape Symmetry"
+                        ng-model="annotation_model.shapesym"
+                        options="c.name for c in annotation_options.lesionlevel[1].questions[1].options"
+                        change="selected()" >
+                        </multiselect>
+                    <div class="btn btn-sm pull-right" ng-show="annotation_model.shapesym">√</div>
+
+                    <br>
+                     <multiselect class=""
+                                 ms-header="Pattern Symmetry"
+                        ng-model="annotation_model.patternsym"
+                        options="c.name for c in annotation_options.lesionlevel[1].questions[2].options"
+                        change="selected()" >
+                        </multiselect>
+
+                    <div class="btn btn-sm pull-right" ng-show="annotation_model.patternsym">√</div>
+
+                </div>
+
+                <div class="step-header">
+                    <div class="btn-group">
+                        <div class="btn">Regional</div>
+                    </div>
+                </div>
+
+                <div class="step-content">
+
+                    <accordion close-others="true">
+
+                        <accordion-group heading="Color" is-open="true">
+
+                          <div ng-repeat="question in annotation_options.lesionlevel[3].questions" ng-class="{selected: selected_annotation == this}" ng-click="selectTileAnnotation(this)">
+                              {{question.name}}
+                          </div>
+
+                        </accordion-group>
+
+                        <accordion-group heading="{{tile.header}}" ng-repeat="tile in annotation_options.tiles">
+
+                            <div ng-repeat="question in tile.questions" ng-class="{selected: selected_annotation == this}" ng-click="selectTileAnnotation(this)">
+                              {{question.name}}
+                            </div>
+
+                        </accordion-group>
+
+                      </accordion>
+
+                </div>
 
                 <!-- Step footer -->
+                <div class="lowertoolbar" ng-show="false" ng-cloak>
 
-                <div class="lowertoolbar" ng-show="canGoToNextStep()" ng-cloak>
-
-
-                    <div class="btn-group pull-right">
-                        <div class="btn btn-success" ng-click="nextStep()" ng-show="compareState('end', tool_bar_state)">
-                            Submit
-                        </div>
-
-
-                        <div class="btn btn-success" ng-click="nextStep()" ng-show="stepHasAnnotations(step)">
-                            Next
-                        </div>
-                    </div>
                 </div>
             </div>
 

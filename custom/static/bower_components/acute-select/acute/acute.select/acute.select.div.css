@@ -1,0 +1,72 @@
+.select-container {
+	position: relative;
+	display: inline-block;
+	width: 100%;
+}
+
+.select-main {
+}
+
+.select-input, .select-text {
+	border: 1px solid #cccccc;
+	width: 100%;
+	height: 2.05556rem; /* replace with sass */
+	padding: 0.44444rem; /* replace with sass */
+	font-size: inherit;
+}
+
+.select-text {
+	display: inline-block;
+}
+
+.down-button {
+	position: absolute;
+	width: 2.05556rem; /* replace with sass */
+	height: 2.05556rem; /* replace with sass */
+	background: url("data:image/svg+xml;base64, PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSI2cHgiIGhlaWdodD0iM3B4IiB2aWV3Qm94PSIwIDAgNiAzIiBlbmFibGUtYmFja2dyb3VuZD0ibmV3IDAgMCA2IDMiIHhtbDpzcGFjZT0icHJlc2VydmUiPjxwb2x5Z29uIHBvaW50cz0iNS45OTIsMCAyLjk5MiwzIC0wLjAwOCwwICIvPjwvc3ZnPg==") no-repeat;
+	background-position: center;
+	top: 0px;
+	right: 0px;
+}
+
+.select-popup {
+	position: absolute;
+	width: 100%;
+	border: 1px solid #cccccc;
+	background-color: #fff;
+	z-index: 999;
+}
+
+.select-filter {
+}
+
+.select-filter-input {
+	width: 100%;
+	height: 2.05556rem;
+	padding: 0.44444rem;
+	float: left;
+}
+
+.select-filter-add {
+}
+
+.select-options {
+	overflow: auto;
+}
+
+.select-options ul {
+	cursor: pointer;
+	list-style: none;
+	margin: 0;
+}
+
+.select-options li {
+	padding: 0.44444rem; /* replace with sass */
+	border-bottom: 1px solid #ccc;
+}
+
+.select-options li:hover {
+    background-color: #f0f0f0;
+}
+
+

@@ -1,0 +1,23 @@
+<div class="ac-select-wrapper select-container" ng-keydown="keyHandler($event)" ac-focus="wrapperFocus">
+	<div class="select-main" ng-click="mainClick()">
+		<div ng-click="togglePopup()">
+			<div class="select-text-display">
+				<input type="text" class="ac-select-text select-input" ng-show="settings.comboMode" ng-model="comboText" ac-focus="comboFocus"
+					ng-change="comboTextChange()" ng-keydown="keyHandler($event)" placeholder="{{placeholdaerText}}">
+				<span class="select-text" ng-hide="settings.comboMode" ng-bind="confirmedItem.text"></span>
+			</div>
+			<span class="down-button"></span>
+		</div>
+	</div>
+	<div class="select-popup" ng-show="popupVisible">
+		<div class="select-filter" ng-hide="settings.comboMode || !settings.showSearchBox">
+			<input class="select-filter-input">
+			<span class="select-filter-add">+</span>
+		</div>
+		<div class="select-options" ng-style='{ "height": (listHeight + 6) + "px" }' ac-scroll-to="scrollTo" ac-on-scroll="listScrolled()">
+			<ul>
+				<li id="{{item.id}}" ng-repeat="item in items | filter: search" ng-bind="item.text" ng-click="itemClick($index)" ng-model="selectedItem"></li>
+			</ul>
+		</div>
+	</div>
+</div>

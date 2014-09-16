@@ -179,7 +179,7 @@ SegmentAnnotator.prototype.getAllData = function(){
     };
 
     return returndata;
-}
+};
 
 // Get annotation as a PNG data URL.
 SegmentAnnotator.prototype.getAnnotation = function() {
@@ -208,7 +208,6 @@ SegmentAnnotator.prototype.getCanvasAsPNG = function(){
   canvas.height = this.height;
 
   var context = canvas.getContext('2d');
-//  var imageData = this.rgbData;
 
   var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
       data = imageData.data;
@@ -245,41 +244,49 @@ SegmentAnnotator.prototype.getTilesAsPNG = function(){
   var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
       data = imageData.data;
 
- console.log('within get segment', this.indexMap.length);
+ console.log('Get Tiles As PNG, Length: ', this.indexMap.length);
+
+ var _min = 255;
+ var _max = 0;
 
  for (var i = 0; i < this.indexMap.length; ++i) {
 
-//    var label = this.annotations[this.indexMap[i]];
+     if(this.indexMap[i] < _min){
+         _min = this.indexMap[i];
+     }
 
+     if(this.indexMap[i] > _max){
+         _max = this.indexMap[i];
+     }
 
-//    data[4 * i + 0] = this.rgbData[4 * i + 0];
-//    data[4 * i + 1] = this.rgbData[4 * i + 1];
-//    data[4 * i + 2] = this.rgbData[4 * i + 2];
-
-//    data[4 * i + 0] = label & 255;
-//    data[4 * i + 1] = (label >>> 8) & 255;
-//    data[4 * i + 2] = (label >>> 16) & 255;
-     data[4 * i + 0] = this.indexMap[i];
-     data[4 * i + 1] = this.indexMap[i];
-     data[4 * i + 2] = this.indexMap[i];
+     // this should support > 255 indices, now have to support loading
+     data[4 * i + 0] = this.indexMap[i] & 255;
+     data[4 * i + 1] = (this.indexMap[i] >>> 8) & 255;
+     data[4 * i + 2] = (this.indexMap[i] >>> 16) & 255;
      data[4 * i + 3] = 255;
   }
+
+  console.log(_max, _min);
+
   context.putImageData(imageData, 0, 0);
   return canvas.toDataURL();
 
 };
 
 // Given mouse coordinates, get an index of the segment.
+
 SegmentAnnotator.prototype._getSegmentIndex = function(event) {
   var x = event.pageX - this.container.offsetLeft + this.container.scrollLeft,
       y = event.pageY - this.container.offsetTop + this.container.scrollTop;
   x = Math.max(Math.min(x, this.layers.highlight.canvas.width - 1), 0);
   y = Math.max(Math.min(y, this.layers.highlight.canvas.height - 1), 0);
+
   return this.indexMap[y * this.layers.highlight.canvas.width + x];
 };
 
 // Update highlight layers.highlight.canvas.
 SegmentAnnotator.prototype._updateHighlight = function(index) {
+
   var data = this.layers.highlight.image.data,
       i,
       pixels;
@@ -302,11 +309,7 @@ SegmentAnnotator.prototype._updateHighlight = function(index) {
 
 // Update label.
 SegmentAnnotator.prototype._updateAnnotation = function(index, render) {
-
-  // console.log('updating index:', index)
-
-  // console.log(this)
-  // console.log(this.labels)
+  console.log('updating index:', index);
 
   if (render && this.annotations[index] === this.currentLabel)
     return;
@@ -584,9 +587,13 @@ SegmentAnnotator.prototype._initializeHighlightLayer = function() {
   this.layers.highlight.image = imageData;
   var mousestate = { down: false, button: 0 },
   _this = this;
+
   // On mousemove or mouseup.
   function updateIfActive(event) {
+
     var segmentId = _this._getSegmentIndex(event);
+    console.log(segmentId);
+
     _this._updateHighlight(segmentId);
     if (mousestate.down) {
       var label = _this.currentLabel;
@@ -608,7 +615,11 @@ SegmentAnnotator.prototype._initializeHighlightLayer = function() {
   this.layers.highlight.canvas.addEventListener('mousedown', function(event) {
     mousestate.down = true;
     mousestate.button = event.button;
+
+    console.log(event);
+
   });
+
 
   // Mouseup.
   window.addEventListener('mouseup', function(event) {
@@ -680,13 +691,10 @@ window.UDASegment = function(imageURL, options) {
 
     function onSourceSuccessLoad(_image, options){
 
-
         tile_image.src = imageURL + "Tiles";
         tile_image.crossOrigin = null;
         tile_image.onerror = function() { onErrorImageLoad(_image); };
         tile_image.onload = function(){ onSuccessImageLoad(_image, tile_image, options); };
-
-
 
     }
 
@@ -718,26 +726,16 @@ window.UDASegment = function(imageURL, options) {
 
         for(var i=0;i < indexMap.length; i++){
 
-            var indexValue = sourceData[i*4 + 0];
-
-
+            // unconvert from multichannel index encoding
+            var indexValue = sourceData[i*4 ] + (256 * sourceData[i*4+1]) + (256*256 * sourceData[i*4 + 2]);
 
             if (indexValue > numSegments){
                 numSegments = indexValue;
             }
-//
+
             // copy index to indexmap from Alpha channel
             indexMap[i] = indexValue;
-//
-            // set alpha channel to full opacity
-//            sourceData[i*4 + 3] = 255
-
         }
-
-
-//        console.log(indexMap)
-
-//        console.log(sourceData);;
 
         options.callback({
             width: imageData.width,
@@ -748,22 +746,18 @@ window.UDASegment = function(imageURL, options) {
             });
     }
 
-      // When image is invalid.
+    // When image is invalid.
     function onErrorImageLoad(image) {
         alert('Failed to load an image: ' + image.src);
     }
-
 
     src_image.src = imageURL + "Source";
     src_image.crossOrigin = null;
     src_image.onerror = function() { onErrorImageLoad(src_image); };
     src_image.onload = function(){ onSourceSuccessLoad(src_image, options); };
-//    image.onload = function() { onSuccessImageLoad(image, options); };
 
 
   };
-
-
 
 
 UDASegmentAnnotator = function(segmentation_url, options) {
