@@ -113,7 +113,8 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
                 }
 
-                e.feature.setValues(properties);
+//                e.feature.setValues(properties);
+                e.feature.setProperties(properties);
 
 //                console.log(e.feature.getProperties())
                 // need to manually update the angular state, since they're not directly linked
@@ -185,9 +186,17 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
             },
 
             moveToFeature: function(feature){
-                var featuresExtent = ol.extent.createEmpty();
-                ol.extent.extend(featuresExtent, feature.getGeometry().getExtent());
-                this.map.getView().fitExtent(featuresExtent, this.map.getSize());
+
+                this.map.getView().fitGeometry(
+                    feature.getGeometry(),
+                    this.map.getSize(),
+                    {
+                        padding: [120, 20, 20, 20],
+                        constrainResolution: false
+                    }
+                );
+
+//                this.map.getView().fitExtent(featuresExtent, this.map.getSize());
             },
 
             featuresAtPoint: function(pixel){
@@ -569,15 +578,28 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
                     for(var i=0;i<response.features.length;i++){
 
-                        var jsObject = response.features[i]
+                        var jsObject = response.features[i];
+
                         var featobj = f.readFeature(jsObject);
+
+                        featobj.setId(i);
 
                         var iconpath = "static/derm/images/lesion.jpg";
 
-                        featobj.setValues({
+                        console.log(featobj);
+
+
+                        featobj.setProperties({
                             'title' : self.draw_label,
                             'icon' : iconpath
                         });
+
+                        console.log(featobj);
+//
+//                        featobj.setValues({
+//                            'title' : self.draw_label,
+//                            'icon' : iconpath
+//                        });
 
                         self.vector_source.addFeature(featobj)
 
@@ -710,7 +732,7 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
                     self.nativeSize = metadata.max_size;
 
-                    self.view = new ol.View2D({
+                    self.view = new ol.View({
                       projection: self.proj,
                       center: self.imageCenter,
                       zoom: 2,
