@@ -36,7 +36,7 @@
     <script type="text/javascript" src="/uda/static/js/pf-segmentation.js"></script>
     <script type="text/javascript" src="/uda/static/js/slic-segmentation.js"></script>
 
-    <script type="text/javascript" src="/uda/static/js/segment-annotator.js"></script>
+    <script type="text/javascript" src="/uda/static/js/segment-filled.js"></script>
 
     <script type="text/javascript" src="/uda/static/js/dermapp-phase2.js"></script>
 
@@ -45,10 +45,7 @@
     <script type="text/javascript" src="/uda/static/js/dermapp-viewer.js"></script>
 
     <script type="text/javascript" src="/uda/static/js/dermapp-variable-map.js"></script>
-
     <script type="text/javascript" src="/uda/static/js/dermapp-annotationview.js"></script>
-
-
 
     <link rel=stylesheet type=text/css href="/uda/static/css/ol.css" />
     <link rel=stylesheet type=text/css href="/uda/static/css/derm.css" />
@@ -67,8 +64,15 @@
         }
 
         .selected {
-            color: #cc0000;
+            weight: 700;
+            width: 100%;
+            color: #ffcc00;
         }
+
+        .colorhover:hover {
+            color: #ffcc00;
+        }
+
 
     </style>
 </head>
@@ -174,25 +178,72 @@
                 <div class="step-header">
                     <div class="btn-group">
                         <div class="btn">Regional</div>
+
+                    </div>
+
+                    <div class="btn-group pull-right" ng-hide="showReview">
+                        <label class="btn btn-inverse">Confidence</label>
+                        <label class="btn" ng-model="certaintyModel" btn-radio="'definite'">100%</label>
+                        <label class="btn" ng-model="certaintyModel" btn-radio="'possible'">50%?</label>
                     </div>
                 </div>
 
-                <div class="step-content">
+                <div class="step-content" ng-hide="showReview">
+                    <input type="text" class="form-control" ng-model="filterval" placeholder="Filter">
+                </div>
+
+                <div class="step-content" ng-show="showReview" ng-cloak>
+
+                    <accordion close-others="false">
+
+                        <accordion-group heading="Color" is-open="true">
+                          <div class="colorhover" ng-repeat="question in annotation_options.lesionlevel[3].questions" ng-class="{selected: selected_annotation == this}"  ng-show="hasValidTile(question.id)" ng-mouseover="hoverTiles(question)">
+                                <span class="pull-right" ng-show="hasValidTile(question.id)">√</span>{{question.name}}
+                          </div>
+                        </accordion-group>
+
+                        <accordion-group heading="{{tile.header}}" ng-repeat="tile in annotation_options.tiles" is-open="true">
+                            <div class="colorhover" ng-repeat="question in tile.questions" ng-class="{selected: selected_annotation == this}"   ng-show="hasValidTile(question.id)" ng-mouseover="hoverTiles(question)">
+                                <span class="pull-right " ng-show="hasValidTile(question.id)">√</span>{{question.name}}
+                            </div>
+                        </accordion-group>
+
+                        <accordion-group heading="Search" ng-show="filterval.length" is-open="true">
+
+                            <div ng-repeat="tile in annotation_options.tiles">
+                                <div class="colorhover" ng-repeat="question in tile.questions" ng-class="{selected: selected_annotation == this}"  ng-show="hasValidTile(question.id)" ng-mouseover="hoverTiles(question)">
+                                    <span class="pull-right" ng-show="hasValidTile(question.id)">√</span>{{question.name}}
+                                </div>
+                            </div>
+
+                        </accordion-group>
+
+                      </accordion>
+
+                </div>
+
+                <div class="step-content" ng-hide="showReview" ng-cloak>
 
                     <accordion close-others="true">
 
                         <accordion-group heading="Color" is-open="true">
-
                           <div ng-repeat="question in annotation_options.lesionlevel[3].questions" ng-class="{selected: selected_annotation == this}" ng-click="selectTileAnnotation(this)">
-                              {{question.name}}
+                                <div ng-show="([question.name] | filter: filterval).length > 0"><span class="pull-right" ng-show="hasValidTile(question.id)">√</span>{{question.name}}</div>
                           </div>
-
                         </accordion-group>
 
-                        <accordion-group heading="{{tile.header}}" ng-repeat="tile in annotation_options.tiles">
-
+                        <accordion-group heading="{{tile.header}}" ng-repeat="tile in annotation_options.tiles" ng-show="filterval.length == 0">
                             <div ng-repeat="question in tile.questions" ng-class="{selected: selected_annotation == this}" ng-click="selectTileAnnotation(this)">
-                              {{question.name}}
+                                <div ng-show="([question.name] | filter: filterval).length > 0"><span class="pull-right" ng-show="hasValidTile(question.id)">√</span>{{question.name}}</div>
+                            </div>
+                        </accordion-group>
+
+                        <accordion-group heading="Search" ng-show="filterval.length" is-open="true">
+
+                            <div ng-repeat="tile in annotation_options.tiles">
+                                <div ng-repeat="question in tile.questions" ng-class="{selected: selected_annotation == this}" ng-click="selectTileAnnotation(this)">
+                                    <div ng-show="([question.name] | filter: filterval).length > 0"><span class="pull-right" ng-show="hasValidTile(question.id)">√</span>{{question.name}}</div>
+                                </div>
                             </div>
 
                         </accordion-group>
@@ -202,7 +253,23 @@
                 </div>
 
                 <!-- Step footer -->
-                <div class="lowertoolbar" ng-show="false" ng-cloak>
+                <div class="lowertoolbar" ng-show="true" ng-cloak>
+
+                    <div class="btn-group">
+                        <div class="btn btn-info" ng-click="resetTiles()" ng-hide="showReview">Reset current</div>
+                    </div>
+
+                    <div class="btn-group">
+                        <div class="btn btn-success" ng-click="hideReview()"  ng-show="showReview">Continue editing</div>
+                    </div>
+
+                    <div class="btn-group pull-right" ng-show="showReview">
+                        <div class="btn btn-success" ng-click="submitAnnotation()">Submit</div>
+                    </div>
+
+                    <div class="btn-group pull-right">
+                        <div class="btn btn-success" ng-click="reviewAnnotations()"  ng-hide="showReview">Review</div>
+                    </div>
 
                 </div>
             </div>

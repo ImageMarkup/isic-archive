@@ -242,6 +242,31 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
                 }
 
                 return features_list;
+            },
+
+            grabCurrentTiles : function(){
+
+                if(this.segmentannotator){
+                    var index_values = this.segmentannotator.getIndicies();
+                    return index_values;
+                }
+
+                return [];
+            },
+
+            clearTiles : function(){
+
+                if(this.segmentannotator){
+                    this.segmentannotator.clearTiles();
+                }
+
+            },
+
+            loadTiles : function(tiles){
+
+                if(this.segmentannotator){
+                    this.segmentannotator.loadTiles(tiles);
+                }
 
             },
 

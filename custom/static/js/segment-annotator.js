@@ -213,19 +213,10 @@ SegmentAnnotator.prototype.getCanvasAsPNG = function(){
       data = imageData.data;
 
  for (var i = 0; i < this.indexMap.length; ++i) {
-
-//    var label = this.annotations[this.indexMap[i]];
-
-
     data[4 * i + 0] = this.rgbData[4 * i + 0];
     data[4 * i + 1] = this.rgbData[4 * i + 1];
     data[4 * i + 2] = this.rgbData[4 * i + 2];
     data[4 * i + 3] = 255;
-
-//    data[4 * i + 0] = label & 255;
-//    data[4 * i + 1] = (label >>> 8) & 255;
-//    data[4 * i + 2] = (label >>> 16) & 255;
-//    data[4 * i + 3] = this.indexMap[i];
   }
   context.putImageData(imageData, 0, 0);
   return canvas.toDataURL();
@@ -276,10 +267,19 @@ SegmentAnnotator.prototype.getTilesAsPNG = function(){
 // Given mouse coordinates, get an index of the segment.
 
 SegmentAnnotator.prototype._getSegmentIndex = function(event) {
-  var x = event.pageX - this.container.offsetLeft + this.container.scrollLeft,
+
+  console.log(this.container);
+
+  // change made to support left column
+  var toolbarWidth = $("#toolContainer").width();
+    console.log(toolbarWidth);
+
+  var x = event.pageX - this.container.offsetLeft + this.container.scrollLeft - toolbarWidth;
       y = event.pageY - this.container.offsetTop + this.container.scrollTop;
+
   x = Math.max(Math.min(x, this.layers.highlight.canvas.width - 1), 0);
   y = Math.max(Math.min(y, this.layers.highlight.canvas.height - 1), 0);
+
 
   return this.indexMap[y * this.layers.highlight.canvas.width + x];
 };
@@ -324,6 +324,9 @@ SegmentAnnotator.prototype._updateAnnotation = function(index, render) {
     data[offset + 0] = color[0];
     data[offset + 1] = color[1];
     data[offset + 2] = color[2];
+
+
+
   }
   if (render)
     this.layers.annotation.canvas
@@ -551,7 +554,7 @@ SegmentAnnotator.prototype._initializeBackgroundLayer = function() {
     data[i + 0] = color[0];
     data[i + 1] = color[1];
     data[i + 2] = color[2];
-    data[i + 3] = 20;
+    data[i + 3] = 0;
   }
   context.putImageData(imageData, 0, 0);
   return this;
@@ -647,9 +650,17 @@ SegmentAnnotator.prototype._setAnnotationAlpha = function(alpha, atBoundary) {
                         index !== indexMap[(i - 1) * width + j] ||
                         index !== indexMap[(i + 1) * width + j]);
       if (isBoundary && atBoundary)
-        data[4 * (i * width + j) + 3] = alpha;
+      {
+        data[4 * (i * width + j) + 3] = 0;
+          // transparency outside tile
+
+      }
       else if (!isBoundary && !atBoundary)
-        data[4 * (i * width + j) + 3] = alpha;
+      {
+
+          // transparency inside tile
+          data[4 * (i * width + j) + 3] = 0;
+      }
     }
   }
   context.putImageData(this.layers.annotation.image, 0, 0);
@@ -720,7 +731,7 @@ window.UDASegment = function(imageURL, options) {
 
         var sourceData = new Uint8Array(tileData.data);
 
-        var indexMap = new Uint8Array(sourceData.length / 4);
+        var indexMap = new Uint16Array(sourceData.length / 4);
 
         var numSegments = 0;
 
@@ -736,6 +747,8 @@ window.UDASegment = function(imageURL, options) {
             // copy index to indexmap from Alpha channel
             indexMap[i] = indexValue;
         }
+
+        console.log('there are ', numSegments);
 
         options.callback({
             width: imageData.width,

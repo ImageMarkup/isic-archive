@@ -217,85 +217,110 @@
             "name": "Network- Target"
         }]
     },
-    {
-        "header": "Structures",
-        "questions": [{
-            "type": "check",
-            "id": "str_strless",
-            "name": "Structures- Structureless"
-        }, {
-            "type": "check",
-            "id": "str_hypo_areas",
-            "name": "Structures- Hypo-pigented areas"
-        }, {
-            "type": "check",
-            "id": "str_reg_blotch",
-            "name": "Structures- Regular blotch"
-        }, {
-            "type": "check",
-            "id": "str_irreg_blotch",
-            "name": "Structures- Irregular blotch"
-        }, {
-            "type": "check",
-            "id": "str_bluewhite",
-            "name": "Structures- Blue/white veil"
-        }, {
-            "type": "check",
-            "id": "str_bluegraygran",
-            "name": "Structures- Blue/gray granules"
-        }, {
-            "type": "check",
-            "id": "str_scar",
-            "name": "Structures- Scar"
-        }, {
-            "type": "check",
-            "id": "str_peribrown",
-            "name": "Structures- peripheral brown structureless areas"
-        }, {
-            "type": "check",
-            "id": "str_bluegraydots",
-            "name": "Structures- Blue/Gray dots"
-        }, {
-            "type": "check",
-            "id": "str_streaks",
-            "name": "Structures- Streaks"
-        }, {
-            "type": "check",
-            "id": "str_pseudo",
-            "name": "Structures- Pseudopods"
-        }, {
-            "type": "check",
-            "id": "str_radialstream",
-            "name": "Structures- Radial streaming"
-        }, {
-            "type": "check",
-            "id": "str_irrstreaks",
-            "name": "Structures - Irregular streaks"
-        }, {
-            "type": "check",
-            "id": "str_lines",
-            "name": "Structures- Lines"
-        }, {
-            "type": "check",
-            "id": "str_circle",
-            "name": "Structures- Circles"
-        }, {
-            "type": "check",
-            "id": "str_clod",
-            "name": "Structures- Clods"
-        }, {
-            "type": "check",
-            "id": "str_chrys",
-            "name": "Structures- Chrysalis"
-        }, {
-            "type": "check",
-            "id": "str_rhomb",
-            "name": "Structures- Rhomboid"
-        }, {
-            "type": "check",
-            "id": "str_regress",
-            "name": "Structures- Regresssion"
-        }, {
+        {
+            "header": "Structures",
+            "questions": [
+                {
+                    "type": "check",
+                    "id": "str_strless",
+                    "name": "Structures- Structureless"
+                },
+                {
+                    "type": "check",
+                    "id": "str_hypo_areas",
+                    "name": "Structures- Hypo-pigented areas"
+                },
+                {
+                    "type": "check",
+                    "id": "str_reg_blotch",
+                    "name": "Structures- Regular blotch"
+                },
+                {
+                    "type": "check",
+                    "id": "str_irreg_blotch",
+                    "name": "Structures- Irregular blotch"
+                },
+                {
+                    "type": "check",
+                    "id": "str_bluewhite",
+                    "name": "Structures- Blue/white veil"
+                },
+                {
+                    "type": "check",
+                    "id": "str_bluegraygran",
+                    "name": "Structures- Blue/gray granules"
+                },
+                {
+                    "type": "check",
+                    "id": "str_scar",
+                    "name": "Structures- Scar"
+                },
+                {
+                    "type": "check",
+                    "id": "str_peribrown",
+                    "name": "Structures- peripheral brown structureless areas"
+                },
+                {
+                    "type": "check",
+                    "id": "str_bluegraydots",
+                    "name": "Structures- Blue/Gray dots"
+                },
+                {
+                    "type": "check",
+                    "id": "str_streaks",
+                    "name": "Structures- Streaks"
+                },
+                {
+                    "type": "check",
+                    "id": "str_pseudo",
+                    "name": "Structures- Pseudopods"
+                },
+                {
+                    "type": "check",
+                    "id": "str_radialstream",
+                    "name": "Structures- Radial streaming"
+                },
+                {
+                    "type": "check",
+                    "id": "str_irrstreaks",
+                    "name": "Structures - Irregular streaks"
+                },
+                {
+                    "type": "check",
+                    "id": "str_lines",
+                    "name": "Structures- Lines"
+                },
+                {
+                    "type": "check",
+                    "id": "str_circle",
+                    "name": "Structures- Circles"
+                },
+                {
+                    "type": "check",
+                    "id": "str_clod",
+                    "name": "Structures- Clods"
+                },
+                {
+                    "type": "check",
+                    "id": "str_chrys",
+                    "name": "Structures- Chrysalis"
+                },
+                {
+                    "type": "check",
+                    "id": "str_rhomb",
+                    "name": "Structures- Rhomboid"
+                },
+                {
+                    "type": "check",
+                    "id": "str_regress",
+                    "name": "Structures- Regresssion"
+                }
+            ]
+        },
+        {
+           "header" : "Dots and globs",
+           "questions": [
+         {
             "type": "check",
             "id": "str_regblackdots",
             "name": "Structures- Regular black dots"

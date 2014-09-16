@@ -13,6 +13,12 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
         $scope.annotation_source = undefined;
 
         $scope.selected_annotation = undefined;
+        $scope.hover_annotation = undefined;
+
+        $scope.certaintyModel = 'definite';
+
+        $scope.showReview = false;
+        $scope.filterval = '';
 
         $scope.formatter = new ol.format.GeoJSON();
 
@@ -39,11 +45,10 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
                         $scope.annotation_source = response.data.annotation;
                         $scope.current_image = response.data.items[0];
+
                     }
 
                     $scope.annotation_options = response.data.variables;
-
-                    console.log(response);
 
                     var segmentation_url = '/api/v1/item/' + $scope.current_image['_id'] + '/segmentation';
 
@@ -62,16 +67,88 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
         	return undefined;
         };
 
-        $scope.selectTileAnnotation = function(theTile){
+        $scope.hasValidTile = function(_id){
 
-            console.log(theTile);
+            if(_id in $scope.annotation_model){
+                var tiles = $scope.annotation_model[_id];
+                for (var i=0;i<tiles.length;i++){
+                    if(tiles[i] > 0)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        };
 
-            $scope.selected_annotation = theTile;
+        $scope.resetTiles = function(){
 
-            $rootScope.imageviewer.selectAnnotationLabel('definite');
+            if($rootScope.imageviewer){
+                $rootScope.imageviewer.clearTiles();
+            }
+        };
+
+        $scope.hoverTiles = function(theTile){
+
+            $rootScope.imageviewer.clearTiles();
+
+            var question_shortname = theTile.id;
+
+            if(question_shortname in $scope.annotation_model){
+                $rootScope.imageviewer.loadTiles($scope.annotation_model[question_shortname])
+            }
+
+            // label 2 -> 100%
+            // label 3 -> 50%
+
+//            $rootScope.imageviewer.selectAnnotationLabel($scope.certaintyModel);
 
         };
 
+        $scope.selectTileAnnotation = function(theTile){
+
+            // save the previous tile if anything is there
+
+            if($scope.selected_annotation){
+
+                var tiles = $rootScope.imageviewer.grabCurrentTiles().slice(0);
+
+                var question_shortname = $scope.selected_annotation.question.id;
+
+                if(question_shortname in $scope.annotation_model){
+                    $scope.annotation_model[question_shortname] = tiles;
+                }else
+                {
+                    $scope.annotation_model[question_shortname] = tiles;
+                }
+
+                $rootScope.imageviewer.clearTiles();
+            }
+
+            // now select the new tile
+
+            $scope.selected_annotation = theTile;
+            var question_shortname = $scope.selected_annotation.question.id;
+
+            if(question_shortname in $scope.annotation_model){
+                $rootScope.imageviewer.loadTiles($scope.annotation_model[question_shortname])
+            }
+
+            // label 2 -> 100%
+            // label 3 -> 50%
+
+            $rootScope.imageviewer.selectAnnotationLabel($scope.certaintyModel);
+
+        };
+
+        $scope.$watch('certaintyModel', function(newValue, oldValue){
+
+            if(newValue){
+                if($rootScope.imageviewer){
+                    $rootScope.imageviewer.selectAnnotationLabel(newValue);
+                }
+            }
+        });
 
 
 
@@ -118,6 +195,48 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
         });
 
 
+        $scope.reviewAnnotations = function(){
+
+
+            if($scope.selected_annotation){
+
+                var tiles = $rootScope.imageviewer.grabCurrentTiles().slice(0);
+
+                var question_shortname = $scope.selected_annotation.question.id;
+
+                if(question_shortname in $scope.annotation_model){
+                    $scope.annotation_model[question_shortname] = tiles;
+                }else
+                {
+                    $scope.annotation_model[question_shortname] = tiles;
+                }
+
+                $scope.selected_annotation = undefined;
+
+                $rootScope.imageviewer.clearTiles();
+            }
+
+            $scope.showReview = true;
+
+        };
+
+        $scope.hideReview = function(){
+
+           $rootScope.imageviewer.clearTiles();
+
+            // label 2 -> 100%
+            // label 3 -> 50%
+
+            $rootScope.imageviewer.selectAnnotationLabel($scope.certaintyModel);
+
+            $scope.showReview = false;
+
+        };
+
+        $scope.submitAnnotations = function(){
+
+        };
+
 
         // setters
 
@@ -139,8 +258,6 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                     // if we're in teh superpixel mode, discard the placehold feature and make your own from the external parameters
                     // ugly but it should work.
                     if ($scope.step_config.type == 'superpixel'){
-
-
 
                         var segmentationPackage = $rootScope.imageviewer.getSegmentationPackage();
 
@@ -212,57 +329,6 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
         };
 
 
-        $scope.getStepAnnotations = function(){
-
-//        	var currentAnnotation = $scope.getCurrentAnnotation();
-        	console.log('current annotation', $scope.current_annotation);
-            if($scope.current_annotation){
-                return $scope.current_annotation.steps[$scope.step]
-            }
-            return undefined;
-        };
-
-        $scope.getAllFeatures = function(returnOlFeatures){
-
-            var all_features = [];
-
-            for(var step in $scope.current_annotation.steps){
-                if (step != $scope.totalSteps - 1){
-                    for(var i =0; i < $scope.current_annotation.steps[step].markup.features.length; i++){
-
-                        var feature = $scope.current_annotation.steps[step].markup.features[i];
-
-                        if(returnOlFeatures){
-
-                            // convert feature to ol
-                            all_features.push($scope.formatter.readFeature(feature))
-
-                        }
-                        else {
-
-                            // push straight geojson features back
-                            all_features.push(feature);
-                        }
-                    }
-                }
-            }
-
-        	return all_features;
-        };
-
-
-        $scope.nextStep = function(){};
-
-        $scope.previousStep = function(){
-            if($scope.step > 0){
-                $scope.gotoStep($scope.step-1);
-            }
-        };
-
-
-        $scope.increaseParameter = function(){};
-
-        $scope.decreaseParameter = function(){};
 
 
 
