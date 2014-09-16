@@ -129,9 +129,12 @@ def uploadHandler(event):
     uda_user = getUser('udastudy')
     phase0_collection = getCollection('Phase 0')
 
+
     if folder['name'] == 'dropzip':
 
-        if file_info['mimeType'] == 'application/zip':
+        possible_zip_formats = ['application/octet-stream','multipart/x-zip','application/zip','application/zip-compressed','application/x-zip-compressed']
+
+        if file_info['mimeType'] in possible_zip_formats:
 
             full_file_path = os.path.join(asset_store_info['root'], file_info['path'])
 
