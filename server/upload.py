@@ -217,7 +217,9 @@ def uploadHandler(event):
 
                         if possible_item.count() > 0:
 
-                            new_metadata = dict(zip(col_headers, row))
+                            full_metadata = dict(zip(col_headers, row))
+
+                            new_metadata = dict((k, v) for k, v in full_metadata.iteritems() if v)
 
                             item = possible_item[0]
 
