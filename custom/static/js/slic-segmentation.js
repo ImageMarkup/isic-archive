@@ -9,6 +9,9 @@
  *
  * and based on the VLFeat implementation.
  *
+ * Modified by Rich Stoner for ISIC
+ * Base branch https://github.com/kyamagu/js-segment-annotator
+ *
  * API
  * ---
  *

@@ -70,6 +70,8 @@ class TaskHandler(object):
 
         # this is where we'd return something if it was an API, instead we're going one step farther and redirecting to the task
 
+
+
         phase_folders = getFoldersForCollection(getCollection(final_task['name']))
 
         target_folder = None

@@ -1,6 +1,10 @@
 /** Javascript segment annotator.
  *
  * Kota Yamaguchi 2013.
+ *
+ * Modified by Rich Stoner for ISIC
+ * Base branch https://github.com/kyamagu/js-segment-annotator
+ *
  */
 
 // SegmentAnnotator constructor.
