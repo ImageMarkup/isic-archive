@@ -14,8 +14,6 @@ review_app.config(function($httpProvider) {
     'application/x-www-form-urlencoded';
 });
 
-review_app.value("girder", girder);
-
 var appController = review_app.controller('ApplicationController', ['$scope', '$rootScope', '$timeout', '$http',
     function ($scope, $rootScope, $timeout, $http) {
 
@@ -35,23 +33,6 @@ var appController = review_app.controller('ApplicationController', ['$scope', '$
             console.log($scope.user);
         });
 
-        girder.apiRoot = '/api/v1';
-        girder.handleRouting = false;
-
-//    Check for who is logged in initially
-        girder.restRequest({
-            path: 'user/authentication',
-            error: null
-        }).done(function (resp) {
-            girder.currentUser = new girder.models.UserModel(resp.user);
-            console.log('hiya');
-//            girder.events.trigger('g:login');
-        });
-
-
-
-
-//        http://uda2study.dev:80/api/v1/user/authentication
 
 
 
