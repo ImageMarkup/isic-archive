@@ -5,6 +5,11 @@
 var derm_app = angular.module('DermApp', ['ui.bootstrap', 'ngSanitize', 'xml']);
 derm_app.value( "ol", ol );
 
+derm_app.config(function($httpProvider) {
+  $httpProvider.defaults.xsrfCookieName = 'girderToken'
+  $httpProvider.defaults.xsrfHeaderName = 'Girder-Token'
+});
+
 // Initialization of angular app controller with necessary scope variables. Inline declaration of external variables
 // needed within the controller's scope. State variables (available between controllers using $rootScope). Necessary to
 // put these in rootScope to handle pushed data via websocket service.
