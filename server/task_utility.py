@@ -158,11 +158,11 @@ def tasklisthandler(id, params):
 
 
 
+    # TODO: can Girder provide the location of this plugin's directory?
+    #  could we reliably use this Python file's location?
+    app_base = os.getcwd()  # e.g. /home/ubuntu/applications/girder
 
-    # app_base = os.path.join(os.curdir, os.pardir)
-    app_base = '/applications'
-
-    app_path = os.path.join(app_base, 'girder', 'plugins', 'uda', 'custom', 'config')
+    app_path = os.path.join(app_base, 'plugins', 'uda', 'custom', 'config')
 
     # get the appropriate jsno
     phasejson = final_task['name'].replace(" ", "").lower() + '.json'
