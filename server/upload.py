@@ -190,7 +190,9 @@ def uploadHandler(event):
 
     elif folder['name'] == 'dropcsv':
 
-        if file_info['mimeType'] == 'text/csv':
+        possible_csv_formats = ['text/csv', 'application/vnd.ms-excel']
+
+        if file_info['mimeType'] in possible_csv_formats:
 
             full_file_path = os.path.join(asset_store_info['root'], file_info['path'])
 
