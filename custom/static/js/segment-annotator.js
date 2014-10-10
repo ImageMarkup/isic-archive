@@ -239,7 +239,7 @@ SegmentAnnotator.prototype.getTilesAsPNG = function(){
   var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
       data = imageData.data;
 
- console.log('Get Tiles As PNG, Length: ', this.indexMap.length);
+// console.log('Get Tiles As PNG, Length: ', this.indexMap.length);
 
  var _min = 255;
  var _max = 0;
@@ -261,7 +261,7 @@ SegmentAnnotator.prototype.getTilesAsPNG = function(){
      data[4 * i + 3] = 255;
   }
 
-  console.log(_max, _min);
+  //console.log(_max, _min);
 
   context.putImageData(imageData, 0, 0);
   return canvas.toDataURL();
@@ -272,11 +272,11 @@ SegmentAnnotator.prototype.getTilesAsPNG = function(){
 
 SegmentAnnotator.prototype._getSegmentIndex = function(event) {
 
-  console.log(this.container);
+//  console.log(this.container);
 
   // change made to support left column
   var toolbarWidth = $("#toolContainer").width();
-    console.log(toolbarWidth);
+  //  console.log(toolbarWidth);
 
   var x = event.pageX - this.container.offsetLeft + this.container.scrollLeft - toolbarWidth;
       y = event.pageY - this.container.offsetTop + this.container.scrollTop;
@@ -599,7 +599,7 @@ SegmentAnnotator.prototype._initializeHighlightLayer = function() {
   function updateIfActive(event) {
 
     var segmentId = _this._getSegmentIndex(event);
-    console.log(segmentId);
+    //console.log(segmentId);
 
     _this._updateHighlight(segmentId);
     if (mousestate.down) {
@@ -655,13 +655,12 @@ SegmentAnnotator.prototype._setAnnotationAlpha = function(alpha, atBoundary) {
                         index !== indexMap[(i + 1) * width + j]);
       if (isBoundary && atBoundary)
       {
-        data[4 * (i * width + j) + 3] = 0;
+        data[4 * (i * width + j) + 3] = 100;
           // transparency outside tile
 
       }
       else if (!isBoundary && !atBoundary)
       {
-
           // transparency inside tile
           data[4 * (i * width + j) + 3] = 0;
       }
