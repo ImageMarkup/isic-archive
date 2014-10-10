@@ -16,8 +16,6 @@ SegmentAnnotator = function(segmentation, options) {
   this.fillAlpha = options.fillAlpha;
   this.boundaryAlpha = options.boundaryAlpha;
 
- console.log('segmentation options', this);
-
   // Variables.
   this.width = segmentation.width;
   this.height = segmentation.height;
@@ -35,8 +33,6 @@ SegmentAnnotator = function(segmentation, options) {
   this.currentLabel = null;
 
   // Initialize internal variables.
-
-  // console.log(this);
 
   this._initializeContainer(options.container);
   this._initializePixelsIndex();
@@ -238,9 +234,6 @@ SegmentAnnotator.prototype.getTilesAsPNG = function(){
 
   var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
       data = imageData.data;
-
-// console.log('Get Tiles As PNG, Length: ', this.indexMap.length);
-
  var _min = 255;
  var _max = 0;
 
@@ -261,8 +254,6 @@ SegmentAnnotator.prototype.getTilesAsPNG = function(){
      data[4 * i + 3] = 255;
   }
 
-  //console.log(_max, _min);
-
   context.putImageData(imageData, 0, 0);
   return canvas.toDataURL();
 
@@ -272,12 +263,8 @@ SegmentAnnotator.prototype.getTilesAsPNG = function(){
 
 SegmentAnnotator.prototype._getSegmentIndex = function(event) {
 
-//  console.log(this.container);
-
   // change made to support left column
   var toolbarWidth = $("#toolContainer").width();
-  //  console.log(toolbarWidth);
-
   var x = event.pageX - this.container.offsetLeft + this.container.scrollLeft - toolbarWidth;
       y = event.pageY - this.container.offsetTop + this.container.scrollTop;
 
@@ -313,7 +300,6 @@ SegmentAnnotator.prototype._updateHighlight = function(index) {
 
 // Update label.
 SegmentAnnotator.prototype._updateAnnotation = function(index, render) {
-  console.log('updating index:', index);
 
   if (render && this.annotations[index] === this.currentLabel)
     return;
@@ -343,8 +329,6 @@ SegmentAnnotator.prototype._updateAnnotation = function(index, render) {
 SegmentAnnotator.prototype._initializePixelsIndex = function() {
   var i;
   this.pixelsMap = new Array(this.segments);
-
-  console.log('There are ' + this.segments.length + 'segments');
 
     for (i = 0; i < this.segments; ++i)
     this.pixelsMap[i] = [];
@@ -599,8 +583,6 @@ SegmentAnnotator.prototype._initializeHighlightLayer = function() {
   function updateIfActive(event) {
 
     var segmentId = _this._getSegmentIndex(event);
-    //console.log(segmentId);
-
     _this._updateHighlight(segmentId);
     if (mousestate.down) {
       var label = _this.currentLabel;
@@ -622,8 +604,6 @@ SegmentAnnotator.prototype._initializeHighlightLayer = function() {
   this.layers.highlight.canvas.addEventListener('mousedown', function(event) {
     mousestate.down = true;
     mousestate.button = event.button;
-
-    console.log(event);
 
   });
 
@@ -656,8 +636,7 @@ SegmentAnnotator.prototype._setAnnotationAlpha = function(alpha, atBoundary) {
       if (isBoundary && atBoundary)
       {
         data[4 * (i * width + j) + 3] = 100;
-          // transparency outside tile
-
+          // transparency outside tile, aka the boundary
       }
       else if (!isBoundary && !atBoundary)
       {
@@ -693,8 +672,6 @@ SegmentAnnotator.prototype._initializeContainer = function(container) {
 
 window.UDASegment = function(imageURL, options) {
 
-    console.log("UDA Segment started");
-
     var src_image = new Image();
     var tile_image = new Image();
 
@@ -714,8 +691,6 @@ window.UDASegment = function(imageURL, options) {
 
     // When image is loaded.
     function onSuccessImageLoad(rgb_image, t_image, options) {
-
-        console.log('tile load');
 
         // create canvas
         var canvas = document.createElement('canvas');
@@ -750,8 +725,6 @@ window.UDASegment = function(imageURL, options) {
             // copy index to indexmap from Alpha channel
             indexMap[i] = indexValue;
         }
-
-        console.log('there are ', numSegments);
 
         options.callback({
             width: imageData.width,
