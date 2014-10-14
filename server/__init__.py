@@ -1,4 +1,5 @@
 
+import functools
 import os
 
 from girder import events
@@ -10,6 +11,13 @@ from qc import QCHandler
 from task_utility import tasklisthandler, taskCompleteHandler, TaskHandler, devNullEndpoint
 
 from annotate import AnnotateHandler, FillHandler, MapHandler
+
+def public_access(fun):
+    @functools.wraps(fun)
+    def accessDecorator(*args, **kwargs):
+        return fun(*args, **kwargs)
+    accessDecorator.accessLevel = 'public'
+    return accessDecorator
 
 
 def load(info):
@@ -86,47 +94,47 @@ def load(info):
 
     # item/:id/thumbnail -> returns a thumbnail of the image
 
-    info['apiRoot'].item.route('GET', (':id', 'thumbnail'), thumbnailhandler)
+    info['apiRoot'].item.route('GET', (':id', 'thumbnail'), public_access(thumbnailhandler))
 
     # item/:id/annotation -> returns the json annotation
 
-    info['apiRoot'].item.route('GET', (':id', 'annotation'), annotationHandler)
+    info['apiRoot'].item.route('GET', (':id', 'annotation'), public_access(annotationHandler))
 
 
     # item/:id/annotation -> returns the png segmentation (index map as alpha channel)
 
-    info['apiRoot'].item.route('GET', (':id', 'segmentationSource'), segmentationSourceHandler)
+    info['apiRoot'].item.route('GET', (':id', 'segmentationSource'), public_access(segmentationSourceHandler))
 
-    info['apiRoot'].item.route('GET', (':id', 'segmentationTiles'), segmentationTileHandler)
+    info['apiRoot'].item.route('GET', (':id', 'segmentationTiles'), public_access(segmentationTileHandler))
 
 
     # item/:id/zoomify -> returns a zoomify xml if available
 
-    info['apiRoot'].item.route('GET', (':id', 'zoomify', ':p1'), zoomifyhandler)
-    info['apiRoot'].item.route('GET', (':id', 'zoomify', ':p1', ':p2'), zoomifyhandler)
+    info['apiRoot'].item.route('GET', (':id', 'zoomify', ':p1'), public_access(zoomifyhandler))
+    info['apiRoot'].item.route('GET', (':id', 'zoomify', ':p1', ':p2'), public_access(zoomifyhandler))
 
 
     # item/:id/fif -> returns the IIP FIF endpoint for an item
 
-    info['apiRoot'].item.route('GET', (':id', 'fif', ':fifparams'), fifHandler)
+    info['apiRoot'].item.route('GET', (':id', 'fif', ':fifparams'), public_access(fifHandler))
 
     # user/:userId/tasklist -> returns a list of images and any UI configuration
 
-    info['apiRoot'].user.route('GET', (':id', 'tasklist'), tasklisthandler)
+    info['apiRoot'].user.route('GET', (':id', 'tasklist'), public_access(tasklisthandler))
 
     # user/:userId/taskcomplete -> POSTable endpoint to handle completed task content
 
-    info['apiRoot'].user.route('POST', (':id', 'taskcomplete', ':tasktype'), taskCompleteHandler)
+    info['apiRoot'].user.route('POST', (':id', 'taskcomplete', ':tasktype'), public_access(taskCompleteHandler))
 
     # debug
 
-    info['apiRoot'].user.route('POST', (':id', 'devnull'), devNullEndpoint)
+    info['apiRoot'].user.route('POST', (':id', 'devnull'), public_access(devNullEndpoint))
 
 
 
     # add event listeners
 
-    events.bind('data.process', 'uploadHandler', uploadHandler)
+    events.bind('data.process', 'uploadHandler', public_access(uploadHandler))
 
 
 
