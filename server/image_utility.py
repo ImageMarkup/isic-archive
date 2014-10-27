@@ -1,14 +1,16 @@
 __author__ = 'stonerri'
 
-
-
-from girder.utility.model_importer import ModelImporter
-from girder.api.describe import Description
-from girder.constants import TerminalColor
 import cherrypy
 import json
 import os
+
 from cherrypy.lib import file_generator
+
+from girder.api.describe import Description
+from girder.constants import TerminalColor
+from girder.utility.model_importer import ModelImporter
+
+
 
 def thumbnailhandler(id, params):
 
@@ -16,13 +18,11 @@ def thumbnailhandler(id, params):
     item = m.model('item').load(id, force=True)
     files = m.model('item').childFiles(item)
 
-    firstFile = None
-    for f in files:
-        # print f
-        if f['exts'][0] == 'tif':
-            firstFile = f
-
-    print firstFile
+    for firstFile in files:
+        if firstFile['exts'][0] == 'tif':
+            break
+    else:
+        raise Exception('Unable to find TIFF file in item %s' % id)
 
     assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
 
@@ -32,33 +32,28 @@ def thumbnailhandler(id, params):
 
     raise cherrypy.HTTPRedirect(thumbnail_url)
 
-
 thumbnailhandler.description = (
     Description('Retrieve the thumbnail for a given item.')
     .param('id', 'The item ID', paramType='path')
     .errorResponse())
 
 
-def annotationHandler(id, params):
 
+def annotationHandler(id, params):
     # todo : have it pull the appropriate annotation, it current pulls the last one
 
     m = ModelImporter()
     item = m.model('item').load(id, force=True)
     files = m.model('item').childFiles(item)
 
-    firstFile = None
-    for f in files:
-        # print f
-        if f['exts'][0] == 'json':
-            firstFile = f
+    for firstFile in files:
+        if firstFile['exts'][0] == 'json':
+            break
+    else:
+        raise Exception('Unable to find JSON file in item %s' % id)
 
-    assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
-    file_path = os.path.join(assetstore['root'], firstFile['path'])
-    json_content = open(file_path, 'r')
-    annotation_str = json.load(json_content)
-    json_content.close()
-
+    json_content_stream = m.model('file').download(firstFile, headers=False)
+    annotation_str = json.loads(''.join(json_content_stream()))
     return annotation_str
 
 annotationHandler.description = (
@@ -68,70 +63,21 @@ annotationHandler.description = (
 
 
 
-
 def segmentationSourceHandler(id, params):
-
     # todo : have it pull the appropriate annotation, it current pulls the last one
 
     m = ModelImporter()
     item = m.model('item').load(id, force=True)
     files = m.model('item').childFiles(item)
 
-    firstFile = None
-    for f in files:
-        # print f
-        if f['exts'][0] == 'png':
-            if 'tile' not in f['name']:
-                firstFile = f
+    for firstFile in files:
+        if firstFile['exts'][0] == 'png':
+            if 'tile' not in firstFile['name']:
+                break
+    else:
+        raise Exception('Unable to find source PNG file in item %s' % id)
 
-    assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
-    file_path = os.path.join(assetstore['root'], firstFile['path'])
-
-    from cherrypy.lib import file_generator
-    cherrypy.response.headers['Content-Type'] = "image/png"
-    png_handle = open(file_path, 'rb')
-    return file_generator(png_handle)
-
-
-def segmentationTileHandler(id, params):
-
-    # todo : have it pull the appropriate annotation, it current pulls the last one
-
-    m = ModelImporter()
-    item = m.model('item').load(id, force=True)
-    files = m.model('item').childFiles(item)
-
-    firstFile = None
-    for f in files:
-        # print f
-        if f['exts'][0] == 'png':
-            print f.keys()
-            if 'tile' in f['name']:
-                firstFile = f
-
-
-    assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
-    file_path = os.path.join(assetstore['root'], firstFile['path'])
-
-    from cherrypy.lib import file_generator
-    cherrypy.response.headers['Content-Type'] = "image/png"
-    png_handle = open(file_path, 'rb')
-    return file_generator(png_handle)
-
-    #
-    # def streamPng():
-    #     with open(file_path, 'rb') as f:
-    #         yield f.read()
-    # return streamPng
-
-
-
-segmentationTileHandler.description = (
-    Description('Retrieve the annotation json for a given item.')
-    .param('id', 'The item ID', paramType='path')
-    .errorResponse())
-
-
+    return m.model('file').download(firstFile, headers=True)
 
 segmentationSourceHandler.description = (
     Description('Retrieve the annotation json for a given item.')
@@ -140,18 +86,35 @@ segmentationSourceHandler.description = (
 
 
 
+def segmentationTileHandler(id, params):
+    # todo : have it pull the appropriate annotation, it current pulls the last one
+
+    m = ModelImporter()
+    item = m.model('item').load(id, force=True)
+    files = m.model('item').childFiles(item)
+
+    for firstFile in files:
+        if firstFile['exts'][0] == 'png':
+            if 'tile' in firstFile['name']:
+                break
+    else:
+        raise Exception('Unable to find tile PNG file in item %s' % id)
+
+    return m.model('file').download(firstFile, headers=True)
+
+segmentationTileHandler.description = (
+    Description('Retrieve the annotation json for a given item.')
+    .param('id', 'The item ID', paramType='path')
+    .errorResponse())
 
 
 
-
-## returns the zoomify metadata
 def zoomifyhandler(id, params, **kwargs):
-
+    """
+    returns the zoomify metadata
+    """
 
     zsplit = cherrypy.url().split('zoomify')
-
-    # print params
-    # print kwargs
 
     if len(zsplit) > 1:
 
@@ -159,12 +122,11 @@ def zoomifyhandler(id, params, **kwargs):
         item = m.model('item').load(id, force=True)
         files = m.model('item').childFiles(item)
 
-        firstFile = None
-        for f in files:
-            # print f
-            if f['exts'][0] == 'tif':
-                firstFile = f
-        print firstFile
+        for firstFile in files:
+            if firstFile['exts'][0] == 'tif':
+                break
+        else:
+            raise Exception('Unable to find TIFF file in item %s' % id)
 
         assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
 
@@ -175,8 +137,6 @@ def zoomifyhandler(id, params, **kwargs):
         raise cherrypy.HTTPRedirect(zoomify_url)
 
     return 'invalid url'
-
-
 
 zoomifyhandler.description = (
     Description('Retrieves the zoomify root path for a given item.')
@@ -196,13 +156,11 @@ def fifHandler(id, params, **kwargs):
         item = m.model('item').load(id, force=True)
         files = m.model('item').childFiles(item)
 
-        firstFile = None
-        for f in files:
-            # print f
-            if f['exts'][0] == 'tif':
-                firstFile = f
-        print firstFile
-
+        for firstFile in files:
+            if firstFile['exts'][0] == 'tif':
+                break
+        else:
+            raise Exception('Unable to find TIFF file in item %s' % id)
 
         assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
 
@@ -214,10 +172,7 @@ def fifHandler(id, params, **kwargs):
 
     return 'invalid url'
 
-
-
 fifHandler.description = (
     Description('Retrieves the FIF IIP root path for a given item.')
     .param('id', 'The item ID', paramType='path')
     .errorResponse())
-
