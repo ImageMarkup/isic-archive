@@ -51,7 +51,7 @@ class TaskHandler(object):
         user = m.model('user').load(id, force=True)
         task_list = []
 
-        for groupId in user['groups']:
+        for groupId in user.get('groups', list()):
             group = m.model('group').load(groupId, force=True)
             group_count, group_weight = getWeightForGroup(group['name'])
 
@@ -117,7 +117,7 @@ def tasklisthandler(id, params):
     user = m.model('user').load(id, force=True)
     task_list = []
 
-    for groupId in user['groups']:
+    for groupId in user.get('groups', list()):
         group = m.model('group').load(groupId, force=True)
         group_count, group_weight = getWeightForGroup(group['name'])
 
