@@ -267,8 +267,8 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
             });
 
 
-            
-            
+
+
             // set map event handlers
             this.map.on('singleclick', function(evt) {
 
@@ -290,13 +290,13 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
                     self.last_click_location = click_coords;
 
-                   	self.autofill(click_coords)
+                    self.autofill(click_coords)
 
                 } else if (self.draw_mode == 'lines') {
 
                     self.last_click_location = evt.coordinate;
                     self.addPoint(evt.coordinate);
-                } 
+                }
             });
 
             $(this.map.getViewport()).on('mousemove', function(evt) {
@@ -361,7 +361,7 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
             featureListFromAnnotation : function(annotation){
 
-            	// console.log(annotation);
+                // console.log(annotation);
                 var features_list = [];
 
                 if (annotation.polygons.length > 0) {
@@ -374,7 +374,7 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
                     features_list.push(af_feature)
                 }
 
-				if (annotation.lines.length > 0) {
+                if (annotation.lines.length > 0) {
 
                     var l_feature = new ol.Feature({
                         'classification' : annotation.classification
@@ -393,18 +393,18 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
             },
 
             setAnnotations : function(features){
-            	if (features) {
+                if (features) {
                     this.vector_source.addFeatures(features);
-            	}
+                }
             },
 
 //            clearTemporaryAnnotations : function(){
 //
 //                // temporary annotations are created
-//				this.temporary_annotations = {
+//            this.temporary_annotations = {
 //                    features : [],
-//	                polygons : []
-//	            };
+//                  polygons : []
+//              };
 //            },
 
             clearLayerAnnotations : function(step){
@@ -589,14 +589,14 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
                 };
 
                 var newHeight = this.nativeSize.h;
-                
+
                 if(- bl[1] < this.nativeSize.h) {
                     newHeight = -bl[1];
                 };
                 if(tl[1] < 0) {
                     newHeight += tl[1];
                     origin_y = -tl[1];
-                }                
+                }
 
                 console.log(origin_x, origin_y, newWidth, newHeight);
 
@@ -800,7 +800,7 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
         }
     );
-    
+
 
 
 
@@ -1127,15 +1127,15 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
         $scope.getCurrentAnnotation = function(){
 
-        	if($rootScope.applicationReady){
+            if($rootScope.applicationReady){
 
-        		if ($scope.annotations) {
+                if ($scope.annotations) {
 //                    console.log($scope.annotations[$scope.image_index]);
-        			return $scope.annotations[$scope.image_index];
-        		}
+                    return $scope.annotations[$scope.image_index];
+                }
 
-        	}
-        	return undefined;
+            }
+            return undefined;
         }
 
 
@@ -1341,7 +1341,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             // just making things explicit for readability's sake
             var features = $rootScope.imageviewer.getFeatures();
             var current_step = $scope.step;
-        	var currentAnnotation = $scope.getCurrentAnnotation();
+            var currentAnnotation = $scope.getCurrentAnnotation();
 
             if (features.length){
 
@@ -1427,14 +1427,14 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
         $scope.saveStepAnnotation = function(annotations, step_to_save){
 
-        	var currentAnnotation = $scope.getCurrentAnnotation();
-        	currentAnnotation.steps[step_to_save] = annotations;
+            var currentAnnotation = $scope.getCurrentAnnotation();
+            currentAnnotation.steps[step_to_save] = annotations;
         }
 
         $scope.getStepAnnotations = function(){
 
-        	var currentAnnotation = $scope.getCurrentAnnotation();
-        	console.log('current annotation', currentAnnotation);
+            var currentAnnotation = $scope.getCurrentAnnotation();
+            console.log('current annotation', currentAnnotation);
             if(currentAnnotation){
                 return currentAnnotation.steps[$scope.step]
             }
@@ -1455,7 +1455,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                 }
             }
 
-        	return all_features;
+            return all_features;
 
         }
 
@@ -1773,7 +1773,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                         }
                     }
 
-                	$scope.step = 0;
+                    $scope.step = 0;
                     $scope.step_config = undefined;
 
                     $scope.review_mode = false;
@@ -1824,7 +1824,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
             $scope.setDrawMode('none', '');
 
-        	$rootScope.imageviewer.startPainting();
+            $rootScope.imageviewer.startPainting();
 
             $scope.runningSegmentation = false;
         };
@@ -1839,25 +1839,25 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
             $scope.setDrawMode('paintbrush', '');
 
-        	$rootScope.imageviewer.startPainting();
+            $rootScope.imageviewer.startPainting();
 
             $scope.runningSegmentation = false;
         };
 
         $scope.finishRegionPaint = function(){
 
-			$scope.tool_bar_state = 'rpreview';
+            $scope.tool_bar_state = 'rpreview';
             $rootScope.imageviewer.acceptPainting();
 
         }
 
         $scope.cancelRegionPaint = function(){
 
-        	$rootScope.imageviewer.acceptPainting();
+            $rootScope.imageviewer.acceptPainting();
 
-//        	$rootScope.imageviewer.clearTemporary();
+//          $rootScope.imageviewer.clearTemporary();
 
-        	$scope.resetStep();
+            $scope.resetStep();
         };
 
         $scope.navMode = function(){
@@ -1895,33 +1895,33 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
         }
 
 
-//		$scope.selectOption = function(key, option_to_select) {
+//      $scope.selectOption = function(key, option_to_select) {
 //
 //            console.log('EH');
 //
-//			var selected_url = 'static/derm/' + $scope.step_base + '/' + (key+1) + '.jpg'
+//          var selected_url = 'static/derm/' + $scope.step_base + '/' + (key+1) + '.jpg'
 //
-//			console.log('selected url', selected_url)
+//          console.log('selected url', selected_url)
 //
-//			var select_single = {
-//				url : selected_url,
-//				key : key
-//			}
-			
-//			if(option_to_select.type == 'select'){
+//          var select_single = {
+//              url : selected_url,
+//              key : key
+//          }
+
+//          if(option_to_select.type == 'select'){
 //
-//				$scope.select_stack.push(select_single);
-//				$scope.step_options = option_to_select.options;
-//				$scope.step_base = $scope.step_base + '/' + (key+1);
+//              $scope.select_stack.push(select_single);
+//              $scope.step_options = option_to_select.options;
+//              $scope.step_base = $scope.step_base + '/' + (key+1);
 //
-//			}
-//			else if (option_to_select.type == 'review') {
+//          }
+//          else if (option_to_select.type == 'review') {
 //
-//				$scope.select_stack.push(select_single);
-//	        	$scope.tool_bar_state = option_to_select.type;
+//              $scope.select_stack.push(select_single);
+//              $scope.tool_bar_state = option_to_select.type;
 //                $scope.openModalWithOptions(option_to_select);
 //
-//			}
+//          }
 //            else if (option_to_select.type == 'gotostep'){
 //
 //                $scope.select_stack.push(select_single);
@@ -1930,28 +1930,28 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 //            }
 
 
-//			else if (option_to_select.type == 'selectadvanced') {
+//          else if (option_to_select.type == 'selectadvanced') {
 //
-//				$scope.select_last = select_single;
+//              $scope.select_last = select_single;
 //
-//				// $rootScope.imageviewer.saveSelectionStack($scope.select_stack);
+//              // $rootScope.imageviewer.saveSelectionStack($scope.select_stack);
 //
-//				$scope.step_options = option_to_select.options;
+//              $scope.step_options = option_to_select.options;
 //
-//				$scope.step_base = $scope.step_base + '/' + (key+1);
+//              $scope.step_base = $scope.step_base + '/' + (key+1);
 //
-//	        	$scope.tool_bar_state = option_to_select.type;
+//              $scope.tool_bar_state = option_to_select.type;
 //
 //
-//			}
-//			else if(option_to_select.type == 'next') {
+//          }
+//          else if(option_to_select.type == 'next') {
 //
-//				console.log('proceeding to next step');
+//              console.log('proceeding to next step');
 //
-//				$scope.nextStep();
+//              $scope.nextStep();
 //
-//			}
-//		}
+//          }
+//      }
 
 
         var ModalInstanceCtrl = function ($scope, $modalInstance, options) {
@@ -2003,7 +2003,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
             if ($rootScope.applicationReady)
             {
-            	var current_annotation = this.getCurrentAnnotation();
+                var current_annotation = this.getCurrentAnnotation();
 
                 if(current_annotation){
                     if (current_annotation.steps.hasOwnProperty(key)){
@@ -2078,7 +2078,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
         $scope.showIfStepGTE = function(step){
 
-        	return parseInt(step) <= $scope.step;	
+            return parseInt(step) <= $scope.step;
         }
 
         $scope.showIfStepOrLast = function(step){
@@ -2203,7 +2203,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
         $scope.drawModeIs = function(mode_query) {
 
             if($rootScope.applicationReady)
-            {            
+            {
                 return mode_query == $scope.draw_mode;
             }
             return false;
@@ -2460,17 +2460,3 @@ function toggleDebug() {
 }
 
 window.onresize = updateLayout;
-
-
-
-
-
-
-
-
-
-
-
-
-
-

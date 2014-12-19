@@ -61,10 +61,10 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
         $scope.getCurrentAnnotation = function(){
 
-        	if($rootScope.applicationReady){
+            if($rootScope.applicationReady){
                 return $scope.current_annotation;
-        	}
-        	return undefined;
+            }
+            return undefined;
         };
 
         $scope.hasValidTile = function(_id){

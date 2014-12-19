@@ -147,7 +147,7 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
                     self.last_click_location = click_coords;
 
-                   	self.autofill(click_coords)
+                    self.autofill(click_coords)
 
                 } else if (self.draw_mode == 'lines') {
 
@@ -218,7 +218,7 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
             featureListFromAnnotation : function(annotation){
 
-            	// console.log(annotation);
+                // console.log(annotation);
                 var features_list = [];
 
                 if (annotation.polygons.length > 0) {
@@ -231,7 +231,7 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
                     features_list.push(af_feature)
                 }
 
-				if (annotation.lines.length > 0) {
+                if (annotation.lines.length > 0) {
 
                     var l_feature = new ol.Feature({
                         'classification' : annotation.classification
@@ -275,9 +275,9 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
             },
 
             setAnnotations : function(features){
-            	if (features) {
+                if (features) {
                     this.vector_source.addFeatures(features);
-            	}
+                }
             },
 
 

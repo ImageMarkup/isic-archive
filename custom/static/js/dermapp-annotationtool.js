@@ -98,12 +98,12 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
         $scope.getCurrentAnnotation = function(){
 
-        	if($rootScope.applicationReady){
+            if($rootScope.applicationReady){
 
                 return $scope.current_annotation;
 
-        	}
-        	return undefined;
+            }
+            return undefined;
         };
 
 
@@ -381,14 +381,14 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
 //        $scope.saveStepAnnotation = function(annotations, step_to_save){
 //
-//        	var currentAnnotation = $scope.getCurrentAnnotation();
-//        	currentAnnotation.steps[step_to_save] = annotations;
+//          var currentAnnotation = $scope.getCurrentAnnotation();
+//          currentAnnotation.steps[step_to_save] = annotations;
 //        }
 
         $scope.getStepAnnotations = function(){
 
-//        	var currentAnnotation = $scope.getCurrentAnnotation();
-        	console.log('current annotation', $scope.current_annotation);
+//          var currentAnnotation = $scope.getCurrentAnnotation();
+            console.log('current annotation', $scope.current_annotation);
             if($scope.current_annotation){
                 return $scope.current_annotation.steps[$scope.step]
             }
@@ -420,7 +420,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                 }
             }
 
-        	return all_features;
+            return all_features;
         };
 
 
@@ -731,7 +731,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
 //                    console.log('Post succesful', response);
 
-                	$scope.step = -1;
+                    $scope.step = -1;
 
                     $scope.step_config = undefined;
                     $scope.review_mode = false;
@@ -787,7 +787,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
             $scope.setDrawMode('none', '');
 
-        	$rootScope.imageviewer.startPainting();
+            $rootScope.imageviewer.startPainting();
 
             // this lags for a bit, then returns
 
@@ -808,7 +808,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
             $scope.setDrawMode('paintbrush', '');
 
-        	$rootScope.imageviewer.startPainting();
+            $rootScope.imageviewer.startPainting();
 
             $scope.runningSegmentation = false;
 
@@ -817,7 +817,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
         $scope.finishRegionPaint = function(){
 
-			$scope.tool_bar_state = 'rpreview';
+            $scope.tool_bar_state = 'rpreview';
 
             $rootScope.imageviewer.acceptPainting();
 
@@ -827,11 +827,11 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
         $scope.cancelRegionPaint = function(){
 
-        	$rootScope.imageviewer.acceptPainting();
+            $rootScope.imageviewer.acceptPainting();
 
             $rootScope.showingSegmentation = false;
 
-        	$scope.resetStep();
+            $scope.resetStep();
         };
 
         $scope.navMode = function(){
@@ -963,7 +963,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
 
         $scope.showIfStepGTE = function(step){
-        	return parseInt(step) <= $scope.step;
+            return parseInt(step) <= $scope.step;
         };
 
         $scope.showIfStepOrLast = function(step){

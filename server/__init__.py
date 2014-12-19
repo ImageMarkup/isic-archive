@@ -49,31 +49,31 @@ def load(info):
 
 
 
-    # 	uda/gallery/:folderId -> returns a single page gallery
+    #   uda/gallery/:folderId -> returns a single page gallery
 
     uda_root.gallery = GalleryHandler()
 
 
 
-    # 	uda/qc/:folderId -> returns a QC page where user can move images to
+    #   uda/qc/:folderId -> returns a QC page where user can move images to
 
     uda_root.qc = QCHandler()
 
 
 
-    # 	uda/view/:itemId -> simple zoomable viewer for an image
+    #   uda/view/:itemId -> simple zoomable viewer for an image
 
     # TODO
 
 
 
-    # 	uda/task/:userId -> redirects to appropriate task view for the user
+    #   uda/task/:userId -> redirects to appropriate task view for the user
 
     uda_root.task = TaskHandler()
 
 
 
-    # 	uda/annotator -> the reconfigurable image annotator
+    #   uda/annotator -> the reconfigurable image annotator
 
     uda_root.annotate = AnnotateHandler()
 
@@ -140,5 +140,3 @@ def load(info):
 
 
     # add the base directory to serve
-
-
