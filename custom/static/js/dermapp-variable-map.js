@@ -234,6 +234,8 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
         };
 
         $scope.submitAnnotations = function(){
+            var submit_url = '/api/v1/user/' + $rootScope.user['_id'] + '/taskcomplete/map';
+            // TODO: submit '$scope.current_annotation' and other results to 'submit_url'
 
         };
 

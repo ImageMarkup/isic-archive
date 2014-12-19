@@ -405,11 +405,16 @@ def taskCompleteHandler(id, tasktype, params):
 
                 result = 'not implemented yet'
 
+    # phase 2
+    if tasktype == 'map':
+        pass
+        # TODO: receive and store phase 2 data here
+
 
 
     return {'status' : result}
 
-        # debug step 2
+
 
 
 
