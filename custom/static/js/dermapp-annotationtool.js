@@ -2,6 +2,23 @@
  * Created by stonerri on 7/28/14.
  */
 
+function bundle_submit_data( )
+	{
+        //This will get called within the submit annotation button... right now this grabs key elements
+	//from the annotationTool and packages it up for submission as a JSON object to Girder
+
+
+	//this will return a bundled JSON object that (hopefully) contains all info needed for an annotation
+        annot = {}
+
+        annot.current_image = dg_annotation_watcher.current_image
+
+        return annot
+
+
+
+	}
+
 
 var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$sanitize', '$http', '$modal', '$log',
     function ($scope, $rootScope, $timeout, $sanitize, $http, $modal, $log) {

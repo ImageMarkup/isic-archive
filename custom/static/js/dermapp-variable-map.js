@@ -3,10 +3,15 @@
  */
 
 
+dg_annotation_watcher  = {};
+
 var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$sanitize', '$http', '$modal', '$log',
     function ($scope, $rootScope, $timeout, $sanitize, $http, $modal, $log) {
 
         console.log('Initialized annotation tool.');
+
+
+        dg_annotation_watcher = $scope;
 
         $scope.annotation_model = {};
         $scope.annotation_options = undefined;
@@ -234,6 +239,9 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
         };
 
         $scope.submitAnnotations = function(){
+            console.log( $scope );
+            console.log('submit annotations happens here');
+
             var submit_url = '/api/v1/user/' + $rootScope.user['_id'] + '/taskcomplete/map';
 
             var taskcomplete_time = Date.now();
@@ -252,7 +260,6 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             $http.post(submit_url, annotation_to_store).success(function(response) {
                 // TODO: post-submit cleanup here
             });
-
         };
 
 
@@ -344,6 +351,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             }
 
             console.log($scope.current_annotation);
+	    console.log('this should appear everytime i switch states?');
         };
 
 
