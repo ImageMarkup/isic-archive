@@ -407,8 +407,26 @@ def taskCompleteHandler(id, tasktype, params):
 
     # phase 2
     if tasktype == 'map':
-        pass
-        # TODO: receive and store phase 2 data here
+
+        markup_str = cherrypy.request.body.read()
+        markup_dict = json.loads(markup_str)
+
+        m = ModelImporter()
+        annotated_image = m.model('item').load(markup_dict['image']['_id'], force=True)
+
+
+        phs = 'p2'
+        item_metadata = {
+            '%s_user'%phs : markup_dict['user']['_id'],
+            '%s_result'%phs :  'ok',
+            '%s_folder_id'%phs : markup_dict['image']['folderId'],
+            '%s_start_time'%phs : markup_dict['taskstart'],
+            '%s_stop_time'%phs : markup_dict['taskend'],
+        }
+
+        m.model('item').setMetadata(annotated_image, item_metadata)
+
+        # TODO: save 'user_annotation' and other information to JSON file
 
 
 

@@ -235,7 +235,23 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
         $scope.submitAnnotations = function(){
             var submit_url = '/api/v1/user/' + $rootScope.user['_id'] + '/taskcomplete/map';
-            // TODO: submit '$scope.current_annotation' and other results to 'submit_url'
+
+            var taskcomplete_time = Date.now();
+
+            var annotation_to_store = {
+                'phase' : 'phase 2',
+                'image' : $scope.current_image,
+                'user' : $rootScope.user,
+                'taskstart' : $rootScope.task_start,
+                'taskend' : taskcomplete_time,
+
+                'user_annotation': $scope.annotation_model,
+                // TODO: add additional info to submission
+            };
+
+            $http.post(submit_url, annotation_to_store).success(function(response) {
+                // TODO: post-submit cleanup here
+            });
 
         };
 
