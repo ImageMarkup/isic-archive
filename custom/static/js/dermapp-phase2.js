@@ -42,7 +42,9 @@ var appController = derm_app.controller('ApplicationController', ['$scope', '$ro
             $rootScope.imageviewer = new olViewer({'div' : 'annotationView'});
             $rootScope.applicationReady = true;
 
-            updateLayout()
+            $rootScope.task_start = Date.now(); // global start time for this task
+
+            updateLayout();
 
         };
 
@@ -50,7 +52,6 @@ var appController = derm_app.controller('ApplicationController', ['$scope', '$ro
 
             if ($rootScope.applicationReady){
 
-                $rootScope.task_start = Date.now(); // global start time for this task
                 $rootScope.imageviewer.clearCurrentImage();
                 var image_url = '/api/v1/item/' + newImage['_id'];
                 $rootScope.imageviewer.loadImageWithURL(image_url);
