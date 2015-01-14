@@ -95,19 +95,12 @@ class TaskHandler(object):
             return 'no tasks for user'
 
 
-
-
-
     # HTML5
     def OPTIONS(self):
         cherrypy.response.headers['Access-Control-Allow-Credentials'] = True
         cherrypy.response.headers['Access-Control-Allow-Origin'] = cherrypy.request.headers['ORIGIN']
         cherrypy.response.headers['Access-Control-Allow-Methods'] = 'GET'
         cherrypy.response.headers['Access-Control-Allow-Headers'] = cherrypy.request.headers['ACCESS-CONTROL-REQUEST-HEADERS']
-
-
-
-
 
 
 
@@ -246,17 +239,11 @@ def tasklisthandler(id, params):
         fvars.close()
 
 
-
-
         return_dict['loadAnnotation'] = True
         return_dict['variables'] = fvarlist
         return_dict['annotation'] = annotation_str['p1c']['steps']
 
-
-
     else:
-
-
         return_dict['loadAnnotation'] = False
 
     # the UI json to provide
@@ -270,11 +257,6 @@ tasklisthandler.description = (
     Description('Retrieve the current task list for a given user')
     .param('id', 'The user ID', paramType='path')
     .errorResponse())
-
-
-
-
-
 
 
 def updateQCStatus(contents):
@@ -359,257 +341,131 @@ def taskCompleteHandler(id, tasktype, params):
             updateQCStatus(qc_contents)
             result = 'success'
 
-    if tasktype == 'markup':
+    if tasktype in ['markup', 'map']:
 
         markup_str = cherrypy.request.body.read()
         markup_dict = json.loads(markup_str)
 
-        print 'id', id
-        print 'body', type(cherrypy.request.body.read())
-        print 'params', type(params)
-        print 'markup', type(markup_dict)
-
-        for input in [id, params, markup_dict]:
-
-            if type(input) == dict:
-                print input.keys()
-
-
-        # this is explicit, could be elegant but not needed.
-
-        print TerminalColor.warning('Task complete: %s' % markup_dict['phase'])
-
-        if 'phase' in markup_dict.keys():
-
-            if markup_dict['phase'].lower() == 'phase 1a':
-
-                result = handlePhase1a(markup_dict)
-
-            elif markup_dict['phase'].lower() == 'phase 1b':
-
-                result = handlePhase1b(markup_dict)
-
-            elif markup_dict['phase'].lower() == 'phase 1c':
-
-                result = handlePhase1c(markup_dict)
-
-
-            # elif markup_dict['phase'].lower() == 'phase 1d':
-            #
-            #     result = handlePhase1c(markup_dict)
-
-
-            else:
-
-                print markup_dict
-
-                result = 'not implemented yet'
-
-    # phase 2
-    if tasktype == 'map':
-
-        markup_str = cherrypy.request.body.read()
-        markup_dict = json.loads(markup_str)
-
-        m = ModelImporter()
-        annotated_image = m.model('item').load(markup_dict['image']['_id'], force=True)
-
-
-        phs = 'p2'
-        item_metadata = {
-            '%s_user'%phs : markup_dict['user']['_id'],
-            '%s_result'%phs :  'ok',
-            '%s_folder_id'%phs : markup_dict['image']['folderId'],
-            '%s_start_time'%phs : markup_dict['taskstart'],
-            '%s_stop_time'%phs : markup_dict['taskend'],
+        phase_handlers = {
+            'phase 1a': handlePhase1a,
+            'phase 1b': handlePhase1b,
+            'phase 1c': handlePhase1c,
+            'phase 2': handlePhase2
         }
+        try:
+            phase_handler = phase_handlers[markup_dict['phase'].lower()]
+        except KeyError:
+            # TODO: fail here
+            print markup_dict
+            result = 'not implemented yet'
+        else:
+            result = phase_handler(markup_dict)
 
-        m.model('item').setMetadata(annotated_image, item_metadata)
-
-        # TODO: save 'user_annotation' and other information to JSON file
-
-
-
-    return {'status' : result}
-
-
-
-
-
-#
-#
-# def handlePhase1aOld(markup_dict):
-#
-#     item_name_base = markup_dict['image']['name'].split('.t')[0]
-#
-#     item_metadata = {
-#         'p1a_user' : markup_dict['user']['_id'],
-#         'p1a_result' :  'ok',
-#         'p1a_folder_id' : markup_dict['image']['folderId'],
-#         'p1a_start_time' : markup_dict['taskstart'],
-#         'p1a_stop_time' : markup_dict['taskend'],
-#     }
-#
-#
-#     dictionary_to_create = {}
-#     dictionary_to_create['p1a'] = {}
-#     dictionary_to_create['p1a']['user'] = markup_dict['user']
-#     dictionary_to_create['p1a']['image'] = markup_dict['image']
-#     dictionary_to_create['p1a']['steps'] = markup_dict['steps']
-#     dictionary_to_create['p1a']['result'] = item_metadata
-#
-#
-#
-#     # grab the b64 png from the dictionary
-#     png_b64string = markup_dict['steps']['2']['markup']['features'][0]['properties']['parameters']['rgb']
-#     # remote the initial data uri details
-#     png_b64string_trim = png_b64string[22:]
-#
-#     # make sure it's not in the final project
-#     del dictionary_to_create['p1a']['steps']['2']['markup']['features'][0]['properties']['parameters']['rgb']
-#
-#     m = ModelImporter()
-#
-#     # add to existing item
-#
-#     annotated_image = m.model('item').load(markup_dict['image']['_id'], force=True)
-#
-#     assetstore = getAssetStoreForItem(annotated_image)
-#
-#     m.model('item').setMetadata(annotated_image, item_metadata)
-#
-#
-#     #move item to folder in phase 1b collection
-#
-#     uda_user = getUDAuser()
-#     original_folder = m.model('folder').load(markup_dict['image']['folderId'], force=True)
-#     phase1b_collection = getCollection('Phase 1b')
-#     phase1b_images = makeFolderIfNotPresent(phase1b_collection, original_folder['name'], '', 'collection', False, uda_user)
-#
-#     annotated_image['folderId'] = phase1b_images['_id']
-#     m.model('item').updateItem(annotated_image)
-#
-#     # add new files to the item
-#
-#     text_annotation_name = item_name_base + '-p1a.json'
-#     text_annotation_data = json.dumps(dictionary_to_create)
-#
-#     json_file = createFileObjectFromData(text_annotation_name, annotated_image, assetstore, text_annotation_data, 'w')
-#
-#
-#     png_annotation_name = item_name_base + '-p1a.png'
-#     png_annotation_data = png_b64string_trim.decode('base64')
-#
-#     png_file = createFileObjectFromData(png_annotation_name, annotated_image, assetstore, png_annotation_data, 'wb')
-#
-#
-#
-#     return 'success'
-#
-
-
+    return {'status': result}
 
 
 def handlePhase1a(markup_dict):
-    return handePhaseCore(markup_dict, 'p1a', 'Phase 1b')
+    return handlePhaseCore(markup_dict, 'p1a', 'Phase 1b')
 
 
 def handlePhase1b(markup_dict):
-    return handePhaseCore(markup_dict, 'p1b', 'Phase 1c')
+    return handlePhaseCore(markup_dict, 'p1b', 'Phase 1c')
+
 
 def handlePhase1c(markup_dict):
-    # return handePhaseCore(markup_dict, 'p1c', 'Phase 1d')
-    return handePhaseCore(markup_dict, 'p1c', 'Phase 2')
+    return handlePhaseCore(markup_dict, 'p1c', 'Phase 2')
 
 
-def handePhaseCore(markup_dict, phase_acronym, next_phase_full):
+def handlePhase2(markup_dict):
+    return handlePhaseCore(markup_dict, 'p2', 'Complete')
 
-    phs = phase_acronym
-    phase_full = next_phase_full
 
+def handlePhaseCore(markup_dict, phase_acronym, next_phase_full):
     item_name_base = markup_dict['image']['name'].split('.t')[0]
 
     item_metadata = {
-        '%s_user'%phs : markup_dict['user']['_id'],
-        '%s_result'%phs :  'ok',
-        '%s_folder_id'%phs : markup_dict['image']['folderId'],
-        '%s_start_time'%phs : markup_dict['taskstart'],
-        '%s_stop_time'%phs : markup_dict['taskend'],
+        '%s_user' % phase_acronym: markup_dict['user']['_id'],
+        '%s_result' % phase_acronym: 'ok',
+        '%s_folder_id' % phase_acronym: markup_dict['image']['folderId'],
+        '%s_start_time' % phase_acronym: markup_dict['taskstart'],
+        '%s_stop_time' % phase_acronym: markup_dict['taskend'],
     }
 
-    dictionary_to_create = {}
-    dictionary_to_create[phs] = {}
-    dictionary_to_create[phs]['user'] = markup_dict['user']
-    dictionary_to_create[phs]['image'] = markup_dict['image']
-    dictionary_to_create[phs]['steps'] = markup_dict['steps']
-    dictionary_to_create[phs]['result'] = item_metadata
+    markup_json = dict()
+    markup_json[phase_acronym] = {
+        'user': markup_dict['user'],
+        'image': markup_dict['image'],
+        'result': item_metadata
+    }
 
+    if phase_acronym in ['p1a', 'p1b', 'p1c']:
+        markup_json[phase_acronym]['steps'] = markup_dict['steps'],
 
-    # grab the b64 png from the dictionary
-    png_b64string = markup_dict['steps']['2']['markup']['features'][0]['properties']['parameters']['rgb']
-    # remote the initial data uri details
-    png_b64string_trim = png_b64string[22:]
+        # grab the b64 png from the dictionary
+        png_b64string = \
+        markup_dict['steps']['2']['markup']['features'][0]['properties'][
+            'parameters']['rgb']
+        # remote the initial data uri details
+        png_b64string_trim = png_b64string[22:]
 
-    # make sure it's not in the final project
-    del dictionary_to_create[phs]['steps']['2']['markup']['features'][0]['properties']['parameters']['rgb']
+        # make sure it's not in the final project
+        del markup_json[phase_acronym]['steps']['2']['markup']['features'][0][
+            'properties']['parameters']['rgb']
 
+        # grab the b64 png from the dictionary
+        png_tiles_b64string = \
+        markup_dict['steps']['2']['markup']['features'][0]['properties'][
+            'parameters']['tiles']
+        # remote the initial data uri details
+        png_tiles_b64string_trim = png_tiles_b64string[22:]
 
-    # grab the b64 png from the dictionary
-    png_tiles_b64string = markup_dict['steps']['2']['markup']['features'][0]['properties']['parameters']['tiles']
-    # remote the initial data uri details
-    png_tiles_b64string_trim = png_tiles_b64string[22:]
+        # make sure it's not in the final project
+        del markup_json[phase_acronym]['steps']['2']['markup']['features'][0][
+            'properties']['parameters']['tiles']
 
-    # make sure it's not in the final project
-    del dictionary_to_create[phs]['steps']['2']['markup']['features'][0]['properties']['parameters']['tiles']
+    elif phase_acronym == 'p2':
+        markup_json[phase_acronym]['user_annotation'] = markup_dict[
+            'user_annotation']
+        markup_json[phase_acronym]['markup_model'] = markup_dict['markup_model']
+        # TODO: dereference annotation_options
 
-
-
-
-    m = ModelImporter()
 
     # add to existing item
-
-    annotated_image = m.model('item').load(markup_dict['image']['_id'], force=True)
-
-    assetstore = getAssetStoreForItem(annotated_image)
-
-    m.model('item').setMetadata(annotated_image, item_metadata)
+    m = ModelImporter()
+    image_item = m.model('item').load(markup_dict['image']['_id'], force=True)
+    m.model('item').setMetadata(image_item, item_metadata)
 
 
-    #move item to folder in phase 1b collection
-
-    uda_user = getUDAuser()
+    # move item to folder in next collection
     original_folder = m.model('folder').load(markup_dict['image']['folderId'], force=True)
-    phase_collection = getCollection(phase_full)
-    phase_images = makeFolderIfNotPresent(phase_collection, original_folder['name'], '', 'collection', False, uda_user)
+    next_phase_folder = makeFolderIfNotPresent(
+        getCollection(next_phase_full),
+        original_folder['name'], '',
+        'collection', False, getUDAuser())
+    image_item['folderId'] = next_phase_folder['_id']
+    m.model('item').updateItem(image_item)
 
-    annotated_image['folderId'] = phase_images['_id']
-    m.model('item').updateItem(annotated_image)
 
     # add new files to the item
+    assetstore = getAssetStoreForItem(image_item)
 
-    text_annotation_name = item_name_base + '-%s.json' % (phs)
-    text_annotation_data = json.dumps(dictionary_to_create)
+    markup_json_file_name = '%s-%s.json' % (item_name_base, phase_acronym)
+    markup_json_data = json.dumps(markup_json)
+    json_file = createFileObjectFromData(markup_json_file_name, image_item, assetstore, markup_json_data, 'w')
 
-    json_file = createFileObjectFromData(text_annotation_name, annotated_image, assetstore, text_annotation_data, 'w')
+    if phase_acronym in ['p1a', 'p1b', 'p1c']:
+        png_annotation_file_name = '%s-%s.png' % (item_name_base, phase_acronym)
+        png_annotation_data = png_b64string_trim.decode('base64')
+        png_file = createFileObjectFromData(png_annotation_file_name, image_item, assetstore, png_annotation_data, 'wb')
 
-
-    png_annotation_name = item_name_base + '-%s.png' % (phs)
-    png_annotation_data = png_b64string_trim.decode('base64')
-
-    png_file = createFileObjectFromData(png_annotation_name, annotated_image, assetstore, png_annotation_data, 'wb')
-
-
-    png_tile_annotation_name = item_name_base + '-tile-%s.png' % (phs)
-    png_tile_annotation_data = png_tiles_b64string_trim.decode('base64')
-
-    png_tile_file = createFileObjectFromData(png_tile_annotation_name, annotated_image, assetstore, png_tile_annotation_data, 'wb')
-
-
+        png_tile_annotation_file_name = '%s-tile-%s.png' % (item_name_base, phase_acronym)
+        png_tile_annotation_data = png_tiles_b64string_trim.decode('base64')
+        png_tile_file = createFileObjectFromData(png_tile_annotation_file_name,
+                                                 image_item, assetstore,
+                                                 png_tile_annotation_data, 'wb')
 
 
     return 'success'
-
 
 
 
@@ -626,17 +482,7 @@ def devNullEndpoint(id, params):
 
 
 
-
-
-
-
-
-
-
-
-
 taskCompleteHandler.description = (
     Description('Push the QC results for the current task list for a given user')
     .param('id', 'The user ID', paramType='path')
     .errorResponse())
-

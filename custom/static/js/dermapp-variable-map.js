@@ -247,13 +247,14 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             var taskcomplete_time = Date.now();
 
             var annotation_to_store = {
-                'phase' : 'phase 2',
+                'phase' : $scope.phase,
                 'image' : $scope.current_image,
                 'user' : $rootScope.user,
                 'taskstart' : $rootScope.task_start,
                 'taskend' : taskcomplete_time,
 
                 'user_annotation': $scope.annotation_model,
+                'markup_model': $scope.annotation_options,
                 // TODO: add additional info to submission
             };
 
