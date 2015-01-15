@@ -377,6 +377,7 @@ def handlePhase1c(markup_dict):
 
 
 def handlePhase2(markup_dict):
+    # TODO: auto-create "Complete" collection owned by "udastudy"
     return handlePhaseCore(markup_dict, 'p2', 'Complete')
 
 

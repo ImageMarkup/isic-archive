@@ -252,10 +252,8 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                 'user' : $rootScope.user,
                 'taskstart' : $rootScope.task_start,
                 'taskend' : taskcomplete_time,
-
                 'user_annotation': $scope.annotation_model,
                 'markup_model': $scope.annotation_options,
-                // TODO: add additional info to submission
             };
 
             $http.post(submit_url, annotation_to_store).success(function(response) {
