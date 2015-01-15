@@ -1,5 +1,6 @@
 {
     "name": "(MSKCC) UDA Study 2",
     "description": "All plugin functionality combined",
-    "dependencies": [""]
+    "version": "1.0.0",
+    "dependencies": []
 }
