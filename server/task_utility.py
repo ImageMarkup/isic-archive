@@ -469,20 +469,6 @@ def handlePhaseCore(markup_dict, phase_acronym, next_phase_full):
     return 'success'
 
 
-
-def devNullEndpoint(id, params):
-
-    # for input in [id, params, cherrypy.request.body.read()]:
-
-    #
-    print 'id', id
-    print 'body', type(cherrypy.request.body.read()),
-    print 'params', type(params)
-
-    return {'status', 'success'}
-
-
-
 taskCompleteHandler.description = (
     Description('Push the QC results for the current task list for a given user')
     .param('id', 'The user ID', paramType='path')

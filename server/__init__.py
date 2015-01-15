@@ -8,7 +8,7 @@ from gallery import GalleryHandler
 from upload import uploadHandler
 from image_utility import zoomifyhandler, thumbnailhandler, fifHandler, annotationHandler, segmentationSourceHandler, segmentationTileHandler
 from qc import QCHandler
-from task_utility import tasklisthandler, taskCompleteHandler, TaskHandler, devNullEndpoint
+from task_utility import tasklisthandler, taskCompleteHandler, TaskHandler
 
 from annotate import AnnotateHandler, FillHandler, MapHandler
 
@@ -125,11 +125,6 @@ def load(info):
     # user/:userId/taskcomplete -> POSTable endpoint to handle completed task content
 
     info['apiRoot'].user.route('POST', (':id', 'taskcomplete', ':tasktype'), public_access(taskCompleteHandler))
-
-    # debug
-
-    info['apiRoot'].user.route('POST', (':id', 'devnull'), public_access(devNullEndpoint))
-
 
 
     # add event listeners
