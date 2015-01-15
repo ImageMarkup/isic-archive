@@ -175,8 +175,6 @@ def getWeightForGroup(groupName):
         weight = 30
     elif groupName == 'Phase 1c':
         weight = 40
-    elif groupName == 'Phase 1d':
-        weight = 50
     elif groupName == 'Phase 2':
         weight = 60
 

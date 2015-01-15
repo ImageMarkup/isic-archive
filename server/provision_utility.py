@@ -137,12 +137,6 @@ def initialSetup():
     m.model('collection').setGroupAccess(phase1c_collection, phase1b_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1c_collection, phase1c_group, AccessType.READ, save=True)
 
-    phase1d_collection = makeCollectionIfNotPresent('Phase 1d', uda_user, 'Images that have completed Phase 1')
-    m.model('collection').setGroupAccess(phase1d_collection, phase0_group, AccessType.READ, save=True)
-    m.model('collection').setGroupAccess(phase1d_collection, phase1a_group, AccessType.READ, save=True)
-    m.model('collection').setGroupAccess(phase1d_collection, phase1b_group, AccessType.READ, save=True)
-    m.model('collection').setGroupAccess(phase1d_collection, phase1c_group, AccessType.READ, save=True)
-
 
     phase2_collection = makeCollectionIfNotPresent('Phase 2', uda_user, 'Images that have completed Phase 1')
     m.model('collection').setGroupAccess(phase2_collection, phase0_group, AccessType.READ, save=True)

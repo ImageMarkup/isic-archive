@@ -13,6 +13,7 @@ import re
 import geojson
 from geojson import Polygon, Feature
 
+# TODO: add celery, geojson to requirements.txt
 
 c = Celery('tasks', backend='amqp', broker='amqp://')
 
