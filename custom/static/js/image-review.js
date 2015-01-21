@@ -8,10 +8,6 @@
 var review_app = angular.module('DermApp', ['ngSanitize', 'mousetrap']);
 
 review_app.config(function($httpProvider) {
-//  $httpProvider.defaults.headers.put['Content-Type'] =
-//    'application/x-www-form-urlencoded';
-  $httpProvider.defaults.headers.post['Content-Type'] =
-    'application/x-www-form-urlencoded';
   $httpProvider.defaults.xsrfCookieName = 'girderToken'
   $httpProvider.defaults.xsrfHeaderName = 'Girder-Token'
 });
@@ -19,35 +15,16 @@ review_app.config(function($httpProvider) {
 var appController = review_app.controller('ApplicationController', ['$scope', '$rootScope', '$timeout', '$http',
     function ($scope, $rootScope, $timeout, $http) {
 
-
         $("#angular_id").height(window.innerHeight - 80 - 100);
         $("#gridcontainer").height(window.innerHeight - 100 - 100);
 
+        $scope.taskcomplete_url = '/api/v1/uda/task/qc/complete';
 
+        var urlvals = window.location.pathname.split('/');
+        var folder_id = urlvals[urlvals.length - 1];
+        $scope.images_url = '/api/v1/item?folderId=' + folder_id;
+        $scope.folder_url = '/api/v1/folder/' + folder_id;
 
-        var api_user_url = '/api/v1/user/me';
-        $scope.user = {};
-        $http.get(api_user_url).then(function(response){
-            $scope.user = response.data;
-            console.log('Logged in as', $scope.user);
-            $scope.taskcomplete_url = '/api/v1/user/' + $scope.user['_id'] + '/taskcomplete/qc';
-
-        });
-
-        $scope.$watch('user', function(newUser, oldUser){
-            if(newUser){
-                var urlvals = window.location.pathname.split('/');
-
-                var folder_id = urlvals[urlvals.length - 1];
-                console.log(folder_id);
-
-                $scope.images_url = '/api/v1/item?folderId='+folder_id;
-                $scope.folder_url = '/api/v1/folder/'+ folder_id;
-
-                $scope.getFolderInfo();
-                $scope.getImages();
-            }
-        });
 
         $scope.getFolderInfo = function(){
 
@@ -106,14 +83,11 @@ var appController = review_app.controller('ApplicationController', ['$scope', '$
         $scope.clearFlagged = function(){
 
             var flagged_images = $scope.flagged_list;
-            var d = Date.now();
 
             var payload = {
                 flagged : flagged_images,
                 folder: $scope.folder_details,
-                good : [],
-                user : $scope.user,
-                date : d
+                good : []
             };
 
             console.log(payload);
@@ -140,14 +114,10 @@ var appController = review_app.controller('ApplicationController', ['$scope', '$
                 }
             }
 
-            var d = Date.now();
-
             var payload = {
                 flagged : flagged_images,
                 good : images_to_accept,
-                user : $scope.user,
-                folder: $scope.folder_details,
-                date : d
+                folder: $scope.folder_details
             };
 
             $http.post($scope.taskcomplete_url, angular.toJson(payload)).then(function(response){
@@ -207,11 +177,8 @@ var appController = review_app.controller('ApplicationController', ['$scope', '$
             }
         };
 
-
-        // run me!
-
-//        $scope.getImages();
-
+        $scope.getFolderInfo();
+        $scope.getImages();
 
     }]);
 

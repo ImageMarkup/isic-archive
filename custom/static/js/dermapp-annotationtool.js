@@ -731,18 +731,17 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                 };
 
                 for(var k in $scope.current_annotation.steps){
-
-                    annotation_to_store.steps[k] = {};
-                    annotation_to_store.steps[k]['markup'] = $scope.current_annotation.steps[k].markup;
-                    annotation_to_store.steps[k]['startTime'] = $scope.current_annotation.steps[k].startTime;
-                    annotation_to_store.steps[k]['submitTime'] = $scope.current_annotation.steps[k].submitTime;
-
+                    annotation_to_store.steps[k] = {
+                        markup: $scope.current_annotation.steps[k].markup,
+                        startTime: $scope.current_annotation.steps[k].startTime,
+                        submitTime: $scope.current_annotation.steps[k].submitTime
+                    };
                 }
 
 //                console.log(annotation_to_store);
 
                 var self = this;
-                var annotation_url = '/api/v1/user/' + $rootScope.user['_id'] + '/taskcomplete/markup';
+                var annotation_url = '/api/v1/uda/task/markup/' + $scope.current_image._id + '/complete';
 
                 $http.post(annotation_url, annotation_to_store).success(function(response){
 

@@ -8,7 +8,7 @@ from gallery import GalleryHandler
 from upload import uploadHandler
 from image_utility import zoomifyhandler, thumbnailhandler, fifHandler, annotationHandler, segmentationSourceHandler, segmentationTileHandler
 from qc import QCHandler
-from task_utility import tasklisthandler, taskCompleteHandler, TaskHandler
+from task_utility import tasklisthandler, TaskHandler, UDAResource
 
 from annotate import AnnotateHandler, FillHandler, MapHandler
 
@@ -24,7 +24,6 @@ def load(info):
 
 
     # create all necessary users, groups, collections, etc
-
     initialSetup()
 
 
@@ -48,6 +47,7 @@ def load(info):
     uda_root = Root()
 
 
+    info['apiRoot'].uda = UDAResource()
 
     #   uda/gallery/:folderId -> returns a single page gallery
 
@@ -121,11 +121,6 @@ def load(info):
     # user/:userId/tasklist -> returns a list of images and any UI configuration
 
     info['apiRoot'].user.route('GET', (':id', 'tasklist'), public_access(tasklisthandler))
-
-    # user/:userId/taskcomplete -> POSTable endpoint to handle completed task content
-
-    info['apiRoot'].user.route('POST', (':id', 'taskcomplete', ':tasktype'), public_access(taskCompleteHandler))
-
 
     # add event listeners
 

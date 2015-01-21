@@ -1,13 +1,213 @@
-__author__ = 'stonerri'
+# coding=utf-8
 
-from girder.utility.model_importer import ModelImporter
-from girder.constants import TerminalColor
-from girder.api.describe import Description
-import cherrypy
-import os
 import datetime
+import mimetypes
+import os
 import json
-from model_utility import *
+
+import cherrypy
+from girder.api import access
+from girder.api.rest import Resource
+from girder.api.describe import Description
+from girder.constants import AccessType
+from girder.utility.model_importer import ModelImporter
+
+from .model_utility import *
+
+
+class UDAResource(Resource):
+    def __init__(self):
+        self.resourceName = 'uda'
+        self.route('POST', ('task', 'qc', 'complete'), self.p0TaskComplete)
+        self.route('POST', ('task', 'markup', ':item_id', 'complete'), self.p1TaskComplete)
+        self.route('POST', ('task', 'map', ':item_id', 'complete'), self.p2TaskComplete)
+
+
+    def _requireCollectionAccess(self, collection_name):
+        collection = self.model('collection').findOne({'name': collection_name})
+        user = self.getCurrentUser()
+        self.model('collection').requireAccess(collection, user, AccessType.WRITE)
+
+
+    @access.user
+    def p0TaskComplete(self, params):
+        self._requireCollectionAccess('Phase 0')
+        contents = json.loads(cherrypy.request.body.read())
+
+        good_images_list = contents['good']
+        flagged_images_dict = contents['flagged']
+        folder_info = contents['folder']
+        current_user = self.getCurrentUser()
+
+        # move flagged images into flagged folder, set QC metadata
+        phase0_collection = self.model('collection').findOne({'name': 'Phase 0'})
+        phase0_flagged_images = getFolder(phase0_collection, 'flagged')
+        # TODO: create "flagged" if not present?
+        for image in flagged_images_dict.itervalues():
+            image_item = self.model('item').load(image['_id'], force=True)
+            # TODO: ensure this image item is actually in Phase 0
+            qc_metadata = {
+                'qc_user': current_user['_id'],
+                'qc_result': 'flagged',
+                'qc_folder_id': folder_info['_id']
+            }
+            self.model('item').setMetadata(image_item, qc_metadata)
+            self.model('item').move(image_item, phase0_flagged_images)
+
+        # move good images into phase 1a folder
+        phase1a_collection = self.model('collection').findOne({'name': 'Phase 1a'})
+        phase1a_images = makeFolderIfNotPresent(phase1a_collection, folder_info['name'], '', 'collection', False, getUDAuser())
+        for image in good_images_list:
+            image_item = self.model('item').load(image['_id'], force=True)
+            # TODO: ensure this image item is actually in Phase 0
+            qc_metadata = {
+                'qc_user': current_user['_id'],
+                'qc_result': 'ok',
+                'qc_folder_id': folder_info['_id'],
+                'qc_stop_time': datetime.datetime.utcnow(),
+            }
+            self.model('item').setMetadata(image_item, qc_metadata)
+            self.model('item').move(image_item, phase1a_images)
+
+        return {'status': 'success'}
+
+    p0TaskComplete.description = (
+        Description('Complete a Phase 0 (qc) task.')
+        .responseClass('UDA')
+        .param('details', 'JSON details of images to be QC\'d.', paramType='body')
+        .errorResponse())
+
+
+    @access.user
+    def p1TaskComplete(self, item_id, params):
+        markup_str = cherrypy.request.body.read()
+        markup_dict = json.loads(markup_str)
+
+        phase_handlers = {
+            # phase_full_lower: (phase_acronym, next_phase_full)
+            'Phase 1a': ('p1a', 'Phase 1b'),
+            'Phase 1b': ('p1b', 'Phase 1c'),
+            'Phase 1c': ('p1c', 'Phase 2'),
+        }
+        try:
+            phase_acronym, next_phase_full = phase_handlers[markup_dict['phase']]
+        except KeyError:
+            # TODO: send the proper error code on failure
+            raise
+        else:
+            self._requireCollectionAccess(markup_dict['phase'])
+            result = self._handlePhaseCore(markup_dict, phase_acronym, next_phase_full)
+
+        return {'status': result}
+
+    p1TaskComplete.description = (
+        Description('Complete a Phase 1 (markup) task.')
+        .responseClass('UDA')
+        .param('item_id', 'The item ID.', paramType='path')
+        .errorResponse())
+
+
+    @access.user
+    def p2TaskComplete(self, item_id, params):
+        self._requireCollectionAccess('Phase 2')
+        markup_str = cherrypy.request.body.read()
+        markup_dict = json.loads(markup_str)
+
+        # TODO: auto-create "Complete" collection owned by "udastudy"
+        result = self._handlePhaseCore(markup_dict, 'p2', 'Complete')
+
+        return {'status': result}
+
+    p2TaskComplete.description = (
+        Description('Complete a Phase 2 (map) task.')
+        .responseClass('UDA')
+        .param('item_id', 'The item ID.', paramType='path')
+        .errorResponse())
+
+
+    def _handlePhaseCore(self, markup_dict, phase_acronym, next_phase_full):
+        item_name_base = markup_dict['image']['name'].split('.t')[0]
+
+        item_metadata = {
+            '%s_user' % phase_acronym: markup_dict['user']['_id'],
+            '%s_result' % phase_acronym: 'ok',
+            '%s_folder_id' % phase_acronym: markup_dict['image']['folderId'],
+            '%s_start_time' % phase_acronym: markup_dict['taskstart'],
+            '%s_stop_time' % phase_acronym: markup_dict['taskend'],
+        }
+
+        markup_json = dict()
+        markup_json[phase_acronym] = {
+            'user': markup_dict['user'],
+            'image': markup_dict['image'],
+            'result': item_metadata
+        }
+
+        if phase_acronym in ['p1a', 'p1b', 'p1c']:
+            markup_json[phase_acronym]['steps'] = markup_dict['steps']
+
+            # grab and remove the b64 png from the dictionary
+            png_b64string = markup_dict['steps']['2']['markup']['features'][0]['properties']['parameters'].pop('rgb')
+            # remote the initial data uri details
+            png_b64string_trim = png_b64string[22:]
+
+            # grab and remove the b64 png from the dictionary
+            png_tiles_b64string = markup_dict['steps']['2']['markup']['features'][0]['properties']['parameters'].pop('tiles')
+            # remote the initial data uri details
+            png_tiles_b64string_trim = png_tiles_b64string[22:]
+
+        elif phase_acronym == 'p2':
+            markup_json[phase_acronym]['user_annotation'] = markup_dict['user_annotation']
+            markup_json[phase_acronym]['markup_model'] = markup_dict['markup_model']
+            # TODO: dereference annotation_options
+
+        # add to existing item
+        # TODO: get item_id from URL, instead of within markup_dict
+        image_item = self.model('item').load(markup_dict['image']['_id'], force=True)
+        self.model('item').setMetadata(image_item, item_metadata)
+
+        # move item to folder in next collection
+        original_folder = self.model('folder').load(markup_dict['image']['folderId'], force=True)
+        next_phase_folder = makeFolderIfNotPresent(
+            getCollection(next_phase_full),
+            original_folder['name'], '',
+            'collection', False, getUDAuser())
+        image_item['folderId'] = next_phase_folder['_id']
+        self.model('item').updateItem(image_item)
+
+        self._createFileFromData(
+            image_item,
+            json.dumps(markup_json),
+            '%s-%s.json' % (item_name_base, phase_acronym)
+        )
+
+        if phase_acronym in ['p1a', 'p1b', 'p1c']:
+            self._createFileFromData(
+                image_item,
+                png_b64string_trim.decode('base64'),
+                '%s-%s.png' % (item_name_base, phase_acronym)
+            )
+
+            self._createFileFromData(
+                image_item,
+                png_tiles_b64string_trim.decode('base64'),
+                '%s-tile-%s.png' % (item_name_base, phase_acronym)
+            )
+
+        return 'success'
+
+
+    def _createFileFromData(self, item, data, filename):
+        # TODO: overwrite existing files if present, using provenance to keep old files
+        upload = self.model('upload').createUpload(
+            getUDAuser(),
+            filename,
+            'item', item,
+            len(data),
+            mimetypes.guess_type(filename)[0]
+        )
+        self.model('upload').handleChunk(upload, data)
+
 
 
 class TaskHandler(object):
@@ -70,7 +270,7 @@ class TaskHandler(object):
 
         # this is where we'd return something if it was an API, instead we're going one step farther and redirecting to the task
 
-
+        # todo: if user isn't a member of any groups with tasks, "final_task['name']" raises a KeyError
 
         phase_folders = getFoldersForCollection(getCollection(final_task['name']))
 
@@ -82,6 +282,8 @@ class TaskHandler(object):
             if len(items_in_folder) > target_count:
                 target_folder = folder
                 target_count = len(items_in_folder)
+
+        # TODO: this breaks if there are more items in "dropzip" than were actually extracted
 
 
         if target_folder:
@@ -255,221 +457,5 @@ def tasklisthandler(id, params):
 
 tasklisthandler.description = (
     Description('Retrieve the current task list for a given user')
-    .param('id', 'The user ID', paramType='path')
-    .errorResponse())
-
-
-def updateQCStatus(contents):
-
-
-    m = ModelImporter()
-
-    # TODO we should do some access control on this, but for now going straight through
-
-    # arrive as a list
-    good_images = contents['good']
-
-    # arrives as a dict
-    flagged_images = contents['flagged']
-
-    # arrives as a dict
-    user_info = contents['user']
-
-    # not needed, calculated automatically by model update
-    datestr = contents['date']
-
-    # folder info
-    folder_info = contents['folder']
-
-    # get folder for flagged images
-    phase0_collection =  getCollection('Phase 0')
-
-    phase0_flagged_images = getFolder(phase0_collection, 'flagged')
-
-    # move flagged images into flagged folder, set QC metadata
-    for image_key, image in flagged_images.iteritems():
-
-        m_image = m.model('item').load(image['_id'], force=True)
-
-        qc_metadata = {
-            'qc_user' : user_info['_id'],
-            'qc_result' :  'flagged',
-            'qc_folder_id' : folder_info['_id']
-        }
-
-        m.model('item').setMetadata(m_image, qc_metadata)
-        m_image['folderId'] = phase0_flagged_images['_id']
-        m.model('item').updateItem(m_image)
-
-
-    uda_user = getUDAuser()
-    phase1a_collection = getCollection('Phase 1a')
-    phase1a_images = makeFolderIfNotPresent(phase1a_collection, folder_info['name'], '', 'collection', False, uda_user)
-
-    # move good images into phase 1a folder
-    for image in good_images:
-
-        m_image = m.model('item').load(image['_id'], force=True)
-
-        qc_metadata = {
-            'qc_user' : user_info['_id'],
-            'qc_result' :  'ok',
-            'qc_folder_id' : folder_info['_id']
-        }
-
-        m.model('item').setMetadata(m_image, qc_metadata)
-
-        m_image['folderId'] = phase1a_images['_id']
-        m.model('item').updateItem(m_image)
-
-
-
-
-def taskCompleteHandler(id, tasktype, params):
-
-    # todo: posting as a dictionary, but content is a key?
-    # print cherrypy.request.body.read()
-
-    # branch on task type
-
-    result = 'invalid post'
-
-    if tasktype == 'qc':
-
-        qc_contents = json.loads(params.keys()[0])
-        if qc_contents:
-            updateQCStatus(qc_contents)
-            result = 'success'
-
-    if tasktype in ['markup', 'map']:
-
-        markup_str = cherrypy.request.body.read()
-        markup_dict = json.loads(markup_str)
-
-        phase_handlers = {
-            'phase 1a': handlePhase1a,
-            'phase 1b': handlePhase1b,
-            'phase 1c': handlePhase1c,
-            'phase 2': handlePhase2
-        }
-        try:
-            phase_handler = phase_handlers[markup_dict['phase'].lower()]
-        except KeyError:
-            # TODO: fail here
-            print markup_dict
-            result = 'not implemented yet'
-        else:
-            result = phase_handler(markup_dict)
-
-    return {'status': result}
-
-
-def handlePhase1a(markup_dict):
-    return handlePhaseCore(markup_dict, 'p1a', 'Phase 1b')
-
-
-def handlePhase1b(markup_dict):
-    return handlePhaseCore(markup_dict, 'p1b', 'Phase 1c')
-
-
-def handlePhase1c(markup_dict):
-    return handlePhaseCore(markup_dict, 'p1c', 'Phase 2')
-
-
-def handlePhase2(markup_dict):
-    # TODO: auto-create "Complete" collection owned by "udastudy"
-    return handlePhaseCore(markup_dict, 'p2', 'Complete')
-
-
-def handlePhaseCore(markup_dict, phase_acronym, next_phase_full):
-    item_name_base = markup_dict['image']['name'].split('.t')[0]
-
-    item_metadata = {
-        '%s_user' % phase_acronym: markup_dict['user']['_id'],
-        '%s_result' % phase_acronym: 'ok',
-        '%s_folder_id' % phase_acronym: markup_dict['image']['folderId'],
-        '%s_start_time' % phase_acronym: markup_dict['taskstart'],
-        '%s_stop_time' % phase_acronym: markup_dict['taskend'],
-    }
-
-    markup_json = dict()
-    markup_json[phase_acronym] = {
-        'user': markup_dict['user'],
-        'image': markup_dict['image'],
-        'result': item_metadata
-    }
-
-    if phase_acronym in ['p1a', 'p1b', 'p1c']:
-        markup_json[phase_acronym]['steps'] = markup_dict['steps'],
-
-        # grab the b64 png from the dictionary
-        png_b64string = \
-        markup_dict['steps']['2']['markup']['features'][0]['properties'][
-            'parameters']['rgb']
-        # remote the initial data uri details
-        png_b64string_trim = png_b64string[22:]
-
-        # make sure it's not in the final project
-        del markup_json[phase_acronym]['steps']['2']['markup']['features'][0][
-            'properties']['parameters']['rgb']
-
-        # grab the b64 png from the dictionary
-        png_tiles_b64string = \
-        markup_dict['steps']['2']['markup']['features'][0]['properties'][
-            'parameters']['tiles']
-        # remote the initial data uri details
-        png_tiles_b64string_trim = png_tiles_b64string[22:]
-
-        # make sure it's not in the final project
-        del markup_json[phase_acronym]['steps']['2']['markup']['features'][0][
-            'properties']['parameters']['tiles']
-
-    elif phase_acronym == 'p2':
-        markup_json[phase_acronym]['user_annotation'] = markup_dict[
-            'user_annotation']
-        markup_json[phase_acronym]['markup_model'] = markup_dict['markup_model']
-        # TODO: dereference annotation_options
-
-
-    # add to existing item
-    m = ModelImporter()
-    image_item = m.model('item').load(markup_dict['image']['_id'], force=True)
-    m.model('item').setMetadata(image_item, item_metadata)
-
-
-    # move item to folder in next collection
-    original_folder = m.model('folder').load(markup_dict['image']['folderId'], force=True)
-    next_phase_folder = makeFolderIfNotPresent(
-        getCollection(next_phase_full),
-        original_folder['name'], '',
-        'collection', False, getUDAuser())
-    image_item['folderId'] = next_phase_folder['_id']
-    m.model('item').updateItem(image_item)
-
-
-    # add new files to the item
-    assetstore = getAssetStoreForItem(image_item)
-
-    markup_json_file_name = '%s-%s.json' % (item_name_base, phase_acronym)
-    markup_json_data = json.dumps(markup_json)
-    json_file = createFileObjectFromData(markup_json_file_name, image_item, assetstore, markup_json_data, 'w')
-
-    if phase_acronym in ['p1a', 'p1b', 'p1c']:
-        png_annotation_file_name = '%s-%s.png' % (item_name_base, phase_acronym)
-        png_annotation_data = png_b64string_trim.decode('base64')
-        png_file = createFileObjectFromData(png_annotation_file_name, image_item, assetstore, png_annotation_data, 'wb')
-
-        png_tile_annotation_file_name = '%s-tile-%s.png' % (item_name_base, phase_acronym)
-        png_tile_annotation_data = png_tiles_b64string_trim.decode('base64')
-        png_tile_file = createFileObjectFromData(png_tile_annotation_file_name,
-                                                 image_item, assetstore,
-                                                 png_tile_annotation_data, 'wb')
-
-
-    return 'success'
-
-
-taskCompleteHandler.description = (
-    Description('Push the QC results for the current task list for a given user')
     .param('id', 'The user ID', paramType='path')
     .errorResponse())
