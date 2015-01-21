@@ -3,13 +3,14 @@
  */
 
 'use strict';
+/* global console */
 
 // Initialization of angular root application
 var review_app = angular.module('DermApp', ['ngSanitize', 'mousetrap']);
 
 review_app.config(function($httpProvider) {
-  $httpProvider.defaults.xsrfCookieName = 'girderToken'
-  $httpProvider.defaults.xsrfHeaderName = 'Girder-Token'
+  $httpProvider.defaults.xsrfCookieName = 'girderToken';
+  $httpProvider.defaults.xsrfHeaderName = 'Girder-Token';
 });
 
 var appController = review_app.controller('ApplicationController', ['$scope', '$rootScope', '$timeout', '$http',
@@ -25,16 +26,11 @@ var appController = review_app.controller('ApplicationController', ['$scope', '$
         $scope.images_url = '/api/v1/item?folderId=' + folder_id;
         $scope.folder_url = '/api/v1/folder/' + folder_id;
 
-
-        $scope.getFolderInfo = function(){
-
-            $http.get($scope.folder_url).then(function(response){
+        $scope.getFolderInfo = function () {
+            $http.get($scope.folder_url).then(function (response) {
                 $scope.folder_details = response.data;
-
-            })
-        }
-
-
+            });
+        };
 
         $scope.hover_image = undefined;
         $scope.flagged_list = {};
@@ -54,7 +50,7 @@ var appController = review_app.controller('ApplicationController', ['$scope', '$
 //        };
 
 
-        $scope.getImages = function(){
+        $scope.getImages = function () {
 
             $http.get($scope.images_url).then(function (response) {
 
@@ -80,7 +76,7 @@ var appController = review_app.controller('ApplicationController', ['$scope', '$
         };
 
 
-        $scope.clearFlagged = function(){
+        $scope.clearFlagged = function () {
 
             var flagged_images = $scope.flagged_list;
 
@@ -90,26 +86,21 @@ var appController = review_app.controller('ApplicationController', ['$scope', '$
                 good : []
             };
 
-            console.log(payload);
-
-
             $http.post($scope.taskcomplete_url, angular.toJson(payload)).then(function(response){
-                if(response.status == 200){
-
-                    $scope.getImages()
+                if (response.status === 200) {
+                    $scope.getImages();
                     $scope.getFolderInfo();
                 }
             });
         };
 
 
-        $scope.submitAll = function(){
+        $scope.submitAll = function () {
 
             var flagged_images = $scope.flagged_list;
             var images_to_accept = [];
-            for(var image_index in $scope.image_list){
-                if(image_index in $scope.flagged_list){}
-                else {
+            for (var image_index in $scope.image_list){
+                if( !(image_index in $scope.flagged_list) ) {
                     images_to_accept.push($scope.image_list[image_index]);
                 }
             }
@@ -121,8 +112,8 @@ var appController = review_app.controller('ApplicationController', ['$scope', '$
             };
 
             $http.post($scope.taskcomplete_url, angular.toJson(payload)).then(function(response){
-                if(response.status == 200){
-                    $scope.getImages()
+                if (response.status === 200){
+                    $scope.getImages();
                 }
             });
         };
@@ -137,7 +128,7 @@ var appController = review_app.controller('ApplicationController', ['$scope', '$
 
         $scope.flagged = function(index){
             var t = $scope.flagged_list[index];
-            return (t != undefined);
+            return (t !== undefined);
         };
 
         $scope.getOffset = function(index){
@@ -149,7 +140,7 @@ var appController = review_app.controller('ApplicationController', ['$scope', '$
 
             var t = $scope.flagged_list[index];
 
-            if (t != undefined) {
+            if (t !== undefined) {
 
                 delete $scope.flagged_list[index];
             }
@@ -157,20 +148,18 @@ var appController = review_app.controller('ApplicationController', ['$scope', '$
                 $scope.flagged_list[index] = $scope.image_list[index];
             }
 
-            console.log($scope.flagged_list)
+            console.log($scope.flagged_list);
         };
 
 
 
         $scope.imageHasAnnotations = function(index){
-
-            var res = $scope.image_list[index].annotation > 0;
-            return res;
+            return $scope.image_list[index].annotation > 0;
         };
 
         $scope.safeApply = function( fn ) {
             var phase = this.$root.$$phase;
-            if(phase == '$apply' || phase == '$digest') {
+            if(phase === '$apply' || phase === '$digest') {
                 if(fn) { fn(); }
             } else {
                 this.$apply(fn);
@@ -179,8 +168,8 @@ var appController = review_app.controller('ApplicationController', ['$scope', '$
 
         $scope.getFolderInfo();
         $scope.getImages();
-
-    }]);
+    }
+]);
 
 
 

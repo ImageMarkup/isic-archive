@@ -2,6 +2,7 @@
  * Created by stonerri on 7/28/14.
  */
 
+/* global console */
 
 dg_annotation_watcher  = {};
 

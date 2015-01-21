@@ -118,6 +118,7 @@ def initialSetup():
 
     phase1a_collection = makeCollectionIfNotPresent('Phase 1a', uda_user, 'Images that have passed initial QC review')
     # phase1a_images = makeFolderIfNotPresent(phase1a_collection, 'images', '', 'collection', False, uda_user)
+    # TODO: remove default "Private" folder in this and other collections
 
     m.model('collection').setGroupAccess(phase1a_collection, phase0_group, AccessType.READ, save=True)
     m.model('collection').setGroupAccess(phase1a_collection, phase1a_group, AccessType.READ, save=True)

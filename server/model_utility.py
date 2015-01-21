@@ -1,16 +1,8 @@
+# coding=utf-8
 
 from girder.utility.model_importer import ModelImporter
-from girder.constants import TerminalColor, AccessType
-from girder import events
+from girder.constants import TerminalColor
 
-import cherrypy
-from bson.objectid import ObjectId, InvalidId
-import json
-import datetime
-import stat
-import tempfile, os
-import mimetypes
-from hashlib import sha512
 
 def getUDAuser():
     m = ModelImporter()

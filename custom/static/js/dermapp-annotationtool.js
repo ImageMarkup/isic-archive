@@ -2,6 +2,9 @@
  * Created by stonerri on 7/28/14.
  */
 
+/* global console */
+
+
 function bundle_submit_data( )
 	{
         //This will get called within the submit annotation button... right now this grabs key elements
@@ -707,7 +710,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                 // pre step change transition
 
                 // don't save the annotations to review
-                if($scope.step == $scope.totalSteps -1 ){
+                if($scope.step === $scope.totalSteps -1 ){
 
                 }
                 else {
@@ -738,15 +741,10 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                     };
                 }
 
-//                console.log(annotation_to_store);
-
                 var self = this;
                 var annotation_url = '/api/v1/uda/task/markup/' + $scope.current_image._id + '/complete';
 
                 $http.post(annotation_url, annotation_to_store).success(function(response){
-
-//                    console.log('Post succesful', response);
-
                     $scope.step = -1;
 
                     $scope.step_config = undefined;
@@ -758,10 +756,9 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                     $scope.loadTasklist();
 
 //                    $scope.loadStep();
-
                 });
             }
-        }
+        };
 
 
 
@@ -839,7 +836,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
             $rootScope.showingSegmentation = false;
 
-        }
+        };
 
         $scope.cancelRegionPaint = function(){
 
@@ -891,7 +888,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             $scope.base = options;
             $scope.selectOption = function(opt){
                 $modalInstance.close(opt);
-            }
+            };
         };
 
 
