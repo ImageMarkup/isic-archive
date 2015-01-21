@@ -1,17 +1,15 @@
-__author__ = 'stonerri'
+# coding=utf-8
 
-import cherrypy
 import json
 import os
 
-from cherrypy.lib import file_generator
-
+import cherrypy
+from girder.api import access
 from girder.api.describe import Description
-from girder.constants import TerminalColor
 from girder.utility.model_importer import ModelImporter
 
 
-
+@access.public
 def thumbnailhandler(id, params):
 
     m = ModelImporter()
@@ -38,7 +36,7 @@ thumbnailhandler.description = (
     .errorResponse())
 
 
-
+@access.public
 def annotationHandler(id, params):
     # todo : have it pull the appropriate annotation, it current pulls the last one
 
@@ -62,7 +60,7 @@ annotationHandler.description = (
     .errorResponse())
 
 
-
+@access.public
 def segmentationSourceHandler(id, params):
     # todo : have it pull the appropriate annotation, it current pulls the last one
 
@@ -85,7 +83,7 @@ segmentationSourceHandler.description = (
     .errorResponse())
 
 
-
+@access.public
 def segmentationTileHandler(id, params):
     # todo : have it pull the appropriate annotation, it current pulls the last one
 
@@ -108,7 +106,7 @@ segmentationTileHandler.description = (
     .errorResponse())
 
 
-
+@access.public
 def zoomifyhandler(id, params, **kwargs):
     """
     returns the zoomify metadata
@@ -144,8 +142,7 @@ zoomifyhandler.description = (
     .errorResponse())
 
 
-
-
+@access.public
 def fifHandler(id, params, **kwargs):
 
     zsplit = cherrypy.url().split('fif/')

@@ -1,6 +1,5 @@
 # coding=utf-8
 
-import functools
 import os
 
 import cherrypy
@@ -12,14 +11,6 @@ from .image_utility import zoomifyhandler, thumbnailhandler, fifHandler, annotat
 from .provision_utility import initialSetup
 from .task_utility import tasklisthandler, TaskHandler, UDAResource
 from .upload import uploadHandler
-
-
-def public_access(fun):
-    @functools.wraps(fun)
-    def accessDecorator(*args, **kwargs):
-        return fun(*args, **kwargs)
-    accessDecorator.accessLevel = 'public'
-    return accessDecorator
 
 
 class StaticRouteWithId(_StaticFileRoute):
@@ -79,27 +70,27 @@ def load(info):
     info['apiRoot'].uda = UDAResource()
 
     # "/api/v1/item/:id/thumbnail" -> returns a thumbnail of the image
-    info['apiRoot'].item.route('GET', (':id', 'thumbnail'), public_access(thumbnailhandler))
+    info['apiRoot'].item.route('GET', (':id', 'thumbnail'), thumbnailhandler)
 
     # "/api/v1/item/:id/annotation" -> returns the json annotation
-    info['apiRoot'].item.route('GET', (':id', 'annotation'), public_access(annotationHandler))
+    info['apiRoot'].item.route('GET', (':id', 'annotation'), annotationHandler)
 
     # "/api/v1/item/:id/segmentationSource" -> returns the png segmentation (index map as alpha channel)
-    info['apiRoot'].item.route('GET', (':id', 'segmentationSource'), public_access(segmentationSourceHandler))
+    info['apiRoot'].item.route('GET', (':id', 'segmentationSource'), segmentationSourceHandler)
     # "/api/v1/item/:id/segmentationTiles"
-    info['apiRoot'].item.route('GET', (':id', 'segmentationTiles'), public_access(segmentationTileHandler))
+    info['apiRoot'].item.route('GET', (':id', 'segmentationTiles'), segmentationTileHandler)
 
     # "/api/v1/item/:id/zoomify/:p1" -> returns a zoomify xml if available
-    info['apiRoot'].item.route('GET', (':id', 'zoomify', ':p1'), public_access(zoomifyhandler))
+    info['apiRoot'].item.route('GET', (':id', 'zoomify', ':p1'), zoomifyhandler)
     # "/api/v1/item/:id/zoomify/:p1/:p2"
-    info['apiRoot'].item.route('GET', (':id', 'zoomify', ':p1', ':p2'), public_access(zoomifyhandler))
+    info['apiRoot'].item.route('GET', (':id', 'zoomify', ':p1', ':p2'), zoomifyhandler)
 
     # "/api/v1/item/:id/fif/:fifparams" -> returns the IIP FIF endpoint for an item
-    info['apiRoot'].item.route('GET', (':id', 'fif', ':fifparams'), public_access(fifHandler))
+    info['apiRoot'].item.route('GET', (':id', 'fif', ':fifparams'), fifHandler)
 
     # "/api/v1/user/:userId/tasklist" -> returns a list of images and any UI configuration
-    info['apiRoot'].user.route('GET', (':id', 'tasklist'), public_access(tasklisthandler))
+    info['apiRoot'].user.route('GET', (':id', 'tasklist'), tasklisthandler)
 
 
     # add event listeners
-    events.bind('data.process', 'uploadHandler', public_access(uploadHandler))
+    events.bind('data.process', 'uploadHandler', uploadHandler)

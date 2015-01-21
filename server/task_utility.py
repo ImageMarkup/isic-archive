@@ -305,7 +305,7 @@ class TaskHandler(object):
         cherrypy.response.headers['Access-Control-Allow-Headers'] = cherrypy.request.headers['ACCESS-CONTROL-REQUEST-HEADERS']
 
 
-
+@access.public
 def tasklisthandler(id, params):
 
     m = ModelImporter()
