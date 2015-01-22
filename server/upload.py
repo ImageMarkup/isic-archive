@@ -5,6 +5,7 @@ __author__ = 'stonerri'
 from girder import events
 from girder.constants import TerminalColor
 from girder.utility.model_importer import ModelImporter
+from girder.constants import AccessType
 
 from pprint import pprint as pp
 import zipfile
