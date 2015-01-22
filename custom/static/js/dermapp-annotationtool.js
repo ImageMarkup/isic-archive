@@ -505,7 +505,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             }
             else if ($scope.tool_bar_state == 'spconfirm'){
 
-                $scope.regionpaint_size += 5;
+                $scope.regionpaint_size += 10;
                 $scope.imageviewer.setPaintParameter($scope.regionpaint_size);
                 $scope.imageviewer.clearPaintByNumber();
 
@@ -531,8 +531,8 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             }
             else if ($scope.tool_bar_state == 'spconfirm'){
 
-                if($scope.regionpaint_size >= 5){
-                    $scope.regionpaint_size -= 5;
+                if($scope.regionpaint_size >= 10){
+                    $scope.regionpaint_size -= 10;
                 }
                 else {
                     $scope.regionpaint_size = 0;
