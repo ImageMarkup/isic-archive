@@ -12,6 +12,7 @@ from girder.api import access
 from girder.api.rest import Resource
 from girder.api.describe import Description
 from girder.constants import AccessType
+from girder.models.model_base import AccessException
 from girder.utility.model_importer import ModelImporter
 
 from .model_utility import *
@@ -21,6 +22,7 @@ from .provision_utility import getOrCreateUDAFolder
 class UDAResource(Resource):
     def __init__(self):
         self.resourceName = 'uda'
+        self.route('GET', ('task',), self.taskList)
         self.route('POST', ('task', 'qc', 'complete'), self.p0TaskComplete)
         self.route('POST', ('task', 'markup', ':item_id', 'complete'), self.p1TaskComplete)
         self.route('POST', ('task', 'map', ':item_id', 'complete'), self.p2TaskComplete)
@@ -30,6 +32,36 @@ class UDAResource(Resource):
         collection = self.model('collection').findOne({'name': collection_name})
         user = self.getCurrentUser()
         self.model('collection').requireAccess(collection, user, AccessType.READ)
+
+
+
+    @access.user
+    def taskList(self, params):
+        result = list()
+
+        # TODO: make this a global constant somewhere
+        phase_names = ['Phase 0', 'Phase 1a', 'Phase 1b', 'Phase 1c', 'Phase 2']
+        for phase_name in phase_names:
+            try:
+                self._requireCollectionAccess(phase_name)
+            except AccessException:
+                continue
+
+            result.append({
+                'phase': phase_name,
+                'count': countImagesInCollection(phase_name),
+                'url': '/uda/annotate', # TODO
+            })
+
+        return result
+
+    taskList.description = (
+        Description('List available tasks.')
+        .responseClass('UDA')
+        .errorResponse())
+
+
+
 
 
     @access.user

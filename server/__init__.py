@@ -44,6 +44,9 @@ def load(info):
         pass
     info['serverRoot'].uda = Root()
 
+    # "/uda/dashboard" -> returns a task dashboard
+    info['serverRoot'].uda.dashboard = StaticRouteWithId(os.path.join(info['pluginRootDir'], 'custom', 'task.html'))
+
     # "/uda/gallery/:folderId" -> returns a single page gallery
     info['serverRoot'].uda.gallery = StaticRouteWithId(os.path.join(info['pluginRootDir'], 'custom', 'gallery.html'))
 
