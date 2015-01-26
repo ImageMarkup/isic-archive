@@ -1,148 +1,227 @@
-__author__ = 'stonerri'
+# coding=utf-8
 
-from girder.constants import TerminalColor, AccessType
+from girder.constants import AccessType
 from girder.utility.model_importer import ModelImporter
-from model_utility import *
+
+
+def getOrCreateUDAUser(username, password,
+                       first_name, last_name, email,
+                       admin, public):
+    user = ModelImporter.model('user').findOne({'login': username})
+    if not user:
+        user = ModelImporter.model('user').createUser(
+            login=username,
+            password=password,
+            firstName=first_name,
+            lastName=last_name,
+            email=email,
+            admin=admin,
+            public=public
+        )
+        # delete default folders
+        for folder in ModelImporter.model('folder').find(
+                {'parentId': user['_id']}):
+            ModelImporter.model('folder').remove(folder)
+    return user
+
+
+def getAdminUser():
+    # TODO: cache this?
+    return getOrCreateUDAUser(
+        username='udastudy',
+        password='udastudy',
+        first_name='UDA Study',
+        last_name='Admin',
+        email='admin@uda2study.org',
+        admin=True,
+        public=False
+    )
+
+
+def getOrCreateUDAGroup(name, description, public):
+    group = ModelImporter.model('group').findOne({'name': name})
+    if not group:
+        group = ModelImporter.model('group').createGroup(
+            name=name,
+            creator=getAdminUser(),
+            description=description,
+            public=public
+        )
+    return group
+
+
+def getOrCreateUDACollection(name, description, public):
+    collection = ModelImporter.model('collection').findOne(
+        {'name': name})
+    if not collection:
+        collection = ModelImporter.model('collection').createCollection(
+            name=name,
+            creator=getAdminUser(),
+            description=description,
+            public=public
+        )
+        # delete default folders
+        for folder in ModelImporter.model('folder').find(
+                {'parentId': collection['_id']}):
+            ModelImporter.model('folder').remove(folder)
+    return collection
+
+
+def getOrCreateUDAFolder(name, description, parent, parent_type):
+    folder = ModelImporter.model('folder').findOne({
+        'name': name,
+        'parentId': parent['_id']
+    })
+    if not folder:
+        folder = ModelImporter.model('folder').createFolder(
+            parent=parent,
+            name=name,
+            description=description,
+            parentType=parent_type,
+            public=None,
+            creator=getAdminUser()
+        )
+        if parent_type != 'folder':
+            # Girder doesn't inherit access from parent collections, but we will
+            ModelImporter.model('folder').copyAccessPolicies(
+                src=parent,
+                dest=folder,
+                save=True
+            )
+    return folder
+
+
+def setupUdaPhase(phase_name, collection_description, group_description):
+    collection = getOrCreateUDACollection(
+        name=phase_name,
+        description=collection_description,
+        public=False
+    )
+    group = getOrCreateUDAGroup(
+        name=phase_name,
+        description=group_description,
+        public=True
+    )
+    ModelImporter.model('collection').setGroupAccess(
+        doc=collection,
+        group=group,
+        level=AccessType.READ,
+        save=True
+    )
+    return collection, group
+
+
+def setupUdaTestUser(phase, username, password, label):
+    assert(' ' not in label)
+    test_user = getOrCreateUDAUser(
+        username=username,
+        password=password,
+        first_name='UDA Study',
+        last_name=label,
+        email='%s@uda2study.org' % label.lower(),
+        admin=False,
+        public=False
+    )
+    # group should already exist
+    group = getOrCreateUDAGroup(name=phase, description=None, public=None)
+    ModelImporter.model('group').addUser(
+        group=group,
+        user=test_user,
+        level=AccessType.READ
+    )
 
 
 def initialSetup():
-    '''
+    phase0_collection, phase0_group = setupUdaPhase(
+        phase_name='Phase 0',
+        collection_description='Images to QC',
+        group_description='Users responsible for uploading raw images & metadata, and doing initial QC'
+    )
+    dropzip_folder = getOrCreateUDAFolder(
+        name='dropzip',
+        description='Upload zipped folders of images here',
+        parent=phase0_collection,
+        parent_type='collection'
+    )
+    ModelImporter.model('folder').setGroupAccess(
+        doc=dropzip_folder,
+        group=phase0_group,
+        level=AccessType.WRITE,
+        save=True
+    )
+    dropcsv_folder = getOrCreateUDAFolder(
+        name='dropcsv',
+        description='Upload CSV files of image metadata here',
+        parent=phase0_collection,
+        parent_type='collection'
+    )
+    ModelImporter.model('folder').setGroupAccess(
+        doc=dropcsv_folder,
+        group=phase0_group,
+        level=AccessType.WRITE,
+        save=True
+    )
+    getOrCreateUDAFolder(
+        name='flagged',
+        description='Images flagged during Phase 0 are here',
+        parent=phase0_collection,
+        parent_type='collection'
+    )
 
-    what does the girder configuration look like when all is said and done
+    setupUdaPhase(
+        phase_name='Phase 1a',
+        collection_description='Images that have passed initial QC review',
+        group_description='Users responsible for setting the normal and lesion boundaries, as well as defining the paint-by-number threshold'
+    )
+    setupUdaPhase(
+        phase_name='Phase 1b',
+        collection_description='Images that have passed novice review',
+        group_description='Users responsible for first pass review and editing of boundaries if necessary'
+    )
+    setupUdaPhase(
+        phase_name='Phase 1c',
+        collection_description='Images that have passed trained review',
+        group_description='Users responsible for signing off on the final series'
+    )
+    setupUdaPhase(
+        phase_name='Phase 2',
+        collection_description='Images that have completed Phase 1',
+        group_description='Users creating feature annotations'
+    )
+    getOrCreateUDACollection('Complete',
+                             description='Images that have been fully annotated',
+                             public=True
+    )
 
-    UDA study phase 1
-
-    3 user groups, each with an example user
-
-    Phase I - Initial reviewers
-    udanovice -> udanovice
-
-    Phase I - Trained reviewers
-    udamike -> udamike
-
-    Phase I - Expert reviewers
-    udaexpert -> udaexpert
-
-
-    3 collections for phase I
-
-    Phase Ia -> initial markup
-
-    Phase Ib -> initial review
-
-    Phase Ic -> final review
-
-    Phase Id -> complete images
-
-    :return:
-    '''
-
-    m = ModelImporter()
-
-    # create users if needed
-
-
-
-    # the admin user
-    uda_user = makeUserIfNotPresent('udastudy', 'udastudy', 'uda admin', 'testuser', 'admin@uda2study.org')
-    uda_user['admin'] = True
-    m.model('user').save(uda_user)
-
-
-
-    # the user that uploads images & metadata
-    uda_steve = makeUserIfNotPresent('udasteve', 'udasteve', 'uda steve', 'testuser', 'steve@uda2study.org')
-
-    # create groups and add users
-    phase0_group = makeGroupIfNotPresent('Phase 0', uda_user, 'These users are responsible for uploading raw images & metadata, and doing initial QC')
-    m.model('group').addUser(phase0_group, uda_steve)
-    m.model('group').updateGroup(phase0_group)
-
-    phase0_collection =  makeCollectionIfNotPresent('Phase 0', uda_user, 'Images to QC')
-    m.model('collection').setGroupAccess(phase0_collection, phase0_group, AccessType.ADMIN, save=True)
-
-    # todo: fix this workaround in girder (needed for upload support into folders within collection)
-    m.model('collection').setUserAccess(phase0_collection, uda_steve, AccessType.ADMIN, save=True)
-
-    dropzipfolder = makeFolderIfNotPresent(phase0_collection, 'dropzip', 'upload zip folder of images here', 'collection', False, uda_user)
-    dropcsv = makeFolderIfNotPresent(phase0_collection, 'dropcsv', 'upload image metadata as csv here', 'collection', False, uda_user)
-    phase0_flagged_images = makeFolderIfNotPresent(phase0_collection, 'flagged', '', 'collection', False, uda_user)
-
-    folders = [dropzipfolder, dropcsv, phase0_flagged_images]
-
-    for folder in folders:
-        m.model('folder').setUserAccess(folder, uda_steve, AccessType.ADMIN, save=True)
-
-
-
-
-    # reviewers
-    uda_novice = makeUserIfNotPresent('udanovice', 'udanovice', 'uda novice', 'testuser', 'novice@uda2study.org')
-    uda_mike = makeUserIfNotPresent('udamike', 'udamike', 'uda trained', 'testuser', 'trained@uda2study.org')
-    uda_expert = makeUserIfNotPresent('udaexpert', 'udaexpert', 'uda expert', 'testuser', 'expert@uda2study.org')
-
-
-    phase1a_group = makeGroupIfNotPresent('Phase 1a', uda_user, 'These users are responsible for setting the normal and lesion boundaries, as well as defining the paint-by-number threshold.')
-    m.model('group').addUser(phase1a_group, uda_novice)
-    m.model('group').updateGroup(phase1a_group)
-
-    phase1b_group = makeGroupIfNotPresent('Phase 1b', uda_user, 'These users are responsible for first pass review and editing of boundaries if necessary')
-    m.model('group').addUser(phase1b_group, uda_mike)
-    m.model('group').updateGroup(phase1b_group)
-
-    phase1c_group = makeGroupIfNotPresent('Phase 1c', uda_user, 'These uses are responsible for signing off on the final series')
-    m.model('group').addUser(phase1c_group, uda_expert)
-    m.model('group').updateGroup(phase1c_group)
-
-    phase2_group = makeGroupIfNotPresent('Phase 2', uda_user, 'Per feature annotation')
-    m.model('group').addUser(phase2_group, uda_user)
-    m.model('group').updateGroup(phase2_group)
-
-    # create collections and assign group read permissions
-
-
-    # only steve (or equivalent) can write to it
-    # setUserAccess(self, doc, user, level, save=False):
-
-
-
-    # everyone in phase 1 can read phase 0 content
-    m.model('collection').setGroupAccess(phase0_collection, phase0_group, AccessType.ADMIN, save=True)
-    m.model('collection').setGroupAccess(phase0_collection, phase1a_group, AccessType.READ, save=True)
-    m.model('collection').setGroupAccess(phase0_collection, phase1b_group, AccessType.READ, save=True)
-    m.model('collection').setGroupAccess(phase0_collection, phase1c_group, AccessType.READ, save=True)
-
-
-
-
-
-    phase1a_collection = makeCollectionIfNotPresent('Phase 1a', uda_user, 'Images that have passed initial QC review')
-    # phase1a_images = makeFolderIfNotPresent(phase1a_collection, 'images', '', 'collection', False, uda_user)
-    # TODO: remove default "Private" folder in this and other collections
-
-    m.model('collection').setGroupAccess(phase1a_collection, phase0_group, AccessType.READ, save=True)
-    m.model('collection').setGroupAccess(phase1a_collection, phase1a_group, AccessType.READ, save=True)
-    m.model('collection').setGroupAccess(phase1a_collection, phase1b_group, AccessType.READ, save=True)
-    m.model('collection').setGroupAccess(phase1a_collection, phase1c_group, AccessType.READ, save=True)
-
-    phase1b_collection = makeCollectionIfNotPresent('Phase 1b', uda_user, 'Images that have passed novice review')
-    m.model('collection').setGroupAccess(phase1b_collection, phase0_group, AccessType.READ, save=True)
-    m.model('collection').setGroupAccess(phase1b_collection, phase1a_group, AccessType.READ, save=True)
-    m.model('collection').setGroupAccess(phase1b_collection, phase1b_group, AccessType.READ, save=True)
-    m.model('collection').setGroupAccess(phase1b_collection, phase1c_group, AccessType.READ, save=True)
-
-
-    phase1c_collection = makeCollectionIfNotPresent('Phase 1c', uda_user, 'Images that have passed trained review')
-    m.model('collection').setGroupAccess(phase1c_collection, phase0_group, AccessType.READ, save=True)
-    m.model('collection').setGroupAccess(phase1c_collection, phase1a_group, AccessType.READ, save=True)
-    m.model('collection').setGroupAccess(phase1c_collection, phase1b_group, AccessType.READ, save=True)
-    m.model('collection').setGroupAccess(phase1c_collection, phase1c_group, AccessType.READ, save=True)
-
-
-    phase2_collection = makeCollectionIfNotPresent('Phase 2', uda_user, 'Images that have completed Phase 1')
-    m.model('collection').setGroupAccess(phase2_collection, phase0_group, AccessType.READ, save=True)
-    m.model('collection').setGroupAccess(phase2_collection, phase1a_group, AccessType.READ, save=True)
-    m.model('collection').setGroupAccess(phase2_collection, phase1b_group, AccessType.READ, save=True)
-    m.model('collection').setGroupAccess(phase2_collection, phase1c_group, AccessType.READ, save=True)
-    m.model('collection').setGroupAccess(phase2_collection, phase2_group,  AccessType.READ, save=True)
-
+    MAKE_TEST_USERS = True
+    if MAKE_TEST_USERS:
+        setupUdaTestUser(
+            phase='Phase 0',
+            username='udauploader',
+            password='udauploader',
+            label='Uploader',
+        )
+        setupUdaTestUser(
+            phase='Phase 1a',
+            username='udanovice',
+            password='udanovice',
+            label='Novice',
+        )
+        setupUdaTestUser(
+            phase='Phase 1b',
+            username='udatrained',
+            password='udatrained',
+            label='Trained',
+        )
+        setupUdaTestUser(
+            phase='Phase 1c',
+            username='udaexpert',
+            password='udaexpert',
+            label='Expert',
+        )
+        setupUdaTestUser(
+            phase='Phase 2',
+            username='udaannotator',
+            password='udaannotator',
+            label='Annotator',
+        )

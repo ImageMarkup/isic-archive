@@ -17,6 +17,7 @@ import tempfile
 import stat
 
 from model_utility import *
+from .provision_utility import getOrCreateUDAFolder
 
 
 
@@ -145,7 +146,12 @@ def uploadHandler(event):
             print TerminalColor.info('Creating folder %s' % base_file_name)
 
             # create the folder as udaadmin
-            zipfolder = makeFolderIfNotPresent(phase0_collection, base_file_name, '', 'collection', False, uda_user)
+            zipfolder = getOrCreateUDAFolder(
+                name=base_file_name,
+                description='',
+                parent=phase0_collection,
+                parent_type='collection'
+            )
 
             # give the file uploader admin access
             m.model('folder').setUserAccess(zipfolder, file_creator, AccessType.ADMIN, save=True)
@@ -231,7 +237,12 @@ def uploadHandler(event):
 
                             if move_item:
 
-                                phase0_images = makeFolderIfNotPresent(phase0_collection, 'images to qc', '', 'collection', False, uda_user)
+                                phase0_images = getOrCreateUDAFolder(
+                                    name='images to qc',
+                                    description='',
+                                    parent=phase0_collection,
+                                    parent_type='collection'
+                                )
                                 m.model('folder').setUserAccess(phase0_images, file_creator, AccessType.ADMIN, save=True)
 
                                 files = m.model('item').childFiles(item, limit=1)

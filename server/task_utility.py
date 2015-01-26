@@ -15,6 +15,7 @@ from girder.constants import AccessType
 from girder.utility.model_importer import ModelImporter
 
 from .model_utility import *
+from .provision_utility import getOrCreateUDAFolder
 
 
 class UDAResource(Resource):
@@ -28,7 +29,7 @@ class UDAResource(Resource):
     def _requireCollectionAccess(self, collection_name):
         collection = self.model('collection').findOne({'name': collection_name})
         user = self.getCurrentUser()
-        self.model('collection').requireAccess(collection, user, AccessType.WRITE)
+        self.model('collection').requireAccess(collection, user, AccessType.READ)
 
 
     @access.user
@@ -38,6 +39,7 @@ class UDAResource(Resource):
 
         good_images_list = contents['good']
         flagged_images_dict = contents['flagged']
+        # TODO: lookup folder from ID
         folder_info = contents['folder']
         current_user = self.getCurrentUser()
 
@@ -58,7 +60,12 @@ class UDAResource(Resource):
 
         # move good images into phase 1a folder
         phase1a_collection = self.model('collection').findOne({'name': 'Phase 1a'})
-        phase1a_images = makeFolderIfNotPresent(phase1a_collection, folder_info['name'], '', 'collection', False, getUDAuser())
+        phase1a_images = getOrCreateUDAFolder(
+            name=folder_info['name'],
+            description=folder_info['description'],
+            parent=phase1a_collection,
+            parent_type='collection'
+        )
         for image in good_images_list:
             image_item = self.model('item').load(image['_id'], force=True)
             # TODO: ensure this image item is actually in Phase 0
@@ -170,10 +177,14 @@ class UDAResource(Resource):
 
         # move item to folder in next collection
         original_folder = self.model('folder').load(markup_dict['image']['folderId'], force=True)
-        next_phase_folder = makeFolderIfNotPresent(
-            getCollection(next_phase_full),
-            original_folder['name'], '',
-            'collection', False, getUDAuser())
+
+        next_phase_folder = getOrCreateUDAFolder(
+            name=original_folder['name'],
+            description=original_folder['description'],
+            parent=getCollection(next_phase_full),
+            parent_type='collection'
+        )
+
         image_item['folderId'] = next_phase_folder['_id']
         self.model('item').updateItem(image_item)
 
