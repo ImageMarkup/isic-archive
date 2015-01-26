@@ -1,7 +1,6 @@
 # coding=utf-8
 
 from girder.utility.model_importer import ModelImporter
-from girder.constants import TerminalColor
 
 
 def getUDAuser():
@@ -12,71 +11,29 @@ def getUDAuser():
 
 
 def getFoldersForCollection(collection, excludeFlagged=True):
-
     m = ModelImporter()
-    folder_query = m.model('folder').find({'parentId': collection['_id']})
-    folders = []
-    if folder_query.count() > 0:
-        for f in folder_query:
-            if not (f['name'] == 'flagged' and excludeFlagged):
-                folders.append(f)
 
+    folder_query = m.model('folder').find({'parentId': collection['_id']})
+    def filterFunc(folder):
+        if collection['name'] == 'Phase 0' and folder['name'] in ['dropzip', 'dropcsv']:
+            return False
+        if excludeFlagged and folder['name'] == 'flagged':
+            return False
+        return True
+
+    folders = filter(filterFunc, folder_query)
     return folders
 
 
 def getItemsInFolder(folder):
-
     m = ModelImporter()
-    item_query = m.model('item').find({'folderId': folder['_id']})
-    items = []
+    return list(m.model('folder').childItems(folder, limit=0))
 
-    if item_query.count() > 0:
-
-        for item in item_query:
-            items.append(item)
-    else:
-        print 'no items in folder', folder['name']
-
-    return items
-
-
-
-def getWeightForGroup(groupName):
-
-    # count number of images in phase 0 collection, not including flagged folder
-    count = countImagesInCollection(groupName)
-    weight = 0
-
-    # assign a weight to phase
-    if groupName == 'Phase 0':
-        weight = 10
-    elif groupName == 'Phase 1a':
-        weight = 20
-    elif groupName == 'Phase 1b':
-        weight = 30
-    elif groupName == 'Phase 1c':
-        weight = 40
-    elif groupName == 'Phase 2':
-        weight = 60
-
-
-    print 'weight for', groupName, weight, count
-    return (count, weight)
 
 def countImagesInCollection(collectionName):
-
     collection = getCollection(collectionName)
-
-    folders = getFoldersForCollection(collection)
-
-    total_len = 0
-
-    for folder in folders:
-        items = getItemsInFolder(folder)
-        total_len += len(items)
-
+    total_len = sum(len(getItemsInFolder(folder)) for folder in getFoldersForCollection(collection))
     return total_len
-
 
 
 def getCollection(collectionName):

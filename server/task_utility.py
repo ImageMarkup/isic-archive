@@ -1,7 +1,9 @@
 # coding=utf-8
 
 import datetime
+import itertools
 import mimetypes
+import operator
 import os
 import json
 
@@ -210,20 +212,48 @@ class UDAResource(Resource):
 
 
 
+
+
+
+
+
+
+
+def getFinalTask(user_id):
+    # assign a weight to phase
+    phase_weights = {
+        'Phase 0': 10,
+        'Phase 1a': 20,
+        'Phase 1b': 30,
+        'Phase 1c': 40,
+        'Phase 2': 60,
+    }
+
+    user = ModelImporter.model('user').load(user_id, force=True)
+    task_list = []
+
+    for groupId in user.get('groups', list()):
+        group_name = ModelImporter.model('group').load(groupId, force=True)['name']
+
+        task_list.append({
+            'name': group_name,
+            'count': countImagesInCollection(group_name),
+            'weight': phase_weights.get(group_name, 0)
+        })
+
+    final_task = {'weight': 0}
+
+    for task in task_list:
+        # print task
+        if task['count'] > 0 and task['weight'] > final_task['weight']:
+            final_task = task
+
+    return final_task
+
+
+
 class TaskHandler(object):
     exposed = True
-    def __init__(self):
-        pass
-
-    # this line will map the first argument after / to the 'id' parameter
-    # for example, a GET request to the url:
-    # http://localhost:8000/items/
-    # will call GET with id=None
-    # and a GET request like this one: http://localhost:8000/items/1
-    # will call GET with id=1
-    # you can map several arguments using:
-    # @cherrypy.propargs('arg1', 'arg2', 'argn')
-    # def GET(self, arg1, arg2, argn)
 
     def urlForPhase(self, phaseName, param=None):
 
@@ -246,27 +276,7 @@ class TaskHandler(object):
 
     @cherrypy.popargs('id')
     def GET(self, id=None):
-
-        m = ModelImporter()
-        user = m.model('user').load(id, force=True)
-        task_list = []
-
-        for groupId in user.get('groups', list()):
-            group = m.model('group').load(groupId, force=True)
-            group_count, group_weight = getWeightForGroup(group['name'])
-
-            task_list.append({
-                 'name': group['name'],
-                 'count' : group_count,
-                 'weight' : group_weight
-            })
-
-        final_task = {'weight': 0}
-
-        for task in task_list:
-            # print task
-            if(task['count'] > 0 and task['weight'] > final_task['weight']):
-                final_task = task
+        final_task = getFinalTask(id)
 
         # this is where we'd return something if it was an API, instead we're going one step farther and redirecting to the task
 
@@ -285,50 +295,16 @@ class TaskHandler(object):
 
         # TODO: this breaks if there are more items in "dropzip" than were actually extracted
 
-
         if target_folder:
-
             redirect_url = self.urlForPhase(final_task['name'], target_folder['_id'])
-
             raise cherrypy.HTTPRedirect(redirect_url)
-
         else:
-
             return 'no tasks for user'
-
-
-    # HTML5
-    def OPTIONS(self):
-        cherrypy.response.headers['Access-Control-Allow-Credentials'] = True
-        cherrypy.response.headers['Access-Control-Allow-Origin'] = cherrypy.request.headers['ORIGIN']
-        cherrypy.response.headers['Access-Control-Allow-Methods'] = 'GET'
-        cherrypy.response.headers['Access-Control-Allow-Headers'] = cherrypy.request.headers['ACCESS-CONTROL-REQUEST-HEADERS']
 
 
 @access.public
 def tasklisthandler(id, params):
-
-    m = ModelImporter()
-    user = m.model('user').load(id, force=True)
-    task_list = []
-
-    for groupId in user.get('groups', list()):
-        group = m.model('group').load(groupId, force=True)
-        group_count, group_weight = getWeightForGroup(group['name'])
-
-        task_list.append({
-             'name': group['name'],
-             'count' : group_count,
-             'weight' : group_weight
-        })
-
-    final_task = {'weight': 0}
-
-    for task in task_list:
-        # print task
-        if(task['count'] > 0 and task['weight'] > final_task['weight']):
-            final_task = task
-
+    final_task = getFinalTask(id)
 
     phase_folders = getFoldersForCollection(getCollection(final_task['name']))
 
@@ -347,10 +323,7 @@ def tasklisthandler(id, params):
 
     return_dict = {}
 
-
     # todo: branch for configs
-
-
 
 
     # TODO: can Girder provide the location of this plugin's directory?
@@ -364,86 +337,45 @@ def tasklisthandler(id, params):
 
     config_json = os.path.abspath(os.path.join(app_path, phasejson))
 
-    fid = open(config_json, 'r')
-    config_list = json.load(fid)
-    fid.close()
-
+    with open(config_json, 'r') as fid:
+        config_list = json.load(fid)
 
     return_dict['items'] = [target_items[0]]
     return_dict['folder'] = target_folder
     return_dict['phase'] = final_task['name']
 
-
-    # non permanent
-    if final_task['name'] == 'Phase 1b':
-
+    m = ModelImporter
+    if final_task['name'] in ['Phase 1b', 'Phase 1c', 'Phase 2']:
         item = m.model('item').load(target_items[0]['_id'], force=True)
         files = m.model('item').childFiles(item)
 
-        firstFile = None
-        for f in files:
-            # print f
-            if 'p1a.json' in f['name']:
-                firstFile = f
+        previous_phase_codes = {
+            'Phase 1b': 'p1a',
+            'Phase 1c': 'p1b',
+            'Phase 2': 'p1c'
+        }
+        previous_phase_code = previous_phase_codes[final_task['name']]
+        target_file_name = '%s.json' % previous_phase_code
+
+        firstFile = sorted(
+            itertools.ifilter(lambda f: target_file_name in f['name'], files),
+            key=operator.itemgetter('created')
+        )[-1]
+        # TODO: handle when no files are found
 
         assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
         file_path = os.path.join(assetstore['root'], firstFile['path'])
-        json_content = open(file_path, 'r')
-        annotation_str = json.load(json_content)
-        json_content.close()
+        with open(file_path, 'r') as json_content:
+            annotation_str = json.load(json_content)
 
         return_dict['loadAnnotation'] = True
-        return_dict['annotation'] = annotation_str['p1a']['steps']
+        return_dict['annotation'] = annotation_str[previous_phase_code]['steps']
 
-    elif final_task['name'] == 'Phase 1c':
-
-        item = m.model('item').load(target_items[0]['_id'], force=True)
-        files = m.model('item').childFiles(item)
-
-        firstFile = None
-        for f in files:
-            # print f
-            if 'p1b.json' in f['name']:
-                firstFile = f
-
-        assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
-        file_path = os.path.join(assetstore['root'], firstFile['path'])
-        json_content = open(file_path, 'r')
-        annotation_str = json.load(json_content)
-        json_content.close()
-
-        return_dict['loadAnnotation'] = True
-        return_dict['annotation'] = annotation_str['p1b']['steps']
-
-
-    elif final_task['name'] == 'Phase 2':
-
-        item = m.model('item').load(target_items[0]['_id'], force=True)
-        files = m.model('item').childFiles(item)
-
-        # add annotations
-        firstFile = None
-        for f in files:
-            # print f
-            if 'p1c.json' in f['name']:
-                firstFile = f
-
-        assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
-        file_path = os.path.join(assetstore['root'], firstFile['path'])
-        json_content = open(file_path, 'r')
-        annotation_str = json.load(json_content)
-        json_content.close()
-
-        vars_path = os.path.abspath(os.path.join(app_path, 'phase2-variables.json'))
-
-        fvars = open(vars_path, 'r')
-        fvarlist  = json.load(fvars)
-        fvars.close()
-
-
-        return_dict['loadAnnotation'] = True
-        return_dict['variables'] = fvarlist
-        return_dict['annotation'] = annotation_str['p1c']['steps']
+        if final_task['name'] == 'Phase 2':
+            vars_path = os.path.abspath(os.path.join(app_path, 'phase2-variables.json'))
+            with open(vars_path, 'r') as fvars:
+                fvarlist = json.load(fvars)
+            return_dict['variables'] = fvarlist
 
     else:
         return_dict['loadAnnotation'] = False
@@ -451,9 +383,7 @@ def tasklisthandler(id, params):
     # the UI json to provide
     return_dict['decision_tree'] = config_list
 
-
     return return_dict
-
 
 tasklisthandler.description = (
     Description('Retrieve the current task list for a given user')
