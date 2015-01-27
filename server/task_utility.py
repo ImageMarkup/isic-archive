@@ -9,7 +9,7 @@ import json
 
 import cherrypy
 from girder.api import access
-from girder.api.rest import Resource
+from girder.api.rest import Resource, RestException, loadmodel
 from girder.api.describe import Description
 from girder.constants import AccessType
 from girder.models.model_base import AccessException
@@ -23,7 +23,7 @@ class UDAResource(Resource):
     def __init__(self):
         self.resourceName = 'uda'
         self.route('GET', ('task',), self.taskList)
-        self.route('POST', ('task', 'qc', 'complete'), self.p0TaskComplete)
+        self.route('POST', ('task', 'qc', ':folder_id', 'complete'), self.p0TaskComplete)
         self.route('POST', ('task', 'markup', ':item_id', 'complete'), self.p1TaskComplete)
         self.route('POST', ('task', 'map', ':item_id', 'complete'), self.p2TaskComplete)
 
@@ -65,27 +65,41 @@ class UDAResource(Resource):
 
 
     @access.user
-    def p0TaskComplete(self, params):
-        self._requireCollectionAccess('Phase 0')
+    @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
+    def p0TaskComplete(self, folder, params):
+        # verify user's access to folder and phase
+        phase0_collection = self.model('collection').findOne({'name': 'Phase 0'})
+        self.model('collection').requireAccess(phase0_collection, self.getCurrentUser(), AccessType.READ)
+        if folder['baseParentId'] != phase0_collection['_id']:
+            raise RestException('Folder %s is not inside Phase 0' % folder['_id'])
+
         contents = json.loads(cherrypy.request.body.read())
 
-        good_images_list = contents['good']
-        flagged_images_dict = contents['flagged']
-        # TODO: lookup folder from ID
-        folder_info = contents['folder']
-        current_user = self.getCurrentUser()
+        # verify that all images are in folder
+        flagged_image_items = [
+            self.model('item').load(image_item_id, force=True)
+            for image_item_id in contents['flagged']
+        ]
+        for image_item in flagged_image_items:
+            if image_item['parentId'] != folder['_id']:
+                raise RestException('Flagged image %s is not inside folder %s' % (image_item['_id'], folder['_id']))
+        good_image_items = [
+            self.model('item').load(image_item_id, force=True)
+            for image_item_id in contents['good']
+        ]
+        for image_item in good_image_items:
+            if image_item['parentId'] != folder['_id']:
+                raise RestException('Good image %s is not inside folder %s' % (image_item['_id'], folder['_id']))
+
 
         # move flagged images into flagged folder, set QC metadata
-        phase0_collection = self.model('collection').findOne({'name': 'Phase 0'})
         phase0_flagged_images = getFolder(phase0_collection, 'flagged')
         # TODO: create "flagged" if not present?
-        for image in flagged_images_dict.itervalues():
-            image_item = self.model('item').load(image['_id'], force=True)
-            # TODO: ensure this image item is actually in Phase 0
+        for image_item in flagged_image_items:
             qc_metadata = {
-                'qc_user': current_user['_id'],
+                'qc_user': self.getCurrentUser()['_id'],
                 'qc_result': 'flagged',
-                'qc_folder_id': folder_info['_id']
+                'qc_folder_id': folder['_id']
             }
             self.model('item').setMetadata(image_item, qc_metadata)
             self.model('item').move(image_item, phase0_flagged_images)
@@ -93,18 +107,16 @@ class UDAResource(Resource):
         # move good images into phase 1a folder
         phase1a_collection = self.model('collection').findOne({'name': 'Phase 1a'})
         phase1a_images = getOrCreateUDAFolder(
-            name=folder_info['name'],
-            description=folder_info['description'],
+            name=folder['name'],
+            description=folder['description'],
             parent=phase1a_collection,
             parent_type='collection'
         )
-        for image in good_images_list:
-            image_item = self.model('item').load(image['_id'], force=True)
-            # TODO: ensure this image item is actually in Phase 0
+        for image_item in good_image_items:
             qc_metadata = {
-                'qc_user': current_user['_id'],
+                'qc_user': self.getCurrentUser()['_id'],
                 'qc_result': 'ok',
-                'qc_folder_id': folder_info['_id'],
+                'qc_folder_id': folder['_id'],
                 'qc_stop_time': datetime.datetime.utcnow(),
             }
             self.model('item').setMetadata(image_item, qc_metadata)

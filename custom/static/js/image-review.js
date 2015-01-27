@@ -19,12 +19,12 @@ var appController = review_app.controller('ApplicationController', ['$scope', '$
         $("#angular_id").height(window.innerHeight - 80 - 100);
         $("#gridcontainer").height(window.innerHeight - 100 - 100);
 
-        $scope.taskcomplete_url = '/api/v1/uda/task/qc/complete';
-
         var urlvals = window.location.pathname.split('/');
         var folder_id = urlvals[urlvals.length - 1];
+
         $scope.images_url = '/api/v1/item?folderId=' + folder_id;
         $scope.folder_url = '/api/v1/folder/' + folder_id;
+        $scope.taskcomplete_url = '/api/v1/uda/task/qc/' + folder_id + '/complete';
 
         $scope.getFolderInfo = function () {
             $http.get($scope.folder_url).then(function (response) {
@@ -77,12 +77,13 @@ var appController = review_app.controller('ApplicationController', ['$scope', '$
 
 
         $scope.clearFlagged = function () {
-
-            var flagged_images = $scope.flagged_list;
+            var flagged_images = [];
+            $scope.flagged_list.forEach(function (flagged_image) {
+                flagged_images.push(flagged_image._id);
+            });
 
             var payload = {
-                flagged : flagged_images,
-                folder: $scope.folder_details,
+                flagged: flagged_images,
                 good : []
             };
 
@@ -96,19 +97,21 @@ var appController = review_app.controller('ApplicationController', ['$scope', '$
 
 
         $scope.submitAll = function () {
+            var flagged_images = [];
+            $scope.flagged_list.forEach(function (flagged_image) {
+                flagged_images.push(flagged_image._id);
+            });
 
-            var flagged_images = $scope.flagged_list;
             var images_to_accept = [];
             for (var image_index in $scope.image_list){
                 if( !(image_index in $scope.flagged_list) ) {
-                    images_to_accept.push($scope.image_list[image_index]);
+                    images_to_accept.push($scope.image_list[image_index]._id);
                 }
             }
 
             var payload = {
-                flagged : flagged_images,
+                flagged: flagged_images,
                 good : images_to_accept,
-                folder: $scope.folder_details
             };
 
             $http.post($scope.taskcomplete_url, angular.toJson(payload)).then(function(response){
