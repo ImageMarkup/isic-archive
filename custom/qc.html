@@ -10,14 +10,11 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <meta name="description" content="ISIC Image annotator">
-    <meta name="author" content="Rich Stoner, David Gutman">
+    <meta name="author" content="Rich Stoner, Brian Helba, David Gutman">
 
     <link rel=stylesheet type=text/css
           href="/uda/static/bower_components/flatstrap/dist/css/bootstrap.min.css">
-
     <link rel=stylesheet type=text/css href="/uda/static/bower_components/font-awesome/css/font-awesome.min.css">
-
-
 
 <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
 <!--[if lt IE 9]>
@@ -36,12 +33,9 @@
 <script src="/uda/static/js/image-review.js"></script>
 
 <style>
-
-
     * {
       border-radius: 0  !important;
     }
-
     body {
         color: #fff;
         background: #000000 !important;
@@ -49,25 +43,18 @@
         font-weight: 300;
         margin: 0px;
         padding: 0px;
-
     }
-
     .imagewrap {
         float:left;
         margin-bottom: 1px;
         background: #000;
     }
-
-
-
     .imagethumb {
         width: inherit;
         height: 200px;
         margin-left: 2px;
         margin-bottom: 2px;
     }
-
-
     .imgcontainer {
         -moz-column-count: 6;
         -moz-column-gap: 10px;
@@ -75,17 +62,13 @@
         -webkit-column-count: 6;
         -webkit-column-gap: 10px;
 
-
         column-count: 6;
         column-gap: 5px;
         column-width: 250px;
         /*width: 100%;*/
 
     }
-
-
     @media (max-width: 1100px) {
-
         /*this is the narrow version*/
 
         .imgcontainer {
@@ -98,16 +81,12 @@
             column-gap: 10px;
             /*column-width: 250px;*/
             /*width: 100%;*/
-
         }
-
         .imagethumb {
             width: inherit;
-           height: 155px;
+            height: 155px;
         }
     }
-
-
     .imgcontainer div {
         /*display: inline-block;*/
         width: 100%;
@@ -115,54 +94,43 @@
         /*min-height: 200px;*/
         background-color: black;
     }
-
     #overlayImage {
         width: 400px;
         position: absolute;
         border: 1px solid #666;
     }
-
     .previewimage {
         width: 398px;
     }
-
     .imageflagged {
         opacity:0.4;
         filter:alpha(opacity=40); /* For IE8 and earlier */
     }
-
     .navbar {
         margin-bottom: 0px !important;
     }
-
     .bigrow {
         padding: 10px;
     }
-
     .whitetext {
         color: #fff;
     }
-
     #gridcontainer > ul {
-          padding:0 0 0 0;
-          margin:0 0 0 0;
-      }
-
-    #gridcontainer >  ul li {
-          list-style:none;
-          margin-bottom:5px;
-      }
-
-    #gridcontainer > ul li img {
-          cursor: pointer;
+        padding:0 0 0 0;
+        margin:0 0 0 0;
     }
-
+    #gridcontainer >  ul li {
+        list-style:none;
+        margin-bottom:5px;
+    }
+    #gridcontainer > ul li img {
+        cursor: pointer;
+    }
     div.wrapper {
         float:left; /* important */
         position:relative; /* important(so we can absolutely position the description div */
     }
-
-    div.description{
+    div.description {
         position:absolute; /* absolute position (so we can position it where we want)*/
 
         bottom:0px; /* position will be on bottom */
@@ -177,117 +145,76 @@
         /*opacity:1.0; *//* transparency */
         /*filter:alpha(opacity=60); *//* IE transparency */
     }
-
     /*div.description:hover {*/
         /*opacity:1.0; *//* transparency */
     /*}*/
-
-    p.description_content{
+    p.description_content {
         /*padding:10px;*/
-
         margin:0px;
     }
-
-
-
 </style>
-
 </head>
-
 <body>
-
-<div>
-
-    <div id="angular_id" ng-controller="ApplicationController">
-
-        <div id="overlayImage" ng-show="hover_image">
-            <img class="previewimage" src="{{hover_image}}"/>
-        </div>
-
-        <div class="container-fluid">
-            <div class="row bigrow">
-
-                <div class="col-md-12">
-
-                    <!--<div class="btn-group">-->
-
-
-                    <!--</div>-->
-
-                    <div class="btn-group">
-
-                        <div class="btn" ng-show="folder_details" disabled>
-                            <i class="glyphicon glyphicon-folder-open"></i>&nbsp;&nbsp; name: <b>{{folder_details.name}}</b>
-                        </div>
-                        <div class="btn" ng-show="folder_details" disabled>
-                            Created: <b>{{folder_details.created}}</b>
-                        </div>
-                        <div class="btn" ng-show="folder_details" disabled>
-                            Updated <b>{{folder_details.updated}}</b>
-                        </div>
-                        <div class="btn btn-info" ng-click="clearFlagged()">Flag images</div>
-                    </div>
-
-
-                    <div class="btn-group pull-right">
-
-                        <div class="btn btn-success" ng-click="submitAll()">Submit images to annotation</div>
-
-                        <!--<button class="btn btn-success"-->
-                                <!--ng-click="download()">Download list</button>-->
-
-                    </div>
-                </div>
+    <div>
+        <div id="angular_id" ng-controller="ApplicationController">
+            <!--
+            <div id="overlayImage" ng-show="hover_image">
+                <img class="previewimage" src="{{hover_image}}"/>
             </div>
-
-            <div class="row">
-
-                <div id="gridcontainer" class="col-md-12">
-
-                    <ul class="row">
-
-                        <li class="col-lg-2 col-md-2 col-sm-3 col-xs-4 wrapper" ng-repeat="image in image_list">
-
-                            <div class='description' ng-show="flagged($index)">
-                                <span class='description_content'><i class="glyphicon glyphicon-flag"></i></span>
+            -->
+            <div class="container-fluid">
+                <div class="row bigrow">
+                    <div class="col-md-12">
+                        <div class="btn-group">
+                            <div class="btn" ng-show="folder_details" disabled>
+                                <span><i class="glyphicon glyphicon-folder-open"></i>&nbsp;&nbsp; name: <b>{{folder_details.name}}</b></span>
                             </div>
-
-                            <img id={{$index}}
-                                 class="img-responsive"
-                                 ng-src="{{image.thumbnail}}"
-                                 ng-class="flagged($index) && show_flags ? 'imageflagged' : ''"
-                                 ng-mouseover="updatePreview()"
-                                 ng-click="toggleFlag($index)""
-                                    />
-                        </li>
-
-
+                            <div class="btn" ng-show="folder_details" disabled>
+                                <span>Created: <b>{{folder_details.created}}</b></span>
+                            </div>
+                            <div class="btn" ng-show="folder_details" disabled>
+                                <span>Updated <b>{{folder_details.updated}}</b></span>
+                            </div>
+                            <div class="btn btn-info" ng-click="submitFlagged()">
+                                <span>Flag images</span>
+                            </div>
+                        </div>
+                        <div class="btn-group pull-right">
+                            <div class="btn btn-success" ng-click="submitAll()">
+                                <span>Submit images to annotation</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-             </div>
-             <div class="row">
-                <div class="col-md-offset-1 col-md-10">
-
-                    <div class="whitetext">
-                        Flagged images:
-                        <span ng-repeat="image in flagged_list">
-                            {{image.title}},
-                        </span>
-
+                <div class="row">
+                    <div id="gridcontainer" class="col-md-12">
+                        <ul class="row">
+                            <li class="col-lg-2 col-md-2 col-sm-3 col-xs-4 wrapper"
+                                ng-repeat="image in image_list track by image._id">
+                                <div class='description' ng-show="isFlagged($index)">
+                                    <span class='description_content'><i class="glyphicon glyphicon-flag"></i></span>
+                                </div>
+                                <img id={{$index}}
+                                     class="img-responsive"
+                                     ng-src="{{image.thumbnail}}"
+                                     ng-class="isFlagged($index) ? 'imageflagged' : ''"
+                                     ng-mouseover="updatePreview()"
+                                     ng-click="toggleFlagged($index)"/>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
-
+            <div class="row">
+                <div class="col-md-offset-1 col-md-10">
+                    <div class="whitetext">
+                        <span>Flagged images: </span>
+                        <span ng-repeat="image in flagged_list track by image._id">{{image.title}},</span>
+                    </div>
+                </div>
+            </div>
             <span mousetrap-keypress="mouse"></span>
         </div>
-
     </div>
-
-</div>
-
 </body>
-
 </html>
-
-

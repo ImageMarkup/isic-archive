@@ -81,14 +81,14 @@ class UDAResource(Resource):
             for image_item_id in contents['flagged']
         ]
         for image_item in flagged_image_items:
-            if image_item['parentId'] != folder['_id']:
+            if image_item['folderId'] != folder['_id']:
                 raise RestException('Flagged image %s is not inside folder %s' % (image_item['_id'], folder['_id']))
         good_image_items = [
             self.model('item').load(image_item_id, force=True)
             for image_item_id in contents['good']
         ]
         for image_item in good_image_items:
-            if image_item['parentId'] != folder['_id']:
+            if image_item['folderId'] != folder['_id']:
                 raise RestException('Good image %s is not inside folder %s' % (image_item['_id'], folder['_id']))
 
 
