@@ -1,19 +1,11 @@
 /**
  * Created by stonerri on 7/28/14.
  */
-
-/* global console */
-
-dg_annotation_watcher  = {};
+'use strict';
+/*jslint browser: true*/
 
 var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$sanitize', '$http', '$modal', '$log',
     function ($scope, $rootScope, $timeout, $sanitize, $http, $modal, $log) {
-
-        console.log('Initialized annotation tool.');
-
-
-        dg_annotation_watcher = $scope;
-
         $scope.annotation_model = {};
         $scope.annotation_options = undefined;
         $scope.annotation_source = undefined;
