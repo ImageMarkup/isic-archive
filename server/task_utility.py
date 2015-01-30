@@ -229,8 +229,7 @@ class UDAResource(Resource):
             parent_type='collection'
         )
 
-        image_item['folderId'] = next_phase_folder['_id']
-        self.model('item').updateItem(image_item)
+        self.model('item').move(image_item, next_phase_folder)
 
         self._createFileFromData(
             image_item,
