@@ -26,8 +26,9 @@ class UDAResource(Resource):
 
         self.route('GET', ('task',), self.taskList)
         self.route('POST', ('task', 'qc', ':folder_id', 'complete'), self.p0TaskComplete)
-        self.route('GET', ('task', 'markup', ':item_id'), self.p1TaskDetail)
+        self.route('GET', ('task', 'markup', ':item_id'), self.p1or2TaskDetail)
         self.route('POST', ('task', 'markup', ':item_id', 'complete'), self.p1TaskComplete)
+        self.route('GET', ('task', 'map', ':item_id'), self.p1or2TaskDetail)
         self.route('POST', ('task', 'map', ':item_id', 'complete'), self.p2TaskComplete)
 
 
@@ -76,7 +77,7 @@ class UDAResource(Resource):
 
     @access.user
     @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
-    def p0TaskComplete(self, folder, params):
+    def p0TaskComplete(self, folder):
         # verify user's access to folder and phase
         phase0_collection = self.model('collection').findOne({'name': 'Phase 0'})
         self.model('collection').requireAccess(phase0_collection, self.getCurrentUser(), AccessType.READ)
@@ -143,7 +144,7 @@ class UDAResource(Resource):
 
     @access.user
     @loadmodel(map={'item_id': 'item'}, model='item', level=AccessType.READ)
-    def p1TaskDetail(self, item, params):
+    def p1or2TaskDetail(self, item, params):
         # verify item is in the correct phase and user has access
         collection = self.model('collection').load(
             id=item['baseParentId'],
@@ -151,8 +152,8 @@ class UDAResource(Resource):
             user=self.getCurrentUser()
         )
         phase_name = collection['name']
-        if not phase_name.startswith('Phase 1'):
-            raise RestException('Item %s is not inside Phase 1' % item['_id'])
+        if not (phase_name.startswith('Phase 1') or phase_name == 'Phase 2'):
+            raise RestException('Item %s is not inside Phase 1 or Phase 2' % item['_id'])
 
         return_dict = {
             'phase': phase_name,
@@ -184,11 +185,10 @@ class UDAResource(Resource):
                 # TODO: no file found, raise error
                 pass
 
-            # if phase_name == 'Phase 2':
-            #     vars_path = os.path.join(self.plugin_root_dir, 'custom', 'config', 'phase2-variables.json')
-            #     with open(vars_path, 'r') as fvars:
-            #         fvarlist = json.load(fvars)
-            #     return_dict['variables'] = fvarlist
+            if phase_name == 'Phase 2':
+                phase2_variables_path = os.path.join(self.plugin_root_dir, 'custom', 'config', 'phase2-variables.json')
+                with open(phase2_variables_path, 'r') as phase2_variables_file:
+                    return_dict['variables'] = json.load(phase2_variables_file)
         else:
             return_dict['loadAnnotation'] = False
 
@@ -200,8 +200,8 @@ class UDAResource(Resource):
 
         return return_dict
 
-    p1TaskDetail.description = (
-        Description('Get details of a Phase 1 (markup) task.')
+    p1or2TaskDetail.description = (
+        Description('Get details of a Phase 1 (markup) or Phase 2 (map) task.')
         .responseClass('UDA')
         .param('item_id', 'The item ID.', paramType='path')
         .errorResponse())

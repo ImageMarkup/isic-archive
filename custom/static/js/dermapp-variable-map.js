@@ -24,37 +24,30 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
         $rootScope.$watch('user', function (newUser, oldUser) {
             if (newUser._id) {
-
-                $scope.tasklist_url = '/api/v1/user/' + newUser['_id'] + '/tasklist';
                 $scope.loadTasklist();
             }
         });
 
         $scope.loadTasklist = function () {
+            var urlvals = window.location.pathname.split('/');
+            var image_item_id = urlvals[urlvals.length - 1];
 
-             $http.get($scope.tasklist_url).then(function(response){
+            var task_detail_url = '/api/v1/uda/task/map/' + image_item_id;
 
+            $http.get(task_detail_url).success(function (data) {
+                $scope.decision_tree = data.decision_tree;
+                $scope.phase = data.phase;
+                $scope.totalSteps = $scope.decision_tree.length;
+                if (data.loadAnnotation) {
+                    $scope.annotation_source = data.annotation;
+                    $scope.current_image = data.items[0];
+                }
+                $scope.annotation_options = data.variables;
 
-                    $scope.decision_tree = response.data.decision_tree;
-                    $scope.phase = response.data.phase;
-                    $scope.totalSteps = $scope.decision_tree.length;
-
-                    if(response.data.loadAnnotation){
-
-                        $scope.annotation_source = response.data.annotation;
-                        $scope.current_image = response.data.items[0];
-
-                    }
-
-                    $scope.annotation_options = response.data.variables;
-
-                    var segmentation_url = '/api/v1/item/' + $scope.current_image['_id'] + '/segmentation';
-
-                    $rootScope.showingSegmentation = true;
-
-                    $rootScope.imageviewer.loadPainting(segmentation_url);
-
-                })
+                var segmentation_url = '/api/v1/item/' + $scope.current_image._id + '/segmentation';
+                $rootScope.showingSegmentation = true;
+                $rootScope.imageviewer.loadPainting(segmentation_url);
+            });
         };
 
         $scope.getCurrentAnnotation = function () {
