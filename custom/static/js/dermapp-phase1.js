@@ -54,7 +54,7 @@ var appController = derm_app.controller('ApplicationController', ['$scope', '$ro
 
         $scope.safeApply = function (fn) {
             var phase = this.$root.$$phase;
-            if(phase == '$apply' || phase == '$digest') {
+            if (phase === '$apply' || phase === '$digest') {
                 if (fn) { fn(); }
             } else {
                 this.$apply(fn);
