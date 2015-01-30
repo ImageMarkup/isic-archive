@@ -52,12 +52,8 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
 
         $rootScope.$watch('user', function (newUser, oldUser) {
-
             if (newUser._id) {
-
-
                 $scope.loadTasklist();
-
             }
         });
 

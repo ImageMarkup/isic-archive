@@ -22,15 +22,15 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
         $rootScope.showingSegmentation = true;
 
-        $rootScope.$watch('user', function(newUser, oldUser){
+        $rootScope.$watch('user', function (newUser, oldUser) {
+            if (newUser._id) {
 
-            if(newUser['_id']){
                 $scope.tasklist_url = '/api/v1/user/' + newUser['_id'] + '/tasklist';
                 $scope.loadTasklist();
             }
         });
 
-        $scope.loadTasklist = function(){
+        $scope.loadTasklist = function () {
 
              $http.get($scope.tasklist_url).then(function(response){
 
@@ -57,20 +57,20 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                 })
         };
 
-        $scope.getCurrentAnnotation = function(){
+        $scope.getCurrentAnnotation = function () {
 
-            if($rootScope.applicationReady){
+            if ($rootScope.applicationReady) {
                 return $scope.current_annotation;
             }
             return undefined;
         };
 
-        $scope.hasValidTile = function(_id){
+        $scope.hasValidTile = function (_id) {
 
-            if(_id in $scope.annotation_model){
+            if (_id in $scope.annotation_model) {
                 var tiles = $scope.annotation_model[_id];
-                for (var i=0;i<tiles.length;i++){
-                    if(tiles[i] > 0)
+                for (var i=0;i<tiles.length;i++) {
+                    if (tiles[i] > 0)
                     {
                         return true;
                     }
@@ -79,21 +79,21 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             return false;
         };
 
-        $scope.resetTiles = function(){
+        $scope.resetTiles = function () {
 
-            if($rootScope.imageviewer){
+            if ($rootScope.imageviewer) {
                 $rootScope.imageviewer.clearTiles();
             }
         };
 
-        $scope.hoverTiles = function(theTile){
+        $scope.hoverTiles = function (theTile) {
 
             $rootScope.imageviewer.clearTiles();
 
             var question_shortname = theTile.id;
 
-            if(question_shortname in $scope.annotation_model){
-                $rootScope.imageviewer.loadTiles($scope.annotation_model[question_shortname])
+            if (question_shortname in $scope.annotation_model) {
+                $rootScope.imageviewer.loadTiles($scope.annotation_model[question_shortname]);
             }
 
             // label 2 -> 100%
@@ -103,17 +103,17 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
         };
 
-        $scope.selectTileAnnotation = function(theTile){
+        $scope.selectTileAnnotation = function (theTile) {
 
             // save the previous tile if anything is there
 
-            if($scope.selected_annotation){
+            if ($scope.selected_annotation) {
 
                 var tiles = $rootScope.imageviewer.grabCurrentTiles().slice(0);
 
                 var question_shortname = $scope.selected_annotation.question.id;
 
-                if(question_shortname in $scope.annotation_model){
+                if (question_shortname in $scope.annotation_model) {
                     $scope.annotation_model[question_shortname] = tiles;
                 }else
                 {
@@ -128,8 +128,8 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             $scope.selected_annotation = theTile;
             var question_shortname = $scope.selected_annotation.question.id;
 
-            if(question_shortname in $scope.annotation_model){
-                $rootScope.imageviewer.loadTiles($scope.annotation_model[question_shortname])
+            if (question_shortname in $scope.annotation_model) {
+                $rootScope.imageviewer.loadTiles($scope.annotation_model[question_shortname]);
             }
 
             // label 2 -> 100%
@@ -139,10 +139,10 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
         };
 
-        $scope.$watch('certaintyModel', function(newValue, oldValue){
+        $scope.$watch('certaintyModel', function (newValue, oldValue) {
 
-            if(newValue){
-                if($rootScope.imageviewer){
+            if (newValue) {
+                if ($rootScope.imageviewer) {
                     $rootScope.imageviewer.selectAnnotationLabel(newValue);
                 }
             }
@@ -151,61 +151,74 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
 
         // shortcut key bindings -> takes you home to task list
-        Mousetrap.bind( ['ctrl+q'], function(evt) {
-            if (typeof (evt.preventDefault) === 'function') {evt.preventDefault();}
-            else {evt.returnValue = false}
+        Mousetrap.bind( ['ctrl+q'], function (evt) {
+            if (typeof (evt.preventDefault) === 'function') {
+                evt.preventDefault();
+            } else {
+                evt.returnValue = false;
+            }
             $scope.$apply();
         });
 
         // shortcut key bindings -> takes you home to task list
-        Mousetrap.bind( ['space'], function(evt) {
-            if (typeof (evt.preventDefault) === 'function') {evt.preventDefault();}
-            else {evt.returnValue = false}
+        Mousetrap.bind( ['space'], function (evt) {
+            if (typeof (evt.preventDefault) === 'function') {
+                evt.preventDefault();
+            } else {
+                evt.returnValue = false;
+            }
 
             $scope.nextStep();
             $scope.$apply();
         });
 
-        Mousetrap.bind( ['ctrl+z'], function(evt) {
-            if (typeof (evt.preventDefault) === 'function') {evt.preventDefault();}
-            else {evt.returnValue = false}
+        Mousetrap.bind( ['ctrl+z'], function (evt) {
+            if (typeof (evt.preventDefault) === 'function') {
+                evt.preventDefault();
+            } else {
+                evt.returnValue = false;
+            }
 
             $scope.previousStep();
             $scope.$apply();
         });
 
 
-        Mousetrap.bind( ['up'], function(evt) {
-            if (typeof (evt.preventDefault) === 'function') {evt.preventDefault();}
-            else {evt.returnValue = false}
+        Mousetrap.bind( ['up'], function (evt) {
+            if (typeof (evt.preventDefault) === 'function') {
+                evt.preventDefault();
+            } else {
+                evt.returnValue = false;
+            }
             $scope.increaseParameter();
             $scope.$apply();
 
         });
 
 
-        Mousetrap.bind( ['down'], function(evt) {
-            if (typeof (evt.preventDefault) === 'function') {evt.preventDefault();}
-            else {evt.returnValue = false}
+        Mousetrap.bind( ['down'], function (evt) {
+            if (typeof (evt.preventDefault) === 'function') {
+                evt.preventDefault();
+            }
+            else {
+                evt.returnValue = false;
+            }
             $scope.decreaseParameter();
             $scope.$apply();
 
         });
 
 
-        $scope.reviewAnnotations = function(){
-
-
-            if($scope.selected_annotation){
+        $scope.reviewAnnotations = function () {
+            if ($scope.selected_annotation) {
 
                 var tiles = $rootScope.imageviewer.grabCurrentTiles().slice(0);
 
                 var question_shortname = $scope.selected_annotation.question.id;
 
-                if(question_shortname in $scope.annotation_model){
+                if (question_shortname in $scope.annotation_model) {
                     $scope.annotation_model[question_shortname] = tiles;
-                }else
-                {
+                } else {
                     $scope.annotation_model[question_shortname] = tiles;
                 }
 
@@ -218,7 +231,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
         };
 
-        $scope.hideReview = function(){
+        $scope.hideReview = function () {
 
            $rootScope.imageviewer.clearTiles();
 
@@ -231,7 +244,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
         };
 
-        $scope.submitAnnotations = function(){
+        $scope.submitAnnotations = function () {
             console.log( $scope );
             console.log('submit annotations happens here');
 
@@ -245,10 +258,10 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                 'taskstart' : $rootScope.task_start,
                 'taskend' : taskcomplete_time,
                 'user_annotation': $scope.annotation_model,
-                'markup_model': $scope.annotation_options,
+                'markup_model': $scope.annotation_options
             };
 
-            $http.post(submit_url, annotation_to_store).success(function(response) {
+            $http.post(submit_url, annotation_to_store).success(function (response) {
                 window.location.replace('/uda/task');
             });
         };
@@ -256,7 +269,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
         // setters
 
-        $scope.saveCurrentStepAnnotation = function(){
+        $scope.saveCurrentStepAnnotation = function () {
 
             // just making things explicit for readability's sake
             var features = $rootScope.imageviewer.getFeatures();
@@ -267,13 +280,13 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
             var current_step = $scope.step;
 
-            if (features.length){
+            if (features.length) {
 
-                if ($scope.step_config && $scope.step_config.type){
+                if ($scope.step_config && $scope.step_config.type) {
 
                     // if we're in teh superpixel mode, discard the placehold feature and make your own from the external parameters
                     // ugly but it should work.
-                    if ($scope.step_config.type == 'superpixel'){
+                    if ($scope.step_config.type === 'superpixel') {
 
                         var segmentationPackage = $rootScope.imageviewer.getSegmentationPackage();
 
@@ -298,7 +311,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
                         $scope.current_annotation.steps[current_step] = singleAnnotation;
                     }
-                    else if(current_step in Object.keys($scope.current_annotation.steps)){
+                    else if (current_step in Object.keys($scope.current_annotation.steps)) {
 
                     // we have an existing annotation, just update the features and modify date
 //                    var stepAnnotation = currentAnnotation.steps[current_step]
@@ -333,22 +346,13 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
                         $scope.current_annotation.steps[current_step] = singleAnnotation;
                     }
-
                 }
             }
             else
             {
-                console.log('dont show up here');
+                console.log('don\'t show up here');
             }
-
             console.log($scope.current_annotation);
-	    console.log('this should appear everytime i switch states?');
         };
-
-
-
-
-
-
-    }]);
-
+    }
+]);
