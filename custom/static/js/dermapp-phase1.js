@@ -1,13 +1,14 @@
 
 'use strict';
+/*jslint browser: true*/
 
 // Initialization of angular root application
 var derm_app = angular.module('DermApp', ['ui.bootstrap', 'ngSanitize', 'xml']);
-derm_app.value( "ol", ol );
+derm_app.value("ol", ol);
 
 derm_app.config(function($httpProvider) {
-  $httpProvider.defaults.xsrfCookieName = 'girderToken'
-  $httpProvider.defaults.xsrfHeaderName = 'Girder-Token'
+    $httpProvider.defaults.xsrfCookieName = 'girderToken';
+    $httpProvider.defaults.xsrfHeaderName = 'Girder-Token';
 });
 
 // Initialization of angular app controller with necessary scope variables. Inline declaration of external variables
@@ -31,41 +32,33 @@ var appController = derm_app.controller('ApplicationController', ['$scope', '$ro
         $("#angular_id").height(window.innerHeight);
         $("#map").height(window.innerHeight);
 
-        $timeout(function(){
+        $timeout(function () {
             $rootScope.ApplicationInit();
         }, 10);
 
         // main application, gives a bit of a delay before loading everything
-        $rootScope.ApplicationInit = function() {
-
+        $rootScope.ApplicationInit = function () {
             $rootScope.debug  = $location.url().indexOf('debug') > -1;
             $rootScope.imageviewer = new olViewer({'div' : 'annotationView'});
             $rootScope.applicationReady = true;
-
         };
 
-        $rootScope.$watch('active_image', function(newImage, oldValue){
-
-            if ($rootScope.applicationReady){
-
+        $rootScope.$watch('active_image', function (newImage, oldValue) {
+            if ($rootScope.applicationReady) {
                 $rootScope.task_start = Date.now(); // global start time for this task
                 $rootScope.imageviewer.clearCurrentImage();
-                var image_url = '/api/v1/item/' + newImage['_id'];
+                var image_url = '/api/v1/item/' + newImage._id;
                 $rootScope.imageviewer.loadImageWithURL(image_url);
-
             }
         });
 
-        $scope.safeApply = function( fn ) {
+        $scope.safeApply = function (fn) {
             var phase = this.$root.$$phase;
             if(phase == '$apply' || phase == '$digest') {
-                if(fn) { fn(); }
+                if (fn) { fn(); }
             } else {
                 this.$apply(fn);
             }
         };
-
-}]);
-
-
-
+    }
+]);

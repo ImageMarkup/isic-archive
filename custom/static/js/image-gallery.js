@@ -8,12 +8,8 @@
 var review_app = angular.module('DermApp', ['ngSanitize', 'mousetrap']);
 
 review_app.config(function($httpProvider) {
-//  $httpProvider.defaults.headers.put['Content-Type'] =
-//    'application/x-www-form-urlencoded';
-  $httpProvider.defaults.headers.post['Content-Type'] =
-    'application/x-www-form-urlencoded';
-  $httpProvider.defaults.xsrfCookieName = 'girderToken'
-  $httpProvider.defaults.xsrfHeaderName = 'Girder-Token'
+  $httpProvider.defaults.xsrfCookieName = 'girderToken';
+  $httpProvider.defaults.xsrfHeaderName = 'Girder-Token';
 });
 
 var appController = review_app.controller('ApplicationController', ['$scope', '$rootScope', '$timeout', '$http',
