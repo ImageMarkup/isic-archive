@@ -9,7 +9,7 @@ from girder.utility.server import _StaticFileRoute
 from .annotate import FillHandler
 from .image_utility import zoomifyhandler, thumbnailhandler, fifHandler, annotationHandler, segmentationSourceHandler, segmentationTileHandler
 from .provision_utility import initialSetup
-from .task_utility import tasklisthandler, TaskHandler, UDAResource
+from .task_utility import UDAResource, TaskHandler
 from .upload import uploadHandler
 
 
@@ -44,9 +44,6 @@ def load(info):
         pass
     info['serverRoot'].uda = Root()
 
-    # "/uda/dashboard" -> returns a task dashboard
-    info['serverRoot'].uda.dashboard = StaticRouteWithId(os.path.join(info['pluginRootDir'], 'custom', 'task.html'))
-
     # "/uda/gallery/:folderId" -> returns a single page gallery
     info['serverRoot'].uda.gallery = StaticRouteWithId(os.path.join(info['pluginRootDir'], 'custom', 'gallery.html'))
 
@@ -56,8 +53,8 @@ def load(info):
     # "uda/view/:itemId" -> simple zoomable viewer for an image
     # TODO
 
-    # "/uda/task/:userId" -> redirects to appropriate task view for the user
-    info['serverRoot'].uda.task = TaskHandler()
+    # "/uda/task" -> redirects to appropriate task view for the user
+    info['serverRoot'].uda.task = TaskHandler(info['pluginRootDir'])
 
     # "/uda/annotator/:id" -> the reconfigurable image annotator
     info['serverRoot'].uda.annotate = StaticRouteWithId(os.path.join(info['pluginRootDir'], 'custom', 'annotate.html'))
@@ -70,7 +67,7 @@ def load(info):
 
 
     # add api routes
-    info['apiRoot'].uda = UDAResource()
+    info['apiRoot'].uda = UDAResource(info['pluginRootDir'])
 
     # "/api/v1/item/:id/thumbnail" -> returns a thumbnail of the image
     info['apiRoot'].item.route('GET', (':id', 'thumbnail'), thumbnailhandler)
@@ -90,9 +87,6 @@ def load(info):
 
     # "/api/v1/item/:id/fif/:fifparams" -> returns the IIP FIF endpoint for an item
     info['apiRoot'].item.route('GET', (':id', 'fif', ':fifparams'), fifHandler)
-
-    # "/api/v1/user/:userId/tasklist" -> returns a list of images and any UI configuration
-    info['apiRoot'].user.route('GET', (':id', 'tasklist'), tasklisthandler)
 
 
     # add event listeners

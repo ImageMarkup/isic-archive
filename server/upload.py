@@ -128,7 +128,7 @@ def uploadHandler(event):
 
     file_creator = m.model('user').load(item['creatorId'], force=True)
 
-    uda_user = getUser('udastudy')
+    uda_user = getUDAuser()
     phase0_collection = getCollection('Phase 0')
 
 

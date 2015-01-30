@@ -1,4 +1,3 @@
-
 'use strict';
 /*jslint browser: true*/
 
@@ -24,8 +23,8 @@ var appController = derm_app.controller('ApplicationController', ['$scope', '$ro
 
         var api_user_url = '/api/v1/user/me';
         $rootScope.user = {};
-        $http.get(api_user_url).then(function(response){
-            $rootScope.user = response.data;
+        $http.get(api_user_url).success(function (data) {
+            $rootScope.user = data;
         });
 
         // initial layout

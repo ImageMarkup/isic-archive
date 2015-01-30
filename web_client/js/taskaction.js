@@ -16,7 +16,7 @@ girder.wrap(girder.views.LayoutHeaderUserView, 'render', function (render) {
 girder.views.LayoutHeaderUserView.prototype.events['click a.a-mytasks-link'] = function () {
 
     window.open(
-      '/uda/task/' + girder.currentUser.get('_id'),
+      '/uda/task',
       '_blank'
     );
 };

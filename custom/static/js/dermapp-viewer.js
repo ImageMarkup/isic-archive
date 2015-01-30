@@ -205,13 +205,13 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
                         info.style.display = 'inline';
                       }
                       else {
-                        info.src = 'static/na.jpg'
+                        info.src = '/uda/static/na.jpg'
                         info.style.display = 'none';
                       }
                   }
                   else {
                       info.style.display = 'none';
-                      info.src = 'static/na.jpg'
+                      info.src = '/uda/static/na.jpg'
                   }
             },
 
@@ -558,7 +558,7 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
 
                 // console.log(msg);
 
-                var segmentURL = 'fill';
+                var segmentURL = '/uda/fill';
 
                 $http.post(segmentURL, msg).success(function(response){
 

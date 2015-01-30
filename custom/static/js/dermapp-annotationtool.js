@@ -55,7 +55,6 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
             if(newUser._id) {
 
-                $scope.tasklist_url = '/api/v1/user/' + newUser['_id'] + '/tasklist';
 
                 $scope.loadTasklist();
 
@@ -63,28 +62,25 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
         });
 
         $scope.loadTasklist = function () {
+            var urlvals = window.location.pathname.split('/');
+            var image_item_id = urlvals[urlvals.length - 1];
 
-             $http.get($scope.tasklist_url).then(function(response){
+            var task_detail_url = '/api/v1/uda/task/markup/' + image_item_id;
 
-                    console.log(response);
+            $http.get(task_detail_url).success(function (data) {
+                $scope.decision_tree = data.decision_tree;
+                $scope.phase = data.phase;
+                $scope.totalSteps = $scope.decision_tree.length;
+                $scope.image_list = data.items;
 
-                    $scope.decision_tree = response.data.decision_tree;
-                    $scope.phase = response.data.phase;
-                    $scope.totalSteps = $scope.decision_tree.length;
-                    $scope.image_list = response.data.items;
+                $scope.selectImage(0);
 
-                    $scope.selectImage(0);
+                if (data.loadAnnotation) {
+                    $scope.current_annotation.steps = data.annotation;
+                }
 
-                    if(response.data.loadAnnotation){
-
-                        $scope.current_annotation.steps = response.data.annotation;
-                        console.log($scope.current_annotation);
-                    }
-
-                    $scope.nextStep();
-
-                })
-
+                $scope.nextStep();
+            });
         };
 
         // Accessors
@@ -93,7 +89,6 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             if ($scope.step >= 0) {
                 return $scope.decision_tree[$scope.step]
             }
-
             return undefined;
         };
 
@@ -654,9 +649,10 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                     };
                 }
 
-                var annotation_url = '/api/v1/uda/task/markup/' + $scope.current_image._id + '/complete';
+                var task_complete_url = '/api/v1/uda/task/markup/' + $scope.current_image._id + '/complete';
 
-                $http.post(annotation_url, annotation_to_store).success(function(response){
+                $http.post(task_complete_url, annotation_to_store).success(function(data){
+                    /* // old code to load a new image in-place
                     $scope.step = -1;
 
                     $scope.step_config = undefined;
@@ -667,7 +663,9 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
                     $scope.loadTasklist();
 
-//                    $scope.loadStep();
+                    // $scope.loadStep();
+                    */
+                    window.location.replace('/uda/task');
                 });
             }
         };

@@ -257,7 +257,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             };
 
             $http.post(submit_url, annotation_to_store).success(function(response) {
-                window.location.replace('/uda/task/' + $rootScope.user._id);
+                window.location.replace('/uda/task');
             });
         };
 

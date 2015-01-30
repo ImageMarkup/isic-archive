@@ -13,17 +13,20 @@ from girder.api.rest import Resource, RestException, loadmodel
 from girder.api.describe import Description
 from girder.constants import AccessType
 from girder.models.model_base import AccessException
-from girder.utility.model_importer import ModelImporter
 
-from .model_utility import *
+from .model_utility import getCollection, getFoldersForCollection,\
+    getFolder, getItemsInFolder, getUDAuser
 from .provision_utility import getOrCreateUDAFolder
 
 
 class UDAResource(Resource):
-    def __init__(self):
+    def __init__(self, plugin_root_dir):
         self.resourceName = 'uda'
+        self.plugin_root_dir = plugin_root_dir
+
         self.route('GET', ('task',), self.taskList)
         self.route('POST', ('task', 'qc', ':folder_id', 'complete'), self.p0TaskComplete)
+        self.route('GET', ('task', 'markup', ':item_id'), self.p1TaskDetail)
         self.route('POST', ('task', 'markup', ':item_id', 'complete'), self.p1TaskComplete)
         self.route('POST', ('task', 'map', ':item_id', 'complete'), self.p2TaskComplete)
 
@@ -34,14 +37,24 @@ class UDAResource(Resource):
         self.model('collection').requireAccess(collection, user, AccessType.READ)
 
 
+    def _countImagesInCollection(self, collectionName):
+        collection = getCollection(collectionName)
+        total_len = sum(len(getItemsInFolder(folder)) for folder in getFoldersForCollection(collection))
+        return total_len
 
     @access.user
     def taskList(self, params):
         result = list()
 
         # TODO: make this a global constant somewhere
-        phase_names = ['Phase 0', 'Phase 1a', 'Phase 1b', 'Phase 1c', 'Phase 2']
-        for phase_name in phase_names:
+        PHASE_TASK_URLS = {
+            'Phase 0': '/uda/task/p0',
+            'Phase 1a': '/uda/task/p1a',
+            'Phase 1b': '/uda/task/p1b',
+            'Phase 1c': '/uda/task/p1c',
+            'Phase 2': '/uda/task/p2'
+        }
+        for phase_name, task_url in sorted(PHASE_TASK_URLS.iteritems()):
             try:
                 self._requireCollectionAccess(phase_name)
             except AccessException:
@@ -49,8 +62,8 @@ class UDAResource(Resource):
 
             result.append({
                 'phase': phase_name,
-                'count': countImagesInCollection(phase_name),
-                'url': '/uda/annotate', # TODO
+                'count': self._countImagesInCollection(phase_name),
+                'url': task_url,
             })
 
         return result
@@ -59,9 +72,6 @@ class UDAResource(Resource):
         Description('List available tasks.')
         .responseClass('UDA')
         .errorResponse())
-
-
-
 
 
     @access.user
@@ -128,6 +138,72 @@ class UDAResource(Resource):
         Description('Complete a Phase 0 (qc) task.')
         .responseClass('UDA')
         .param('details', 'JSON details of images to be QC\'d.', paramType='body')
+        .errorResponse())
+
+
+    @access.user
+    @loadmodel(map={'item_id': 'item'}, model='item', level=AccessType.READ)
+    def p1TaskDetail(self, item, params):
+        # verify item is in the correct phase and user has access
+        collection = self.model('collection').load(
+            id=item['baseParentId'],
+            level=AccessType.READ,
+            user=self.getCurrentUser()
+        )
+        phase_name = collection['name']
+        if not phase_name.startswith('Phase 1'):
+            raise RestException('Item %s is not inside Phase 1' % item['_id'])
+
+        return_dict = {
+            'phase': phase_name,
+            'items': [item],
+        }
+
+        # if necessary, load annotations from previous phase
+        PREVIOUS_PHASE_CODES = {
+            'Phase 1b': 'p1a',
+            'Phase 1c': 'p1b',
+            'Phase 2': 'p1c'
+        }
+        previous_phase_code = PREVIOUS_PHASE_CODES.get(phase_name)
+        if previous_phase_code:
+            return_dict['loadAnnotation'] = True
+
+            previous_phase_annotation_file_name_ending = '-%s.json' % previous_phase_code
+            for item_file in sorted(
+                    self.model('item').childFiles(item, limit=0),
+                    key=operator.itemgetter('created'),
+                    reverse=True
+            ):
+                if item_file['name'].endswith(previous_phase_annotation_file_name_ending):
+                    item_file_generator = self.model('file').download(item_file, headers=False)
+                    previous_phase_annotation = json.loads(''.join(item_file_generator()))
+                    return_dict['annotation'] = previous_phase_annotation[previous_phase_code]['steps']
+                    break
+            else:
+                # TODO: no file found, raise error
+                pass
+
+            # if phase_name == 'Phase 2':
+            #     vars_path = os.path.join(self.plugin_root_dir, 'custom', 'config', 'phase2-variables.json')
+            #     with open(vars_path, 'r') as fvars:
+            #         fvarlist = json.load(fvars)
+            #     return_dict['variables'] = fvarlist
+        else:
+            return_dict['loadAnnotation'] = False
+
+        # include static phase config
+        phase_config_file_name = '%s.json' % phase_name.replace(' ', '').lower()
+        phase_config_file_path = os.path.join(self.plugin_root_dir, 'custom', 'config', phase_config_file_name)
+        with open(phase_config_file_path, 'r') as phase_config_file:
+            return_dict['decision_tree'] = json.load(phase_config_file)
+
+        return return_dict
+
+    p1TaskDetail.description = (
+        Description('Get details of a Phase 1 (markup) task.')
+        .responseClass('UDA')
+        .param('item_id', 'The item ID.', paramType='path')
         .errorResponse())
 
 
@@ -265,181 +341,84 @@ class UDAResource(Resource):
         self.model('upload').handleChunk(upload, data)
 
 
+class TaskHandler(Resource):
+    def __init__(self, plugin_root_dir):
+        self.resourceName = 'task'
+        self.plugin_root_dir = plugin_root_dir
+
+        self.route('GET', (), self.taskDashboard)
+        self.route('GET', ('p0',), self.p0TaskRedirect)
+        self.route('GET', ('p1a',), self.p1aTaskRedirect)
+        self.route('GET', ('p1b',), self.p1bTaskRedirect)
+        self.route('GET', ('p1c',), self.p1cTaskRedirect)
+        self.route('GET', ('p2',), self.p2TaskRedirect)
+        # TODO: cookieAuth decorator
 
 
+    @access.public
+    def taskDashboard(self, params):
+        return cherrypy.lib.static.serve_file(os.path.join(self.plugin_root_dir, 'custom', 'task.html'))
+    taskDashboard.cookieAuth = True
 
 
+    def _largestFolderWithItems(self, phase_name):
+        collection = self.model('collection').findOne({'name': phase_name})
+        self.model('collection').requireAccess(
+            doc=collection,
+            user=self.getCurrentUser(),
+            level=AccessType.READ
+        )
 
+        folders_with_items = (
+            (folder, getItemsInFolder(folder))
+            for folder in getFoldersForCollection(collection))
+        folders_with_items = itertools.ifilter(lambda x: len(x[1]), folders_with_items)
+        folders_with_items = sorted(folders_with_items, key=lambda x: [1], reverse=True)
 
-
-
-def getFinalTask(user_id):
-    # assign a weight to phase
-    phase_weights = {
-        'Phase 0': 10,
-        'Phase 1a': 20,
-        'Phase 1b': 30,
-        'Phase 1c': 40,
-        'Phase 2': 60,
-    }
-
-    user = ModelImporter.model('user').load(user_id, force=True)
-    task_list = []
-
-    for groupId in user.get('groups', list()):
-        group_name = ModelImporter.model('group').load(groupId, force=True)['name']
-
-        task_list.append({
-            'name': group_name,
-            'count': countImagesInCollection(group_name),
-            'weight': phase_weights.get(group_name, 0)
-        })
-
-    final_task = {'weight': 0}
-
-    for task in task_list:
-        # print task
-        if task['count'] > 0 and task['weight'] > final_task['weight']:
-            final_task = task
-
-    return final_task
-
-
-
-class TaskHandler(object):
-    exposed = True
-
-    def urlForPhase(self, phaseName, param=None):
-
-        url = '/'
-
-        # assign a weight to phase
-        if phaseName == 'Phase 0':
-            url = '/uda/qc/%s' % param
-        elif phaseName == 'Phase 1a':
-            url = '/uda/annotate'
-        elif phaseName == 'Phase 1b':
-            url = '/uda/annotate'
-        elif phaseName == 'Phase 1c':
-            url = '/uda/annotate'
-        elif phaseName == 'Phase 2':
-            url = '/uda/map'
-
-        return url
-
-
-    @cherrypy.popargs('id')
-    def GET(self, id=None):
-        final_task = getFinalTask(id)
-
-        # this is where we'd return something if it was an API, instead we're going one step farther and redirecting to the task
-
-        # todo: if user isn't a member of any groups with tasks, "final_task['name']" raises a KeyError
-
-        phase_folders = getFoldersForCollection(getCollection(final_task['name']))
-
-        target_folder = None
-        target_count = 0
-
-        for folder in phase_folders:
-            items_in_folder = getItemsInFolder(folder)
-            if len(items_in_folder) > target_count:
-                target_folder = folder
-                target_count = len(items_in_folder)
-
-        # TODO: this breaks if there are more items in "dropzip" than were actually extracted
-
-        if target_folder:
-            redirect_url = self.urlForPhase(final_task['name'], target_folder['_id'])
-            raise cherrypy.HTTPRedirect(redirect_url)
+        if folders_with_items:
+            folder, items = folders_with_items[0]
+            return folder, items
         else:
+            return None, None
+
+
+    def _taskRedirect(self, phase_name, url_format):
+        folder, items = self._largestFolderWithItems(phase_name)
+        if folder is None:
             return 'no tasks for user'
 
-
-@access.public
-def tasklisthandler(id, params):
-    final_task = getFinalTask(id)
-
-    phase_folders = getFoldersForCollection(getCollection(final_task['name']))
-
-    target_folder = None
-    target_count = 0
-    target_items = []
-
-    for folder in phase_folders:
-        items_in_folder = getItemsInFolder(folder)
-        # print '###', folder
-        if len(items_in_folder) > target_count:
-            target_folder = folder
-            target_count = len(items_in_folder)
-            target_items = items_in_folder
-
-
-    return_dict = {}
-
-    # todo: branch for configs
-
-
-    # TODO: can Girder provide the location of this plugin's directory?
-    #  could we reliably use this Python file's location?
-    app_base = os.getcwd()  # e.g. /home/ubuntu/applications/girder
-
-    app_path = os.path.join(app_base, 'plugins', 'uda', 'custom', 'config')
-
-    # get the appropriate jsno
-    phasejson = final_task['name'].replace(" ", "").lower() + '.json'
-
-    config_json = os.path.abspath(os.path.join(app_path, phasejson))
-
-    with open(config_json, 'r') as fid:
-        config_list = json.load(fid)
-
-    return_dict['items'] = [target_items[0]]
-    return_dict['folder'] = target_folder
-    return_dict['phase'] = final_task['name']
-
-    m = ModelImporter
-    if final_task['name'] in ['Phase 1b', 'Phase 1c', 'Phase 2']:
-        item = m.model('item').load(target_items[0]['_id'], force=True)
-        files = m.model('item').childFiles(item)
-
-        previous_phase_codes = {
-            'Phase 1b': 'p1a',
-            'Phase 1c': 'p1b',
-            'Phase 2': 'p1c'
+        redirect_url = url_format % {
+            'folder_id': folder['_id'],
+            'item_id': items[0]['_id']
         }
-        previous_phase_code = previous_phase_codes[final_task['name']]
-        target_file_name = '%s.json' % previous_phase_code
+        raise cherrypy.HTTPRedirect(redirect_url, status=307)
 
-        firstFile = sorted(
-            itertools.ifilter(lambda f: target_file_name in f['name'], files),
-            key=operator.itemgetter('created')
-        )[-1]
-        # TODO: handle when no files are found
 
-        assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
-        file_path = os.path.join(assetstore['root'], firstFile['path'])
-        with open(file_path, 'r') as json_content:
-            annotation_str = json.load(json_content)
+    @access.user
+    def p0TaskRedirect(self, params):
+        return self._taskRedirect('Phase 0', '/uda/qc/%(folder_id)s')
+    p0TaskRedirect.cookieAuth = True
 
-        return_dict['loadAnnotation'] = True
-        return_dict['annotation'] = annotation_str[previous_phase_code]['steps']
 
-        if final_task['name'] == 'Phase 2':
-            vars_path = os.path.abspath(os.path.join(app_path, 'phase2-variables.json'))
-            with open(vars_path, 'r') as fvars:
-                fvarlist = json.load(fvars)
-            return_dict['variables'] = fvarlist
+    @access.user
+    def p1aTaskRedirect(self, params):
+        return self._taskRedirect('Phase 1a', '/uda/annotate/%(item_id)s')
+    p1aTaskRedirect.cookieAuth = True
 
-    else:
-        return_dict['loadAnnotation'] = False
 
-    # the UI json to provide
-    return_dict['decision_tree'] = config_list
+    @access.user
+    def p1bTaskRedirect(self, params):
+        return self._taskRedirect('Phase 1b', '/uda/annotate/%(item_id)s')
+    p1bTaskRedirect.cookieAuth = True
 
-    return return_dict
 
-tasklisthandler.description = (
-    Description('Retrieve the current task list for a given user')
-    .param('id', 'The user ID', paramType='path')
-    .errorResponse())
+    @access.user
+    def p1cTaskRedirect(self, params):
+        return self._taskRedirect('Phase 1c', '/uda/annotate/%(item_id)s')
+    p1cTaskRedirect.cookieAuth = True
+
+
+    @access.user
+    def p2TaskRedirect(self, params):
+        return self._taskRedirect('Phase 2', '/uda/map/%(item_id)s')
+    p2TaskRedirect.cookieAuth = True
