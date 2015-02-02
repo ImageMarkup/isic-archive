@@ -40,7 +40,7 @@
                 <h4>{{ task.name }} ({{ task.count }})</h4>
                 <ul>
                     <li ng-repeat="dataset in task.datasets track by dataset.url">
-                        <a href="{{ dataset.url }}">{{ dataset.name }} ({{ task.count }})</a>
+                        <a href="{{ dataset.url }}">{{ dataset.name }} ({{ dataset.count }})</a>
                     </li>
                 </ul>
             </li>
