@@ -15,8 +15,8 @@ from girder.constants import AccessType
 from girder.models.model_base import AccessException
 
 from .model_utility import getCollection, getFoldersForCollection,\
-    getFolder, getItemsInFolder, getUDAuser
-from .provision_utility import getOrCreateUDAFolder
+    getFolder, getItemsInFolder
+from .provision_utility import getOrCreateUDAFolder, getAdminUser
 
 
 class UDAResource(Resource):
@@ -332,7 +332,7 @@ class UDAResource(Resource):
     def _createFileFromData(self, item, data, filename):
         # TODO: overwrite existing files if present, using provenance to keep old files
         upload = self.model('upload').createUpload(
-            getUDAuser(),
+            getAdminUser(),
             filename,
             'item', item,
             len(data),
