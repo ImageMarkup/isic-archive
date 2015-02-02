@@ -105,7 +105,7 @@ class UDAResource(Resource):
 
     @access.user
     @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
-    def p0TaskComplete(self, folder):
+    def p0TaskComplete(self, folder, params):
         # verify user's access to folder and phase
         phase0_collection = self.model('collection').findOne({'name': 'Phase 0'})
         self.model('collection').requireAccess(phase0_collection, self.getCurrentUser(), AccessType.READ)
