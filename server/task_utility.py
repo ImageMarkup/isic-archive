@@ -13,10 +13,14 @@ from girder.api.rest import Resource, RestException, loadmodel
 from girder.api.describe import Description
 from girder.constants import AccessType
 from girder.models.model_base import AccessException
+from girder.utility.model_importer import ModelImporter
 
-from .model_utility import getCollection, getFoldersForCollection,\
-    getFolder, getItemsInFolder
+from .model_utility import getCollection, getFolder
 from .provision_utility import getOrCreateUDAFolder, getAdminUser
+
+
+def getItemsInFolder(folder):
+    return list(ModelImporter.model('folder').childItems(folder, limit=0))
 
 
 class UDAResource(Resource):
@@ -36,12 +40,25 @@ class UDAResource(Resource):
         collection = self.model('collection').findOne({'name': collection_name})
         user = self.getCurrentUser()
         self.model('collection').requireAccess(collection, user, AccessType.READ)
+        return collection
 
 
-    def _countImagesInCollection(self, collectionName):
-        collection = getCollection(collectionName)
-        total_len = sum(len(getItemsInFolder(folder)) for folder in getFoldersForCollection(collection))
-        return total_len
+    def _getFoldersForCollection(self, collection, excludeFlagged=True):
+        def p0FilterFunc(folder):
+            if folder['name'] in ['dropzip', 'dropcsv']:
+                return False
+            if excludeFlagged and folder['name'] == 'flagged':
+                return False
+            return True
+
+        folders = self.model('folder').find(
+            {'parentId': collection['_id']})
+
+        if collection['name'] == 'Phase 0':
+            # TODO: do the filtering in the query
+            folders = itertools.ifilter(p0FilterFunc, folders)
+        return folders
+
 
     @access.user
     def taskList(self, params):
@@ -49,22 +66,33 @@ class UDAResource(Resource):
 
         # TODO: make this a global constant somewhere
         PHASE_TASK_URLS = {
-            'Phase 0': '/uda/task/p0',
-            'Phase 1a': '/uda/task/p1a',
-            'Phase 1b': '/uda/task/p1b',
-            'Phase 1c': '/uda/task/p1c',
-            'Phase 2': '/uda/task/p2'
+            'Phase 0': '/uda/task/p0/%(folder_id)s',
+            'Phase 1a': '/uda/task/p1a/%(folder_id)s',
+            'Phase 1b': '/uda/task/p1b/%(folder_id)s',
+            'Phase 1c': '/uda/task/p1c/%(folder_id)s',
+            'Phase 2': '/uda/task/p2/%(folder_id)s'
         }
         for phase_name, task_url in sorted(PHASE_TASK_URLS.iteritems()):
             try:
-                self._requireCollectionAccess(phase_name)
+                collection = self._requireCollectionAccess(phase_name)
             except AccessException:
                 continue
 
+            datasets = (
+                {
+                    'name': folder['name'],
+                    'count': len(getItemsInFolder(folder)),
+                    'url': task_url % {'folder_id': folder['_id']}
+                }
+                for folder in self._getFoldersForCollection(collection)
+            )
+            datasets = itertools.ifilter(operator.itemgetter('count'), datasets)
+            datasets = sorted(datasets, key=operator.itemgetter('name'))
+
             result.append({
-                'phase': phase_name,
-                'count': self._countImagesInCollection(phase_name),
-                'url': task_url,
+                'name': phase_name,
+                'count': sum(dataset['count'] for dataset in datasets),
+                'datasets': datasets
             })
 
         return result
@@ -347,11 +375,11 @@ class TaskHandler(Resource):
         self.plugin_root_dir = plugin_root_dir
 
         self.route('GET', (), self.taskDashboard)
-        self.route('GET', ('p0',), self.p0TaskRedirect)
-        self.route('GET', ('p1a',), self.p1aTaskRedirect)
-        self.route('GET', ('p1b',), self.p1bTaskRedirect)
-        self.route('GET', ('p1c',), self.p1cTaskRedirect)
-        self.route('GET', ('p2',), self.p2TaskRedirect)
+        self.route('GET', ('p0', ':folder_id'), self.p0TaskRedirect)
+        self.route('GET', ('p1a', ':folder_id'), self.p1aTaskRedirect)
+        self.route('GET', ('p1b', ':folder_id'), self.p1bTaskRedirect)
+        self.route('GET', ('p1c', ':folder_id'), self.p1cTaskRedirect)
+        self.route('GET', ('p2', ':folder_id'), self.p2TaskRedirect)
         # TODO: cookieAuth decorator
 
 
@@ -361,31 +389,14 @@ class TaskHandler(Resource):
     taskDashboard.cookieAuth = True
 
 
-    def _largestFolderWithItems(self, phase_name):
+    def _taskRedirect(self, phase_name, folder, url_format):
         collection = self.model('collection').findOne({'name': phase_name})
-        self.model('collection').requireAccess(
-            doc=collection,
-            user=self.getCurrentUser(),
-            level=AccessType.READ
-        )
+        if folder['baseParentId'] != collection['_id']:
+            raise RestException('Folder "%s" is not in collection "%s"' % (folder['_id'], phase_name))
 
-        folders_with_items = (
-            (folder, getItemsInFolder(folder))
-            for folder in getFoldersForCollection(collection))
-        folders_with_items = itertools.ifilter(lambda x: len(x[1]), folders_with_items)
-        folders_with_items = sorted(folders_with_items, key=lambda x: [1], reverse=True)
-
-        if folders_with_items:
-            folder, items = folders_with_items[0]
-            return folder, items
-        else:
-            return None, None
-
-
-    def _taskRedirect(self, phase_name, url_format):
-        folder, items = self._largestFolderWithItems(phase_name)
-        if folder is None:
-            return 'no tasks for user'
+        items = getItemsInFolder(folder)
+        if not items:
+            raise RestException('Folder "%s" in collection "%s" is empty' % (folder['_id'], phase_name))
 
         redirect_url = url_format % {
             'folder_id': folder['_id'],
@@ -395,30 +406,35 @@ class TaskHandler(Resource):
 
 
     @access.user
-    def p0TaskRedirect(self, params):
-        return self._taskRedirect('Phase 0', '/uda/qc/%(folder_id)s')
+    @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
+    def p0TaskRedirect(self, folder, params):
+        return self._taskRedirect('Phase 0', folder, '/uda/qc/%(folder_id)s')
     p0TaskRedirect.cookieAuth = True
 
 
     @access.user
-    def p1aTaskRedirect(self, params):
-        return self._taskRedirect('Phase 1a', '/uda/annotate/%(item_id)s')
+    @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
+    def p1aTaskRedirect(self, folder, params):
+        return self._taskRedirect('Phase 1a', folder, '/uda/annotate/%(item_id)s')
     p1aTaskRedirect.cookieAuth = True
 
 
     @access.user
-    def p1bTaskRedirect(self, params):
-        return self._taskRedirect('Phase 1b', '/uda/annotate/%(item_id)s')
+    @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
+    def p1bTaskRedirect(self, folder, params):
+        return self._taskRedirect('Phase 1b', folder, '/uda/annotate/%(item_id)s')
     p1bTaskRedirect.cookieAuth = True
 
 
     @access.user
-    def p1cTaskRedirect(self, params):
-        return self._taskRedirect('Phase 1c', '/uda/annotate/%(item_id)s')
+    @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
+    def p1cTaskRedirect(self, folder, params):
+        return self._taskRedirect('Phase 1c', folder, '/uda/annotate/%(item_id)s')
     p1cTaskRedirect.cookieAuth = True
 
 
     @access.user
-    def p2TaskRedirect(self, params):
-        return self._taskRedirect('Phase 2', '/uda/map/%(item_id)s')
+    @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
+    def p2TaskRedirect(self, folder, params):
+        return self._taskRedirect('Phase 2', folder, '/uda/map/%(item_id)s')
     p2TaskRedirect.cookieAuth = True

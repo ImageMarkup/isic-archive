@@ -12,14 +12,18 @@ review_app.config(function($httpProvider) {
   $httpProvider.defaults.xsrfHeaderName = 'Girder-Token';
 });
 
-var appController = review_app.controller('ApplicationController', ['$scope', '$rootScope', '$timeout', '$http',
-    function ($scope, $rootScope, $timeout, $http) {
+var appController = review_app.controller('TaskController', ['$scope', '$http', '$interval',
+    function ($scope, $http, $interval) {
 
         $scope.task_list = [];
-        $http.get('/api/v1/uda/task').success(function (data) {
-            $scope.task_list = data;
-        });
+        $scope.update = function () {
+            $http.get('/api/v1/uda/task').success(function (data) {
+                $scope.task_list = data;
+            });
+        };
+        $interval($scope.update, 5000);
 
+        $scope.update();
     }]);
 
 
