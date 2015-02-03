@@ -33,18 +33,29 @@
     <script src="/uda/static/js/task.js"></script>
 </head>
 <body>
-    <div id="angular_id" ng-controller="TaskController">
-        <h1>Task Dashboard</h1>
-        <ul>
-            <li ng-repeat="task in task_list track by task.name">
-                <h4>{{ task.name }} ({{ task.count }})</h4>
-                <ul>
-                    <li ng-repeat="dataset in task.datasets track by dataset.url">
-                        <a href="{{ dataset.url }}">{{ dataset.name }} ({{ dataset.count }})</a>
-                    </li>
-                </ul>
-            </li>
-        </ul>
+    <div class="container" ng-controller="TaskController">
+        <h1 class="row">Task Dashboard</h1>
+        <div class="row col-lg-6">
+            <div class="panel-group" ng-repeat="phase in task_list track by phase.name">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <div class="panel-title">
+                            <span>{{ phase.name }}</span>
+                            <span class="badge pull-right">{{ phase.count }}</span>
+                        </div>
+                        <i>{{ phase.description }}</i>
+                    </div>
+                    <ul class="list-group">
+                        <a class="list-group-item"
+                           ng-repeat="dataset in phase.datasets track by dataset.url"
+                           href="{{ dataset.url }}">
+                            <span class="btn-link">{{ dataset.name }}</span>
+                            <span class="badge">{{ dataset.count }}</span>
+                        </a>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>

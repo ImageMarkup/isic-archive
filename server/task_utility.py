@@ -90,7 +90,8 @@ class UDAResource(Resource):
             datasets = sorted(datasets, key=operator.itemgetter('name'))
 
             result.append({
-                'name': phase_name,
+                'name': collection['name'],
+                'description': collection['description'],
                 'count': sum(dataset['count'] for dataset in datasets),
                 'datasets': datasets
             })
