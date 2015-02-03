@@ -290,8 +290,10 @@ class UDAResource(Resource):
             '%s_user' % phase_acronym: markup_dict['user']['_id'],
             '%s_result' % phase_acronym: 'ok',
             '%s_folder_id' % phase_acronym: markup_dict['image']['folderId'],
-            '%s_start_time' % phase_acronym: markup_dict['taskstart'],
-            '%s_stop_time' % phase_acronym: markup_dict['taskend'],
+            '%s_start_time' % phase_acronym:
+                datetime.datetime.utcfromtimestamp(markup_dict['taskstart'] / 1000.0),
+            '%s_stop_time' % phase_acronym:
+                datetime.datetime.utcfromtimestamp(markup_dict['taskend'] / 1000.0),
         }
 
         markup_json = dict()
