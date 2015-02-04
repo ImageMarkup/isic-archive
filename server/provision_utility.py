@@ -193,7 +193,7 @@ def initialSetup():
                              public=True
     )
 
-    MAKE_TEST_USERS = True
+    MAKE_TEST_USERS = False
     if MAKE_TEST_USERS:
         setupUdaTestUser(
             phase='Phase 0',
