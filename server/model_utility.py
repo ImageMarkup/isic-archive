@@ -3,10 +3,6 @@
 from girder.utility.model_importer import ModelImporter
 
 
-def getUDAuser():
-    return ModelImporter.model('user').findOne({'login': 'udastudy'})
-
-
 def getCollection(collectionName):
     return ModelImporter.model('collection').findOne({'name': collectionName})
 
