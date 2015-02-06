@@ -11,7 +11,7 @@ import zipfile
 from girder.constants import AccessType
 from girder.utility.model_importer import ModelImporter
 
-from .provision_utility import getOrCreateUDAFolder
+from .provision_utility import getOrCreateUDAFolder, getAdminUser
 
 ZIP_FORMATS = [
     'multipart/x-zip',
@@ -76,8 +76,6 @@ def zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_us
 
     with zipfile.ZipFile(upload_file_path) as zip_file, TemporaryDirectory() as temp_dir:
         for original_file in zip_file.infolist():
-            guessed_mime = mimetypes.guess_type(original_file.filename)
-
             original_file_name = original_file.filename
             original_file_name.replace('\\', '/')
             original_file_name = os.path.basename(original_file_name)
@@ -92,7 +90,7 @@ def zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_us
                     original_file_obj
                 )
 
-            converted_file_name = '%s.tif' % os.path.splitext(original_file_name)[0]
+            converted_file_name = '%s.new.tif' % os.path.splitext(original_file_name)[0]
             converted_file_path = os.path.join(temp_dir, converted_file_name)
 
             try:
@@ -109,31 +107,52 @@ def zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_us
                     '--bigtiff',
                 ))
             except subprocess.CalledProcessError:
-                continue
-            finally:
                 os.remove(original_file_path)
+                try:
+                    os.remove(converted_file_path)
+                except OSError:
+                    pass
+                continue
 
+            # upload original image
+            upload = ModelImporter.model('upload').createUpload(
+                user=upload_user,
+                name=original_file_name,
+                parentType='folder',
+                parent=images_folder,
+                size=os.path.getsize(original_file_path),
+                mimeType='image/tiff',
+            )
+            with open(original_file_path, 'rb') as original_file_obj:
+                # TODO: buffered?
+                image_file = ModelImporter.model('upload').handleChunk(
+                    upload, original_file_obj.read())
+            os.remove(original_file_path)
+
+            image_item = ModelImporter.model('item').load(image_file['itemId'], force=True)
+            image_mimetype = mimetypes.guess_type(original_file.filename)[0]
+
+            # upload converted image
             upload = ModelImporter.model('upload').createUpload(
                 user=upload_user,
                 name=converted_file_name,
-                parentType='folder',
-                parent=images_folder,
+                parentType='item',
+                parent=image_item,
                 size=os.path.getsize(converted_file_path),
-                mimeType='image/tiff',
+                mimeType=image_mimetype,
             )
-            with open(converted_file_path, 'r') as converted_file_obj:
+            with open(converted_file_path, 'rb') as converted_file_obj:
                 # TODO: buffered?
-                girder_file = ModelImporter.model('upload').handleChunk(
+                ModelImporter.model('upload').handleChunk(
                     upload, converted_file_obj.read())
             os.remove(converted_file_path)
 
-            newitem = ModelImporter.model('item').load(girder_file['itemId'], force=True)
-            ModelImporter.model('item').setMetadata(newitem, {
-                'originalMimeType': guessed_mime[0],
-                'convertedMimeType': 'image/tiff',
+            ModelImporter.model('item').setMetadata(image_item, {
                 # provide full and possibly-qualified path as originalFilename
                 'originalFilename': original_file.filename,
-                'convertedFilename': converted_file_name
+                'originalMimeType': image_mimetype,
+                'convertedFilename': converted_file_name,
+                'convertedMimeType': 'image/tiff',
             })
 
 
