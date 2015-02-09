@@ -15,7 +15,6 @@ from girder.constants import AccessType
 from girder.models.model_base import AccessException
 from girder.utility.model_importer import ModelImporter
 
-from .model_utility import getCollection, getFolder
 from .provision_utility import getOrCreateUDAFolder, getAdminUser
 
 
@@ -136,7 +135,10 @@ class UDAResource(Resource):
 
 
         # move flagged images into flagged folder, set QC metadata
-        phase0_flagged_images = getFolder(phase0_collection, 'flagged')
+        phase0_flagged_images = ModelImporter.model('folder').findOne({
+            'parentId': phase0_collection['_id'],
+            'name': 'flagged'
+        })
         # TODO: create "flagged" if not present?
         for image_item in flagged_image_items:
             qc_metadata = {
@@ -335,7 +337,7 @@ class UDAResource(Resource):
         next_phase_folder = getOrCreateUDAFolder(
             name=original_folder['name'],
             description=original_folder['description'],
-            parent=getCollection(next_phase_full),
+            parent=ModelImporter.model('collection').findOne({'name': next_phase_full}),
             parent_type='collection'
         )
 
