@@ -9,9 +9,11 @@ import tempfile
 import zipfile
 
 from girder.constants import AccessType
+from girder.models.notification import ProgressState
 from girder.utility.model_importer import ModelImporter
+from girder.utility.progress import ProgressContext
 
-from .provision_utility import getOrCreateUDAFolder, getAdminUser
+from .provision_utility import getOrCreateUDAFolder
 
 ZIP_FORMATS = [
     'multipart/x-zip',
@@ -74,7 +76,9 @@ def zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_us
     )
     ModelImporter.model('folder').setUserAccess(images_folder, upload_user, AccessType.ADMIN, save=True)
 
-    with zipfile.ZipFile(upload_file_path) as zip_file, TemporaryDirectory() as temp_dir:
+    with zipfile.ZipFile(upload_file_path) as zip_file:
+        # filter out directories and count real files
+        zip_files = list()
         for original_file in zip_file.infolist():
             original_file_name = original_file.filename
             original_file_name.replace('\\', '/')
@@ -82,19 +86,34 @@ def zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_us
             if not original_file_name or not original_file.file_size:
                 # file is probably a directory, skip
                 continue
+            zip_files.append((original_file, original_file_name))
 
-            original_file_path = os.path.join(temp_dir, original_file_name)
-            with open(original_file_path, 'wb') as original_file_obj:
-                shutil.copyfileobj(
-                    zip_file.open(original_file),
-                    original_file_obj
-                )
+        with TemporaryDirectory() as temp_dir, \
+            ProgressContext(
+                on=True,
+                user=upload_user,
+                title='Processing "%s"' % upload_file['name'],
+                total=len(zip_files),
+                state=ProgressState.ACTIVE,
+                current=0,
+                message='') as progress:
 
-            converted_file_name = '%s.new.tif' % os.path.splitext(original_file_name)[0]
-            converted_file_path = os.path.join(temp_dir, converted_file_name)
+            for original_file, original_file_name in zip_files:
+                progress.update(
+                    increment=1,
+                    message='Extracting "%s"' % original_file_name)
 
-            try:
-                subprocess.check_call((
+                original_file_path = os.path.join(temp_dir, original_file_name)
+                with open(original_file_path, 'wb') as original_file_obj:
+                    shutil.copyfileobj(
+                        zip_file.open(original_file),
+                        original_file_obj
+                    )
+
+                converted_file_name = '%s.new.tif' % os.path.splitext(original_file_name)[0]
+                converted_file_path = os.path.join(temp_dir, converted_file_name)
+
+                convert_command = (
                     '/usr/local/bin/vips',
                     'tiffsave',
                     original_file_path, converted_file_path,
@@ -105,55 +124,59 @@ def zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_us
                     '--tile-height', '256',
                     '--pyramid',
                     '--bigtiff',
-                ))
-            except subprocess.CalledProcessError:
+                )
+                # TODO: subprocess.check_call is causing the whole application to crash
+                os.popen(' '.join(convert_command))
+                # try:
+                #     subprocess.check_call(convert_command)
+                # except subprocess.CalledProcessError:
+                #     os.remove(original_file_path)
+                #     try:
+                #         os.remove(converted_file_path)
+                #     except OSError:
+                #         pass
+                #     continue
+
+                # upload original image
+                upload = ModelImporter.model('upload').createUpload(
+                    user=upload_user,
+                    name=original_file_name,
+                    parentType='folder',
+                    parent=images_folder,
+                    size=os.path.getsize(original_file_path),
+                    mimeType='image/tiff',
+                )
+                with open(original_file_path, 'rb') as original_file_obj:
+                    # TODO: buffered?
+                    image_file = ModelImporter.model('upload').handleChunk(
+                        upload, original_file_obj.read())
                 os.remove(original_file_path)
-                try:
-                    os.remove(converted_file_path)
-                except OSError:
-                    pass
-                continue
 
-            # upload original image
-            upload = ModelImporter.model('upload').createUpload(
-                user=upload_user,
-                name=original_file_name,
-                parentType='folder',
-                parent=images_folder,
-                size=os.path.getsize(original_file_path),
-                mimeType='image/tiff',
-            )
-            with open(original_file_path, 'rb') as original_file_obj:
-                # TODO: buffered?
-                image_file = ModelImporter.model('upload').handleChunk(
-                    upload, original_file_obj.read())
-            os.remove(original_file_path)
+                image_item = ModelImporter.model('item').load(image_file['itemId'], force=True)
+                image_mimetype = mimetypes.guess_type(original_file.filename)[0]
 
-            image_item = ModelImporter.model('item').load(image_file['itemId'], force=True)
-            image_mimetype = mimetypes.guess_type(original_file.filename)[0]
+                # upload converted image
+                upload = ModelImporter.model('upload').createUpload(
+                    user=upload_user,
+                    name=converted_file_name,
+                    parentType='item',
+                    parent=image_item,
+                    size=os.path.getsize(converted_file_path),
+                    mimeType=image_mimetype,
+                )
+                with open(converted_file_path, 'rb') as converted_file_obj:
+                    # TODO: buffered?
+                    ModelImporter.model('upload').handleChunk(
+                        upload, converted_file_obj.read())
+                os.remove(converted_file_path)
 
-            # upload converted image
-            upload = ModelImporter.model('upload').createUpload(
-                user=upload_user,
-                name=converted_file_name,
-                parentType='item',
-                parent=image_item,
-                size=os.path.getsize(converted_file_path),
-                mimeType=image_mimetype,
-            )
-            with open(converted_file_path, 'rb') as converted_file_obj:
-                # TODO: buffered?
-                ModelImporter.model('upload').handleChunk(
-                    upload, converted_file_obj.read())
-            os.remove(converted_file_path)
-
-            ModelImporter.model('item').setMetadata(image_item, {
-                # provide full and possibly-qualified path as originalFilename
-                'originalFilename': original_file.filename,
-                'originalMimeType': image_mimetype,
-                'convertedFilename': converted_file_name,
-                'convertedMimeType': 'image/tiff',
-            })
+                ModelImporter.model('item').setMetadata(image_item, {
+                    # provide full and possibly-qualified path as originalFilename
+                    'originalFilename': original_file.filename,
+                    'originalMimeType': image_mimetype,
+                    'convertedFilename': converted_file_name,
+                    'convertedMimeType': 'image/tiff',
+                })
 
 
 def csvUploadHandler(upload_collection, upload_file_path, upload_user):
