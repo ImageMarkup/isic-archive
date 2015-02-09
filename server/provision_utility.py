@@ -149,18 +149,6 @@ def initialSetup():
         level=AccessType.WRITE,
         save=True
     )
-    dropcsv_folder = getOrCreateUDAFolder(
-        name='dropcsv',
-        description='Upload CSV files of image metadata here',
-        parent=phase0_collection,
-        parent_type='collection'
-    )
-    ModelImporter.model('folder').setGroupAccess(
-        doc=dropcsv_folder,
-        group=phase0_group,
-        level=AccessType.WRITE,
-        save=True
-    )
     getOrCreateUDAFolder(
         name='flagged',
         description='Images flagged during Phase 0 are here',

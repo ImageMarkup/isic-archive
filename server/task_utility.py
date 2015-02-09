@@ -20,7 +20,10 @@ from .provision_utility import getOrCreateUDAFolder, getAdminUser
 
 
 def getItemsInFolder(folder):
-    return list(ModelImporter.model('folder').childItems(folder, limit=0))
+    return list(ModelImporter.model('folder').childItems(
+        folder, limit=0,
+        filters={'meta.convertedFilename': {'$exists': True}}
+    ))
 
 
 class UDAResource(Resource):
@@ -45,7 +48,7 @@ class UDAResource(Resource):
 
     def _getFoldersForCollection(self, collection, excludeFlagged=True):
         def p0FilterFunc(folder):
-            if folder['name'] in ['dropzip', 'dropcsv']:
+            if folder['name'] == 'dropzip':
                 return False
             if excludeFlagged and folder['name'] == 'flagged':
                 return False

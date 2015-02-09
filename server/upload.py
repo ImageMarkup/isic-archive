@@ -13,7 +13,7 @@ from girder.models.notification import ProgressState
 from girder.utility.model_importer import ModelImporter
 from girder.utility.progress import ProgressContext
 
-from .provision_utility import getOrCreateUDAFolder
+from .provision_utility import getOrCreateUDAFolder, getAdminUser
 
 ZIP_FORMATS = [
     'multipart/x-zip',
@@ -43,7 +43,7 @@ def uploadHandler(event):
     upload_folder = ModelImporter.model('folder').load(upload_item['folderId'], force=True)
     upload_collection = ModelImporter.model('collection').load(upload_folder['parentId'], force=True)
 
-    if (upload_collection['name'] != 'Phase 0') or (upload_folder['name'] not in ['dropzip', 'dropcsv']):
+    if upload_collection['name'] != 'Phase 0':
         return
 
     upload_file_mimetype = upload_file['mimeType']
@@ -59,9 +59,9 @@ def uploadHandler(event):
         else:
             pass
             # TODO: warning
-    elif upload_folder['name'] == 'dropcsv':
+    else:
         if upload_file_mimetype in CSV_FORMATS:
-            csvUploadHandler(upload_collection, upload_file_path, upload_user)
+            csvUploadHandler(upload_folder, upload_item, upload_file, upload_file_path, upload_user)
         else:
             pass
             # TODO: warning
@@ -95,8 +95,7 @@ def zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_us
                 title='Processing "%s"' % upload_file['name'],
                 total=len(zip_files),
                 state=ProgressState.ACTIVE,
-                current=0,
-                message='') as progress:
+                current=0) as progress:
 
             for original_file, original_file_name in zip_files:
                 progress.update(
@@ -110,7 +109,8 @@ def zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_us
                         original_file_obj
                     )
 
-                converted_file_name = '%s.new.tif' % os.path.splitext(original_file_name)[0]
+                original_file_basename = os.path.splitext(original_file_name)[0]
+                converted_file_name = '%s.new.tif' % original_file_basename
                 converted_file_path = os.path.join(temp_dir, converted_file_name)
 
                 convert_command = (
@@ -153,6 +153,9 @@ def zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_us
                 os.remove(original_file_path)
 
                 image_item = ModelImporter.model('item').load(image_file['itemId'], force=True)
+                image_item['name'] = original_file_basename
+                ModelImporter.model('item').updateItem(image_item)
+
                 image_mimetype = mimetypes.guess_type(original_file.filename)[0]
 
                 # upload converted image
@@ -179,8 +182,23 @@ def zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_us
                 })
 
 
-def csvUploadHandler(upload_collection, upload_file_path, upload_user):
-    with open(upload_file_path, 'rUb') as upload_file_obj:
+def csvUploadHandler(upload_folder, upload_item, upload_file, upload_file_path, upload_user):
+    dataset_folder_ids = [
+        folder['_id']
+        for folder in ModelImporter.model('folder').find({
+            'name': upload_folder['name']
+    })]
+    # TODO: ensure that dataset_folder_ids are UDA folders / in UDA phases
+
+    parse_errors = list()
+    with open(upload_file_path, 'rUb') as upload_file_obj,\
+        ProgressContext(
+            on=True,
+            user=upload_user,
+            title='Processing "%s"' % upload_file['name'],
+            state=ProgressState.ACTIVE,
+            message='Parsing CSV') as progress:
+
         # csv.reader(csvfile, delimiter=',', quotechar='"')
         csv_reader = csv.DictReader(upload_file_obj)
 
@@ -189,25 +207,38 @@ def csvUploadHandler(upload_collection, upload_file_path, upload_user):
             return
 
         for csv_row in csv_reader:
-
             isic_id = csv_row['isic_id']
             if not isic_id:
-                # csv_reader.line_num
-                # TODO: error
+                parse_errors.append('No "isic_id" field in row %d' % csv_reader.line_num)
                 continue
 
-            # TODO: find files in any collection, any folder?
             # TODO: require upload_user to match image creator?
             image_items = ModelImporter.model('item').find({
-                'name': '%s.tif' % isic_id
+                'name': '%s.tif' % isic_id,
+                'parentId': {'$in': dataset_folder_ids}
             })
-            if not image_items:
-                # TODO: error
+            if not image_items.count():
+                parse_errors.append('No image found with isic_id "%s"' % isic_id)
                 continue
             elif image_items.count() > 1:
-                # TODO: error
+                parse_errors.append('Multiple images found with isic_id "%s"' % isic_id)
                 continue
             else:
                 image_item = image_items.next()
 
             ModelImporter.model('item').setMetadata(image_item, metadata=csv_row)
+
+    if parse_errors:
+        # TODO: eventually don't store whole string in memory
+        parse_errors_str = '\n'.join(parse_errors)
+
+        upload = ModelImporter.model('upload').createUpload(
+            user=getAdminUser(),
+            name='parse_errors.txt',
+            parentType='item',
+            parent=upload_item,
+            size=len(parse_errors_str),
+            mimeType='text/plain',
+        )
+        ModelImporter.model('upload').handleChunk(
+            upload, parse_errors_str)
