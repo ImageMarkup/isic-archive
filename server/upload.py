@@ -116,7 +116,8 @@ def zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_us
                 convert_command = (
                     '/usr/local/bin/vips',
                     'tiffsave',
-                    original_file_path, converted_file_path,
+                    '\'%s\'' % original_file_path,
+                    '\'%s\'' % converted_file_path,
                     '--compression', 'jpeg',
                     '--Q', '90',
                     '--tile',
