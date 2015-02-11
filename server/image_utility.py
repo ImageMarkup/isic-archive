@@ -14,21 +14,21 @@ def thumbnailhandler(id, params):
 
     m = ModelImporter()
     item = m.model('item').load(id, force=True)
-    files = m.model('item').childFiles(item)
 
-    for firstFile in files:
-        if firstFile['exts'][0] == 'tif':
-            break
-    else:
+    image_file = ModelImporter.model('file').findOne({
+        'itemId': item['_id'],
+        'name': item['meta']['convertedFilename']
+    })
+    if not image_file:
         raise Exception('Unable to find TIFF file in item %s' % id)
 
-    assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
+    assetstore = m.model('assetstore').load(image_file['assetstoreId'])
 
     # have to fake it for IIP to place nice
-    file_path = os.path.join(assetstore['root'], firstFile['path'] + '.tif')
+    file_path = os.path.join(assetstore['root'], image_file['path'] + '.tif')
     thumbnail_url = '/fcgi-bin/iipsrv.fcgi?FIF=%s&WID=256&CVT=jpeg' % (file_path)
 
-    raise cherrypy.HTTPRedirect(thumbnail_url)
+    raise cherrypy.HTTPRedirect(thumbnail_url, status=307)
 
 thumbnailhandler.description = (
     Description('Retrieve the thumbnail for a given item.')
@@ -118,21 +118,21 @@ def zoomifyhandler(id, params, **kwargs):
 
         m = ModelImporter()
         item = m.model('item').load(id, force=True)
-        files = m.model('item').childFiles(item)
 
-        for firstFile in files:
-            if firstFile['exts'][0] == 'tif':
-                break
-        else:
+        image_file = ModelImporter.model('file').findOne({
+            'itemId': item['_id'],
+            'name': item['meta']['convertedFilename']
+        })
+        if not image_file:
             raise Exception('Unable to find TIFF file in item %s' % id)
 
-        assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
+        assetstore = m.model('assetstore').load(image_file['assetstoreId'])
 
         # have to fake it for IIP to place nice
-        file_path = os.path.join(assetstore['root'], firstFile['path'] + '.tif')
+        file_path = os.path.join(assetstore['root'], image_file['path'] + '.tif')
         zoomify_url = '/fcgi-bin/iipsrv.fcgi?Zoomify=%s%s' % (file_path, zsplit[1])
 
-        raise cherrypy.HTTPRedirect(zoomify_url)
+        raise cherrypy.HTTPRedirect(zoomify_url, status=307)
 
     return 'invalid url'
 
@@ -151,21 +151,21 @@ def fifHandler(id, params, **kwargs):
 
         m = ModelImporter()
         item = m.model('item').load(id, force=True)
-        files = m.model('item').childFiles(item)
 
-        for firstFile in files:
-            if firstFile['exts'][0] == 'tif':
-                break
-        else:
+        image_file = ModelImporter.model('file').findOne({
+            'itemId': item['_id'],
+            'name': item['meta']['convertedFilename']
+        })
+        if not image_file:
             raise Exception('Unable to find TIFF file in item %s' % id)
 
-        assetstore = m.model('assetstore').load(firstFile['assetstoreId'])
+        assetstore = m.model('assetstore').load(image_file['assetstoreId'])
 
         # have to fake it for IIP to place nice
-        file_path = os.path.join(assetstore['root'], firstFile['path'] + '.tif')
+        file_path = os.path.join(assetstore['root'], image_file['path'] + '.tif')
         zoomify_url = '/fcgi-bin/iipsrv.fcgi?FIF=%s%s' % (file_path, zsplit[1])
 
-        raise cherrypy.HTTPRedirect(zoomify_url)
+        raise cherrypy.HTTPRedirect(zoomify_url, status=307)
 
     return 'invalid url'
 
