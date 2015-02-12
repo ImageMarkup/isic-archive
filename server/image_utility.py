@@ -25,7 +25,7 @@ def thumbnailhandler(id, params):
     assetstore = m.model('assetstore').load(image_file['assetstoreId'])
 
     # have to fake it for IIP to place nice
-    file_path = os.path.join(assetstore['root'], image_file['path'] + '.tif')
+    file_path = os.path.join(assetstore['root'], image_file['path'])
     thumbnail_url = '/fcgi-bin/iipsrv.fcgi?FIF=%s&WID=256&CVT=jpeg' % (file_path)
 
     raise cherrypy.HTTPRedirect(thumbnail_url, status=307)
@@ -129,7 +129,7 @@ def zoomifyhandler(id, params, **kwargs):
         assetstore = m.model('assetstore').load(image_file['assetstoreId'])
 
         # have to fake it for IIP to place nice
-        file_path = os.path.join(assetstore['root'], image_file['path'] + '.tif')
+        file_path = os.path.join(assetstore['root'], image_file['path'])
         zoomify_url = '/fcgi-bin/iipsrv.fcgi?Zoomify=%s%s' % (file_path, zsplit[1])
 
         raise cherrypy.HTTPRedirect(zoomify_url, status=307)
@@ -162,7 +162,7 @@ def fifHandler(id, params, **kwargs):
         assetstore = m.model('assetstore').load(image_file['assetstoreId'])
 
         # have to fake it for IIP to place nice
-        file_path = os.path.join(assetstore['root'], image_file['path'] + '.tif')
+        file_path = os.path.join(assetstore['root'], image_file['path'])
         zoomify_url = '/fcgi-bin/iipsrv.fcgi?FIF=%s%s' % (file_path, zsplit[1])
 
         raise cherrypy.HTTPRedirect(zoomify_url, status=307)
