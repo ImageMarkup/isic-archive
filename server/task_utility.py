@@ -343,9 +343,14 @@ class UDAResource(Resource):
 
         self.model('item').move(image_item, next_phase_folder)
 
+        def _defaultSerialize(o):
+            if isinstance(o, datetime.datetime):
+                return o.isoformat()
+            raise TypeError(repr(o) + " is not JSON serializable")
+
         self._createFileFromData(
             image_item,
-            json.dumps(markup_json),
+            json.dumps(markup_json, default=_defaultSerialize),
             '%s-%s.json' % (item_name_base, phase_acronym)
         )
 
