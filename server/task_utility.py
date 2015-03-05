@@ -88,7 +88,6 @@ class UDAResource(Resource):
                 }
                 for folder in self._getFoldersForCollection(collection)
             )
-            datasets = itertools.ifilter(operator.itemgetter('count'), datasets)
             datasets = sorted(datasets, key=operator.itemgetter('name'))
 
             result.append({
@@ -331,18 +330,6 @@ class UDAResource(Resource):
         image_item = self.model('item').load(markup_dict['image']['_id'], force=True)
         self.model('item').setMetadata(image_item, item_metadata)
 
-        # move item to folder in next collection
-        original_folder = self.model('folder').load(markup_dict['image']['folderId'], force=True)
-
-        next_phase_folder = getOrCreateUDAFolder(
-            name=original_folder['name'],
-            description=original_folder['description'],
-            parent=ModelImporter.model('collection').findOne({'name': next_phase_full}),
-            parent_type='collection'
-        )
-
-        self.model('item').move(image_item, next_phase_folder)
-
         def _defaultSerialize(o):
             if isinstance(o, datetime.datetime):
                 return o.isoformat()
@@ -366,6 +353,21 @@ class UDAResource(Resource):
                 png_tiles_b64string_trim.decode('base64'),
                 '%s-tile-%s.png' % (item_name_base, phase_acronym)
             )
+
+        # move item to folder in next collection
+        original_folder = self.model('folder').load(markup_dict['image']['folderId'], force=True)
+        next_phase_folder = getOrCreateUDAFolder(
+            name=original_folder['name'],
+            description=original_folder['description'],
+            parent=ModelImporter.model('collection').findOne({'name': next_phase_full}),
+            parent_type='collection'
+        )
+
+        self.model('item').move(image_item, next_phase_folder)
+
+        # remove empty folders in original collection
+        if self.model('folder').subtreeCount(original_folder) == 1:
+            self.model('folder').remove(original_folder)
 
         return 'success'
 
