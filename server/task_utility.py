@@ -20,7 +20,7 @@ from .provision_utility import getOrCreateUDAFolder, getAdminUser
 
 def getItemsInFolder(folder):
     return list(ModelImporter.model('folder').childItems(
-        folder, limit=0,
+        folder,
         filters={'meta.convertedFilename': {'$exists': True}}
     ))
 
@@ -205,7 +205,7 @@ class UDAResource(Resource):
 
             previous_phase_annotation_file_name_ending = '-%s.json' % previous_phase_code
             for item_file in sorted(
-                    self.model('item').childFiles(item, limit=0),
+                    self.model('item').childFiles(item),
                     key=operator.itemgetter('created'),
                     reverse=True
             ):
