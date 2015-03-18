@@ -32,16 +32,18 @@ CSV_FORMATS = [
 
 def uploadHandler(event):
     upload_file = event.info['file']
-    upload_item = ModelImporter.model('item').load(upload_file['itemId'], force=True)
-    upload_folder = ModelImporter.model('folder').load(upload_item['folderId'], force=True)
-    upload_collection = ModelImporter.model('collection').load(upload_folder['parentId'], force=True)
-
-    if upload_collection['name'] != 'Phase 0':
-        return
-
     upload_file_mimetype = upload_file['mimeType']
     if upload_file_mimetype == 'application/octet-stream':
         upload_file_mimetype = mimetypes.guess_type(upload_file['name'], strict=False)[0]
+    if upload_file_mimetype not in ZIP_FORMATS + CSV_FORMATS:
+        # TODO: check if a non zip or csv is uploaded by a user
+        return
+
+    upload_item = ModelImporter.model('item').load(upload_file['itemId'], force=True)
+    upload_folder = ModelImporter.model('folder').load(upload_item['folderId'], force=True)
+    upload_collection = ModelImporter.model('collection').load(upload_folder['parentId'], force=True)
+    if upload_collection['name'] != 'Phase 0':
+        return
 
     upload_file_path = os.path.join(event.info['assetstore']['root'], upload_file['path'])
     upload_user = ModelImporter.model('user').load(upload_item['creatorId'], force=True)
@@ -49,15 +51,9 @@ def uploadHandler(event):
     if upload_folder['name'] == 'dropzip':
         if upload_file_mimetype in ZIP_FORMATS:
             _zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_user)
-        else:
-            pass
-            # TODO: warning
     else:
         if upload_file_mimetype in CSV_FORMATS:
             _csvUploadHandler(upload_folder, upload_item, upload_file, upload_file_path, upload_user)
-        else:
-            pass
-            # TODO: warning
 
 
 class ZipFileOpener(object):
