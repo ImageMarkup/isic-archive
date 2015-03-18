@@ -134,11 +134,17 @@ class UDAResource(Resource):
 
 
         # move flagged images into flagged folder, set QC metadata
-        phase0_flagged_images = ModelImporter.model('folder').findOne({
+        # TODO: create "flagged" if not present?
+        flagged_folder = ModelImporter.model('folder').findOne({
             'parentId': phase0_collection['_id'],
             'name': 'flagged'
         })
-        # TODO: create "flagged" if not present?
+        phase0_flagged_images = getOrCreateUDAFolder(
+            name=folder['name'],
+            description='',
+            parent=flagged_folder,
+            parent_type='folder'
+        )
         for image_item in flagged_image_items:
             qc_metadata = {
                 'qc_user': self.getCurrentUser()['_id'],
