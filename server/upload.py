@@ -4,12 +4,14 @@ import csv
 import mimetypes
 import os
 import shutil
+import sys
 import subprocess
 import tempfile
 import zipfile
 
 from girder.constants import AccessType
 from girder.models.notification import ProgressState
+from girder.utility import assetstore_utilities
 from girder.utility.model_importer import ModelImporter
 from girder.utility.progress import ProgressContext
 
@@ -26,15 +28,6 @@ CSV_FORMATS = [
     'text/csv',
     'application/vnd.ms-excel'
 ]
-
-
-class TemporaryDirectory(object):
-    def __enter__(self):
-        self.temp_dir = tempfile.mkdtemp()
-        return self.temp_dir
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        shutil.rmtree(self.temp_dir)
 
 
 def uploadHandler(event):
@@ -55,19 +48,120 @@ def uploadHandler(event):
 
     if upload_folder['name'] == 'dropzip':
         if upload_file_mimetype in ZIP_FORMATS:
-            zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_user)
+            _zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_user)
         else:
             pass
             # TODO: warning
     else:
         if upload_file_mimetype in CSV_FORMATS:
-            csvUploadHandler(upload_folder, upload_item, upload_file, upload_file_path, upload_user)
+            _csvUploadHandler(upload_folder, upload_item, upload_file, upload_file_path, upload_user)
         else:
             pass
             # TODO: warning
 
 
-def zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_user):
+class ZipFileOpener(object):
+    def __init__(self, zip_file_path):
+        self.zip_file_path = zip_file_path
+        # TODO: check for "7z" command
+
+    def __enter__(self):
+        self._createTempDirs()
+        try:
+            return self._defaultUnzip()
+        except zipfile.BadZipfile:
+            return self._fallbackUnzip()
+
+
+    def _createTempDirs(self):
+        assetstore = ModelImporter.model('assetstore').getCurrent()
+        assetstore_adapter = assetstore_utilities.getAssetstoreAdapter(assetstore)
+        try:
+            self.temp_dir = tempfile.mkdtemp(dir=assetstore_adapter.tempDir)
+            self.external_temp_dir = tempfile.mkdtemp(dir=assetstore_adapter.tempDir)
+        except (AttributeError, OSError):
+            self.temp_dir = tempfile.mkdtemp()
+            self.external_temp_dir = tempfile.mkdtemp()
+
+
+    def _defaultUnzip(self):
+        zip_file = zipfile.ZipFile(self.zip_file_path)
+
+        # filter out directories and count real files
+        file_list = list()
+        for original_file in zip_file.infolist():
+            original_file_relpath = original_file.filename
+            original_file_relpath.replace('\\', '/')
+            original_file_name = os.path.basename(original_file_relpath)
+            if not original_file_name or not original_file.file_size:
+                # file is probably a directory, skip
+                continue
+            file_list.append((original_file, original_file_relpath))
+        return self._defaultUnzipIter(zip_file, file_list), len(file_list), self.external_temp_dir
+
+
+    def _defaultUnzipIter(self, zip_file, file_list):
+        for original_file, original_file_relpath in file_list:
+            original_file_name = os.path.basename(original_file_relpath)
+            temp_file_path = os.path.join(self.temp_dir, original_file_name)
+            with open(temp_file_path, 'wb') as temp_file_obj:
+                shutil.copyfileobj(
+                    zip_file.open(original_file),
+                    temp_file_obj
+                )
+            yield temp_file_path, original_file_relpath
+            os.remove(temp_file_path)
+        zip_file.close()
+
+
+    def _fallbackUnzip(self):
+        unzip_command = (
+            '7z',
+            'x',
+            '-y',
+            '-o%s' % self.temp_dir,
+            self.zip_file_path
+        )
+        try:
+            with open(os.devnull, 'rb') as null_in,\
+                    open(os.devnull, 'wb') as null_out:
+                subprocess.check_call(unzip_command,
+                    stdin=null_in, stdout=null_out, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError:
+            self.__exit__(*sys.exc_info())
+            raise
+
+        file_list = list()
+        for temp_dir_path, _, temp_file_names in os.walk(self.temp_dir):
+            for temp_file_name in temp_file_names:
+                temp_file_path = os.path.join(temp_dir_path, temp_file_name)
+                original_file_relpath = os.path.relpath(temp_file_path, self.temp_dir)
+                file_list.append((temp_file_path, original_file_relpath))
+        return iter(file_list), len(file_list), self.external_temp_dir
+
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        shutil.rmtree(self.temp_dir)
+        shutil.rmtree(self.external_temp_dir)
+
+
+def _uploadFileFromPath(file_path, user, name, parent, parent_type, mime_type):
+    upload = ModelImporter.model('upload').createUpload(
+        user=user,
+        name=name,
+        parentType=parent_type,
+        parent=parent,
+        size=os.path.getsize(file_path),
+        mimeType=mime_type,
+    )
+    with open(file_path, 'rb') as file_obj:
+        # TODO: buffered?
+        upload_file = ModelImporter.model('upload').handleChunk(
+            upload, file_obj.read())
+    return upload_file
+
+
+def _zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_user):
     images_folder = getOrCreateUDAFolder(
         name=os.path.splitext(upload_file['name'])[0],
         description='',
@@ -76,38 +170,21 @@ def zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_us
     )
     ModelImporter.model('folder').setUserAccess(images_folder, upload_user, AccessType.ADMIN, save=True)
 
-    with zipfile.ZipFile(upload_file_path) as zip_file:
-        # filter out directories and count real files
-        zip_files = list()
-        for original_file in zip_file.infolist():
-            original_file_name = original_file.filename
-            original_file_name.replace('\\', '/')
-            original_file_name = os.path.basename(original_file_name)
-            if not original_file_name or not original_file.file_size:
-                # file is probably a directory, skip
-                continue
-            zip_files.append((original_file, original_file_name))
-
-        with TemporaryDirectory() as temp_dir, \
-            ProgressContext(
+    with ZipFileOpener(upload_file_path) as (file_list, file_count, temp_dir):
+        with ProgressContext(
                 on=True,
                 user=upload_user,
                 title='Processing "%s"' % upload_file['name'],
-                total=len(zip_files),
+                total=file_count,
                 state=ProgressState.ACTIVE,
                 current=0) as progress:
 
-            for original_file, original_file_name in zip_files:
+            for original_file_path, original_file_relpath in file_list:
+                original_file_name = os.path.basename(original_file_relpath)
+
                 progress.update(
                     increment=1,
                     message='Extracting "%s"' % original_file_name)
-
-                original_file_path = os.path.join(temp_dir, original_file_name)
-                with open(original_file_path, 'wb') as original_file_obj:
-                    shutil.copyfileobj(
-                        zip_file.open(original_file),
-                        original_file_obj
-                    )
 
                 original_file_basename = os.path.splitext(original_file_name)[0]
                 converted_file_name = '%s.new.tif' % original_file_basename
@@ -129,9 +206,11 @@ def zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_us
                 # TODO: subprocess.check_call is causing the whole application to crash
                 os.popen(' '.join(convert_command))
                 # try:
-                #     subprocess.check_call(convert_command)
+                #     with open(os.devnull, 'rb') as null_in,\
+                #             open(os.devnull, 'wb') as null_out:
+                #         subprocess.check_call(convert_command,
+                #             stdin=null_in, stdout=null_out, stderr=subprocess.STDOUT)
                 # except subprocess.CalledProcessError:
-                #     os.remove(original_file_path)
                 #     try:
                 #         os.remove(converted_file_path)
                 #     except OSError:
@@ -139,56 +218,47 @@ def zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_us
                 #     continue
 
                 # upload original image
-                upload = ModelImporter.model('upload').createUpload(
+                image_file = _uploadFileFromPath(
+                    file_path=original_file_path,
                     user=upload_user,
                     name=original_file_name,
-                    parentType='folder',
                     parent=images_folder,
-                    size=os.path.getsize(original_file_path),
-                    mimeType='image/tiff',
+                    parent_type='folder',
+                    mime_type='image/tiff'
                 )
-                with open(original_file_path, 'rb') as original_file_obj:
-                    # TODO: buffered?
-                    image_file = ModelImporter.model('upload').handleChunk(
-                        upload, original_file_obj.read())
-                os.remove(original_file_path)
-
                 image_item = ModelImporter.model('item').load(image_file['itemId'], force=True)
                 image_item['name'] = original_file_basename
                 ModelImporter.model('item').updateItem(image_item)
 
-                image_mimetype = mimetypes.guess_type(original_file.filename)[0]
+                image_mimetype = mimetypes.guess_type(original_file_relpath)[0]
 
                 # upload converted image
-                upload = ModelImporter.model('upload').createUpload(
+                _uploadFileFromPath(
+                    file_path=converted_file_path,
                     user=upload_user,
                     name=converted_file_name,
-                    parentType='item',
                     parent=image_item,
-                    size=os.path.getsize(converted_file_path),
-                    mimeType=image_mimetype,
+                    parent_type='item',
+                    mime_type=image_mimetype
                 )
-                with open(converted_file_path, 'rb') as converted_file_obj:
-                    # TODO: buffered?
-                    ModelImporter.model('upload').handleChunk(
-                        upload, converted_file_obj.read())
                 os.remove(converted_file_path)
 
                 ModelImporter.model('item').setMetadata(image_item, {
                     # provide full and possibly-qualified path as originalFilename
-                    'originalFilename': original_file.filename,
+                    'originalFilename': original_file_relpath,
                     'originalMimeType': image_mimetype,
                     'convertedFilename': converted_file_name,
                     'convertedMimeType': 'image/tiff',
                 })
 
 
-def csvUploadHandler(upload_folder, upload_item, upload_file, upload_file_path, upload_user):
+def _csvUploadHandler(upload_folder, upload_item, upload_file, upload_file_path, upload_user):
     dataset_folder_ids = [
         folder['_id']
         for folder in ModelImporter.model('folder').find({
             'name': upload_folder['name']
-    })]
+        })
+    ]
     # TODO: ensure that dataset_folder_ids are UDA folders / in UDA phases
 
     parse_errors = list()
