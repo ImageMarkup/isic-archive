@@ -172,6 +172,10 @@ class UDAResource(Resource):
             self.model('item').setMetadata(image_item, qc_metadata)
             self.model('item').move(image_item, phase1a_images)
 
+        # remove empty folders in original collection
+        if self.model('folder').subtreeCount(folder) == 1:
+            self.model('folder').remove(folder)
+
         return {'status': 'success'}
 
     p0TaskComplete.description = (
