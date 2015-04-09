@@ -1,15 +1,10 @@
 from celery import Celery
 
-import sys
-
 import cv2
 import urllib
 import numpy as np
 import json
 from numpy import squeeze
-import Image
-import cStringIO
-import re
 import geojson
 from geojson import Polygon, Feature
 
@@ -246,7 +241,6 @@ def segmentImage(input_parameters):
     import cv2
     import numpy as np
     from numpy import unique, squeeze
-    import Image
     import cStringIO
     import re
     import geojson
