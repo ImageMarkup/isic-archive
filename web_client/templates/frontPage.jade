@@ -1,0 +1,20 @@
+.g-frontpage-header
+  img.g-frontpage-logo(src="#{staticRoot}/img/Girder_Mark.png", width="82")
+  .g-frontpage-title-container
+    .g-frontpage-title UDA 2 Archive
+    .g-frontpage-subtitle ISIC Unified Dermoscopy Algorithm 2
+
+.g-frontpage-body
+  p.g-frontpage-paragraph
+    b Welcome to the UDA 2 Study Archive.
+    br
+    if !currentUser
+      | To get started annotating images, first
+      a.g-register-link  Register
+      |  as a new user or
+      a.g-login-link  Log In
+      |  if you already have an account.
+    else
+      | To see available images annotation tasks, click the
+      a(href='/uda/task')  Image Tasks
+      |  link on the left.
