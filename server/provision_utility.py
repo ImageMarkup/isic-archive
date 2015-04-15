@@ -4,6 +4,23 @@ from girder.constants import AccessType
 from girder.utility.model_importer import ModelImporter
 
 
+def onUserCreated(event):
+    if ModelImporter.model('setting').get('uda.demo_mode', None):
+        user = event.info
+        addUserToAllUDAGroups(user)
+
+
+def addUserToAllUDAGroups(user):
+    # group should already exist
+    for phase in ['Phase 0', 'Phase 1a', 'Phase 1b', 'Phase 1c', 'Phase 2']:
+        group = getOrCreateUDAGroup(name=phase, description=None, public=None)
+        ModelImporter.model('group').addUser(
+            group=group,
+            user=user,
+            level=AccessType.READ
+        )
+
+
 def getOrCreateUDAUser(username, password,
                        first_name, last_name, email,
                        admin, public):
@@ -47,6 +64,7 @@ def getOrCreateUDAGroup(name, description, public):
             description=description,
             public=public
         )
+        # remove udaadmin from group
     return group
 
 

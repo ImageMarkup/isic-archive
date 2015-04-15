@@ -8,7 +8,7 @@ from girder.utility.server import _StaticFileRoute
 
 from .annotate import FillHandler
 from .image_utility import zoomifyhandler, thumbnailhandler, fifHandler, annotationHandler, segmentationSourceHandler, segmentationTileHandler
-from .provision_utility import initialSetup
+from .provision_utility import initialSetup, onUserCreated
 from .task_utility import UDAResource, TaskHandler
 from .upload import uploadHandler
 
@@ -91,3 +91,5 @@ def load(info):
 
     # add event listeners
     events.bind('data.process', 'uploadHandler', uploadHandler)
+
+    events.bind('model.user.save.created', 'onUserCreated', onUserCreated)
