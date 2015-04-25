@@ -1,6 +1,6 @@
 {
-    "name": "(MSKCC) UDA Study 2",
-    "description": "All plugin functionality combined",
+    "name": "UDA 2 Archive",
+    "description": "The UDA 2 dermoscopy image archive.",
     "version": "1.0.0",
     "dependencies": []
 }
