@@ -4,9 +4,11 @@
 from girder.constants import AccessType
 from girder.utility.model_importer import ModelImporter
 
+from . import constants
+
 
 def onUserCreated(event):
-    if ModelImporter.model('setting').get('uda.demo_mode', None):
+    if ModelImporter.model('setting').get(constants.PluginSettings.DEMO_MODE):
         user = event.info
         addUserToAllUDAGroups(user)
 
@@ -151,6 +153,9 @@ def setupUdaTestUser(phase, username, password, label):
 
 
 def initialSetup():
+    if ModelImporter.model('setting').get(constants.PluginSettings.DEMO_MODE, None) is None:
+        ModelImporter.model('setting').set(constants.PluginSettings.DEMO_MODE, False)
+
     phase0_collection, phase0_group = setupUdaPhase(
         phase_name='Phase 0',
         collection_description='Images to QC',

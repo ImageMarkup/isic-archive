@@ -5,8 +5,10 @@ import os
 
 import cherrypy
 from girder import events
+from girder.models.model_base import ValidationException
 from girder.utility.server import _StaticFileRoute
 
+from . import constants
 from .annotate import FillHandler
 from .image_utility import zoomifyhandler, thumbnailhandler, fifHandler, annotationHandler, segmentationSourceHandler, segmentationTileHandler
 from .provision_utility import initialSetup, onUserCreated
@@ -24,7 +26,23 @@ class StaticRouteWithId(_StaticFileRoute):
         return super(StaticRouteWithId, self).GET()
 
 
+def validateSettings(event):
+    key, val = event.info['key'], event.info['value']
+
+    if key == constants.PluginSettings.DEMO_MODE:
+        if not isinstance(val, bool):
+            raise ValidationException(
+                'Demo mode must be provided as a boolean.', 'value')
+        event.preventDefault().stopPropagation()
+
+
 def load(info):
+    # add event listeners
+    # note, 'model.setting.validate' must be bound before initialSetup is called
+    events.bind('model.setting.validate', 'uda', validateSettings)
+    events.bind('data.process', 'uploadHandler', uploadHandler)
+    events.bind('model.user.save.created', 'onUserCreated', onUserCreated)
+
     # create all necessary users, groups, collections, etc
     initialSetup()
 
@@ -88,9 +106,3 @@ def load(info):
 
     # "/api/v1/item/:id/fif/:fifparams" -> returns the IIP FIF endpoint for an item
     info['apiRoot'].item.route('GET', (':id', 'fif', ':fifparams'), fifHandler)
-
-
-    # add event listeners
-    events.bind('data.process', 'uploadHandler', uploadHandler)
-
-    events.bind('model.user.save.created', 'onUserCreated', onUserCreated)
