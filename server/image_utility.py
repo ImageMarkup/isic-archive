@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import json
 import os
 
 import cherrypy
@@ -33,30 +32,6 @@ def thumbnailhandler(item, params):
 thumbnailhandler.cookieAuth = True
 thumbnailhandler.description = (
     Description('Retrieve the thumbnail for a given item.')
-    .param('item_id', 'The item ID', paramType='path')
-    .errorResponse())
-
-
-@access.public
-@loadmodel(map={'item_id': 'item'}, model='item', level=AccessType.READ)
-def annotationHandler(item, params):
-    # todo : have it pull the appropriate annotation, it current pulls the last one
-
-    files = ModelImporter.model('item').childFiles(item)
-
-    for firstFile in files:
-        if firstFile['exts'][0] == 'json':
-            break
-    else:
-        raise RestException('No JSON file in item')
-
-    json_content_stream = ModelImporter.model('file').download(firstFile, headers=False)
-    annotation_str = json.loads(''.join(json_content_stream()))
-    return annotation_str
-
-annotationHandler.cookieAuth = True
-annotationHandler.description = (
-    Description('Retrieve the annotation json for a given item.')
     .param('item_id', 'The item ID', paramType='path')
     .errorResponse())
 

@@ -10,7 +10,7 @@ from girder.utility.server import _StaticFileRoute
 
 from . import constants
 from .annotate import FillHandler
-from .image_utility import zoomifyhandler, thumbnailhandler, fifHandler, annotationHandler, segmentationSourceHandler, segmentationTileHandler
+from .image_utility import zoomifyhandler, thumbnailhandler, fifHandler, segmentationSourceHandler, segmentationTileHandler
 from .provision_utility import initialSetup, onUserCreated
 from .task_utility import UDAResource, TaskHandler
 from .upload import uploadHandler
@@ -90,9 +90,6 @@ def load(info):
 
     # "/api/v1/item/:id/thumbnail" -> returns a thumbnail of the image
     info['apiRoot'].item.route('GET', (':item_id', 'thumbnail'), thumbnailhandler)
-
-    # "/api/v1/item/:id/annotation" -> returns the json annotation
-    info['apiRoot'].item.route('GET', (':item_id', 'annotation'), annotationHandler)
 
     # "/api/v1/item/:id/segmentationSource" -> returns the png segmentation (index map as alpha channel)
     info['apiRoot'].item.route('GET', (':item_id', 'segmentationSource'), segmentationSourceHandler)
