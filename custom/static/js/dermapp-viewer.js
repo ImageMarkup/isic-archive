@@ -694,7 +694,8 @@ var olViewer = derm_app.factory('olViewer', function(ol, $http, xmlParser) {
                         extent: [0, 0, metadata.max_size.w, metadata.max_size.h]
                     });
 
-                    var crossOrigin = 'anonymous';
+                    // https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes
+                    var crossOrigin = 'use-credentials';
 
                     self.image_source = new ol.source.Zoomify({
                         url: self.zoomify_url + '/',

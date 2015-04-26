@@ -89,20 +89,20 @@ def load(info):
     info['apiRoot'].uda = UDAResource(info['pluginRootDir'])
 
     # "/api/v1/item/:id/thumbnail" -> returns a thumbnail of the image
-    info['apiRoot'].item.route('GET', (':id', 'thumbnail'), thumbnailhandler)
+    info['apiRoot'].item.route('GET', (':item_id', 'thumbnail'), thumbnailhandler)
 
     # "/api/v1/item/:id/annotation" -> returns the json annotation
-    info['apiRoot'].item.route('GET', (':id', 'annotation'), annotationHandler)
+    info['apiRoot'].item.route('GET', (':item_id', 'annotation'), annotationHandler)
 
     # "/api/v1/item/:id/segmentationSource" -> returns the png segmentation (index map as alpha channel)
-    info['apiRoot'].item.route('GET', (':id', 'segmentationSource'), segmentationSourceHandler)
+    info['apiRoot'].item.route('GET', (':item_id', 'segmentationSource'), segmentationSourceHandler)
     # "/api/v1/item/:id/segmentationTiles"
-    info['apiRoot'].item.route('GET', (':id', 'segmentationTiles'), segmentationTileHandler)
+    info['apiRoot'].item.route('GET', (':item_id', 'segmentationTiles'), segmentationTileHandler)
 
     # "/api/v1/item/:id/zoomify/:p1" -> returns a zoomify xml if available
-    info['apiRoot'].item.route('GET', (':id', 'zoomify', ':p1'), zoomifyhandler)
+    info['apiRoot'].item.route('GET', (':item_id', 'zoomify', ':p1'), zoomifyhandler)
     # "/api/v1/item/:id/zoomify/:p1/:p2"
-    info['apiRoot'].item.route('GET', (':id', 'zoomify', ':p1', ':p2'), zoomifyhandler)
+    info['apiRoot'].item.route('GET', (':item_id', 'zoomify', ':p1', ':p2'), zoomifyhandler)
 
     # "/api/v1/item/:id/fif/:fifparams" -> returns the IIP FIF endpoint for an item
-    info['apiRoot'].item.route('GET', (':id', 'fif', ':fifparams'), fifHandler)
+    info['apiRoot'].item.route('GET', (':item_id', 'fif', ':fifparams'), fifHandler)
