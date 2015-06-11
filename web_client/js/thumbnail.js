@@ -1,6 +1,4 @@
-/**
- * Created by stonerri on 7/25/14.
- */
+/*global _, girder*/
 
 var thumbnailView = {
     views: {}
@@ -8,6 +6,7 @@ var thumbnailView = {
 
 thumbnailView.views.ThumbnailWidget = girder.View.extend({
     initialize: function (settings) {
+        'use strict';
         this.item = settings.item;
         this.accessLevel = settings.accessLevel;
         this.item.on('change', function () {
@@ -17,14 +16,13 @@ thumbnailView.views.ThumbnailWidget = girder.View.extend({
     },
 
     render: function () {
-
+        'use strict';
         console.log('init thumbnail');
 
         var meta = this.item.get('meta');
 
 //        if (this.accessLevel >= girder.AccessType.READ && meta && meta.vega) {
-        if (this.accessLevel >= girder.AccessType.READ)
-        {
+        if (this.accessLevel >= girder.AccessType.READ) {
             $(".g-item-info").after(jade.templates.thumbnail());
 
             $('#thumbnail-img').attr("src", "/api/v1/item/" + this.item.get("_id") + "/thumbnail");
@@ -52,6 +50,7 @@ thumbnailView.views.ThumbnailWidget = girder.View.extend({
 
 
 girder.wrap(girder.views.ItemView, 'render', function (render) {
+    'use strict';
     this.model.getAccessLevel(_.bind(function (accessLevel) {
         // Because the passthrough call to render() also does an async call to
         // getAccessLevel(), wait until this one completes before invoking that

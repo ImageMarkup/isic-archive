@@ -1,8 +1,7 @@
-/**
- * Created by stonerri on 7/25/14.
- */
+/*global girder*/
 
 girder.wrap(girder.views.HierarchyWidget, 'render', function (render) {
+    'use strict';
     // Call the underlying render function that we are wrapping
     render.call(this);
 
@@ -12,9 +11,9 @@ girder.wrap(girder.views.HierarchyWidget, 'render', function (render) {
 
 
 girder.views.HierarchyWidget.prototype.events['click a.qc-link'] = function () {
-
+    'use strict';
     window.open(
-      '/uda/qc/' + this.parentModel.get('_id'),
-      '_blank'
+        '/uda/qc/' + this.parentModel.get('_id'),
+        '_blank'
     );
 };
