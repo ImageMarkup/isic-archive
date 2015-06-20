@@ -37,6 +37,9 @@ def validateSettings(event):
 
 
 def load(info):
+    # set the title of the HTML pages
+    info['serverRoot'].updateHtmlVars({'title': 'ISIC Archive'})
+
     # add event listeners
     # note, 'model.setting.validate' must be bound before initialSetup is called
     events.bind('model.setting.validate', 'uda', validateSettings)
