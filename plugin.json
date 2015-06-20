@@ -1,6 +1,6 @@
 {
-    "name": "UDA 2 Archive",
-    "description": "The UDA 2 dermoscopy image archive.",
+    "name": "ISIC Archive",
+    "description": "The ISIC dermoscopy image archive.",
     "version": "1.0.0",
     "dependencies": []
 }

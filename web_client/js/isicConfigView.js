@@ -1,14 +1,14 @@
 /*global _, girder*/
 
-girder.views.uda_ConfigView = girder.View.extend({
+girder.views.isic_ConfigView = girder.View.extend({
     events: {
-        'submit #uda-config-form': function (event) {
+        'submit #isic-config-form': function (event) {
             'use strict';
             event.preventDefault();
-            this.$('#uda-config-error-message').empty();
+            this.$('#isic-config-error-message').empty();
             this._saveSettings([{
                 key: 'uda.demo_mode',
-                value: this.$('#uda-config-demo-mode').prop('checked')
+                value: this.$('#isic-config-demo-mode').prop('checked')
             }]);
         }
     },
@@ -24,7 +24,7 @@ girder.views.uda_ConfigView = girder.View.extend({
             }
         }).done(_.bind(function (resp) {
             this.render();
-            this.$('#uda-config-demo-mode').prop(
+            this.$('#isic-config-demo-mode').prop(
                 'checked',
                 resp['uda.demo_mode']
             );
@@ -33,10 +33,10 @@ girder.views.uda_ConfigView = girder.View.extend({
 
     render: function () {
         'use strict';
-        this.$el.html(girder.templates.udaConfig());
+        this.$el.html(girder.templates.isicConfig());
         if (!this.breadcrumb) {
             this.breadcrumb = new girder.views.PluginConfigBreadcrumbWidget({
-                pluginName: 'UDA 2 Archive',
+                pluginName: 'ISIC Archive',
                 el: this.$('.g-config-breadcrumb-container'),
                 parentView: this
             }).render();
@@ -61,16 +61,16 @@ girder.views.uda_ConfigView = girder.View.extend({
                 timeout: 4000
             });
         }, this)).error(_.bind(function (resp) {
-            this.$('#uda-config-error-message').text(
+            this.$('#isic-config-error-message').text(
                 resp.responseJSON.message
             );
         }, this));
     }
 });
 
-girder.router.route('plugins/uda/config', 'udaConfig', function () {
+girder.router.route('plugins/isic/config', 'isicConfig', function () {
     'use strict';
-    girder.events.trigger('g:navigateTo', girder.views.uda_ConfigView);
+    girder.events.trigger('g:navigateTo', girder.views.isic_ConfigView);
 });
 
-girder.exposePluginConfig('uda', 'plugins/uda/config');
+girder.exposePluginConfig('isic_archive', 'plugins/isic/config');

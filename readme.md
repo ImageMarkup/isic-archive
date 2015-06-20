@@ -1,3 +1,2 @@
-uda standalone plugin for girder
-Rich Stoner
-2014
+# ISIC Archive #
+## International Skin Imaging Collaboration: Melanoma Project ##

@@ -8,7 +8,7 @@ girder.wrap(girder.views.LayoutGlobalNavView, 'render', function (render) {
         this.defaultNavItems.unshift({
             name: 'Image Tasks',
             icon: 'icon-picture',
-            target: 'uda-tasks'
+            target: 'isic-tasks'
         });
     'use strict';
     }
@@ -16,7 +16,7 @@ girder.wrap(girder.views.LayoutGlobalNavView, 'render', function (render) {
     render.call(this);
 });
 
-girder.router.route('uda-tasks', 'uda-tasks', function () {
+girder.router.route('isic-tasks', 'isic-tasks', function () {
     'use strict';
     window.location.replace('/uda/task');
 });

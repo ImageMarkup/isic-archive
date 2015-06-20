@@ -49,7 +49,7 @@ def load(info):
 
     # add static file serving
     app_base = os.path.join(os.curdir, os.pardir)
-    app_path = os.path.join(app_base, 'girder', 'plugins', 'uda', 'custom')
+    app_path = os.path.join(app_base, 'girder', 'plugins', 'isic_archive', 'custom')
 
     info['config']['/uda'] = {
         'tools.staticdir.on': 'True',
