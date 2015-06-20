@@ -1,0 +1,39 @@
+---
+
+- name: Download
+  git:
+    repo: https://github.com/girder/girder.git
+    dest: "{{ girder_path }}"
+    version: "{{ girder_version }}"
+    update: no
+    force: yes
+  #notify: Rebuild Girder
+
+- name: Install build dependencies
+  apt:
+    name: "{{ item }}"
+  sudo: yes
+  with_items:
+    - git
+#    - build-essential
+#    - python-dev
+    - libffi-dev
+
+- name: Install Python dependencies
+  pip:
+    requirements: "{{ girder_path }}/requirements.txt"
+    virtualenv: "{{ python_dist_path }}"
+  sudo: yes if python_dist == "system" else no
+
+#- name: Install NodeJS dependencies
+#  npm:
+#    name: "{{ item }}"
+#    global: yes
+#  with_items:
+#    - grunt
+#    - grunt-cli
+#  sudo: yes
+
+- name: Build
+  npm:
+    path: "{{ girder_path }}"

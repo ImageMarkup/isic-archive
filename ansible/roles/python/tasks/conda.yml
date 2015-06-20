@@ -1,0 +1,17 @@
+---
+
+- name: Download Conda installer
+  get_url:
+    url: "http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh"
+    dest: "{{ python_conda_installer_path }}"
+    mode: 0755
+
+- name: Create Conda environment
+  command: "{{ python_conda_installer_path }} -b -p {{ python_dist_path }}"
+  args:
+    creates: "{{ python_dist_path }}"
+
+- name: Install pip
+  conda:
+    name: pip
+    executable: "{{ python_dist_path }}/bin/conda"

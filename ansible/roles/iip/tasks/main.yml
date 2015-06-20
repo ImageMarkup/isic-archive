@@ -1,0 +1,43 @@
+---
+
+- name: Install build dependencies
+  apt:
+    name: "{{ item }}"
+  sudo: yes
+  with_items:
+    - git
+    - build-essential
+    - autoconf
+    - libtool
+    - libtiff5-dev
+
+- name: Download
+  git:
+    repo: "https://github.com/ruven/iipsrv.git"
+    dest: "{{ iip_path }}"
+    version: "{{ iip_version }}"
+    update: no
+    force: yes
+  notify: Rebuild
+
+- meta: flush_handlers
+
+- name: Prepare build
+  command: "{{ iip_path }}/autogen.sh"
+  args:
+    chdir: "{{ iip_path }}"
+    creates: "{{ iip_path }}/configure"
+
+- name: Configure build
+  # TODO: do we need this?
+  #command: "{{ iip_path }}/configure --with-tiff-includes=/usr/local/include --with-tiff-libraries=/usr/local/lib chdir={{ iip_path }} creates={{ iip_path }}/src/Makefile"
+  command: "{{ iip_path }}/configure"
+  args:
+    chdir: "{{ iip_path }}"
+    creates: "{{ iip_path }}/src/Makefile"
+
+- name: Build
+  command: "make -j{{ build_parallelism }}"
+  args:
+    chdir: "{{ iip_path }}"
+    creates: "{{ iip_path }}/src/iipsrv.fcgi"

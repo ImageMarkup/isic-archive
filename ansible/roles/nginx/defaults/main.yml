@@ -1,0 +1,7 @@
+---
+
+ssl: false
+
+girder_port: 8080
+iip_port: 9000
+supervisor_port: 9999

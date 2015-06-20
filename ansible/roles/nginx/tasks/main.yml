@@ -1,0 +1,62 @@
+---
+
+- name: Install package
+  apt:
+    name: nginx-light
+  sudo: yes
+
+- name: Remove default site config file
+  file:
+    state: absent
+    path: "/etc/nginx/sites-available/default"
+  sudo: yes
+
+- name: Deploy base config file
+  template:
+    src: "base.conf.j2"
+    dest: "/etc/nginx/conf.d/base.conf"
+    owner: root
+    group: root
+    mode: 0644
+  sudo: yes
+  notify: Restart Nginx
+
+- name: Deploy uda site config file
+  template:
+    src: uda.conf.j2
+    dest: "/etc/nginx/conf.d/uda.conf"
+    owner: root
+    group: root
+    mode: 0644
+  sudo: yes
+  notify: Restart Nginx
+
+- name: Deploy SSL certificate file
+  copy:
+    src: "{{ ssl.certificate_file }}"
+    dest: "/etc/ssl/certs/{{ site_hostname }}.pem"
+    owner: root
+    group: root
+    mode: 0644
+  sudo: yes
+  when: ssl
+
+- name: Deploy SSL key file
+  copy:
+    src: "{{ ssl.key_file }}"
+    dest: "/etc/ssl/private/{{ site_hostname }}.key"
+    owner: root
+    group: root
+    mode: 0600
+  sudo: yes
+  when: ssl
+
+- name: Deploy supervisor site config file
+  template:
+    src: "supervisor.conf.j2"
+    dest: "/etc/nginx/conf.d/supervisor.conf"
+    owner: root
+    group: root
+    mode: 0644
+  sudo: yes
+  notify: Restart Nginx

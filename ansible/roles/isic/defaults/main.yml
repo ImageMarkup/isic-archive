@@ -1,0 +1,5 @@
+---
+
+girder_version: "v1.2.4"
+
+python_dist_path: "{{ ansible_user_dir }}/env"

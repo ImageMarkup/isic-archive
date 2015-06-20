@@ -1,0 +1,74 @@
+---
+
+- name: Install build dependencies
+  apt:
+    name: "{{ item }}"
+  sudo: yes
+  with_items:
+    # TODO: prevent these from installing X Windows stuff
+    - git
+    - build-essential
+    - pkg-config
+    - libgirepository1.0-dev
+    - gtk-doc-tools
+    - libglib2.0-dev
+    - libxml2-dev
+    - gettext
+    - libjpeg-dev
+    - libexif-dev
+    - libgsf-1-dev
+    - libtiff5-dev
+    - libfftw3-dev
+    #- liblcms2-dev
+    - libpng12-dev
+    - libmagickwand-dev
+    #- libpango1.0-dev
+    - liborc-0.4-dev
+    #- libmatio-dev
+    #- libcfitsio3-dev
+    - libwebp-dev
+    - libopenexr-dev
+    - libopenslide-dev
+    - swig
+    - python-dev
+
+- name: Download
+  git:
+    repo: "https://github.com/jcupitt/libvips.git"
+    dest: "{{ vips_path }}"
+    version: "{{ vips_version }}"
+    update: no
+    force: yes
+  notify: Rebuild
+
+- meta: flush_handlers
+
+- name: Prepare build
+  command: "{{ vips_path }}/bootstrap.sh"
+  args:
+    chdir: "{{ vips_path }}"
+    creates: "{{ vips_path }}/configure"
+
+- name: Configure build
+  command: "{{ vips_path }}/configure"
+  args:
+    chdir: "{{ vips_path }}"
+    creates: "{{ vips_path }}/Makefile"
+
+- name: Build
+  command: "make -j{{ build_parallelism }}"
+  args:
+    chdir: "{{ vips_path }}"
+    creates: "{{ vips_path }}/tools/vips"
+
+# TODO: make this not execute every time
+- name: Install
+  command: "make install"
+  args:
+    chdir: "{{ vips_path }}"
+  sudo: yes
+
+# TODO: make this not execute every time
+- name: Update installed shared libs
+  command: ldconfig
+  sudo: yes

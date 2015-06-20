@@ -1,0 +1,12 @@
+---
+
+dependencies:
+  - role: iip
+
+  - role: vips
+
+  - role: girder
+    # TODO: use the variables set from "defaults"
+    girder_version: "v1.2.4"
+    python_dist: "conda"
+    python_dist_path: "{{ ansible_user_dir }}/env"

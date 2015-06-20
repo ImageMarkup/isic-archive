@@ -1,0 +1,38 @@
+---
+
+#- name: Download
+#  git:
+#    repo: https://github.com/imagemarkup/girder.git
+#    dest: "{{ girder_path }}"
+#    version: "{{ girder_version }}"
+#    update: no
+#    force: yes
+#  #notify: Rebuild Girder
+
+- name: Install package dependencies
+  apt:
+    name: "{{ item }}"
+  sudo: yes
+  with_items:
+    - p7zip-full
+
+- name: Install Conda dependencies
+  conda:
+    name: "{{ item }}"
+    executable: "{{ python_dist_path }}/bin/conda"
+  with_items:
+    - anaconda
+    - opencv
+    - cffi
+
+- name: Install Python dependencies
+  pip:
+    name: "{{ item }}"
+    virtualenv: "{{ python_dist_path }}"
+  with_items:
+    - celery
+    - geojson
+    - pillow
+
+## local config
+# TODO: rebuild Girder

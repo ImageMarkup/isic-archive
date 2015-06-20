@@ -1,0 +1,12 @@
+---
+
+girder_port: 8080
+iip_port: 9000
+supervisor_port: 9999
+
+iip_path: "{{ ansible_user_dir }}/iipsrv"
+
+girder_path: "{{ ansible_user_dir }}/girder"
+
+python_dist_path: "{{ ansible_user_dir }}/env"
+

@@ -1,0 +1,6 @@
+---
+
+- name: Rebuild
+  command: "git clean -fdx"
+  args:
+    chdir: "{{ vips_path }}"
