@@ -282,8 +282,8 @@ def _csvUploadHandler(upload_folder, upload_item, upload_file, upload_file_path,
 
             # TODO: require upload_user to match image creator?
             image_items = ModelImporter.model('item').find({
-                'name': '%s.tif' % isic_id,
-                'parentId': {'$in': dataset_folder_ids}
+                'name': isic_id,
+                'folderId': {'$in': dataset_folder_ids}
             })
             if not image_items.count():
                 parse_errors.append('No image found with isic_id "%s"' % isic_id)
