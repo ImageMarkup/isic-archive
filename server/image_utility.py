@@ -14,7 +14,7 @@ from girder.utility.model_importer import ModelImporter
 @access.public
 @loadmodel(map={'item_id': 'item'}, model='item', level=AccessType.READ)
 def thumbnailhandler(item, params):
-    image_file = ModelImporter.model('file').fineOne({
+    image_file = ModelImporter.model('file').findOne({
         'itemId': item['_id'],
         'name': item['meta']['convertedFilename']
     })
