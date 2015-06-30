@@ -117,8 +117,11 @@ zoomifyhandler.description = (
 
 
 @access.public
-@loadmodel(map={'item_id': 'item'}, model='item', level=AccessType.READ)
-def fifHandler(item, params, **kwargs):
+#@loadmodel(map={'item_id': 'item'}, model='item', level=AccessType.READ)
+def fifHandler(item_id, params, **kwargs):
+    # can't use "loadmodel", as the requesting user may actually be the server
+    #   in "image_processing.fillImageGeoJSON", which doesn't send credentials
+    item = ModelImporter.model('item').load(item_id, force=True)
 
     zsplit = cherrypy.url().split('fif/')
 
