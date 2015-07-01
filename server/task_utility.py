@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import collections
 import datetime
 import itertools
 import mimetypes
@@ -230,9 +231,36 @@ class UDAResource(Resource):
                 pass
 
             if phase_name == 'Phase 2':
-                phase2_variables_path = os.path.join(self.plugin_root_dir, 'custom', 'config', 'phase2-variables.json')
-                with open(phase2_variables_path, 'r') as phase2_variables_file:
-                    return_dict['variables'] = json.load(phase2_variables_file)
+                # hardcode a default featureset for now
+                featureset = self.model('featureset', 'isic_archive').findOne({'name': 'UDA2 Study'})
+
+                legacy_featureset = dict()
+                for new_level, legacy_level in [
+                        ('image_features', 'lesionlevel'),
+                        ('region_features', 'tiles')
+                        ]:
+                    # need to first build an intermediate variable to maintain ordering
+                    legacy_questions = collections.OrderedDict()
+
+                    for feature in featureset[new_level]:
+                        header = feature['name'][0]
+                        legacy_question = {
+                            'name': feature['name'][0] if len(feature['name']) == 1 else ': '.join(feature['name'][1:]),
+                            'type': feature['type']
+                        }
+                        if feature['type'] =='select':
+                            legacy_question['shortname'] = feature['id']
+                            legacy_question['options'] = feature['options']
+                        else:
+                            legacy_question['id'] = feature['id']
+                        legacy_questions.setdefault(header, list()).append(legacy_question)
+
+                    legacy_featureset[legacy_level] = [
+                        {'header': header, 'questions': questions}
+                        for header, questions in legacy_questions.iteritems()
+                    ]
+
+                return_dict['variables'] = legacy_featureset
         else:
             return_dict['loadAnnotation'] = False
 

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import datetime
+import json
+import os
+
 from girder.constants import AccessType
 from girder.utility.model_importer import ModelImporter
 
@@ -152,7 +156,7 @@ def setupUdaTestUser(phase, username, password, label):
     )
 
 
-def initialSetup():
+def initialSetup(info):
     if ModelImporter.model('setting').get(constants.PluginSettings.DEMO_MODE, None) is None:
         ModelImporter.model('setting').set(constants.PluginSettings.DEMO_MODE, False)
 
@@ -204,6 +208,23 @@ def initialSetup():
                              description='Images that have been fully annotated',
                              public=True
     )
+
+
+
+    for featureset_file_name in [
+        'uda2study.json',
+        'isic_analytical.json',
+        'isic_conventional.json'
+    ]:
+        featureset_file_path = os.path.join(info['pluginRootDir'], 'custom', 'config', featureset_file_name)
+        with open(featureset_file_path, 'r') as featureset_file:
+            featureset_data = json.load(featureset_file)
+            featureset = ModelImporter.model('featureset', 'isic_archive').findOne(
+                {'name': featureset_data['name']})
+            if not featureset:
+                featureset_data['creatorId'] = getAdminUser()['_id']
+                featureset_data['created'] = datetime.datetime.utcnow()
+                ModelImporter.model('featureset', 'isic_archive').save(featureset_data)
 
     MAKE_TEST_USERS = False
     if MAKE_TEST_USERS:

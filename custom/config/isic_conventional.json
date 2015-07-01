@@ -1,0 +1,210 @@
+{
+  "name": "ISIC Conventional",
+  "version": 0.1,
+  "image_features": [
+    {
+      "id": "image_quality",
+      "name": "Image Quality",
+      "type": "select",
+      "options": [
+        {
+          "id": "acceptable",
+          "name": "Acceptable for dermoscopic evaluation"
+        },
+        {
+          "id": "non_acceptable",
+          "name": "Non acceptable"
+        }
+      ]
+    },
+
+    {
+      "id": "pattern_symmetry",
+      "name": "Pattern Symmetry",
+      "type": "select",
+      "options": [
+        {
+          "id": "two_axis",
+          "name": "Two axis symmetry"
+        },
+        {
+          "id": "one_axis",
+          "name": "One axis symmetry"
+        },
+        {
+          "id": "asymmetry",
+          "name": "Asymmetry"
+        }
+      ]
+    }
+  ],
+  "region_features": [
+    {
+      "id": "pigment_network.typical",
+      "name": ["Pigment network (reticular)", "Typical"],
+      "type": "check"
+    },
+    {
+      "id": "pigment_network.atypical",
+      "name": ["Pigment network (reticular)", "Atypical"],
+      "type": "check"
+    },
+
+    {
+      "id": "negative_network",
+      "name": ["Negative network (inverse network)"],
+      "type": "check"
+    },
+
+    {
+      "id": "shiny_white_structures.short_white_lines",
+      "name": ["Shiny white structures", "Short white lines"],
+      "type": "check"
+    },
+    {
+      "id": "shiny_white_structures.blotches",
+      "name": ["Shiny white structures", "Blotches"],
+      "type": "check"
+    },
+    {
+      "id": "shiny_white_structures.strands",
+      "name": ["Shiny white structures", "Strands"],
+      "type": "check"
+    },
+    {
+      "id": "shiny_white_structures.rosetts",
+      "name": ["Shiny white structures", "Rosetts"],
+      "type": "check"
+    },
+
+    {
+      "id": "dots.regular",
+      "name": ["Dots", "Regular"],
+      "type": "check"
+    },
+    {
+      "id": "dots.irregular",
+      "name": ["Dots", "Irregular"],
+      "type": "check"
+    },
+
+    {
+      "id": "globules.regular",
+      "name": ["Globules", "Regular"],
+      "type": "check"
+    },
+    {
+      "id": "globules.irregular",
+      "name": ["Globules", "Irregular"],
+      "type": "check"
+    },
+
+    {
+      "id": "streaks.radial_streaming",
+      "name": ["Streaks", "Radial streaming"],
+      "type": "check"
+    },
+    {
+      "id": "streaks.pseudopods",
+      "name": ["Streaks", "Pseudopods"],
+      "type": "check"
+    },
+
+    {
+      "id": "starburst_peripheral_globular.starburst",
+      "name": ["Starburst pattern or peripheral globular rim", "Starburst"],
+      "type": "check"
+    },
+    {
+      "id": "starburst_peripheral_globular.peripheral_globular",
+      "name": ["Starburst pattern or peripheral globular rim", "Peripheral globular"],
+      "type": "check"
+    },
+
+    {
+      "id": "blotch.regular",
+      "name": ["Blotch", "Regular"],
+      "type": "check"
+    },
+    {
+      "id": "blotch.irregular",
+      "name": ["Blotch", "Irregular"],
+      "type": "check"
+    },
+
+    {
+      "id": "tan_peripheral_structureless",
+      "name": ["Tan peripheral structureless area"],
+      "type": "check"
+    },
+
+    {
+      "id": "regression.scar_depigmentation",
+      "name": ["Regression structures", "Scar like depigmentation"],
+      "type": "check"
+    },
+    {
+      "id": "regression.granularity",
+      "name": ["Regression structures", "Granularity (peppering)"],
+      "type": "check"
+    },
+    {
+      "id": "regression.blue_white_veil_over_flat",
+      "name": ["Regression structures", "Blue-white veil over flat"],
+      "type": "check"
+    },
+
+    {
+      "id": "blue_white_veil",
+      "name": ["Blue white veil (implies raised portion of lesion)"],
+      "type": "check"
+    },
+
+    {
+      "id": "blood_vessels.typical",
+      "name": ["Blood vessels", "Typical"],
+      "type": "check"
+    },
+    {
+      "id": "blood_vessels.atypical.milky_red",
+      "name": ["Blood vessels", "Atypical", "Milky red areas"],
+      "type": "check"
+    },
+    {
+      "id": "blood_vessels.atypical.dotted",
+      "name": ["Blood vessels", "Atypical", "Dotted"],
+      "type": "check"
+    },
+    {
+      "id": "blood_vessels.atypical.serpentine",
+      "name": ["Blood vessels", "Atypical", "Serpentine (linear irregular)"],
+      "type": "check"
+    },
+    {
+      "id": "blood_vessels.atypical.arborizing",
+      "name": ["Blood vessels", "Atypical", "Arborizing"],
+      "type": "check"
+    },
+    {
+      "id": "blood_vessels.atypical.short_fine_telangiectasia",
+      "name": ["Blood vessels", "Atypical", "Short fine telangiectasia"],
+      "type": "check"
+    },
+    {
+      "id": "blood_vessels.atypical.corkscrew",
+      "name": ["Blood vessels", "Atypical", "Corkscrew"],
+      "type": "check"
+    },
+    {
+      "id": "blood_vessels.atypical.hairpin_vessels",
+      "name": ["Blood vessels", "Atypical", "Hairpin vessels"],
+      "type": "check"
+    },
+
+    {
+      "id": "ulceration_erosions",
+      "name": ["Ulceration / erosions"],
+      "type": "check"
+    }
+  ]
+}

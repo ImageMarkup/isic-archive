@@ -10,6 +10,7 @@ from girder.utility.server import _StaticFileRoute
 
 from . import constants
 from .annotate import FillHandler
+from . import api
 from .image_utility import zoomifyhandler, thumbnailhandler, fifHandler, segmentationSourceHandler, segmentationTileHandler
 from .provision_utility import initialSetup, onUserCreated
 from .task_utility import UDAResource, TaskHandler
@@ -47,7 +48,7 @@ def load(info):
     events.bind('model.user.save.created', 'onUserCreated', onUserCreated)
 
     # create all necessary users, groups, collections, etc
-    initialSetup()
+    initialSetup(info)
 
 
     # add static file serving
@@ -106,3 +107,6 @@ def load(info):
 
     # "/api/v1/item/:id/fif/:fifparams" -> returns the IIP FIF endpoint for an item
     info['apiRoot'].item.route('GET', (':item_id', 'fif', ':fifparams'), fifHandler)
+
+    info['apiRoot'].isic = Root()
+    info['apiRoot'].isic.featureset = api.FeaturesetResource
