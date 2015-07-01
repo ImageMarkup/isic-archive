@@ -17,7 +17,7 @@ from girder.constants import AccessType
 from girder.models.model_base import AccessException
 from girder.utility.model_importer import ModelImporter
 
-from .provision_utility import getOrCreateUDAFolder, getAdminUser
+from .provision_utility import ISIC, _ISICCollection, getAdminUser
 
 
 def getItemsInFolder(folder):
@@ -141,7 +141,7 @@ class UDAResource(Resource):
             'parentId': phase0_collection['_id'],
             'name': 'flagged'
         })
-        phase0_flagged_images = getOrCreateUDAFolder(
+        phase0_flagged_images = _ISICCollection.createFolder(
             name=folder['name'],
             description='',
             parent=flagged_folder,
@@ -158,7 +158,7 @@ class UDAResource(Resource):
 
         # move good images into phase 1a folder
         phase1a_collection = self.model('collection').findOne({'name': 'Phase 1a'})
-        phase1a_images = getOrCreateUDAFolder(
+        phase1a_images = _ISICCollection.createFolder(
             name=folder['name'],
             description=folder['description'],
             parent=phase1a_collection,
@@ -285,19 +285,19 @@ class UDAResource(Resource):
         markup_dict = json.loads(markup_str)
 
         phase_handlers = {
-            # phase_full_lower: (phase_acronym, next_phase_full)
-            'Phase 1a': ('p1a', 'Phase 1b'),
-            'Phase 1b': ('p1b', 'Phase 1c'),
-            'Phase 1c': ('p1c', 'Phase 2'),
+            # phase_full_lower: (phase_acronym, next_phase_collection)
+            'Phase 1a': ('p1a', ISIC.Phase1b.collection),
+            'Phase 1b': ('p1b', ISIC.Phase1c.collection),
+            'Phase 1c': ('p1c', ISIC.LesionImages.collection),
         }
         try:
-            phase_acronym, next_phase_full = phase_handlers[markup_dict['phase']]
+            phase_acronym, next_phase_collection = phase_handlers[markup_dict['phase']]
         except KeyError:
             # TODO: send the proper error code on failure
             raise
         else:
             self._requireCollectionAccess(markup_dict['phase'])
-            result = self._handlePhaseCore(markup_dict, phase_acronym, next_phase_full)
+            result = self._handlePhaseCore(markup_dict, phase_acronym, next_phase_collection)
 
         return {'status': result}
 
@@ -326,7 +326,7 @@ class UDAResource(Resource):
         .errorResponse())
 
 
-    def _handlePhaseCore(self, markup_dict, phase_acronym, next_phase_full):
+    def _handlePhaseCore(self, markup_dict, phase_acronym, next_phase_collection):
         item_name_base = markup_dict['image']['name'].split('.t')[0]
 
         item_metadata = {
@@ -395,10 +395,10 @@ class UDAResource(Resource):
 
         # move item to folder in next collection
         original_folder = self.model('folder').load(markup_dict['image']['folderId'], force=True)
-        next_phase_folder = getOrCreateUDAFolder(
+        next_phase_folder = _ISICCollection.createFolder(
             name=original_folder['name'],
             description=original_folder['description'],
-            parent=ModelImporter.model('collection').findOne({'name': next_phase_full}),
+            parent=next_phase_collection,
             parent_type='collection'
         )
 

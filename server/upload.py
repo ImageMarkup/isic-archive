@@ -10,13 +10,12 @@ import subprocess
 import tempfile
 import zipfile
 
-from girder.constants import AccessType
 from girder.models.notification import ProgressState
 from girder.utility import assetstore_utilities
 from girder.utility.model_importer import ModelImporter
 from girder.utility.progress import ProgressContext
 
-from .provision_utility import getOrCreateUDAFolder, getAdminUser
+from .provision_utility import getAdminUser
 
 ZIP_FORMATS = [
     'multipart/x-zip',
@@ -159,13 +158,14 @@ def _uploadFileFromPath(file_path, user, name, parent, parent_type, mime_type):
 
 
 def _zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_user):
-    images_folder = getOrCreateUDAFolder(
+    images_folder = ModelImporter.model('folder').createFolder(
+        parent=upload_collection,
         name=os.path.splitext(upload_file['name'])[0],
         description='',
-        parent=upload_collection,
-        parent_type='collection'
+        parent_type='collection',
+        creator=upload_user
     )
-    ModelImporter.model('folder').setUserAccess(images_folder, upload_user, AccessType.ADMIN, save=True)
+    # TODO: accept the broken Girder behavior for now, as we don't want to inherit all collection permissions
 
     with ZipFileOpener(upload_file_path) as (file_list, file_count, temp_dir):
         with ProgressContext(

@@ -19,13 +19,21 @@ def onUserCreated(event):
 
 def addUserToAllUDAGroups(user):
     # group should already exist
-    for phase in ['Phase 0', 'Phase 1a', 'Phase 1b', 'Phase 1c', 'Phase 2']:
-        group = getOrCreateUDAGroup(name=phase, description=None, public=None)
-        ModelImporter.model('group').addUser(
-            group=group,
-            user=user,
-            level=AccessType.READ
-        )
+    for collection in [
+        ISIC.Phase0,
+        ISIC.Phase1a,
+        ISIC.Phase1b,
+        ISIC.Phase1c,
+        ISIC.LesionImages,
+        ISIC.AnnotationStudies,
+    ]:
+        if collection.group:
+            ModelImporter.model('group').addUser(
+                group=collection.group,
+                user=user,
+                # TODO: change
+                level=AccessType.READ
+            )
 
 
 def getOrCreateUDAUser(username, password,
@@ -62,78 +70,83 @@ def getAdminUser():
     )
 
 
-def getOrCreateUDAGroup(name, description, public):
-    group = ModelImporter.model('group').findOne({'name': name})
-    if not group:
-        group = ModelImporter.model('group').createGroup(
-            name=name,
-            creator=getAdminUser(),
-            description=description,
-            public=public
-        )
-        # remove udaadmin from group
-    return group
+class _ISICCollection(ModelImporter):
+    # TODO: add a refresh mechanism, or just store the ids, rather than the whole model
+    def __init__(self,
+            collection_name, collection_description,
+            public,
+            group_name=None, group_description=None):
 
-
-def getOrCreateUDACollection(name, description, public):
-    collection = ModelImporter.model('collection').findOne(
-        {'name': name})
-    if not collection:
-        collection = ModelImporter.model('collection').createCollection(
-            name=name,
-            creator=getAdminUser(),
-            description=description,
-            public=public
-        )
-        # delete default folders
-        for folder in ModelImporter.model('folder').find(
-                {'parentId': collection['_id']}):
-            ModelImporter.model('folder').remove(folder)
-    return collection
-
-
-def getOrCreateUDAFolder(name, description, parent, parent_type):
-    folder = ModelImporter.model('folder').findOne({
-        'name': name,
-        'parentId': parent['_id']
-    })
-    if not folder:
-        folder = ModelImporter.model('folder').createFolder(
-            parent=parent,
-            name=name,
-            description=description,
-            parentType=parent_type,
-            public=None,
-            creator=getAdminUser()
-        )
-        if parent_type != 'folder':
-            # Girder doesn't inherit access from parent collections, but we will
-            ModelImporter.model('folder').copyAccessPolicies(
-                src=parent,
-                dest=folder,
-                save=True
+        self.collection = self.model('collection').findOne(
+            {'name': collection_name})
+        if not self.collection:
+            self.collection = self.model('collection').createCollection(
+                name=collection_name,
+                creator=getAdminUser(),
+                description=collection_description,
+                public=public
             )
-    return folder
+            # delete default folders
+            for folder in self.model('folder').find(
+                    {'parentId': self.collection['_id']}):
+                self.model('folder').remove(folder)
+
+        if group_name:
+            self.group = self.model('group').findOne(
+                {'name': group_name})
+            if not self.group:
+                self.group = self.model('group').createGroup(
+                    name=group_name,
+                    creator=getAdminUser(),
+                    description=group_description,
+                    public=True
+                )
+                self.model('group').removeUser(self.group, getAdminUser())
+                # remove udaadmin from group
+
+                self.model('collection').setGroupAccess(
+                    doc=self.collection,
+                    group=self.group,
+                    # TODO: make this a special access level
+                    level=AccessType.READ,
+                    save=True
+                )
+        else:
+            self.group = None
+
+    @classmethod
+    def createFolder(cls, name, description, parent, parent_type):
+        folder = cls.model('folder').findOne({
+            'name': name,
+            'parentId': parent['_id']
+        })
+        if not folder:
+            folder = cls.model('folder').createFolder(
+                parent=parent,
+                name=name,
+                description=description,
+                parentType=parent_type,
+                public=None,
+                creator=getAdminUser()
+            )
+            if parent_type != 'folder':
+                # Girder doesn't inherit access from parent collections, but we will
+                cls.model('folder').copyAccessPolicies(
+                    src=parent,
+                    dest=folder,
+                    save=True
+                )
+        return folder
 
 
-def setupUdaPhase(phase_name, collection_description, group_description):
-    collection = getOrCreateUDACollection(
-        name=phase_name,
-        description=collection_description,
-        public=False
-    )
-    group = getOrCreateUDAGroup(
-        name=phase_name,
-        description=group_description,
-        public=True
-    )
-    ModelImporter.model('collection').setGroupAccess(
-        doc=collection,
-        group=group,
-        level=AccessType.READ,
-        save=True
-    )
-    return collection, group
+# this will be populated in 'initialSetup'
+class ISIC(object):
+    Phase0 = None
+    Phase1a = None
+    Phase1b = None
+    Phase1c = None
+    LesionImages = None
+    AnnotationStudies = None
 
 
 def setupUdaTestUser(phase, username, password, label):
@@ -147,10 +160,8 @@ def setupUdaTestUser(phase, username, password, label):
         admin=False,
         public=False
     )
-    # group should already exist
-    group = getOrCreateUDAGroup(name=phase, description=None, public=None)
     ModelImporter.model('group').addUser(
-        group=group,
+        group=phase.group,
         user=test_user,
         level=AccessType.READ
     )
@@ -160,56 +171,70 @@ def initialSetup(info):
     if ModelImporter.model('setting').get(constants.PluginSettings.DEMO_MODE, None) is None:
         ModelImporter.model('setting').set(constants.PluginSettings.DEMO_MODE, False)
 
-    phase0_collection, phase0_group = setupUdaPhase(
-        phase_name='Phase 0',
+    ISIC.Phase0 = _ISICCollection(
+        collection_name='Phase 0',
         collection_description='Images to QC',
+        public=False,
+        group_name='Phase 0',
         group_description='Users responsible for uploading raw images & metadata, and doing initial QC'
     )
-    dropzip_folder = getOrCreateUDAFolder(
+
+    ISIC.Phase1a = _ISICCollection(
+        collection_name='Phase 1a',
+        collection_description='Images that have passed initial QC review',
+        public=False,
+        group_name='Phase 1a',
+        group_description='Users responsible for setting the normal and lesion boundaries, as well as defining the paint-by-number threshold'
+    )
+
+    ISIC.Phase1b = _ISICCollection(
+        collection_name='Phase 1b',
+        collection_description='Images that have passed novice review',
+        public=False,
+        group_name='Phase 1b',
+        group_description='Users responsible for first pass review and editing of boundaries if necessary'
+    )
+
+    ISIC.Phase1c = _ISICCollection(
+        collection_name='Phase 1c',
+        collection_description='Images that have passed trained review',
+        public=False,
+        group_name='Phase 1c',
+        group_description='Users responsible for signing off on the final series'
+    )
+
+    ISIC.LesionImages = _ISICCollection(
+        collection_name='Lesion Images',
+        collection_description='Lesion images available for annotation studies',
+        public=True
+    )
+
+    ISIC.AnnotationStudies = _ISICCollection(
+        collection_name='Annotation Studies',
+        collection_description='Clinical feature annotation studies',
+        public=True,
+        group_name='Study Creators',
+        group_description='Annotation study creators and administrators'
+    )
+
+    dropzip_folder = _ISICCollection.createFolder(
         name='dropzip',
         description='Upload zipped folders of images here',
-        parent=phase0_collection,
+        parent=ISIC.Phase0.collection,
         parent_type='collection'
     )
     ModelImporter.model('folder').setGroupAccess(
         doc=dropzip_folder,
-        group=phase0_group,
+        group=ISIC.Phase0.group,
         level=AccessType.WRITE,
         save=True
     )
-    getOrCreateUDAFolder(
+    _ISICCollection.createFolder(
         name='flagged',
         description='Images flagged during Phase 0 are here',
-        parent=phase0_collection,
+        parent=ISIC.Phase0.collection,
         parent_type='collection'
     )
-
-    setupUdaPhase(
-        phase_name='Phase 1a',
-        collection_description='Images that have passed initial QC review',
-        group_description='Users responsible for setting the normal and lesion boundaries, as well as defining the paint-by-number threshold'
-    )
-    setupUdaPhase(
-        phase_name='Phase 1b',
-        collection_description='Images that have passed novice review',
-        group_description='Users responsible for first pass review and editing of boundaries if necessary'
-    )
-    setupUdaPhase(
-        phase_name='Phase 1c',
-        collection_description='Images that have passed trained review',
-        group_description='Users responsible for signing off on the final series'
-    )
-    setupUdaPhase(
-        phase_name='Phase 2',
-        collection_description='Images that have completed Phase 1',
-        group_description='Users creating feature annotations'
-    )
-    getOrCreateUDACollection('Complete',
-                             description='Images that have been fully annotated',
-                             public=True
-    )
-
-
 
     for featureset_file_name in [
         'uda2study.json',
@@ -229,31 +254,31 @@ def initialSetup(info):
     MAKE_TEST_USERS = False
     if MAKE_TEST_USERS:
         setupUdaTestUser(
-            phase='Phase 0',
+            phase=ISIC.Phase0,
             username='udauploader',
             password='udauploader',
             label='Uploader',
         )
         setupUdaTestUser(
-            phase='Phase 1a',
+            phase=ISIC.Phase1a,
             username='udanovice',
             password='udanovice',
             label='Novice',
         )
         setupUdaTestUser(
-            phase='Phase 1b',
+            phase=ISIC.Phase1b,
             username='udatrained',
             password='udatrained',
             label='Trained',
         )
         setupUdaTestUser(
-            phase='Phase 1c',
+            phase=ISIC.Phase1c,
             username='udaexpert',
             password='udaexpert',
             label='Expert',
         )
         setupUdaTestUser(
-            phase='Phase 2',
+            phase=ISIC.AnnotationStudies,
             username='udaannotator',
             password='udaannotator',
             label='Annotator',
