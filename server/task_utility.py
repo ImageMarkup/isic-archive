@@ -232,7 +232,7 @@ class UDAResource(Resource):
 
             if phase_name == 'Phase 2':
                 # hardcode a default featureset for now
-                featureset = self.model('featureset', 'isic_archive').findOne({'name': 'UDA2 Study'})
+                featureset = self.model('featureset', 'isic_archive').findOne({'name': 'ISIC Conventional'})
 
                 legacy_featureset = dict()
                 for new_level, legacy_level in [
