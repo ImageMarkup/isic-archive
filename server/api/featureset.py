@@ -4,6 +4,7 @@
 from girder.api import access
 from girder.api.rest import Resource, loadmodel
 from girder.api.describe import Description
+from girder.constants import AccessType
 
 
 class FeaturesetResource(Resource):
@@ -32,7 +33,7 @@ class FeaturesetResource(Resource):
 
 
     @access.public
-    @loadmodel(model='featureset', plugin='isic_archive')
+    @loadmodel(model='featureset', plugin='isic_archive', level=AccessType.READ)
     def getFeatureset(self, featureset, params):
         return self.model('featureset', 'isic_archive').filter(featureset)
     getFeatureset.description = (
@@ -43,7 +44,7 @@ class FeaturesetResource(Resource):
 
 
     # @access.admin
-    # @loadmodel(model='featureset', plugin='isic_archive')
+    # @loadmodel(model='featureset', plugin='isic_archive', level=AccessType.ADMIN)
     # def deleteFeatureset(self, featureset, params):
     #     # TODO: need to ensure no studies are using this featureset
     #     # TODO: make this an AccessControlledModel

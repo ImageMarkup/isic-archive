@@ -247,6 +247,7 @@ def initialSetup(info):
             featureset = ModelImporter.model('featureset', 'isic_archive').findOne(
                 {'name': featureset_data['name']})
             if not featureset:
+                # these values may be updated to be more accurate
                 featureset_data['creatorId'] = getAdminUser()['_id']
                 featureset_data['created'] = datetime.datetime.utcnow()
                 ModelImporter.model('featureset', 'isic_archive').save(featureset_data)
