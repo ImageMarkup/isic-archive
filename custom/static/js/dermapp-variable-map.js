@@ -35,6 +35,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             var task_detail_url = '/api/v1/uda/task/map/' + image_item_id;
 
             $http.get(task_detail_url).success(function (data) {
+                $scope.current_annotation = null; // TODO
                 $scope.decision_tree = data.decision_tree;
                 $scope.phase = data.phase;
                 $scope.totalSteps = $scope.decision_tree.length;
@@ -241,20 +242,18 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             console.log( $scope );
             console.log('submit annotations happens here');
 
-            var submit_url = '/api/v1/uda/task/map/' + $scope.current_image._id + '/complete';
+            var submit_url = '/api/v1/annotation/' + $scope.current_annotation._id;
 
             var taskcomplete_time = Date.now();
 
             var annotation_to_store = {
-                'image' : $scope.current_image,
-                'user' : $rootScope.user,
-                'taskstart' : $rootScope.task_start,
-                'taskend' : taskcomplete_time,
-                'user_annotation': $scope.annotation_model,
-                'markup_model': $scope.annotation_options
+                'imageId' : $scope.current_image._id,
+                'startTime' : $rootScope.task_start,
+                'stopTime' : taskcomplete_time,
+                'annotations': $scope.annotation_model
             };
 
-            $http.post(submit_url, annotation_to_store).success(function (response) {
+            $http.put(submit_url, annotation_to_store).success(function (response) {
                 window.location.replace('/uda/task');
             });
         };

@@ -88,9 +88,11 @@ class StudyResource(Resource):
                 self.model('item').setMetadata(
                     item=annotation_item,
                     metadata={
+                        'userId': annotator_user['_id'],
+                        'imageId': image_item['_id'],
                         'studyId': study_folder['_id'],
-                        'start_time': None,
-                        'stop_time': None,
+                        'startTime': None,
+                        'stopTime': None,
                         'annotations': None,
                     }
                 )

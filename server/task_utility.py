@@ -37,7 +37,6 @@ class UDAResource(Resource):
         self.route('GET', ('task', 'markup', ':item_id'), self.p1or2TaskDetail)
         self.route('POST', ('task', 'markup', ':item_id', 'complete'), self.p1TaskComplete)
         self.route('GET', ('task', 'map', ':item_id'), self.p1or2TaskDetail)
-        self.route('POST', ('task', 'map', ':item_id', 'complete'), self.p2TaskComplete)
 
 
     def _requireCollectionAccess(self, collection_name):
@@ -308,24 +307,6 @@ class UDAResource(Resource):
         .errorResponse())
 
 
-    @access.user
-    def p2TaskComplete(self, item_id, params):
-        self._requireCollectionAccess('Phase 2')
-        markup_str = cherrypy.request.body.read()
-        markup_dict = json.loads(markup_str)
-
-        # TODO: auto-create "Complete" collection owned by "udastudy"
-        result = self._handlePhaseCore(markup_dict, 'p2', 'Complete')
-
-        return {'status': result}
-
-    p2TaskComplete.description = (
-        Description('Complete a Phase 2 (map) task.')
-        .responseClass('UDA')
-        .param('item_id', 'The item ID.', paramType='path')
-        .errorResponse())
-
-
     def _handlePhaseCore(self, markup_dict, phase_acronym, next_phase_collection):
         item_name_base = markup_dict['image']['name'].split('.t')[0]
 
@@ -346,23 +327,17 @@ class UDAResource(Resource):
             'result': item_metadata
         }
 
-        if phase_acronym in ['p1a', 'p1b', 'p1c']:
-            markup_json[phase_acronym]['steps'] = markup_dict['steps']
+        markup_json[phase_acronym]['steps'] = markup_dict['steps']
 
-            # grab and remove the b64 png from the dictionary
-            png_b64string = markup_dict['steps']['2']['markup']['features'][0]['properties']['parameters'].pop('rgb')
-            # remote the initial data uri details
-            png_b64string_trim = png_b64string[22:]
+        # grab and remove the b64 png from the dictionary
+        png_b64string = markup_dict['steps']['2']['markup']['features'][0]['properties']['parameters'].pop('rgb')
+        # remote the initial data uri details
+        png_b64string_trim = png_b64string[22:]
 
-            # grab and remove the b64 png from the dictionary
-            png_tiles_b64string = markup_dict['steps']['2']['markup']['features'][0]['properties']['parameters'].pop('tiles')
-            # remote the initial data uri details
-            png_tiles_b64string_trim = png_tiles_b64string[22:]
-
-        elif phase_acronym == 'p2':
-            markup_json[phase_acronym]['user_annotation'] = markup_dict['user_annotation']
-            markup_json[phase_acronym]['markup_model'] = markup_dict['markup_model']
-            # TODO: dereference annotation_options
+        # grab and remove the b64 png from the dictionary
+        png_tiles_b64string = markup_dict['steps']['2']['markup']['features'][0]['properties']['parameters'].pop('tiles')
+        # remote the initial data uri details
+        png_tiles_b64string_trim = png_tiles_b64string[22:]
 
         # add to existing item
         # TODO: get item_id from URL, instead of within markup_dict
@@ -380,18 +355,17 @@ class UDAResource(Resource):
             '%s-%s.json' % (item_name_base, phase_acronym)
         )
 
-        if phase_acronym in ['p1a', 'p1b', 'p1c']:
-            self._createFileFromData(
-                image_item,
-                png_b64string_trim.decode('base64'),
-                '%s-%s.png' % (item_name_base, phase_acronym)
-            )
+        self._createFileFromData(
+            image_item,
+            png_b64string_trim.decode('base64'),
+            '%s-%s.png' % (item_name_base, phase_acronym)
+        )
 
-            self._createFileFromData(
-                image_item,
-                png_tiles_b64string_trim.decode('base64'),
-                '%s-tile-%s.png' % (item_name_base, phase_acronym)
-            )
+        self._createFileFromData(
+            image_item,
+            png_tiles_b64string_trim.decode('base64'),
+            '%s-tile-%s.png' % (item_name_base, phase_acronym)
+        )
 
         # move item to folder in next collection
         original_folder = self.model('folder').load(markup_dict['image']['folderId'], force=True)

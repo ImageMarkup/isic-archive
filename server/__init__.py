@@ -108,6 +108,7 @@ def load(info):
     # "/api/v1/item/:id/fif/:fifparams" -> returns the IIP FIF endpoint for an item
     info['apiRoot'].item.route('GET', (':item_id', 'fif', ':fifparams'), fifHandler)
 
-    # TODO: nest these under a "/uda" path
+    # TODO: nest these under a "/isic" path
+    info['apiRoot'].annotation = api.AnnotationResource()
     info['apiRoot'].featureset = api.FeaturesetResource()
     info['apiRoot'].study = api.StudyResource()
