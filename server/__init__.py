@@ -110,3 +110,4 @@ def load(info):
 
     # TODO: nest these under a "/uda" path
     info['apiRoot'].featureset = api.FeaturesetResource()
+    info['apiRoot'].study = api.StudyResource()
