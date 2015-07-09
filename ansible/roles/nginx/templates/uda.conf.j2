@@ -2,7 +2,7 @@ server {
     listen {% if ssl %}443{% else %}80{% endif %};
     server_name {{ site_hostname }};
 
-    {% if ssl %}
+    {% if ssl -%}
     ssl on;
     ssl_certificate /etc/ssl/certs/{{ site_hostname }}.pem;
     ssl_certificate_key /etc/ssl/private/{{ site_hostname }}.key;

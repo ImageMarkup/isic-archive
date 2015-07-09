@@ -2,12 +2,12 @@
 
 - name: Download
   git:
-    repo: https://github.com/girder/girder.git
+    repo: "https://github.com/girder/girder.git"
     dest: "{{ girder_path }}"
     version: "{{ girder_version }}"
     update: no
     force: yes
-  #notify: Rebuild Girder
+  #notify: Rebuild
 
 - name: Install build dependencies
   apt:

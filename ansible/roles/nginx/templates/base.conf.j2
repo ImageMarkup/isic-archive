@@ -5,8 +5,18 @@ client_max_body_size 100M;
 
 proxy_http_version 1.1;
 proxy_set_header Host $proxy_host;
-proxy_set_header Connection close;
+#proxy_set_header Connection close;
+
 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Host $host;
+proxy_set_header X-Forwarded-Proto $scheme;
 
 # fixes an issue with responses over 1024m
 proxy_buffering off;
+
+# Must set the following for SSE notifications to work
+proxy_cache off;
+proxy_set_header Connection '';
+chunked_transfer_encoding off;
+proxy_read_timeout 600s;
+proxy_send_timeout 600s;

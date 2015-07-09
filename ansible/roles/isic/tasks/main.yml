@@ -2,7 +2,7 @@
 
 #- name: Download
 #  git:
-#    repo: https://github.com/imagemarkup/girder.git
+#    repo: "https://github.com/ImageMarkup/isic-archive.git"
 #    dest: "{{ girder_path }}"
 #    version: "{{ girder_version }}"
 #    update: no
