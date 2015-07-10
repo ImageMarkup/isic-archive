@@ -162,7 +162,7 @@ def _zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_u
         parent=upload_collection,
         name=os.path.splitext(upload_file['name'])[0],
         description='',
-        parent_type='collection',
+        parentType='collection',
         creator=upload_user
     )
     # TODO: accept the broken Girder behavior for now, as we don't want to inherit all collection permissions
