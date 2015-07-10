@@ -2,8 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import os
+import re
 
 import cherrypy
+import pymongo
+
 from girder.api import access
 from girder.api.describe import Description
 from girder.api.rest import loadmodel, RestException
@@ -41,11 +44,12 @@ thumbnailhandler.description = (
 def segmentationSourceHandler(item, params):
     # todo : have it pull the appropriate annotation, it current pulls the last one
 
-    files = ModelImporter.model('item').childFiles(item)
+    files = ModelImporter.model('item').childFiles(item, sort=[('created', pymongo.DESCENDING)])
 
     for firstFile in files:
-        if firstFile['exts'][0] == 'png':
-            if 'tile' not in firstFile['name']:
+        if firstFile['mimeType'] == 'image/png':
+            # this is a hack; we should use negative lookahead assertions instead
+            if re.search(r'-p1.\.png$', firstFile['name']) and not re.search(r'-tile-p1.\.png$', firstFile['name']):
                 break
     else:
         raise RestException('No source PNG file in item')
@@ -64,11 +68,11 @@ segmentationSourceHandler.description = (
 def segmentationTileHandler(item, params):
     # todo : have it pull the appropriate annotation, it current pulls the last one
 
-    files = ModelImporter.model('item').childFiles(item)
+    files = ModelImporter.model('item').childFiles(item, sort=[('created', pymongo.DESCENDING)])
 
     for firstFile in files:
-        if firstFile['exts'][0] == 'png':
-            if 'tile' in firstFile['name']:
+        if firstFile['mimeType'] == 'image/png':
+            if re.search(r'-tile-p1.\.png$', firstFile['name']):
                 break
     else:
         raise RestException('No tile PNG file in item')
