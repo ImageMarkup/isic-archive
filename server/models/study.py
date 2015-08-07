@@ -5,7 +5,6 @@ from enum import Enum
 
 from girder.constants import AccessType
 from girder.models.folder import Folder
-from girder.models.model_base import ValidationException
 
 
 class Study(Folder):
@@ -23,11 +22,6 @@ class Study(Folder):
 
 
     def createStudy(self, name, creator_user, featureset, annotator_users, image_items):
-        if not annotator_users:
-            raise ValidationException('annotator_users is empty')
-        if not image_items:
-            raise ValidationException('image_items is empty')
-
         # this may raise a ValidationException if the name already exists
         study_folder = self.createFolder(
             parent=self.loadStudyCollection(),
@@ -66,10 +60,14 @@ class Study(Folder):
     def addAnnotator(self, study, annotator_user, creator_user, image_items=None):
         if not image_items:
             # use one of the existing users (which must exist) as a prototype
+            existing_annotator_folder = self.model('folder').findOne({'parentId': study['_id']})
+            if not existing_annotator_folder:
+                # no image_items and no existing images, so nothing to be done
+                return
             image_items = (
                 self.model('item').load(annotation_item['meta']['imageId'], force=True)
                 for annotation_item in self.model('annotation', 'isic_archive').find({
-                    'parentId': self.model('folder').findOne({'parentId': study['_id']})['_id']
+                    'parentId': existing_annotator_folder['_id']
                 })
             )
 

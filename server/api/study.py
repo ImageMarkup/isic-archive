@@ -87,11 +87,11 @@ class StudyResource(Resource):
 
         study_name = body_json['name']
         creator_user = self.getCurrentUser()
-        annotator_users = [self.model('user').load(annotator_id, user=creator_user, level=AccessType.READ)
-                           for annotator_id in body_json['annotatorIds']]
+        annotator_users = (self.model('user').load(annotator_id, user=creator_user, level=AccessType.READ)
+                           for annotator_id in body_json['annotatorIds'])
         # TODO: validate that these items are actually in the correct folder
-        image_items = [self.model('item').load(image_id, user=creator_user, level=AccessType.READ)
-                       for image_id in body_json['imageIds']]
+        image_items = (self.model('item').load(image_id, user=creator_user, level=AccessType.READ)
+                       for image_id in body_json['imageIds'])
         featureset = self.model('featureset', 'isic_archive').load(body_json['featuresetId'])
 
         self.model('study', 'isic_archive').createStudy(

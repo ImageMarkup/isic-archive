@@ -4,7 +4,7 @@
 import datetime
 
 from girder.constants import AccessType
-from girder.models.model_base import Model, ValidationException
+from girder.models.model_base import Model
 
 
 class Featureset(Model):
@@ -22,11 +22,6 @@ class Featureset(Model):
         ))
 
 
-    def validate(self, doc):
-        # raise ValidationException
-        return doc
-
-
     def createFeatureset(self, name, version, creator):
         now = datetime.datetime.utcnow()
 
@@ -38,3 +33,8 @@ class Featureset(Model):
             'image_features': [],
             'region_features': [],
         })
+
+
+    def validate(self, doc):
+        # raise ValidationException
+        return doc
