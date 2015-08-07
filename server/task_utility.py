@@ -34,9 +34,8 @@ class UDAResource(Resource):
 
         self.route('GET', ('task',), self.taskList)
         self.route('POST', ('task', 'qc', ':folder_id', 'complete'), self.p0TaskComplete)
-        self.route('GET', ('task', 'markup', ':item_id'), self.p1or2TaskDetail)
+        self.route('GET', ('task', 'markup', ':item_id'), self.p1TaskDetail)
         self.route('POST', ('task', 'markup', ':item_id', 'complete'), self.p1TaskComplete)
-        self.route('GET', ('task', 'map', ':item_id'), self.p1or2TaskDetail)
 
 
     def _requireCollectionAccess(self, collection_name):
@@ -73,22 +72,51 @@ class UDAResource(Resource):
             'Phase 1a': '/uda/task/p1a/%(folder_id)s',
             'Phase 1b': '/uda/task/p1b/%(folder_id)s',
             'Phase 1c': '/uda/task/p1c/%(folder_id)s',
-            'Phase 2': '/uda/task/p2/%(folder_id)s'
+            'Phase 2': '/uda/task/p2/%(study_id)s'
         }
         for phase_name, task_url in sorted(PHASE_TASK_URLS.iteritems()):
-            try:
-                collection = self._requireCollectionAccess(phase_name)
-            except AccessException:
-                continue
+            if phase_name != 'Phase 2':
+                try:
+                    collection = self._requireCollectionAccess(phase_name)
+                except AccessException:
+                    continue
 
-            datasets = (
-                {
-                    'name': folder['name'],
-                    'count': len(getItemsInFolder(folder)),
-                    'url': task_url % {'folder_id': folder['_id']}
+                datasets = (
+                    {
+                        'name': folder['name'],
+                        'count': len(getItemsInFolder(folder)),
+                        'url': task_url % {'folder_id': folder['_id']}
+                    }
+                    for folder in self._getFoldersForCollection(collection)
+                )
+            else:
+                # TODO: this could be done more efficiently, without duplicate queries,
+                #   but let's wait until this API refactored
+                study_list = self.model('study', 'isic_archive').find(
+                    annotator_user=self.getCurrentUser(),
+                    state=self.model('study', 'isic_archive').State.ACTIVE
+                )
+                if not study_list.count():
+                    continue
+                datasets = (
+                    {
+                        'name': study['name'],
+                        'count': self.model('study', 'isic_archive').childAnnotations(
+                            study=study,
+                            annotator_user=self.getCurrentUser(),
+                            state=self.model('study', 'isic_archive').State.ACTIVE
+                        ).count(),
+                        'url': task_url % {'study_id': study['_id']}
+                    }
+                    for study in study_list
+                )
+                # TODO: replace this with the actual collection description,
+                #   and update that to note Phase 2
+                collection = {
+                    'name': 'Annotation Studies',
+                    'description': 'Clinical feature annotation studies (Phase 2)'
                 }
-                for folder in self._getFoldersForCollection(collection)
-            )
+
             datasets = sorted(datasets, key=operator.itemgetter('name'))
 
             result.append({
@@ -188,7 +216,7 @@ class UDAResource(Resource):
 
     @access.user
     @loadmodel(map={'item_id': 'item'}, model='item', level=AccessType.READ)
-    def p1or2TaskDetail(self, item, params):
+    def p1TaskDetail(self, item, params):
         # verify item is in the correct phase and user has access
         collection = self.model('collection').load(
             id=item['baseParentId'],
@@ -208,7 +236,6 @@ class UDAResource(Resource):
         PREVIOUS_PHASE_CODES = {
             'Phase 1b': 'p1a',
             'Phase 1c': 'p1b',
-            'Phase 2': 'p1c'
         }
         previous_phase_code = PREVIOUS_PHASE_CODES.get(phase_name)
         if previous_phase_code:
@@ -229,37 +256,6 @@ class UDAResource(Resource):
                 # TODO: no file found, raise error
                 pass
 
-            if phase_name == 'Phase 2':
-                # hardcode a default featureset for now
-                featureset = self.model('featureset', 'isic_archive').findOne({'name': 'ISIC Conventional'})
-
-                legacy_featureset = dict()
-                for new_level, legacy_level in [
-                        ('image_features', 'lesionlevel'),
-                        ('region_features', 'tiles')
-                        ]:
-                    # need to first build an intermediate variable to maintain ordering
-                    legacy_questions = collections.OrderedDict()
-
-                    for feature in featureset[new_level]:
-                        header = feature['name'][0]
-                        legacy_question = {
-                            'name': feature['name'][0] if len(feature['name']) == 1 else ': '.join(feature['name'][1:]),
-                            'type': feature['type']
-                        }
-                        if feature['type'] =='select':
-                            legacy_question['shortname'] = feature['id']
-                            legacy_question['options'] = feature['options']
-                        else:
-                            legacy_question['id'] = feature['id']
-                        legacy_questions.setdefault(header, list()).append(legacy_question)
-
-                    legacy_featureset[legacy_level] = [
-                        {'header': header, 'questions': questions}
-                        for header, questions in legacy_questions.iteritems()
-                    ]
-
-                return_dict['variables'] = legacy_featureset
         else:
             return_dict['loadAnnotation'] = False
 
@@ -271,8 +267,8 @@ class UDAResource(Resource):
 
         return return_dict
 
-    p1or2TaskDetail.description = (
-        Description('Get details of a Phase 1 (markup) or Phase 2 (map) task.')
+    p1TaskDetail.description = (
+        Description('Get details of a Phase 1 (markup) task.')
         .responseClass('UDA')
         .param('item_id', 'The item ID.', paramType='path')
         .errorResponse())
@@ -407,7 +403,7 @@ class TaskHandler(Resource):
         self.route('GET', ('p1a', ':folder_id'), self.p1aTaskRedirect)
         self.route('GET', ('p1b', ':folder_id'), self.p1bTaskRedirect)
         self.route('GET', ('p1c', ':folder_id'), self.p1cTaskRedirect)
-        self.route('GET', ('p2', ':folder_id'), self.p2TaskRedirect)
+        self.route('GET', ('p2', ':study_id'), self.p2TaskRedirect)
         # TODO: cookieAuth decorator
 
 
@@ -462,7 +458,18 @@ class TaskHandler(Resource):
 
 
     @access.user
-    @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
-    def p2TaskRedirect(self, folder, params):
-        return self._taskRedirect('Phase 2', folder, '/uda/map/%(item_id)s')
+    @loadmodel(map={'study_id': 'study'}, model='study', plugin='isic_archive', level=AccessType.READ)
+    def p2TaskRedirect(self, study, params):
+        try:
+            annotation = self.model('study', 'isic_archive').childAnnotations(
+                study=study,
+                annotator_user=self.getCurrentUser(),
+                state=self.model('study', 'isic_archive').State.ACTIVE,
+                limit=1
+            ).next()
+        except StopIteration:
+            raise RestException('Study "%s" has no annotation tasks for this user.' % study['_id'])
+
+        redirect_url = '/uda/map/%s' % annotation['_id']
+        raise cherrypy.HTTPRedirect(redirect_url, status=307)
     p2TaskRedirect.cookieAuth = True

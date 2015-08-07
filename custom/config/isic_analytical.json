@@ -40,27 +40,27 @@
   ],
   "region_features": [
     {
-      "id": "lines.reticular",
+      "id": "lines/reticular",
       "name": ["Lines", "Reticular"],
       "type": "check"
     },
     {
-      "id": "lines.branched",
+      "id": "lines/branched",
       "name": ["Lines", "Branched"],
       "type": "check"
     },
     {
-      "id": "lines.parallel",
+      "id": "lines/parallel",
       "name": ["Lines", "Parallel"],
       "type": "check"
     },
     {
-      "id": "lines.radial",
+      "id": "lines/radial",
       "name": ["Lines", "Radial"],
       "type": "check"
     },
     {
-      "id": "lines.curved",
+      "id": "lines/curved",
       "name": ["Lines", "Curved"],
       "type": "check"
     },

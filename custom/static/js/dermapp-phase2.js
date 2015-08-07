@@ -2,7 +2,7 @@
 /*jslint browser: true*/
 
 // Initialization of angular root application
-var derm_app = angular.module('DermApp', ['ui.bootstrap', 'ngSanitize', 'xml', 'ui.multiselect']);
+var derm_app = angular.module('DermApp', ['ui.bootstrap', 'ngSanitize', 'xml', 'ui.select']);
 derm_app.value("ol", ol);
 
 derm_app.config(function($httpProvider) {

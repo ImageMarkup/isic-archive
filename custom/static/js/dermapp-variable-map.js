@@ -28,21 +28,24 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             }
         });
 
+        $scope.selected = function() {
+            console.log("selected", $scope.annotation_model);
+        };
+
         $scope.loadTasklist = function () {
             var urlvals = window.location.pathname.split('/');
-            var image_item_id = urlvals[urlvals.length - 1];
+            var annotation_item_id = urlvals[urlvals.length - 1];
+            $scope.annotation_item_id = annotation_item_id;
 
-            var task_detail_url = '/api/v1/uda/task/map/' + image_item_id;
+            var annotation_detail_url = '/api/v1/annotation/' + annotation_item_id;
 
-            $http.get(task_detail_url).success(function (data) {
+            $http.get(annotation_detail_url).success(function (data) {
                 $scope.current_annotation = null; // TODO
                 $scope.decision_tree = data.decision_tree;
-                $scope.phase = data.phase;
+                $scope.phase = 'Phase 2';
                 $scope.totalSteps = $scope.decision_tree.length;
-                if (data.loadAnnotation) {
-                    $scope.annotation_source = data.annotation;
-                    $scope.current_image = data.items[0];
-                }
+                $scope.annotation_source = data.annotation;
+                $scope.current_image = data.image;
                 $scope.annotation_options = data.variables;
 
                 var segmentation_url = '/api/v1/item/' + $scope.current_image._id + '/segmentation';
@@ -242,7 +245,8 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             console.log( $scope );
             console.log('submit annotations happens here');
 
-            var submit_url = '/api/v1/annotation/' + $scope.current_annotation._id;
+            //var submit_url = '/api/v1/annotation/' + $scope.current_annotation._id;
+            var submit_url = '/api/v1/annotation/' + $scope.annotation_item_id;
 
             var taskcomplete_time = Date.now();
 

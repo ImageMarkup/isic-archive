@@ -1,15 +1,13 @@
-/**
- * Created by stonerri on 3/13/14.
- */
-
 'use strict';
+/*jslint browser: true*/
+/*global angular*/
 
 // Initialization of angular root application
 var review_app = angular.module('DermApp', ['ngSanitize', 'mousetrap']);
 
-review_app.config(function($httpProvider) {
-  $httpProvider.defaults.xsrfCookieName = 'girderToken';
-  $httpProvider.defaults.xsrfHeaderName = 'Girder-Token';
+review_app.config(function ($httpProvider) {
+    $httpProvider.defaults.xsrfCookieName = 'girderToken';
+    $httpProvider.defaults.xsrfHeaderName = 'Girder-Token';
 });
 
 var appController = review_app.controller('TaskController', ['$scope', '$http', '$interval',

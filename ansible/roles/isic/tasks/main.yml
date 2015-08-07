@@ -33,6 +33,7 @@
     - celery
     - geojson
     - pillow
+    - enum34
 
 ## local config
 # TODO: rebuild Girder

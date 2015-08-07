@@ -109,6 +109,6 @@ def load(info):
     info['apiRoot'].item.route('GET', (':item_id', 'fif', ':fifparams'), fifHandler)
 
     # TODO: nest these under a "/isic" path
-    info['apiRoot'].annotation = api.AnnotationResource()
+    info['apiRoot'].annotation = api.AnnotationResource(info['pluginRootDir'])
     info['apiRoot'].featureset = api.FeaturesetResource()
     info['apiRoot'].study = api.StudyResource()

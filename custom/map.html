@@ -23,13 +23,18 @@
     <script src="/uda/static/bower_components/jquery/dist/jquery.min.js"></script>
     <script src="/uda/static/bower_components/flatstrap/dist/js/bootstrap.min.js"></script>
 
-    <script src="/uda/static/bower_components/angular/angular.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.3/angular.js"></script>
     <script src="/uda/static/bower_components/angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js"></script>
-    <script src="/uda/static/bower_components/angular-sanitize/angular-sanitize.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.3/angular-sanitize.js"></script>
     <script src="/uda/static/bower_components/angular-xml/angular-xml.min.js"></script>
     <script src="/uda/static/bower_components/mousetrap/mousetrap.min.js"></script>
 
     <script src="/uda/static/bower_components/amitava82-angular-multiselect/src/multiselect-tpls.js"></script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.12.1/select.min.js"></script>
+    <link rel=stylesheet type=text/css href="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.12.1/select.min.css">
+
 
     <script type="text/javascript" src="/uda/static/js/ol.js"></script>
     <script type="text/javascript" src="/uda/static/js/pf-segmentation.js"></script>
@@ -102,54 +107,44 @@
                     <div class="clearfix"></div>
                 </div>
                 <div class="clearfix"></div>
+
+
                 <!-- Step content -->
                 <div class="step-header">
                     <div class="btn-group">
                         <div class="btn">Lesion-level</div>
                     </div>
                 </div>
-                <!-- this is messy, could be refactored but the nested models werent' playing nicely-->
-                <div class="step-content">
-                     <multiselect class=""
-                        ng-model="annotation_model.pattern"
-                        ms-header="Pattern"
-                        options="c.name for c in annotation_options.lesionlevel[0].questions[0].options"
-                        change="selected()" >
-                    </multiselect>
-                    <div class="btn btn-sm pull-right" ng-show="annotation_model.pattern">
-                        <span>√</span>
-                    </div>
-                    <br>
-                     <multiselect class=""
-                        ms-header="Organization"
-                        ng-model="annotation_model.organization"
-                        options="c.name for c in annotation_options.lesionlevel[1].questions[0].options"
-                        change="selected()" >
-                    </multiselect>
-                    <div class="btn btn-sm pull-right" ng-show="annotation_model.organization">
-                        <span>√</span>
-                    </div>
-                    <br>
-                     <multiselect class=""
-                                  ms-header="Shape Symmetry"
-                        ng-model="annotation_model.shapesym"
-                        options="c.name for c in annotation_options.lesionlevel[1].questions[1].options"
-                        change="selected()" >
-                    </multiselect>
-                    <div class="btn btn-sm pull-right" ng-show="annotation_model.shapesym">
-                        <span>√</span>
-                    </div>
-                    <br>
-                    <multiselect class=""
-                                 ms-header="Pattern Symmetry"
-                        ng-model="annotation_model.patternsym"
-                        options="c.name for c in annotation_options.lesionlevel[1].questions[2].options"
-                        change="selected()" >
-                    </multiselect>
-                    <div class="btn btn-sm pull-right" ng-show="annotation_model.patternsym">
-                        <span>√</span>
+                <div class="step-content" ng-repeat="feature_group in annotation_options.lesionlevel">
+                    <h3>{{ feature_group.header }}</h3>
+                    <div ng-repeat="feature in feature_group.questions">
+                        <div ng-switch="feature.type">
+                            <div ng-switch-when="select">
+                                <label>{{ feature.name }}</label>
+                                <ui-select
+                                        ng-model="annotation_model[feature.shortname]"
+                                        search-enabled="false"
+                                        on-select="selected($item, $model)"
+                                        on-remove="selected($item, $model)"
+                                        theme="bootstrap">
+                                    <ui-select-match placeholder="{{ feature.name }}">
+                                        {{ $select.selected.name }}
+                                    </ui-select-match>
+                                    <ui-select-choices repeat="option.id as option in feature.options">
+                                        <div ng-bind-html="option.name"></div>
+                                    </ui-select-choices>
+                                </ui-select>
+                                <!-- TODO: put this on the same line -->
+                                <div class="btn btn-sm pull-right" ng-show="annotation_model[feature.shortname]">
+                                    <span>√</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+
+
                 <div class="step-header">
                     <div class="btn-group">
                         <div class="btn">Regional</div>
@@ -160,21 +155,20 @@
                         <label class="btn" ng-model="certaintyModel" btn-radio="'possible'">50%?</label>
                     </div>
                 </div>
+
                 <div class="step-content" ng-hide="showReview">
                     <input type="text" class="form-control" ng-model="filterval" placeholder="Filter">
                 </div>
+
+
+
+
+
+
+
+
                 <div class="step-content" ng-show="showReview" ng-cloak>
                     <accordion close-others="false">
-                        <accordion-group heading="Color" is-open="true">
-                            <div class="colorhover"
-                                 ng-repeat="question in annotation_options.lesionlevel[3].questions"
-                                 ng-class="{selected: selected_annotation == this}"
-                                 ng-show="hasValidTile(question.id)"
-                                 ng-mouseover="hoverTiles(question)">
-                                <span class="pull-right" ng-show="hasValidTile(question.id)">√</span>
-                                <span>{{question.name}}</span>
-                            </div>
-                        </accordion-group>
                         <accordion-group heading="{{tile.header}}"
                                          ng-repeat="tile in annotation_options.tiles"
                                          is-open="true">
@@ -205,16 +199,6 @@
                 </div>
                 <div class="step-content" ng-hide="showReview" ng-cloak>
                     <accordion close-others="true">
-                        <accordion-group heading="Color" is-open="true">
-                            <div ng-repeat="question in annotation_options.lesionlevel[3].questions"
-                                 ng-class="{selected: selected_annotation == this}"
-                                 ng-click="selectTileAnnotation(this)">
-                                <div ng-show="([question.name] | filter: filterval).length > 0">
-                                    <span class="pull-right" ng-show="hasValidTile(question.id)">√</span>
-                                    <span>{{question.name}}</span>
-                                </div>
-                            </div>
-                        </accordion-group>
                         <accordion-group heading="{{tile.header}}"
                                          ng-repeat="tile in annotation_options.tiles"
                                          ng-show="filterval.length == 0">
@@ -241,6 +225,13 @@
                         </accordion-group>
                     </accordion>
                 </div>
+
+
+
+
+
+
+
                 <!-- Step footer -->
                 <div class="lowertoolbar" ng-show="true" ng-cloak>
                     <div class="btn-group">

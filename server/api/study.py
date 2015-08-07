@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import cherrypy
+
 from girder.api import access
-from girder.api.rest import Resource
+from girder.api.rest import Resource, RestException, loadmodel
 from girder.api.describe import Description
 from girder.constants import AccessType
 
@@ -13,7 +15,67 @@ class StudyResource(Resource):
     def __init__(self,):
         self.resourceName = 'study'
 
+        self.route('GET', (), self.find)
+        self.route('GET', (':study_id', 'task'), self.redirectTask)
         self.route('POST', (), self.createStudy)
+
+
+    @access.public
+    def find(self, params):
+        filters = dict()
+
+        if params.get('user'):
+            if params['user'] == 'me':
+                filters['annotator_user'] = self.getCurrentUser()
+            else:
+                filters['annotator_user'] = self.model('user').load(
+                    id=params['user'],
+                    level=AccessType.READ,
+                    user=self.getCurrentUser()
+                )
+
+        if params.get('state'):
+            try:
+                filters['state'] = self.model('study', 'isic_archive').State(params['state'])
+            except ValueError:
+                raise RestException('Query parameter "state" may only be "active" or "complete".')
+
+        return [self.model('study', 'isic_archive').filter(study_folder)
+                for study_folder in self.model('study', 'isic_archive').find(**filters)]
+
+    find.description = (
+        Description('Return a list of annotation studies.')
+        .param('state', 'Filter studies to those at a given state',
+               paramType='query', required=False, enum=('active', 'complete'))
+        .param('user', 'Filter studies to those containing a user ID, or "me".',
+               paramType='query', required=False)
+        .errorResponse())
+
+
+    @access.user
+    @loadmodel(model='folder', map={'study_id': 'study_folder'}, level=AccessType.READ)
+    def redirectTask(self, study_folder, params):
+        # TODO: it's not strictly necessary to load the study
+
+        active_annotation_study = self.model('item').findOne({
+            'baseParentId': ISIC.AnnotationStudies.collection['_id'],
+            'meta.studyId': study_folder['_id'],
+            'meta.userId': self.getCurrentUser()['_id'],
+            'meta.stopTime': None
+        })
+
+        if active_annotation_study:
+            annotation_task_url = '/uda/map/%s' % active_annotation_study['_id']
+            raise cherrypy.HTTPRedirect(annotation_task_url, status=307)
+        else:
+            raise RestException('No active annotations for this user in this study.')
+
+    redirectTask.cookieAuth = True
+    redirectTask.description = (
+        Description('Redirect to an active annotation study task.')
+        .param('study_id', 'The study to search for annotation tasks in.',
+               paramType='path', required=True)
+        .errorResponse())
 
 
     @access.admin
@@ -22,80 +84,19 @@ class StudyResource(Resource):
 
         self.requireParams(('name', 'annotatorIds', 'imageIds', 'featuresetId'), body_json)
 
+        study_name = body_json['name']
         creator_user = self.getCurrentUser()
         annotator_users = [self.model('user').load(annotator_id, user=creator_user, level=AccessType.READ)
                            for annotator_id in body_json['annotatorIds']]
         # TODO: validate that these items are actually in the correct folder
         image_items = [self.model('item').load(image_id, user=creator_user, level=AccessType.READ)
                        for image_id in body_json['imageIds']]
-        featureset_item = self.model('featureset', 'isic_archive').load(body_json['featuresetId'])
+        featureset = self.model('featureset', 'isic_archive').load(body_json['featuresetId'])
 
-        # this may raise a ValidationException if the name already exists
-        study_folder = self.model('folder').createFolder(
-            parent=ISIC.AnnotationStudies.collection,
-            name=body_json['name'],
-            description='',
-            parentType='collection',
-            public=None,
-            creator=creator_user
-        )
-        self.model('folder').copyAccessPolicies(
-            src=ISIC.AnnotationStudies.collection,
-            dest=study_folder,
-            save=False
-        )
-        self.model('folder').setUserAccess(
-            doc=study_folder,
-            user=creator_user,
-            # TODO: make admin
-            level=AccessType.READ,
-            save=False
-        )
-        # "setMetadata" will always save
-        self.model('folder').setMetadata(
-            folder=study_folder,
-            metadata={
-                'featuresetId': featureset_item['_id']
-            }
-        )
+        self.model('study', 'isic_archive').createStudy(
+            study_name, creator_user, featureset, annotator_users, image_items)
 
 
-        for annotator_user in annotator_users:
-            annotator_folder = self.model('folder').createFolder(
-                parent=study_folder,
-                name='%(login)s (%(firstName)s %(lastName)s)' % annotator_user,
-                description='',
-                parentType='folder',
-                public=True,
-                creator=annotator_user
-            )
-            # study creator accesses will already have been copied to this sub-folder
-            self.model('folder').setUserAccess(
-                doc=annotator_folder,
-                user=annotator_user,
-                # TODO: make write
-                level=AccessType.READ,
-                save=True
-            )
-
-            for image_item in image_items:
-                annotation_item = self.model('item').createItem(
-                    folder=annotator_folder,
-                    name=image_item['name'],
-                    description='',
-                    creator=annotator_user
-                )
-                self.model('item').setMetadata(
-                    item=annotation_item,
-                    metadata={
-                        'userId': annotator_user['_id'],
-                        'imageId': image_item['_id'],
-                        'studyId': study_folder['_id'],
-                        'startTime': None,
-                        'stopTime': None,
-                        'annotations': None,
-                    }
-                )
     createStudy.description = (
         Description('Create an annotation study.')
         .param('body', 'JSON containing the study parameters.', paramType='body')
