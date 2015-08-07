@@ -27,9 +27,9 @@ class AnnotationResource(Resource):
 
 
     @access.user
-    @loadmodel(model='item', map={'annotation_id': 'annotation_item'}, level=AccessType.READ)
+    @loadmodel(model='annotation', plugin='isic_archive', map={'annotation_id': 'annotation_item'}, level=AccessType.READ)
     def getAnnotation(self, annotation_item, params):
-        # return self.model('item').filter(annotation_item)
+        # return self.model('annotation', 'isic_archive').filter(annotation_item)
         image = self.model('item').load(annotation_item['meta']['imageId'], force=True)
         study = self.model('study', 'isic_archive').load(annotation_item['meta']['studyId'], force=True)
         featureset = self.model('featureset', 'isic_archive').load(study['meta']['featuresetId'])
@@ -95,7 +95,7 @@ class AnnotationResource(Resource):
 
 
     @access.admin
-    @loadmodel(model='item', map={'annotation_id': 'annotation_item'}, level=AccessType.READ)
+    @loadmodel(model='annotation', plugin='isic_archive', map={'annotation_id': 'annotation_item'}, level=AccessType.READ)
     def submitAnnotation(self, annotation_item, params):
         if annotation_item['baseParentId'] != ISIC.AnnotationStudies.collection['_id']:
             raise RestException('Annotation id references a non-annotation item.')
@@ -118,7 +118,7 @@ class AnnotationResource(Resource):
             datetime.datetime.utcfromtimestamp(body_json['stopTime'] / 1000.0)
         annotation_item['meta']['annotations'] = body_json['annotations']
 
-        self.model('item').save(annotation_item)
+        self.model('annotation', 'isic_archive').save(annotation_item)
 
     submitAnnotation.description = (
         Description('Submit a completed annotation.')

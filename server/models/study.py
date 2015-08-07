@@ -68,7 +68,7 @@ class Study(Folder):
             # use one of the existing users (which must exist) as a prototype
             image_items = (
                 self.model('item').load(annotation_item['meta']['imageId'], force=True)
-                for annotation_item in self.model('item').find({
+                for annotation_item in self.model('annotation', 'isic_archive').find({
                     'parentId': self.model('folder').findOne({'parentId': study['_id']})['_id']
                 })
             )
@@ -97,35 +97,12 @@ class Study(Folder):
         )
 
         for image_item in image_items:
-            self.createAnnotation(study, image_item, creator_user, annotator_folder)
+            self.model('annotation', 'isic_archive').createAnnotation(study, image_item, creator_user, annotator_folder)
 
 
     def addImage(self, study, image_item, creator_user):
         for annotator_folder in self.model('folder').find({'parentId': study['_id']}):
-            self.createAnnotation(study, image_item, creator_user, annotator_folder)
-
-
-    def createAnnotation(self, study, image_item, creator_user, annotator_folder):
-        # TODO: move this to an annotation model
-        annotation_item = self.model('item').createItem(
-            folder=annotator_folder,
-            name=image_item['name'],
-            description='',
-            creator=creator_user
-        )
-        # "setMetadata" will always save
-        self.model('item').setMetadata(
-            item=annotation_item,
-            metadata={
-                'studyId': study['_id'],
-                'userId': annotator_folder['meta']['userId'],
-                'imageId': image_item['_id'],
-                'startTime': None,
-                'stopTime': None,
-                'annotations': None
-            }
-        )
-        return annotation_item
+            self.model('annotation', 'isic_archive').createAnnotation(study, image_item, creator_user, annotator_folder)
 
 
     def childAnnotations(self, study=None, annotator_user=None, state=None, **kwargs):
@@ -143,7 +120,7 @@ class Study(Folder):
                 raise ValueError('"state" must be an instance of State')
         if annotator_user:
             query['meta.userId'] = annotator_user['_id']
-        return self.model('item').find(query, **kwargs)
+        return self.model('annotation', 'isic_archive').find(query, **kwargs)
 
 
     def find(self, query=None, annotator_user=None, state=None, **kwargs):

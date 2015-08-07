@@ -57,7 +57,8 @@ class StudyResource(Resource):
     def redirectTask(self, study_folder, params):
         # TODO: it's not strictly necessary to load the study
 
-        active_annotation_study = self.model('item').findOne({
+        # TODO: move this to model
+        active_annotation_study = self.model('annotation', 'isic_archive').findOne({
             'baseParentId': ISIC.AnnotationStudies.collection['_id'],
             'meta.studyId': study_folder['_id'],
             'meta.userId': self.getCurrentUser()['_id'],
