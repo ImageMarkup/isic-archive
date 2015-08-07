@@ -59,17 +59,7 @@ class Study(Folder):
 
     def addAnnotator(self, study, annotator_user, creator_user, image_items=None):
         if not image_items:
-            # use one of the existing users (which must exist) as a prototype
-            existing_annotator_folder = self.model('folder').findOne({'parentId': study['_id']})
-            if not existing_annotator_folder:
-                # no image_items and no existing images, so nothing to be done
-                return
-            image_items = (
-                self.model('item').load(annotation_item['meta']['imageId'], force=True)
-                for annotation_item in self.model('annotation', 'isic_archive').find({
-                    'parentId': existing_annotator_folder['_id']
-                })
-            )
+            image_items = self.getImages(study)
 
         annotator_folder = self.model('folder').createFolder(
             parent=study,
@@ -104,12 +94,30 @@ class Study(Folder):
             self.model('annotation', 'isic_archive').createAnnotation(study, image_item, creator_user, annotator_folder)
 
 
-    def childAnnotations(self, study=None, annotator_user=None, state=None, **kwargs):
+    def getAnnotators(self, study):
+        for annotator_folder in self.model('folder').find({'parentId': study['_id']}):
+            yield self.model('user').load(annotator_folder['meta']['userId'], force=True)
+
+
+    def getImages(self, study):
+        # use one of the existing users as a prototype
+        annotator_folder = self.model('folder').findOne({'parentId': study['_id']})
+        if annotator_folder:
+            # there will only be images if there is at least one annotator
+            for annotation_item in self.model('annotation', 'isic_archive').find({'parentId': annotator_folder['_id']}):
+                yield self.model('item').load(annotation_item['meta']['imageId'], force=True)
+
+
+    def childAnnotations(self, study=None, annotator_user=None, image_item=None, state=None, **kwargs):
         query = {
             'baseParentId': self.loadStudyCollection()['_id']
         }
         if study:
             query['meta.studyId'] = study['_id']
+        if annotator_user:
+            query['meta.userId'] = annotator_user['_id']
+        if image_item:
+            query['meta.imageId'] = image_item['_id']
         if state:
             if state == self.State.ACTIVE:
                 query['meta.stopTime'] = None
@@ -117,8 +125,6 @@ class Study(Folder):
                 query['meta.stopTime'] = {'$ne': None}
             else:
                 raise ValueError('"state" must be an instance of State')
-        if annotator_user:
-            query['meta.userId'] = annotator_user['_id']
         return self.model('annotation', 'isic_archive').find(query, **kwargs)
 
 
