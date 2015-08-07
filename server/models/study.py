@@ -80,6 +80,7 @@ class Study(Folder):
             creator=creator_user
         )
         # study creator accesses will already have been copied to this sub-folder
+        # TODO: all users from the study don't need access; this should be changed and migrated
         self.model('folder').setUserAccess(
             doc=annotator_folder,
             user=annotator_user,

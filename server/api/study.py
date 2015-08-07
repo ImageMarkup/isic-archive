@@ -52,15 +52,16 @@ class StudyResource(Resource):
         .errorResponse())
 
 
+
     @access.user
-    @loadmodel(model='folder', map={'study_id': 'study_folder'}, level=AccessType.READ)
-    def redirectTask(self, study_folder, params):
+    @loadmodel(model='study', plugin='isic_archive', map={'study_id': 'study'}, level=AccessType.READ)
+    def redirectTask(self, study, params):
         # TODO: it's not strictly necessary to load the study
 
         # TODO: move this to model
         active_annotation_study = self.model('annotation', 'isic_archive').findOne({
             'baseParentId': ISIC.AnnotationStudies.collection['_id'],
-            'meta.studyId': study_folder['_id'],
+            'meta.studyId': study['_id'],
             'meta.userId': self.getCurrentUser()['_id'],
             'meta.stopTime': None
         })

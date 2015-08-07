@@ -94,7 +94,7 @@ class AnnotationResource(Resource):
         .errorResponse())
 
 
-    @access.admin
+    @access.user
     @loadmodel(model='annotation', plugin='isic_archive', map={'annotation_id': 'annotation_item'}, level=AccessType.READ)
     def submitAnnotation(self, annotation_item, params):
         if annotation_item['baseParentId'] != ISIC.AnnotationStudies.collection['_id']:
