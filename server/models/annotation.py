@@ -28,6 +28,25 @@ class Annotation(Item):
         return annotation_item
 
 
+    def _find_query_filter(self, query):
+        annotation_query = {
+            'baseParentId': self.model('study', 'isic_archive').loadStudyCollection()['_id']
+        }
+        if query:
+            annotation_query.update(query)
+        return annotation_query
+
+
+    def find(self, query=None, **kwargs):
+        annotation_query = self._find_query_filter(query)
+        return Item.find(self, annotation_query, **kwargs)
+
+
+    def findOne(self, query=None, **kwargs):
+        annotation_query = self._find_query_filter(query)
+        return Item.findOne(self, annotation_query, **kwargs)
+
+
     def validate(self, doc):
         # TODO: implement
         # raise ValidationException

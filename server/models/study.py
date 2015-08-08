@@ -95,8 +95,10 @@ class Study(Folder):
 
 
     def getAnnotators(self, study):
-        for annotator_folder in self.model('folder').find({'parentId': study['_id']}):
-            yield self.model('user').load(annotator_folder['meta']['userId'], force=True)
+        annotator_folders = self.model('folder').find({'parentId': study['_id']})
+        return self.model('user').find({
+            '_id': {'$in': annotator_folders.distinct('meta.userId')}
+        })
 
 
     def getImages(self, study):
@@ -104,14 +106,17 @@ class Study(Folder):
         annotator_folder = self.model('folder').findOne({'parentId': study['_id']})
         if annotator_folder:
             # there will only be images if there is at least one annotator
-            for annotation_item in self.model('annotation', 'isic_archive').find({'parentId': annotator_folder['_id']}):
-                yield self.model('item').load(annotation_item['meta']['imageId'], force=True)
+            annotation_items = self.model('annotation', 'isic_archive').find({'folderId': annotator_folder['_id']})
+            image_ids = annotation_items.distinct('meta.imageId')
+        else:
+            image_ids = list()
+        return self.model('item').find({
+            '_id': {'$in': image_ids}
+        })
 
 
     def childAnnotations(self, study=None, annotator_user=None, image_item=None, state=None, **kwargs):
-        query = {
-            'baseParentId': self.loadStudyCollection()['_id']
-        }
+        query = dict()
         if study:
             query['meta.studyId'] = study['_id']
         if annotator_user:
@@ -128,7 +133,7 @@ class Study(Folder):
         return self.model('annotation', 'isic_archive').find(query, **kwargs)
 
 
-    def find(self, query=None, annotator_user=None, state=None, **kwargs):
+    def _find_query_filter(self, query, annotator_user, state):
         study_query = {
             'baseParentId': self.loadStudyCollection()['_id']
         }
@@ -142,7 +147,17 @@ class Study(Folder):
             study_query.update({
                 '_id': {'$in': annotations.distinct('meta.studyId')}
             })
+        return study_query
+
+
+    def find(self, query=None, annotator_user=None, state=None, **kwargs):
+        study_query = self._find_query_filter(query, annotator_user, state)
         return Folder.find(self, study_query, **kwargs)
+
+
+    def findOne(self, query=None, annotator_user=None, state=None, **kwargs):
+        study_query = self._find_query_filter(query, annotator_user, state)
+        return Folder.findOne(self, study_query, **kwargs)
 
 
     def validate(self, doc, **kwargs):
