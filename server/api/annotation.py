@@ -29,7 +29,7 @@ class AnnotationResource(Resource):
     @access.user
     @loadmodel(model='annotation', plugin='isic_archive', map={'annotation_id': 'annotation_item'}, level=AccessType.READ)
     def getAnnotation(self, annotation_item, params):
-        # return self.model('annotation', 'isic_archive').filter(annotation_item)
+        # return self.model('annotation', 'isic_archive').filter(annotation_item, , self.getCurrentUser())
         image = self.model('item').load(annotation_item['meta']['imageId'], force=True)
         study = self.model('study', 'isic_archive').load(annotation_item['meta']['studyId'], force=True)
         featureset = self.model('featureset', 'isic_archive').load(study['meta']['featuresetId'])

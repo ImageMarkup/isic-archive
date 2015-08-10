@@ -46,7 +46,7 @@ class StudyResource(Resource):
             except ValueError:
                 raise RestException('Query parameter "state" may only be "active" or "complete".')
 
-        return [self.model('study', 'isic_archive').filter(study_folder)
+        return [self.model('study', 'isic_archive').filter(study_folder, self.getCurrentUser())
                 for study_folder in self.model('study', 'isic_archive').find(**filters)]
 
     find.description = (
@@ -64,7 +64,7 @@ class StudyResource(Resource):
         if params.get('format') == 'csv':
             return self._getStudyCSV(study)
         else:
-            return self.model('study', 'isic_archive').filter(study)
+            return self.model('study', 'isic_archive').filter(study, self.getCurrentUser())
 
     getStudy.description = (
         Description('Get a study by ID.')
