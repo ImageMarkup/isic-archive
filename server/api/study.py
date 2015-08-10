@@ -3,6 +3,7 @@
 
 import csv
 from cStringIO import StringIO
+import functools
 import itertools
 
 import cherrypy
@@ -62,7 +63,16 @@ class StudyResource(Resource):
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
     def getStudy(self, study, params):
         if params.get('format') == 'csv':
-            return self._getStudyCSV(study)
+            cherrypy.response.stream = True
+            cherrypy.response.headers['Content-Type'] = 'text/csv'
+            cherrypy.response.headers['Content-Disposition'] = 'attachment; filename="%s"' % study['name']
+            # return functools.partial(self._getStudyCSVStream, study)
+            # workaround for Girder issue
+            def stream():
+                for chunk in self._getStudyCSVStream(study):
+                    yield chunk
+            return stream
+
         else:
             return self.model('study', 'isic_archive').filter(study, self.getCurrentUser())
 
@@ -74,7 +84,7 @@ class StudyResource(Resource):
         .errorResponse())
 
 
-    def _getStudyCSV(self, study):
+    def _getStudyCSVStream(self, study):
         featureset = self.model('featureset', 'isic_archive').load(study['meta']['featuresetId'])
         csv_fields = tuple(itertools.chain(
             ('study_name', 'study_id',
@@ -90,6 +100,9 @@ class StudyResource(Resource):
         csv_writer = csv.DictWriter(response_body, csv_fields, restval='')
 
         csv_writer.writeheader()
+        yield response_body.getvalue()
+        response_body.seek(0)
+        response_body.truncate()
 
         for annotator_user, image_item in itertools.product(
             self.model('study', 'isic_archive').getAnnotators(study).sort('login', pymongo.ASCENDING),
@@ -120,11 +133,9 @@ class StudyResource(Resource):
                             out_dict[feature_name] = feature_value[superpixel_num]
 
                         csv_writer.writerow(out_dict)
-
-        # TODO: stream?
-        cherrypy.response.stream = False
-        cherrypy.response.headers['Content-Type'] = 'text/csv'
-        return cherrypy.lib.file_generator(response_body)
+                        yield response_body.getvalue()
+                        response_body.seek(0)
+                        response_body.truncate()
 
 
     @access.user
