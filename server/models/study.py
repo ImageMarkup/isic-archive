@@ -135,7 +135,7 @@ class Study(Folder):
 
     def _find_query_filter(self, query, annotator_user, state):
         study_query = {
-            'baseParentId': self.loadStudyCollection()['_id']
+            'parentId': self.loadStudyCollection()['_id']
         }
         if query:
             study_query.update(query)
