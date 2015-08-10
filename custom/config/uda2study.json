@@ -193,8 +193,9 @@
           "name": "Border- unable to tell"
         }
       ]
-    },
-
+    }
+  ],
+  "region_features": [
     {
       "id": "c_lbrown",
       "name": ["Color", "Color- Light brown"],
@@ -239,9 +240,8 @@
       "id": "c_bluewhite",
       "name": ["Color", "Color- Blue/white"],
       "type": "check"
-    }
-  ],
-  "region_features": [
+    },
+
     {
       "id": "net_typ",
       "name": ["Network", "Network- Typical"],

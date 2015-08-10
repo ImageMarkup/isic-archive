@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import csv
+from cStringIO import StringIO
+import itertools
+
 import cherrypy
+import pymongo
 
 from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel
@@ -16,7 +21,8 @@ class StudyResource(Resource):
         self.resourceName = 'study'
 
         self.route('GET', (), self.find)
-        self.route('GET', (':study_id', 'task'), self.redirectTask)
+        self.route('GET', (':id',), self.getStudy)
+        self.route('GET', (':id', 'task'), self.redirectTask)
         self.route('POST', (), self.createStudy)
 
 
@@ -52,9 +58,77 @@ class StudyResource(Resource):
         .errorResponse())
 
 
+    @access.public
+    @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
+    def getStudy(self, study, params):
+        if params.get('format') == 'csv':
+            return self._getStudyCSV(study)
+        else:
+            return self.model('study', 'isic_archive').filter(study)
+
+    getStudy.description = (
+        Description('Get a study by ID.')
+        .param('id', 'The ID of the study.', paramType='path')
+        .param('format', 'The output format.',
+               paramType='query', required=False, enum=('csv',))
+        .errorResponse())
+
+
+    def _getStudyCSV(self, study):
+        featureset = self.model('featureset', 'isic_archive').load(study['meta']['featuresetId'])
+        csv_fields = tuple(itertools.chain(
+            ('study_name', 'study_id',
+             'user_login_name', 'user_id',
+             # TOOD: replace 'image_name' with 'isic_lesion_id'
+             'image_name', 'image_id',
+             'superpixel_id'),
+            # (feature['id'] for feature in featureset['image_features']),
+            (feature['id'] for feature in featureset['region_features'])
+        ))
+
+        response_body = StringIO()
+        csv_writer = csv.DictWriter(response_body, csv_fields, restval='')
+
+        csv_writer.writeheader()
+
+        for annotator_user, image_item in itertools.product(
+            self.model('study', 'isic_archive').getAnnotators(study).sort('login', pymongo.ASCENDING),
+            self.model('study', 'isic_archive').getImages(study).sort('name', pymongo.ASCENDING)
+        ):
+            # this will iterate either 0 or 1 times
+            for annotation in self.model('study', 'isic_archive').childAnnotations(
+                study=study,
+                annotator_user=annotator_user,
+                image_item=image_item,
+                state=self.model('study', 'isic_archive').State.COMPLETE
+            ):
+                # TODO: move this into the query
+                if 'region_features' in annotation['meta']['annotations']:
+                    superpixel_count = len(annotation['meta']['annotations']['region_features'].itervalues().next())
+                    for superpixel_num in xrange(superpixel_count):
+
+                        out_dict = {
+                            'study_name': study['name'],
+                            'study_id': str(study['_id']),
+                            'user_login_name': annotator_user['login'],
+                            'user_id': str(annotator_user['_id']),
+                            'image_name': image_item['name'],
+                            'image_id': str(image_item['_id']),
+                            'superpixel_id': superpixel_num,
+                        }
+                        for feature_name, feature_value in annotation['meta']['annotations']['region_features'].iteritems():
+                            out_dict[feature_name] = feature_value[superpixel_num]
+
+                        csv_writer.writerow(out_dict)
+
+        # TODO: stream?
+        cherrypy.response.stream = False
+        cherrypy.response.headers['Content-Type'] = 'text/csv'
+        return cherrypy.lib.file_generator(response_body)
+
 
     @access.user
-    @loadmodel(model='study', plugin='isic_archive', map={'study_id': 'study'}, level=AccessType.READ)
+    @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
     def redirectTask(self, study, params):
         # TODO: it's not strictly necessary to load the study
 
@@ -75,8 +149,7 @@ class StudyResource(Resource):
     redirectTask.cookieAuth = True
     redirectTask.description = (
         Description('Redirect to an active annotation study task.')
-        .param('study_id', 'The study to search for annotation tasks in.',
-               paramType='path', required=True)
+        .param('id', 'The study to search for annotation tasks in.', paramType='path')
         .errorResponse())
 
 
