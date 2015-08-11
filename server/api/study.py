@@ -80,7 +80,7 @@ class StudyResource(Resource):
         Description('Get a study by ID.')
         .param('id', 'The ID of the study.', paramType='path')
         .param('format', 'The output format.',
-               paramType='query', required=False, enum=('csv',))
+               paramType='query', required=False, enum=('csv', 'json'), default='json')
         .errorResponse())
 
 

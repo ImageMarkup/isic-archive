@@ -90,7 +90,7 @@ class AnnotationResource(Resource):
 
     getAnnotation.description = (
         Description('Get annotation details.')
-        .param('annotation_id', 'The ID of the annotation to be fetched.', paramType='path', required=True)
+        .param('annotation_id', 'The ID of the annotation to be fetched.', paramType='path')
         .errorResponse())
 
 
@@ -122,6 +122,6 @@ class AnnotationResource(Resource):
 
     submitAnnotation.description = (
         Description('Submit a completed annotation.')
-        .param('annotation_id', 'The ID of the annotation to be submitted.', paramType='path', required=True)
+        .param('annotation_id', 'The ID of the annotation to be submitted.', paramType='path')
         .param('body', 'JSON containing the annotation parameters.', paramType='body', required=True)
         .errorResponse())
