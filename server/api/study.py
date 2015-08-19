@@ -66,12 +66,7 @@ class StudyResource(Resource):
             cherrypy.response.stream = True
             cherrypy.response.headers['Content-Type'] = 'text/csv'
             cherrypy.response.headers['Content-Disposition'] = 'attachment; filename="%s"' % study['name']
-            # return functools.partial(self._getStudyCSVStream, study)
-            # workaround for Girder issue
-            def stream():
-                for chunk in self._getStudyCSVStream(study):
-                    yield chunk
-            return stream
+            return functools.partial(self._getStudyCSVStream, study)
 
         else:
             return self.model('study', 'isic_archive').filter(study, self.getCurrentUser())
