@@ -6,7 +6,7 @@ girder.wrap(girder.views.HierarchyWidget, 'render', function (render) {
     render.call(this);
 
     // Add a link just below the widget
-    this.$('li a.g-edit-folder').after('<a class="gallery-link"><i class="icon-th"></i>Open as gallery</a>');
+    this.$('li a.g-download-folder').after('<a class="gallery-link"><i class="icon-th"></i>Open as gallery</a>');
 });
 
 
