@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import collections
 import datetime
 import itertools
 import mimetypes
@@ -39,9 +38,16 @@ class UDAResource(Resource):
 
 
     def _requireCollectionAccess(self, collection_name):
+        assert(collection_name in ('Phase 0', 'Phase 1a', 'Phase 1b'))
+
         collection = self.model('collection').findOne({'name': collection_name})
+        group = self.model('group').findOne({'name': collection_name})
         user = self.getCurrentUser()
+
         self.model('collection').requireAccess(collection, user, AccessType.READ)
+        if group['_id'] not in user.get('groups', []):
+            raise AccessException('access denied for user %s to group %s' % (user['_id'], collection_name))
+
         return collection
 
 

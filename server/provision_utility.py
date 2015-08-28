@@ -180,7 +180,7 @@ def initialSetup(info):
     ISIC.Phase1a = _ISICCollection(
         collection_name='Phase 1a',
         collection_description='Images that have passed initial QC review',
-        public=False,
+        public=True,
         group_name='Phase 1a',
         group_description='Users responsible for setting the normal and lesion boundaries, as well as defining the paint-by-number threshold'
     )
@@ -188,7 +188,7 @@ def initialSetup(info):
     ISIC.Phase1b = _ISICCollection(
         collection_name='Phase 1b',
         collection_description='Images that have passed novice review',
-        public=False,
+        public=True,
         group_name='Phase 1b',
         group_description='Users responsible for boundary review and editing of boundaries if necessary'
     )
