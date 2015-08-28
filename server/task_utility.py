@@ -71,7 +71,6 @@ class UDAResource(Resource):
             'Phase 0': '/uda/task/p0/%(folder_id)s',
             'Phase 1a': '/uda/task/p1a/%(folder_id)s',
             'Phase 1b': '/uda/task/p1b/%(folder_id)s',
-            'Phase 1c': '/uda/task/p1c/%(folder_id)s',
             'Phase 2': '/uda/task/p2/%(study_id)s'
         }
         for phase_name, task_url in sorted(PHASE_TASK_URLS.iteritems()):
@@ -233,15 +232,10 @@ class UDAResource(Resource):
         }
 
         # if necessary, load annotations from previous phase
-        PREVIOUS_PHASE_CODES = {
-            'Phase 1b': 'p1a',
-            'Phase 1c': 'p1b',
-        }
-        previous_phase_code = PREVIOUS_PHASE_CODES.get(phase_name)
-        if previous_phase_code:
+        if phase_name == 'Phase 1b':
             return_dict['loadAnnotation'] = True
 
-            previous_phase_annotation_file_name_ending = '-%s.json' % previous_phase_code
+            previous_phase_annotation_file_name_ending = '-%s.json' % 'p1a'
             for item_file in sorted(
                     self.model('item').childFiles(item),
                     key=operator.itemgetter('created'),
@@ -250,7 +244,7 @@ class UDAResource(Resource):
                 if item_file['name'].endswith(previous_phase_annotation_file_name_ending):
                     item_file_generator = self.model('file').download(item_file, headers=False)
                     previous_phase_annotation = json.loads(''.join(item_file_generator()))
-                    return_dict['annotation'] = previous_phase_annotation[previous_phase_code]['steps']
+                    return_dict['annotation'] = previous_phase_annotation['p1a']['steps']
                     break
             else:
                 # TODO: no file found, raise error
@@ -282,8 +276,7 @@ class UDAResource(Resource):
         phase_handlers = {
             # phase_full_lower: (phase_acronym, next_phase_collection)
             'Phase 1a': ('p1a', ISIC.Phase1b.collection),
-            'Phase 1b': ('p1b', ISIC.Phase1c.collection),
-            'Phase 1c': ('p1c', ISIC.LesionImages.collection),
+            'Phase 1b': ('p1b', ISIC.LesionImages.collection)
         }
         try:
             phase_acronym, next_phase_collection = phase_handlers[markup_dict['phase']]
@@ -402,7 +395,6 @@ class TaskHandler(Resource):
         self.route('GET', ('p0', ':folder_id'), self.p0TaskRedirect)
         self.route('GET', ('p1a', ':folder_id'), self.p1aTaskRedirect)
         self.route('GET', ('p1b', ':folder_id'), self.p1bTaskRedirect)
-        self.route('GET', ('p1c', ':folder_id'), self.p1cTaskRedirect)
         self.route('GET', ('p2', ':study_id'), self.p2TaskRedirect)
         # TODO: cookieAuth decorator
 
@@ -448,13 +440,6 @@ class TaskHandler(Resource):
     def p1bTaskRedirect(self, folder, params):
         return self._taskRedirect('Phase 1b', folder, '/uda/annotate/%(item_id)s')
     p1bTaskRedirect.cookieAuth = True
-
-
-    @access.user
-    @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
-    def p1cTaskRedirect(self, folder, params):
-        return self._taskRedirect('Phase 1c', folder, '/uda/annotate/%(item_id)s')
-    p1cTaskRedirect.cookieAuth = True
 
 
     @access.user

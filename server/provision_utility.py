@@ -23,7 +23,6 @@ def addUserToAllUDAGroups(user):
         ISIC.Phase0,
         ISIC.Phase1a,
         ISIC.Phase1b,
-        ISIC.Phase1c,
         ISIC.LesionImages,
         ISIC.AnnotationStudies,
     ]:
@@ -144,7 +143,6 @@ class ISIC(object):
     Phase0 = None
     Phase1a = None
     Phase1b = None
-    Phase1c = None
     LesionImages = None
     AnnotationStudies = None
 
@@ -192,15 +190,7 @@ def initialSetup(info):
         collection_description='Images that have passed novice review',
         public=False,
         group_name='Phase 1b',
-        group_description='Users responsible for first pass review and editing of boundaries if necessary'
-    )
-
-    ISIC.Phase1c = _ISICCollection(
-        collection_name='Phase 1c',
-        collection_description='Images that have passed trained review',
-        public=False,
-        group_name='Phase 1c',
-        group_description='Users responsible for signing off on the final series'
+        group_description='Users responsible for boundary review and editing of boundaries if necessary'
     )
 
     ISIC.LesionImages = _ISICCollection(
@@ -268,15 +258,9 @@ def initialSetup(info):
         )
         setupUdaTestUser(
             phase=ISIC.Phase1b,
-            username='udatrained',
-            password='udatrained',
-            label='Trained',
-        )
-        setupUdaTestUser(
-            phase=ISIC.Phase1c,
             username='udaexpert',
             password='udaexpert',
-            label='Expert',
+            label='Trained',
         )
         setupUdaTestUser(
             phase=ISIC.AnnotationStudies,

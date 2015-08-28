@@ -8,6 +8,7 @@ import operator
 import os
 
 from bson import ObjectId
+import pymongo
 
 from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel
@@ -26,6 +27,27 @@ class AnnotationResource(Resource):
         self.route('PUT', (':annotation_id',), self.submitAnnotation)
 
 
+    # TODO: move this to an image model
+    def _getSegmentationInfo(self, image):
+        # get the most recent file from p1b or p1c
+        item_file = self.model('file').findOne(
+            query={
+                'itemId': image['_id'],
+                'name': {'$regex': 'p1[bc]\.json$'}
+            },
+            sort=[('created', pymongo.DESCENDING)]
+        )
+        if item_file:
+            item_file_generator = self.model('file').download(item_file, headers=False)
+            segmentation_info = json.loads(''.join(item_file_generator()))
+
+            # this first dict level will always contain a single item called
+            #   'p1b' or 'p1c', but we're not sure which
+            return segmentation_info.values()[0]
+        else:
+            return None
+
+
     @access.user
     @loadmodel(model='annotation', plugin='isic_archive', map={'annotation_id': 'annotation_item'}, level=AccessType.READ)
     def getAnnotation(self, annotation_item, params):
@@ -38,20 +60,11 @@ class AnnotationResource(Resource):
             'image': image
         }
 
-        # load segmentation info from Phase 1c
-        for item_file in sorted(
-                self.model('item').childFiles(image),
-                key=operator.itemgetter('created'),
-                reverse=True
-        ):
-            if item_file['name'].endswith('p1c.json'):
-                item_file_generator = self.model('file').download(item_file, headers=False)
-                previous_phase_annotation = json.loads(''.join(item_file_generator()))
-                return_dict['annotation'] = previous_phase_annotation['p1c']['steps']
-                break
-        else:
+        segmentation_info = self._getSegmentationInfo(image)
+        if not segmentation_info:
             # TODO: no file found
             raise Exception()
+        return_dict['annotation'] = segmentation_info['steps']
 
         # transform featureset to legacy format
         legacy_featureset = dict()
