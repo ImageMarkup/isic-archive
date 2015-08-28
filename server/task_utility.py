@@ -3,10 +3,11 @@
 
 import datetime
 import itertools
+import json
 import mimetypes
 import operator
 import os
-import json
+import random
 
 import cherrypy
 from girder.api import access
@@ -420,9 +421,13 @@ class TaskHandler(Resource):
         if not items:
             raise RestException('Folder "%s" in collection "%s" is empty' % (folder['_id'], phase_name))
 
+        # this will help slightly with multiple users simultaneously segmenting
+        #   the same dataset, but still has a race condition for smaller datasets
+        task_item = random.choice(items)
+
         redirect_url = url_format % {
             'folder_id': folder['_id'],
-            'item_id': items[0]['_id']
+            'item_id': task_item['_id']
         }
         raise cherrypy.HTTPRedirect(redirect_url, status=307)
 
