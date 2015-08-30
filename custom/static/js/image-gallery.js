@@ -187,16 +187,6 @@ var appController = review_app.controller('ApplicationController', ['$scope', '$
 //            return res;
 //        };
 
-        $scope.safeApply = function( fn ) {
-            var phase = this.$root.$$phase;
-            if(phase == '$apply' || phase == '$digest') {
-                if(fn) { fn(); }
-            } else {
-                this.$apply(fn);
-            }
-        };
-
-
         // run me!
 
 //        $scope.getImages();

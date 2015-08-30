@@ -19,17 +19,14 @@ function updateLayout() {
     $("#annotationView").height(window.innerHeight);
     $("#toolContainer").height(window.innerHeight);
 
-    var scope = angular.element($("#angular_id")).scope();
-    scope.safeApply(function(){
-        console.log(window.innerWidth, window.innerHeight);
-        //1920 1106
-    });
+    externalApply();
 }
 
 function externalApply() {
     var scope = angular.element($("#angular_id")).scope();
-    scope.safeApply(function(){
-    });
+    if (!scope.$root.$$phase) {
+        scope.$apply();
+    }
 }
 
 window.onresize = updateLayout;

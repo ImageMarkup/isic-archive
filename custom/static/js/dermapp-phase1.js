@@ -50,14 +50,5 @@ var appController = derm_app.controller('ApplicationController', ['$scope', '$ro
                 $rootScope.imageviewer.loadImageWithURL(image_url);
             }
         });
-
-        $scope.safeApply = function (fn) {
-            var phase = this.$root.$$phase;
-            if (phase === '$apply' || phase === '$digest') {
-                if (fn) { fn(); }
-            } else {
-                this.$apply(fn);
-            }
-        };
     }
 ]);
