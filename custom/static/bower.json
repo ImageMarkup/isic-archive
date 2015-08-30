@@ -24,7 +24,6 @@
     "angular-ui-bootstrap-bower": "~0.10.0",
     "angular-mousetrap": "~1.0.0",
     "FileSaver": "*",
-    "acute-select": "~0.1.0",
     "amitava82-angular-multiselect": "*"
   }
 }
