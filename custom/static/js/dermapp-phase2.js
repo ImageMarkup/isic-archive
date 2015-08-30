@@ -20,7 +20,6 @@ var appController = derm_app.controller('ApplicationController', ['$scope', '$ro
         // global ready state variable
         $rootScope.applicationReady = false; // a hack to know when the rest has loaded (since ol3 won't init until dom does)
         $rootScope.imageviewer = undefined; // the ol3 viewer
-        $scope.active_image = undefined; // image metedata for currently viewed image
 
         var api_user_url = '/api/v1/user/me';
         $rootScope.user = {};
@@ -40,14 +39,6 @@ var appController = derm_app.controller('ApplicationController', ['$scope', '$ro
             $rootScope.task_start = Date.now(); // global start time for this task
 
             updateLayout();
-        });
-
-        $rootScope.$watch('active_image', function (newImage, oldValue) {
-            if ($rootScope.applicationReady) {
-                $rootScope.imageviewer.clearCurrentImage();
-                var image_url = '/api/v1/item/' + newImage._id;
-                $rootScope.imageviewer.loadImageWithURL(image_url);
-            }
         });
 
         $scope.safeApply = function (fn) {
