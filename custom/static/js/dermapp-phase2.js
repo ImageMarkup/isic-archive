@@ -6,16 +6,18 @@
 var derm_app = angular.module('DermApp', ['ui.bootstrap', 'ngSanitize', 'xml', 'ui.select']);
 derm_app.value("ol", ol);
 
-derm_app.config(function ($httpProvider) {
+derm_app.config(function ($httpProvider, $logProvider) {
     $httpProvider.defaults.xsrfCookieName = 'girderToken';
     $httpProvider.defaults.xsrfHeaderName = 'Girder-Token';
+
+    $logProvider.debugEnabled(true);
 });
 
 // Initialization of angular app controller with necessary scope variables. Inline declaration of external variables
 // needed within the controller's scope. State variables (available between controllers using $rootScope). Necessary to
 // put these in rootScope to handle pushed data via websocket service.
-var appController = derm_app.controller('ApplicationController', ['$scope', '$rootScope', '$location', '$http', '$document', 'olViewer',
-    function ($scope, $rootScope, $location, $http, $document, olViewer) {
+var appController = derm_app.controller('ApplicationController', ['$scope', '$rootScope', '$location', '$http', '$document', '$log', 'olViewer',
+    function ($scope, $rootScope, $location, $http, $document, $log, olViewer) {
 
         // global ready state variable
         $rootScope.applicationReady = false; // a hack to know when the rest has loaded (since ol3 won't init until dom does)
@@ -33,6 +35,7 @@ var appController = derm_app.controller('ApplicationController', ['$scope', '$ro
 
         // main application, gives a bit of a delay before loading everything
         $document.ready(function () {
+            $log.debug('DOM ready');
             $rootScope.imageviewer = new olViewer({'div' : 'annotationView'});
             $rootScope.applicationReady = true;
 
@@ -80,7 +83,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
         });
 
         $scope.selected = function() {
-            console.log("selected", $scope.annotation_model);
+            $log.debug("selected", $scope.annotation_model);
         };
 
         $scope.loadTasklist = function () {
@@ -291,8 +294,8 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
         };
 
         $scope.submitAnnotations = function () {
-            console.log( $scope );
-            console.log('submit annotations happens here');
+            $log.debug( $scope );
+            $log.debug('submit annotations happens here');
 
             //var submit_url = '/api/v1/annotation/' + $scope.current_annotation._id;
             var submit_url = '/api/v1/annotation/' + $scope.annotation_item_id;
@@ -319,7 +322,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             // just making things explicit for readability's sake
             var features = $rootScope.imageviewer.getFeatures();
 
-            console.log('current step features', features);
+            $log.debug('current step features', features);
 
             var submitTime = Date.now();
 
@@ -380,7 +383,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                     }
                     else {
                         // this is the first instance of the annotation, set the create date and field of view as well
-                        console.log('this is the first annotation for this step, creating');
+                        $log.debug('this is the first annotation for this step, creating');
 
                         geojsonfeatures = $scope.formatter.writeFeatures(features);
 
@@ -395,9 +398,9 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                 }
             }
             else {
-                console.log('don\'t show up here');
+                $log.debug('don\'t show up here');
             }
-            console.log($scope.current_annotation);
+            $log.debug($scope.current_annotation);
         };
     }
 ]);
