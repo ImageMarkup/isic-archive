@@ -1,11 +1,12 @@
 'use strict';
+/*global $, angular*/
 /*jslint browser: true*/
 
 // Initialization of angular root application
 var derm_app = angular.module('DermApp', ['ui.bootstrap', 'ngSanitize', 'xml']);
 derm_app.value("ol", ol);
 
-derm_app.config(function($httpProvider) {
+derm_app.config(function ($httpProvider) {
     $httpProvider.defaults.xsrfCookieName = 'girderToken';
     $httpProvider.defaults.xsrfHeaderName = 'Girder-Token';
 });

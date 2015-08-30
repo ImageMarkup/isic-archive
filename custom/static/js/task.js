@@ -23,6 +23,3 @@ var appController = review_app.controller('TaskController', ['$scope', '$http', 
 
         $scope.update();
     }]);
-
-
-

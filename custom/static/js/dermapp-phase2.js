@@ -1,13 +1,14 @@
 'use strict';
+/*global angular, ol, Mousetrap, console*/
 /*jslint browser: true*/
 
 // Initialization of angular root application
 var derm_app = angular.module('DermApp', ['ui.bootstrap', 'ngSanitize', 'xml', 'ui.select']);
 derm_app.value("ol", ol);
 
-derm_app.config(function($httpProvider) {
-  $httpProvider.defaults.xsrfCookieName = 'girderToken';
-  $httpProvider.defaults.xsrfHeaderName = 'Girder-Token';
+derm_app.config(function ($httpProvider) {
+    $httpProvider.defaults.xsrfCookieName = 'girderToken';
+    $httpProvider.defaults.xsrfHeaderName = 'Girder-Token';
 });
 
 // Initialization of angular app controller with necessary scope variables. Inline declaration of external variables
@@ -279,7 +280,8 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
                 if (question_shortname in $scope.annotation_model) {
                     $scope.annotation_model[question_shortname] = tiles;
-                } else {
+                }
+                else {
                     $scope.annotation_model[question_shortname] = tiles;
                 }
 
