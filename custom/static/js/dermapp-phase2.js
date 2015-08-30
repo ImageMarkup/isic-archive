@@ -166,19 +166,18 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
         };
 
         $scope.selectTileAnnotation = function (theTile) {
-
+            var question_shortname;
             // save the previous tile if anything is there
 
             if ($scope.selected_annotation) {
 
                 var tiles = $rootScope.imageviewer.grabCurrentTiles().slice(0);
 
-                var question_shortname = $scope.selected_annotation.question.id;
+                question_shortname = $scope.selected_annotation.question.id;
 
                 if (question_shortname in $scope.annotation_model) {
                     $scope.annotation_model[question_shortname] = tiles;
-                }else
-                {
+                } else {
                     $scope.annotation_model[question_shortname] = tiles;
                 }
 
@@ -188,7 +187,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             // now select the new tile
 
             $scope.selected_annotation = theTile;
-            var question_shortname = $scope.selected_annotation.question.id;
+            question_shortname = $scope.selected_annotation.question.id;
 
             if (question_shortname in $scope.annotation_model) {
                 $rootScope.imageviewer.loadTiles($scope.annotation_model[question_shortname]);
@@ -291,7 +290,6 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             }
 
             $scope.showReview = true;
-
         };
 
         $scope.hideReview = function () {
@@ -304,7 +302,6 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             $rootScope.imageviewer.selectAnnotationLabel($scope.certaintyModel);
 
             $scope.showReview = false;
-
         };
 
         $scope.submitAnnotations = function () {
@@ -323,7 +320,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                 'annotations': $scope.annotation_model
             };
 
-            $http.put(submit_url, annotation_to_store).success(function (response) {
+            $http.put(submit_url, annotation_to_store).success(function () {
                 window.location.replace('/uda/task');
             });
         };
@@ -345,6 +342,8 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             if (features.length) {
 
                 if ($scope.step_config && $scope.step_config.type) {
+                    var geojsonfeatures;
+                    var singleAnnotation;
 
                     // if we're in teh superpixel mode, discard the placehold feature and make your own from the external parameters
                     // ugly but it should work.
@@ -363,9 +362,9 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                         // set the geometry of this feature to be the screen extents
                         feature.setGeometry(new ol.geom.Point([0, 0]));
 
-                        var geojsonfeatures = $scope.formatter.writeFeatures([feature]);
+                        geojsonfeatures = $scope.formatter.writeFeatures([feature]);
 
-                        var singleAnnotation = {
+                        singleAnnotation = {
                             markup : geojsonfeatures,
                             startTime : $scope.step_start,
                             submitTime : submitTime
@@ -375,32 +374,31 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                     }
                     else if (current_step in Object.keys($scope.current_annotation.steps)) {
 
-                    // we have an existing annotation, just update the features and modify date
-//                    var stepAnnotation = currentAnnotation.steps[current_step]
+                        // we have an existing annotation, just update the features and modify date
+                        //var stepAnnotation = currentAnnotation.steps[current_step]
 
-//                    var geojson  = new ol.parser.GeoJSON;
-//                    var features = vectorsource.getFeatures();
-//                    var json     = geojson.writeFeatures(features);
+                        //var geojson  = new ol.parser.GeoJSON;
+                        //var features = vectorsource.getFeatures();
+                        //var json     = geojson.writeFeatures(features);
 
-                    var geojsonfeatures = $scope.formatter.writeFeatures(features);
+                        geojsonfeatures = $scope.formatter.writeFeatures(features);
 
-                    var singleAnnotation = {
-                        markup : geojsonfeatures,
-                        startTime : $scope.step_start,
-                        submitTime : submitTime
-                    };
+                        singleAnnotation = {
+                            markup : geojsonfeatures,
+                            startTime : $scope.step_start,
+                            submitTime : submitTime
+                        };
 
-                    $scope.current_annotation.steps[current_step] = singleAnnotation;
+                        $scope.current_annotation.steps[current_step] = singleAnnotation;
 
                     }
-                    else
-                    {
+                    else {
                         // this is the first instance of the annotation, set the create date and field of view as well
                         console.log('this is the first annotation for this step, creating');
 
-                        var geojsonfeatures = $scope.formatter.writeFeatures(features);
+                        geojsonfeatures = $scope.formatter.writeFeatures(features);
 
-                        var singleAnnotation = {
+                        singleAnnotation = {
                             markup : geojsonfeatures,
                             startTime : $scope.step_start,
                             submitTime : submitTime
@@ -410,8 +408,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
                     }
                 }
             }
-            else
-            {
+            else {
                 console.log('don\'t show up here');
             }
             console.log($scope.current_annotation);
