@@ -14,8 +14,8 @@ derm_app.config(function ($httpProvider) {
 // Initialization of angular app controller with necessary scope variables. Inline declaration of external variables
 // needed within the controller's scope. State variables (available between controllers using $rootScope). Necessary to
 // put these in rootScope to handle pushed data via websocket service.
-var appController = derm_app.controller('ApplicationController', ['$scope', '$rootScope', '$location', '$timeout', '$http', 'olViewer',
-    function ($scope, $rootScope, $location, $timeout, $http, olViewer) {
+var appController = derm_app.controller('ApplicationController', ['$scope', '$rootScope', '$location', '$http', '$document', 'olViewer',
+    function ($scope, $rootScope, $location, $http, $document, olViewer) {
 
         // global ready state variable
         $rootScope.applicationReady = false; // a hack to know when the rest has loaded (since ol3 won't init until dom does)
@@ -32,19 +32,15 @@ var appController = derm_app.controller('ApplicationController', ['$scope', '$ro
         $("#angular_id").height(window.innerHeight);
         $("#map").height(window.innerHeight);
 
-        $timeout(function () {
-            $rootScope.ApplicationInit();
-        }, 10);
-
         // main application, gives a bit of a delay before loading everything
-        $rootScope.ApplicationInit = function () {
+        $document.ready(function () {
             $rootScope.imageviewer = new olViewer({'div' : 'annotationView'});
             $rootScope.applicationReady = true;
 
             $rootScope.task_start = Date.now(); // global start time for this task
 
             updateLayout();
-        };
+        });
 
         $rootScope.$watch('active_image', function (newImage, oldValue) {
             if ($rootScope.applicationReady) {
