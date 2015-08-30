@@ -94,8 +94,8 @@
                         <span>ISIC Annotation Tool : Exhaustive Annotation</span>
                     </div>
                     <div class="btn-group btn-group-block">
-                        <div class="btn">
-                            <span>User: {{ user.login }}</span>
+                        <div class="btn" ng-controller="UserController">
+                            <span ng-cloak ng-show="user">User: {{ user.firstName}} {{ user.lastName }} ({{ user.login }})</span>
                         </div>
                         <div class="btn">
                             <span>{{ phase }}</span>

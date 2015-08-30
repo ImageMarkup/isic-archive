@@ -16,18 +16,12 @@ derm_app.config(function ($httpProvider, $logProvider) {
 // Initialization of angular app controller with necessary scope variables. Inline declaration of external variables
 // needed within the controller's scope. State variables (available between controllers using $rootScope). Necessary to
 // put these in rootScope to handle pushed data via websocket service.
-var appController = derm_app.controller('ApplicationController', ['$scope', '$rootScope', '$location', '$http', '$document', '$log', 'olViewer',
-    function ($scope, $rootScope, $location, $http, $document, $log, olViewer) {
+var appController = derm_app.controller('ApplicationController', ['$scope', '$rootScope', '$location', '$document', '$log', 'olViewer',
+    function ($scope, $rootScope, $location, $document, $log, olViewer) {
 
         // global ready state variable
         $rootScope.applicationReady = false; // a hack to know when the rest has loaded (since ol3 won't init until dom does)
         $rootScope.imageviewer = undefined; // the ol3 viewer
-
-        var api_user_url = '/api/v1/user/me';
-        $rootScope.user = {};
-        $http.get(api_user_url).then(function (response) {
-            $rootScope.user = response.data;
-        });
 
         // initial layout
         $("#angular_id").height(window.innerHeight);
@@ -58,6 +52,25 @@ var appController = derm_app.controller('ApplicationController', ['$scope', '$ro
 ]);
 
 
+derm_app.controller('UserController', ['$scope', '$http', '$log',
+    function ($scope, $http, $log) {
+        var apiUserUrl = '/api/v1/user/me';
+        //$scope.user = {};
+        $http.get(apiUserUrl).then(function (response) {
+            $log.debug('Got user response', response);
+            if (response.data) {
+                $scope.user = response.data;
+            } else {
+                $scope.user = {
+                    login: 'not logged in',
+                    firstName: 'Anonymous',
+                    lastName: ''
+                };
+            }
+        });
+    }
+]);
+
 var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$sanitize', '$http', '$modal', '$log',
     function ($scope, $rootScope, $timeout, $sanitize, $http, $modal, $log) {
         $scope.annotation_model = {};
@@ -76,8 +89,8 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
         $rootScope.showingSegmentation = true;
 
-        $rootScope.$watch('user', function (newUser, oldUser) {
-            if (newUser._id) {
+        $rootScope.$watch('applicationReady', function () {
+            if ($rootScope.applicationReady) {
                 $scope.loadTasklist();
             }
         });
