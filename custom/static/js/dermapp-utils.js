@@ -70,22 +70,6 @@ function externalApply() {
     })
 }
 
-function toggleDebug() {
-
-    var scope = angular.element($("#angular_id")).scope();
-
-    console.log('Angular state before: ', scope.debug);
-
-    scope.safeApply(function(){
-
-       scope.debug = !scope.debug;
-
-    });
-
-    console.log('Angular state before: ', scope.debug);
-
-}
-
 window.onresize = updateLayout;
 
 
