@@ -38,7 +38,7 @@ var appController = derm_app.controller('ApplicationController', ['$scope', '$ro
 
         // main application, gives a bit of a delay before loading everything
         $rootScope.ApplicationInit = function () {
-            $rootScope.imageviewer = new olViewer({'div' : 'annotationView'});
+            $rootScope.imageviewer = new olViewer($('#map')[0]);
             $rootScope.applicationReady = true;
         };
 

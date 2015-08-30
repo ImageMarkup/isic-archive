@@ -5,9 +5,9 @@
 var olViewer = derm_app.factory('olViewer',
     function (ol, $http, $log, xmlParser) {
 
-        var olViewer = function (viewer_options) {
+        var olViewer = function (mapContainer) {
 
-            $log.debug('Creating OLViewer with opts', viewer_options, this);
+            $log.debug('Creating olViewer:', this);
 
             var self = this;
 
@@ -122,7 +122,7 @@ var olViewer = derm_app.factory('olViewer',
             // initialize map (imageviewer)
             this.map = new ol.Map({
                 renderer: 'canvas',
-                target: 'map'
+                target: mapContainer
             });
 
             // set map event handlers

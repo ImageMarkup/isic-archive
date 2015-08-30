@@ -30,7 +30,7 @@ var appController = derm_app.controller('ApplicationController', ['$scope', '$ro
         // main application, gives a bit of a delay before loading everything
         $document.ready(function () {
             $log.debug('DOM ready');
-            $rootScope.imageviewer = new olViewer({'div' : 'annotationView'});
+            $rootScope.imageviewer = new olViewer($('#map')[0]);
             $rootScope.applicationReady = true;
 
             $rootScope.task_start = Date.now(); // global start time for this task
