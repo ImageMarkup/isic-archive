@@ -119,7 +119,7 @@
                             <div ng-switch-when="select">
                                 <label>{{ feature.name }}</label>
                                 <ui-select
-                                        ng-model="annotation_model[feature.shortname]"
+                                        ng-model="annotation_values[feature.shortname]"
                                         search-enabled="false"
                                         on-select="selected($item, $model)"
                                         on-remove="selected($item, $model)"
@@ -132,7 +132,7 @@
                                     </ui-select-choices>
                                 </ui-select>
                                 <!-- TODO: put this on the same line -->
-                                <div class="btn btn-sm pull-right" ng-show="annotation_model[feature.shortname]">
+                                <div class="btn btn-sm pull-right" ng-show="annotation_values[feature.shortname]">
                                     <span>√</span>
                                 </div>
                             </div>
@@ -171,7 +171,7 @@
                                          is-open="true">
                             <div class="colorhover"
                                  ng-repeat="question in tile.questions"
-                                 ng-class="{selected: selected_annotation == this}"
+                                 ng-class="{selected: selected_question_id === question.id}"
                                  ng-show="hasValidTile(question.id)"
                                  ng-mouseover="hoverTiles(question)">
                                 <span class="pull-right " ng-show="hasValidTile(question.id)">√</span>
@@ -184,7 +184,7 @@
                             <div ng-repeat="tile in annotation_options.tiles">
                                 <div class="colorhover"
                                      ng-repeat="question in tile.questions"
-                                     ng-class="{selected: selected_annotation == this}"
+                                     ng-class="{selected: selected_question_id === question.id}"
                                      ng-show="hasValidTile(question.id)"
                                      ng-mouseover="hoverTiles(question)">
                                     <span class="pull-right" ng-show="hasValidTile(question.id)">√</span>
@@ -200,8 +200,8 @@
                                          ng-repeat="tile in annotation_options.tiles"
                                          ng-show="filterval.length == 0">
                             <div ng-repeat="question in tile.questions"
-                                 ng-class="{selected: selected_annotation == this}"
-                                 ng-click="selectTileAnnotation(this)">
+                                 ng-class="{selected: selected_question_id === question.id}"
+                                 ng-click="selectQuestion(question.id)">
                                 <div ng-show="([question.name] | filter: filterval).length > 0">
                                     <span class="pull-right" ng-show="hasValidTile(question.id)">√</span>
                                     <span>{{question.name}}</span>
@@ -211,8 +211,8 @@
                         <accordion-group heading="Search" ng-show="filterval.length" is-open="true">
                             <div ng-repeat="tile in annotation_options.tiles">
                                 <div ng-repeat="question in tile.questions"
-                                     ng-class="{selected: selected_annotation == this}"
-                                     ng-click="selectTileAnnotation(this)">
+                                     ng-class="{selected: selected_question_id === question.id}"
+                                     ng-click="selectQuestion(question.id)">
                                     <div ng-show="([question.name] | filter: filterval).length > 0">
                                         <span class="pull-right" ng-show="hasValidTile(question.id)">√</span>
                                         <span>{{question.name}}</span>
