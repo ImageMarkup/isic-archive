@@ -95,7 +95,6 @@ derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$san
             var annotation_detail_url = '/api/v1/annotation/' + annotation_item_id;
 
             $http.get(annotation_detail_url).success(function (data) {
-                $scope.current_annotation = null; // TODO
                 $scope.phase = 'Phase 2';
                 $scope.annotation_source = data.annotation;
                 $scope.current_image = data.image;
@@ -105,13 +104,6 @@ derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$san
                 $rootScope.showingSegmentation = true;
                 $rootScope.imageviewer.loadPainting(segmentation_url);
             });
-        };
-
-        $scope.getCurrentAnnotation = function () {
-            if ($rootScope.applicationReady) {
-                return $scope.current_annotation;
-            }
-            return undefined;
         };
 
         $scope.hasValidTile = function (_id) {
@@ -284,7 +276,6 @@ derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$san
             $log.debug( $scope );
             $log.debug('submit annotations happens here');
 
-            //var submit_url = '/api/v1/annotation/' + $scope.current_annotation._id;
             var submit_url = '/api/v1/annotation/' + $scope.annotation_item_id;
 
             var taskcomplete_time = Date.now();
@@ -299,92 +290,6 @@ derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$san
             $http.put(submit_url, annotation_to_store).success(function () {
                 window.location.replace('/uda/task');
             });
-        };
-
-        // setters
-        $scope.saveCurrentStepAnnotation = function () {
-            // just making things explicit for readability's sake
-            var features = $rootScope.imageviewer.getFeatures();
-
-            $log.debug('current step features', features);
-
-            var submitTime = Date.now();
-
-            var current_step = $scope.step;
-
-            if (features.length) {
-
-                if ($scope.step_config && $scope.step_config.type) {
-                    var geojsonfeatures;
-                    var singleAnnotation;
-
-                    // if we're in teh superpixel mode, discard the placehold feature and make your own from the external parameters
-                    // ugly but it should work.
-                    if ($scope.step_config.type === 'superpixel') {
-
-                        var segmentationPackage = $rootScope.imageviewer.getSegmentationPackage();
-
-                        var feature = new ol.Feature({
-                            title: 'superpixel',
-                            longtitle: 'superpixel region',
-                            icon: '',
-                            source: $scope.phase,
-                            parameters: segmentationPackage
-                        });
-
-                        // set the geometry of this feature to be the screen extents
-                        feature.setGeometry(new ol.geom.Point([0, 0]));
-
-                        geojsonfeatures = $scope.formatter.writeFeatures([feature]);
-
-                        singleAnnotation = {
-                            markup : geojsonfeatures,
-                            startTime : $scope.step_start,
-                            submitTime : submitTime
-                        };
-
-                        $scope.current_annotation.steps[current_step] = singleAnnotation;
-                    }
-                    else if (current_step in Object.keys($scope.current_annotation.steps)) {
-
-                        // we have an existing annotation, just update the features and modify date
-                        //var stepAnnotation = currentAnnotation.steps[current_step]
-
-                        //var geojson  = new ol.parser.GeoJSON;
-                        //var features = vectorsource.getFeatures();
-                        //var json     = geojson.writeFeatures(features);
-
-                        geojsonfeatures = $scope.formatter.writeFeatures(features);
-
-                        singleAnnotation = {
-                            markup : geojsonfeatures,
-                            startTime : $scope.step_start,
-                            submitTime : submitTime
-                        };
-
-                        $scope.current_annotation.steps[current_step] = singleAnnotation;
-
-                    }
-                    else {
-                        // this is the first instance of the annotation, set the create date and field of view as well
-                        $log.debug('this is the first annotation for this step, creating');
-
-                        geojsonfeatures = $scope.formatter.writeFeatures(features);
-
-                        singleAnnotation = {
-                            markup : geojsonfeatures,
-                            startTime : $scope.step_start,
-                            submitTime : submitTime
-                        };
-
-                        $scope.current_annotation.steps[current_step] = singleAnnotation;
-                    }
-                }
-            }
-            else {
-                $log.debug('don\'t show up here');
-            }
-            $log.debug($scope.current_annotation);
         };
     }
 ]);
