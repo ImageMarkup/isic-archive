@@ -66,6 +66,7 @@ derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$san
         $scope.hover_annotation = undefined;
 
         $scope.certaintyModel = 'definite';
+        $scope.phase = 'Phase 2';
 
         $scope.showReview = false;
         $scope.filterval = '';
@@ -76,7 +77,7 @@ derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$san
 
         $rootScope.$watch('applicationReady', function () {
             if ($rootScope.applicationReady) {
-                $scope.loadTasklist();
+                loadAnnotationTask();
             }
         });
 
@@ -84,7 +85,7 @@ derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$san
             $log.debug("selected", $scope.annotation_model);
         };
 
-        $scope.loadTasklist = function () {
+        function loadAnnotationTask () {
             var urlvals = window.location.pathname.split('/');
             var annotation_item_id = urlvals[urlvals.length - 1];
             $scope.annotation_item_id = annotation_item_id;
@@ -93,7 +94,6 @@ derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$san
 
             $http.get(annotation_detail_url).success(function (data) {
                 //data.segmentation_info; // unused
-                $scope.phase = 'Phase 2';
                 $scope.current_image = data.image;
                 $scope.annotation_options = data.variables;
 
@@ -102,7 +102,7 @@ derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$san
                 $rootScope.imageviewer.loadPainting(segmentation_url);
                 $scope.task_start = Date.now(); // global start time for this task
             });
-        };
+        }
 
         $scope.hasValidTile = function (_id) {
             if (_id in $scope.annotation_model) {
