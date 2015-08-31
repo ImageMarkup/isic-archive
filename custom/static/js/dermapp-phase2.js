@@ -1,5 +1,5 @@
 'use strict';
-/*global $, angular, ol, Mousetrap*/
+/*global $, angular, ol*/
 /*jslint browser: true*/
 
 // Initialization of angular root application
@@ -63,15 +63,12 @@ derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$san
         $scope.annotation_options = undefined;
 
         $scope.selected_annotation = undefined;
-        $scope.hover_annotation = undefined;
 
         $scope.certaintyModel = 'definite';
         $scope.phase = 'Phase 2';
 
         $scope.showReview = false;
         $scope.filterval = '';
-
-        $scope.formatter = new ol.format.GeoJSON();
 
         $rootScope.showingSegmentation = true;
 
@@ -180,62 +177,6 @@ derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$san
                     $rootScope.imageviewer.selectAnnotationLabel(newValue);
                 }
             }
-        });
-
-        // shortcut key bindings -> takes you home to task list
-        Mousetrap.bind( ['ctrl+q'], function (evt) {
-            if (typeof (evt.preventDefault) === 'function') {
-                evt.preventDefault();
-            } else {
-                evt.returnValue = false;
-            }
-            $scope.$apply();
-        });
-
-        // shortcut key bindings -> takes you home to task list
-        Mousetrap.bind( ['space'], function (evt) {
-            if (typeof (evt.preventDefault) === 'function') {
-                evt.preventDefault();
-            } else {
-                evt.returnValue = false;
-            }
-
-            $scope.nextStep();
-            $scope.$apply();
-        });
-
-        Mousetrap.bind( ['ctrl+z'], function (evt) {
-            if (typeof (evt.preventDefault) === 'function') {
-                evt.preventDefault();
-            } else {
-                evt.returnValue = false;
-            }
-
-            $scope.previousStep();
-            $scope.$apply();
-        });
-
-        Mousetrap.bind( ['up'], function (evt) {
-            if (typeof (evt.preventDefault) === 'function') {
-                evt.preventDefault();
-            } else {
-                evt.returnValue = false;
-            }
-            $scope.increaseParameter();
-            $scope.$apply();
-
-        });
-
-        Mousetrap.bind( ['down'], function (evt) {
-            if (typeof (evt.preventDefault) === 'function') {
-                evt.preventDefault();
-            }
-            else {
-                evt.returnValue = false;
-            }
-            $scope.decreaseParameter();
-            $scope.$apply();
-
         });
 
         $scope.reviewAnnotations = function () {
