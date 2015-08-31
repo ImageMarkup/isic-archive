@@ -6,7 +6,7 @@ import os
 import cherrypy
 from girder import events
 from girder.models.model_base import ValidationException
-from girder.utility.server import _StaticFileRoute
+from girder.utility.server import staticFile, _StaticFileRoute
 
 from . import constants
 from .annotate import FillHandler
@@ -83,7 +83,7 @@ def load(info):
     info['serverRoot'].uda.annotate = StaticRouteWithId(os.path.join(info['pluginRootDir'], 'custom', 'annotate.html'))
 
     # "/uda/map/:id"
-    info['serverRoot'].uda.map = StaticRouteWithId(os.path.join(info['pluginRootDir'], 'custom', 'map.html'))
+    info['serverRoot'].uda.map = staticFile(os.path.join(info['pluginRootDir'], 'custom', 'map.html'))
 
     # "/uda/fill/:id" (POST only)
     info['serverRoot'].uda.fill = FillHandler()

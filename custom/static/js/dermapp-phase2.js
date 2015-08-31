@@ -55,8 +55,8 @@ derm_app.controller('UserController', ['$scope', '$http', '$log',
     }
 ]);
 
-derm_app.controller('AnnotationController', ['$scope', '$rootScope', '$http', '$log',
-    function ($scope, $rootScope, $http, $log) {
+derm_app.controller('AnnotationController', ['$scope', '$rootScope', '$location', '$http', '$log',
+    function ($scope, $rootScope, $location, $http, $log) {
         $rootScope.showingSegmentation = true;
 
         $scope.annotation_values = {};
@@ -70,8 +70,7 @@ derm_app.controller('AnnotationController', ['$scope', '$rootScope', '$http', '$
 
         $rootScope.$watch('applicationReady', function (ready) {
             if (ready === true) {
-                var urlvals = window.location.pathname.split('/');
-                $scope.annotation_item_id = urlvals[urlvals.length - 1];
+                $scope.annotation_item_id = $location.path().substring(1);
             }
         });
 

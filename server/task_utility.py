@@ -466,6 +466,6 @@ class TaskHandler(Resource):
         except StopIteration:
             raise RestException('Study "%s" has no annotation tasks for this user.' % study['_id'])
 
-        redirect_url = '/uda/map/%s' % annotation['_id']
+        redirect_url = '/uda/map#/%s' % annotation['_id']
         raise cherrypy.HTTPRedirect(redirect_url, status=307)
     p2TaskRedirect.cookieAuth = True
