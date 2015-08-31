@@ -34,7 +34,7 @@ def thumbnailhandler(item, params):
 
 thumbnailhandler.cookieAuth = True
 thumbnailhandler.description = (
-    Description('Retrieve the thumbnail for a given item.')
+    Description('Retrieve the thumbnail for a given image item.')
     .param('item_id', 'The item ID', paramType='path')
     .errorResponse())
 
@@ -46,19 +46,21 @@ def segmentationSourceHandler(item, params):
 
     files = ModelImporter.model('item').childFiles(item, sort=[('created', pymongo.DESCENDING)])
 
-    for firstFile in files:
-        if firstFile['mimeType'] == 'image/png':
+    for first_file in files:
+        if first_file['mimeType'] == 'image/png':
             # this is a hack; we should use negative lookahead assertions instead
-            if re.search(r'-p1.\.png$', firstFile['name']) and not re.search(r'-tile-p1.\.png$', firstFile['name']):
+            if re.search(r'-p1.\.png$', first_file['name']) and not re.search(r'-tile-p1.\.png$', first_file['name']):
                 break
     else:
         raise RestException('No source PNG file in item')
 
-    return ModelImporter.model('file').download(firstFile, headers=True)
+    file_download = ModelImporter.model('file').download(first_file, headers=True)
+    cherrypy.response.headers['Content-Disposition'] = 'inline; filename="%s"' % first_file['name']
+    return file_download
 
 segmentationSourceHandler.cookieAuth = True
 segmentationSourceHandler.description = (
-    Description('Retrieve the annotation json for a given item.')
+    Description('Retrieve segmentation source PNG image for a given image item.')
     .param('item_id', 'The item ID', paramType='path')
     .errorResponse())
 
@@ -70,18 +72,20 @@ def segmentationTileHandler(item, params):
 
     files = ModelImporter.model('item').childFiles(item, sort=[('created', pymongo.DESCENDING)])
 
-    for firstFile in files:
-        if firstFile['mimeType'] == 'image/png':
-            if re.search(r'-tile-p1.\.png$', firstFile['name']):
+    for first_file in files:
+        if first_file['mimeType'] == 'image/png':
+            if re.search(r'-tile-p1.\.png$', first_file['name']):
                 break
     else:
         raise RestException('No tile PNG file in item')
 
-    return ModelImporter.model('file').download(firstFile, headers=True)
+    file_download = ModelImporter.model('file').download(first_file, headers=True)
+    cherrypy.response.headers['Content-Disposition'] = 'inline; filename="%s"' % first_file['name']
+    return file_download
 
 segmentationTileHandler.cookieAuth = True
 segmentationTileHandler.description = (
-    Description('Retrieve the annotation json for a given item.')
+    Description('Retrieve segmentation tile PNG image for a given image item.')
     .param('item_id', 'The item ID', paramType='path')
     .errorResponse())
 
