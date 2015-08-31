@@ -92,7 +92,7 @@ class AnnotationResource(Resource):
                 {'header': header, 'questions': questions}
                 for header, questions in legacy_questions.iteritems()
             ]
-        return_dict['variables'] = legacy_featureset
+        return_dict['features'] = legacy_featureset
 
         return return_dict
 

@@ -76,7 +76,7 @@
             <div id="hoverBar">
                 <img id="objectinfo" style="display:none;" class="optionimage" src="/uda/static/na.jpg" />
             </div>
-            <div class="col-sm-3" id="toolContainer" ng-controller="AnnotationTool">
+            <div class="col-sm-3" id="toolContainer" ng-controller="AnnotationController">
                 <script type="text/ng-template" id="myModalContent.html" class="modalbase">
                     <div class="modal-body">
                         <div>
@@ -98,7 +98,7 @@
                             <span ng-cloak ng-show="user">User: {{ user.firstName}} {{ user.lastName }} ({{ user.login }})</span>
                         </div>
                         <div class="btn">
-                            <span>{{ phase }}</span>
+                            <span>Phase 2</span>
                         </div>
                     </div>
                     <div class="clearfix"></div>
@@ -107,122 +107,117 @@
 
 
                 <!-- Step content -->
-                <div class="step-header">
-                    <div class="btn-group">
-                        <div class="btn">Lesion-level</div>
+
+                <div ng-controller="ImageFeatureAnnotationController">
+                    <div class="step-header">
+                        <div class="btn-group">
+                            <div class="btn">Lesion-level</div>
+                        </div>
                     </div>
-                </div>
-                <div class="step-content" ng-repeat="feature_group in annotation_options.lesionlevel">
-                    <h3>{{ feature_group.header }}</h3>
-                    <div ng-repeat="feature in feature_group.questions">
-                        <div ng-switch="feature.type">
-                            <div ng-switch-when="select">
-                                <label>{{ feature.name }}</label>
-                                <ui-select
-                                        ng-model="annotation_values[feature.shortname]"
-                                        search-enabled="false"
-                                        on-select="selected($item, $model)"
-                                        on-remove="selected($item, $model)"
-                                        theme="bootstrap">
-                                    <ui-select-match placeholder="{{ feature.name }}">
-                                        {{ $select.selected.name }}
-                                    </ui-select-match>
-                                    <ui-select-choices repeat="option.id as option in feature.options">
-                                        <div ng-bind-html="option.name"></div>
-                                    </ui-select-choices>
-                                </ui-select>
-                                <!-- TODO: put this on the same line -->
-                                <div class="btn btn-sm pull-right" ng-show="annotation_values[feature.shortname]">
-                                    <span>√</span>
+                    <div class="step-content" ng-repeat="feature_group in features">
+                        <h3>{{ feature_group.header }}</h3>
+                        <div ng-repeat="feature in feature_group.questions">
+                            <div ng-switch="feature.type">
+                                <div ng-switch-when="select">
+                                    <label>{{ feature.name }}</label>
+                                    <ui-select
+                                            ng-model="annotation_values[feature.shortname]"
+                                            search-enabled="false"
+                                            on-select="selected($item, $model)"
+                                            on-remove="selected($item, $model)"
+                                            theme="bootstrap">
+                                        <ui-select-match placeholder="{{ feature.name }}">
+                                            {{ $select.selected.name }}
+                                        </ui-select-match>
+                                        <ui-select-choices repeat="option.id as option in feature.options">
+                                            <div ng-bind-html="option.name"></div>
+                                        </ui-select-choices>
+                                    </ui-select>
+                                    <!-- TODO: put this on the same line -->
+                                    <div class="btn btn-sm pull-right" ng-show="annotation_values[feature.shortname]">
+                                        <span>√</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-
-
-                <div class="step-header">
-                    <div class="btn-group">
-                        <div class="btn">Regional</div>
+                <div ng-controller="RegionFeatureAnnotationController">
+                    <div class="step-header">
+                        <div class="btn-group">
+                            <div class="btn">Regional</div>
+                        </div>
+                        <div class="btn-group pull-right" ng-hide="showReview">
+                            <label class="btn btn-inverse">Confidence</label>
+                            <label class="btn" ng-model="certaintyModel" btn-radio="'definite'">100%</label>
+                            <label class="btn" ng-model="certaintyModel" btn-radio="'possible'">50%?</label>
+                        </div>
                     </div>
-                    <div class="btn-group pull-right" ng-hide="showReview">
-                        <label class="btn btn-inverse">Confidence</label>
-                        <label class="btn" ng-model="certaintyModel" btn-radio="'definite'">100%</label>
-                        <label class="btn" ng-model="certaintyModel" btn-radio="'possible'">50%?</label>
+
+                    <div class="step-content" ng-hide="showReview">
+                        <input type="text" class="form-control" ng-model="filterval" placeholder="Filter">
                     </div>
-                </div>
 
-                <div class="step-content" ng-hide="showReview">
-                    <input type="text" class="form-control" ng-model="filterval" placeholder="Filter">
-                </div>
-
-
-
-
-
-
-
-
-                <div class="step-content" ng-show="showReview" ng-cloak>
-                    <accordion close-others="false">
-                        <accordion-group heading="{{tile.header}}"
-                                         ng-repeat="tile in annotation_options.tiles"
-                                         is-open="true">
-                            <div class="colorhover"
-                                 ng-repeat="question in tile.questions"
-                                 ng-class="{selected: selected_question_id === question.id}"
-                                 ng-show="hasValidTile(question.id)"
-                                 ng-mouseover="hoverTiles(question)">
-                                <span class="pull-right " ng-show="hasValidTile(question.id)">√</span>
-                                <span>{{question.name}}</span>
-                            </div>
-                        </accordion-group>
-                        <accordion-group heading="Search"
-                                         ng-show="filterval.length"
-                                         is-open="true">
-                            <div ng-repeat="tile in annotation_options.tiles">
+                    <div class="step-content" ng-show="showReview" ng-cloak>
+                        <accordion close-others="false">
+                            <accordion-group heading="{{tile.header}}"
+                                             ng-repeat="tile in features"
+                                             is-open="true">
                                 <div class="colorhover"
                                      ng-repeat="question in tile.questions"
                                      ng-class="{selected: selected_question_id === question.id}"
-                                     ng-show="hasValidTile(question.id)"
-                                     ng-mouseover="hoverTiles(question)">
-                                    <span class="pull-right" ng-show="hasValidTile(question.id)">√</span>
+                                     ng-show="questionHasPositiveTile(question.id)"
+                                     ng-mouseover="displayQuestionTiles(question.id)">
+                                    <span class="pull-right" ng-show="questionHasPositiveTile(question.id)">√</span>
                                     <span>{{question.name}}</span>
                                 </div>
-                            </div>
-                        </accordion-group>
-                      </accordion>
-                </div>
-                <div class="step-content" ng-hide="showReview" ng-cloak>
-                    <accordion close-others="true">
-                        <accordion-group heading="{{tile.header}}"
-                                         ng-repeat="tile in annotation_options.tiles"
-                                         ng-show="filterval.length == 0">
-                            <div ng-repeat="question in tile.questions"
-                                 ng-class="{selected: selected_question_id === question.id}"
-                                 ng-click="selectQuestion(question.id)">
-                                <div ng-show="([question.name] | filter: filterval).length > 0">
-                                    <span class="pull-right" ng-show="hasValidTile(question.id)">√</span>
-                                    <span>{{question.name}}</span>
+                            </accordion-group>
+                            <accordion-group heading="Search"
+                                             ng-show="filterval.length"
+                                             is-open="true">
+                                <div ng-repeat="tile in features">
+                                    <div class="colorhover"
+                                         ng-repeat="question in tile.questions"
+                                         ng-class="{selected: selected_question_id === question.id}"
+                                         ng-show="questionHasPositiveTile(question.id)"
+                                         ng-mouseover="displayQuestionTiles(question.id)">
+                                        <span class="pull-right" ng-show="questionHasPositiveTile(question.id)">√</span>
+                                        <span>{{question.name}}</span>
+                                    </div>
                                 </div>
-                            </div>
-                        </accordion-group>
-                        <accordion-group heading="Search" ng-show="filterval.length" is-open="true">
-                            <div ng-repeat="tile in annotation_options.tiles">
+                            </accordion-group>
+                          </accordion>
+                    </div>
+                    <div class="step-content" ng-hide="showReview" ng-cloak>
+                        <accordion close-others="true">
+                            <accordion-group heading="{{tile.header}}"
+                                             ng-repeat="tile in features"
+                                             ng-show="filterval.length == 0">
                                 <div ng-repeat="question in tile.questions"
                                      ng-class="{selected: selected_question_id === question.id}"
                                      ng-click="selectQuestion(question.id)">
                                     <div ng-show="([question.name] | filter: filterval).length > 0">
-                                        <span class="pull-right" ng-show="hasValidTile(question.id)">√</span>
+                                        <span class="pull-right" ng-show="questionHasPositiveTile(question.id)">√</span>
                                         <span>{{question.name}}</span>
                                     </div>
                                 </div>
-                            </div>
-                        </accordion-group>
-                    </accordion>
+                            </accordion-group>
+                            <accordion-group heading="Search" ng-show="filterval.length" is-open="true">
+                                <div ng-repeat="tile in features">
+                                    <div ng-repeat="question in tile.questions"
+                                         ng-class="{selected: selected_question_id === question.id}"
+                                         ng-click="selectQuestion(question.id)">
+                                        <div ng-show="([question.name] | filter: filterval).length > 0">
+                                            <span class="pull-right" ng-show="questionHasPositiveTile(question.id)">√</span>
+                                            <span>{{question.name}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </accordion-group>
+                        </accordion>
+                    </div>
                 </div>
-
 
 
 
@@ -232,16 +227,16 @@
                 <!-- Step footer -->
                 <div class="lowertoolbar" ng-show="true" ng-cloak>
                     <div class="btn-group">
-                        <div class="btn btn-info" ng-click="resetTiles()" ng-hide="showReview">Reset current</div>
+                        <div class="btn btn-info" ng-click="clearAnnotations()" ng-hide="showReview">Reset current</div>
                     </div>
                     <div class="btn-group">
-                        <div class="btn btn-success" ng-click="hideReview()"  ng-show="showReview">Continue editing</div>
+                        <div class="btn btn-success" ng-click="showReview = false"  ng-show="showReview">Continue editing</div>
                     </div>
                     <div class="btn-group pull-right" ng-show="showReview">
                         <div class="btn btn-success" ng-click="submitAnnotations()">Submit</div>
                     </div>
                     <div class="btn-group pull-right">
-                        <div class="btn btn-success" ng-click="reviewAnnotations()"  ng-hide="showReview">Review</div>
+                        <div class="btn btn-success" ng-click="showReview = true"  ng-hide="showReview">Review</div>
                     </div>
                 </div>
             </div>

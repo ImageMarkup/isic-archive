@@ -10,7 +10,7 @@ derm_app.config(function ($httpProvider, $logProvider) {
     $httpProvider.defaults.xsrfCookieName = 'girderToken';
     $httpProvider.defaults.xsrfHeaderName = 'Girder-Token';
 
-    $logProvider.debugEnabled(true);
+    $logProvider.debugEnabled(false);
 });
 
 // Initialization of angular app controller with necessary scope variables. Inline declaration of external variables
@@ -29,7 +29,6 @@ derm_app.controller('ApplicationController', ['$scope', '$rootScope', '$location
 
         // main application, gives a bit of a delay before loading everything
         $document.ready(function () {
-            $log.debug('DOM ready');
             $rootScope.imageviewer = new olViewer($('#map')[0]);
             $rootScope.applicationReady = true;
 
@@ -43,7 +42,6 @@ derm_app.controller('UserController', ['$scope', '$http', '$log',
         var apiUserUrl = '/api/v1/user/me';
         //$scope.user = {};
         $http.get(apiUserUrl).then(function (response) {
-            $log.debug('Got user response', response);
             if (response.data) {
                 $scope.user = response.data;
             } else {
@@ -57,142 +55,177 @@ derm_app.controller('UserController', ['$scope', '$http', '$log',
     }
 ]);
 
-derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$sanitize', '$http', '$modal', '$log',
-    function ($scope, $rootScope, $timeout, $sanitize, $http, $modal, $log) {
-        $scope.annotation_values = {};
-        $scope.annotation_options = undefined;
-
-        $scope.selected_question_id = undefined;
-
-        $scope.certaintyModel = 'definite';
-        $scope.phase = 'Phase 2';
-
-        $scope.showReview = false;
-        $scope.filterval = '';
-
+derm_app.controller('AnnotationController', ['$scope', '$rootScope', '$http', '$log',
+    function ($scope, $rootScope, $http, $log) {
         $rootScope.showingSegmentation = true;
 
-        $rootScope.$watch('applicationReady', function () {
-            if ($rootScope.applicationReady) {
-                loadAnnotationTask();
+        $scope.annotation_values = {};
+        $scope.clearAnnotations = function () {
+            // annotation_values should be set before initialization,
+            //   but must also be re-cleared after child controllers run
+            $scope.$broadcast('reset');
+            $scope.annotation_values = {};
+            $scope.showReview = false;
+        };
+
+        $rootScope.$watch('applicationReady', function (ready) {
+            if (ready === true) {
+                var urlvals = window.location.pathname.split('/');
+                $scope.annotation_item_id = urlvals[urlvals.length - 1];
             }
+        });
+
+        var image_item_id;
+        var start_time;
+        $scope.$watch('annotation_item_id', function (annotation_item_id) {
+            if (annotation_item_id !== undefined) {
+                var annotation_detail_url = '/api/v1/annotation/' + annotation_item_id;
+                $http.get(annotation_detail_url).success(function (data) {
+                    //data.segmentation_info; // unused
+                    $scope.all_features = data.features;
+
+                    image_item_id = data.image._id;
+                    var segmentation_url = '/api/v1/item/' + image_item_id + '/segmentation';
+                    $rootScope.imageviewer.loadPainting(
+                        segmentation_url,
+                        function () {
+                            // this callback is being executed from non-Angular code, so we must
+                            //   wrap all work that it does in an $apply
+                            $scope.$apply(function () {
+                                $scope.clearAnnotations();
+                            });
+                        }
+                    );
+
+                    start_time = Date.now();
+                });
+            }
+        });
+
+        $scope.submitAnnotations = function () {
+            var submit_url = '/api/v1/annotation/' + $scope.annotation_item_id;
+            var annotation_to_store = {
+                imageId: image_item_id,
+                startTime: start_time,
+                stopTime: Date.now(),
+                annotations: $scope.annotation_values
+            };
+            $http.put(submit_url, annotation_to_store).success(function () {
+                window.location.replace('/uda/task');
+            });
+        };
+    }
+]);
+
+derm_app.controller('ImageFeatureAnnotationController', ['$scope', '$log',
+    function ($scope, $log) {
+        $scope.$watch('all_features', function (all_features) {
+            if (all_features !== undefined) {
+                $scope.features = all_features.lesionlevel;
+            }
+        });
+
+        $scope.$on('reset', function () {
+            // will also be called to initialize
+            // TODO: reset drop-downs
         });
 
         $scope.selected = function () {
             $log.debug("selected", $scope.annotation_values);
         };
+    }
+]);
 
-        function loadAnnotationTask () {
-            var urlvals = window.location.pathname.split('/');
-            var annotation_item_id = urlvals[urlvals.length - 1];
-            $scope.annotation_item_id = annotation_item_id;
-
-            var annotation_detail_url = '/api/v1/annotation/' + annotation_item_id;
-            $http.get(annotation_detail_url).success(function (data) {
-                //data.segmentation_info; // unused
-                $scope.current_image = data.image;
-                $scope.annotation_options = data.variables;
-
-                var segmentation_url = '/api/v1/item/' + $scope.current_image._id + '/segmentation';
-                $rootScope.showingSegmentation = true;
-                $rootScope.imageviewer.loadPainting(segmentation_url);
-                $scope.task_start = Date.now(); // global start time for this task
-            });
-        }
-
-        $scope.hasValidTile = function (_id) {
-            if (_id in $scope.annotation_values) {
-                var tiles = $scope.annotation_values[_id];
-                for (var i=0;i<tiles.length;i++) {
-                    if (tiles[i] > 0)
-                    {
-                        return true;
-                    }
-                }
+derm_app.controller('RegionFeatureAnnotationController', ['$scope', '$rootScope', '$log',
+    function ($scope, $rootScope, $log) {
+        $scope.$watch('all_features', function (all_features) {
+            $log.debug('RegionFeatureAnnotationController.all_features', all_features);
+            if (all_features !== undefined) {
+                $scope.features = all_features.tiles;
             }
-            return false;
-        };
+        });
 
-        $scope.resetTiles = function () {
+        $scope.$on('reset', function () {
+            $log.debug('RegionFeatureAnnotationController.reset');
+            // will also be called to initialize
+            $scope.selected_question_id = undefined;
+            // TODO: if annotation_values were specific to this scope, we could clear it here
+            $scope.certaintyModel = 'definite';
+            $scope.filterval = '';
+        });
+
+        $scope.$watch('selected_question_id', function (new_question_id, old_question_id) {
+            $log.debug('RegionFeatureAnnotationController.selected_question_id', old_question_id, new_question_id);
+            // TODO: ensure that new_question_id is actually in $scope.annotation_options
+            // store the previously selected feature
+            if (old_question_id !== undefined) {
+                // TODO: don't store when in review mode
+                $scope.annotation_values[old_question_id] =
+                    $rootScope.imageviewer.grabCurrentTiles().slice(0);
+            }
+            // reset the overlay
             if ($rootScope.imageviewer) {
                 $rootScope.imageviewer.clearTiles();
             }
-        };
-
-        $scope.hoverTiles = function (theTile) {
-            $rootScope.imageviewer.clearTiles();
-
-            var question_shortname = theTile.id;
-
-            if (question_shortname in $scope.annotation_values) {
-                $rootScope.imageviewer.loadTiles($scope.annotation_values[question_shortname]);
-            }
-
-            // label 2 -> 100%
-            // label 3 -> 50%
-
-//            $rootScope.imageviewer.selectAnnotationLabel($scope.certaintyModel);
-
-        };
-
-        function storeSelectedQuestion () {
-            if ($scope.selected_question_id) {
-                $scope.annotation_values[$scope.selected_question_id] =
-                    $rootScope.imageviewer.grabCurrentTiles().slice(0);
-
-                $scope.selected_question_id = undefined;
-                $rootScope.imageviewer.clearTiles();
-            }
-        }
-
-        $scope.selectQuestion = function (question_id) {
-            storeSelectedQuestion();
-
-            $scope.selected_question_id = question_id;
-            if ($scope.selected_question_id in $scope.annotation_values) {
+            // load any already-stored feature data
+            if (new_question_id in $scope.annotation_values) {
                 $rootScope.imageviewer.loadTiles($scope.annotation_values[$scope.selected_question_id]);
+            } else if (new_question_id === undefined) {
+                // TODO: disable annotation layer interaction (but not display)
             }
+        });
 
-            // label 2 -> 100%
-            // label 3 -> 50%
-            $rootScope.imageviewer.selectAnnotationLabel($scope.certaintyModel);
-        };
-
-        $scope.$watch('certaintyModel', function (newValue, oldValue) {
-            if (newValue) {
+        $scope.$watch('certaintyModel', function (certaintyModel) {
+            $log.debug('RegionFeatureAnnotationController.certaintyModel', certaintyModel);
+            if (certaintyModel !== undefined) {
                 if ($rootScope.imageviewer) {
-                    $rootScope.imageviewer.selectAnnotationLabel(newValue);
+                    // label 2 -> 100%
+                    // label 3 -> 50%
+                    $rootScope.imageviewer.selectAnnotationLabel(certaintyModel);
                 }
             }
         });
 
-        $scope.reviewAnnotations = function () {
-            storeSelectedQuestion();
-            $scope.showReview = true;
-        };
+        $scope.$watch('showReview', function (showReview) {
+            $log.debug('RegionFeatureAnnotationController.showReview', showReview);
+            if (showReview === true) {
+                // this will clear the tiles
+                $scope.selected_question_id = undefined;
+            } else if (showReview === false) {
+                if ($rootScope.imageviewer) {
+                    $rootScope.imageviewer.clearTiles();
+                }
+            }
+        });
 
-        $scope.hideReview = function () {
-           $rootScope.imageviewer.clearTiles();
-
-            // label 2 -> 100%
-            // label 3 -> 50%
-
+        $scope.selectQuestion = function (question_id) {
+            $log.debug('RegionFeatureAnnotationController.selectQuestion', question_id);
+            $scope.selected_question_id = question_id;
+            // TODO: selectAnnotationLabel may not be necessary
             $rootScope.imageviewer.selectAnnotationLabel($scope.certaintyModel);
-
-            $scope.showReview = false;
         };
 
-        $scope.submitAnnotations = function () {
-            var submit_url = '/api/v1/annotation/' + $scope.annotation_item_id;
-            var annotation_to_store = {
-                'imageId' : $scope.current_image._id,
-                'startTime' : $scope.task_start,
-                'stopTime' : Date.now(),
-                'annotations': $scope.annotation_values
-            };
-            $http.put(submit_url, annotation_to_store).success(function () {
-                window.location.replace('/uda/task');
-            });
+        $scope.questionHasPositiveTile = function (question_id) {
+            // TODO: this is being called way too much
+            var result;
+            var feature_value = $scope.annotation_values[question_id];
+            if (Array.isArray(feature_value)) {
+                result = feature_value.some(function (tile_val) {
+                    return tile_val !== 0;
+                });
+            } else {
+                result = false;
+            }
+            return result;
+        };
+
+        $scope.displayQuestionTiles = function (question_id) {
+            // TODO: just set $scope.selected_question_id, but update that watch function to not store annotations in review mode
+            $rootScope.imageviewer.clearTiles();
+            if (question_id in $scope.annotation_values) {
+                $rootScope.imageviewer.loadTiles($scope.annotation_values[question_id]);
+            }
+            //$rootScope.imageviewer.selectAnnotationLabel($scope.certaintyModel);
         };
     }
 ]);

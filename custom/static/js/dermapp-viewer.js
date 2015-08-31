@@ -339,7 +339,7 @@ var olViewer = derm_app.factory('olViewer',
                 }
             },
 
-            loadPainting: function (segmentURL) {
+            loadPainting: function (segmentURL, onLoadCallback) {
                 var self = this;
 
                 $log.debug('segment url', segmentURL);
@@ -352,7 +352,7 @@ var olViewer = derm_app.factory('olViewer',
                     highlightAlpha: 0,
                     boundaryAlpha: 190,
                     labels: _labels,
-                    onload: function () {
+                    onload: onLoadCallback || function () {
 //                        $("#annotatorcontainer").show();
                     }
                 });
