@@ -33,8 +33,6 @@ derm_app.controller('ApplicationController', ['$scope', '$rootScope', '$location
             $rootScope.imageviewer = new olViewer($('#map')[0]);
             $rootScope.applicationReady = true;
 
-            $rootScope.task_start = Date.now(); // global start time for this task
-
             updateLayout();
         });
     }
@@ -102,6 +100,7 @@ derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$san
                 var segmentation_url = '/api/v1/item/' + $scope.current_image._id + '/segmentation';
                 $rootScope.showingSegmentation = true;
                 $rootScope.imageviewer.loadPainting(segmentation_url);
+                $scope.task_start = Date.now(); // global start time for this task
             });
         };
 
@@ -272,20 +271,13 @@ derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$san
         };
 
         $scope.submitAnnotations = function () {
-            $log.debug( $scope );
-            $log.debug('submit annotations happens here');
-
             var submit_url = '/api/v1/annotation/' + $scope.annotation_item_id;
-
-            var taskcomplete_time = Date.now();
-
             var annotation_to_store = {
                 'imageId' : $scope.current_image._id,
-                'startTime' : $rootScope.task_start,
-                'stopTime' : taskcomplete_time,
+                'startTime' : $scope.task_start,
+                'stopTime' : Date.now(),
                 'annotations': $scope.annotation_model
             };
-
             $http.put(submit_url, annotation_to_store).success(function () {
                 window.location.replace('/uda/task');
             });
