@@ -64,7 +64,7 @@ class AnnotationResource(Resource):
         if not segmentation_info:
             # TODO: no file found
             raise Exception()
-        return_dict['annotation'] = segmentation_info['steps']
+        return_dict['segmentation_info'] = segmentation_info['steps']
 
         # transform featureset to legacy format
         legacy_featureset = dict()

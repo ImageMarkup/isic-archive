@@ -63,7 +63,6 @@ derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$san
     function ($scope, $rootScope, $timeout, $sanitize, $http, $modal, $log) {
         $scope.annotation_model = {};
         $scope.annotation_options = undefined;
-        $scope.annotation_source = undefined;
 
         $scope.selected_annotation = undefined;
         $scope.hover_annotation = undefined;
@@ -95,8 +94,8 @@ derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$san
             var annotation_detail_url = '/api/v1/annotation/' + annotation_item_id;
 
             $http.get(annotation_detail_url).success(function (data) {
+                //data.segmentation_info; // unused
                 $scope.phase = 'Phase 2';
-                $scope.annotation_source = data.annotation;
                 $scope.current_image = data.image;
                 $scope.annotation_options = data.variables;
 
