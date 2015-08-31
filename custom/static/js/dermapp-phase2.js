@@ -96,9 +96,7 @@ derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$san
 
             $http.get(annotation_detail_url).success(function (data) {
                 $scope.current_annotation = null; // TODO
-                $scope.decision_tree = data.decision_tree;
                 $scope.phase = 'Phase 2';
-                $scope.totalSteps = $scope.decision_tree.length;
                 $scope.annotation_source = data.annotation;
                 $scope.current_image = data.image;
                 $scope.annotation_options = data.variables;

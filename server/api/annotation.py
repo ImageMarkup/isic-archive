@@ -94,11 +94,6 @@ class AnnotationResource(Resource):
             ]
         return_dict['variables'] = legacy_featureset
 
-        # include static phase config
-        phase_config_file_path = os.path.join(self.plugin_root_dir, 'custom', 'config', 'phase2.json')
-        with open(phase_config_file_path, 'r') as phase_config_file:
-            return_dict['decision_tree'] = json.load(phase_config_file)
-
         return return_dict
 
     getAnnotation.description = (
