@@ -1,7 +1,9 @@
 {
   "undef": true,
   "unused": true,
+  "globalstrict": true,
   "browser": true,
+  "jquery": true,
   "globals": {
     "angular": false,
     "ol": false

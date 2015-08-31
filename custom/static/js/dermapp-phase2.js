@@ -1,5 +1,5 @@
 'use strict';
-/*global angular, ol, Mousetrap, console*/
+/*global $, angular, ol, Mousetrap*/
 /*jslint browser: true*/
 
 // Initialization of angular root application
@@ -16,7 +16,7 @@ derm_app.config(function ($httpProvider, $logProvider) {
 // Initialization of angular app controller with necessary scope variables. Inline declaration of external variables
 // needed within the controller's scope. State variables (available between controllers using $rootScope). Necessary to
 // put these in rootScope to handle pushed data via websocket service.
-var appController = derm_app.controller('ApplicationController', ['$scope', '$rootScope', '$location', '$document', '$log', 'olViewer',
+derm_app.controller('ApplicationController', ['$scope', '$rootScope', '$location', '$document', '$log', 'olViewer',
     function ($scope, $rootScope, $location, $document, $log, olViewer) {
 
         // global ready state variable
@@ -40,7 +40,6 @@ var appController = derm_app.controller('ApplicationController', ['$scope', '$ro
     }
 ]);
 
-
 derm_app.controller('UserController', ['$scope', '$http', '$log',
     function ($scope, $http, $log) {
         var apiUserUrl = '/api/v1/user/me';
@@ -60,7 +59,7 @@ derm_app.controller('UserController', ['$scope', '$http', '$log',
     }
 ]);
 
-var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$sanitize', '$http', '$modal', '$log',
+derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$sanitize', '$http', '$modal', '$log',
     function ($scope, $rootScope, $timeout, $sanitize, $http, $modal, $log) {
         $scope.annotation_model = {};
         $scope.annotation_options = undefined;
@@ -84,7 +83,7 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             }
         });
 
-        $scope.selected = function() {
+        $scope.selected = function () {
             $log.debug("selected", $scope.annotation_model);
         };
 
@@ -111,7 +110,6 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
         };
 
         $scope.getCurrentAnnotation = function () {
-
             if ($rootScope.applicationReady) {
                 return $scope.current_annotation;
             }
@@ -119,7 +117,6 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
         };
 
         $scope.hasValidTile = function (_id) {
-
             if (_id in $scope.annotation_model) {
                 var tiles = $scope.annotation_model[_id];
                 for (var i=0;i<tiles.length;i++) {
@@ -133,14 +130,12 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
         };
 
         $scope.resetTiles = function () {
-
             if ($rootScope.imageviewer) {
                 $rootScope.imageviewer.clearTiles();
             }
         };
 
         $scope.hoverTiles = function (theTile) {
-
             $rootScope.imageviewer.clearTiles();
 
             var question_shortname = theTile.id;
@@ -192,15 +187,12 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
         };
 
         $scope.$watch('certaintyModel', function (newValue, oldValue) {
-
             if (newValue) {
                 if ($rootScope.imageviewer) {
                     $rootScope.imageviewer.selectAnnotationLabel(newValue);
                 }
             }
         });
-
-
 
         // shortcut key bindings -> takes you home to task list
         Mousetrap.bind( ['ctrl+q'], function (evt) {
@@ -235,7 +227,6 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             $scope.$apply();
         });
 
-
         Mousetrap.bind( ['up'], function (evt) {
             if (typeof (evt.preventDefault) === 'function') {
                 evt.preventDefault();
@@ -246,7 +237,6 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             $scope.$apply();
 
         });
-
 
         Mousetrap.bind( ['down'], function (evt) {
             if (typeof (evt.preventDefault) === 'function') {
@@ -259,7 +249,6 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             $scope.$apply();
 
         });
-
 
         $scope.reviewAnnotations = function () {
             if ($scope.selected_annotation) {
@@ -279,12 +268,10 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
                 $rootScope.imageviewer.clearTiles();
             }
-
             $scope.showReview = true;
         };
 
         $scope.hideReview = function () {
-
            $rootScope.imageviewer.clearTiles();
 
             // label 2 -> 100%
@@ -316,11 +303,8 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             });
         };
 
-
         // setters
-
         $scope.saveCurrentStepAnnotation = function () {
-
             // just making things explicit for readability's sake
             var features = $rootScope.imageviewer.getFeatures();
 
