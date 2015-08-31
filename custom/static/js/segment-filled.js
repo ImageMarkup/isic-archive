@@ -35,8 +35,6 @@ SegmentAnnotator = function (segmentation, options) {
 
     // Initialize internal variables.
 
-    // console.log(this);
-
     this._initializeContainer(options.container);
     this._initializePixelsIndex();
     this._initializeBackgroundLayer();
@@ -135,7 +133,8 @@ SegmentAnnotator.prototype.setImageAlpha = function (alpha) {
     }
     var context = this.layers.image.canvas.getContext('2d'),
         data = this.layers.image.image.data;
-    for (var i = 3; i < data.length; i += 4) {
+    for (var i = 3; i < data.length; i += 4)
+    {
         data[i] = alpha;
     }
     context.putImageData(this.layers.image.image, 0, 0);
@@ -144,7 +143,8 @@ SegmentAnnotator.prototype.setImageAlpha = function (alpha) {
 
 // Set the alpha value for the segment boundary.
 SegmentAnnotator.prototype.setBoundaryAlpha = function (alpha) {
-    if (alpha === undefined) {
+    if (alpha === undefined)
+    {
         alpha = this.boundaryAlpha;
     }
     this._setAnnotationAlpha(alpha, true);
@@ -236,8 +236,6 @@ SegmentAnnotator.prototype.getTilesAsPNG = function () {
     var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
     data = imageData.data;
 
-    console.log('Get Tiles As PNG, Length: ', this.indexMap.length);
-
     var _min = 255;
     var _max = 0;
 
@@ -257,8 +255,6 @@ SegmentAnnotator.prototype.getTilesAsPNG = function () {
         data[4 * i + 2] = (this.indexMap[i] >>> 16) & 255;
         data[4 * i + 3] = 255;
     }
-
-    console.log(_max, _min);
 
     context.putImageData(imageData, 0, 0);
     return canvas.toDataURL();
@@ -344,8 +340,6 @@ SegmentAnnotator.prototype._initializePixelsIndex = function () {
     var i;
     this.pixelsMap = new Array(this.segments);
 
-    console.log('There are ' + this.segments.length + 'segments');
-
     for (i = 0; i < this.segments; ++i)
         this.pixelsMap[i] = [];
 
@@ -368,36 +362,12 @@ SegmentAnnotator.prototype._initializeColorMap = function (newLabels) {
             g,
             b;
         switch (i % 6) {
-            case 0:
-                r = v;
-                g = t;
-                b = p;
-                break;
-            case 1:
-                r = q;
-                g = v;
-                b = p;
-                break;
-            case 2:
-                r = p;
-                g = v;
-                b = t;
-                break;
-            case 3:
-                r = p;
-                g = q;
-                b = v;
-                break;
-            case 4:
-                r = t;
-                g = p;
-                b = v;
-                break;
-            case 5:
-                r = v;
-                g = p;
-                b = q;
-                break;
+            case 0: r = v; g = t; b = p; break;
+            case 1: r = q; g = v; b = p; break;
+            case 2: r = p; g = v; b = t; break;
+            case 3: r = p; g = q; b = v; break;
+            case 4: r = t; g = p; b = v; break;
+            case 5: r = v; g = p; b = q; break;
         }
         return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
     }
@@ -633,9 +603,7 @@ SegmentAnnotator.prototype._initializeImageLayer = function () {
 SegmentAnnotator.prototype._initializeHighlightLayer = function () {
     var canvas = this._createLayer();
     canvas.style.cursor = 'pointer';
-    canvas.oncontextmenu = function () {
-        return false;
-    };
+    canvas.oncontextmenu = function () { return false; };
     var context = canvas.getContext('2d'),
         imageData = context.createImageData(this.width, this.height),
         data = imageData.data;
@@ -678,7 +646,6 @@ SegmentAnnotator.prototype._initializeHighlightLayer = function () {
         mousestate.down = true;
         mousestate.button = event.button;
 
-        console.log(event);
 
     });
 
@@ -708,12 +675,13 @@ SegmentAnnotator.prototype._setAnnotationAlpha = function (alpha, atBoundary) {
                     index !== indexMap[i * width + j + 1] ||
                     index !== indexMap[(i - 1) * width + j] ||
                     index !== indexMap[(i + 1) * width + j]);
-            if (isBoundary && atBoundary) {
+            if (isBoundary && atBoundary)
+            {
                 data[4 * (i * width + j) + 3] = 0;
                 // transparency outside tile
             }
-            else if (!isBoundary && !atBoundary) {
-
+            else if (!isBoundary && !atBoundary)
+            {
                 // transparency inside tile
                 data[4 * (i * width + j) + 3] = 0;
             }
@@ -746,8 +714,6 @@ SegmentAnnotator.prototype._initializeContainer = function (container) {
 
 window.UDASegment = function (imageURL, options) {
 
-    console.log("UDA Segment started");
-
     var src_image = new Image();
     var tile_image = new Image();
 
@@ -760,19 +726,13 @@ window.UDASegment = function (imageURL, options) {
 
         tile_image.src = imageURL + "Tiles";
         tile_image.crossOrigin = null;
-        tile_image.onerror = function () {
-            onErrorImageLoad(_image);
-        };
-        tile_image.onload = function () {
-            onSuccessImageLoad(_image, tile_image, options);
-        };
+        tile_image.onerror = function () { onErrorImageLoad(_image); };
+        tile_image.onload = function (){ onSuccessImageLoad(_image, tile_image, options); };
 
     }
 
     // When image is loaded.
     function onSuccessImageLoad(rgb_image, t_image, options) {
-
-        console.log('tile load');
 
         // create canvas
         var canvas = document.createElement('canvas');
@@ -808,8 +768,6 @@ window.UDASegment = function (imageURL, options) {
             indexMap[i] = indexValue;
         }
 
-        console.log('there are ', numSegments);
-
         options.callback({
             width: imageData.width,
             height: imageData.height,
@@ -826,12 +784,8 @@ window.UDASegment = function (imageURL, options) {
 
     src_image.src = imageURL + "Source";
     src_image.crossOrigin = null;
-    src_image.onerror = function () {
-        onErrorImageLoad(src_image);
-    };
-    src_image.onload = function () {
-        onSourceSuccessLoad(src_image, options);
-    };
+    src_image.onerror = function () { onErrorImageLoad(src_image); };
+    src_image.onload = function (){ onSourceSuccessLoad(src_image, options); };
 
 
 };
