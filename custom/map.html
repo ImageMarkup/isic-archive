@@ -35,6 +35,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.12.1/select.min.js"></script>
     <link rel=stylesheet type=text/css href="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.12.1/select.min.css">
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/js/bootstrap-switch.min.js"></script>
+    <link rel=stylesheet type=text/css href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/css/bootstrap3/bootstrap-switch.min.css">
+    <script src="https://cdn.rawgit.com/frapontillo/angular-bootstrap-switch/0.4.1/dist/angular-bootstrap-switch.min.js"></script>
+
 
     <script type="text/javascript" src="/uda/static/js/ol.js"></script>
     <script type="text/javascript" src="/uda/static/js/pf-segmentation.js"></script>
@@ -68,15 +72,24 @@
         .colorhover:hover {
             color: #ffcc00;
         }
+
+        .isic-overview-frame {
+            position: absolute;
+            z-index: 5000;
+            top: 5px;
+            right: 5px;
+            border: 5px solid #282727;
+        }
+
     </style>
 </head>
 <body>
     <div id="angular_id" ng-controller="ApplicationController">
-        <div>
+        <div ng-controller="AnnotationController">
             <div id="hoverBar">
                 <img id="objectinfo" style="display:none;" class="optionimage" src="/uda/static/na.jpg" />
             </div>
-            <div class="col-sm-3" id="toolContainer" ng-controller="AnnotationController">
+            <div class="col-sm-3" id="toolContainer">
                 <script type="text/ng-template" id="myModalContent.html" class="modalbase">
                     <div class="modal-body">
                         <div>
@@ -100,6 +113,11 @@
                         <div class="btn">
                             <span>Phase 2</span>
                         </div>
+                    </div>
+                    <div class="btn">
+                        <label for="isic-overview-toggle">Overview Image: </label>
+                        <input bs-switch type="checkbox" id="isic-overview-toggle"
+                               ng-model="display_overview" switch-size="mini">
                     </div>
                     <div class="clearfix"></div>
                 </div>
@@ -243,6 +261,8 @@
             <div class="col-sm-9 nopad">
                 <div id="map" class="map" ng-hide="showingSegmentation"></div>
                 <div id="annotatorcontainer" ng-show="showingSegmentation"></div>
+                <img ng-show="display_overview && overview_image_url" ng-src="{{ overview_image_url }}"
+                        class="isic-overview-frame">
             </div>
         </div>
     </div>

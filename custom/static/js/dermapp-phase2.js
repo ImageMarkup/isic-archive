@@ -3,7 +3,7 @@
 /*jslint browser: true*/
 
 // Initialization of angular root application
-var derm_app = angular.module('DermApp', ['ui.bootstrap', 'ngSanitize', 'xml', 'ui.select']);
+var derm_app = angular.module('DermApp', ['ui.bootstrap', 'ngSanitize', 'xml', 'ui.select', 'frapontillo.bootstrap-switch']);
 derm_app.value("ol", ol);
 
 derm_app.config(function ($httpProvider, $logProvider) {
@@ -59,6 +59,9 @@ derm_app.controller('AnnotationController', ['$scope', '$rootScope', '$location'
     function ($scope, $rootScope, $location, $http, $log) {
         $rootScope.showingSegmentation = true;
 
+        $scope.overview_image_url = null;
+        $scope.display_overview = true;
+
         $scope.annotation_values = {};
         $scope.clearAnnotations = function () {
             // annotation_values should be set before initialization,
@@ -95,6 +98,8 @@ derm_app.controller('AnnotationController', ['$scope', '$rootScope', '$location'
                             });
                         }
                     );
+
+                    $scope.overview_image_url = '/api/v1/item/' + image_item_id + '/thumbnail';
 
                     start_time = Date.now();
                 });
