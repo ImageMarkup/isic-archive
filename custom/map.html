@@ -121,7 +121,7 @@
                         </div>
                     </div>
                     <div class="step-content" ng-repeat="feature_group in features">
-                        <h3>{{ feature_group.header }}</h3>
+                        <h4>{{ feature_group.header }}</h4>
                         <div ng-repeat="feature in feature_group.questions">
                             <div ng-switch="feature.type">
                                 <div ng-switch-when="select">
