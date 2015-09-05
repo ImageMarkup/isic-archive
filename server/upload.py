@@ -141,22 +141,6 @@ class ZipFileOpener(object):
         shutil.rmtree(self.external_temp_dir)
 
 
-def _uploadFileFromPath(file_path, user, name, parent, parent_type, mime_type):
-    upload = ModelImporter.model('upload').createUpload(
-        user=user,
-        name=name,
-        parentType=parent_type,
-        parent=parent,
-        size=os.path.getsize(file_path),
-        mimeType=mime_type,
-    )
-    with open(file_path, 'rb') as file_obj:
-        # TODO: buffered?
-        upload_file = ModelImporter.model('upload').handleChunk(
-            upload, file_obj.read())
-    return upload_file
-
-
 def _zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_user):
     images_folder = ModelImporter.model('folder').createFolder(
         parent=upload_collection,
@@ -215,14 +199,18 @@ def _zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_u
                 #     continue
 
                 # upload original image
-                image_file = _uploadFileFromPath(
-                    file_path=original_file_path,
-                    user=upload_user,
-                    name=original_file_name,
-                    parent=images_folder,
-                    parent_type='folder',
-                    mime_type='image/tiff'
-                )
+
+                with open(original_file_path, 'rb') as original_file_obj:
+                    image_file = ModelImporter.model('upload').uploadFromFile(
+                        obj=original_file_obj,
+                        size=os.path.getsize(original_file_path),
+                        name=original_file_name,
+                        parentType='folder',
+                        parent=images_folder,
+                        user=upload_user,
+                        mimeType='image/tiff',
+                    )
+
                 image_item = ModelImporter.model('item').load(image_file['itemId'], force=True)
                 image_item['name'] = original_file_basename
                 ModelImporter.model('item').updateItem(image_item)
@@ -230,14 +218,16 @@ def _zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_u
                 image_mimetype = mimetypes.guess_type(original_file_relpath)[0]
 
                 # upload converted image
-                _uploadFileFromPath(
-                    file_path=converted_file_path,
-                    user=upload_user,
-                    name=converted_file_name,
-                    parent=image_item,
-                    parent_type='item',
-                    mime_type=image_mimetype
-                )
+                with open(converted_file_path, 'rb') as converted_file_obj:
+                    ModelImporter.model('upload').uploadFromFile(
+                        obj=converted_file_obj,
+                        size=os.path.getsize(converted_file_path),
+                        name=converted_file_name,
+                        parentType='item',
+                        parent=image_item,
+                        user=upload_user,
+                        mimeType=image_mimetype,
+                    )
                 os.remove(converted_file_path)
 
                 ModelImporter.model('item').setMetadata(image_item, {
