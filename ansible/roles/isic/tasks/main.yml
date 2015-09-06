@@ -30,7 +30,6 @@
     name: "{{ item }}"
     virtualenv: "{{ python_dist_path }}"
   with_items:
-    - celery
     - geojson
     - pillow
     - enum34

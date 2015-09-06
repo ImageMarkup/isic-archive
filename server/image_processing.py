@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from celery import Celery
-
 import cv2
 import urllib
 import numpy as np
@@ -11,9 +9,8 @@ from numpy import squeeze
 import geojson
 from geojson import Polygon, Feature
 
-# TODO: add celery, geojson, opencv to requirements.txt
+# TODO: add geojson, opencv to requirements.txt
 
-c = Celery('tasks', backend='amqp', broker='amqp://')
 
 class NumPyArangeEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -21,13 +18,7 @@ class NumPyArangeEncoder(json.JSONEncoder):
             return obj.tolist() # or map(int, obj)
         return json.JSONEncoder.default(self, obj)
 
-@c.task(name='tasks.add')
-def add(x, y):
-    print 'hello task'
-    return x + y
 
-
-@c.task(name='tasks.fillImageGeoJSON')
 def fillImageGeoJSON(params):
 
 #todo implement a smart url-based hashing cache
@@ -129,7 +120,6 @@ def fillImageGeoJSON(params):
 
 
 #
-# @c.task(name='tasks.fillImage2')
 # def fillImage2(params):
 #
 # #todo implement a smart url-based hashing cache
@@ -236,7 +226,6 @@ def fillImageGeoJSON(params):
 
 
 
-@c.task
 def segmentImage(input_parameters):
     """ This function takes an input URL, seed point, and tolerance and produces a pointlist of the outer most contour
     """
