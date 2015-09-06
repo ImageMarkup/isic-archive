@@ -37,6 +37,18 @@ def validateSettings(event):
         event.preventDefault().stopPropagation()
 
 
+def clearRouteDocs():
+    from girder.api.docs import routes
+    # preserve the user token login operation
+    user_auth_ops = routes['user']['/user/authentication']
+    routes.clear()
+    routes['user']['/user/authentication'] = user_auth_ops
+    # TODO: remove this, once upstream is updated
+    from girder.api.docs import discovery
+    discovery.clear()
+    discovery.add('user')
+
+
 def load(info):
     # set the title of the HTML pages
     info['serverRoot'].updateHtmlVars({'title': 'ISIC Archive'})
@@ -90,6 +102,9 @@ def load(info):
 
 
     # add api routes
+    # remove docs for default Girder API, to simplify page
+    clearRouteDocs()
+
     info['apiRoot'].uda = UDAResource(info['pluginRootDir'])
 
     # "/api/v1/item/:id/thumbnail" -> returns a thumbnail of the image
