@@ -4,8 +4,6 @@
 import collections
 import datetime
 import json
-import operator
-import os
 
 from bson import ObjectId
 import pymongo

@@ -46,8 +46,7 @@ var appController = derm_app.controller('ApplicationController', ['$scope', '$ro
             if ($rootScope.applicationReady) {
                 $rootScope.task_start = Date.now(); // global start time for this task
                 $rootScope.imageviewer.clearCurrentImage();
-                var image_url = '/api/v1/item/' + newImage._id;
-                $rootScope.imageviewer.loadImageWithURL(image_url);
+                $rootScope.imageviewer.loadImageWithURL(newImage._id);
             }
         });
     }

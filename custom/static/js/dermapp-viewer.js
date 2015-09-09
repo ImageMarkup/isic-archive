@@ -418,88 +418,18 @@ var olViewer = derm_app.factory('olViewer',
             autofill: function (click_coords) {
                 var self = this;
 
-                var extent = this.map.getView().calculateExtent(this.map.getSize());
-                var tr = ol.extent.getTopRight(extent);
-                var tl = ol.extent.getTopLeft(extent);
-                var bl = ol.extent.getBottomLeft(extent);
-
+//                var extent = this.map.getView().calculateExtent(this.map.getSize());
+//                var tr = ol.extent.getTopRight(extent);
+//                var tl = ol.extent.getTopLeft(extent);
+//                var bl = ol.extent.getBottomLeft(extent);
                 // think: if x is positive on left, subtract from total width
                 // if x on right is greater than width, x = width
 
-                var origin_x = 0;
-                var origin_y = 0;
-
-                var click_x_offset = 0;
-                var click_y_offset = 0;
-
-                var newWidth = this.nativeSize.w;
-
-                if (tr[0] < this.nativeSize.w) {
-                    newWidth = tr[0];
-                }
-                if (tl[0] > 0) {
-                    newWidth -= tl[0];
-                    origin_x = tl[0];
-                }
-
-                var newHeight = this.nativeSize.h;
-
-                if (- bl[1] < this.nativeSize.h) {
-                    newHeight = -bl[1];
-                }
-
-                if (tl[1] < 0) {
-                    newHeight += tl[1];
-                    origin_y = -tl[1];
-                }
-
-                $log.debug(origin_x, origin_y, newWidth, newHeight);
-
-                if (newWidth <= 0 || newHeight <= 0) {
-                    $log.debug('offscreen or invalid region');
-                }
-
-                var rel = [];
-                rel[0] = origin_x / this.nativeSize.w;
-                rel[1] = origin_y / this.nativeSize.h;
-                rel[2] = newWidth / this.nativeSize.w;
-                rel[3] = newHeight / this.nativeSize.h;
-
-                var dataurl = function (rel, width) {
-                    return '/&WID=' + width + '&RGN=' + rel.join(',') + '&CVT=jpeg';
-                };
-
-                // var url_to_use = this.data_url + '&WID=400&RGN=0.25,0.25,0.5,0.5&CVT=jpeg'
-                var url_to_use = this.data_url + dataurl(rel, 500);
-
-                var subimage = {
-                    origin: [origin_x, origin_y],
-                    size: [newWidth, newHeight],
-                    rel: rel
-                };
-                var origimage = {
-                    origin: [0, 0],
-                    size: [this.nativeSize.w, this.nativeSize.h]
-                };
-
-                // relative click is not based on the image origin, but rather the extent origin
-                var click = {
-                    absolute: click_coords,
-                    relative: [(click_coords[0]) / this.nativeSize.w, (click_coords[1]) / this.nativeSize.h]
-                };
-
+                var segmentURL = '/api/v1/image/' + this.current_image_id + '/segment-boundary';
                 var msg = {
-                    image: {
-                        region: subimage,
-                        base: origimage,
-                        url: url_to_use
-                    },
                     tolerance: this.fill_tolerance,
-                    click: click
+                    seed: click_coords.map(Math.round)
                 };
-                // $log.debug(msg);
-
-                var segmentURL = '/uda/fill';
                 $http.post(segmentURL, msg).success(function (response) {
 
                     self.vector_source.clear();
@@ -508,11 +438,17 @@ var olViewer = derm_app.factory('olViewer',
                     for (var i=0; i<response.features.length; i++) {
                         var jsObject = response.features[i];
 
-                        var featobj = f.readFeature(jsObject);
+                        // flip the sign of the y-coordinates
+                        var coordinates = jsObject.geometry.coordinates[0];
+                        for (var j=0; j<coordinates.length; j++) {
+                            coordinates[j][1] = -1 * coordinates[j][1];
+                        }
+
+                        var featobj = f.readFeatureFromObject(jsObject);
 
                         featobj.setId(i);
 
-                        var iconpath = "static/derm/images/lesion.jpg";
+                        var iconpath = "/uda/static/derm/images/lesion.jpg";
 
                         featobj.setProperties({
                             'title' : self.draw_label,
@@ -575,8 +511,11 @@ var olViewer = derm_app.factory('olViewer',
             },
 
 //          designed for the Girder-based url-rewrite.
-            loadImageWithURL: function (base_url) {
+            loadImageWithURL: function (image_id) {
                 var self = this;
+
+                self.current_image_id = image_id;
+                var base_url = '/api/v1/item/' + image_id;
                 self.segmentation_list = [];
 
                 self.zoomify_url = base_url + '/zoomify';

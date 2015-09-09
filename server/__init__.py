@@ -9,7 +9,6 @@ from girder.models.model_base import ValidationException
 from girder.utility.server import staticFile, _StaticFileRoute
 
 from . import constants
-from .annotate import FillHandler
 from . import api
 from .image_utility import zoomifyhandler, thumbnailhandler, fifHandler, segmentationSourceHandler, segmentationTileHandler
 from .provision_utility import initialSetup, onUserCreated
@@ -97,9 +96,6 @@ def load(info):
     # "/uda/map/:id"
     info['serverRoot'].uda.map = staticFile(os.path.join(info['pluginRootDir'], 'custom', 'map.html'))
 
-    # "/uda/fill/:id" (POST only)
-    info['serverRoot'].uda.fill = FillHandler()
-
 
     # add api routes
     # remove docs for default Girder API, to simplify page
@@ -126,4 +122,5 @@ def load(info):
     # TODO: nest these under a "/isic" path
     info['apiRoot'].annotation = api.AnnotationResource(info['pluginRootDir'])
     info['apiRoot'].featureset = api.FeaturesetResource()
+    info['apiRoot'].image = api.ImageResource()
     info['apiRoot'].study = api.StudyResource()

@@ -4,201 +4,165 @@
 import cStringIO
 import json
 import re
-import urllib
 
 import cv2
 import geojson
-import numpy as np
+import numpy
 
-# TODO: add geojson, opencv to requirements.txt
+# TODO: add numpy, geojson, opencv to requirements.txt
 
 
 class NumPyArangeEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, np.ndarray):
+        if isinstance(obj, numpy.ndarray):
             return obj.tolist()  # or map(int, obj)
         return json.JSONEncoder.default(self, obj)
 
 
-def fillImageGeoJSON(params):
-    # TODO: implement a smart url-based hashing cache
+def segmentConnectedRegion(image, seed, tolerance):
+    return _segmentConnectedRegionCV(image, seed, tolerance)
 
-    # loading image from url into memory, first as np array then OpenCV image
-    req = urllib.urlopen(params['image']['url'])
 
-    arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
-    img = cv2.imdecode(arr, -1)  # 'load it as it is'
+def _segmentConnectedRegionSK(image, seed, tolerance):
+    """
+    SciKit Image implementation
+    """
+    # TODO
+    # threshold step
+    # http://scikit-image.org/docs/stable/api/skimage.measure.html#label
+    pass
 
-    h, w = img.shape[:2]
-    mask = np.zeros((h + 2, w + 2), np.uint8)
 
-    lo = int(params['tolerance'])
-    hi = int(params['tolerance'])
-    connectivity = 4
-    flags = connectivity
+def _segmentConnectedRegionCV(image, seed, tolerance,
+                              connectivity=8, fill_value=1):
+    """
+    Segment an image into a region connected to a seed point, using OpenCV.
+
+    :param image: The image to be segmented.
+    :type image: numpy.ndarray
+    :param seed: The point inside the connected region where the
+    segmentation will start.
+    :type seed: list
+    :param tolerance: The maximum color/intensity difference between the seed
+    point and a point in the connected region.
+    :type tolerance: int
+    :param connectivity: (optional) The number of allowed connectivity
+    propagation directions. Allowed values are:
+      * 4 for edge pixels
+      * 8 for edge and corner pixels
+    :type connectivity: int
+    :param fill_value: (optional)  The value to fill in the mask for pixels
+    that are part of the connected region. Should be non-zero.
+    :type fill_value: int
+    :returns: A binary label mask, with an extra 1-pixel wide padded border.
+    The values are either ``0`` or ``fill_value``.
+    :rtype: numpy.ndarray
+    """
+    image_height, image_width, image_channels = image.shape
+    # create padded mask to store output
+    mask = numpy.zeros((image_height + 2, image_width + 2), numpy.uint8)
+
+    flags = 0
+    flags |= connectivity
+    flags |= (fill_value << 8)
+    # compare each candidate to the seed, not its nearest neighbor; for lesion
+    #   images the gradient is too shallow for even very small tolerances to
+    #   work with a neared neighbor comparison
     flags |= cv2.FLOODFILL_FIXED_RANGE
 
-    relclick = np.asarray(params['click']['relative'])
-    absclick = np.asarray(params['click']['absolute'])
-    regsize = np.asarray(params['image']['region']['size'])
-    region_origin = np.asarray(params['image']['region']['origin'])
+    area, (bounds_x, bounds_y, bounds_width, bounds_height) = cv2.floodFill(
+        image=image,
+        mask=mask,
+        seedPoint=tuple(seed),
+        newVal=(255, 190, 00),  # TODO: why this?
+        loDiff=(tolerance,) * 3,
+        upDiff=(tolerance,) * 3,
+        flags=flags
+    )
 
-    regclick = absclick - region_origin
-    reg_relclick = regclick / regsize
-    real_size = np.asarray([w, h])
-    region_real_click = real_size * reg_relclick
+    # we could remove the padding, but cv2.findContours requires it to be present
+    # mask = mask[1:-1, 1:-1]
 
-    seed_pt = (int(region_real_click[0]), int(region_real_click[1]))
-
-    # seed_pt = (int(params['click']['relative'][0] * w), int(params['click']['relative'][1] * h))
-    # this doesn't work when an edge is clipped
-
-    cv2.floodFill(img, mask, seed_pt, (255, 190, 00), (lo, lo, lo), (hi, hi, hi), flags)
-    contours = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-    # contours are now defined in the coordinates of the image captured
-    # to get their relative position in the sub-image
-
-    subimage_x_to_rel_subimage_x = 1. / w
-    subimage_y_to_rel_subimage_y = 1. / h
-
-    # since we know the transform of the sub-image coordinate frame to the native coordinate frame
-
-    js_region_width = float(params['image']['region']['size'][0])  # this is width in native coordinates
-    js_region_height = float(params['image']['region']['size'][1])  # this is height in native coordinates
-
-    js_region_origin_x = float(params['image']['region']['origin'][0])  # this is offset in native coordinates
-    js_region_origin_y = float(params['image']['region']['origin'][1])  # this is offset in native coordinates
+    return mask
 
 
-    def contourToGeoString(cnt):
-        """
-        convert an OpenCV contour to a geojson-compatible representation
-        """
-        t_string = []
+def extractContour(image_mask):
+    return _extractContourCV(image_mask)
 
-        for pt in cnt:
 
-            rx = subimage_x_to_rel_subimage_x * pt[0]
-            ry = subimage_y_to_rel_subimage_y * pt[1]
+def _extractContourSK(image_mask):
+    """
+    SciKit Image implementation
+    """
+    # TODO
+    pass
 
-            new_x = (js_region_width * rx) + js_region_origin_x - 3
-            new_y = -1 * ((js_region_height * ry) + js_region_origin_y - 3)
 
-            # px = np.round(pt[0] * x_scale) + bl[0]
-            # py = -1*np.round(pt[1] * y_scale) + tr[1]
+def _extractContourCV(image_mask, safe=True, smoothing=False):
+    """
+    Extract the contour line within a segmented label mask, using OpenCV.
 
-            t_string.append((float(new_x), float(new_y)))
+    :param image_mask: A binary label mask, with an extra 1-pixel wide padded
+    border. Values are considered as only 0 or non-0.
+    :type image_mask: numpy.ndarray
+    :param safe: Guarantee that the image_mask will not be modified. This is slower.
+    :type safe: bool
+    :param smoothing: Use a Teh-Chin chain approximation algorithm to slightly
+    smooth and collapse the contour.
+    :type smoothing: bool
+    :return: An array of point pairs.
+    :rtype: numpy.ndarray
+    """
+    if safe:
+        image_mask = numpy.copy(image_mask)
 
-        return t_string
+    if smoothing:
+        # TODO: determine which one to use (or add parameter for either)
+        # approx_method = cv2.CHAIN_APPROX_TC89_L1
+        approx_method = cv2.CHAIN_APPROX_TC89_KCOS
+    else:
+        approx_method = cv2.CHAIN_APPROX_SIMPLE
 
-    outer_poly = (contourToGeoString(np.squeeze(contours[0][0])))
+    contours, hierarchy = cv2.findContours(
+        image=image_mask,
+        mode=cv2.RETR_EXTERNAL,
+        method=approx_method,
+        # compensate for the image's 1-pixel padding
+        offset=(-1, -1)
+    )
 
-    geo = geojson.Polygon([outer_poly])
-    feat = geojson.Feature(geometry=geo)
+    # "cv2.RETR_EXTERNAL" means there's only one contour
+    contour = contours[0]
+    # contour initially looks like [ [[0,1]], [[0,2]] ], so squeeze it
+    contour = numpy.squeeze(contour)
+    return contour
 
-    feat['properties']['rgbcolor'] = '''rgba(255, 255, 255, 0.1)'''
-    feat['properties']['hexcolor'] = '''#ff0000'''
-    feat['properties']['source'] = 'autofill'
 
-    del img, mask
+def fillImageGeoJSON(image_data, seed_point, tolerance):
+    if not(
+        # note, the image_data has a shape of (rows, cols), the seed is (x, y)
+        0.0 <= seed_point[0] <= image_data.shape[1] and
+        0.0 <= seed_point[1] <= image_data.shape[0]
+    ):
+        # TODO: a proper out of bounds error
+        return {'error': 'out of bounds'}
 
-    return_msg = {
-        'features': [geojson.dumps(feat)]
+    image_mask = segmentConnectedRegion(image_data, seed_point, tolerance)
+    contour = extractContour(image_mask)
+
+    feat = geojson.Feature(
+        # TODO: can this be made a LineString?
+        # geometry=geojson.LineString(coordinates=tuple(contour.tolist())),
+        geometry=geojson.Polygon(coordinates=(contour.tolist(),)),
+        properties={
+            'rgbcolor': 'rgba(255, 255, 255, 0.1)',
+            'hexcolor': '#ff0000',
+            'source': 'autofill'
+        }
+    )
+    return {
+        'features': [feat]
     }
-
-    return return_msg
-
-
-# def fillImage2(params):
-#
-#     # TODO: implement a smart url-based hashing cache
-#
-#     # loading image from url into memory, first as np array then opencv image
-#     req = urllib.urlopen(params['image']['url'])
-#     arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
-#     img = cv2.imdecode(arr,-1) # 'load it as it is'
-#
-#     h, w = img.shape[:2]
-#     mask = np.zeros((h+2, w+2), np.uint8)
-#
-#     lo = int(params['tolerance'])
-#     hi = int(params['tolerance'])
-#     connectivity = 4
-#     flags = connectivity
-#     flags |= cv2.FLOODFILL_FIXED_RANGE
-#
-#     relclick = np.asarray(params['click']['relative'])
-#     absclick = np.asarray(params['click']['absolute'])
-#     regsize = np.asarray(params['image']['region']['size'])
-#
-#     region_origin = np.asarray(params['image']['region']['origin'])
-#
-#     regclick = absclick - region_origin
-#     reg_relclick = regclick / regsize
-#
-#     real_size = np.asarray([w,h])
-#
-#     region_real_click = real_size * reg_relclick
-#
-#     seed_pt = (int(region_real_click[0]), int(region_real_click[1]))
-#
-#     # seed_pt = (int(params['click']['relative'][0] * w), int(params['click']['relative'][1] * h))
-#     # this doesn't work when an edge is clipped
-#
-#     cv2.floodFill(img, mask, seed_pt, (255,190,00), (lo,lo,lo), (hi,hi,hi), flags)
-#     contours = cv2.findContours(mask,cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-#
-#     # contours are now defined in the coordinates of the image captured
-#     # to get their relative position in the subimage
-#
-#     subimage_x_to_rel_subimage_x = 1. / w
-#     subimage_y_to_rel_subimage_y = 1. / h
-#
-#     # since we know the transform of the subimage coordinate frame to the native coordinate frame
-#
-#     js_region_width = float(params['image']['region']['size'][0]) # this is width in native coordinates
-#     js_region_height = float(params['image']['region']['size'][1]) # this is height in native coordinates
-#
-#     js_region_origin_x = float(params['image']['region']['origin'][0]) # this is offset in native coordinates
-#     js_region_origin_y = float(params['image']['region']['origin'][1]) # this is offset in native coordinates
-#
-#
-#     def offsetPoint((x, y)):
-#
-#         rx = subimage_x_to_rel_subimage_x * x
-#         ry = subimage_y_to_rel_subimage_y * y
-#
-#         new_x = (js_region_width * rx) + js_region_origin_x - 3
-#         new_y = (js_region_height * ry) + js_region_origin_y - 3
-#
-#         return (new_x, new_y)
-#
-#     outer_contour = contours[0][0]
-#     rescaled_contour = np.zeros_like(outer_contour)
-#
-#     for n, cnt in enumerate(outer_contour):
-#         x,y = offsetPoint(cnt[0])
-#         rescaled_contour[n, :] = [x,-y]
-#
-#     class NumPyArangeEncoder(json.JSONEncoder):
-#         def default(self, obj):
-#             if isinstance(obj, np.ndarray):
-#                 return obj.tolist() # or map(int, obj)
-#             return json.JSONEncoder.default(self, obj)
-#
-#
-#     outer = json.dumps(rescaled_contour, cls=NumPyArangeEncoder)
-#     # inner = json.dumps(contours[0][1], cls=NumPyArangeEncoder)
-#
-#     del img, mask
-#
-#     return_msg = {}
-#     return_msg['contour'] = {
-#         'outer' : outer
-#     }
-#
-#     return return_msg
 
 
 def segmentImage(input_parameters):
@@ -211,7 +175,7 @@ def segmentImage(input_parameters):
     imgstr = re.search(r'base64,(.*)', opdata['image']).group(1)
     tempimg = cStringIO.StringIO(imgstr.decode('base64'))
     tempimg.seek(0)
-    cvimg = cv2.imdecode(np.asarray(bytearray(tempimg.read()), dtype=np.uint8), 1)
+    cvimg = cv2.imdecode(numpy.asarray(bytearray(tempimg.read()), dtype=numpy.uint8), 1)
     # cv2.imwrite('inputimage.png', cvimg)
 
     # imgray = cv2.cvtColor(cvimg,cv2.COLOR_BGR2GRAY)
@@ -233,21 +197,21 @@ def segmentImage(input_parameters):
     x_scale = native_width / imgray.shape[1]
     y_scale = native_height / imgray.shape[0]
 
-    def contourToGeoString(cnt):
+    def contourToGeoString(contour):
         """
         convert an OpenCV contour to a geojson-compatible representation
         """
         t_string = []
-        for pt in cnt:
+        for pt in contour:
 
-            px = np.round(pt[0] * x_scale) + bl[0]
-            py = -1 * np.round(pt[1] * y_scale) + tr[1]
+            px = numpy.round(pt[0] * x_scale) + bl[0]
+            py = -1 * numpy.round(pt[1] * y_scale) + tr[1]
 
             t_string.append((float(px), float(py)))
 
         return t_string
 
-    unique_labels = np.unique(imgray)
+    unique_labels = numpy.unique(imgray)
 
     # we're going to make an assumption: only consider a single hole in a polygon
 
@@ -285,16 +249,21 @@ def segmentImage(input_parameters):
             elif hei[2] < 0:
                 # this contour has no children, just add it
 
-                outer_poly = (contourToGeoString(np.squeeze(cnt)))
+                outer_poly = (contourToGeoString(numpy.squeeze(cnt)))
 
-    #             x_vals = np.round(ca[:,0] * x_scale) + bl[0]
-    #             y_vals = -1*np.round(ca[:,1] * y_scale) + tr[1]
+    #             x_vals = numpy.round(ca[:,0] * x_scale) + bl[0]
+    #             y_vals = -1*numpy.round(ca[:,1] * y_scale) + tr[1]
 
                 # print '(add) %s: %d -> this contour (%d) has no children' % (label,n, len(outer_poly))
 
-                geo = geojson.Polygon([outer_poly])
-                feat = geojson.Feature(geometry=geo, id=len(all_cnts))
-                feat['properties']['labelindex'] = str(label)
+                feat = geojson.Feature(
+                    geometry=geojson.Polygon((outer_poly,)),
+                    id=len(all_cnts),
+                    properties={
+                        'labelindex': str(label)
+                    }
+                )
+
 
                 cntdict[str(label)].append(feat)
                 all_cnts.append(feat)
@@ -303,15 +272,18 @@ def segmentImage(input_parameters):
                 # contour's child is at contours[hei[2]]
                 # add this contour and it's child
 
-                outer_poly = contourToGeoString(np.squeeze(cnt))
-                inner_poly = contourToGeoString(np.squeeze(contours[hei[2]]))
+                outer_poly = contourToGeoString(numpy.squeeze(cnt))
+                inner_poly = contourToGeoString(numpy.squeeze(contours[hei[2]]))
 
                 # print '(add) %s: %d -> this contour (%d) has a child: %d (%d)' % (label, n, len(outer_poly), hei[2], len(inner_poly))
 
-                geo = geojson.Polygon([outer_poly, inner_poly])
-
-                feat = geojson.Feature(geometry=geo, id=len(all_cnts))
-                feat['properties']['labelindex'] = str(label)
+                feat = geojson.Feature(
+                    geometry=geojson.Polygon((outer_poly, inner_poly)),
+                    id=len(all_cnts),
+                    properties={
+                        'labelindex': str(label)
+                    }
+                )
 
                 cntdict[str(label)].append(feat)
 
@@ -319,9 +291,5 @@ def segmentImage(input_parameters):
 
         for c in all_cnts:
             return_data.append(geojson.dumps(c))
-
-        # print 'There are %d features to return' % (len(return_data))
-
-        # msg['features'] =
 
     return return_data

@@ -17,19 +17,7 @@ from girder.utility.model_importer import ModelImporter
 @access.public
 @loadmodel(map={'item_id': 'item'}, model='item', level=AccessType.READ)
 def thumbnailhandler(item, params):
-    image_file = ModelImporter.model('file').findOne({
-        'itemId': item['_id'],
-        'name': item['meta']['convertedFilename']
-    })
-    if not image_file:
-        raise RestException('No TIFF file in item')
-
-    assetstore = ModelImporter.model('assetstore').load(image_file['assetstoreId'])
-
-    # have to fake it for IIP to play nice
-    file_path = os.path.join(assetstore['root'], image_file['path'])
-    thumbnail_url = '/fcgi-bin/iipsrv.fcgi?FIF=%s&WID=256&CVT=jpeg' % file_path
-
+    thumbnail_url = ModelImporter.model('image', 'isic_archive').tileServerURL(item, {'WID': 256})
     raise cherrypy.HTTPRedirect(thumbnail_url, status=307)
 
 thumbnailhandler.cookieAuth = True
@@ -134,12 +122,7 @@ def fifHandler(item_id, params, **kwargs):
     zsplit = cherrypy.url().split('fif/')
 
     if len(zsplit) > 1:
-        image_file = ModelImporter.model('file').findOne({
-            'itemId': item['_id'],
-            'name': item['meta']['convertedFilename']
-        })
-        if not image_file:
-            raise RestException('No TIFF file in item')
+        image_file = ModelImporter.model('image', 'isic_archive').multiresolutionFile(item)
 
         assetstore = ModelImporter.model('assetstore').load(image_file['assetstoreId'])
 
