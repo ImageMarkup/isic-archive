@@ -42,10 +42,6 @@ def clearRouteDocs():
     user_auth_ops = routes['user']['/user/authentication']
     routes.clear()
     routes['user']['/user/authentication'] = user_auth_ops
-    # TODO: remove this, once upstream is updated
-    from girder.api.docs import discovery
-    discovery.clear()
-    discovery.add('user')
 
 
 def load(info):
