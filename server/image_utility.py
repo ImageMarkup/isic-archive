@@ -17,7 +17,7 @@ from girder.utility.model_importer import ModelImporter
 @access.public
 @loadmodel(map={'item_id': 'item'}, model='item', level=AccessType.READ)
 def thumbnailhandler(item, params):
-    thumbnail_url = ModelImporter.model('image', 'isic_archive').tileServerURL(item, {'WID': 256})
+    thumbnail_url = ModelImporter.model('image', 'isic_archive').tileServerURL(item, width=256)
     raise cherrypy.HTTPRedirect(thumbnail_url, status=307)
 
 thumbnailhandler.cookieAuth = True

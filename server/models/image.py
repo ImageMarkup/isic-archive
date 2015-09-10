@@ -23,18 +23,17 @@ class Image(Item):
         })
 
 
-    def tileServerURL(self, image, params=None):
+    def tileServerURL(self, image, width=None):
         image_file = self.multiresolutionFile(image)
         assetstore = self.model('assetstore').load(image_file['assetstoreId'])
         file_path = os.path.join(assetstore['root'], image_file['path'])
 
-        # the ordering of query string parameters to IIP matters
+        # the ordering of query string parameters to IIP critically matters
         query_params = collections.OrderedDict()
-        # FIF seems to need to come first
         query_params['FIF'] = file_path
+        if width:
+            query_params['WID'] = width
         query_params['CVT'] = 'jpeg'
-        if params:
-            query_params.update(params)
 
         # TODO: this won't work if the server's DNS doesn't know its own canonical hostname
         current_location = getUrlParts()
