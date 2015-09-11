@@ -46,7 +46,7 @@ class AnnotationResource(Resource):
             return None
 
 
-    @access.user
+    @access.public
     @loadmodel(model='annotation', plugin='isic_archive', map={'annotation_id': 'annotation_item'}, level=AccessType.READ)
     def getAnnotation(self, annotation_item, params):
         # return self.model('annotation', 'isic_archive').filter(annotation_item, , self.getCurrentUser())
