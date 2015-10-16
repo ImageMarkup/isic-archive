@@ -3,22 +3,6 @@
   "version": 0.2,
   "image_features": [
     {
-      "id": "image_quality",
-      "name": ["Image Quality"],
-      "type": "select",
-      "options": [
-        {
-          "id": "acceptable",
-          "name": "Acceptable for dermoscopic evaluation"
-        },
-        {
-          "id": "non_acceptable",
-          "name": "Non acceptable"
-        }
-      ]
-    },
-
-    {
       "id": "pattern_symmetry",
       "name": ["Pattern Symmetry"],
       "type": "select",
