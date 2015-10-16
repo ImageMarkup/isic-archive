@@ -12,8 +12,14 @@ from . import constants
 
 
 def onUserCreated(event):
+    user = event.info
+
+    # make all users private
+    # TODO: make users visible to the "study creators" group
+    user['public'] = False
+    ModelImporter.model('user').save(user)
+
     if ModelImporter.model('setting').get(constants.PluginSettings.DEMO_MODE):
-        user = event.info
         addUserToAllUDAGroups(user)
 
 
