@@ -113,11 +113,12 @@ class AnnotationResource(Resource):
             raise RestException('Annotation is already complete.')
 
         body_json = self.getBodyJson()
-        self.requireParams(('imageId', 'startTime', 'stopTime', 'annotations'), body_json)
+        self.requireParams(('status', 'imageId', 'startTime', 'stopTime', 'annotations'), body_json)
 
         if ObjectId(body_json['imageId']) != annotation_item['meta']['imageId']:
             raise RestException('Submitted imageId is incorrect.')
 
+        annotation_item['meta']['status'] = body_json['status']
         annotation_item['meta']['startTime'] = \
             datetime.datetime.utcfromtimestamp(body_json['startTime'] / 1000.0)
         annotation_item['meta']['stopTime'] = \

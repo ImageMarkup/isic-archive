@@ -106,9 +106,15 @@ derm_app.controller('AnnotationController', ['$scope', '$rootScope', '$location'
             }
         });
 
-        $scope.submitAnnotations = function () {
+        /* Submit an annotation task.
+         *
+         * status should be either 'true', or a string describing the reason
+         * for failure.
+         */
+        $scope.submitAnnotations = function (status) {
             var submit_url = '/api/v1/annotation/' + $scope.annotation_item_id;
             var annotation_to_store = {
+                status: status === true ? 'ok' : status,
                 imageId: image_item_id,
                 startTime: start_time,
                 stopTime: Date.now(),
@@ -120,6 +126,17 @@ derm_app.controller('AnnotationController', ['$scope', '$rootScope', '$location'
         };
     }
 ]);
+
+
+derm_app.controller('FlagAnnotationController', ['$scope', '$log',
+    function ($scope, $log) {
+        $scope.flag = function (reason) {
+            $scope.clearAnnotations();
+            $scope.submitAnnotations(reason);
+        };
+    }
+]);
+
 
 derm_app.controller('ImageFeatureAnnotationController', ['$scope', '$log',
     function ($scope, $log) {
