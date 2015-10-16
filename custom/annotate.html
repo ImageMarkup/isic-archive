@@ -88,7 +88,7 @@
                 <div>
                     <div class="thumbnailview step-content">
                         <p>Annotating {{ current_image.name }}</p>
-                        <img class="" ng-src="/api/v1/item/{{current_image._id}}/thumbnail" />
+                        <img class="" ng-src="/api/v1/image/{{current_image._id}}/thumbnail" />
                     </div>
                 </div>
                 -->
@@ -147,7 +147,7 @@
                             </div>
                             <div class="imagePreview">
                                 <div class='wrapper' ng-repeat="(i, v) in image_list">
-                                    <img class="imagethumb" ng-click='selectImage(i)' ng-src="/api/v1/item/{{v._id}}/thumbnail" />
+                                    <img class="imagethumb" ng-click='selectImage(i)' ng-src="/api/v1/image/{{v._id}}/thumbnail" />
                                     <div class='description' ng-show="imageHasAnnotations(i)">
                                         <span class='label label-primary givedropshadow'>
                                             {{image_list[i].annotation.length}}</span>

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import cherrypy
+
 from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel
 from girder.api.describe import Description
@@ -13,8 +15,24 @@ class ImageResource(Resource):
     def __init__(self,):
         self.resourceName = 'image'
 
+        self.route('GET', (':id', 'thumbnail'), self.thumbnail)
+
         # TODO: change to GET
         self.route('POST', (':id', 'segment-boundary'), self.segmentBoundary)
+
+
+    @access.public
+    @loadmodel(model='item', map={'id': 'image'}, level=AccessType.READ)
+    def thumbnail(self, image, params):
+        width = int(params.get('width', 256))
+        thumbnail_url = self.model('image', 'isic_archive').tileServerURL(image, width=width)
+        raise cherrypy.HTTPRedirect(thumbnail_url, status=307)
+
+    thumbnail.cookieAuth = True
+    thumbnail.description = (
+        Description('Retrieve the thumbnail for a given image item.')
+        .param('item_id', 'The item ID', paramType='path')
+        .errorResponse())
 
 
     @access.user

@@ -94,7 +94,7 @@ var appController = review_app.controller('ApplicationController', ['$scope', '$
                 response.data.forEach(function(image){
 
                     var simple_rep = image;
-                    simple_rep['thumbnail'] = '/api/v1/item/' + image['_id'] + '/thumbnail';
+                    simple_rep['thumbnail'] = '/api/v1/image/' + image['_id'] + '/thumbnail';
                     simple_rep['image']
                     simple_rep['title'] = image['name'];
 

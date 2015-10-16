@@ -13,7 +13,7 @@ from girder.api.rest import loadmodel, RestException
 from girder.constants import AccessType
 from girder.utility.model_importer import ModelImporter
 
-
+# TODO: this function should be safe to remove, but test everything first
 @access.public
 @loadmodel(map={'item_id': 'item'}, model='item', level=AccessType.READ)
 def thumbnailhandler(item, params):

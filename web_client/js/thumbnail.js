@@ -25,7 +25,7 @@ thumbnailView.views.ThumbnailWidget = girder.View.extend({
         if (this.accessLevel >= girder.AccessType.READ) {
             $(".g-item-info").after(jade.templates.thumbnail());
 
-            $('#thumbnail-img').attr("src", "/api/v1/item/" + this.item.get("_id") + "/thumbnail");
+            $('#thumbnail-img').attr("src", "/api/v1/image/" + this.item.get("_id") + "/thumbnail");
 
 //            $.ajax({
 //                url: "/api/v1/item/" + this.item.get("_id") + "/download",

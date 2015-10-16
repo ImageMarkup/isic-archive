@@ -99,7 +99,7 @@ derm_app.controller('AnnotationController', ['$scope', '$rootScope', '$location'
                         }
                     );
 
-                    $scope.overview_image_url = '/api/v1/item/' + image_item_id + '/thumbnail';
+                    $scope.overview_image_url = '/api/v1/image/' + image_item_id + '/thumbnail?width=256';
 
                     start_time = Date.now();
                 });
