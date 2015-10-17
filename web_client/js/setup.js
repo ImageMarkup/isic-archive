@@ -6,7 +6,7 @@
 girder.wrap(girder.views.LayoutGlobalNavView, 'render', function (render) {
     'use strict';
 
-    var isicNavItems = [
+    this.navItems = [
         {
             name: 'Lesion Images',
             icon: 'icon-picture',
@@ -19,15 +19,23 @@ girder.wrap(girder.views.LayoutGlobalNavView, 'render', function (render) {
         }
     ];
     if (girder.currentUser) {
-        isicNavItems.push({
+        this.navItems.push({
             name: 'Your Tasks',
             icon: 'icon-check',
             target: 'isic-tasks'
         });
     }
-    this.navItems = isicNavItems.concat(this.defaultNavItems);
+    this.navItems = this.navItems.concat(this.defaultNavItems);
+    if (girder.currentUser && girder.currentUser.get('admin')) {
+        this.navItems.push({
+            name: 'Admin console',
+            icon: 'icon-wrench',
+            target: 'admin'
+        });
+    }
 
     render.call(this);
+    return this;
 });
 
 function _navigateToCollection(collectionName, replace) {
