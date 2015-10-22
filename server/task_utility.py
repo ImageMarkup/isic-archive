@@ -10,6 +10,8 @@ import os
 import random
 
 import cherrypy
+import pymongo
+
 from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel
 from girder.api.describe import Description
@@ -457,15 +459,16 @@ class TaskHandler(Resource):
     @loadmodel(map={'study_id': 'study'}, model='study', plugin='isic_archive', level=AccessType.READ)
     def p2TaskRedirect(self, study, params):
         try:
-            annotation = self.model('study', 'isic_archive').childAnnotations(
+            active_annotations = self.model('study', 'isic_archive').childAnnotations(
                 study=study,
                 annotator_user=self.getCurrentUser(),
                 state=self.model('study', 'isic_archive').State.ACTIVE,
                 limit=1
-            ).next()
+            )
+            next_annotation = active_annotations.sort('name', pymongo.ASCENDING).next()
         except StopIteration:
             raise RestException('Study "%s" has no annotation tasks for this user.' % study['_id'])
 
-        redirect_url = '/uda/map#/%s' % annotation['_id']
+        redirect_url = '/uda/map#/%s' % next_annotation['_id']
         raise cherrypy.HTTPRedirect(redirect_url, status=307)
     p2TaskRedirect.cookieAuth = True
