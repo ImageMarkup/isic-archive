@@ -117,6 +117,7 @@ def load(info):
 
     # TODO: nest these under a "/isic" path
     info['apiRoot'].annotation = api.AnnotationResource(info['pluginRootDir'])
+    info['apiRoot'].dataset = api.DatasetResource()
     info['apiRoot'].featureset = api.FeaturesetResource()
     info['apiRoot'].image = api.ImageResource()
     info['apiRoot'].study = api.StudyResource()

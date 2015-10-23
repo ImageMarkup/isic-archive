@@ -15,10 +15,39 @@ class ImageResource(Resource):
     def __init__(self,):
         self.resourceName = 'image'
 
+        self.route('GET', (), self.find)
         self.route('GET', (':id', 'thumbnail'), self.thumbnail)
 
         # TODO: change to GET
         self.route('POST', (':id', 'segment-boundary'), self.segmentBoundary)
+
+
+    @access.public
+    def find(self, params):
+        user = self.getCurrentUser()
+        limit, offset, sort = self.getPagingParameters(params, 'lowerName')
+
+        if 'datasetId' in params:
+            dataset = self.model('dataset', 'isic_archive').load(
+                id=params['datasetId'], user=user, level=AccessType.READ, exc=True)
+
+            images = self.model('dataset', 'isic_archive').childImages(
+                dataset, limit=limit, offset=offset, sort=sort)
+        else:
+            # TODO: maybe make datasetId actually required and raise an Exception
+
+            # TODO: only list images from datasets we have access to
+            images = self.model('image', 'isic_archive').find(
+                limit=limit, offset=offset, sort=sort)
+
+        return [self.model('image', 'isic_archive').filter(image, user)
+                for image in images]
+
+    find.description = (
+        Description('Return a list of lesion images.')
+        .pagingParams(defaultSort='name')
+        .param('datasetId', 'The ID of the dataset to use.', required=True)
+        .errorResponse())
 
 
     @access.public

@@ -31,12 +31,12 @@ class Study(Folder):
             public=None,
             creator=creator_user
         )
-        self.copyAccessPolicies(
+        study_folder = self.copyAccessPolicies(
             src=self.loadStudyCollection(),
             dest=study_folder,
             save=False
         )
-        self.setUserAccess(
+        study_folder = self.setUserAccess(
             doc=study_folder,
             user=creator_user,
             # TODO: make admin
@@ -44,7 +44,7 @@ class Study(Folder):
             save=False
         )
         # "setMetadata" will always save
-        self.setMetadata(
+        study_folder = self.setMetadata(
             folder=study_folder,
             metadata={
                 'featuresetId': featureset['_id']

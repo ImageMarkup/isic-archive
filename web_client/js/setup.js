@@ -8,9 +8,9 @@ girder.wrap(girder.views.LayoutGlobalNavView, 'render', function (render) {
 
     this.navItems = [
         {
-            name: 'Lesion Images',
+            name: 'Lesion Datasets',
             icon: 'icon-picture',
-            target: 'isic-images'
+            target: 'isic-datasets'
         },
         {
             name: 'Annotation Studies',
@@ -52,11 +52,6 @@ function _navigateToCollection(collectionName, replace) {
         });
     });
 }
-
-girder.router.route('isic-images', 'isic-images', function () {
-    'use strict';
-    _navigateToCollection('Lesion Images', true);
-});
 
 girder.router.route('isic-studies', 'isic-studies', function () {
     'use strict';
