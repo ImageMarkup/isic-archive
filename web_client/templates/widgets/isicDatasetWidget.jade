@@ -13,17 +13,17 @@
   role='tabpanel'
   aria-labelledby='heading'+dataset.id
 )
-  .panel-body(style="width=300")
+  .panel-body
     span #{dataset.get('description')}
 
-    .carousel.slide(id='carousel'+dataset.id data-ride="carousel" style="width=256")
-      ol.carousel-indicators
-        each image, imageNum in images
-          li(
-            class=imageNum === 0 ? 'active' : ''
-            data-target="#carousel-example-generic"
-            data-slide-to=imageNum
-          )
+    .carousel.slide(id='carousel'+dataset.id data-ride="carousel" style="width: 256px;")
+      //ol.carousel-indicators
+      //  each image, imageNum in images
+      //    li(
+      //      class=imageNum === 0 ? 'active' : ''
+      //      data-target="#carousel-example-generic"
+      //      data-slide-to=imageNum
+      //    )
       .carousel-inner(role="listbox")
         each image, imageNum in images
           .item(class=imageNum === 0 ? 'active' : '')
