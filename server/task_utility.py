@@ -186,7 +186,6 @@ class UDAResource(Resource):
             qc_metadata = {
                 'qc_user': self.getCurrentUser()['_id'],
                 'qc_result': 'flagged',
-                'qc_folder_id': folder['_id']
             }
             self.model('item').setMetadata(image_item, qc_metadata)
             self.model('item').move(image_item, phase0_flagged_images)
@@ -203,7 +202,6 @@ class UDAResource(Resource):
             qc_metadata = {
                 'qc_user': self.getCurrentUser()['_id'],
                 'qc_result': 'ok',
-                'qc_folder_id': folder['_id'],
                 'qc_stop_time': datetime.datetime.utcnow(),
             }
             self.model('item').setMetadata(image_item, qc_metadata)
@@ -311,7 +309,6 @@ class UDAResource(Resource):
         item_metadata = {
             '%s_user' % phase_acronym: markup_dict['user']['_id'],
             '%s_result' % phase_acronym: 'ok',
-            '%s_folder_id' % phase_acronym: markup_dict['image']['folderId'],
             '%s_start_time' % phase_acronym:
                 datetime.datetime.utcfromtimestamp(markup_dict['taskstart'] / 1000.0),
             '%s_stop_time' % phase_acronym:
