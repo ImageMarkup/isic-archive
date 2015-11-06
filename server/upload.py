@@ -208,7 +208,7 @@ def _zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_u
                         parentType='folder',
                         parent=images_folder,
                         user=upload_user,
-                        mimeType='image/tiff',
+                        mimeType=image_mimetype,
                     )
 
                 image_item = ModelImporter.model('item').load(image_file['itemId'], force=True)
@@ -226,7 +226,7 @@ def _zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_u
                         parentType='item',
                         parent=image_item,
                         user=upload_user,
-                        mimeType=image_mimetype,
+                        mimeType='image/tiff',
                     )
                 os.remove(converted_file_path)
 
