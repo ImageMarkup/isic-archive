@@ -35,6 +35,13 @@ def validateSettings(event):
                 'Demo mode must be provided as a boolean.', 'value')
         event.preventDefault().stopPropagation()
 
+    if key == constants.PluginSettings.MAX_ISIC_ID:
+        # TODO: can we disable this from being set via the HTTP API?
+        if not isinstance(val, int):
+            raise ValidationException(
+                'Maximum ISIC ID must be provided as an integer.', 'value')
+        event.preventDefault().stopPropagation()
+
 
 def clearRouteDocs():
     from girder.api.docs import routes
@@ -50,7 +57,7 @@ def load(info):
 
     # add event listeners
     # note, 'model.setting.validate' must be bound before initialSetup is called
-    events.bind('model.setting.validate', 'uda', validateSettings)
+    events.bind('model.setting.validate', 'isic', validateSettings)
     events.bind('data.process', 'uploadHandler', uploadHandler)
     events.bind('model.user.save.created', 'onUserCreated', onUserCreated)
 

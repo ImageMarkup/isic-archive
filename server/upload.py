@@ -167,8 +167,13 @@ def _zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_u
                     increment=1,
                     message='Extracting "%s"' % original_file_name)
 
-                original_file_basename = os.path.splitext(original_file_name)[0]
-                converted_file_name = '%s.new.tif' % original_file_basename
+                image_item = ModelImporter.model('image', 'isic').createImage(
+                    creator=upload_user,
+                    parentFolder=images_folder
+                )
+
+                # original_file_basename = os.path.splitext(original_file_name)[0]
+                converted_file_name = '%s.tif' % image_item['name']
                 converted_file_path = os.path.join(temp_dir, converted_file_name)
 
                 convert_command = (
@@ -199,23 +204,20 @@ def _zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_u
                 #     continue
 
                 # upload original image
-
+                image_mimetype = mimetypes.guess_type(original_file_name)[0]
                 with open(original_file_path, 'rb') as original_file_obj:
-                    image_file = ModelImporter.model('upload').uploadFromFile(
+                    ModelImporter.model('upload').uploadFromFile(
                         obj=original_file_obj,
                         size=os.path.getsize(original_file_path),
-                        name=original_file_name,
-                        parentType='folder',
-                        parent=images_folder,
+                        name='%s.%s' % (
+                            image_item['name'],
+                            os.path.splitext(original_file_name)[1]
+                        ),
+                        parentType='item',
+                        parent=image_item,
                         user=upload_user,
                         mimeType=image_mimetype,
                     )
-
-                image_item = ModelImporter.model('item').load(image_file['itemId'], force=True)
-                image_item['name'] = original_file_basename
-                ModelImporter.model('item').updateItem(image_item)
-
-                image_mimetype = mimetypes.guess_type(original_file_relpath)[0]
 
                 # upload converted image
                 with open(converted_file_path, 'rb') as converted_file_obj:
@@ -233,9 +235,7 @@ def _zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_u
                 ModelImporter.model('item').setMetadata(image_item, {
                     # provide full and possibly-qualified path as originalFilename
                     'originalFilename': original_file_relpath,
-                    'originalMimeType': image_mimetype,
                     'convertedFilename': converted_file_name,
-                    'convertedMimeType': 'image/tiff',
                 })
 
 

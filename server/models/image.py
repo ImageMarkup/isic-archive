@@ -13,8 +13,27 @@ from girder.api.rest import getUrlParts
 from girder.models.model_base import GirderException
 from girder.models.item import Item
 
+from .. import constants
+
 
 class Image(Item):
+
+    def createImage(self, creator, parentFolder):
+        new_isic_id = self.model('setting').get(
+            constants.PluginSettings.MAX_ISIC_ID, default=-1) + 1
+
+        image = self.createItem(
+            name='ISIC_%07d' % new_isic_id,
+            creator=creator,
+            folder=parentFolder,
+            description=''
+        )
+
+        self.model('setting').set(
+            constants.PluginSettings.MAX_ISIC_ID, new_isic_id)
+
+        return image
+
 
     def multiresolutionFile(self, image):
         return self.model('file').findOne({
