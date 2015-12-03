@@ -265,7 +265,7 @@ def _csvUploadHandler(upload_folder, upload_item, upload_file, upload_file_path,
             return
 
         for csv_row in csv_reader:
-            isic_id = csv_row['isic_id']
+            isic_id = csv_row.pop('isic_id', None)
             if not isic_id:
                 parse_errors.append('No "isic_id" field in row %d' % csv_reader.line_num)
                 continue
