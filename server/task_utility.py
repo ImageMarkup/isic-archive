@@ -31,6 +31,7 @@ def getItemsInFolder(folder):
 
 class UDAResource(Resource):
     def __init__(self, plugin_root_dir):
+        super(UDAResource, self).__init__()
         self.resourceName = 'uda'
         self.plugin_root_dir = plugin_root_dir
 
@@ -394,6 +395,7 @@ class UDAResource(Resource):
 
 class TaskHandler(Resource):
     def __init__(self, plugin_root_dir):
+        super(TaskHandler, self).__init__()
         self.resourceName = 'task'
         self.plugin_root_dir = plugin_root_dir
 
