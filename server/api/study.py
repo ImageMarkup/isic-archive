@@ -19,6 +19,7 @@ from ..provision_utility import ISIC
 
 class StudyResource(Resource):
     def __init__(self,):
+        super(StudyResource, self).__init__()
         self.resourceName = 'study'
 
         self.route('GET', (), self.find)

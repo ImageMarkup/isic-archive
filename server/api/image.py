@@ -13,6 +13,7 @@ from ..image_processing import fillImageGeoJSON
 
 class ImageResource(Resource):
     def __init__(self,):
+        super(ImageResource, self).__init__()
         self.resourceName = 'image'
 
         self.route('GET', (), self.find)

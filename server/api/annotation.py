@@ -18,6 +18,7 @@ from ..provision_utility import ISIC
 
 class AnnotationResource(Resource):
     def __init__(self, plugin_root_dir):
+        super(AnnotationResource, self).__init__()
         self.resourceName = 'annotation'
         self.plugin_root_dir = plugin_root_dir
 

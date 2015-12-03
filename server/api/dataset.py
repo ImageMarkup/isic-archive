@@ -8,7 +8,8 @@ from girder.constants import AccessType
 
 
 class DatasetResource(Resource):
-    def __init__(self,):
+    def __init__(self):
+        super(DatasetResource, self).__init__()
         self.resourceName = 'study'
 
         self.route('GET', (), self.find)

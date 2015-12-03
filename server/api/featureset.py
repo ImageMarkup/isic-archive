@@ -8,7 +8,8 @@ from girder.constants import AccessType
 
 
 class FeaturesetResource(Resource):
-    def __init__(self,):
+    def __init__(self):
+        super(FeaturesetResource, self).__init__()
         self.resourceName = 'featureset'
 
         self.route('GET', (), self.find)
