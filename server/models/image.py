@@ -28,6 +28,9 @@ class Image(Item):
             folder=parentFolder,
             description=''
         )
+        self.setMetadata(image, {
+            'clinical': {}
+        })
 
         self.model('setting').set(
             constants.PluginSettings.MAX_ISIC_ID, new_isic_id)

@@ -271,7 +271,7 @@ def _csvUploadHandler(upload_folder, upload_item, upload_file, upload_file_path,
                 continue
 
             # TODO: require upload_user to match image creator?
-            image_items = ModelImporter.model('item').find({
+            image_items = ModelImporter.model('image', 'isic').find({
                 'name': isic_id,
                 'folderId': {'$in': dataset_folder_ids}
             })
@@ -284,7 +284,11 @@ def _csvUploadHandler(upload_folder, upload_item, upload_file, upload_file_path,
             else:
                 image_item = image_items.next()
 
-            ModelImporter.model('item').setMetadata(image_item, metadata=csv_row)
+            clinical_metadata = image_item['meta']['clinical']
+            clinical_metadata.update(csv_row)
+            ModelImporter.model('image', 'isic').setMetadata(image_item, {
+                'clinical': clinical_metadata
+            })
 
     if parse_errors:
         # TODO: eventually don't store whole string in memory
