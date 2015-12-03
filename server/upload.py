@@ -167,7 +167,7 @@ def _zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_u
                     increment=1,
                     message='Extracting "%s"' % original_file_name)
 
-                image_item = ModelImporter.model('image', 'isic').createImage(
+                image_item = ModelImporter.model('image', 'isic_archive').createImage(
                     creator=upload_user,
                     parentFolder=images_folder
                 )
@@ -271,7 +271,7 @@ def _csvUploadHandler(upload_folder, upload_item, upload_file, upload_file_path,
                 continue
 
             # TODO: require upload_user to match image creator?
-            image_items = ModelImporter.model('image', 'isic').find({
+            image_items = ModelImporter.model('image', 'isic_archive').find({
                 'name': isic_id,
                 'folderId': {'$in': dataset_folder_ids}
             })
@@ -286,7 +286,7 @@ def _csvUploadHandler(upload_folder, upload_item, upload_file, upload_file_path,
 
             clinical_metadata = image_item['meta']['clinical']
             clinical_metadata.update(csv_row)
-            ModelImporter.model('image', 'isic').setMetadata(image_item, {
+            ModelImporter.model('image', 'isic_archive').setMetadata(image_item, {
                 'clinical': clinical_metadata
             })
 
