@@ -92,6 +92,24 @@
                     </div>
                 </div>
                 -->
+                <div uib-dropdown ng-controller="FlagAnnotationController" class="btn-group">
+                    <button uib-dropdown-toggle
+                            type="button"
+                            class="btn btn-warning dropdown-toggle"
+                            data-toggle="dropdown"
+                            aria-haspopup="true"
+                            aria-expanded="false">
+                        Flag Image <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a ng-click="flag('phi')">Contains PHI</a></li>
+                        <li><a ng-click="flag('quality')">Low optical quality</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a ng-click="flag('other')">Other reason</a></li>
+                        <!--<li><a ng-click="flag('custom')">Custom reason (specify...)</a></li>-->
+                    </ul>
+                </div>
+
                 <div class="clearfix"></div>
                 <!-- Step content -->
                 <div class="" ng-repeat="(key, value) in decision_tree">

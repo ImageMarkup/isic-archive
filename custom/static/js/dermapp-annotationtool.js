@@ -6,6 +6,17 @@
 /*jslint browser: true*/
 /*global console*/
 
+
+// TODO: re-use some of this from Phase 2?
+derm_app.controller('FlagAnnotationController', ['$scope', '$log',
+    function ($scope, $log) {
+        $scope.flag = function (reason) {
+            $scope.abort(reason);
+        };
+    }
+]);
+
+
 var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$sanitize', '$http', '$modal', '$log',
     function ($scope, $rootScope, $timeout, $sanitize, $http, $modal, $log) {
 
@@ -664,6 +675,9 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
             }
         };
 
+        $scope.abort = function(reason) {
+            window.location.replace('/uda/task');
+        };
 
         // Paint by numbers methods
 
