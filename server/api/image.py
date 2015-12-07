@@ -17,6 +17,7 @@ class ImageResource(Resource):
         self.resourceName = 'image'
 
         self.route('GET', (), self.find)
+        self.route('GET', (':id',), self.getImage)
         self.route('GET', (':id', 'thumbnail'), self.thumbnail)
 
         # TODO: change to GET
@@ -53,12 +54,23 @@ class ImageResource(Resource):
 
     @access.public
     @loadmodel(model='item', map={'id': 'image'}, level=AccessType.READ)
+    def getImage(self, image, params):
+        return self.model('image', 'isic_archive').filter(image, self.getCurrentUser())
+
+    getImage.description = (
+        Description('Retrieve the thumbnail for a given image item.')
+        .param('item_id', 'The item ID', paramType='path')
+        .errorResponse())
+
+
+    @access.cookie
+    @access.public
+    @loadmodel(model='item', map={'id': 'image'}, level=AccessType.READ)
     def thumbnail(self, image, params):
         width = int(params.get('width', 256))
         thumbnail_url = self.model('image', 'isic_archive').tileServerURL(image, width=width)
         raise cherrypy.HTTPRedirect(thumbnail_url, status=307)
 
-    thumbnail.cookieAuth = True
     thumbnail.description = (
         Description('Retrieve the thumbnail for a given image item.')
         .param('item_id', 'The item ID', paramType='path')
