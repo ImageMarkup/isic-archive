@@ -24,6 +24,8 @@ class StudyResource(Resource):
 
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getStudy)
+        self.route('GET', (':id', 'users'), self.getStudyUsers)
+        self.route('GET', (':id', 'images'), self.getStudyImages)
         self.route('GET', (':id', 'task'), self.redirectTask)
         self.route('POST', (), self.createStudy)
 
@@ -132,6 +134,30 @@ class StudyResource(Resource):
                         yield response_body.getvalue()
                         response_body.seek(0)
                         response_body.truncate()
+
+
+    @access.public
+    @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
+    def getStudyUsers(self, study, params):
+        summary_fields = ['_id', 'login']
+        return [
+            {field: user[field] for field in summary_fields}
+            for user in
+            self.model('study', 'isic_archive').getAnnotators(study).sort(
+                'login', pymongo.ASCENDING)
+            ]
+
+
+    @access.public
+    @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
+    def getStudyImages(self, study, params):
+        summary_fields = ['_id', 'name']
+        return [
+            {field: image[field] for field in summary_fields}
+            for image in
+            self.model('study', 'isic_archive').getImages(study).sort(
+                'name', pymongo.ASCENDING)
+            ]
 
 
     @access.user
