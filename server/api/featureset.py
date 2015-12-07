@@ -34,7 +34,7 @@ class FeaturesetResource(Resource):
 
 
     @access.public
-    @loadmodel(model='featureset', plugin='isic_archive', level=AccessType.READ)
+    @loadmodel(model='featureset', plugin='isic_archive')
     def getFeatureset(self, featureset, params):
         return self.model('featureset', 'isic_archive').filter(featureset)
     getFeatureset.description = (
