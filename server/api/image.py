@@ -5,7 +5,7 @@ import cherrypy
 
 from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel
-from girder.api.describe import Description
+from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
 
 from ..image_processing import fillImageGeoJSON
@@ -24,61 +24,67 @@ class ImageResource(Resource):
         self.route('POST', (':id', 'segment-boundary'), self.segmentBoundary)
 
 
+    @describeRoute(
+        Description('Return a list of lesion images.')
+        .pagingParams(defaultSort='lowerName')
+        .param('datasetId', 'The ID of the dataset to use.', required=True)
+        .errorResponse()
+    )
     @access.public
     def find(self, params):
+        self.requireParams('datasetId', params)
         user = self.getCurrentUser()
         limit, offset, sort = self.getPagingParameters(params, 'lowerName')
 
-        if 'datasetId' in params:
-            dataset = self.model('dataset', 'isic_archive').load(
-                id=params['datasetId'], user=user, level=AccessType.READ, exc=True)
-
-            images = self.model('dataset', 'isic_archive').childImages(
+        dataset = self.model('dataset', 'isic_archive').load(
+            id=params['datasetId'], user=user, level=AccessType.READ, exc=True)
+        return [
+            {
+                field: image[field]
+                for field in
+                self.model('image', 'isic_archive').summaryFields
+            }
+            for image in
+            self.model('dataset', 'isic_archive').childImages(
                 dataset, limit=limit, offset=offset, sort=sort)
-        else:
-            # TODO: maybe make datasetId actually required and raise an Exception
-
-            # TODO: only list images from datasets we have access to
-            images = self.model('image', 'isic_archive').find(
-                limit=limit, offset=offset, sort=sort)
-
-        return [self.model('image', 'isic_archive').filter(image, user)
-                for image in images]
-
-    find.description = (
-        Description('Return a list of lesion images.')
-        .pagingParams(defaultSort='name')
-        .param('datasetId', 'The ID of the dataset to use.', required=True)
-        .errorResponse())
+        ]
 
 
+    @describeRoute(
+        Description('Return an image\'s details.')
+        .param('id', 'The ID of the image.', paramType='path')
+        .errorResponse('ID was invalid.')
+    )
     @access.public
-    @loadmodel(model='item', map={'id': 'image'}, level=AccessType.READ)
+    @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def getImage(self, image, params):
-        return self.model('image', 'isic_archive').filter(image, self.getCurrentUser())
-
-    getImage.description = (
-        Description('Retrieve the thumbnail for a given image item.')
-        .param('item_id', 'The item ID', paramType='path')
-        .errorResponse())
+        return self.model('image', 'isic_archive').filter(
+            image, self.getCurrentUser())
 
 
+    @describeRoute(
+        Description('Return an image\'s thumbnail.')
+        .param('id', 'The ID of the image.', paramType='path')
+        .errorResponse('ID was invalid.')
+    )
     @access.cookie
     @access.public
-    @loadmodel(model='item', map={'id': 'image'}, level=AccessType.READ)
+    @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def thumbnail(self, image, params):
         width = int(params.get('width', 256))
-        thumbnail_url = self.model('image', 'isic_archive').tileServerURL(image, width=width)
+        thumbnail_url = self.model('image', 'isic_archive').tileServerURL(
+            image, width=width)
         raise cherrypy.HTTPRedirect(thumbnail_url, status=307)
 
-    thumbnail.description = (
-        Description('Retrieve the thumbnail for a given image item.')
-        .param('item_id', 'The item ID', paramType='path')
-        .errorResponse())
 
-
+    @describeRoute(
+        Description('Return an image\'s boundary segmentation.')
+        # .responseClass('Image')
+        .param('id', 'The ID of the image.', paramType='path')
+        .errorResponse('ID was invalid.')
+    )
     @access.user
-    @loadmodel(model='item', map={'id': 'image'}, level=AccessType.READ)
+    @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def segmentBoundary(self, image, params):
         body_json = self.getBodyJson()
         self.requireParams(('seed', 'tolerance'), body_json)
@@ -106,10 +112,3 @@ class ImageResource(Resource):
 
         return results
         # return json.dumps(results)
-
-    segmentBoundary.description = (
-        Description('Return the boundary segmentation for an image.')
-        # .responseClass('Image')
-        .param('id', 'The ID of the image.', paramType='path')
-        .param('id', 'The ID of the image.', paramType='path')
-        .errorResponse('ID was invalid.'))

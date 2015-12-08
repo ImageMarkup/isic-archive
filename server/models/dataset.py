@@ -7,7 +7,19 @@ from girder.models.folder import Folder
 
 class Dataset(Folder):
 
-    # TODO: add indexes in "initialize"
+    def initialize(self):
+        super(Dataset, self).initialize()
+        # TODO: add indexes
+
+        self._filterKeys[AccessType.READ].clear()
+        self.exposeFields(level=AccessType.READ, fields=(
+            '_id', 'name', 'description', 'meta', 'created', 'creatorId',
+            'updated',
+            # TODO: re-add once converted files no longer contributes to size
+            # 'size',
+        ))
+
+        self.summaryFields = ('_id', 'name', 'updated')
 
     def loadDatasetCollection(self):
         # assumes collection has been created by provision_utility
@@ -68,7 +80,16 @@ class Dataset(Folder):
             dataset_query.update(query)
         return dataset_query
 
-    # TODO: add a "list" method, similar to "Collection.list"
+
+    def list(self, user=None, limit=0, offset=0, sort=None):
+        """
+        Return a paginated list of datasets that a user may access.
+        """
+        cursor = self.find({}, sort=sort)
+        return self.filterResultsByPermission(
+            cursor=cursor, user=user, level=AccessType.READ, limit=limit,
+            offset=offset)
+
 
     def find(self, query=None, **kwargs):
         dataset_query = self._find_query_filter(query)

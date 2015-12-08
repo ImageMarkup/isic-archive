@@ -10,6 +10,7 @@ import requests
 from requests.packages.urllib3.util import Url
 
 from girder.api.rest import getUrlParts
+from girder.constants import AccessType
 from girder.models.model_base import GirderException
 from girder.models.item import Item
 
@@ -17,6 +18,20 @@ from .. import constants
 
 
 class Image(Item):
+
+    def initialize(self):
+        super(Image, self).initialize()
+
+        self._filterKeys[AccessType.READ].clear()
+        self.exposeFields(level=AccessType.READ, fields=(
+            '_id', 'name', 'description', 'meta', 'created', 'creatorId',
+            'updated',
+            # TODO: re-add once converted file no longer contributes to size
+            # 'size',
+        ))
+
+        self.summaryFields = ('_id', 'name', 'updated')
+
 
     def createImage(self, creator, parentFolder):
         new_isic_id = self.model('setting').get(
