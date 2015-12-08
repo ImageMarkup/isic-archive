@@ -676,7 +676,14 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
         };
 
         $scope.abort = function(reason) {
-            window.location.replace('/uda/task');
+            var flagURL = '/api/v1/image/' + this.current_image_id + '/flag';
+            var data = {
+                reason: reason
+            };
+            $http.post(flagURL, data).success(function (response) {
+                window.location.replace('/uda/task');
+            });
+            // TODO: lock UI while request is pending
         };
 
         // Paint by numbers methods

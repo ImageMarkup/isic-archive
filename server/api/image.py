@@ -1,14 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import datetime
+
 import cherrypy
 
 from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
+from girder.models.model_base import AccessException
 
 from ..image_processing import fillImageGeoJSON
+from ..provision_utility import _ISICCollection
 
 
 class ImageResource(Resource):
@@ -19,6 +23,8 @@ class ImageResource(Resource):
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getImage)
         self.route('GET', (':id', 'thumbnail'), self.thumbnail)
+
+        self.route('POST', (':id', 'flag'), self.flag)
 
         # TODO: change to GET
         self.route('POST', (':id', 'segment-boundary'), self.segmentBoundary)
@@ -75,6 +81,54 @@ class ImageResource(Resource):
         thumbnail_url = self.model('image', 'isic_archive').tileServerURL(
             image, width=width)
         raise cherrypy.HTTPRedirect(thumbnail_url, status=307)
+
+
+    @describeRoute(
+        Description('Flag an image with a problem.')
+        .param('id', 'The ID of the image.', paramType='path')
+        .errorResponse('ID was invalid.')
+    )
+    @access.cookie
+    @access.user
+    @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
+    def flag(self, image, params):
+        body_json = self.getBodyJson()
+        self.requireParams(('reason',), body_json)
+
+        # TODO: change to use direct permissions on the image
+        if not any(
+            self.model('group').findOne(
+                {'name': groupName}
+            )['_id'] in self.getCurrentUser()['groups']
+            for groupName in
+            ['Phase 0', 'Phase 1a', 'Phase 1b']
+        ):
+            raise AccessException('User does not have permission to flag this image.')
+
+        image_dataset= self.model('dataset', 'isic_archive').load(
+            image['folderId'], force=True)
+
+        flagged_folder = self.model('folder').findOne({
+            'parentId': self.model('collection').findOne({'name': 'Phase 0'})['_id'],
+            'name': 'flagged'
+        })
+        phase0_flagged_images = _ISICCollection.createFolder(
+            name=image_dataset['name'],
+            description='',
+            parent=flagged_folder,
+            parent_type='folder'
+        )
+
+        flag_metadata = {
+            'flaggedUserId': self.getCurrentUser()['_id'],
+            'flaggedTime': datetime.datetime.utcnow(),
+            'flaggedReason': body_json['reason'],
+        }
+        self.model('item').setMetadata(image, flag_metadata)
+        # TODO: deal with any existing studies with this image
+        self.model('item').move(image, phase0_flagged_images)
+
+        return {'status': 'success'}
 
 
     @describeRoute(
