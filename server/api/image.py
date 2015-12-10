@@ -23,6 +23,7 @@ class ImageResource(Resource):
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getImage)
         self.route('GET', (':id', 'thumbnail'), self.thumbnail)
+        self.route('GET', (':id', 'download'), self.download)
 
         self.route('POST', (':id', 'flag'), self.flag)
 
@@ -81,6 +82,19 @@ class ImageResource(Resource):
         thumbnail_url = self.model('image', 'isic_archive').tileServerURL(
             image, width=width)
         raise cherrypy.HTTPRedirect(thumbnail_url, status=307)
+
+
+    @describeRoute(
+        Description('Download an image\'s high-quality original binary data.')
+        .param('id', 'The ID of the image.', paramType='path')
+        .errorResponse('ID was invalid.')
+    )
+    @access.cookie
+    @access.public
+    @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
+    def download(self, image, params):
+        original_file = self.model('image', 'isic_archive').originalFile(image)
+        return self.model('file').download(original_file, headers=True)
 
 
     @describeRoute(
