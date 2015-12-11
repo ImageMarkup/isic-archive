@@ -201,41 +201,41 @@
                             <div class="btn" ng-show="folder_details" disabled>
                                 <span>Updated <b>{{folder_details.updated}}</b></span>
                             </div>
-                            <div class="btn btn-info" ng-click="submitFlagged()">
-                                <span>Flag images</span>
-                            </div>
                         </div>
-                        <div class="btn-group pull-right">
+                        <div class="pull-right">
+                            <div class="btn btn-info" ng-click="submitFlagged()">
+                                <span>Submit only flagged</span>
+                            </div>
                             <div class="btn btn-success" ng-click="submitAll()">
-                                <span>Submit images to annotation</span>
+                                <span>Submit all</span>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="row">
-                    <div id="gridcontainer" class="col-lg-12 col-md-12">
-                            <div class="isic-gallery-image"
-                                 ng-repeat="image in image_list track by image._id">
-                                <div class="flagged" ng-show="isFlagged($index)">
-                                    <div class="overlay"></div>
-                                    <i class="glyphicon glyphicon-flag"></i>
-                                </div>
-                                <img id={{$index}}
-                                     class="img-responsive"
-                                     ng-src="{{ image.thumbnail }}"
-                                     ng-class="isFlagged($index) ? 'imageflagged' : ''"
-                                     ng-mouseover="updatePreview()"
-                                     ng-click="toggleFlagged($index)"
-                                     width="512">
-                            </div>
+                    <div class="col-md-offset-1 col-md-10">
+                        <div class="whitetext">
+                            <span>Flagged images: </span>
+                            <span ng-repeat="image in flagged_list track by image._id">{{image.title}},</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-offset-1 col-md-10">
-                    <div class="whitetext">
-                        <span>Flagged images: </span>
-                        <span ng-repeat="image in flagged_list track by image._id">{{image.title}},</span>
+                <div class="row">
+                    <div id="gridcontainer" class="col-lg-12 col-md-12">
+                        <div class="isic-gallery-image"
+                             ng-repeat="image in image_list track by image._id">
+                            <div class="flagged" ng-show="isFlagged($index)">
+                                <div class="overlay"></div>
+                                <i class="glyphicon glyphicon-flag"></i>
+                            </div>
+                            <img id={{$index}}
+                                 class="img-responsive"
+                                 ng-src="{{ image.thumbnail }}"
+                                 ng-class="isFlagged($index) ? 'imageflagged' : ''"
+                                 ng-mouseover="updatePreview()"
+                                 ng-click="toggleFlagged($index)"
+                                 width="512">
+                        </div>
                     </div>
                 </div>
             </div>
