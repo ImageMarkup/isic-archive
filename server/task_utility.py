@@ -404,13 +404,12 @@ class TaskHandler(Resource):
         self.route('GET', ('p1a', ':folder_id'), self.p1aTaskRedirect)
         self.route('GET', ('p1b', ':folder_id'), self.p1bTaskRedirect)
         self.route('GET', ('p2', ':study_id'), self.p2TaskRedirect)
-        # TODO: cookieAuth decorator
 
 
+    @access.cookie
     @access.public
     def taskDashboard(self, params):
         return cherrypy.lib.static.serve_file(os.path.join(self.plugin_root_dir, 'custom', 'task.html'))
-    taskDashboard.cookieAuth = True
 
 
     def _taskRedirect(self, phase_name, folder, url_format):
@@ -433,27 +432,28 @@ class TaskHandler(Resource):
         raise cherrypy.HTTPRedirect(redirect_url, status=307)
 
 
+    @access.cookie
     @access.user
     @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
     def p0TaskRedirect(self, folder, params):
         return self._taskRedirect('Phase 0', folder, '/uda/qc/%(folder_id)s')
-    p0TaskRedirect.cookieAuth = True
 
 
+    @access.cookie
     @access.user
     @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
     def p1aTaskRedirect(self, folder, params):
         return self._taskRedirect('Phase 1a', folder, '/uda/annotate/%(item_id)s')
-    p1aTaskRedirect.cookieAuth = True
 
 
+    @access.cookie
     @access.user
     @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
     def p1bTaskRedirect(self, folder, params):
         return self._taskRedirect('Phase 1b', folder, '/uda/annotate/%(item_id)s')
-    p1bTaskRedirect.cookieAuth = True
 
 
+    @access.cookie
     @access.user
     @loadmodel(map={'study_id': 'study'}, model='study', plugin='isic_archive', level=AccessType.READ)
     def p2TaskRedirect(self, study, params):
@@ -470,4 +470,3 @@ class TaskHandler(Resource):
 
         redirect_url = '/uda/map#/%s' % next_annotation['_id']
         raise cherrypy.HTTPRedirect(redirect_url, status=307)
-    p2TaskRedirect.cookieAuth = True
