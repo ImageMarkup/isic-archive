@@ -3,20 +3,16 @@
 /*jslint browser: true*/
 
 // Initialization of angular root application
-var derm_app = angular.module('DermApp', ['ui.bootstrap', 'ngSanitize', 'xml', 'ui.select', 'frapontillo.bootstrap-switch']);
-derm_app.value("ol", ol);
+var derm_app = angular.module('DermApp');
 
-derm_app.config(function ($httpProvider, $logProvider) {
-    $httpProvider.defaults.xsrfCookieName = 'girderToken';
-    $httpProvider.defaults.xsrfHeaderName = 'Girder-Token';
-
-    $logProvider.debugEnabled(false);
-});
+// Register 'ol' service
+derm_app.value('ol', ol);
 
 // Initialization of angular app controller with necessary scope variables. Inline declaration of external variables
 // needed within the controller's scope. State variables (available between controllers using $rootScope). Necessary to
 // put these in rootScope to handle pushed data via websocket service.
-derm_app.controller('ApplicationController', ['$scope', '$rootScope', '$location', '$document', '$log', 'olViewer',
+derm_app.controller('ApplicationController',
+    ['$scope', '$rootScope', '$location', '$document', '$log', 'olViewer',
     function ($scope, $rootScope, $location, $document, $log, olViewer) {
 
         // global ready state variable

@@ -10,29 +10,39 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <meta name="description" content="ISIC Image annotator">
-    <meta name="author" content="Rich Stoner, Brian Helba, David Gutman">
 
+    <script src="/uda/static/bower_components/jquery/dist/jquery.min.js"></script>
+
+    <script src="/uda/static/bower_components/flatstrap/dist/js/bootstrap.min.js"></script>
     <link rel=stylesheet type=text/css
           href="/uda/static/bower_components/flatstrap/dist/css/bootstrap.min.css">
+
     <link rel=stylesheet type=text/css href="/uda/static/bower_components/font-awesome/css/font-awesome.min.css">
 
-<!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
-<!--[if lt IE 9]>
-    <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
-<![endif]-->
+    <script src="/uda/static/bower_components/angular/angular.min.js"></script>
+    <script src="/uda/static/bower_components/angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js"></script>
+    <script src="/uda/static/bower_components/angular-sanitize/angular-sanitize.js"></script>
+    <script src="/uda/static/bower_components/angular-xml/angular-xml.min.js"></script>
+    <script src="/uda/static/bower_components/mousetrap/mousetrap.min.js"></script>
+    <script src="/uda/static/bower_components/angular-mousetrap/src/keypress.js"></script>
 
-<script src="/uda/static/bower_components/jquery/dist/jquery.min.js"></script>
-<script src="/uda/static/bower_components/flatstrap/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.12.1/select.min.js"></script>
+    <link rel=stylesheet type=text/css href="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.12.1/select.min.css">
 
-<script src="/uda/static/bower_components/angular/angular.min.js"></script>
-<script src="/uda/static/bower_components/angular-sanitize/angular-sanitize.js"></script>
-<script src="/uda/static/bower_components/mousetrap/mousetrap.min.js"></script>
-<script src="/uda/static/bower_components/angular-mousetrap/src/keypress.js"></script>
-<script src="/uda/static/bower_components/FileSaver/FileSaver.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/js/bootstrap-switch.min.js"></script>
+    <link rel=stylesheet type=text/css href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/css/bootstrap3/bootstrap-switch.min.css">
+    <script src="https://cdn.rawgit.com/frapontillo/angular-bootstrap-switch/0.4.1/dist/angular-bootstrap-switch.min.js"></script>
 
-<script src="/uda/static/js/image-review.js"></script>
+    <script src="/uda/static/bower_components/FileSaver/FileSaver.js"></script>
 
-<style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.8.1/js/lightbox.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.8.1/css/lightbox.min.css"
+          rel=stylesheet type=text/css >
+
+    <script src="/uda/static/js/isic-app.js"></script>
+    <script src="/uda/static/js/image-review.js"></script>
+
+    <style>
     * {
       border-radius: 0  !important;
     }
@@ -165,11 +175,10 @@
         left: 0px;
     }
 
-
     /*div.description:hover {*/
         /*opacity:1.0; *//* transparency */
     /*}*/
-</style>
+    </style>
 </head>
 <body>
     <div>

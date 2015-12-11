@@ -81,14 +81,8 @@ def load(info):
         pass
     info['serverRoot'].uda = Root()
 
-    # "/uda/gallery/:folderId" -> returns a single page gallery
-    info['serverRoot'].uda.gallery = StaticRouteWithId(os.path.join(info['pluginRootDir'], 'custom', 'qc.html'))
-
-    # "uda/qc/:folderId" -> returns a QC page where user can move images to
-    info['serverRoot'].uda.qc = StaticRouteWithId(os.path.join(info['pluginRootDir'], 'custom', 'qc.html'))
-
-    # "uda/view/:itemId" -> simple zoomable viewer for an image
-    # TODO
+    # "/uda/gallery" -> returns a single page gallery
+    info['serverRoot'].uda.gallery = staticFile(os.path.join(info['pluginRootDir'], 'custom', 'gallery.html'))
 
     # "/uda/task" -> redirects to appropriate task view for the user
     info['serverRoot'].uda.task = TaskHandler(info['pluginRootDir'])

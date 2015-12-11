@@ -1,30 +1,27 @@
-/**
- * Created by stonerri on 3/13/14.
- */
-
 'use strict';
 /*jslint browser: true*/
 
-// Initialization of angular root application
-var review_app = angular.module('DermApp', ['ngSanitize', 'mousetrap']);
+var isic_app = angular.module('DermApp');
 
-review_app.config(function ($httpProvider) {
-    $httpProvider.defaults.xsrfCookieName = 'girderToken';
-    $httpProvider.defaults.xsrfHeaderName = 'Girder-Token';
-});
-
-var appController = review_app.controller('ApplicationController', ['$scope', '$rootScope', '$timeout', '$http',
-    function ($scope, $rootScope, $timeout, $http) {
+isic_app.controller('ApplicationController',
+    ['$scope', '$location', '$http',
+    function ($scope, $location, $http) {
 
         $("#angular_id").height(window.innerHeight - 80 - 100);
         $("#gridcontainer").height(window.innerHeight - 100 - 100);
 
-        var urlvals = window.location.pathname.split('/');
-        var folder_id = urlvals[urlvals.length - 1];
 
-        var folder_url = '/api/v1/folder/' + folder_id;
-        var images_url = '/api/v1/item?folderId=' + folder_id;
-        var taskcomplete_url = '/api/v1/uda/task/qc/' + folder_id + '/complete';
+        var url_path_components = $location.path().substring(1).split('/');
+        // TODO: check these params exist
+        $scope.gallery_type = url_path_components[0];
+        $scope.gallery_id = url_path_components[1];
+
+        var folder_url = '/api/v1/folder/' + $scope.gallery_id;
+        var images_url = '/api/v1/item?folderId=' + $scope.gallery_id;
+        var taskcomplete_url;
+        if ($scope.gallery_type === 'qc') {
+            taskcomplete_url = '/api/v1/uda/task/qc/' + $scope.gallery_id + '/complete';
+        }
 
         $scope.sync = function () {
             // get folder details for name and times

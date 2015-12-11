@@ -436,7 +436,7 @@ class TaskHandler(Resource):
     @access.user
     @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
     def p0TaskRedirect(self, folder, params):
-        return self._taskRedirect('Phase 0', folder, '/uda/qc/%(folder_id)s')
+        return self._taskRedirect('Phase 0', folder, '/uda/gallery#/qc/%(folder_id)s')
 
 
     @access.cookie
