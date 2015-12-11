@@ -38,6 +38,25 @@ isic_app.controller('ApplicationController',
                     simple_rep.thumbnail = '/api/v1/image/' + image._id + '/thumbnail?width=512';
                     simple_rep.title = image.name;
 
+                    simple_rep.diagnosis_strings = [];
+                    [
+                        'diagnosis',
+                        //'Diagnosis', // Too long
+                        'diagnosis_short',
+                        'pathology diagnosis',
+                        'pathology diagnosis subtype',
+                        'benign_malignant',
+                        'ben_mal',
+                        'malignant',
+                        'Location',
+                        'localization'
+                    ].forEach(function (key) {
+                        var value = image.meta['clinical'][key];
+                        if (value) {
+                            simple_rep.diagnosis_strings.push(key + ': ' + value);
+                        }
+                    });
+
                     $scope.image_list.push(simple_rep);
                 });
             });
