@@ -226,10 +226,11 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-md-offset-1 col-md-10">
+                    <div class="col-md-12">
                         <div class="whitetext">
                             <span>Flagged images: </span>
-                            <span ng-repeat="image in flagged_list track by image._id">{{image.title}},</span>
+                            <span ng-repeat="image in flagged_list track by image._id"
+                                >{{ image.title + ($last ? '' : ', ') }}</span>
                         </div>
                     </div>
                 </div>
