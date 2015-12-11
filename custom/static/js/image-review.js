@@ -49,7 +49,7 @@ isic_app.controller('ApplicationController',
                         'Location',
                         'localization'
                     ].forEach(function (key) {
-                        var value = image.meta['clinical'][key];
+                        var value = image.meta.clinical[key];
                         if (value) {
                             image.diagnosis_strings.push(key + ': ' + value);
                         }
