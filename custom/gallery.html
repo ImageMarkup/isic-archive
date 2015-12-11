@@ -254,7 +254,10 @@
                                     <span>{{ image.name }}</span>
                                 </div>
                                 <div class="text metadata" ng-show="image.diagnosis_strings">
-                                    <span ng-repeat="diagnosis_string in image.diagnosis_strings">{{ diagnosis_string }}</span>
+                                    <span ng-repeat="diagnosis_string in image.diagnosis_strings">
+                                        <span>{{ diagnosis_string }}</span>
+                                        <br>
+                                    </span>
                                </div>
                             </div>
                             <img id={{$index}}
