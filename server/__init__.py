@@ -82,7 +82,7 @@ def load(info):
     info['serverRoot'].uda = Root()
 
     # "/uda/gallery/:folderId" -> returns a single page gallery
-    info['serverRoot'].uda.gallery = StaticRouteWithId(os.path.join(info['pluginRootDir'], 'custom', 'gallery.html'))
+    info['serverRoot'].uda.gallery = StaticRouteWithId(os.path.join(info['pluginRootDir'], 'custom', 'qc.html'))
 
     # "uda/qc/:folderId" -> returns a QC page where user can move images to
     info['serverRoot'].uda.qc = StaticRouteWithId(os.path.join(info['pluginRootDir'], 'custom', 'qc.html'))
