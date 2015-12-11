@@ -176,16 +176,23 @@
         font-size: 50px;
     }
 
-    .isic-gallery-image > .overlay > .metadata {
+    .isic-gallery-image > .overlay > .text {
         z-index: 3;
-
-        position: absolute;
-        bottom: 0px;
-        left: 0px;
 
         padding: 5px;
 
         background-color: rgba(0, 0, 0, 0.6);
+    }
+
+    .isic-gallery-image > .overlay > .text.name {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+    }
+    .isic-gallery-image > .overlay > .text.metadata {
+        position: absolute;
+        bottom: 0px;
+        left: 0px;
     }
 
     /*div.description:hover {*/
@@ -230,7 +237,7 @@
                         <div class="whitetext">
                             <span>Flagged images: </span>
                             <span ng-repeat="image in flagged_list track by image._id"
-                                >{{ image.title + ($last ? '' : ', ') }}</span>
+                                >{{ image.name + ($last ? '' : ', ') }}</span>
                         </div>
                     </div>
                 </div>
@@ -243,7 +250,10 @@
                                     <div class="shade"></div>
                                     <i class="glyphicon glyphicon-flag"></i>
                                 </div>
-                                <div class="metadata" ng-show="image.diagnosis_strings">
+                                <div class="text name">
+                                    <span>{{ image.name }}</span>
+                                </div>
+                                <div class="text metadata" ng-show="image.diagnosis_strings">
                                     <span ng-repeat="diagnosis_string in image.diagnosis_strings">{{ diagnosis_string }}</span>
                                </div>
                             </div>

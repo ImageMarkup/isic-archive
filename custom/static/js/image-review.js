@@ -34,11 +34,9 @@ isic_app.controller('ApplicationController',
             $http.get(images_url).success(function (data) {
                 $scope.image_list = [];
                 data.forEach(function (image) {
-                    var simple_rep = image;
-                    simple_rep.thumbnail = '/api/v1/image/' + image._id + '/thumbnail?width=512';
-                    simple_rep.title = image.name;
+                    image.thumbnail = '/api/v1/image/' + image._id + '/thumbnail?width=512';
 
-                    simple_rep.diagnosis_strings = [];
+                    image.diagnosis_strings = [];
                     [
                         'diagnosis',
                         //'Diagnosis', // Too long
@@ -53,11 +51,11 @@ isic_app.controller('ApplicationController',
                     ].forEach(function (key) {
                         var value = image.meta['clinical'][key];
                         if (value) {
-                            simple_rep.diagnosis_strings.push(key + ': ' + value);
+                            image.diagnosis_strings.push(key + ': ' + value);
                         }
                     });
 
-                    $scope.image_list.push(simple_rep);
+                    $scope.image_list.push(image);
                 });
             });
 
