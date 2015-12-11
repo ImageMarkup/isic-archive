@@ -40,6 +40,53 @@ class UDAResource(Resource):
         self.route('GET', ('task', 'markup', ':item_id'), self.p1TaskDetail)
         self.route('POST', ('task', 'markup', ':item_id', 'complete'), self.p1TaskComplete)
 
+        self.route('POST', ('task', 'select', ':folder_id'), self.selectTaskComplete)
+
+    @access.user
+    @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
+    def selectTaskComplete(self, folder, params):
+        contents = json.loads(cherrypy.request.body.read())
+
+        flagged_image_items = [
+            self.model('item').load(image_item_id, force=True)
+            for image_item_id in contents['flagged']
+        ]
+        for image_item in flagged_image_items:
+            if image_item['folderId'] != folder['_id']:
+                raise RestException('Flagged image %s is not inside folder %s' % (image_item['_id'], folder['_id']))
+        good_image_items = [
+            self.model('item').load(image_item_id, force=True)
+            for image_item_id in contents['good']
+        ]
+        for image_item in good_image_items:
+            if image_item['folderId'] != folder['_id']:
+                raise RestException('Good image %s is not inside folder %s' % (image_item['_id'], folder['_id']))
+
+        parent_type = folder['parentCollection']
+        parent_entity = self.model(parent_type).load(folder['parentId'], force=True)
+
+        flagged_folder = self.model('folder').createFolder(
+            reuseExisting=True,
+            name='%s (flagged)' % folder['name'],
+            parent=parent_entity,
+            parentType=parent_type,
+            creator=self.getCurrentUser()
+        )
+        for image_item in flagged_image_items:
+            self.model('item').move(image_item, flagged_folder)
+
+        accepted_folder = self.model('folder').createFolder(
+            reuseExisting=True,
+            name='%s (accepted)' % folder['name'],
+            parent=parent_entity,
+            parentType=parent_type,
+            creator=self.getCurrentUser()
+        )
+        for image_item in good_image_items:
+            self.model('item').move(image_item, accepted_folder)
+
+        return {'status': 'success'}
+
 
     def _requireCollectionAccess(self, collection_name):
         assert(collection_name in ('Phase 0', 'Phase 1a', 'Phase 1b'))

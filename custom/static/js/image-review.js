@@ -10,17 +10,23 @@ isic_app.controller('ApplicationController',
         $("#angular_id").height(window.innerHeight - 80 - 100);
         $("#gridcontainer").height(window.innerHeight - 100 - 100);
 
-
         var url_path_components = $location.path().substring(1).split('/');
         // TODO: check these params exist
         $scope.gallery_type = url_path_components[0];
         $scope.gallery_id = url_path_components[1];
 
         var folder_url = '/api/v1/folder/' + $scope.gallery_id;
-        var images_url = '/api/v1/item?folderId=' + $scope.gallery_id;
-        var taskcomplete_url;
+        var images_url = '/api/v1/item?limit=50&offset=0&folderId=' + $scope.gallery_id;
+
+        var complete_submit_url;
+        var complete_redirect_url;
         if ($scope.gallery_type === 'qc') {
-            taskcomplete_url = '/api/v1/uda/task/qc/' + $scope.gallery_id + '/complete';
+            complete_submit_url = '/api/v1/uda/task/qc/' + $scope.gallery_id + '/complete';
+            complete_redirect_url = '/uda/task';
+        }
+        else if ($scope.gallery_type === 'select') {
+            complete_submit_url = '/api/v1/uda/task/select/' + $scope.gallery_id;
+            complete_redirect_url = null;
         }
 
         $scope.sync = function () {
@@ -97,9 +103,13 @@ isic_app.controller('ApplicationController',
                 flagged: flagged_images,
                 good : images_to_accept
             };
-            $http.post(taskcomplete_url, payload).success(function() {
+            $http.post(complete_submit_url, payload).success(function() {
                 if (include_accepted) {
-                    window.location.replace('/uda/task');
+                    if (complete_redirect_url === null) {
+                        $scope.sync();
+                    } else {
+                        window.location.replace(complete_redirect_url);
+                    }
                 }
                 else {
                     // TODO: disable buttons while request is pending
