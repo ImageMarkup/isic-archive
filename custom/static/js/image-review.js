@@ -45,7 +45,7 @@ isic_app.controller('ApplicationController',
                     image.diagnosis_strings = [];
                     [
                         'diagnosis',
-                        //'Diagnosis', // Too long
+                        'Diagnosis',
                         'diagnosis_short',
                         'pathology diagnosis',
                         'pathology diagnosis subtype',
