@@ -4,8 +4,6 @@
 import collections
 import os
 
-import cv2
-import numpy
 import requests
 from requests.packages.urllib3.util import Url
 
@@ -15,6 +13,7 @@ from girder.models.model_base import GirderException
 from girder.models.item import Item
 
 from .. import constants
+from .segmentation_helpers import SegmentationHelper
 
 
 class Image(Item):
@@ -99,14 +98,11 @@ class Image(Item):
             response.raise_for_status()
         except requests.RequestException:
             raise GirderException('Tile server unavailable.')
-        image_data = numpy.fromstring(response.content, dtype=numpy.uint8)
-        return image_data
+        return response.content
 
 
     def binaryImageRaw(self, image):
-        jpeg_image_data = self.binaryImageJpeg(image)
-        raw_image_data = cv2.imdecode(jpeg_image_data, cv2.CV_LOAD_IMAGE_COLOR)
-        return raw_image_data
+        return SegmentationHelper.loadImage(self.binaryImageJpeg(image))
 
 
     def validate(self, doc):

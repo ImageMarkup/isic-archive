@@ -8,8 +8,9 @@ import re
 import cv2
 import geojson
 import numpy
-
 # TODO: add numpy, geojson, opencv to requirements.txt
+
+from .models.segmentation_helpers import SegmentationHelper
 
 
 class NumPyArangeEncoder(json.JSONEncoder):
@@ -18,124 +19,6 @@ class NumPyArangeEncoder(json.JSONEncoder):
             return obj.tolist()  # or map(int, obj)
         return json.JSONEncoder.default(self, obj)
 
-
-def segmentConnectedRegion(image, seed, tolerance):
-    return _segmentConnectedRegionCV(image, seed, tolerance)
-
-
-def _segmentConnectedRegionSK(image, seed, tolerance):
-    """
-    SciKit Image implementation
-    """
-    # TODO
-    # threshold step
-    # http://scikit-image.org/docs/stable/api/skimage.measure.html#label
-    pass
-
-
-def _segmentConnectedRegionCV(image, seed, tolerance,
-                              connectivity=8, fill_value=1):
-    """
-    Segment an image into a region connected to a seed point, using OpenCV.
-
-    :param image: The image to be segmented.
-    :type image: numpy.ndarray
-    :param seed: The point inside the connected region where the
-    segmentation will start.
-    :type seed: list
-    :param tolerance: The maximum color/intensity difference between the seed
-    point and a point in the connected region.
-    :type tolerance: int
-    :param connectivity: (optional) The number of allowed connectivity
-    propagation directions. Allowed values are:
-      * 4 for edge pixels
-      * 8 for edge and corner pixels
-    :type connectivity: int
-    :param fill_value: (optional)  The value to fill in the mask for pixels
-    that are part of the connected region. Should be non-zero.
-    :type fill_value: int
-    :returns: A binary label mask, with an extra 1-pixel wide padded border.
-    The values are either ``0`` or ``fill_value``.
-    :rtype: numpy.ndarray
-    """
-    image_height, image_width, image_channels = image.shape
-    # create padded mask to store output
-    mask = numpy.zeros((image_height + 2, image_width + 2), numpy.uint8)
-
-    flags = 0
-    flags |= connectivity
-    flags |= (fill_value << 8)
-    # compare each candidate to the seed, not its nearest neighbor; for lesion
-    #   images the gradient is too shallow for even very small tolerances to
-    #   work with a neared neighbor comparison
-    flags |= cv2.FLOODFILL_FIXED_RANGE
-
-    area, (bounds_x, bounds_y, bounds_width, bounds_height) = cv2.floodFill(
-        image=image,
-        mask=mask,
-        seedPoint=tuple(seed),
-        newVal=(255, 190, 00),  # TODO: why this?
-        loDiff=(tolerance,) * 3,
-        upDiff=(tolerance,) * 3,
-        flags=flags
-    )
-
-    # we could remove the padding, but cv2.findContours requires it to be present
-    # mask = mask[1:-1, 1:-1]
-
-    return mask
-
-
-def extractContour(image_mask):
-    return _extractContourCV(image_mask)
-
-
-def _extractContourSK(image_mask):
-    """
-    SciKit Image implementation
-    """
-    # TODO
-    pass
-
-
-def _extractContourCV(image_mask, safe=True, smoothing=False):
-    """
-    Extract the contour line within a segmented label mask, using OpenCV.
-
-    :param image_mask: A binary label mask, with an extra 1-pixel wide padded
-    border. Values are considered as only 0 or non-0.
-    :type image_mask: numpy.ndarray
-    :param safe: Guarantee that the image_mask will not be modified. This is slower.
-    :type safe: bool
-    :param smoothing: Use a Teh-Chin chain approximation algorithm to slightly
-    smooth and collapse the contour.
-    :type smoothing: bool
-    :return: An array of point pairs.
-    :rtype: numpy.ndarray
-    """
-    if safe:
-        image_mask = numpy.copy(image_mask)
-
-    if smoothing:
-        # TODO: determine which one to use (or add parameter for either)
-        # approx_method = cv2.CHAIN_APPROX_TC89_L1
-        approx_method = cv2.CHAIN_APPROX_TC89_KCOS
-    else:
-        approx_method = cv2.CHAIN_APPROX_SIMPLE
-
-    contours, hierarchy = cv2.findContours(
-        image=image_mask,
-        mode=cv2.RETR_EXTERNAL,
-        method=approx_method,
-        # compensate for the image's 1-pixel padding
-        offset=(-1, -1)
-    )
-
-    # "cv2.RETR_EXTERNAL" means there's only one contour
-    contour = contours[0]
-    # contour initially looks like [ [[0,1]], [[0,2]] ], so squeeze it
-    contour = numpy.squeeze(contour)
-    return contour
 
 
 def fillImageGeoJSON(image_data, seed_point, tolerance):
@@ -147,8 +30,7 @@ def fillImageGeoJSON(image_data, seed_point, tolerance):
         # TODO: a proper out of bounds error
         return {'error': 'out of bounds'}
 
-    image_mask = segmentConnectedRegion(image_data, seed_point, tolerance)
-    contour = extractContour(image_mask)
+    contour = SegmentationHelper.segment(image_data, seed_point, tolerance)
 
     feat = geojson.Feature(
         # TODO: can this be made a LineString?
