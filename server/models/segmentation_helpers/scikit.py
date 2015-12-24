@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import collections
 import itertools
 
 import numpy
 import skimage.io
 import skimage.measure
 import skimage.morphology
+import skimage.segmentation
 
 from .base import BaseSegmentationHelper
 
@@ -77,8 +79,8 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
             element = skimage.morphology.disk(element_size, element_type)
         elif element_shape == 'cross':
             element = numpy.zeros((element_size, element_size), element_type)
-            element[:, element_size // 2] = element_type(True)
-            element[element_size // 2, :] = element_type(True)
+            element[:, element_size // 2] = element_type.type(True)
+            element[element_size // 2, :] = element_type.type(True)
         elif element_shape == 'square':
             element = skimage.morphology.square(element_size, element_type)
         else:
@@ -136,3 +138,85 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
             verts=numpy.fliplr(coords)
         )
         return mask_image
+
+
+    @classmethod
+    def _slic(cls, image, segment_size):
+        compactness = 0.01  # make superpixels highly deformable
+        max_iter = 10
+        sigma = 2.0
+
+        num_segments = (image.shape[0] * image.shape[1]) / (segment_size ** 2)
+
+        label_image = skimage.segmentation.slic(
+            image,
+            n_segments=num_segments,
+            compactness=compactness,
+            max_iter=max_iter,
+            sigma=sigma,
+            enforce_connectivity=True,
+            min_size_factor=0.5,
+            slic_zero=True
+        )
+        return label_image
+
+
+    class _PersistentCounter(object):
+        def __init__(self):
+            self.value = 0
+
+        def __call__(self):
+            ret = self.value
+            self.value += 1
+            return ret
+
+
+    @classmethod
+    def _uint64ToRGB(cls, val):
+        return numpy.dstack((
+            numpy.bitwise_and(numpy.uint64(val), numpy.uint64(0xff)
+            ).astype(numpy.uint8),
+            numpy.right_shift(
+                numpy.bitwise_and(numpy.uint64(val), numpy.uint64(0xff00)),
+                numpy.uint64(8)
+            ).astype(numpy.uint8),
+            numpy.right_shift(
+                numpy.bitwise_and(numpy.uint64(val), numpy.uint64(0xff0000)),
+                numpy.uint64(16)
+            ).astype(numpy.uint8)
+        ))
+
+
+    @classmethod
+    def superpixels(cls, image, coords):
+        mask_image = ScikitSegmentationHelper._contourToMask(image, coords)
+
+        # TODO: remove
+        mask_image = ScikitSegmentationHelper._binaryOpening(
+            mask_image, element_shape='circle', element_radius=5)
+
+        inside_image = image.copy()
+        inside_image[numpy.logical_not(mask_image)] = 0
+        inside_superpixel_labels = cls._slic(inside_image, segment_size=20)
+
+        outside_image = image.copy()
+        outside_image[mask_image] = 0
+        outside_superpixel_labels = cls._slic(outside_image, segment_size=60)
+
+        # https://stackoverflow.com/questions/16210738/implementation-of-numpy-in1d-for-2d-arrays
+        inside_superpixel_mask = numpy.in1d(
+            inside_superpixel_labels.flat,
+            numpy.unique(inside_superpixel_labels[mask_image])
+        ).reshape(inside_superpixel_labels.shape)
+
+        combined_superpixel_labels = outside_superpixel_labels.copy()
+        combined_superpixel_labels[inside_superpixel_mask] = \
+            inside_superpixel_labels[inside_superpixel_mask] + \
+            outside_superpixel_labels.max() + 10000
+
+        label_values = collections.defaultdict(cls._PersistentCounter())
+        for value in numpy.nditer(combined_superpixel_labels, op_flags=['readwrite']):
+            value[...] = label_values[value.item()]
+
+        combined_superpixels = cls._uint64ToRGB(combined_superpixel_labels)
+        return combined_superpixels
