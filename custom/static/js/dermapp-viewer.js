@@ -425,7 +425,7 @@ var olViewer = derm_app.factory('olViewer',
                 // think: if x is positive on left, subtract from total width
                 // if x on right is greater than width, x = width
 
-                var segmentURL = '/api/v1/image/' + this.current_image_id + '/segment-boundary';
+                var segmentURL = '/api/v1/image/' + this.current_image_id + '/segment';
                 var msg = {
                     tolerance: this.fill_tolerance,
                     seed: click_coords.map(Math.round)
@@ -435,28 +435,23 @@ var olViewer = derm_app.factory('olViewer',
                     self.vector_source.clear();
                     var f = new ol.format.GeoJSON();
 
-                    for (var i=0; i<response.features.length; i++) {
-                        var jsObject = response.features[i];
-
-                        // flip the sign of the y-coordinates
-                        var coordinates = jsObject.geometry.coordinates[0];
-                        for (var j=0; j<coordinates.length; j++) {
-                            coordinates[j][1] = -1 * coordinates[j][1];
-                        }
-
-                        var featobj = f.readFeatureFromObject(jsObject);
-
-                        featobj.setId(i);
-
-                        var iconpath = "/uda/static/derm/images/lesion.jpg";
-
-                        featobj.setProperties({
-                            'title' : self.draw_label,
-                            'icon' : iconpath
-                        });
-
-                        self.vector_source.addFeature(featobj);
+                    // flip the sign of the y-coordinates
+                    var coordinates = response.geometry.coordinates[0];
+                    for (var j=0; j<coordinates.length; j++) {
+                        coordinates[j][1] = -1 * coordinates[j][1];
                     }
+
+                    var featobj = f.readFeature(response);
+                    featobj.setId(0);
+                    featobj.setProperties({
+                        rgbcolor: 'rgba(255, 255, 255, 0.1)',
+                        hexcolor: '#ff0000',
+                        title : self.draw_label,
+                        icon : '/uda/static/derm/images/lesion.jpg'
+                    });
+
+                    self.vector_source.addFeature(featobj);
+
                     // manually request an updated frame async
                     self.map.render();
                 });

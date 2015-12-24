@@ -5,7 +5,7 @@ import collections
 import os
 from six import BytesIO
 
-import requests
+import geojson
 from requests.packages.urllib3.util import Url
 
 from girder.api.rest import getUrlParts
@@ -109,18 +109,46 @@ class Image(Item):
         return url.url
 
 
-    def binaryImageJpeg(self, image):
-        image_server_url = self.tileServerURL(image)
-        try:
-            response = requests.get(image_server_url)
-            response.raise_for_status()
-        except requests.RequestException:
-            raise GirderException('Tile server unavailable.')
-        return response.content
 
 
-    def binaryImageRaw(self, image):
-        return SegmentationHelper.loadImage(self.binaryImageJpeg(image))
+
+
+    def doSegmentation(self, image, seed_coord, tolerance):
+        """
+        Run a lesion segmentation.
+
+        :param image: A Girder Image item.
+        :param seed_coord: X, Y coordinates of the segmentation seed point.
+        :type seed_coord: tuple[int]
+        :param tolerance: The intensity tolerance value for the segmentation.
+        :type tolerance: int
+        :return: The lesion segmentation, as a GeoJSON Polygon Feature.
+        :rtype: geojson.Feature
+        """
+        image_data = self.imageData(image)
+
+        if not(
+            # The image_data has a shape of (rows, cols), the seed is (x, y)
+            0.0 <= seed_coord[0] <= image_data.shape[1] and
+            0.0 <= seed_coord[1] <= image_data.shape[0]
+        ):
+            raise GirderException('seed_coord is out of bounds')
+
+        contour_coords = SegmentationHelper.segment(
+            image_data, seed_coord, tolerance)
+
+        contour_feature = geojson.Feature(
+            geometry=geojson.Polygon(
+                coordinates=(contour_coords.tolist(),)
+            ),
+            properties={
+                'source': 'autofill',
+                'seedPoint': seed_coord,
+                'tolerance': tolerance
+            }
+        )
+
+        return contour_feature
 
 
     def validate(self, doc):

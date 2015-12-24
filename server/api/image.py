@@ -11,8 +11,8 @@ from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
 from girder.models.model_base import AccessException
 
-from ..image_processing import fillImageGeoJSON
 from ..provision_utility import _ISICCollection
+from girder.models.model_base import GirderException
 
 
 class ImageResource(Resource):
@@ -26,9 +26,8 @@ class ImageResource(Resource):
         self.route('GET', (':id', 'download'), self.download)
 
         self.route('POST', (':id', 'flag'), self.flag)
+        self.route('POST', (':id', 'segment'), self.doSegmentation)
 
-        # TODO: change to GET
-        self.route('POST', (':id', 'segment-boundary'), self.segmentBoundary)
 
 
     @describeRoute(
@@ -146,23 +145,27 @@ class ImageResource(Resource):
 
 
     @describeRoute(
-        Description('Return an image\'s boundary segmentation.')
-        # .responseClass('Image')
+        Description('Run and return a new semi-automated segmentation.')
         .param('id', 'The ID of the image.', paramType='path')
+        .param('seed', 'The X, Y coordinates of a segmentation seed point.',
+               paramType='body')
+        .param('tolerance',
+               'The intensity tolerance value for the segmentation.',
+               paramType='body')
         .errorResponse('ID was invalid.')
     )
     @access.user
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
-    def segmentBoundary(self, image, params):
+    def doSegmentation(self, image, params):
         body_json = self.getBodyJson()
         self.requireParams(('seed', 'tolerance'), body_json)
 
         # validate parameters
-        seed_point = body_json['seed']
+        seed_coord = body_json['seed']
         if not (
-            isinstance(seed_point, list) and
-            len(seed_point) == 2 and
-            all(isinstance(value, int) for value in seed_point)
+            isinstance(seed_coord, list) and
+            len(seed_coord) == 2 and
+            all(isinstance(value, int) for value in seed_coord)
         ):
             raise RestException('Submitted "seed" must be a coordinate pair.')
 
@@ -170,13 +173,12 @@ class ImageResource(Resource):
         if not isinstance(tolerance, int):
             raise RestException('Submitted "tolerance" must be an integer.')
 
-        image_data = self.model('image', 'isic_archive').binaryImageRaw(image)
+        try:
+            contour_feature = self.model('image', 'isic_archive').doSegmentation(
+                image, seed_coord, tolerance)
+        except GirderException as e:
+            raise RestException(e.message)
 
-        results = fillImageGeoJSON(
-            image_data=image_data,
-            seed_point=seed_point,
-            tolerance=tolerance
-        )
+        return contour_feature
 
-        return results
-        # return json.dumps(results)
+
