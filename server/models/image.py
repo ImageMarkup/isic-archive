@@ -14,7 +14,8 @@ from girder.models.model_base import GirderException
 from girder.models.item import Item
 
 from .. import constants
-from .segmentation_helpers import SegmentationHelper
+from .segmentation_helpers import ScikitSegmentationHelper, \
+    OpenCVSegmentationHelper
 
 
 class Image(Item):
@@ -74,7 +75,8 @@ class Image(Item):
             self.model('file').download(image_file, headers=False)()
         )
 
-        image_data = SegmentationHelper.loadImage(image_file_stream)
+        # Scikit-Image is ~70ms faster at loading images
+        image_data = ScikitSegmentationHelper.loadImage(image_file_stream)
         return image_data
 
 
@@ -134,7 +136,8 @@ class Image(Item):
         ):
             raise GirderException('seed_coord is out of bounds')
 
-        contour_coords = SegmentationHelper.segment(
+        # OpenCV is significantly faster at segmentation right now
+        contour_coords = OpenCVSegmentationHelper.segment(
             image_data, seed_coord, tolerance)
 
         contour_feature = geojson.Feature(

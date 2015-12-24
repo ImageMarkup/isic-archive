@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from .opencv import OpenCVSegmentationHelper as SegmentationHelper
+    from .opencv import OpenCVSegmentationHelper
 except ImportError:
-    try:
-        from .scikit import ScikitSegmentationHelper as SegmentationHelper
-    except ImportError:
-        raise ImportError('Could not load OpenCV or Scikit-Image.')
+    raise ImportError('Could not load OpenCV.')
+
+try:
+    from .scikit import ScikitSegmentationHelper
+except ImportError:
+    raise ImportError('Could not load Scikit-Image.')

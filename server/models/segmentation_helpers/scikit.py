@@ -24,7 +24,6 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         :return: An Numpy array with the RGB image data.
         :rtype: numpy.ndarray
         """
-        # TODO: consider scipy.ndimage.imread
         return skimage.io.imread(image_data_stream)
 
 
