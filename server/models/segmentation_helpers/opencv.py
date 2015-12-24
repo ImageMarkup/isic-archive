@@ -44,7 +44,9 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
             connectivity=8,
             pad_output=True
         )
-        mask_image = cls._binaryOpening(mask_image)
+        # TODO: for _binaryOpening to work, a new _floodFill must be run on the
+        #   mask image afterwards, or else _maskToContour will fail
+        # mask_image = cls._binaryOpening(mask_image, padded_input=True)
         contour_coords = cls._maskToContour(
             mask_image,
             padded_input=True,
@@ -110,7 +112,8 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
 
 
     @classmethod
-    def _binaryOpening(cls, image, element_shape='circle', element_radius=5):
+    def _binaryOpening(cls, image, element_shape='circle', element_radius=5,
+                       padded_input=False):
         if image.dtype != numpy.uint8:
             raise TypeError('image must be an array of uint8.')
 
@@ -131,6 +134,11 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
             kernel=cv2.getStructuringElement(
                 shape, (element_size, element_size))
         )
+
+        if padded_input:
+            morphed_image[[0, -1], :] = 1
+            morphed_image[:, [0, -1]] = 1
+
         return morphed_image
 
 

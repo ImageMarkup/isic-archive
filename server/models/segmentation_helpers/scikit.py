@@ -36,7 +36,7 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
             tolerance,
             connectivity=8
         )
-        mask_image = cls._binaryOpening(mask_image)
+        # mask_image = cls._binaryOpening(mask_image)
         contour_coords = cls._maskToContour(mask_image)
         return contour_coords
 
