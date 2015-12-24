@@ -3,6 +3,7 @@
 
 import collections
 import os
+from six import BytesIO
 
 import requests
 from requests.packages.urllib3.util import Url
@@ -58,6 +59,23 @@ class Image(Item):
             # TODO: make this more robust (original image may not be a JPEG)
             'name': '%s.jpg' % image['name']
         })
+
+
+    def imageData(self, image):
+        """
+        Return the RGB image data associated with this image.
+
+        :rtype: numpy.ndarray
+        """
+        image_file = self.originalFile(image)
+
+        image_file_stream = BytesIO()
+        image_file_stream.writelines(
+            self.model('file').download(image_file, headers=False)()
+        )
+
+        image_data = SegmentationHelper.loadImage(image_file_stream)
+        return image_data
 
 
     def multiresolutionFile(self, image):

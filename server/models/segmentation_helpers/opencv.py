@@ -9,9 +9,32 @@ from .base import BaseSegmentationHelper
 
 class OpenCVSegmentationHelper(BaseSegmentationHelper):
     @classmethod
-    def loadImage(cls, image_data):
-        image_data_array = numpy.fromstring(image_data, dtype=numpy.uint8)
-        return cv2.imdecode(image_data_array, cv2.CV_LOAD_IMAGE_COLOR)
+    def loadImage(cls, image_data_stream):
+        """
+        Load an image into an RGB array.
+        :param image_data_stream: A file-like object containing the encoded
+        (JPEG, etc.) image data.
+        :type image_data_stream: file-like object
+        :return: An Numpy array with the RGB image data.
+        :rtype: numpy.ndarray
+        """
+        if hasattr(image_data_stream, 'getvalue'):
+            # This is more efficient for BytesIO objects
+            image_data_bytes = image_data_stream.getvalue()
+        elif hasattr(image_data_stream, 'read'):
+            image_data_bytes = image_data_stream.read()
+        else:
+            raise ValueError('image_data_stream must be a file-like object.')
+
+        image_data_array = numpy.fromstring(image_data_bytes, dtype=numpy.uint8)
+        del image_data_bytes
+        image_data = cv2.imdecode(image_data_array, cv2.CV_LOAD_IMAGE_COLOR)
+        # OpenCV loads images as BGR
+        # TODO: copy this (instead of altering the view), so future usages can
+        #   be more efficient?
+        image_data = image_data[:, :, ::-1]
+        return image_data
+
 
     @classmethod
     def segment(cls, image, seed_coord, tolerance):

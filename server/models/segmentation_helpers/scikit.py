@@ -15,8 +15,18 @@ from .base import BaseSegmentationHelper
 
 class ScikitSegmentationHelper(BaseSegmentationHelper):
     @classmethod
-    def loadImage(cls, image_data):
-        return skimage.io.imread(image_data)
+    def loadImage(cls, image_data_stream):
+        """
+        Load an image into an RGB array.
+        :param image_data_stream: A file-like object containing the encoded
+        (JPEG, etc.) image data.
+        :type image_data_stream: file-like object
+        :return: An Numpy array with the RGB image data.
+        :rtype: numpy.ndarray
+        """
+        # TODO: consider scipy.ndimage.imread
+        return skimage.io.imread(image_data_stream)
+
 
     @classmethod
     def segment(cls, image, seed_coord, tolerance):
