@@ -15,7 +15,7 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         :param image_data_stream: A file-like object containing the encoded
         (JPEG, etc.) image data.
         :type image_data_stream: file-like object
-        :return: An Numpy array with the RGB image data.
+        :return: A Numpy array with the RGB image data.
         :rtype: numpy.ndarray
         """
         if hasattr(image_data_stream, 'getvalue'):
@@ -33,6 +33,12 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         #   with array views
         image_data = image_data[:, :, ::-1].copy()
         return image_data
+
+
+    @classmethod
+    def writeImage(cls, image, encoding='png'):
+        # TODO: cv2.imencode
+        raise NotImplementedError()
 
 
     @classmethod

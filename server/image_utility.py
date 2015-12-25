@@ -9,9 +9,12 @@ import pymongo
 
 from girder.api import access
 from girder.api.describe import Description
-from girder.api.rest import loadmodel, RestException
-from girder.constants import AccessType
+from girder.api.rest import loadmodel, RestException, setRawResponse
+from girder.constants import AccessType, SortDir
 from girder.utility.model_importer import ModelImporter
+
+from .models.segmentation_helpers.scikit import ScikitSegmentationHelper
+
 
 # TODO: this function should be safe to remove, but test everything first
 @access.public
@@ -30,7 +33,11 @@ thumbnailhandler.description = (
 @access.public
 @loadmodel(map={'item_id': 'item'}, model='item', level=AccessType.READ)
 def segmentationSourceHandler(item, params):
-    # todo : have it pull the appropriate annotation, it current pulls the last one
+    # if item['meta']['studyId'] == ObjectId('567864779fc3c148a0c9b248'):
+    if True:
+        return ModelImporter.model('file').download(
+            ModelImporter.model('image', 'isic_archive').originalFile(item),
+            headers=True)
 
     files = ModelImporter.model('item').childFiles(item, sort=[('created', pymongo.DESCENDING)])
 
@@ -56,7 +63,20 @@ segmentationSourceHandler.description = (
 @access.public
 @loadmodel(map={'item_id': 'item'}, model='item', level=AccessType.READ)
 def segmentationTileHandler(item, params):
-    # todo : have it pull the appropriate annotation, it current pulls the last one
+    # if item['meta']['studyId'] == ObjectId('567864779fc3c148a0c9b248'):
+    if True:
+        Segmentation = ModelImporter.model('segmentation', 'isic_archive')
+        segmentation = Segmentation.findOne(
+            {'imageId': item['_id']},
+            sort=[('created', SortDir.DESCENDING)]
+        )
+        superpixels = Segmentation.generateSuperpixels(segmentation, item)
+
+        superpixels_stream = ScikitSegmentationHelper.writeImage(superpixels, 'png')
+
+        cherrypy.response.headers['Content-Type'] = 'image/png'
+        setRawResponse(True)
+        return superpixels_stream.getvalue
 
     files = ModelImporter.model('item').childFiles(item, sort=[('created', pymongo.DESCENDING)])
 

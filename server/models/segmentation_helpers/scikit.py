@@ -3,6 +3,7 @@
 
 import collections
 import itertools
+from six import BytesIO
 
 import numpy
 import skimage.io
@@ -21,10 +22,17 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         :param image_data_stream: A file-like object containing the encoded
         (JPEG, etc.) image data.
         :type image_data_stream: file-like object
-        :return: An Numpy array with the RGB image data.
+        :return: A Numpy array with the RGB image data.
         :rtype: numpy.ndarray
         """
         return skimage.io.imread(image_data_stream)
+
+
+    @classmethod
+    def writeImage(cls, image, encoding='png'):
+        image_stream = BytesIO()
+        skimage.io.imsave(image_stream, image, format_str=encoding)
+        return image_stream
 
 
     @classmethod

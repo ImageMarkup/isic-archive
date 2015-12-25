@@ -10,9 +10,14 @@ class BaseSegmentationHelper(object):
         :param image_data_stream: A file-like object containing the encoded
         (JPEG, etc.) image data.
         :type image_data_stream: file-like object
-        :return: An Numpy array with the RGB image data.
+        :return: A Numpy array with the RGB image data.
         :rtype: numpy.ndarray
         """
+        raise NotImplementedError()
+
+    @classmethod
+    def writeImage(cls, image, encoding='png'):
+        # TODO: cv2.imencode
         raise NotImplementedError()
 
     @classmethod
