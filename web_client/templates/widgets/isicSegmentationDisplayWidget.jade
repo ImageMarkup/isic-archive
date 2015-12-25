@@ -1,0 +1,18 @@
+.g-folder-info-lines
+  .g-folder-info-line
+    i.icon-clock
+    span Created
+    span.g-bold-part  #{girder.formatDate(segmentation.created, girder.DATE_SECOND)}
+
+  .g-folder-info-line
+    i.icon-user-md
+    span Skill
+    span.g-bold-part  #{segmentation.skill}
+
+  .g-folder-info-line
+    i.icon-user
+    span Creator
+    span.g-bold-part  #{segmentation.creator.firstName} #{segmentation.creator.lastName} (#{segmentation.creator.login})
+
+  .g-folder-info-line
+    img(src=segmentationThumbnailUrl)

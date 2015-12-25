@@ -29,7 +29,6 @@ class ImageResource(Resource):
         self.route('POST', (':id', 'segment'), self.doSegmentation)
 
 
-
     @describeRoute(
         Description('Return a list of lesion images.')
         .pagingParams(defaultSort='lowerName')
@@ -71,6 +70,8 @@ class ImageResource(Resource):
     @describeRoute(
         Description('Return an image\'s thumbnail.')
         .param('id', 'The ID of the image.', paramType='path')
+        .param('width', 'The desired width for the thumbnail.',
+               paramType='query', required=False)
         .errorResponse('ID was invalid.')
     )
     @access.cookie
@@ -180,5 +181,3 @@ class ImageResource(Resource):
             raise RestException(e.message)
 
         return contour_feature
-
-

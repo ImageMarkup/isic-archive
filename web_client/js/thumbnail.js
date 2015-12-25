@@ -3,12 +3,12 @@ girder.wrap(girder.views.ItemView, 'render', function (render) {
     // ItemView is a special case in which rendering is done asynchronously,
     // so we must listen for a render event.
     this.once('g:rendered', function () {
-        this.thumbnailWidget = new girder.views.ThumbnailWidget({
+        // TODO: only add if this is an image item
+        new girder.views.ThumbnailWidget({
             el: $('<div>', {class: '.g-item-thumbnail'})
                 .insertAfter(this.$('.g-item-info')),
             parentView: this,
-            itemModel: this.model,
-            girder: girder
+            itemModel: this.model
         });
     }, this);
     render.call(this);

@@ -5,6 +5,7 @@ import datetime
 
 from enum import Enum
 
+from girder import events
 from girder.constants import AccessType
 from girder.models.model_base import Model
 
@@ -19,8 +20,9 @@ class Segmentation(Model):
 
 
     def initialize(self):
-        # TODO: add indexes
         self.name = 'segmentation'
+        self.ensureIndices(['imageId', 'created'])
+
         self.exposeFields(AccessType.READ, (
             'imageId',
             'skill',
@@ -29,6 +31,8 @@ class Segmentation(Model):
             'stopTime'
             'created'
         ))
+        events.bind('model.user.save.created', 'isic_archive.gc_segmentation',
+                    self._onDeleteItem)
 
 
     def createSegmentation(self, image, skill, creator):
@@ -71,6 +75,33 @@ class Segmentation(Model):
         superpixels = ScikitSegmentationHelper.superpixels(image_data, coords)
 
         return superpixels
+
+
+    def childSuperpixels(self, segmentation,
+                         limit=0, offset=0, sort=None, **kwargs):
+        return self.model('file').find(
+            {'itemId': segmentation['_id']},
+            limit=limit, offset=offset, sort=sort, **kwargs)
+
+
+    def _onDeleteItem(self, event):
+        item = event.info
+        # TODO: can we tell if this item is an image?
+        for segmentation in self.find({
+            'imageId': item['_id']
+        }):
+            self.remove(segmentation)
+
+
+    def remove(self, segmentation, **kwargs):
+        for fileObj in self.model('file').find({
+            'itemId': segmentation['_id']
+        }):
+            fileKwargs = kwargs.copy()
+            fileKwargs.pop('updateItemSize', None)
+            self.model('file').remove(fileObj, updateItemSize=False,
+                                      **fileKwargs)
+        super(Segmentation, self).remove(segmentation)
 
 
     def validate(self, doc):

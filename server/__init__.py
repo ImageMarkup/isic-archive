@@ -121,4 +121,5 @@ def load(info):
     info['apiRoot'].dataset = api.DatasetResource()
     info['apiRoot'].featureset = api.FeaturesetResource()
     info['apiRoot'].image = api.ImageResource()
+    info['apiRoot'].segmentation = api.SegmentationResource()
     info['apiRoot'].study = api.StudyResource()
