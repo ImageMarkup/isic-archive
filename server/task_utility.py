@@ -45,7 +45,7 @@ class UDAResource(Resource):
     @access.user
     @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
     def selectTaskComplete(self, folder, params):
-        contents = json.loads(cherrypy.request.body.read())
+        contents = self.getBodyJson()
 
         flagged_image_items = [
             self.model('item').load(image_item_id, force=True)
@@ -102,23 +102,6 @@ class UDAResource(Resource):
         return collection
 
 
-    def _getFoldersForCollection(self, collection, excludeFlagged=True):
-        def p0FilterFunc(folder):
-            if folder['name'] == 'dropzip':
-                return False
-            if excludeFlagged and folder['name'] == 'flagged':
-                return False
-            return True
-
-        folders = self.model('folder').find(
-            {'parentId': collection['_id']})
-
-        if collection['name'] == 'Phase 0':
-            # TODO: do the filtering in the query
-            folders = itertools.ifilter(p0FilterFunc, folders)
-        return folders
-
-
     @access.user
     def taskList(self, params):
         result = list()
@@ -143,7 +126,10 @@ class UDAResource(Resource):
                         'count': len(getItemsInFolder(folder)),
                         'url': task_url % {'folder_id': folder['_id']}
                     }
-                    for folder in self._getFoldersForCollection(collection)
+                    for folder in self.model('folder').find({
+                        'parentId': collection['_id'],
+                        'name': {'$ne': 'dropzip'}
+                    })
                 )
             else:
                 # TODO: this could be done more efficiently, without duplicate queries,
@@ -199,7 +185,7 @@ class UDAResource(Resource):
         if folder['baseParentId'] != phase0_collection['_id']:
             raise RestException('Folder %s is not inside Phase 0' % folder['_id'])
 
-        contents = json.loads(cherrypy.request.body.read())
+        contents = self.getBodyJson()
 
         # verify that all images are in folder
         flagged_image_items = [
@@ -217,26 +203,12 @@ class UDAResource(Resource):
             if image_item['folderId'] != folder['_id']:
                 raise RestException('Good image %s is not inside folder %s' % (image_item['_id'], folder['_id']))
 
-
-        # move flagged images into flagged folder, set QC metadata
-        # TODO: create "flagged" if not present?
-        flagged_folder = ModelImporter.model('folder').findOne({
-            'parentId': phase0_collection['_id'],
-            'name': 'flagged'
-        })
-        phase0_flagged_images = _ISICCollection.createFolder(
-            name=folder['name'],
-            description='',
-            parent=flagged_folder,
-            parent_type='folder'
+        # move flagged images into flagged folder
+        self.model('image', 'isic_archive').flagMultiple(
+            images=flagged_image_items,
+            reason='phase0',
+            user=self.getCurrentUser()
         )
-        for image_item in flagged_image_items:
-            qc_metadata = {
-                'qc_user': self.getCurrentUser()['_id'],
-                'qc_result': 'flagged',
-            }
-            self.model('item').setMetadata(image_item, qc_metadata)
-            self.model('item').move(image_item, phase0_flagged_images)
 
         # move good images into phase 1a folder
         phase1a_collection = self.model('collection').findOne({'name': 'Phase 1a'})

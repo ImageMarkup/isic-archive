@@ -168,6 +168,12 @@ def initialSetup(info):
         group_description='Users responsible for uploading raw images & metadata, and doing initial QC'
     )
 
+    ISIC.Flagged = _ISICCollection(
+        collection_name='Flagged Images',
+        collection_description='Images that have been flagged for any reason',
+        public=False
+    )
+
     ISIC.Phase1a = _ISICCollection(
         collection_name='Phase 1a',
         collection_description='Images that have passed initial QC review',
@@ -209,12 +215,6 @@ def initialSetup(info):
         group=ISIC.Phase0.group,
         level=AccessType.WRITE,
         save=True
-    )
-    _ISICCollection.createFolder(
-        name='flagged',
-        description='Images flagged during Phase 0 are here',
-        parent=ISIC.Phase0.collection,
-        parent_type='collection'
     )
 
     for featureset_file_name in [

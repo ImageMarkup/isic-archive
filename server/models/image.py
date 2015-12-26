@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import collections
+import datetime
 import os
 from six import BytesIO
 
@@ -10,10 +11,11 @@ from requests.packages.urllib3.util import Url
 
 from girder.api.rest import getUrlParts
 from girder.constants import AccessType
-from girder.models.model_base import GirderException
+from girder.models.model_base import AccessException, GirderException
 from girder.models.item import Item
 
 from .. import constants
+from ..provision_utility import _ISICCollection
 from .segmentation_helpers import ScikitSegmentationHelper, \
     OpenCVSegmentationHelper
 
@@ -111,8 +113,59 @@ class Image(Item):
         return url.url
 
 
+    def flag(self, image, reason, user):
+        self.flagMultiple([image], reason, user)
 
 
+    def flagMultiple(self, images, reason, user):
+        # TODO: change to use direct permissions on the images
+        if not any(
+            self.model('group').findOne(
+                {'name': groupName}
+            )['_id'] in user.get('groups', [])
+            for groupName in
+            ['Phase 0', 'Phase 1a', 'Phase 1b']
+        ):
+            # Check if all images are part of annotation studies that this user
+            #   is part of
+            image_ids = list(set(image['_id'] for image in images))
+            annotations = self.model('annotation', 'isic_archive').find({
+                'imageId': {'$in': image_ids},
+                'userId': user['_id']
+            })
+            if len(image_ids) != len(annotations):
+                raise AccessException(
+                    'User does not have permission to flag these images.')
+
+        datasets = [
+            self.model('dataset', 'isic_archive').load(
+                dataset_id, force=True)
+            for dataset_id in
+            set(image['folderId'] for image in images)
+        ]
+
+        flagged_collection = self.model('collection').findOne(
+            {'name': 'Flagged Images'})
+
+        dataset_flagged_folders = {
+            dataset['_id']: _ISICCollection.createFolder(
+                name=dataset['name'],
+                description='',
+                parent=flagged_collection,
+                parent_type='collection'
+            )
+            for dataset in datasets
+        }
+
+        flag_metadata = {
+            'flaggedUserId': user['_id'],
+            'flaggedTime': datetime.datetime.utcnow(),
+            'flaggedReason': reason,
+        }
+        for image in images:
+            self.model('item').setMetadata(image, flag_metadata)
+            # TODO: deal with any existing studies with this image
+            self.model('item').move(image, dataset_flagged_folders[image['folderId']])
 
 
     def doSegmentation(self, image, seed_coord, tolerance):
