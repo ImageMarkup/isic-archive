@@ -91,10 +91,6 @@ class _ISICCollection(ModelImporter):
                 description=collection_description,
                 public=public
             )
-            # delete default folders
-            for folder in self.model('folder').find(
-                    {'parentId': self.collection['_id']}):
-                self.model('folder').remove(folder)
 
         if group_name:
             self.group = self.model('group').findOne(
@@ -121,27 +117,16 @@ class _ISICCollection(ModelImporter):
 
     @classmethod
     def createFolder(cls, name, description, parent, parent_type):
-        folder = cls.model('folder').findOne({
-            'name': name,
-            'parentId': parent['_id']
-        })
-        if not folder:
-            folder = cls.model('folder').createFolder(
-                parent=parent,
-                name=name,
-                description=description,
-                parentType=parent_type,
-                public=None,
-                creator=getAdminUser()
-            )
-            if parent_type != 'folder':
-                # Girder doesn't inherit access from parent collections, but we will
-                cls.model('folder').copyAccessPolicies(
-                    src=parent,
-                    dest=folder,
-                    save=True
-                )
-        return folder
+        return cls.model('folder').createFolder(
+            parent=parent,
+            name=name,
+            description=description,
+            parentType=parent_type,
+            public=None,
+            creator=getAdminUser(),
+            allowRename=False,
+            reuseExisting=True
+        )
 
 
 # this will be populated in 'initialSetup'
