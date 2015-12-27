@@ -2,12 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import six
 
+from bson import ObjectId
 from enum import Enum
 
 from girder import events
 from girder.constants import AccessType
-from girder.models.model_base import Model
+from girder.models.model_base import Model, ValidationException
 
 from .segmentation_helpers import ScikitSegmentationHelper
 
@@ -43,15 +45,15 @@ class Segmentation(Model):
 
         return self.save({
             'imageId': image['_id'],
-            'skill': skill,
+            'skill': skill.value,
             'creatorId': creator['_id'],
 
             'lesionBoundary': {
-                'startTime': None,
-                'stopTime': None,
                 'type': 'Feature',
                 'properties': {
-                    'source': None
+                    'source': None,
+                    'startTime': None,
+                    'stopTime': None,
                 },
                 'geometry': {
                     'type': 'Polygon',
@@ -105,5 +107,60 @@ class Segmentation(Model):
 
 
     def validate(self, doc):
-        # raise ValidationException
+        try:
+            assert set(six.viewkeys(doc)) == {
+                'imageId', 'skill', 'creatorId', 'lesionBoundary', 'created'}
+
+            assert isinstance(doc['imageId'], ObjectId)
+            assert self.model('image', 'isic_archive').find(
+                {'_id': doc['imageId']}).count()
+
+            # TODO: better use of Enum
+            assert doc['skill'] in {'novice', 'expert'}
+
+            assert isinstance(doc['creatorId'], ObjectId)
+            assert self.model('user').find(
+                {'_id': doc['creatorId']}).count()
+
+            assert isinstance(doc['lesionBoundary'], dict)
+            assert set(six.viewkeys(doc['lesionBoundary'])) == {
+                'type', 'properties', 'geometry'}
+
+            assert doc['lesionBoundary']['type'] == 'Feature'
+
+            assert isinstance(doc['lesionBoundary']['properties'], dict)
+            assert set(six.viewkeys(doc['lesionBoundary']['properties'])) <= {
+                'source', 'startTime', 'stopTime', 'seedPoint', 'tolerance'}
+            assert set(six.viewkeys(doc['lesionBoundary']['properties'])) >= {
+                'source', 'startTime', 'stopTime'}
+            assert doc['lesionBoundary']['properties']['source'] in {
+                'autofill', 'manual pointlist'}
+            assert isinstance(doc['lesionBoundary']['properties']['startTime'],
+                              datetime.datetime)
+            assert isinstance(doc['lesionBoundary']['properties']['stopTime'],
+                              datetime.datetime)
+
+            assert isinstance(doc['lesionBoundary']['geometry'], dict)
+            assert set(six.viewkeys(doc['lesionBoundary']['geometry'])) == {
+                'type', 'coordinates'}
+            assert doc['lesionBoundary']['geometry']['type'] == 'Polygon'
+            assert isinstance(doc['lesionBoundary']['geometry']['coordinates'],
+                              list)
+            assert len(doc['lesionBoundary']['geometry']['coordinates']) == 1
+            assert isinstance(
+                doc['lesionBoundary']['geometry']['coordinates'][0], list)
+            assert len(doc['lesionBoundary']['geometry']['coordinates'][0]) > 2
+            assert doc['lesionBoundary']['geometry']['coordinates'][0][0] == \
+                doc['lesionBoundary']['geometry']['coordinates'][0][-1]
+            for coord in doc['lesionBoundary']['geometry']['coordinates'][0]:
+                assert isinstance(coord, list)
+                assert len(coord) == 2
+                assert isinstance(coord[0], (int, float))
+                assert isinstance(coord[1], (int, float))
+
+            assert isinstance(doc['created'], datetime.datetime)
+
+        except AssertionError:
+            # TODO: message
+            raise ValidationException('')
         return doc
