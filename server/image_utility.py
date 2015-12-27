@@ -70,13 +70,9 @@ def segmentationTileHandler(item, params):
             {'imageId': item['_id']},
             sort=[('created', SortDir.DESCENDING)]
         )
-        superpixels = Segmentation.generateSuperpixels(segmentation, item)
-
-        superpixels_stream = ScikitSegmentationHelper.writeImage(superpixels, 'png')
-
-        cherrypy.response.headers['Content-Type'] = 'image/png'
-        setRawResponse(True)
-        return superpixels_stream.getvalue
+        superpixels_file = Segmentation.superpixelsFile(segmentation)
+        return ModelImporter.model('file').download(
+            superpixels_file, headers=True)
 
     files = ModelImporter.model('item').childFiles(item, sort=[('created', pymongo.DESCENDING)])
 

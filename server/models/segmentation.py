@@ -6,6 +6,7 @@ import six
 
 from bson import ObjectId
 from enum import Enum
+import numpy
 
 from girder import events
 from girder.constants import AccessType
@@ -33,7 +34,8 @@ class Segmentation(Model):
             'stopTime'
             'created'
         ))
-        events.bind('model.user.save.created', 'isic_archive.gc_segmentation',
+        events.bind('model.item.remove_with_kwargs',
+                    'isic_archive.gc_segmentation',
                     self._onDeleteItem)
 
 
@@ -79,29 +81,51 @@ class Segmentation(Model):
         return superpixels
 
 
-    def childSuperpixels(self, segmentation,
-                         limit=0, offset=0, sort=None, **kwargs):
-        return self.model('file').find(
-            {'itemId': segmentation['_id']},
-            limit=limit, offset=offset, sort=sort, **kwargs)
+    def saveSuperpixels(self, segmentation, superpixels):
+        """
+        :type segmentation: dict
+        :type superpixels: file-like object or numpy.ndarray
+        :return: The Girder File containing the PNG-encoded superpixel labels.
+        :rtype: dict
+        """
+        if isinstance(superpixels, numpy.ndarray):
+            superpixels = ScikitSegmentationHelper.writeImage(
+                superpixels, 'png')
+
+        return self.model('upload').uploadFromFile(
+            obj=superpixels,
+            size=len(superpixels.getvalue()),
+            name='%s_superpixels.png' % segmentation['_id'],
+            parentType='item',
+            parent=segmentation,
+            user={'_id': segmentation['creatorId']},
+            mimeType='image/png'
+        )
+
+
+    def superpixelsFile(self, segmentation):
+        """
+        :type segmentation: dict
+        :rtype: models.file.File or None
+        """
+        return self.model('file').findOne({'itemId': segmentation['_id']})
 
 
     def _onDeleteItem(self, event):
-        item = event.info
+        item = event.info['document']
         # TODO: can we tell if this item is an image?
         for segmentation in self.find({
             'imageId': item['_id']
         }):
-            self.remove(segmentation)
+            self.remove(segmentation, **event.info['kwargs'])
 
 
     def remove(self, segmentation, **kwargs):
-        for fileObj in self.model('file').find({
-            'itemId': segmentation['_id']
-        }):
+        superpixelFile = self.superpixelsFile(segmentation)
+        if superpixelFile:
             fileKwargs = kwargs.copy()
             fileKwargs.pop('updateItemSize', None)
-            self.model('file').remove(fileObj, updateItemSize=False,
+            self.model('file').remove(superpixelFile, updateItemSize=False,
                                       **fileKwargs)
         super(Segmentation, self).remove(segmentation)
 

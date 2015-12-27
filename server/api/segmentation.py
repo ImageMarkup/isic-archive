@@ -22,6 +22,8 @@ class SegmentationResource(Resource):
         self.route('GET', (':id',), self.getSegmentation)
         self.route('GET', (':id', 'thumbnail'), self.thumbnail)
 
+        self.route('GET', (':id', 'superpixels'), self.getSuperpixels)
+
 
     @describeRoute(
         Description('List the segmentations for an image.')
@@ -119,3 +121,18 @@ class SegmentationResource(Resource):
 
         cherrypy.response.headers['Content-Type'] = 'image/jpeg'
         return output_image_data.getvalue
+
+
+    @describeRoute(
+        Description('Get the superpixels for this segmentation, as a'
+                    ' PNG-encoded label map.')
+        .param('id', 'The ID of the segmentation.', paramType='path')
+        .errorResponse('ID was invalid.')
+    )
+    @access.cookie
+    @access.public
+    @loadmodel(model='segmentation', plugin='isic_archive')
+    def getSuperpixels(self, segmentation, params):
+        Segmentation = self.model('segmentation', 'isic_archive')
+        superpixels_file = Segmentation.superpixelsFile(segmentation)
+        return self.model('file').download(superpixels_file, headers=True)
