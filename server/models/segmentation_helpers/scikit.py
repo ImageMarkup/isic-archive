@@ -32,6 +32,7 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
     def writeImage(cls, image, encoding='png'):
         image_stream = BytesIO()
         skimage.io.imsave(image_stream, image, format_str=encoding)
+        image_stream.seek(0)
         return image_stream
 
 
