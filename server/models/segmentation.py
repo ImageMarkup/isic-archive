@@ -92,6 +92,8 @@ class Segmentation(Model):
             superpixels = ScikitSegmentationHelper.writeImage(
                 superpixels, 'png')
 
+        self.removeSuperpixels(segmentation)
+
         return self.model('upload').uploadFromFile(
             obj=superpixels,
             size=len(superpixels.getvalue()),
@@ -101,6 +103,15 @@ class Segmentation(Model):
             user={'_id': segmentation['creatorId']},
             mimeType='image/png'
         )
+
+
+    def removeSuperpixels(self, segmentation, **kwargs):
+        superpixels_file = self.superpixelsFile(segmentation)
+        if superpixels_file:
+            fileKwargs = kwargs.copy()
+            fileKwargs.pop('updateItemSize', None)
+            self.model('file').remove(superpixels_file, updateItemSize=False,
+                                      **fileKwargs)
 
 
     def superpixelsFile(self, segmentation):
@@ -121,12 +132,7 @@ class Segmentation(Model):
 
 
     def remove(self, segmentation, **kwargs):
-        superpixelFile = self.superpixelsFile(segmentation)
-        if superpixelFile:
-            fileKwargs = kwargs.copy()
-            fileKwargs.pop('updateItemSize', None)
-            self.model('file').remove(superpixelFile, updateItemSize=False,
-                                      **fileKwargs)
+        self.removeSuperpixels(segmentation, **kwargs)
         super(Segmentation, self).remove(segmentation)
 
 
