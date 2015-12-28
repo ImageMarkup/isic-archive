@@ -127,7 +127,8 @@ derm_app.controller('AnnotationController', [
                 annotations: $scope.annotation_values
             };
             $http.put(submit_url, annotation_to_store).success(function () {
-                window.location.replace('/uda/task');
+                //window.location.replace('/uda/task');
+                window.location.replace('/uda/task/p2/' + $scope.study._id);
             });
         };
     }
