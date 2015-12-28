@@ -94,15 +94,18 @@ class Segmentation(Model):
 
         self.removeSuperpixels(segmentation)
 
-        return self.model('upload').uploadFromFile(
+        superpixels_file = self.model('upload').uploadFromFile(
             obj=superpixels,
             size=len(superpixels.getvalue()),
             name='%s_superpixels.png' % segmentation['_id'],
-            parentType='item',
-            parent=segmentation,
             user={'_id': segmentation['creatorId']},
             mimeType='image/png'
         )
+        # Uploads re-lookup the passed "parent" item, so it can't be set in
+        #  uploadFromFile
+        superpixels_file['itemId'] = segmentation['_id']
+        superpixels_file = self.model('file').save(superpixels_file)
+        return superpixels_file
 
 
     def removeSuperpixels(self, segmentation, **kwargs):
