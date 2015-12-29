@@ -10,7 +10,7 @@ import numpy
 
 from girder import events
 from girder.constants import AccessType
-from girder.models.model_base import Model, ValidationException
+from girder.models.model_base import Model, GirderException, ValidationException
 
 from .segmentation_helpers import ScikitSegmentationHelper
 
@@ -130,9 +130,11 @@ class Segmentation(Model):
         :type segmentation: dict
         :rtype: numpy.ndarray
         """
-        # TODO: reduce duplication with Image.imageData
         superpixels_file = self.superpixelsFile(segmentation)
+        if not superpixels_file:
+            raise GirderException('No superpixels file in segmentation.')
 
+        # TODO: reduce duplication with Image.imageData
         superpixels_file_stream = six.BytesIO()
         superpixels_file_stream.writelines(
             self.model('file').download(superpixels_file, headers=False)()
@@ -160,7 +162,8 @@ class Segmentation(Model):
     def validate(self, doc):
         try:
             assert set(six.viewkeys(doc)) == {
-                'imageId', 'skill', 'creatorId', 'lesionBoundary', 'created'}
+                '_id', 'imageId', 'skill', 'creatorId', 'lesionBoundary',
+                'created'}
 
             assert isinstance(doc['imageId'], ObjectId)
             assert self.model('image', 'isic_archive').find(
