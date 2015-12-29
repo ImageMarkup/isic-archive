@@ -125,6 +125,24 @@ class Segmentation(Model):
         return self.model('file').findOne({'itemId': segmentation['_id']})
 
 
+    def superpixelsData(self, segmentation):
+        """
+        :type segmentation: dict
+        :rtype: numpy.ndarray
+        """
+        # TODO: reduce duplication with Image.imageData
+        superpixels_file = self.superpixelsFile(segmentation)
+
+        superpixels_file_stream = six.BytesIO()
+        superpixels_file_stream.writelines(
+            self.model('file').download(superpixels_file, headers=False)()
+        )
+
+        # Scikit-Image is ~70ms faster at loading images
+        superpixels = ScikitSegmentationHelper.loadImage(superpixels_file_stream)
+        return superpixels
+
+
     def _onDeleteItem(self, event):
         item = event.info['document']
         # TODO: can we tell if this item is an image?

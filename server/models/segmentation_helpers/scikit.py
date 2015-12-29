@@ -3,7 +3,7 @@
 
 import collections
 import itertools
-from six import BytesIO
+import six
 
 import numpy
 import skimage.io
@@ -30,7 +30,7 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
 
     @classmethod
     def writeImage(cls, image, encoding='png'):
-        image_stream = BytesIO()
+        image_stream = six.BytesIO()
         skimage.io.imsave(image_stream, image, format_str=encoding)
         image_stream.seek(0)
         return image_stream

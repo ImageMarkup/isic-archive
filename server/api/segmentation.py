@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from six import BytesIO
+import six
 
 import cherrypy
 from PIL import Image as PIL_Image, ImageDraw as PIL_ImageDraw
@@ -112,7 +112,7 @@ class SegmentationResource(Resource):
             width=5
         )
 
-        output_image_data = BytesIO()
+        output_image_data = six.BytesIO()
         factor = pil_image_data.size[0] / float(width)
         pil_image_data.resize((
             int(pil_image_data.size[0] / factor),

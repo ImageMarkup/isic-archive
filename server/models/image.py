@@ -4,7 +4,7 @@
 import collections
 import datetime
 import os
-from six import BytesIO
+import six
 
 import geojson
 from requests.packages.urllib3.util import Url
@@ -72,7 +72,7 @@ class Image(Item):
         """
         image_file = self.originalFile(image)
 
-        image_file_stream = BytesIO()
+        image_file_stream = six.BytesIO()
         image_file_stream.writelines(
             self.model('file').download(image_file, headers=False)()
         )
