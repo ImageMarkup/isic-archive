@@ -95,6 +95,11 @@ derm_app.controller('AnnotationController', ['$scope', '$rootScope', '$location'
                         }
                     );
 
+                    var image_detail_url = '/api/v1/image/' + image_item_id;
+                    $http.get(image_detail_url).success(function (data) {
+                        $scope.image_info = data;
+                    });
+
                     $scope.overview_image_url = '/api/v1/image/' + image_item_id + '/thumbnail?width=256';
 
                     start_time = Date.now();

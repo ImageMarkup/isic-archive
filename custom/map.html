@@ -91,11 +91,11 @@
                         <span>ISIC Annotation Tool : Exhaustive Annotation</span>
                     </div>
                     <div class="btn-group btn-group-block">
-                        <div class="btn" ng-controller="UserController">
-                            <span ng-cloak ng-show="user">User: {{ user.firstName}} {{ user.lastName }} ({{ user.login }})</span>
-                        </div>
                         <div class="btn">
-                            <span>Phase 2</span>
+                            <span ng-cloak ng-show="image_info"><b>Image:</b> {{ image_info.name }}</span>
+                        </div>
+                        <div class="btn" ng-controller="UserController">
+                            <span ng-cloak ng-show="user"><b>User:</b> {{ user.firstName}} {{ user.lastName }} ({{ user.login }})</span>
                         </div>
                     </div>
                     <div class="btn">
