@@ -15,4 +15,9 @@
     span.g-bold-part  #{segmentation.creator.firstName} #{segmentation.creator.lastName} (#{segmentation.creator.login})
 
   .g-folder-info-line
+    i.icon-user-md
+    span Source
+    span.g-bold-part  #{segmentation.lesionBoundary.properties.source}
+
+  .g-folder-info-line
     img(src=segmentationThumbnailUrl)
