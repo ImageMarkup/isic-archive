@@ -118,27 +118,39 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
 
 
     @classmethod
+    def _structuringElement(cls, shape, radius, element_type=bool):
+        size = (radius * 2) + 1
+
+        if shape == 'circle':
+            # This is broken and does not return a true circle, but there is
+            #   no way to change the major/semi-major axes
+            shape_key = cv2.MORPH_ELLIPSE
+        elif shape == 'cross':
+            shape_key = cv2.MORPH_CROSS
+        elif shape == 'square':
+            shape_key = cv2.MORPH_RECT
+        else:
+            raise ValueError('Unknown element shape value.')
+
+        element = cv2.getStructuringElement(shape_key, (size, size))
+        return element.astype(element_type)
+
+
+    @classmethod
     def _binaryOpening(cls, image, element_shape='circle', element_radius=5,
                        padded_input=False):
         if image.dtype != numpy.uint8:
             raise TypeError('image must be an array of uint8.')
 
-        element_size = (element_radius * 2) + 1
-
-        if element_shape == 'circle':
-            shape = cv2.MORPH_ELLIPSE
-        elif element_shape == 'cross':
-            shape = cv2.MORPH_CROSS
-        elif element_shape == 'square':
-            shape = cv2.MORPH_RECT
-        else:
-            raise ValueError('Unknown element shape value.')
+        # This is the only version that returns a true circle
+        from .scikit import ScikitSegmentationHelper
+        element = ScikitSegmentationHelper._structuringElement(
+            element_shape, element_radius, image.dtype.type)
 
         morphed_image = cv2.morphologyEx(
             src=image,
             op=cv2.MORPH_OPEN,
-            kernel=cv2.getStructuringElement(
-                shape, (element_size, element_size))
+            kernel=element
         )
 
         if padded_input:

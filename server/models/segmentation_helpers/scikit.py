@@ -94,20 +94,26 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
 
 
     @classmethod
-    def _binaryOpening(cls, image, element_shape='circle', element_radius=5):
-        element_size = (element_radius * 2) + 1
-        element_type = image.dtype
+    def _structuringElement(cls, shape, radius, element_type=bool):
+        size = (radius * 2) + 1
 
-        if element_shape == 'circle':
-            element = skimage.morphology.disk(element_radius, element_type)
-        elif element_shape == 'cross':
-            element = numpy.zeros((element_size, element_size), element_type)
-            element[:, element_size // 2] = element_type.type(True)
-            element[element_size // 2, :] = element_type.type(True)
-        elif element_shape == 'square':
-            element = skimage.morphology.square(element_size, element_type)
+        if shape == 'circle':
+            element = skimage.morphology.disk(radius, element_type)
+        elif shape == 'cross':
+            element = numpy.zeros((size, size), element_type)
+            element[:, size // 2] = element_type(True)
+            element[size // 2, :] = element_type(True)
+        elif shape == 'square':
+            element = skimage.morphology.square(size, element_type)
         else:
             raise ValueError('Unknown element shape value.')
+
+        return element
+
+
+    @classmethod
+    def _binaryOpening(cls, image, element_shape='circle', element_radius=5):
+        element = cls._structuringElement(element_shape, element_radius, bool)
 
         morphed_image = skimage.morphology.binary_opening(
             image=image,
@@ -212,12 +218,11 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
 
     @classmethod
     def superpixels(cls, image, coords):
-        mask_image = ScikitSegmentationHelper._contourToMask(image, coords)
+        mask_image = cls._contourToMask(image, coords)
 
-        # TODO: Due to some bugs, the element_radius was intended to be 5, but
-        #   was effectively 9; for now, keep using 9
-        mask_image = ScikitSegmentationHelper._binaryOpening(
-            mask_image, element_shape='circle', element_radius=9)
+        from .opencv import OpenCVSegmentationHelper
+        mask_image = OpenCVSegmentationHelper._binaryOpening(
+            mask_image, element_shape='circle', element_radius=5)
 
         inside_image = image.copy()
         inside_image[numpy.logical_not(mask_image)] = 0
