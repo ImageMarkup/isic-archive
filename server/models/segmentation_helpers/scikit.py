@@ -95,11 +95,11 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
 
     @classmethod
     def _binaryOpening(cls, image, element_shape='circle', element_radius=5):
-        element_size = (element_radius * 2) - 1
+        element_size = (element_radius * 2) + 1
         element_type = image.dtype
 
         if element_shape == 'circle':
-            element = skimage.morphology.disk(element_size, element_type)
+            element = skimage.morphology.disk(element_radius, element_type)
         elif element_shape == 'cross':
             element = numpy.zeros((element_size, element_size), element_type)
             element[:, element_size // 2] = element_type.type(True)
@@ -214,9 +214,10 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
     def superpixels(cls, image, coords):
         mask_image = ScikitSegmentationHelper._contourToMask(image, coords)
 
-        # TODO: remove
+        # TODO: Due to some bugs, the element_radius was intended to be 5, but
+        #   was effectively 9; for now, keep using 9
         mask_image = ScikitSegmentationHelper._binaryOpening(
-            mask_image, element_shape='circle', element_radius=5)
+            mask_image, element_shape='circle', element_radius=9)
 
         inside_image = image.copy()
         inside_image[numpy.logical_not(mask_image)] = 0

@@ -123,7 +123,7 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         if image.dtype != numpy.uint8:
             raise TypeError('image must be an array of uint8.')
 
-        element_size = (element_radius * 2) - 1
+        element_size = (element_radius * 2) + 1
 
         if element_shape == 'circle':
             shape = cv2.MORPH_ELLIPSE
