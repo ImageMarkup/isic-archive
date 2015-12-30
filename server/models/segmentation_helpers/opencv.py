@@ -187,10 +187,24 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
             offset=(-1, -1)
         )
 
-        # "cv2.RETR_EXTERNAL" means there's only one contour
-        contour = contours[0]
+        # Morphological operations may cause multiple disconnected components;
+        #   ideally, the seed point + region growing would be used to eliminate
+        #   these, but this is slower and the seed point is not available for
+        #   many older segmentations; so, simply select the largest component
+        #   instead
+        largest_contour = max(
+            contours,
+            # TODO: use a better measure of region size than simply the number
+            #   of defining points
+            key=lambda contour: len(contour)
+        )
+
         # contour initially looks like [ [[0,1]], [[0,2]] ], so squeeze it
-        contour = numpy.squeeze(contour)
+        largest_contour = numpy.squeeze(largest_contour)
         # place a duplicate of the first value at the end
-        contour = numpy.append(contour, contour[0:1], axis=0)
-        return contour
+        largest_contour = numpy.append(
+            largest_contour,
+            largest_contour[0:1],
+            axis=0
+        )
+        return largest_contour
