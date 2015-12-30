@@ -7,6 +7,7 @@ import six
 from bson import ObjectId
 from enum import Enum
 import numpy
+from PIL import Image as PIL_Image, ImageDraw as PIL_ImageDraw
 
 from girder import events
 from girder.constants import AccessType
@@ -66,6 +67,23 @@ class Segmentation(Model):
 
             'created': now
         })
+
+
+    def boundaryThumbnail(self, segmentation, image=None, width=256):
+        Image = self.model('image', 'isic_archive')
+        if not image:
+            image = Image.load(segmentation['imageId'], force=True, exc=True)
+
+        pil_image_data = PIL_Image.fromarray(Image.imageData(image))
+        pil_draw = PIL_ImageDraw.Draw(pil_image_data)
+        pil_draw.line(
+            list(six.moves.map(tuple, segmentation['lesionBoundary']['geometry']['coordinates'][0])),
+            fill=(0, 255, 0),  # TODO: make color an option
+            width=5
+        )
+
+        return ScikitSegmentationHelper.writeImage(
+            numpy.asarray(pil_image_data), 'jpeg', width)
 
 
     def generateSuperpixels(self, segmentation, image=None):

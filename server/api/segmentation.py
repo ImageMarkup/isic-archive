@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import six
-
 import cherrypy
-from PIL import Image as PIL_Image, ImageDraw as PIL_ImageDraw
 
 from girder.api import access
-from girder.api.rest import Resource, loadmodel
+from girder.api.rest import Resource, loadmodel, rawResponse
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 
@@ -95,32 +92,21 @@ class SegmentationResource(Resource):
     )
     @access.cookie
     @access.public
+    @rawResponse
     @loadmodel(model='segmentation', plugin='isic_archive')
     def thumbnail(self, segmentation, params):
+        # TODO: convert this to make Segmentation use an AccessControlMixin
         image = self.model('image', 'isic_archive').load(
             segmentation['imageId'], level=AccessType.READ,
             user=self.getCurrentUser(), exc=True)
 
         width = int(params.get('width', 256))
 
-        image_data = self.model('image', 'isic_archive').imageData(image)
-        pil_image_data = PIL_Image.fromarray(image_data)
-        pil_draw = PIL_ImageDraw.Draw(pil_image_data)
-        pil_draw.line(
-            list(map(tuple, segmentation['lesionBoundary']['geometry']['coordinates'][0])),
-            fill=(0, 255, 0),  # TODO: make color an option
-            width=5
-        )
-
-        output_image_data = six.BytesIO()
-        factor = pil_image_data.size[0] / float(width)
-        pil_image_data.resize((
-            int(pil_image_data.size[0] / factor),
-            int(pil_image_data.size[1] / factor)
-        )).save(output_image_data, format='jpeg')
+        thumbnail_image_data = self.model('segmentation', 'isic_archive').boundaryThumbnail(
+            segmentation, image, width)
 
         cherrypy.response.headers['Content-Type'] = 'image/jpeg'
-        return output_image_data.getvalue
+        return thumbnail_image_data.getvalue()
 
 
     @describeRoute(

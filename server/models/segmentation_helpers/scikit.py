@@ -10,6 +10,7 @@ import skimage.io
 import skimage.measure
 import skimage.morphology
 import skimage.segmentation
+import skimage.transform
 
 from .base import BaseSegmentationHelper
 
@@ -29,7 +30,11 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
 
 
     @classmethod
-    def writeImage(cls, image, encoding='png'):
+    def writeImage(cls, image, encoding='png', width=None):
+        if width is not None:
+            factor = image.scale[1] / float(width)
+            image = skimage.transform.rescale(image, factor)
+
         image_stream = six.BytesIO()
         skimage.io.imsave(image_stream, image, format_str=encoding)
         image_stream.seek(0)
