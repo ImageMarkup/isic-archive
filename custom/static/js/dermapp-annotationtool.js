@@ -537,11 +537,10 @@ var annotationTool = derm_app.controller('AnnotationTool', ['$scope', '$rootScop
 
                     if ($scope.step_config.default === 'preloadseg') {
 
-                        var segmentation_url = '/api/v1/item/' + $scope.current_image._id + '/segmentation';
-
                         $rootScope.showingSegmentation = true;
 
-                        $rootScope.imageviewer.loadPainting(segmentation_url);
+                        // TODO: loadPainting should be called with a segmentationId
+                        $rootScope.imageviewer.loadPainting($scope.current_image._id, null);
 
                         $scope.setDrawMode('superpixel', $scope.step_config.classification);
 

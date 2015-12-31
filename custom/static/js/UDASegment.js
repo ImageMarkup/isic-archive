@@ -1,4 +1,4 @@
-window.UDASegment = function (imageURL, options) {
+window.UDASegment = function (imageId, segmentationId, options) {
 
     var src_image = new Image();
     var tile_image = new Image();
@@ -10,7 +10,7 @@ window.UDASegment = function (imageURL, options) {
 
     function onSourceSuccessLoad(_image, options) {
 
-        tile_image.src = imageURL + "Tiles";
+        tile_image.src = '/api/v1/segmentation/' + segmentationId + '/superpixels';
         tile_image.crossOrigin = null;
         tile_image.onerror = function () { onErrorImageLoad(_image); };
         tile_image.onload = function (){ onSuccessImageLoad(_image, tile_image, options); };
@@ -68,19 +68,17 @@ window.UDASegment = function (imageURL, options) {
         alert('Failed to load an image: ' + image.src);
     }
 
-    src_image.src = imageURL + "Source";
+    src_image.src = '/api/v1/image/' + imageId + '/download';
     src_image.crossOrigin = null;
     src_image.onerror = function () { onErrorImageLoad(src_image); };
     src_image.onload = function (){ onSourceSuccessLoad(src_image, options); };
-
-
 };
 
 
-UDASegmentAnnotator = function (segmentation_url, options) {
+UDASegmentAnnotator = function (imageId, segmentationId, options) {
     var _this = this;
 
-    UDASegment(segmentation_url, {
+    UDASegment(imageId, segmentationId, {
         callback: function (result) {
             SegmentAnnotator.call(_this, result, options);
         }

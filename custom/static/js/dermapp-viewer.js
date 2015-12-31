@@ -339,23 +339,25 @@ var olViewer = derm_app.factory('olViewer',
                 }
             },
 
-            loadPainting: function (segmentURL, onLoadCallback) {
+            loadPainting: function (imageId, segmentationId, onLoadCallback) {
                 var self = this;
 
-                $log.debug('segment url', segmentURL);
-
-                self.segmentannotator = new UDASegmentAnnotator(segmentURL, {
-                    regionSize: self.paint_size,
-                    backgroundColor: [0,0,0],
-                    container: document.getElementById('annotatorcontainer'),
-                    fillAlpha: 0,
-                    highlightAlpha: 0,
-                    boundaryAlpha: 190,
-                    labels: _labels,
-                    onload: onLoadCallback || function () {
-//                        $("#annotatorcontainer").show();
+                self.segmentannotator = new UDASegmentAnnotator(
+                    imageId,
+                    segmentationId,
+                    {
+                        regionSize: self.paint_size,
+                        backgroundColor: [0,0,0],
+                        container: document.getElementById('annotatorcontainer'),
+                        fillAlpha: 0,
+                        highlightAlpha: 0,
+                        boundaryAlpha: 190,
+                        labels: _labels,
+                        onload: onLoadCallback || function () {
+    //                        $("#annotatorcontainer").show();
+                        }
                     }
-                });
+                );
             },
 
             startPainting: function () {

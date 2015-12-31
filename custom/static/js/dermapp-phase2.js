@@ -79,13 +79,12 @@ derm_app.controller('AnnotationController', ['$scope', '$rootScope', '$location'
             if (annotation_item_id !== undefined) {
                 var annotation_detail_url = '/api/v1/annotation/' + annotation_item_id;
                 $http.get(annotation_detail_url).success(function (data) {
-                    //data.segmentation_info; // unused
                     $scope.all_features = data.features;
 
                     image_item_id = data.image._id;
-                    var segmentation_url = '/api/v1/item/' + image_item_id + '/segmentation';
                     $rootScope.imageviewer.loadPainting(
-                        segmentation_url,
+                        image_item_id,
+                        data.segmentationId,
                         function () {
                             // this callback is being executed from non-Angular code, so we must
                             //   wrap all work that it does in an $apply

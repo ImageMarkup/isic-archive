@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from girder.constants import AccessType
 from girder.models.item import Item
 
 
 class Annotation(Item):
 
-    def createAnnotation(self, study, image_item, creator_user, annotator_folder):
+    def createAnnotation(self, study, segmentation, creator_user, annotator_folder):
+        image = self.model('image', 'isic_archive').load(
+            segmentation['imageId'], user=creator_user, level=AccessType.READ)
+
         annotation_item = self.createItem(
             folder=annotator_folder,
-            name=image_item['name'],
+            name=image['name'],
             description='',
             creator=creator_user
         )
@@ -19,7 +23,8 @@ class Annotation(Item):
             metadata={
                 'studyId': study['_id'],
                 'userId': annotator_folder['meta']['userId'],
-                'imageId': image_item['_id'],
+                'segmentationId': segmentation['_id'],
+                'imageId': image['_id'],
                 'startTime': None,
                 'stopTime': None,
                 'annotations': None

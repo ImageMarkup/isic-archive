@@ -10,7 +10,7 @@ from girder.utility.server import staticFile, _StaticFileRoute
 
 from . import constants
 from . import api
-from .image_utility import zoomifyhandler, thumbnailhandler, fifHandler, segmentationSourceHandler, segmentationTileHandler
+from .image_utility import zoomifyhandler, thumbnailhandler, fifHandler
 from .provision_utility import initialSetup, onUserCreated
 from .task_utility import UDAResource, TaskHandler
 from .upload import uploadHandler
@@ -102,11 +102,6 @@ def load(info):
 
     # "/api/v1/item/:id/thumbnail" -> returns a thumbnail of the image
     info['apiRoot'].item.route('GET', (':item_id', 'thumbnail'), thumbnailhandler)
-
-    # "/api/v1/item/:id/segmentationSource" -> returns the png segmentation (index map as alpha channel)
-    info['apiRoot'].item.route('GET', (':item_id', 'segmentationSource'), segmentationSourceHandler)
-    # "/api/v1/item/:id/segmentationTiles"
-    info['apiRoot'].item.route('GET', (':item_id', 'segmentationTiles'), segmentationTileHandler)
 
     # "/api/v1/item/:id/zoomify/:p1" -> returns a zoomify xml if available
     info['apiRoot'].item.route('GET', (':item_id', 'zoomify', ':p1'), zoomifyhandler)

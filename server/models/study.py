@@ -21,7 +21,7 @@ class Study(Folder):
         return self.model('collection').findOne({'name': 'Annotation Studies'})
 
 
-    def createStudy(self, name, creator_user, featureset, annotator_users, image_items):
+    def createStudy(self, name, creator_user, featureset, annotator_users, segmentations):
         # this may raise a ValidationException if the name already exists
         study_folder = self.createFolder(
             parent=self.loadStudyCollection(),
@@ -52,14 +52,16 @@ class Study(Folder):
         )
 
         for annotator_user in annotator_users:
-            self.addAnnotator(study_folder, annotator_user, creator_user, image_items)
+            self.addAnnotator(study_folder, annotator_user, creator_user, segmentations)
 
         return study_folder
 
 
-    def addAnnotator(self, study, annotator_user, creator_user, image_items=None):
-        if not image_items:
-            image_items = self.getImages(study)
+    def addAnnotator(self, study, annotator_user, creator_user, segmentations=None):
+        if not segmentations:
+            raise Exception('No list of segmentatoins provided')
+            # TODO: add a "getSegmentations" method to attempt to look them up
+            segmentations = self.getImages(study)
 
         annotator_folder = self.model('folder').createFolder(
             parent=study,
@@ -85,13 +87,13 @@ class Study(Folder):
             }
         )
 
-        for image_item in image_items:
-            self.model('annotation', 'isic_archive').createAnnotation(study, image_item, creator_user, annotator_folder)
+        for segmentation in segmentations:
+            self.model('annotation', 'isic_archive').createAnnotation(study, segmentation, creator_user, annotator_folder)
 
 
-    def addImage(self, study, image_item, creator_user):
+    def addImage(self, study, segmentation, creator_user):
         for annotator_folder in self.model('folder').find({'parentId': study['_id']}):
-            self.model('annotation', 'isic_archive').createAnnotation(study, image_item, creator_user, annotator_folder)
+            self.model('annotation', 'isic_archive').createAnnotation(study, segmentation, creator_user, annotator_folder)
 
 
     def getAnnotators(self, study):

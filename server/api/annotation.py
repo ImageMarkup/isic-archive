@@ -50,20 +50,19 @@ class AnnotationResource(Resource):
     @access.public
     @loadmodel(model='annotation', plugin='isic_archive', map={'annotation_id': 'annotation_item'}, level=AccessType.READ)
     def getAnnotation(self, annotation_item, params):
-        # return self.model('annotation', 'isic_archive').filter(annotation_item, , self.getCurrentUser())
-        image = self.model('item').load(annotation_item['meta']['imageId'], force=True)
-        study = self.model('study', 'isic_archive').load(annotation_item['meta']['studyId'], force=True)
-        featureset = self.model('featureset', 'isic_archive').load(study['meta']['featuresetId'])
+        image = self.model('image', 'isic_archive').load(
+            annotation_item['meta']['imageId'], force=True)
+        # segmentation = self.model('segmentation', 'isic_archive').load(
+        #     annotation_item['meta']['segmentationId'], force=True)
+        study = self.model('study', 'isic_archive').load(
+            annotation_item['meta']['studyId'], force=True)
+        featureset = self.model('featureset', 'isic_archive').load(
+            study['meta']['featuresetId'])
 
         return_dict = {
-            'image': image
+            'image': image,
+            'segmentationId': annotation_item['meta']['segmentationId']
         }
-
-        segmentation_info = self._getSegmentationInfo(image)
-        if not segmentation_info:
-            # TODO: no file found
-            raise Exception()
-        return_dict['segmentation_info'] = segmentation_info['steps']
 
         # transform featureset to legacy format
         legacy_featureset = dict()

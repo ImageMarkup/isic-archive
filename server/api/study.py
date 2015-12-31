@@ -190,19 +190,23 @@ class StudyResource(Resource):
     def createStudy(self, params):
         body_json = self.getBodyJson()
 
-        self.requireParams(('name', 'annotatorIds', 'imageIds', 'featuresetId'), body_json)
+        self.requireParams(('name', 'annotatorIds', 'segmentationIds', 'featuresetId'), body_json)
 
         study_name = body_json['name']
         creator_user = self.getCurrentUser()
-        annotator_users = (self.model('user').load(annotator_id, user=creator_user, level=AccessType.READ)
-                           for annotator_id in body_json['annotatorIds'])
-        # TODO: validate that these items are actually in the correct folder
-        image_items = (self.model('item').load(image_id, user=creator_user, level=AccessType.READ)
-                       for image_id in body_json['imageIds'])
+        annotator_users = [
+            self.model('user').load(
+                annotator_id, user=creator_user, level=AccessType.READ)
+            for annotator_id in body_json['annotatorIds']
+        ]
+        segmentations = [
+            self.model('segmentation', 'isic_archive').load(segmentation_id)
+            for segmentation_id in body_json['segmentationIds']
+        ]
         featureset = self.model('featureset', 'isic_archive').load(body_json['featuresetId'])
 
         self.model('study', 'isic_archive').createStudy(
-            study_name, creator_user, featureset, annotator_users, image_items)
+            study_name, creator_user, featureset, annotator_users, segmentations)
 
 
     createStudy.description = (

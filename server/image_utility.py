@@ -2,18 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import os
-import re
 
 import cherrypy
-import pymongo
 
 from girder.api import access
 from girder.api.describe import Description
-from girder.api.rest import loadmodel, RestException, setRawResponse
-from girder.constants import AccessType, SortDir
+from girder.api.rest import loadmodel, RestException
+from girder.constants import AccessType
 from girder.utility.model_importer import ModelImporter
-
-from .models.segmentation_helpers.scikit import ScikitSegmentationHelper
 
 
 # TODO: this function should be safe to remove, but test everything first
@@ -26,70 +22,6 @@ def thumbnailhandler(item, params):
 thumbnailhandler.cookieAuth = True
 thumbnailhandler.description = (
     Description('Retrieve the thumbnail for a given image item.')
-    .param('item_id', 'The item ID', paramType='path')
-    .errorResponse())
-
-
-@access.public
-@loadmodel(map={'item_id': 'item'}, model='item', level=AccessType.READ)
-def segmentationSourceHandler(item, params):
-    # if item['meta']['studyId'] == ObjectId('567864779fc3c148a0c9b248'):
-    if True:
-        return ModelImporter.model('file').download(
-            ModelImporter.model('image', 'isic_archive').originalFile(item),
-            headers=True)
-
-    files = ModelImporter.model('item').childFiles(item, sort=[('created', pymongo.DESCENDING)])
-
-    for first_file in files:
-        if first_file['mimeType'] == 'image/png':
-            # this is a hack; we should use negative lookahead assertions instead
-            if re.search(r'-p1.\.png$', first_file['name']) and not re.search(r'-tile-p1.\.png$', first_file['name']):
-                break
-    else:
-        raise RestException('No source PNG file in item')
-
-    file_download = ModelImporter.model('file').download(first_file, headers=True)
-    cherrypy.response.headers['Content-Disposition'] = 'inline; filename="%s"' % first_file['name']
-    return file_download
-
-segmentationSourceHandler.cookieAuth = True
-segmentationSourceHandler.description = (
-    Description('Retrieve segmentation source PNG image for a given image item.')
-    .param('item_id', 'The item ID', paramType='path')
-    .errorResponse())
-
-
-@access.public
-@loadmodel(map={'item_id': 'item'}, model='item', level=AccessType.READ)
-def segmentationTileHandler(item, params):
-    # if item['meta']['studyId'] == ObjectId('567864779fc3c148a0c9b248'):
-    if True:
-        Segmentation = ModelImporter.model('segmentation', 'isic_archive')
-        segmentation = Segmentation.findOne(
-            {'imageId': item['_id']},
-            sort=[('created', SortDir.DESCENDING)]
-        )
-        superpixels_file = Segmentation.superpixelsFile(segmentation)
-        return ModelImporter.model('file').download(
-            superpixels_file, headers=True)
-
-    files = ModelImporter.model('item').childFiles(item, sort=[('created', pymongo.DESCENDING)])
-
-    for first_file in files:
-        if first_file['mimeType'] == 'image/png':
-            if re.search(r'-tile-p1.\.png$', first_file['name']):
-                break
-    else:
-        raise RestException('No tile PNG file in item')
-
-    file_download = ModelImporter.model('file').download(first_file, headers=True)
-    cherrypy.response.headers['Content-Disposition'] = 'inline; filename="%s"' % first_file['name']
-    return file_download
-
-segmentationTileHandler.cookieAuth = True
-segmentationTileHandler.description = (
-    Description('Retrieve segmentation tile PNG image for a given image item.')
     .param('item_id', 'The item ID', paramType='path')
     .errorResponse())
 
