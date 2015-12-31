@@ -87,7 +87,7 @@ class SegmentationResource(Resource):
         Description('Get a thumbnail, showing a segmentation.')
         .param('id', 'The ID of the segmentation.', paramType='path')
         .param('width', 'The desired width for the thumbnail.',
-               paramType='query', required=False)
+               paramType='query', required=False, default=256)
         .errorResponse('ID was invalid.')
     )
     @access.cookie

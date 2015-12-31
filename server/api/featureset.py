@@ -3,7 +3,7 @@
 
 from girder.api import access
 from girder.api.rest import Resource, loadmodel
-from girder.api.describe import Description
+from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
 
 
@@ -18,13 +18,14 @@ class FeaturesetResource(Resource):
         # self.route('DELETE', (':id',), self.deleteFeatureset)
 
 
+    @describeRoute(
+        Description('List featuresets.')
+        .responseClass('Featureset')
+    )
     @access.public
     def find(self, params):
         return [self.model('featureset', 'isic_archive').filter(featureset)
                 for featureset in self.model('featureset', 'isic_archive').find()]
-    find.description = (
-        Description('List featuresets.')
-        .responseClass('Featureset'))
 
 
     # @access.admin
@@ -33,15 +34,16 @@ class FeaturesetResource(Resource):
     #     raise NotImplementedError()
 
 
+    @describeRoute(
+        Description('Get a featureset by ID.')
+        .responseClass('Featureset')
+        .param('id', 'The ID of the featureset.', paramType='path')
+        .errorResponse('ID was invalid.')
+    )
     @access.public
     @loadmodel(model='featureset', plugin='isic_archive')
     def getFeatureset(self, featureset, params):
         return self.model('featureset', 'isic_archive').filter(featureset)
-    getFeatureset.description = (
-        Description('Get a featureset by ID.')
-        .responseClass('Featureset')
-        .param('id', 'The ID of the featureset.', paramType='path')
-        .errorResponse('ID was invalid.'))
 
 
     # @access.admin

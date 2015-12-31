@@ -10,7 +10,7 @@ import pymongo
 
 from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel
-from girder.api.describe import Description
+from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
 
 from ..provision_utility import ISIC
@@ -26,27 +26,11 @@ class AnnotationResource(Resource):
         self.route('PUT', (':annotation_id',), self.submitAnnotation)
 
 
-    # TODO: move this to an image model
-    def _getSegmentationInfo(self, image):
-        # get the most recent file from p1b or p1c
-        item_file = self.model('file').findOne(
-            query={
-                'itemId': image['_id'],
-                'name': {'$regex': 'p1[bc]\.json$'}
-            },
-            sort=[('created', pymongo.DESCENDING)]
-        )
-        if item_file:
-            item_file_generator = self.model('file').download(item_file, headers=False)
-            segmentation_info = json.loads(''.join(item_file_generator()))
-
-            # this first dict level will always contain a single item called
-            #   'p1b' or 'p1c', but we're not sure which
-            return segmentation_info.values()[0]
-        else:
-            return None
-
-
+    @describeRoute(
+        Description('Get annotation details.')
+        .param('annotation_id', 'The ID of the annotation to be fetched.', paramType='path')
+        .errorResponse()
+    )
     @access.public
     @loadmodel(model='annotation', plugin='isic_archive', map={'annotation_id': 'annotation_item'}, level=AccessType.READ)
     def getAnnotation(self, annotation_item, params):
@@ -94,12 +78,13 @@ class AnnotationResource(Resource):
 
         return return_dict
 
-    getAnnotation.description = (
-        Description('Get annotation details.')
-        .param('annotation_id', 'The ID of the annotation to be fetched.', paramType='path')
-        .errorResponse())
 
-
+    @describeRoute(
+        Description('Submit a completed annotation.')
+        .param('annotation_id', 'The ID of the annotation to be submitted.', paramType='path')
+        .param('body', 'JSON containing the annotation parameters.', paramType='body', required=True)
+        .errorResponse()
+    )
     @access.user
     @loadmodel(model='annotation', plugin='isic_archive', map={'annotation_id': 'annotation_item'}, level=AccessType.READ)
     def submitAnnotation(self, annotation_item, params):
@@ -126,9 +111,3 @@ class AnnotationResource(Resource):
         annotation_item['meta']['annotations'] = body_json['annotations']
 
         self.model('annotation', 'isic_archive').save(annotation_item)
-
-    submitAnnotation.description = (
-        Description('Submit a completed annotation.')
-        .param('annotation_id', 'The ID of the annotation to be submitted.', paramType='path')
-        .param('body', 'JSON containing the annotation parameters.', paramType='body', required=True)
-        .errorResponse())

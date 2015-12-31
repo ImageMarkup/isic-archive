@@ -11,7 +11,7 @@ import pymongo
 
 from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel
-from girder.api.describe import Description
+from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
 
 from ..provision_utility import ISIC
@@ -30,6 +30,14 @@ class StudyResource(Resource):
         self.route('POST', (), self.createStudy)
 
 
+    @describeRoute(
+        Description('Return a list of annotation studies.')
+        .param('state', 'Filter studies to those at a given state',
+               paramType='query', required=False, enum=('active', 'complete'))
+        .param('user', 'Filter studies to those containing a user ID, or "me".',
+               paramType='query', required=False)
+        .errorResponse()
+    )
     @access.public
     def find(self, params):
         filters = dict()
@@ -53,15 +61,14 @@ class StudyResource(Resource):
         return [self.model('study', 'isic_archive').filter(study_folder, self.getCurrentUser())
                 for study_folder in self.model('study', 'isic_archive').find(**filters)]
 
-    find.description = (
-        Description('Return a list of annotation studies.')
-        .param('state', 'Filter studies to those at a given state',
-               paramType='query', required=False, enum=('active', 'complete'))
-        .param('user', 'Filter studies to those containing a user ID, or "me".',
-               paramType='query', required=False)
-        .errorResponse())
 
-
+    @describeRoute(
+        Description('Get a study by ID.')
+        .param('id', 'The ID of the study.', paramType='path')
+        .param('format', 'The output format.',
+               paramType='query', required=False, enum=('csv', 'json'), default='json')
+        .errorResponse()
+    )
     @access.public
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
     def getStudy(self, study, params):
@@ -73,13 +80,6 @@ class StudyResource(Resource):
 
         else:
             return self.model('study', 'isic_archive').filter(study, self.getCurrentUser())
-
-    getStudy.description = (
-        Description('Get a study by ID.')
-        .param('id', 'The ID of the study.', paramType='path')
-        .param('format', 'The output format.',
-               paramType='query', required=False, enum=('csv', 'json'), default='json')
-        .errorResponse())
 
 
     def _getStudyCSVStream(self, study):
@@ -136,6 +136,11 @@ class StudyResource(Resource):
                         response_body.truncate()
 
 
+    @describeRoute(
+        Description('Get the annotator users that comprise a study.')
+        .param('id', 'The ID of the study.', paramType='path')
+        .errorResponse('ID was invalid.')
+    )
     @access.public
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
     def getStudyUsers(self, study, params):
@@ -148,6 +153,11 @@ class StudyResource(Resource):
             ]
 
 
+    @describeRoute(
+        Description('Get the images that comprise a study.')
+        .param('id', 'The ID of the study.', paramType='path')
+        .errorResponse('ID was invalid.')
+    )
     @access.public
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
     def getStudyImages(self, study, params):
@@ -160,6 +170,12 @@ class StudyResource(Resource):
             ]
 
 
+    @describeRoute(
+        Description('Redirect to an active annotation study task.')
+        .param('id', 'The study to search for annotation tasks in.', paramType='path')
+        .errorResponse()
+    )
+    @access.cookie
     @access.user
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
     def redirectTask(self, study, params):
@@ -179,13 +195,12 @@ class StudyResource(Resource):
         else:
             raise RestException('No active annotations for this user in this study.')
 
-    redirectTask.cookieAuth = True
-    redirectTask.description = (
-        Description('Redirect to an active annotation study task.')
-        .param('id', 'The study to search for annotation tasks in.', paramType='path')
-        .errorResponse())
 
-
+    @describeRoute(
+        Description('Create an annotation study.')
+        .param('body', 'JSON containing the study parameters.', paramType='body')
+        .errorResponse('Write access was denied on the parent folder.', 403)
+    )
     @access.admin
     def createStudy(self, params):
         body_json = self.getBodyJson()
@@ -207,10 +222,3 @@ class StudyResource(Resource):
 
         self.model('study', 'isic_archive').createStudy(
             study_name, creator_user, featureset, annotator_users, segmentations)
-
-
-    createStudy.description = (
-        Description('Create an annotation study.')
-        .param('body', 'JSON containing the study parameters.', paramType='body')
-        .errorResponse()
-        .errorResponse('Write access was denied on the parent folder.', 403))
