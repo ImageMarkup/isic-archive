@@ -10,41 +10,33 @@
 
 // SegmentAnnotator constructor.
 SegmentAnnotator = function (segmentation, options) {
-
     if (typeof options === 'undefined') options = {};
     this.backgroundColor = options.backgroundColor;
     this.highlightAlpha = options.highlightAlpha;
     this.fillAlpha = options.fillAlpha;
     this.boundaryAlpha = options.boundaryAlpha;
-
     // Variables.
     this.width = segmentation.width;
     this.height = segmentation.height;
     this.indexMap = segmentation.indexMap;
     this.rgbData = segmentation.rgbData;
     this.segments = segmentation.size;
-
     this.layers = {
         image: { canvas: null, image: null },
         annotation: { canvas: null, image: null },
         highlight: { canvas: null, image: null }
     };
-
     this.currentSegment = null;
     this.currentLabel = null;
-
     // Initialize internal variables.
-
     this._initializeContainer(options.container);
     this._initializePixelsIndex();
     this._initializeBackgroundLayer();
     this._initializeColorMap(options.labels);
     this._initializeAnnotations(options.annotationURL, function () {
-
         this._initializeImageLayer();
         this._initializeAnnotationLayer();
         this._initializeHighlightLayer();
-
         if (options.onload)
             options.onload.call(this);
     });
@@ -128,15 +120,12 @@ SegmentAnnotator.prototype.removeLabel = function (index) {
 
 // Set the alpha value for the image layer.
 SegmentAnnotator.prototype.setImageAlpha = function (alpha) {
-    if (alpha === undefined) {
+    if (alpha === undefined)
         alpha = 255;
-    }
     var context = this.layers.image.canvas.getContext('2d'),
         data = this.layers.image.image.data;
     for (var i = 3; i < data.length; i += 4)
-    {
         data[i] = alpha;
-    }
     context.putImageData(this.layers.image.image, 0, 0);
     return this;
 };
@@ -144,9 +133,7 @@ SegmentAnnotator.prototype.setImageAlpha = function (alpha) {
 // Set the alpha value for the segment boundary.
 SegmentAnnotator.prototype.setBoundaryAlpha = function (alpha) {
     if (alpha === undefined)
-    {
         alpha = this.boundaryAlpha;
-    }
     this._setAnnotationAlpha(alpha, true);
     return this;
 };
@@ -264,24 +251,18 @@ SegmentAnnotator.prototype.getTilesAsPNG = function () {
 // Given mouse coordinates, get an index of the segment.
 
 SegmentAnnotator.prototype._getSegmentIndex = function (event) {
-
     // change made to support left column
     var toolbarWidth = $("#toolContainer").width();
-
     var x = event.pageX - this.container.offsetLeft + this.container.scrollLeft - toolbarWidth;
-    y = event.pageY - this.container.offsetTop + this.container.scrollTop;
-
+        y = event.pageY - this.container.offsetTop + this.container.scrollTop;
     x = Math.max(Math.min(x, this.layers.highlight.canvas.width - 1), 0);
     y = Math.max(Math.min(y, this.layers.highlight.canvas.height - 1), 0);
-
-
     return this.indexMap[y * this.layers.highlight.canvas.width + x];
 };
 
 
 // Update highlight layers.highlight.canvas.
 SegmentAnnotator.prototype._updateHighlight = function (index) {
-
     var data = this.layers.highlight.image.data,
         i,
         pixels;
@@ -304,29 +285,22 @@ SegmentAnnotator.prototype._updateHighlight = function (index) {
 
 // Update label.
 SegmentAnnotator.prototype._updateAnnotation = function (index, render) {
-
     if (render && this.annotations[index] === this.currentLabel)
         return;
     var data = this.layers.annotation.image.data,
         pixels = this.pixelsMap[index];
-
     this.annotations[index] = this.currentLabel;
-
-
     for (var i = 0; i < pixels.length; ++i) {
         var offset = 4 * pixels[i],
             alpha = 100,
             color = this.labels[this.currentLabel].color;
-
         if (color[0] == 255 && color[1] == 255) {
             alpha = 0;
         }
-
         data[offset + 0] = color[0];
         data[offset + 1] = color[1];
         data[offset + 2] = color[2];
         data[offset + 3] = alpha;
-
     }
     if (render)
         this.layers.annotation.canvas
@@ -339,10 +313,8 @@ SegmentAnnotator.prototype._updateAnnotation = function (index, render) {
 SegmentAnnotator.prototype._initializePixelsIndex = function () {
     var i;
     this.pixelsMap = new Array(this.segments);
-
     for (i = 0; i < this.segments; ++i)
         this.pixelsMap[i] = [];
-
     for (i = 0; i < this.indexMap.length; ++i)
         this.pixelsMap[this.indexMap[i]].push(i);
     return this;
@@ -374,12 +346,10 @@ SegmentAnnotator.prototype._initializeColorMap = function (newLabels) {
 
     // Calculate a color value in the range input. [white, hsv() ...]
     function pickColor(index, range) {
-        if (index === 0) {
+        if (index === 0)
             return [255, 255, 255];
-        }
-        else {
+        else
             return hsv2rgb((index - 1) / Math.max(1, range - 1), 1, 1);
-        }
     }
 
     if (newLabels === undefined) {
@@ -389,30 +359,24 @@ SegmentAnnotator.prototype._initializeColorMap = function (newLabels) {
         ];
     }
     else {
-        if (typeof newLabels !== 'object') {
+        if (typeof newLabels !== 'object')
             throw 'Labels must be an array';
-        }
-        if (newLabels.length < 1) {
+        if (newLabels.length < 1)
             throw 'Empty labels';
-        }
         var uncolored = 0,
             index = 0,
             i;
         this.labels = newLabels.slice(0);
         for (i = 0; i < this.labels.length; ++i) {
-            if (typeof this.labels[i] === 'string') {
+            if (typeof this.labels[i] === 'string')
                 this.labels[i] = { name: this.labels[i] };
-            }
-            if (this.labels[i].color === undefined) {
+            if (this.labels[i].color === undefined)
                 ++uncolored;
-            }
         }
-        for (i = 0; i < this.labels.length; ++i) {
-            if (this.labels[i].color === undefined) {
+        for (i = 0; i < this.labels.length; ++i)
+            if (this.labels[i].color === undefined)
                 this.labels[i].color = hsv2rgb((index++) /
                     Math.max(1, uncolored), 1, 1);
-            }
-        }
     }
     return this;
 };
@@ -497,7 +461,6 @@ SegmentAnnotator.prototype._importAnnotation = function (url, callback) {
                 label = sourceData[offset + 0] |
                     (sourceData[offset + 1] << 8) |
                     (sourceData[offset + 2] << 16);
-
                 var count = histogram[label] || 0;
                 histogram[label] = ++count;
             }
@@ -617,12 +580,9 @@ SegmentAnnotator.prototype._initializeHighlightLayer = function () {
     this.layers.highlight.image = imageData;
     var mousestate = { down: false, button: 0 },
         _this = this;
-
     // On mousemove or mouseup.
     function updateIfActive(event) {
-
         var segmentId = _this._getSegmentIndex(event);
-
         _this._updateHighlight(segmentId);
         if (mousestate.down) {
             var label = _this.currentLabel;
@@ -632,24 +592,17 @@ SegmentAnnotator.prototype._initializeHighlightLayer = function () {
             _this.currentLabel = label;
         }
     }
-
     this.layers.highlight.canvas.addEventListener('mousemove', updateIfActive);
     this.layers.highlight.canvas.addEventListener('mouseup', updateIfActive);
-
     // Mouseleave.
     this.layers.highlight.canvas.addEventListener('mouseleave', function (event) {
         _this._updateHighlight(null);
     });
-
     // Mousedown.
     this.layers.highlight.canvas.addEventListener('mousedown', function (event) {
         mousestate.down = true;
         mousestate.button = event.button;
-
-
     });
-
-
     // Mouseup.
     window.addEventListener('mouseup', function (event) {
         mousestate.down = false;
@@ -731,7 +684,6 @@ PFSegmentAnnotator = function (imageURL, options) {
 
 // Set up inheritance.
 PFSegmentAnnotator.prototype = Object.create(SegmentAnnotator.prototype);
-
 
 /** Create an annotation tool based on SLIC segmentation.
  *
