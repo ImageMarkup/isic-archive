@@ -88,10 +88,10 @@ def load(info):
     info['serverRoot'].uda.task = TaskHandler(info['pluginRootDir'])
 
     # "/uda/annotator/:id" -> the reconfigurable image annotator
-    info['serverRoot'].uda.annotate = StaticRouteWithId(os.path.join(info['pluginRootDir'], 'custom', 'annotate.html'))
+    info['serverRoot'].uda.annotate = StaticRouteWithId(os.path.join(info['pluginRootDir'], 'custom', 'phase1.html'))
 
     # "/uda/map/:id"
-    info['serverRoot'].uda.map = staticFile(os.path.join(info['pluginRootDir'], 'custom', 'map.html'))
+    info['serverRoot'].uda.map = staticFile(os.path.join(info['pluginRootDir'], 'custom', 'phase2.html'))
 
 
     # add api routes
