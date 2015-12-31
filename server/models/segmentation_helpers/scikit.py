@@ -221,8 +221,12 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         mask_image = cls._contourToMask(image, coords)
 
         from .opencv import OpenCVSegmentationHelper
+        # This operation is much faster in OpenCV
         mask_image = OpenCVSegmentationHelper._binaryOpening(
-            mask_image, element_shape='circle', element_radius=5)
+            mask_image.astype(numpy.uint8),
+            element_shape='circle',
+            element_radius=5
+        ).astype(bool)
 
         inside_image = image.copy()
         inside_image[numpy.logical_not(mask_image)] = 0
