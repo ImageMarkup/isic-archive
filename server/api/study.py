@@ -40,6 +40,7 @@ class StudyResource(Resource):
     )
     @access.public
     def find(self, params):
+        Study = self.model('study', 'isic_archive')
         filters = dict()
 
         if params.get('user'):
@@ -54,12 +55,15 @@ class StudyResource(Resource):
 
         if params.get('state'):
             try:
-                filters['state'] = self.model('study', 'isic_archive').State(params['state'])
+                filters['state'] = Study.State(params['state'])
             except ValueError:
                 raise RestException('Query parameter "state" may only be "active" or "complete".')
 
-        return [self.model('study', 'isic_archive').filter(study_folder, self.getCurrentUser())
-                for study_folder in self.model('study', 'isic_archive').find(**filters)]
+        return list(Study.filterResultsByPermission(
+            Study.find(**filters),
+            self.getCurrentUser(),
+            level=AccessType.READ
+        ))
 
 
     @describeRoute(
