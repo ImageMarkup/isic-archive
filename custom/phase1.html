@@ -41,7 +41,6 @@
     <script type="text/javascript" src="/uda/static/js/dermapp-utils.js"></script>
     <script type="text/javascript" src="/uda/static/js/dermapp-labels.js"></script>
     <script type="text/javascript" src="/uda/static/js/dermapp-viewer.js"></script>
-    <script type="text/javascript" src="/uda/static/js/dermapp-annotationtool.js"></script>
 
     <link rel=stylesheet type=text/css href="/uda/static/css/ol.css" />
     <link rel=stylesheet type=text/css href="/uda/static/css/derm.css" />
@@ -196,11 +195,6 @@
                             </div>
                             <div class="btn" disabled>
                                 <span>Tolerance: <b>{{regionpaint_size}}</b></span>
-                            </div>
-                        </div>
-                        <div class="btn-group content-group" ng-show="compareState('pldefine', tool_bar_state)">
-                            <div class="btn" disabled>
-                                <span>Place 3 or more points to create a perimeter</span>
                             </div>
                         </div>
                         <div class="btn-group content-group" ng-show="compareState('rppaint', tool_bar_state)">
