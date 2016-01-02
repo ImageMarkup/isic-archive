@@ -66,10 +66,11 @@ class SegmentationResource(Resource):
             segmentation['imageId'], level=AccessType.READ,
             user=self.getCurrentUser(), exc=True)
 
+        userSummaryFields = ['_id', 'login', 'firstName', 'lastName']
         segmentation['creator'] = self.model('user').load(
             segmentation.pop('creatorId'),
             force=True, exc=True,
-            fields={'_id', 'login', 'firstName', 'lastName'})
+            fields=userSummaryFields)
 
         # Deal with a bug in Girder
         # TODO: Remove this
@@ -77,7 +78,7 @@ class SegmentationResource(Resource):
         segmentation['creator'] = {
             k: v
             for k, v in six.viewitems(segmentation['creator'])
-            if k in {'_id', 'login', 'firstName', 'lastName'}
+            if k in userSummaryFields
         }
 
         return segmentation

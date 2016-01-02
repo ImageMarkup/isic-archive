@@ -244,6 +244,23 @@ var olViewer = derm_app.factory('olViewer',
                 }
             },
 
+            disableTiles: function () {
+                if (this.segmentannotator) {
+                    //this.segmentannotator.disable();
+                    // The implementation of "disable" is broken
+                    this.segmentannotator.layers.highlight.canvas.style.display = 'none';
+
+                }
+            },
+
+            enableTiles: function () {
+                if (this.segmentannotator) {
+                    //this.segmentannotator.enable();
+                    // The implementation of "enable" is broken
+                    this.segmentannotator.layers.highlight.canvas.style.display = 'block';
+                }
+            },
+
             getFeatures: function () {
                 return this.vector_source.getFeatures();
             },

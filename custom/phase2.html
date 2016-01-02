@@ -20,6 +20,7 @@
     <script src="/uda/static/bower_components/flatstrap/dist/js/bootstrap.min.js"></script>
 
     <script src="/uda/static/bower_components/angular/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-resource.js"></script>
     <script src="/uda/static/bower_components/angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js"></script>
     <script src="/uda/static/bower_components/angular-sanitize/angular-sanitize.min.js"></script>
     <script src="/uda/static/bower_components/angular-xml/angular-xml.min.js"></script>
@@ -61,14 +62,6 @@
         .panel-body {
             background-color: #333;
         }
-        .selected {
-            weight: 700;
-            width: 100%;
-            color: #ffcc00;
-        }
-        .colorhover:hover {
-            color: #ffcc00;
-        }
 
         .isic-overview-frame {
             position: absolute;
@@ -78,6 +71,29 @@
             border: 5px solid #282727;
         }
 
+        .isic-annotation-feature {
+            /* this ancestor must have a non-static position,
+               so children can have absolute position with respect to this */
+            position: relative;
+        }
+
+        .isic-annotation-feature:hover {
+            color: #ffcc00;
+        }
+
+        .isic-annotation-feature.selected {
+            weight: 700;
+            width: 100%;
+            color: #ffcc00;
+        }
+
+        .isic-annotation-feature > .overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
     </style>
 </head>
 <body>
@@ -93,7 +109,7 @@
                     </div>
                     <div class="btn-group btn-group-block">
                         <div class="btn">
-                            <span ng-cloak ng-show="image_info"><b>Image:</b> {{ image_info.name }}</span>
+                            <span ng-cloak ng-show="image"><b>Image:</b> {{ image.name }}</span>
                         </div>
                         <div class="btn" ng-controller="UserController">
                             <span ng-cloak ng-show="user"><b>User:</b> {{ user.firstName}} {{ user.lastName }} ({{ user.login }})</span>
@@ -138,12 +154,12 @@
                     </div>
                     <div class="step-content" ng-repeat="feature_group in features">
                         <h4>{{ feature_group.header }}</h4>
-                        <div ng-repeat="feature in feature_group.questions">
+                        <div ng-repeat="feature in $scope.featureset.image_features track by feature.id">
                             <div ng-switch="feature.type">
                                 <div ng-switch-when="select">
-                                    <label>{{ feature.name }}</label>
+                                    <label>{{ feature.name.join(': ') }}</label>
                                     <ui-select
-                                            ng-model="annotation_values[feature.shortname]"
+                                            ng-model="annotation_values[feature.id]"
                                             search-enabled="false"
                                             on-select="selected($item, $model)"
                                             on-remove="selected($item, $model)"
@@ -156,7 +172,7 @@
                                         </ui-select-choices>
                                     </ui-select>
                                     <!-- TODO: put this on the same line -->
-                                    <div class="btn btn-sm pull-right" ng-show="annotation_values[feature.shortname]">
+                                    <div class="btn btn-sm pull-right" ng-show="annotation_values[feature.id]">
                                         <span>√</span>
                                     </div>
                                 </div>
@@ -176,75 +192,39 @@
                             <label class="btn" ng-model="certaintyModel" btn-radio="'possible'">50%?</label>
                         </div>
                     </div>
-
-                    <div class="step-content" ng-hide="showReview">
-                        <input type="text" class="form-control" ng-model="filterval" placeholder="Filter">
-                    </div>
-
-                    <div class="step-content" ng-show="showReview" ng-cloak>
+                    <div class="step-content">
+                        <div ng-show="!showReview" ng-cloak>
+                            <i class="glyphicon glyphicon-info-sign"></i>
+                            <span> Click a feature sub-heading to select for markup.</span>
+                        </div>
+                        <div ng-show="showReview" ng-cloak>
+                            <i class="glyphicon glyphicon-info-sign"></i>
+                            <span> Mouse over a feature name to display markup.</span>
+                        </div>
                         <accordion close-others="false">
-                            <accordion-group heading="{{tile.header}}"
-                                             ng-repeat="tile in features"
-                                             is-open="true">
-                                <div class="colorhover"
-                                     ng-repeat="question in tile.questions"
-                                     ng-class="{selected: selected_question_id === question.id}"
-                                     ng-show="questionHasPositiveTile(question.id)"
-                                     ng-mouseover="displayQuestionTiles(question.id)">
-                                    <span class="pull-right" ng-show="questionHasPositiveTile(question.id)">√</span>
-                                    <span>{{question.name}}</span>
-                                </div>
-                            </accordion-group>
-                            <accordion-group heading="Search"
-                                             ng-show="filterval.length"
-                                             is-open="true">
-                                <div ng-repeat="tile in features">
-                                    <div class="colorhover"
-                                         ng-repeat="question in tile.questions"
-                                         ng-class="{selected: selected_question_id === question.id}"
-                                         ng-show="questionHasPositiveTile(question.id)"
-                                         ng-mouseover="displayQuestionTiles(question.id)">
-                                        <span class="pull-right" ng-show="questionHasPositiveTile(question.id)">√</span>
-                                        <span>{{question.name}}</span>
-                                    </div>
-                                </div>
-                            </accordion-group>
-                          </accordion>
-                    </div>
-                    <div class="step-content" ng-hide="showReview" ng-cloak>
-                        <accordion close-others="true">
-                            <accordion-group heading="{{tile.header}}"
-                                             ng-repeat="tile in features"
-                                             ng-show="filterval.length == 0">
-                                <div ng-repeat="question in tile.questions"
-                                     ng-class="{selected: selected_question_id === question.id}"
-                                     ng-click="selectQuestion(question.id)">
-                                    <div ng-show="([question.name] | filter: filterval).length > 0">
-                                        <span class="pull-right" ng-show="questionHasPositiveTile(question.id)">√</span>
-                                        <span>{{question.name}}</span>
-                                    </div>
-                                </div>
-                            </accordion-group>
-                            <accordion-group heading="Search" ng-show="filterval.length" is-open="true">
-                                <div ng-repeat="tile in features">
-                                    <div ng-repeat="question in tile.questions"
-                                         ng-class="{selected: selected_question_id === question.id}"
-                                         ng-click="selectQuestion(question.id)">
-                                        <div ng-show="([question.name] | filter: filterval).length > 0">
-                                            <span class="pull-right" ng-show="questionHasPositiveTile(question.id)">√</span>
-                                            <span>{{question.name}}</span>
-                                        </div>
-                                    </div>
+                            <accordion-group
+                                    ng-repeat="(feature_group_name, feature_group) in feature_groups track by feature_group_name"
+                                    heading="{{ feature_group_name }}"
+                                    is-open="true">
+                                <div class="isic-annotation-feature"
+                                     ng-repeat="feature in feature_group track by feature.id"
+                                     ng-show="!showReview || featureHasPositiveTile(feature.id)"
+                                     ng-class="{selected: selected_feature_id === feature.id}">
+                                    <div ng-if="!showReview"
+                                         class="overlay"
+                                         ng-click="selectFeature(feature.id)"></div>
+                                    <div ng-if="showReview"
+                                         class="overlay"
+                                         ng-mouseenter="displayQuestionTiles(feature.id)"
+                                         ng-mouseleave="displayQuestionTiles(null)"></div>
+                                    <span ng-show="featureHasPositiveTile(feature.id)"
+                                          class="pull-right" >√</span>
+                                    <span>{{ feature.name.slice(1).join(': ') || feature.name[0] }}</span>
                                 </div>
                             </accordion-group>
                         </accordion>
                     </div>
                 </div>
-
-
-
-
-
 
                 <!-- Step footer -->
                 <div class="lowertoolbar" ng-show="true" ng-cloak>

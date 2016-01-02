@@ -386,26 +386,17 @@ SegmentAnnotator.prototype.getIndicies = function () {
 };
 
 SegmentAnnotator.prototype.clearTiles = function () {
-
     for (var i = 0; i < this.annotations.length; i++) {
         this.annotations[i] = 0;
     }
-
-    console.log(this.annotations);
     this._renderAnnotation();
 };
 
 SegmentAnnotator.prototype.loadTiles = function (new_tiles) {
-
-//    console.log('new tiles', new_tiles);
-
     for (var i = 0; i < this.annotations.length; i++) {
         this.annotations[i] = new_tiles[i];
     }
-
-
     this._renderAnnotation();
-
 };
 
 //
