@@ -32,7 +32,7 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
     @classmethod
     def writeImage(cls, image, encoding='png', width=None):
         if width is not None:
-            factor = image.scale[1] / float(width)
+            factor = float(width) / image.shape[1]
             image = skimage.transform.rescale(image, factor)
 
         image_stream = six.BytesIO()
