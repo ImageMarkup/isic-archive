@@ -40,33 +40,35 @@ class Segmentation(Model):
                     self._onDeleteItem)
 
 
-    def createSegmentation(self, image, skill, creator):
+    def getUserSkill(self, user):
+        expert_group = self.model('group').findOne({'name': 'Phase 1b'})
+        if expert_group['_id'] in user['groups']:
+            return self.Skill.EXPERT
+        novice_group = self.model('group').findOne({'name': 'Phase 1a'})
+        if novice_group['_id'] in user['groups']:
+            return self.Skill.NOVICE
+        return None
+
+
+    def createSegmentation(self, image, skill, creator, lesionBoundary):
         if not isinstance(skill, self.Skill):
             raise TypeError('skill must be an instance of Skill')
 
         now = datetime.datetime.utcnow()
 
-        return self.save({
+        segmentation = self.save({
             'imageId': image['_id'],
             'skill': skill.value,
             'creatorId': creator['_id'],
-
-            'lesionBoundary': {
-                'type': 'Feature',
-                'properties': {
-                    'source': None,
-                    'startTime': None,
-                    'stopTime': None,
-                },
-                'geometry': {
-                    'type': 'Polygon',
-                    'coordinates': []
-                },
-            },
-            'superpixels': None,
-
+            'lesionBoundary': lesionBoundary,
             'created': now
         })
+
+        # TODO: run this asynchronously
+        superpixels = self.generateSuperpixels(segmentation, image)
+        self.saveSuperpixels(segmentation, superpixels)
+
+        return segmentation
 
 
     def boundaryThumbnail(self, segmentation, image=None, width=256):
@@ -131,6 +133,9 @@ class Segmentation(Model):
         if superpixels_file:
             fileKwargs = kwargs.copy()
             fileKwargs.pop('updateItemSize', None)
+            # If the file has an itemId, Girder will attempt to update folder
+            #   sizes (which don't exist)
+            superpixels_file['itemId'] = None
             self.model('file').remove(superpixels_file, updateItemSize=False,
                                       **fileKwargs)
 

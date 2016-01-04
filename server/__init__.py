@@ -3,10 +3,9 @@
 
 import os
 
-import cherrypy
 from girder import events
 from girder.models.model_base import ValidationException
-from girder.utility.server import staticFile, _StaticFileRoute
+from girder.utility.server import staticFile
 
 from . import constants
 from . import api
@@ -14,16 +13,6 @@ from .image_utility import zoomifyhandler, thumbnailhandler, fifHandler
 from .provision_utility import initialSetup, onUserCreated
 from .task_utility import UDAResource, TaskHandler
 from .upload import uploadHandler
-
-
-class StaticRouteWithId(_StaticFileRoute):
-    """
-    This creates a static route with an optional nonfunctional "/:id" variable
-    path component at the end.
-    """
-    @cherrypy.popargs('id')
-    def GET(self, id=None):
-        return super(StaticRouteWithId, self).GET()
 
 
 def validateSettings(event):
@@ -88,7 +77,7 @@ def load(info):
     info['serverRoot'].uda.task = TaskHandler(info['pluginRootDir'])
 
     # "/uda/annotator/:id" -> the reconfigurable image annotator
-    info['serverRoot'].uda.annotate = StaticRouteWithId(os.path.join(info['pluginRootDir'], 'custom', 'phase1.html'))
+    info['serverRoot'].uda.annotate = staticFile(os.path.join(info['pluginRootDir'], 'custom', 'phase1.html'))
 
     # "/uda/map/:id"
     info['serverRoot'].uda.map = staticFile(os.path.join(info['pluginRootDir'], 'custom', 'phase2.html'))

@@ -2,9 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import datetime
-import itertools
 import json
-import mimetypes
 import operator
 import os
 import random
@@ -19,7 +17,7 @@ from girder.constants import AccessType
 from girder.models.model_base import AccessException
 from girder.utility.model_importer import ModelImporter
 
-from .provision_utility import ISIC, _ISICCollection, getAdminUser
+from .provision_utility import _ISICCollection
 
 
 def getItemsInFolder(folder):
@@ -38,7 +36,6 @@ class UDAResource(Resource):
         self.route('GET', ('task',), self.taskList)
         self.route('POST', ('task', 'qc', ':folder_id', 'complete'), self.p0TaskComplete)
         self.route('GET', ('task', 'markup', ':item_id'), self.p1TaskDetail)
-        self.route('POST', ('task', 'markup', ':item_id', 'complete'), self.p1TaskComplete)
 
         self.route('POST', ('task', 'select', ':folder_id'), self.selectTaskComplete)
 
@@ -188,6 +185,13 @@ class UDAResource(Resource):
         contents = self.getBodyJson()
 
         # verify that all images are in folder
+
+        image_ids = set(
+            image['_id']
+            for image in
+            self.model('image', 'isic_archive').find
+        )
+
         flagged_image_items = [
             self.model('item').load(image_item_id, force=True)
             for image_item_id in contents['flagged']
@@ -209,6 +213,10 @@ class UDAResource(Resource):
             reason='phase0',
             user=self.getCurrentUser()
         )
+        # TODO: move metadata:
+        #  'qc_user' to 'flaggedUserId'
+        #  'qc_result' to 'flaggedReason'
+        #  create 'flaggedTime'
 
         # move good images into phase 1a folder
         phase1a_collection = self.model('collection').findOne({'name': 'Phase 1a'})
@@ -295,123 +303,6 @@ class UDAResource(Resource):
         .errorResponse())
 
 
-    @access.user
-    def p1TaskComplete(self, item_id, params):
-        markup_str = cherrypy.request.body.read()
-        markup_dict = json.loads(markup_str)
-
-        phase_handlers = {
-            # phase_full_lower: (phase_acronym, next_phase_collection)
-            'Phase 1a': ('p1a', ISIC.Phase1b.collection),
-            'Phase 1b': ('p1b', ISIC.LesionImages.collection)
-        }
-        try:
-            phase_acronym, next_phase_collection = phase_handlers[markup_dict['phase']]
-        except KeyError:
-            # TODO: send the proper error code on failure
-            raise
-        else:
-            self._requireCollectionAccess(markup_dict['phase'])
-            result = self._handlePhaseCore(markup_dict, phase_acronym, next_phase_collection)
-
-        return {'status': result}
-
-    p1TaskComplete.description = (
-        Description('Complete a Phase 1 (markup) task.')
-        .responseClass('UDA')
-        .param('item_id', 'The item ID.', paramType='path')
-        .errorResponse())
-
-
-    def _handlePhaseCore(self, markup_dict, phase_acronym, next_phase_collection):
-        item_name_base = markup_dict['image']['name'].split('.t')[0]
-
-        item_metadata = {
-            '%s_user' % phase_acronym: markup_dict['user']['_id'],
-            '%s_result' % phase_acronym: 'ok',
-            '%s_start_time' % phase_acronym:
-                datetime.datetime.utcfromtimestamp(markup_dict['taskstart'] / 1000.0),
-            '%s_stop_time' % phase_acronym:
-                datetime.datetime.utcfromtimestamp(markup_dict['taskend'] / 1000.0),
-        }
-
-        markup_json = dict()
-        markup_json[phase_acronym] = {
-            'user': markup_dict['user'],
-            'image': markup_dict['image'],
-            'result': item_metadata
-        }
-
-        markup_json[phase_acronym]['steps'] = markup_dict['steps']
-
-        # grab and remove the b64 png from the dictionary
-        png_b64string = markup_dict['steps']['2']['markup']['features'][0]['properties']['parameters'].pop('rgb')
-        # remote the initial data uri details
-        png_b64string_trim = png_b64string[22:]
-
-        # grab and remove the b64 png from the dictionary
-        png_tiles_b64string = markup_dict['steps']['2']['markup']['features'][0]['properties']['parameters'].pop('tiles')
-        # remote the initial data uri details
-        png_tiles_b64string_trim = png_tiles_b64string[22:]
-
-        # add to existing item
-        # TODO: get item_id from URL, instead of within markup_dict
-        image_item = self.model('item').load(markup_dict['image']['_id'], force=True)
-        self.model('item').setMetadata(image_item, item_metadata)
-
-        def _defaultSerialize(o):
-            if isinstance(o, datetime.datetime):
-                return o.isoformat()
-            raise TypeError(repr(o) + " is not JSON serializable")
-
-        self._createFileFromData(
-            image_item,
-            json.dumps(markup_json, default=_defaultSerialize),
-            '%s-%s.json' % (item_name_base, phase_acronym)
-        )
-
-        self._createFileFromData(
-            image_item,
-            png_b64string_trim.decode('base64'),
-            '%s-%s.png' % (item_name_base, phase_acronym)
-        )
-
-        self._createFileFromData(
-            image_item,
-            png_tiles_b64string_trim.decode('base64'),
-            '%s-tile-%s.png' % (item_name_base, phase_acronym)
-        )
-
-        # move item to folder in next collection
-        original_folder = self.model('folder').load(markup_dict['image']['folderId'], force=True)
-        next_phase_folder = _ISICCollection.createFolder(
-            name=original_folder['name'],
-            description=original_folder['description'],
-            parent=next_phase_collection,
-            parent_type='collection'
-        )
-
-        self.model('item').move(image_item, next_phase_folder)
-
-        # remove empty folders in original collection
-        if self.model('folder').subtreeCount(original_folder) == 1:
-            self.model('folder').remove(original_folder)
-
-        return 'success'
-
-
-    def _createFileFromData(self, item, data, filename):
-        # TODO: overwrite existing files if present, using provenance to keep old files
-        upload = self.model('upload').createUpload(
-            getAdminUser(),
-            filename,
-            'item', item,
-            len(data),
-            mimetypes.guess_type(filename)[0]
-        )
-        self.model('upload').handleChunk(upload, data)
-
-
 class TaskHandler(Resource):
     def __init__(self, plugin_root_dir):
         super(TaskHandler, self).__init__()
@@ -462,14 +353,14 @@ class TaskHandler(Resource):
     @access.user
     @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
     def p1aTaskRedirect(self, folder, params):
-        return self._taskRedirect('Phase 1a', folder, '/uda/annotate/%(item_id)s')
+        return self._taskRedirect('Phase 1a', folder, '/uda/annotate#/%(item_id)s')
 
 
     @access.cookie
     @access.user
     @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
     def p1bTaskRedirect(self, folder, params):
-        return self._taskRedirect('Phase 1b', folder, '/uda/annotate/%(item_id)s')
+        return self._taskRedirect('Phase 1b', folder, '/uda/annotate#/%(item_id)s')
 
 
     @access.cookie

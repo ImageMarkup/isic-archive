@@ -1,47 +1,73 @@
 <!DOCTYPE html>
-
 <html lang="en" ng-app="DermApp">
-
 <head>
     <meta charset="utf-8">
-    <title>ISIC Dermoscopic Annotation Tool</title>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link href="/static/img/Girder_Favicon.png" rel="icon" type="image/png">
 
-    <meta name="description" content="ISIC Image annotator">
+    <title>ISIC Archive: Image Review</title>
+    <meta name="description" content="ISIC Archive: Image Review">
 
+    <!-- jQuery -->
     <script src="/uda/static/bower_components/jquery/dist/jquery.min.js"></script>
 
+    <!-- Flatstrap ("Bootstrap without all the extra stuff") -->
     <script src="/uda/static/bower_components/flatstrap/dist/js/bootstrap.min.js"></script>
-    <link rel=stylesheet type=text/css
-          href="/uda/static/bower_components/flatstrap/dist/css/bootstrap.min.css">
+    <link href="/uda/static/bower_components/flatstrap/dist/css/bootstrap.min.css" rel=stylesheet type=text/css>
 
+    <!-- Font Awesome -->
     <link rel=stylesheet type=text/css href="/uda/static/bower_components/font-awesome/css/font-awesome.min.css">
 
+    <!-- AngularJS -->
     <script src="/uda/static/bower_components/angular/angular.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-resource.js"></script>
-    <script src="/uda/static/bower_components/angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js"></script>
-    <script src="/uda/static/bower_components/angular-sanitize/angular-sanitize.js"></script>
-    <script src="/uda/static/bower_components/angular-xml/angular-xml.min.js"></script>
+
+    <!-- Angular Mousetrap -->
     <script src="/uda/static/bower_components/mousetrap/mousetrap.min.js"></script>
     <script src="/uda/static/bower_components/angular-mousetrap/src/keypress.js"></script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.12.1/select.min.js"></script>
-    <link rel=stylesheet type=text/css href="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.12.1/select.min.css">
+    <!-- AngularUI Bootstrap -->
+    <script src="/uda/static/bower_components/angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js"></script>
 
+    <!-- Angular Sanitize -->
+    <script src="/uda/static/bower_components/angular-sanitize/angular-sanitize.min.js"></script>
+
+    <!-- Angular XML -->
+    <script src="/uda/static/bower_components/angular-xml/angular-xml.min.js"></script>
+
+    <!-- AngularUI Select -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.12.1/select.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.12.1/select.min.css" rel=stylesheet type=text/css>
+
+    <!-- angular-bootstrap-switch -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/js/bootstrap-switch.min.js"></script>
-    <link rel=stylesheet type=text/css href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/css/bootstrap3/bootstrap-switch.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/css/bootstrap3/bootstrap-switch.min.css" rel=stylesheet type=text/css>
     <script src="https://cdn.rawgit.com/frapontillo/angular-bootstrap-switch/0.4.1/dist/angular-bootstrap-switch.min.js"></script>
 
-    <script src="/uda/static/bower_components/FileSaver/FileSaver.js"></script>
+    <!-- angular-multiselect -->
+    <script src="/uda/static/bower_components/amitava82-angular-multiselect/src/multiselect-tpls.js"></script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.8.1/js/lightbox.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.8.1/css/lightbox.min.css"
-          rel=stylesheet type=text/css >
+    <!-- OpenLayers3 -->
+    <script src="/uda/static/js/ol-debug.js"></script>
+    <link href="/uda/static/css/ol.css" rel=stylesheet type=text/css>
 
+    <!-- js-segment-annotator -->
+    <script type="text/javascript" src="/uda/static/js/js-segment-annotator/pf-segmentation.js"></script>
+    <script type="text/javascript" src="/uda/static/js/slic-segmentation.js"></script>
+    <script type="text/javascript" src="/uda/static/js/segment-annotator-phase2.js"></script>
+    <script type="text/javascript" src="/uda/static/js/UDASegment.js"></script>
+
+    <!-- ISIC App -->
     <script src="/uda/static/js/isic-app.js"></script>
+    <script src="/uda/static/js/isic-user-controller.js"></script>
     <script src="/uda/static/js/image-review.js"></script>
+
+    <!-- (WIP) Lightbox2 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.8.1/js/lightbox.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.8.1/css/lightbox.min.css" rel=stylesheet type=text/css>
 
     <style>
     * {

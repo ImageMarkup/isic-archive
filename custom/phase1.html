@@ -1,285 +1,194 @@
 <!DOCTYPE html>
-
 <html lang="en" ng-app="DermApp">
-
 <head>
     <meta charset="utf-8">
-    <title>ISIC Dermoscopic Annotation Tool</title>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <meta name="description" content="ISIC Image annotator">
-    <meta name="author" content="Rich Stoner, Brian Helba, David Gutman">
+    <title>ISIC Archive: Image Segmentation</title>
+    <meta name="description" content="ISIC Archive: Image Segmentation">
 
-    <link rel=stylesheet type=text/css href="/uda/static/bower_components/flatstrap/dist/css/bootstrap.min.css">
+    <!-- jQuery -->
+    <script src="/uda/static/bower_components/jquery/dist/jquery.min.js"></script>
+
+    <!-- Flatstrap ("Bootstrap without all the extra stuff") -->
+    <script src="/uda/static/bower_components/flatstrap/dist/js/bootstrap.min.js"></script>
+    <link href="/uda/static/bower_components/flatstrap/dist/css/bootstrap.min.css" rel=stylesheet type=text/css>
+
+    <!-- Font Awesome -->
     <link rel=stylesheet type=text/css href="/uda/static/bower_components/font-awesome/css/font-awesome.min.css">
 
-    <!--[if lt IE 9]>
-    <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+    <!-- AngularJS -->
+    <script src="/uda/static/bower_components/angular/angular.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-resource.js"></script>
 
-    <script src="/uda/static/bower_components/jquery/dist/jquery.min.js"></script>
-    <script src="/uda/static/bower_components/flatstrap/dist/js/bootstrap.min.js"></script>
-
-    <script src="/uda/static/bower_components/angular/angular.min.js"></script>
-    <script src="/uda/static/bower_components/angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js"></script>
-    <script src="/uda/static/bower_components/angular-sanitize/angular-sanitize.min.js"></script>
-    <script src="/uda/static/bower_components/angular-xml/angular-xml.min.js"></script>
+    <!-- Angular Mousetrap -->
     <script src="/uda/static/bower_components/mousetrap/mousetrap.min.js"></script>
+    <script src="/uda/static/bower_components/angular-mousetrap/src/keypress.js"></script>
 
+    <!-- AngularUI Bootstrap -->
+    <script src="https://raw.githubusercontent.com/angular-ui/bootstrap/gh-pages/ui-bootstrap-tpls-0.14.3.min.js"></script>
+    <!--<script src="/uda/static/bower_components/angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js"></script>-->
+
+    <!-- Angular Sanitize -->
+    <script src="/uda/static/bower_components/angular-sanitize/angular-sanitize.min.js"></script>
+
+    <!-- Angular XML -->
+    <script src="/uda/static/bower_components/angular-xml/angular-xml.min.js"></script>
+
+    <!-- AngularUI Select -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.12.1/select.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.12.1/select.min.css" rel=stylesheet type=text/css>
+
+    <!-- angular-bootstrap-switch -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/js/bootstrap-switch.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/css/bootstrap3/bootstrap-switch.min.css" rel=stylesheet type=text/css>
+    <script src="https://cdn.rawgit.com/frapontillo/angular-bootstrap-switch/0.4.1/dist/angular-bootstrap-switch.min.js"></script>
+
+    <!-- angular-multiselect -->
     <script src="/uda/static/bower_components/amitava82-angular-multiselect/src/multiselect-tpls.js"></script>
 
-    <script type="text/javascript" src="/uda/static/js/ol-debug.js"></script>
+    <!-- OpenLayers3 -->
+    <script src="/uda/static/js/ol-debug.js"></script>
+    <link href="/uda/static/css/ol.css" rel=stylesheet type=text/css>
+
+    <!-- js-segment-annotator -->
     <script type="text/javascript" src="/uda/static/js/js-segment-annotator/pf-segmentation.js"></script>
     <script type="text/javascript" src="/uda/static/js/slic-segmentation.js"></script>
     <script type="text/javascript" src="/uda/static/js/segment-annotator-phase1.js"></script>
     <script type="text/javascript" src="/uda/static/js/UDASegment.js"></script>
 
-    <script type="text/javascript" src="/uda/static/js/dermapp-phase1.js"></script>
-
-    <script type="text/javascript" src="/uda/static/js/dermapp-utils.js"></script>
-    <script type="text/javascript" src="/uda/static/js/dermapp-labels.js"></script>
-    <script type="text/javascript" src="/uda/static/js/dermapp-viewer.js"></script>
-
-    <link rel=stylesheet type=text/css href="/uda/static/css/ol.css" />
-    <link rel=stylesheet type=text/css href="/uda/static/css/derm.css" />
-
-    <style>
-    </style>
+    <!-- ISIC App -->
+    <script src="/uda/static/js/isic-app.js"></script>
+    <script src="/uda/static/js/isic-user-controller.js"></script>
+    <script src="/uda/static/js/dermapp-phase1.js"></script>
+    <script src="/uda/static/js/dermapp-utils.js"></script>
+    <script src="/uda/static/js/dermapp-labels.js"></script>
+    <script src="/uda/static/js/dermapp-viewer.js"></script>
+    <link rel=stylesheet type=text/css href="/uda/static/css/derm.css">
 </head>
 <body>
     <div id="angular_id" ng-controller="ApplicationController">
-        <div>
+        <div ng-controller="SegmentationController">
             <div id="hoverBar">
                 <img id="objectinfo" style="display:none;" class="optionimage" src="/uda/static/na.jpg" />
             </div>
-            <div class="col-sm-3" id="toolContainer" ng-controller="AnnotationTool">
-                <script type="text/ng-template" id="myModalContent.html" class="modalbase">
-                    <div class="modal-body">
-                        <div>{{base.title}}</div>
-                        <div class="btn-group choiceoption" ng-repeat="opt in base.options">
-                            <div class="btn btn-primary" ng-click="selectOption(opt)">
-                                <span>{{opt.title}}</span>
-                            </div>
+            <div class="col-sm-3" id="toolContainer">
+                <div class="isichead">
+                    <div class="isictitle">
+                        <span>ISIC Annotation Tool : Phase 1</span>
+                    </div>
+                    <div class="btn-group btn-group-block">
+                        <div class="btn">
+                            <span ng-cloak ng-show="image"><b>Image:</b> {{ image.name }}</span>
+                        </div>
+                        <div class="btn" ng-controller="UserController">
+                            <span ng-cloak ng-show="user"><b>User:</b> {{ user.firstName}} {{ user.lastName }} ({{ user.login }})</span>
                         </div>
                     </div>
-                </script>
-                <script type="text/ng-template" id="field_renderer.html">
-                    <a href="#" ng-click="selectDropDownOption(opt)">
-                        <img class="optionimage" ng-src="/{{ opt.icon }}" />
-                    </a>
-                    <ul>
-                        <li ng-show="opt.type!='choice'"
-                            ng-repeat="opt in opt.options"
-                            ng-include="'field_renderer.html'">
-                        </li>
-                    </ul>
-                </script>
-                <div class="isichead">
-                    <div class="isictitle">ISIC Annotation Tool : Phase 1</div>
-                    <div class="btn-group btn-group-block">
-                        <div class="btn">User: {{ user.login }}</div>
-                        <div class="btn">{{ phase }}</div>
+                    <div uib-dropdown
+                         ng-controller="FlagAnnotationController"
+                         class="btn-group">
+                        <button uib-dropdown-toggle
+                                type="button"
+                                class="btn btn-warning dropdown-toggle"
+                                data-toggle="dropdown"
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                                ng-disabled="isSubmitting">
+                            Flag Image <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a ng-click="flag('phi')">Contains PHI</a></li>
+                            <li><a ng-click="flag('quality')">Low optical quality</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a ng-click="flag('other')">Other reason</a></li>
+                            <!--<li><a ng-click="flag('custom')">Custom reason (specify...)</a></li>-->
+                        </ul>
                     </div>
                     <div class="clearfix"></div>
                 </div>
-                <!--
-                <div>
-                    <div class="thumbnailview step-content">
-                        <p>Annotating {{ current_image.name }}</p>
-                        <img class="" ng-src="/api/v1/image/{{current_image._id}}/thumbnail" />
-                    </div>
-                </div>
-                -->
-                <div uib-dropdown ng-controller="FlagAnnotationController" class="btn-group">
-                    <button uib-dropdown-toggle
-                            type="button"
-                            class="btn btn-warning dropdown-toggle"
-                            data-toggle="dropdown"
-                            aria-haspopup="true"
-                            aria-expanded="false">
-                        Flag Image <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a ng-click="flag('phi')">Contains PHI</a></li>
-                        <li><a ng-click="flag('quality')">Low optical quality</a></li>
-                        <li role="separator" class="divider"></li>
-                        <li><a ng-click="flag('other')">Other reason</a></li>
-                        <!--<li><a ng-click="flag('custom')">Custom reason (specify...)</a></li>-->
-                    </ul>
-                </div>
-
                 <div class="clearfix"></div>
-                <!-- Step content -->
-                <div class="" ng-repeat="(key, value) in decision_tree">
-                    <div ng-show="smartShowHeader(key)" class="">
-                        <div class="step-header">
-                            <div class="btn-group">
-                                <div ng-click="gotoStep(key)" ng-class="stepHasAnnotations(key) ? 'btn labelgreen' : 'btn'">
-                                    {{value.title}}
+
+                <div>
+                    <uib-accordion close-others="true">
+                        <uib-accordion-group
+                                ng-repeat="prev_segmentation in prev_segmentations track by prev_segmentation._id"
+                                is-disabled="true || isSubmitting" is-open="false">
+                            <uib-accordion-heading>
+                                <span>Previous: {{ prev_segmentation.created }} {{ prev_segmentation.skill }}</span>
+                            </uib-accordion-heading>
+                        </uib-accordion-group>
+
+                        <uib-accordion-group
+                                is-disabled="isSubmitting" is-open="true">
+                            <uib-accordion-heading>
+                                <span>Semi-automated: Seeded floodfill</span>
+                            </uib-accordion-heading>
+                            <div ng-controller="FloodfillSegmentationController">
+                                <div class="alert alert-info">
+                                    <i class="glyphicon glyphicon-info-sign"></i>
+                                    <span> Click a seed point in the image to generate a new segmentation.</span>
                                 </div>
-                                <!--
-                                <div type="button" class="btn btn-inverse dropdown-toggle" data-toggle="dropdown" ng-show="showIfStep(key)">
-                                    <i class="fa fa-bars"></i>
-                                </div>
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <a href="#" ng-click="previousStep()">Go back</a>
-                                    </li>
-                                    <li>
-                                        <a href="#" ng-click="gotoStep(0)">Restart this image</a>
-                                    </li>
-                                    <li>
-                                        <a href="#" ng-click="">Flag this image</a>
-                                    </li>
-                                    <li class="divider"></li>
-                                    <li>
-                                        <a href="#" ng-click="showHelp(key)">Get help for this step</a>
-                                    </li>
-                                </ul>
-                                -->
-                            </div>
-                            <div class="btn-group pull-right">
-                                <div ng-click="deleteSaved(key)" class="btn" ng-show="stepHasAnnotations(key)">
-                                    <i class="fa fa-trash-o fawhite" tooltip-placement="left" tooltip="Delete step annotations"></i>
-                                </div>
-                                &nbsp;
-                            </div>
-                            <div ng-show="current_annotation.steps[key]" class="markupwell">
-                                <div class="btn-group">
-                                    <div class="hideli markupsmalllabel btn btn-sm" ng-repeat="feature in current_annotation.steps[key].markup.features">
-                                        <span class="label label-default">{{feature.geometry.type}}&nbsp;</span>
-                                        <span class="label label-info">&nbsp;{{feature.properties.title}}</span>
+                                <div class="btn-group content-group">
+                                    <div class="btn btn-primary"
+                                         ng-click="increaseParameter()"
+                                         ng-disabled="isSubmitting">
+                                        <i class="fa fa-chevron-up"></i>
+                                    </div>
+                                    <div class="btn btn-primary"
+                                         ng-click="decreaseParameter()"
+                                         ng-disabled="isSubmitting">
+                                        <i class="fa fa-chevron-down"></i>
+                                    </div>
+                                    <div class="btn" disabled>
+                                        <span>Tolerance: <b>{{ magicwand_tolerance }}</b></span>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div ng-show="smartShowContent(key)" class="step-content">
-                        <!--
-                        <div ng-show="compareState('image', tool_bar_state)">
-                            <div class="btn-group content-group">
-                                <div class="btn btn-inverse">Selected: {{ current_image.name }}
+                        </uib-accordion-group>
+
+                        <uib-accordion-group
+                                is-disabled="isSubmitting" is-open="false">
+                            <uib-accordion-heading>
+                                <span>Manual: Drawing</span>
+                            </uib-accordion-heading>
+                            <div ng-controller="ManualSegmentationController">
+                                <!--<div class="content-group">-->
+                                <div class="alert alert-info">
+                                    <i class="glyphicon glyphicon-info-sign"></i>
+                                    <span> Place 3 or more points to create a perimeter.</span>
+                                </div>
+                                <!-- TODO: add a reset button -->
+                                <div class="alert alert-warning">
+                                        <i class="glyphicon glyphicon-warning-sign"></i>
+                                    <span> Only the first completed polygon will be used. Close and re-open this tab to reset drawing.</span>
                                 </div>
                             </div>
-                            <div class="imagePreview">
-                                <div class='wrapper' ng-repeat="(i, v) in image_list">
-                                    <img class="imagethumb" ng-click='selectImage(i)' ng-src="/api/v1/image/{{v._id}}/thumbnail" />
-                                    <div class='description' ng-show="imageHasAnnotations(i)">
-                                        <span class='label label-primary givedropshadow'>
-                                            {{image_list[i].annotation.length}}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        -->
-                        <!-- magic wand -->
-                        <div class="btn-group content-group" ng-show="compareState('mwdefine', tool_bar_state)">
-                            <div class="btn btn-primary" ng-click="increaseParameter()">
-                                <i class="fa fa-chevron-up"></i>
-                            </div>
-                            <div class="btn btn-primary" ng-click="decreaseParameter()">
-                                <i class="fa fa-chevron-down"></i>
-                            </div>
-                            <div class="btn" disabled>
-                                <span>Tolerance: <b>{{magicwand_tolerance}}</b></span>
-                            </div>
-                        </div>
-                        <div class="btn-group content-group" ng-show="compareState('spconfirm', tool_bar_state)">
-                            <div class="btn btn-primary" ng-click="increaseParameter()">
-                                <i class="fa fa-chevron-up"></i>
-                            </div>
-                            <div class="btn btn-primary" ng-click="decreaseParameter()">
-                                <i class="fa fa-chevron-down"></i>
-                            </div>
-                            <div class="btn" disabled>
-                                <span>Tolerance: <b>{{regionpaint_size}}</b></span>
-                            </div>
-                        </div>
-                        <div class="btn-group content-group" ng-show="compareState('rppaint', tool_bar_state)">
-                            <div class="btn" ng-show="drawModeIs('paintbrush')" ng-click="navMode()">
-                                <span>Hide contours</span>
-                            </div>
-                            <div class="btn" ng-show="drawModeIs('navigate')" ng-click="drawMode()">
-                                <span>Show contours</span>
-                            </div>
-                            <div class="btn btn-inverse" disabled style="max-width: 200px;">
-                                <span>{{select_detail.title}}</span>
-                            </div>
-                            <div class="btncontainer">
-                                <img class="btnimage" ng-src="{{select_detail.url}}" />
-                            </div>
-                        </div>
-                        <div class="btn-group content-group" ng-show="compareState('rpreview', tool_bar_state)">
-                            <div class="btn" ng-click="runRegionPaint()" ng-show="select_detail">
-                                <span>Edit labels</span>
-                            </div>
-                        </div>
-                        <div class="btn-group content-group" ng-show="compareState('selectpbn', tool_bar_state)">
-                            <div class="btn btn-inverse" ng-click="nextStep()">
-                                <i class="fa fa-check-square" tooltip-placement="right" tooltip="No details to annotate"></i>
-                            </div>
-                        </div>
-                        <div class="btn-group content-group" ng-show="compareState('select', tool_bar_state)">
-                            <div class="btn btn-inverse" disabled>
-                                <span>Selected:</span>
-                            </div>
-                            <div class="btncontainer">
-                                <img class="btnimage" ng-src="{{select_pattern.get('icon')}}" tooltip="{{ select_pattern.get('title') }}" />
-                            </div>
-                        </div>
-                        <div class="btn-group pull-right content-group" ng-show="compareState('rppaint', tool_bar_state)">
-                            <div class="btn btn-inverse" ng-click="finishRegionPaint()">
-                                <span>Fill contours<</span>
-                            </div>
-                        </div>
-                        <div class="btn-group pull-right content-group" ng-show="compareState('mwdefine', tool_bar_state)">
-                            <div class="btn btn-inverse" ng-click="manualEdit()">
-                                <i class="fa fa-edit" tooltip-placement="left" tooltip="Manual edit"></i>
-                            </div>
-                        </div>
-                        <div class="btn-group pull-right content-group" ng-show="compareState('selectpbn', tool_bar_state)">
-                            <div class="btn btn-inverse" ng-show="runningSegmentation">
-                                <i class="fa fa-spinner fa-spin"></i>
-                            </div>
-                            <div class="btn btn-primary" ng-click="runRegionPaint()">
-                                <span>Click to begin</span>
-                            </div>
-                        </div>
-                        <div class="btn-group content-group" ng-show="compareState('superpixel', tool_bar_state)">
-                            <div class="btn btn-inverse" ng-click="runRegionPaintConfigure()">
-                                <span>Click to begin</span>
-                            </div>
-                            <div class="btn btn-inverse" ng-show="runningSegmentation">
-                                <i class="fa fa-spinner fa-spin"></i>
-                            </div>
-                        </div>
-                        <div class="btn-group pull-right content-group" ng-show="compareState('spconfirm', tool_bar_state)">
-                            <div class="btn btn-inverse" ng-show="runningSegmentation">
-                                <i class="fa fa-spinner fa-spin"></i>
-                            </div>
-                            <!--<div class="btn btn-success" ng-click="nextStep()">-->
-                                <!--Next-->
-                            <!--</div>-->
-                        </div>
-                        <div class="btn-group content-group" ng-show="stepHasDropDownOptions()">
-                            <nav>
-                                <ul>
-                                    <li ng-repeat="opt in step_options" ng-include="'field_renderer.html'"></li>
-                                </ul>
-                            </nav>
-                        </div>
-                    </div>
+                        </uib-accordion-group>
+                    </uib-accordion>
                 </div>
                 <!-- Step footer -->
-                <div class="lowertoolbar" ng-show="canGoToNextStep()" ng-cloak>
+                <div class="lowertoolbar" ng-cloak>
                     <div class="btn-group pull-right">
-                        <div class="btn btn-success" ng-click="nextStep()" ng-show="compareState('end', tool_bar_state)">
+                        <div class="btn btn-success"
+                             ng-show="canSubmit()"
+                             ng-click="doSubmit()"
+                             ng-disabled="isSubmitting">
                             <span>Submit</span>
                         </div>
-                        <div class="btn btn-success" ng-click="nextStep()" ng-show="stepHasAnnotations(step)">
-                            <span>Next</span>
+                    </div>
+                    <div class="clearfix"></div>
+                    <div ng-if="isSubmitting"
+                         ng-controller="SubmitProgressController">
+                        <div class="alert alert-success">
+                            <span>Uploading and creating superpixels...</span>
+                            <uib-progressbar
+                                    max="max"
+                                    value="value">
+                            </uib-progressbar>
                         </div>
                     </div>
                 </div>

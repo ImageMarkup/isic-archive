@@ -2,58 +2,35 @@
 /*global $, angular*/
 /*jslint browser: true*/
 
-// Initialization of angular root application
-var derm_app = angular.module('DermApp', ['ui.bootstrap', 'ngSanitize', 'xml']);
-derm_app.value("ol", ol);
+var derm_app = angular.module('DermApp');
 
-derm_app.config(function ($httpProvider) {
-    $httpProvider.defaults.xsrfCookieName = 'girderToken';
-    $httpProvider.defaults.xsrfHeaderName = 'Girder-Token';
-});
+// Register 'ol' service
+derm_app.value('ol', ol);
 
 // Initialization of angular app controller with necessary scope variables. Inline declaration of external variables
 // needed within the controller's scope. State variables (available between controllers using $rootScope). Necessary to
 // put these in rootScope to handle pushed data via websocket service.
-var appController = derm_app.controller('ApplicationController', ['$scope', '$rootScope', '$location', '$timeout', '$http', 'olViewer',
-    function ($scope, $rootScope, $location, $timeout, $http, olViewer) {
+derm_app.controller('ApplicationController', [
+    '$scope', '$rootScope', 'olViewer',
+    function ($scope, $rootScope, olViewer) {
 
         // global ready state variable
         $rootScope.applicationReady = false; // a hack to know when the rest has loaded (since ol3 won't init until dom does)
         $rootScope.imageviewer = undefined; // the ol3 viewer
-        $scope.active_image = undefined; // image metedata for currently viewed image
-
-        var api_user_url = '/api/v1/user/me';
-        $rootScope.user = {};
-        $http.get(api_user_url).success(function (data) {
-            $rootScope.user = data;
-        });
 
         // initial layout
         $("#angular_id").height(window.innerHeight);
         $("#map").height(window.innerHeight);
 
-        $timeout(function () {
-            $rootScope.ApplicationInit();
-        }, 10);
+        $rootScope.imageviewer = new olViewer($('#map')[0]);
 
-        // main application, gives a bit of a delay before loading everything
-        $rootScope.ApplicationInit = function () {
-            $rootScope.imageviewer = new olViewer($('#map')[0]);
-            $rootScope.applicationReady = true;
-        };
-
-        $rootScope.$watch('active_image', function (newImage, oldValue) {
-            if ($rootScope.applicationReady) {
-                $rootScope.task_start = Date.now(); // global start time for this task
-                $rootScope.imageviewer.clearCurrentImage();
-                $rootScope.imageviewer.loadImageWithURL(newImage._id);
-            }
-        });
+        // TODO: remove and clean up HTML elements
+        $scope.showingSegmentation = false;
     }
 ]);
 
-
-derm_app.controller('FlagAnnotationController', ['$scope', '$log',
+derm_app.controller('FlagAnnotationController', [
+    '$scope', '$log',
     function ($scope, $log) {
         $scope.flag = function (reason) {
             $scope.abort(reason);
@@ -61,958 +38,159 @@ derm_app.controller('FlagAnnotationController', ['$scope', '$log',
     }
 ]);
 
+derm_app.controller('SegmentationController', [
+    '$scope', '$rootScope', '$location', '$http', '$log', 'Image', 'Segmentation',
+    function ($scope, $rootScope, $location, $http, $log, Image, Segmentation) {
+        $scope.isSubmitting = false;
 
-derm_app.controller('AnnotationTool', ['$scope', '$rootScope', '$timeout', '$sanitize', '$http', '$modal', '$log',
-    function ($scope, $rootScope, $timeout, $sanitize, $http, $modal, $log) {
+        $scope.load = function () {
+            var image_id = $location.path().substring(1);
 
-        // single step instance variables
+            $scope.image = Image.get({'id': image_id});
+            $scope.prev_segmentations = Segmentation.query({'imageId': image_id});
+        };
+        $scope.load();
 
-        $scope.step = -1; // current step
-        $scope.totalSteps = 0; // total number of steps
+        var start_time;
+        $scope.$watch('image && image._id', function () {
+            if (!$scope.image || !$scope.image.$resolved) {
+                return;
+            }
 
-        $scope.step_config = undefined; // current step configuration
+            $rootScope.imageviewer.clearCurrentImage();
+            $rootScope.imageviewer.loadImageWithURL($scope.image._id);
+            $rootScope.imageviewer.clearPaintByNumber();
 
-        $scope.tool_bar_state = undefined; // current toolbar configuration (nested under step)
+            start_time = Date.now();
+        });
 
-        $scope.step_options = undefined; // list of options to select (if step has any)
+        $scope.canSubmit = function() {
+            return Boolean($rootScope.imageviewer.getFeatures().length);
+        };
 
+        $scope.doSubmit = function () {
+            var formatter = new ol.format.GeoJSON();
+            var feature = formatter.writeFeatureObject(
+                $rootScope.imageviewer.getFeatures()[0]
+            );
 
-        $scope.formatter = new ol.format.GeoJSON();
+            // flip the sign of the y-coordinates
+            var coordinates = feature.geometry.coordinates[0];
+            for (var j=0; j<coordinates.length; j++) {
+                coordinates[j][1] = -1 * coordinates[j][1];
+            }
+            delete feature.id;
+            delete feature.properties.hexcolor;
+            delete feature.properties.icon;
+            delete feature.properties.rgbcolor;
+            delete feature.properties.title;
+            feature.properties.startTime = start_time;
+            feature.properties.stopTime = Date.now();
 
-
-        $scope.clearAnnotation = function () {
-            $scope.review_mode = false;
-            $scope.current_annotation = {
-                steps : {}
+            var post_data = {
+                imageId: $scope.image._id,
+                lesionBoundary: feature
             };
-        };
-        $scope.clearAnnotation();
-
-        // annotation instance variables
-
-        $scope.image_index = -1;
-
-        $scope.current_image = $rootScope.active_image;
-
-        // annotation tool parameters
-
-        $scope.draw_mode = 'navigate'; //
-
-        $scope.magicwand_tolerance = 50;
-
-        $scope.regionpaint_size = 70;
-
-        $scope.runningSegmentation = false;
-
-        $rootScope.showingSegmentation = false;
-
-
-        $rootScope.$watch('user', function (newUser, oldUser) {
-            if (newUser._id) {
-                $scope.loadTasklist();
-            }
-        });
-
-        $scope.loadTasklist = function () {
-            var urlvals = window.location.pathname.split('/');
-            var image_item_id = urlvals[urlvals.length - 1];
-
-            var task_detail_url = '/api/v1/uda/task/markup/' + image_item_id;
-
-            $http.get(task_detail_url).success(function (data) {
-                $scope.decision_tree = data.decision_tree;
-                $scope.phase = data.phase;
-                $scope.totalSteps = $scope.decision_tree.length;
-                $scope.image_list = data.items;
-
-                $scope.selectImage(0);
-
-                if (data.loadAnnotation) {
-                    $scope.current_annotation.steps = data.annotation;
-                }
-
-                $scope.nextStep();
-            });
-        };
-
-        // Accessors
-
-        $scope.getCurrentStepConfig = function () {
-            if ($scope.step >= 0) {
-                return $scope.decision_tree[$scope.step];
-            }
-            return undefined;
-        };
-
-        $scope.getCurrentAnnotation = function () {
-            if ($rootScope.applicationReady) {
-                return $scope.current_annotation;
-            }
-            return undefined;
-        };
-
-
-        // selections
-        $scope.selectImage = function (selected_index) {
-
-            $scope.image_index = selected_index;
-
-            $scope.current_image = $scope.image_list[$scope.image_index];
-
-            $rootScope.active_image = $scope.current_image;
-
-            //todo uncomment this eventually
-
-            if ($rootScope.imageviewer) {
-                $rootScope.imageviewer.clearPaintByNumber();
-            }
-        };
-
-
-        $scope.stepHasDropDownOptions = function () {
-
-            // returns true if current toolbar state is select
-            if ($scope.tool_bar_state) {
-                return $scope.tool_bar_state === 'select' || $scope.tool_bar_state === 'rppaint';
-            }
-            return false;
-
-        };
-
-
-        $scope.canGoToNextStep = function () {
-
-            // returns true if the current step contains the necessary information to go to the next step
-//            if ($scope.step == 0) {
-//
-//                // step 0 -> if we have an image
-//                return $rootScope.active_image != undefined;
-//
-//            }
-            if ($scope.step === $scope.totalSteps - 1) {
-                return true;
-            }
-            else if ($scope.step >= 0) {
-                // step 1=6 -> if we have annotations
-                return $scope.stepHasAnnotations($scope.step);
-            }
-
-            return false;
-        };
-
-
-        $scope.selectDropDownOption = function (option) {
-
-            if (option.type === 'drop') {
-
-                console.log('this is not a valid selection');
-
-            }
-            else if (option.type === 'dropchoice') {
-
-                console.log('valid selection, creating annotation and opening modal');
-
-                var feature = new ol.Feature({
-                    title: option.title,
-                    longtitle: option.longtitle,
-                    icon: option.icon,
-                    source: 'selectedoption'
-                });
-
-                feature.setGeometry(new ol.geom.Point([0, 0]));
-
-                $rootScope.imageviewer.setAnnotations([feature]);
-
-                if (option.options.length > 0) {
-                    // contains additional questions in form of modal
-                    $scope.openModalWithOptions(option);
-                }
-            }
-            else if (option.type === 'dropoption') {
-
-                console.log('valid paint selection');
-                $scope.selectDetail(option);
-
-            }
-            else if (option.type === 'gotostep') {
-
-                console.log('valid selection, creating annotation and moving on to next step');
-
-                var feature = new ol.Feature({
-                    title: option.title,
-                    longtitle: option.longtitle,
-                    icon: option.icon,
-                    source: 'selectedoption'
-                });
-
-                feature.setGeometry(new ol.geom.Point([0, 0]));
-
-                $rootScope.imageviewer.setAnnotations([feature]);
-
-                $scope.gotoStep(option.value);
-            }
-            else {
-                console.log('unhandled option type');
-                console.log(option);
-            }
-        };
-
-
-        // shortcut key bindings -> takes you home to task list
-        Mousetrap.bind( ['ctrl+q'], function (evt) {
-            if (typeof (evt.preventDefault) === 'function') {
-                evt.preventDefault();
-            } else {
-                evt.returnValue = false;
-            }
-            $scope.$apply();
-        });
-
-        // shortcut key bindings -> takes you home to task list
-        Mousetrap.bind( ['space'], function (evt) {
-            if (typeof (evt.preventDefault) === 'function') {
-                evt.preventDefault();
-            } else {
-                evt.returnValue = false;
-            }
-            $scope.nextStep();
-
-            $scope.$apply();
-        });
-
-        Mousetrap.bind( ['ctrl+z'], function (evt) {
-            if (typeof (evt.preventDefault) === 'function') {
-                evt.preventDefault();
-            } else {
-                evt.returnValue = false;
-            }
-            $scope.previousStep();
-
-            $scope.$apply();
-        });
-
-
-        Mousetrap.bind( ['up'], function (evt) {
-            if (typeof (evt.preventDefault) === 'function') {
-                evt.preventDefault();
-            } else {
-                evt.returnValue = false;
-            }
-            $scope.increaseParameter();
-            $scope.$apply();
-        });
-
-
-        Mousetrap.bind( ['down'], function (evt) {
-            if (typeof (evt.preventDefault) === 'function') {
-                evt.preventDefault();
-            } else {
-                evt.returnValue = false;
-            }
-            $scope.decreaseParameter();
-            $scope.$apply();
-        });
-
-
-        $scope.setDrawMode = function (newDrawMode, newDrawLabel) {
-            $scope.draw_mode = newDrawMode;
-            $rootScope.imageviewer.setDrawMode(newDrawMode, newDrawLabel);
-        };
-
-
-        // setters
-        $scope.saveCurrentStepAnnotation = function () {
-
-            // just making things explicit for readability's sake
-            var features = $rootScope.imageviewer.getFeatures();
-
-            console.log('current step features', features);
-
-            var submitTime = Date.now();
-
-            var current_step = $scope.step;
-
-            if (features.length) {
-
-                if ($scope.step_config && $scope.step_config.type) {
-
-                    // if we're in teh superpixel mode, discard the placehold feature and make your own from the external parameters
-                    // ugly but it should work.
-                    if ($scope.step_config.type === 'superpixel') {
-
-                        var segmentationPackage = $rootScope.imageviewer.getSegmentationPackage();
-
-                        var feature = new ol.Feature({
-                            title: 'superpixel',
-                            longtitle: 'superpixel region',
-                            icon: '',
-                            source: $scope.phase,
-                            parameters: segmentationPackage
-                        });
-
-                        // set the geometry of this feature to be the screen extents
-                        feature.setGeometry(new ol.geom.Point([0, 0]));
-
-                        var geojsonfeatures = $scope.formatter.writeFeatures([feature]);
-
-                        var singleAnnotation = {
-                            markup : geojsonfeatures,
-                            startTime : $scope.step_start,
-                            submitTime : submitTime
-                        };
-
-                        $scope.current_annotation.steps[current_step] = singleAnnotation;
-                    }
-                    else if (current_step in Object.keys($scope.current_annotation.steps)) {
-                        // we have an existing annotation, just update the features and modify date
-//                      var stepAnnotation = currentAnnotation.steps[current_step]
-
-//                      var geojson  = new ol.parser.GeoJSON;
-//                      var features = vectorsource.getFeatures();
-//                      var json     = geojson.writeFeatures(features);
-
-                        var geojsonfeatures = $scope.formatter.writeFeatures(features);
-
-                        var singleAnnotation = {
-                            markup : geojsonfeatures,
-                            startTime : $scope.step_start,
-                            submitTime : submitTime
-                        };
-
-                        $scope.current_annotation.steps[current_step] = singleAnnotation;
-
-                    }
-                    else {
-                        // this is the first instance of the annotation, set the create date and field of view as well
-                        console.log('this is the first annotation for this step, creating');
-
-                        var geojsonfeatures = $scope.formatter.writeFeatures(features);
-
-                        var singleAnnotation = {
-                            markup : geojsonfeatures,
-                            startTime : $scope.step_start,
-                            submitTime : submitTime
-                        };
-
-                        $scope.current_annotation.steps[current_step] = singleAnnotation;
-                    }
-                }
-            }
-            else {
-                console.log('dont show up here');
-            }
-            console.log($scope.current_annotation);
-        };
-
-//        $scope.saveStepAnnotation = function (annotations, step_to_save) {
-//
-//          var currentAnnotation = $scope.getCurrentAnnotation();
-//          currentAnnotation.steps[step_to_save] = annotations;
-//        }
-
-        $scope.getStepAnnotations = function () {
-
-//          var currentAnnotation = $scope.getCurrentAnnotation();
-            console.log('current annotation', $scope.current_annotation);
-            if ($scope.current_annotation) {
-                return $scope.current_annotation.steps[$scope.step];
-            }
-            return undefined;
-        };
-
-        $scope.getAllFeatures = function (returnOlFeatures) {
-
-            var all_features = [];
-
-            for (var step in $scope.current_annotation.steps) {
-                if (step !== $scope.totalSteps - 1) {
-                    for (var i =0; i < $scope.current_annotation.steps[step].markup.features.length; i++) {
-
-                        var feature = $scope.current_annotation.steps[step].markup.features[i];
-
-                        if (returnOlFeatures) {
-                            // convert feature to ol
-                            all_features.push($scope.formatter.readFeature(feature));
-                        }
-                        else {
-                            // push straight geojson features back
-                            all_features.push(feature);
-                        }
-                    }
-                }
-            }
-            return all_features;
-        };
-
-
-        $scope.beginAnnotation = function () {
-            // clear paint layer if present, then call next step
-            if ($rootScope.imageviewer) {
-                $rootScope.imageviewer.clearPaintByNumber();
-            }
-
-            $scope.review_mode = false;
-
-            $scope.nextStep();
-        };
-
-        $scope.nextStep = function () {
-            // if we have the step config, use it to define next step
-            if ($scope.step_config) {
-
-                if ($scope.step_config.next !== $scope.step) {
-                    $scope.gotoStep($scope.step_config.next);
-                }
-                else {
-                    console.log('already at this step');
-                }
-            }
-            else {
-                console.log('next', $scope.step+1);
-                $scope.gotoStep($scope.step+1);
-            }
-        };
-
-
-
-        $scope.previousStep = function () {
-            if ($scope.step > 0) {
-                $scope.gotoStep($scope.step-1);
-            }
-        };
-
-
-        $scope.manualEdit = function () {
-            $scope.tool_bar_state = 'pldefine';
-            $scope.setDrawMode('pointlist', 'lesion');
-        };
-
-
-        $scope.increaseParameter = function () {
-            if ($scope.tool_bar_state === 'mwdefine') {
-                $scope.magicwand_tolerance += 5;
-                $scope.imageviewer.setFillParameter($scope.magicwand_tolerance);
-                $scope.imageviewer.regenerateFill();
-            }
-            else if ($scope.tool_bar_state === 'spconfirm') {
-                $scope.regionpaint_size += 10;
-                $scope.imageviewer.setPaintParameter($scope.regionpaint_size);
-                $scope.imageviewer.clearPaintByNumber();
-
-                $scope.runRegionPaintConfigure();
-            }
-        };
-
-        $scope.decreaseParameter = function () {
-            if ($scope.tool_bar_state === 'mwdefine') {
-                if ($scope.magicwand_tolerance >= 5) {
-                    $scope.magicwand_tolerance -= 5;
-                }
-                else {
-                    $scope.magicwand_tolerance = 0;
-                }
-
-                $scope.imageviewer.setFillParameter($scope.magicwand_tolerance);
-                $scope.imageviewer.regenerateFill();
-            }
-            else if ($scope.tool_bar_state === 'spconfirm') {
-
-                if ($scope.regionpaint_size >= 10) {
-                    $scope.regionpaint_size -= 10;
-                }
-                else {
-                    $scope.regionpaint_size = 0;
-                }
-
-                $scope.imageviewer.setPaintParameter($scope.regionpaint_size);
-                $scope.imageviewer.clearPaintByNumber();
-                $scope.runRegionPaintConfigure();
-
-            }
-        };
-
-
-        // initial function when a step is loaded
-        $scope.loadStep = function () {
-            // get current step configuration
-            $scope.step_config = $scope.getCurrentStepConfig();
-
-            // clear viewer current and temporary annotations
-            $scope.clearStep();
-
-            if ($scope.step_config && $scope.step_config.type === 'end') {
-
-                $scope.review_mode = true;
-
-                var allFeatures = $scope.getAllFeatures(true);
-
-                if (allFeatures) {
-
-                    $rootScope.imageviewer.setAnnotations(allFeatures);
-
-                }
-                else {
-                    // this step doesn't have annotations, do appropriate step selection processing steps (aka auto)
-                }
-            }
-            else {
-
-                var stepAnnotation = $scope.getStepAnnotations();
-
-                if (stepAnnotation) {
-
-                    var olFeatures = [];
-                    for (var i=0; i < stepAnnotation.markup.features.length; i++) {
-                        olFeatures.push($scope.formatter.readFeature(stepAnnotation.markup.features[i]));
-                    }
-
-                    $rootScope.imageviewer.setAnnotations(olFeatures);
-                }
-            }
-
-            // load previous annotations if there are any
-//            $rootScope.imageviewer.hidePaintLayerIfVisible();
-
-            $rootScope.showingSegmentation = false;
-
-            if ($scope.step_config) {
-
-                // set imageviewer to current step configuration
-                if ($scope.step_config.default !== "") {
-
-                    if ($scope.step_config.default === 'preloadseg') {
-
-                        $rootScope.showingSegmentation = true;
-
-                        // TODO: loadPainting should be called with a segmentationId
-                        $rootScope.imageviewer.loadPainting($scope.current_image._id, null);
-
-                        $scope.setDrawMode('superpixel', $scope.step_config.classification);
-
-
-                    }
-                    else if ($rootScope.imageviewer.hasSegmentation() && $scope.step_config.default === 'superpixel') {
-
-                        $rootScope.showingSegmentation = true;
-
-                        $scope.setDrawMode($scope.step_config.default, $scope.step_config.classification);
-
-                    }
-                    else {
-
-                        $scope.setDrawMode($scope.step_config.default, $scope.step_config.classification);
-                    }
-                }
-                else {
-                    $scope.setDrawMode('navigate', '');
-                }
-
-                if ($scope.step_config.zoom === "lesion") {
-
-                    var feature = $scope.getLesionFeature();
-
-                    var olFeature = $scope.formatter.readFeature(feature);
-
-                    $rootScope.imageviewer.moveToFeature(olFeature);
-
-                }
-
-                // set some UI helpers
-                $scope.step_options = $scope.step_config.options;
-                $scope.step_base = $scope.step_config.step;
-
-                $scope.step_start = Date.now();
-
-                console.log('Finished loading step', $scope.step_config.step, $scope.current_annotation);
-            }
-        };
-
-
-        $scope.clearStep = function () {
-            // if no annotations, do nothing.
-            $scope.clearDrawingTools();
-
-            // if imageviewer annotations, clear them
-            $scope.clearLayerAnnotations();
-
-            $scope.select_detail = undefined;
-            $scope.select_pattern = undefined;
-
-            // return to original step definition
-            if ($scope.step_config) {
-                $scope.tool_bar_state = $scope.step_config.type;
-            }
-        };
-
-
-        // returns the first feature from the first lesion definition step
-        $scope.getLesionFeature = function () {
-            return $scope.current_annotation.steps[0].markup.features[0];
-        };
-
-        // this will clear the
-        $scope.clearLayerAnnotations = function () {
-            $rootScope.imageviewer.clearLayerAnnotations();
-        };
-
-        $scope.clearDrawingTools = function () {
-            $rootScope.imageviewer.hidePaintLayerIfVisible();
-            $rootScope.imageviewer.removeDrawInteraction();
-        };
-
-
-        $scope.gotoStep = function (step) {
-
-            if (step < $scope.totalSteps) {
-                // pre step change transition
-
-                // don't save the annotations to review
-                if ($scope.step === $scope.totalSteps -1 ) {
-
-                }
-                else {
-                    $scope.saveCurrentStepAnnotation();
-                }
-
-                $scope.step = step;
-                $scope.loadStep();
-            }
-            else if (step >= $scope.totalSteps) {
-
-                var taskcomplete_time = Date.now();
-
-                var annotation_to_store = {
-                    'phase' : $scope.phase,
-                    'image' : $scope.current_image,
-                    'user' : $rootScope.user,
-                    'taskstart' : $rootScope.task_start,
-                    'taskend' : taskcomplete_time,
-                    'steps' : {}
-                };
-
-                for (var k in $scope.current_annotation.steps) {
-                    annotation_to_store.steps[k] = {
-                        markup: $scope.current_annotation.steps[k].markup,
-                        startTime: $scope.current_annotation.steps[k].startTime,
-                        submitTime: $scope.current_annotation.steps[k].submitTime
-                    };
-                }
-
-                var task_complete_url = '/api/v1/uda/task/markup/' + $scope.current_image._id + '/complete';
-
-                $http.post(task_complete_url, annotation_to_store).success(function (data) {
-                    /* // old code to load a new image in-place
-                    $scope.step = -1;
-
-                    $scope.step_config = undefined;
-                    $scope.review_mode = false;
-
-                    $scope.clearAnnotation();
-                    $scope.clearStep();
-
-                    $scope.loadTasklist();
-
-                    // $scope.loadStep();
-                    */
-                    window.location.replace('/uda/task');
-                });
-            }
-        };
-
-        $scope.abort = function(reason) {
-            var flagURL = '/api/v1/image/' + this.current_image_id + '/flag';
-            var data = {
-                reason: reason
-            };
-            $http.post(flagURL, data).success(function (response) {
+            Segmentation.save({}, post_data, function() {
+                $scope.isSubmitting = false;
                 window.location.replace('/uda/task');
             });
-            // TODO: lock UI while request is pending
+
+            $scope.isSubmitting = true;
+            // TODO: cause stop() to be called on the active sub-controller,
+            //   but without clearing the annotation
+            $rootScope.imageviewer.removeDrawInteraction();
+            $rootScope.imageviewer.setDrawMode('navigate', 'lesion');
         };
-
-        // Paint by numbers methods
-
-        $scope.runRegionPaint = function () {
-
-            $scope.runningSegmentation = true;
-
-            $timeout(function () {
-
-                $scope.regionPaintDelay();
-
-            }, 50);
-        };
-
-        // TODO consider combining independent functions into switched
-
-        $scope.runRegionPaintConfigure = function () {
-
-            $scope.runningSegmentation = true;
-
-            $timeout(function () {
-
-                $scope.regionPaintConfigureDelay();
-
-            }, 50);
-        };
-
-        $scope.regionPaintConfigureDelay = function () {
-
-            $scope.tool_bar_state = 'spconfirm';
-
-            var feature = $scope.getLesionFeature();
-            var olFeature = $scope.formatter.readFeature(feature);
-            $rootScope.imageviewer.moveToFeature(olFeature);
-
-            $scope.setDrawMode('none', '');
-
-            $rootScope.imageviewer.startPainting();
-
-            // this lags for a bit, then returns
-
-
-            $scope.runningSegmentation = false;
-
-            $rootScope.showingSegmentation = true;
-        };
-
-
-        $scope.regionPaintDelay = function () {
-
-            $scope.tool_bar_state = 'rppaint';
-
-            var feature = $scope.getLesionFeature();
-            var olFeature = $scope.formatter.readFeature(feature);
-            $rootScope.imageviewer.moveToFeature(olFeature);
-
-            $scope.setDrawMode('paintbrush', '');
-
-            $rootScope.imageviewer.startPainting();
-
-            $scope.runningSegmentation = false;
-
-            $rootScope.showingSegmentation = true;
-        };
-
-        $scope.finishRegionPaint = function () {
-
-            $scope.tool_bar_state = 'rpreview';
-
-            $rootScope.imageviewer.acceptPainting();
-
-            $rootScope.showingSegmentation = false;
-
-        };
-
-        $scope.cancelRegionPaint = function () {
-
-            $rootScope.imageviewer.acceptPainting();
-
-            $rootScope.showingSegmentation = false;
-
-            $scope.resetStep();
-        };
-
-        $scope.navMode = function () {
-
-            $rootScope.imageviewer.hidePaintLayerIfVisible();
-
-            $rootScope.showingSegmentation = false;
-
-            $scope.setDrawMode('navigate', '');
-
-        };
-
-        $scope.drawMode = function () {
-
-            var feature = $scope.getLesionFeature();
-            var olFeature = $scope.formatter.readFeature(feature);
-            $rootScope.imageviewer.moveToFeature(olFeature);
-
-            $scope.showingSegmentation = true;
-
-//            $rootScope.imageviewer.showPaintLayerIfVisible();
-
-            $scope.setDrawMode('paintbrush', '');
-
-
-        };
-
-
-        // Magic wand methods
-
-        $scope.selectDetail = function (detailobj) {
-            $scope.select_detail = detailobj;
-            $rootScope.imageviewer.selectAnnotationLabel(detailobj.value);
-        };
-
-
-        var ModalInstanceCtrl = function ($scope, $modalInstance, options) {
-
-            $scope.base = options;
-            $scope.selectOption = function (opt) {
-                $modalInstance.close(opt);
-            };
-        };
-
-
-
-        $scope.openModalWithOptions = function (options) {
-
-            $scope.modal_options = options.options[0];
-
-            var modalInstance = $modal.open({
-              templateUrl: 'myModalContent.html',
-              controller: ModalInstanceCtrl,
-              backdrop: 'static',
-              keyboard: false,
-              resolve: {
-                options: function () {
-                  return $scope.modal_options;
-                }
-              }
-            });
-
-            modalInstance.result.then(function (selectedOption) {
-
-                console.log('Selected option', selectedOption);
-
-                // assuming we have steps to go to
-                $scope.gotoStep(selectedOption.value);
-
-            }, function () {
-              $log.info('Modal dismissed at: ' + new Date());
-            });
-
-        };
-
-        $scope.deleteSaved = function (key) {
-
-            if ($rootScope.applicationReady)
-            {
-                if ($scope.current_annotation) {
-                    if ($scope.current_annotation.steps.hasOwnProperty(key)) {
-                        delete $scope.current_annotation.steps[key];
-                    }
-                }
-
-                $scope.clearStep();
+    }
+]);
+
+derm_app.controller('SubmitProgressController', [
+    '$scope', '$interval',
+    function ($scope, $interval) {
+        $scope.value = 0.0;
+        var interval = 0.5;
+        $scope.max = 10.0;
+
+        function increment () {
+            $scope.value += interval;
+            if ($scope.value === $scope.max) {
+                $interval.cancel(promise);
             }
+        }
 
-            return false;
-        };
-
-        // state functions
-        $scope.showIfStep = function (step) {
-            return parseInt(step) === $scope.step;
-        };
+        var promise = $interval(increment, interval * 1000);
+    }
+]);
 
 
-        $scope.smartShowHeader = function (step, details) {
-            // if the step has annotations, return yes
-            if ($scope.stepHasAnnotations(step)) {
-                return true;
-//                if ($scope.review_mode) {
-//                    return true;
-//                }
+derm_app.controller('FloodfillSegmentationController', [
+    '$scope', '$rootScope',
+    function ($scope, $rootScope) {
+        $scope.$parent.$parent.$watch('isOpen', function (isOpen) {
+            if (isOpen) {
+                start();
+            } else {
+                stop();
             }
+        });
 
-            if (step === $scope.totalSteps - 1) {
-                if ($scope.review_mode) {
-                    return true;
-                }
+        function start() {
+            $rootScope.imageviewer.setDrawMode('autofill', 'lesion');
+        }
+
+        function stop() {
+            $rootScope.imageviewer.clearLayerAnnotations();
+            if ($rootScope.imageviewer.draw_mode === 'autofill') {
+                // Directly switching to another accordion opens that one before
+                //   this is closed
+                $rootScope.imageviewer.setDrawMode('navigate', 'lesion');
             }
+        }
 
-            // depending on
-            return parseInt(step) === $scope.step;
+        // TODO: The internal tolerance value is not initialized from this
+        $scope.magicwand_tolerance = 50;
+        function updateParameter () {
+            $scope.imageviewer.setFillParameter($scope.magicwand_tolerance);
+            $scope.imageviewer.regenerateFill();
+        }
+        $scope.increaseParameter = function () {
+            $scope.magicwand_tolerance += 5;
+            updateParameter();
         };
-
-
-        $scope.smartShowContent = function (step, details) {
-            return parseInt(step) === $scope.step;
-        };
-
-        $scope.isLastStep = function () {
-            return ($scope.step === ($scope.totalSteps - 1));
-        };
-
-
-        $scope.showIfStepGTE = function (step) {
-            return parseInt(step) <= $scope.step;
-        };
-
-        $scope.showIfStepOrLast = function (step) {
-            if ($scope.step === $rootScope.decision_tree.length - 1) {
-                return true;
+        $scope.decreaseParameter = function () {
+            if ($scope.magicwand_tolerance >= 5) {
+                $scope.magicwand_tolerance -= 5;
+                updateParameter();
             }
-            return parseInt(step) === $scope.step;
         };
-
-        $scope.compareState = function (target, current_value) {
-            return target === current_value;
-        };
+    }
+]);
 
 
-        // if there are any annotations, you can proceed
-        $scope.hasAnnotations = function () {
-            return ($scope.hasLayerAnnotations() || $scope.hasStackSelections());
-        };
-
-        $scope.imageHasAnnotations = function (index) {
-
-            if ($rootScope.applicationReady) {
-                if ($scope.image_list[index].annotation) {
-                    return true;
-                }
+derm_app.controller('ManualSegmentationController', [
+    '$scope', '$rootScope',
+    function ($scope, $rootScope) {
+        $scope.$parent.$parent.$watch('isOpen', function (isOpen) {
+            if (isOpen) {
+                start();
+            } else {
+                stop();
             }
-            return false;
-        };
+        });
 
-        //temporary annotations = points that need to be converted into a polygon
-        $scope.hasStackSelections = function () {
+        function start() {
+            $rootScope.imageviewer.setDrawMode('pointlist', 'lesion');
+        }
 
-            if ($rootScope.applicationReady) {
-                return $scope.select_stack.length > 0;
+        function stop() {
+            $rootScope.imageviewer.clearLayerAnnotations();
+            $rootScope.imageviewer.removeDrawInteraction();
+            if ($rootScope.imageviewer.draw_mode === 'pointlist') {
+                // Directly switching to another accordion opens that one before
+                //   this is closed
+                $rootScope.imageviewer.setDrawMode('navigate', 'lesion');
             }
-            return false;
-        };
-
-        // saved annotations = points that have been converted... NOT TO BE CONFUSED WITH STEP annotations
-        $scope.hasLayerAnnotations = function () {
-            if ($rootScope.applicationReady) {
-                return $rootScope.imageviewer.hasLayerAnnotations();
-            }
-            return false;
-        };
-
-        $scope.stepHasAnnotations = function (step) {
-
-            if ($rootScope.applicationReady) {
-                if (step !== $scope.totalSteps -1 ) {
-                    if ($rootScope.imageviewer.hasLayerAnnotations()) {
-                        if (step === $scope.step) {
-                            return true;
-                        }
-                    }
-
-                    if ($scope.current_annotation) {
-                        var step_annotation = $scope.current_annotation.steps[step];
-
-                        if (step_annotation) {
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
-        };
-
-
-        $scope.drawModeIs = function (mode_query) {
-            if ($rootScope.applicationReady) {
-                return mode_query === $scope.draw_mode;
-            }
-            return false;
-        };
+        }
     }
 ]);

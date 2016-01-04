@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import datetime
+
 import cherrypy
 
 from girder.api import access
-from girder.api.rest import Resource, loadmodel, rawResponse
+from girder.api.rest import Resource, RestException, loadmodel, rawResponse
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
+
+from ..provision_utility import ISIC, _ISICCollection
 
 
 class SegmentationResource(Resource):
@@ -15,7 +19,7 @@ class SegmentationResource(Resource):
         self.resourceName = 'segmentation'
 
         self.route('GET', (), self.find)
-        # self.route('POST', (), self.createSegmentation)
+        self.route('POST', (), self.createSegmentation)
         self.route('GET', (':id',), self.getSegmentation)
         self.route('GET', (':id', 'thumbnail'), self.thumbnail)
 
@@ -48,9 +52,49 @@ class SegmentationResource(Resource):
         .errorResponse('ID was invalid.')
     )
     @access.user
-    @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
-    def createSegmentation(self, image, params):
-        pass
+    def createSegmentation(self, params):
+        Segmentation = self.model('segmentation', 'isic_archive')
+
+        body_json = self.getBodyJson()
+        self.requireParams(('imageId', 'lesionBoundary'), body_json)
+
+        user = self.getCurrentUser()
+
+        image = self.model('image', 'isic_archive').load(
+            body_json['imageId'], level=AccessType.READ, user=user)
+
+        lesionBoundary = body_json['lesionBoundary']
+        lesionBoundary['properties']['startTime'] = datetime.datetime.utcfromtimestamp(
+            lesionBoundary['properties']['startTime'] / 1000.0)
+        lesionBoundary['properties']['stopTime'] = datetime.datetime.utcfromtimestamp(
+            lesionBoundary['properties']['stopTime'] / 1000.0)
+
+        skill = Segmentation.getUserSkill(user)
+        if skill is None:
+            raise RestException('Current user is not authorized to create segmentations.')
+
+        segmentation = Segmentation.createSegmentation(
+            image=image,
+            skill=skill,
+            creator=user,
+            lesionBoundary=lesionBoundary
+        )
+
+        # Move image item to next collection
+        if skill == Segmentation.Skill.EXPERT:
+            next_phase_collection = ISIC.LesionImages.collection
+        else:
+            next_phase_collection = ISIC.Phase1b.collection
+        original_folder = self.model('folder').load(image['folderId'], force=True)
+        next_phase_folder = _ISICCollection.createFolder(
+            name=original_folder['name'],
+            description=original_folder['description'],
+            parent=next_phase_collection,
+            parent_type='collection'
+        )
+        self.model('item').move(image, next_phase_folder)
+
+        return segmentation
 
 
     @describeRoute(

@@ -2,6 +2,8 @@
 /*global derm_app, $, console*/
 /*jslint browser: true*/
 
+var derm_app = angular.module('DermApp');
+
 var olViewer = derm_app.factory('olViewer',
     function (ol, $http, $log, xmlParser) {
 

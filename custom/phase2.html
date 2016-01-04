@@ -1,66 +1,79 @@
 <!DOCTYPE html>
-
 <html lang="en" ng-app="DermApp">
-
 <head>
     <meta charset="utf-8">
-    <title>ISIC Dermoscopic Annotation Tool</title>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="icon" type="image/png" href="/static/img/Girder_Favicon.png">
+    <link href="/static/img/Girder_Favicon.png" rel="icon" type="image/png">
 
-    <meta name="description" content="ISIC Image annotator">
+    <title>ISIC Archive: Image Annotation</title>
+    <meta name="description" content="ISIC Archive: Image Annotation">
 
-    <link rel=stylesheet type=text/css href="/uda/static/bower_components/flatstrap/dist/css/bootstrap.min.css">
-    <link rel=stylesheet type=text/css href="/uda/static/bower_components/font-awesome/css/font-awesome.min.css">
-    <!--<link rel=stylesheet type=text/css href="/uda/static/bower_components/amitava82-angular-multiselect/src/style.css">-->
-
+    <!-- jQuery -->
     <script src="/uda/static/bower_components/jquery/dist/jquery.min.js"></script>
-    <script src="/uda/static/bower_components/flatstrap/dist/js/bootstrap.min.js"></script>
 
+    <!-- Flatstrap ("Bootstrap without all the extra stuff") -->
+    <script src="/uda/static/bower_components/flatstrap/dist/js/bootstrap.min.js"></script>
+    <link href="/uda/static/bower_components/flatstrap/dist/css/bootstrap.min.css" rel=stylesheet type=text/css>
+
+    <!-- Font Awesome -->
+    <link rel=stylesheet type=text/css href="/uda/static/bower_components/font-awesome/css/font-awesome.min.css">
+
+    <!-- AngularJS -->
     <script src="/uda/static/bower_components/angular/angular.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-resource.js"></script>
-    <script src="/uda/static/bower_components/angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js"></script>
-    <script src="/uda/static/bower_components/angular-sanitize/angular-sanitize.min.js"></script>
-    <script src="/uda/static/bower_components/angular-xml/angular-xml.min.js"></script>
+
+    <!-- Angular Mousetrap -->
     <script src="/uda/static/bower_components/mousetrap/mousetrap.min.js"></script>
     <script src="/uda/static/bower_components/angular-mousetrap/src/keypress.js"></script>
 
-    <script src="/uda/static/bower_components/amitava82-angular-multiselect/src/multiselect-tpls.js"></script>
+    <!-- AngularUI Bootstrap -->
+    <script src="/uda/static/bower_components/angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js"></script>
 
+    <!-- Angular Sanitize -->
+    <script src="/uda/static/bower_components/angular-sanitize/angular-sanitize.min.js"></script>
+
+    <!-- Angular XML -->
+    <script src="/uda/static/bower_components/angular-xml/angular-xml.min.js"></script>
+
+    <!-- AngularUI Select -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.12.1/select.min.js"></script>
-    <link rel=stylesheet type=text/css href="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.12.1/select.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.12.1/select.min.css" rel=stylesheet type=text/css>
 
+    <!-- angular-bootstrap-switch -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/js/bootstrap-switch.min.js"></script>
-    <link rel=stylesheet type=text/css href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/css/bootstrap3/bootstrap-switch.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/css/bootstrap3/bootstrap-switch.min.css" rel=stylesheet type=text/css>
     <script src="https://cdn.rawgit.com/frapontillo/angular-bootstrap-switch/0.4.1/dist/angular-bootstrap-switch.min.js"></script>
 
-    <script type="text/javascript" src="/uda/static/js/ol.js"></script>
+    <!-- angular-multiselect -->
+    <script src="/uda/static/bower_components/amitava82-angular-multiselect/src/multiselect-tpls.js"></script>
+
+    <!-- OpenLayers3 -->
+    <script src="/uda/static/js/ol-debug.js"></script>
+    <link href="/uda/static/css/ol.css" rel=stylesheet type=text/css>
+
+    <!-- js-segment-annotator -->
     <script type="text/javascript" src="/uda/static/js/js-segment-annotator/pf-segmentation.js"></script>
     <script type="text/javascript" src="/uda/static/js/slic-segmentation.js"></script>
-
     <script type="text/javascript" src="/uda/static/js/segment-annotator-phase2.js"></script>
     <script type="text/javascript" src="/uda/static/js/UDASegment.js"></script>
 
+    <!-- ISIC App -->
     <script src="/uda/static/js/isic-app.js"></script>
-    <script type="text/javascript" src="/uda/static/js/dermapp-phase2.js"></script>
-
-    <script type="text/javascript" src="/uda/static/js/dermapp-utils.js"></script>
-    <script type="text/javascript" src="/uda/static/js/dermapp-labels.js"></script>
-    <script type="text/javascript" src="/uda/static/js/dermapp-viewer.js"></script>
-
-    <link rel=stylesheet type=text/css href="/uda/static/css/ol.css" />
-    <link rel=stylesheet type=text/css href="/uda/static/css/derm.css" />
+    <script src="/uda/static/js/isic-user-controller.js"></script>
+    <script src="/uda/static/js/dermapp-phase2.js"></script>
+    <script src="/uda/static/js/dermapp-utils.js"></script>
+    <script src="/uda/static/js/dermapp-labels.js"></script>
+    <script src="/uda/static/js/dermapp-viewer.js"></script>
+    <link rel=stylesheet type=text/css href="/uda/static/css/derm.css">
 
     <style>
         #toolContainer {
             /*height: 100%;*/
             height: 600px;
             overflow: scroll;;
-        }
-        .panel-body {
-            background-color: #333;
         }
 
         .isic-overview-frame {
@@ -143,9 +156,7 @@
                 </div>
                 <div class="clearfix"></div>
 
-
                 <!-- Step content -->
-
                 <div ng-controller="ImageFeatureAnnotationController">
                     <div class="step-header">
                         <div class="btn-group">
