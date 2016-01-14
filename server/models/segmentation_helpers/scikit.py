@@ -203,17 +203,18 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
     @classmethod
     def _uint64ToRGB(cls, val):
         return numpy.dstack((
-            numpy.bitwise_and(numpy.uint64(val), numpy.uint64(0xff)
-            ).astype(numpy.uint8),
-            numpy.right_shift(
-                numpy.bitwise_and(numpy.uint64(val), numpy.uint64(0xff00)),
-                numpy.uint64(8)
-            ).astype(numpy.uint8),
-            numpy.right_shift(
-                numpy.bitwise_and(numpy.uint64(val), numpy.uint64(0xff0000)),
-                numpy.uint64(16)
-            ).astype(numpy.uint8)
+            val.astype(numpy.uint8),
+            (val >> numpy.uint64(8)).astype(numpy.uint8),
+            (val >> numpy.uint64(16)).astype(numpy.uint8)
         ))
+
+
+    @classmethod
+    def _RGBTounit64(cls, val):
+        return \
+            (val[..., 0].astype(numpy.uint64)) + \
+            (val[..., 1].astype(numpy.uint64) << numpy.uint64(8)) + \
+            (val[..., 2].astype(numpy.uint64) << numpy.uint64(16))
 
 
     @classmethod
