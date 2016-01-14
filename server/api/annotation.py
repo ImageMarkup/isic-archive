@@ -17,8 +17,73 @@ class AnnotationResource(Resource):
         self.resourceName = 'annotation'
         self.plugin_root_dir = plugin_root_dir
 
+        self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getAnnotation)
         self.route('PUT', (':id',), self.submitAnnotation)
+
+
+    @describeRoute(
+        Description('Return a list of annotations.')
+        .param('studyId', 'The ID of the study to filter by.',
+               paramType='query', required=True)
+        .param('userId', 'The ID of the user to filter by.',
+               paramType='query', required=False)
+        .param('segmentationId', 'The ID of the segmentation to filter by.',
+               paramType='query', required=False)
+        .param('imageId', 'The ID of the image to filter by.',
+               paramType='query', required=False)
+        .errorResponse()
+    )
+    @access.public
+    def find(self, params):
+        Study = self.model('study', 'isic_archive')
+
+        self.requireParams(('studyId',), params)
+
+        # check access here for simplicity
+        study = Study.load(
+            params['studyId'], user=self.getCurrentUser(),
+            level=AccessType.READ, exc=True)
+
+        annotator_user = self.model('user').load(
+            params['userId'], force=True, exc=True) \
+            if 'userId' in params else None
+
+        segmentation = self.model('segmentation', 'isic_archive').load(
+            params['segmentationId'], force=True, exc=True) \
+            if 'segmentationId' in params else None
+
+        image = self.model('image', 'isic_archive').load(
+            params['imageId'], force=True, exc=True) \
+            if 'imageId' in params else None
+
+        # TODO: add state
+
+        # TODO: add limit, offset
+
+        # TODO: limit fields returned
+        annotations = Study.childAnnotations(
+            study=study,
+            annotator_user=annotator_user,
+            segmentation=segmentation,
+            image_item=image
+        )
+
+        return list(
+            {
+                '_id': annotation['_id'],
+                'name': annotation['name'],
+                'studyId': annotation['meta']['studyId'],
+                'userId': annotation['meta']['userId'],
+                'segmentationId': annotation['meta']['segmentationId'],
+                'imageId': annotation['meta']['imageId'],
+                # TODO: change to State enum and ensure it serializes
+                'state': 'complete' \
+                         if annotation['meta']['stopTime'] is not None \
+                         else 'active'
+            }
+            for annotation in annotations
+        )
 
 
     @describeRoute(

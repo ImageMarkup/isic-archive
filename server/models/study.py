@@ -117,12 +117,16 @@ class Study(Folder):
         })
 
 
-    def childAnnotations(self, study=None, annotator_user=None, image_item=None, state=None, **kwargs):
+    def childAnnotations(self, study=None, annotator_user=None,
+                         segmentation=None, image_item=None, state=None,
+                         **kwargs):
         query = dict()
         if study:
             query['meta.studyId'] = study['_id']
         if annotator_user:
             query['meta.userId'] = annotator_user['_id']
+        if segmentation:
+            query['meta.segmentationId'] = segmentation['_id']
         if image_item:
             query['meta.imageId'] = image_item['_id']
         if state:
