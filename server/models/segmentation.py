@@ -142,20 +142,25 @@ class Segmentation(Model):
                                       **fileKwargs)
 
 
-    def superpixelsFile(self, segmentation):
+    def superpixelsFile(self, segmentation, version=None):
         """
         :type segmentation: dict
+        :type version: float or None
         :rtype: dict or None
         """
-        return self.model('file').findOne({'itemId': segmentation['_id']})
+        query = {'itemId': segmentation['_id']}
+        if version is not None:
+            query['superpixelVersion'] = version
+        return self.model('file').findOne(query)
 
 
-    def superpixelsData(self, segmentation):
+    def superpixelsData(self, segmentation, version=None):
         """
         :type segmentation: dict
+        :type version: float or None
         :rtype: numpy.ndarray
         """
-        superpixels_file = self.superpixelsFile(segmentation)
+        superpixels_file = self.superpixelsFile(segmentation, version)
         if not superpixels_file:
             raise GirderException('No superpixels file in segmentation.')
 
