@@ -104,15 +104,10 @@ class Study(Folder):
 
 
     def getImages(self, study):
-        # use one of the existing users as a prototype
-        annotator_folder = self.model('folder').findOne({'parentId': study['_id']})
-        if annotator_folder:
-            # there will only be images if there is at least one annotator
-            annotation_items = self.model('annotation', 'isic_archive').find({'folderId': annotator_folder['_id']})
-            image_ids = annotation_items.distinct('meta.imageId')
-        else:
-            image_ids = list()
-        return self.model('item').find({
+        image_ids = self.model('annotation', 'isic_archive').find({
+            'meta.studyId': study['_id']
+        }).distinct('meta.imageId')
+        return self.model('image', 'isic_archive').find({
             '_id': {'$in': image_ids}
         })
 
