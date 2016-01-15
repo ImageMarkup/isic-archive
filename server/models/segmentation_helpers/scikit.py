@@ -170,12 +170,19 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
 
 
     @classmethod
-    def _slic(cls, image, segment_size):
+    def _slic(cls, image, num_segments=None, segment_size=None):
         compactness = 0.01  # make superpixels highly deformable
         max_iter = 10
         sigma = 2.0
 
-        num_segments = (image.shape[0] * image.shape[1]) / (segment_size ** 2)
+        if num_segments and segment_size:
+            raise ValueError('Only one of num_segments or segment_size may be set.')
+        elif num_segments:
+            pass
+        elif segment_size:
+            num_segments = (image.shape[0] * image.shape[1]) / (segment_size ** 2)
+        else:
+            raise ValueError('One of num_segments or segment_size must be set.')
 
         label_image = skimage.segmentation.slic(
             image,
@@ -218,7 +225,14 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
 
 
     @classmethod
-    def superpixels(cls, image, coords):
+    def superpixels(cls, image):
+        superpixel_labels = cls._slic(image, num_segments=1000)
+        superpixels = cls._uint64ToRGB(superpixel_labels)
+        return superpixels
+
+
+    @classmethod
+    def superpixels_legacy(cls, image, coords):
         mask_image = cls._contourToMask(image, coords)
 
         from .opencv import OpenCVSegmentationHelper

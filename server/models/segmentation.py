@@ -66,7 +66,7 @@ class Segmentation(Model):
 
         # TODO: run this asynchronously
         superpixels = self.generateSuperpixels(segmentation, image)
-        self.saveSuperpixels(segmentation, superpixels)
+        self.saveSuperpixels(segmentation, superpixels, 2.0)
 
         return segmentation
 
@@ -94,17 +94,18 @@ class Segmentation(Model):
             image = Image.load(segmentation['imageId'], force=True, exc=True)
 
         image_data = Image.imageData(image)
-        coords = segmentation['lesionBoundary']['geometry']['coordinates'][0]
+        # coords = segmentation['lesionBoundary']['geometry']['coordinates'][0]
 
-        superpixels = ScikitSegmentationHelper.superpixels(image_data, coords)
+        superpixels = ScikitSegmentationHelper.superpixels(image_data)
 
         return superpixels
 
 
-    def saveSuperpixels(self, segmentation, superpixels):
+    def saveSuperpixels(self, segmentation, superpixels, version):
         """
         :type segmentation: dict
         :type superpixels: file-like object or numpy.ndarray
+        :type version: float
         :return: The Girder File containing the PNG-encoded superpixel labels.
         :rtype: dict
         """
@@ -124,6 +125,7 @@ class Segmentation(Model):
         # Uploads re-lookup the passed "parent" item, so it can't be set in
         #  uploadFromFile
         superpixels_file['itemId'] = segmentation['_id']
+        superpixels_file['superpixelVersion'] = version
         superpixels_file = self.model('file').save(superpixels_file)
         return superpixels_file
 
@@ -143,7 +145,7 @@ class Segmentation(Model):
     def superpixelsFile(self, segmentation):
         """
         :type segmentation: dict
-        :rtype: models.file.File or None
+        :rtype: dict or None
         """
         return self.model('file').findOne({'itemId': segmentation['_id']})
 
