@@ -82,14 +82,29 @@ class ImageResource(Resource):
     @describeRoute(
         Description('Download an image\'s high-quality original binary data.')
         .param('id', 'The ID of the image.', paramType='path')
+        .param('contentDisposition', 'Specify the Content-Disposition response '
+               'header disposition-type value', required=False,
+               enum=['inline', 'attachment'])
         .errorResponse('ID was invalid.')
     )
     @access.cookie
     @access.public
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def download(self, image, params):
+        contentDisp = params.get('contentDisposition', None)
+        if contentDisp is not None and \
+                contentDisp not in {'inline', 'attachment'}:
+            raise RestException('Unallowed contentDisposition type "%s".' %
+                                contentDisp)
+
         original_file = self.model('image', 'isic_archive').originalFile(image)
-        return self.model('file').download(original_file, headers=True)
+        file_stream = self.model('file').download(original_file, headers=True)
+
+        # TODO: replace this after https://github.com/girder/girder/pull/1123
+        if contentDisp == 'inline':
+            cherrypy.response.headers['Content-Disposition'] = \
+                'inline; filename="%s"' % original_file['name']
+        return file_stream
 
 
     @describeRoute(

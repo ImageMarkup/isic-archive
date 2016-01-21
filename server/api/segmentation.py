@@ -133,6 +133,9 @@ class SegmentationResource(Resource):
         .param('id', 'The ID of the segmentation.', paramType='path')
         .param('width', 'The desired width for the thumbnail.',
                paramType='query', required=False, default=256)
+        .param('contentDisposition', 'Specify the Content-Disposition response '
+               'header disposition-type value', required=False,
+               enum=['inline', 'attachment'])
         .errorResponse('ID was invalid.')
     )
     @access.cookie
@@ -140,6 +143,12 @@ class SegmentationResource(Resource):
     @rawResponse
     @loadmodel(model='segmentation', plugin='isic_archive')
     def thumbnail(self, segmentation, params):
+        contentDisp = params.get('contentDisposition', None)
+        if contentDisp is not None and \
+                contentDisp not in {'inline', 'attachment'}:
+            raise RestException('Unallowed contentDisposition type "%s".' %
+                                contentDisp)
+
         # TODO: convert this to make Segmentation use an AccessControlMixin
         image = self.model('image', 'isic_archive').load(
             segmentation['imageId'], level=AccessType.READ,
@@ -147,11 +156,21 @@ class SegmentationResource(Resource):
 
         width = int(params.get('width', 256))
 
-        thumbnail_image_data = self.model('segmentation', 'isic_archive').boundaryThumbnail(
+        thumbnail_image_stream = self.model('segmentation', 'isic_archive').boundaryThumbnail(
             segmentation, image, width)
+        thumbnail_image_data = thumbnail_image_stream.getvalue()
 
         cherrypy.response.headers['Content-Type'] = 'image/jpeg'
-        return thumbnail_image_data.getvalue()
+        content_name = '%s_segmentation_thumbnail.jpg' % image['_id']
+        if contentDisp == 'inline':
+            cherrypy.response.headers['Content-Disposition'] = \
+                'inline; filename="%s"' % content_name
+        else:
+            cherrypy.response.headers['Content-Disposition'] = \
+                'attachment; filename="%s"' % content_name
+        cherrypy.response.headers['Content-Length'] = len(thumbnail_image_data)
+
+        return thumbnail_image_data
 
 
     @describeRoute(
