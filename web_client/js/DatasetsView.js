@@ -1,11 +1,3 @@
-girder.router.route('isic-datasets', 'isic-datasets', function () {
-    'use strict';
-    //_navigateToCollection('Lesion Images', true);
-    girder.events.trigger('g:navigateTo', girder.views.IsicDatasetsView, {});
-    girder.events.trigger('g:highlightItem', 'isic-datasetsView');
-});
-
-
 girder.views.IsicDatasetsView = girder.View.extend({
     initialize: function () {
         this.collection = new girder.collections.IsicDatasetCollection();
