@@ -1,34 +1,51 @@
 <!DOCTYPE html>
-
 <html lang="en" ng-app="DermApp">
-
 <head>
     <meta charset="utf-8">
-    <title>ISIC Dermoscopic Annotation Tool</title>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link href="/static/img/Girder_Favicon.png" rel="icon" type="image/png">
 
-    <meta name="description" content="ISIC Image annotator">
-    <meta name="author" content="Rich Stoner, Brian Helba, David Gutman">
+    <title>ISIC Archive: Task Dashboard</title>
+    <meta name="description" content="ISIC Archive: Task Dashboard">
 
-    <link rel=stylesheet type=text/css
-          href="/uda/static/bower_components/flatstrap/dist/css/bootstrap.min.css">
-    <link rel=stylesheet type=text/css href="/uda/static/bower_components/font-awesome/css/font-awesome.min.css">
+    <!-- jQuery -->
+    <script src="/static/built/plugins/isic_archive/extra/bower_components/jquery/dist/jquery.min.js"></script>
 
+    <!-- Flatstrap ("Bootstrap without all the extra stuff") -->
+    <script src="/static/built/plugins/isic_archive/extra/bower_components/flatstrap/dist/js/bootstrap.min.js"></script>
+    <link href="/static/built/plugins/isic_archive/extra/bower_components/flatstrap/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css">
 
-    <!--[if lt IE 9]>
-        <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+    <!-- Font Awesome -->
+    <link href="/static/built/plugins/isic_archive/extra/bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 
-    <script src="/uda/static/bower_components/jquery/dist/jquery.min.js"></script>
-    <script src="/uda/static/bower_components/flatstrap/dist/js/bootstrap.min.js"></script>
-    <script src="/uda/static/bower_components/angular/angular.min.js"></script>
-    <script src="/uda/static/bower_components/angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js"></script>
-    <script src="/uda/static/bower_components/angular-sanitize/angular-sanitize.js"></script>
-    <script src="/uda/static/bower_components/mousetrap/mousetrap.min.js"></script>
-    <script src="/uda/static/bower_components/angular-mousetrap/src/keypress.js"></script>
-    <script src="/uda/static/bower_components/FileSaver/FileSaver.js"></script>
+    <!-- AngularJS -->
+    <script src="/static/built/plugins/isic_archive/extra/bower_components/angular/angular.min.js"></script>
+    <script src="/static/built/plugins/isic_archive/extra/bower_components/angular-resource/angular-resource.min.js"></script>
+
+    <!-- Angular Mousetrap -->
+    <script src="/static/built/plugins/isic_archive/extra/bower_components/mousetrap/mousetrap.min.js"></script>
+    <script src="/static/built/plugins/isic_archive/extra/bower_components/angular-mousetrap/src/keypress.js"></script>
+
+    <!-- AngularUI Bootstrap -->
+    <script src="/static/built/plugins/isic_archive/extra/bower_components/angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js"></script>
+
+    <!-- Angular Sanitize -->
+    <script src="/static/built/plugins/isic_archive/extra/bower_components/angular-sanitize/angular-sanitize.min.js"></script>
+
+    <!-- Angular XML -->
+    <!-- <unnecessary> -->
+
+    <!-- AngularUI Select -->
+    <!-- <unnecessary> -->
+
+    <!-- angular-bootstrap-switch -->
+    <!-- <unnecessary> -->
+
+    <!-- angular-multiselect -->
+    <!-- <unnecessary> -->
 
     <script src="/uda/static/js/task.js"></script>
 </head>

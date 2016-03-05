@@ -1,0 +1,21 @@
+{
+  "name": "isic_archive",
+  "version": "1.0.0",
+  "description": "The ISIC dermoscopy image archive.",
+  "homepage": "https://isic-archive.com/",
+  "bugs": {
+    "url": "https://github.com/ImageMarkup/isic-archive/issues"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ImageMarkup/isic-archive.git"
+  },
+  "dependencies": {
+    "bower": "^1.7.7"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "postinstall": "bower --config.interactive=false --allow-root install"
+  }
+}

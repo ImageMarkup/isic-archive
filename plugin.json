@@ -2,5 +2,8 @@
     "name": "ISIC Archive",
     "description": "The ISIC dermoscopy image archive.",
     "version": "1.0.0",
-    "dependencies": []
+    "dependencies": [],
+    "grunt": {
+        "file": "Gruntfile.js"
+    }
 }
