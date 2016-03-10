@@ -1,6 +1,0 @@
----
-
-iip_version: 39ea9491a9433ee9d77e5d5878dc005f0a77317
-iip_path: "{{ ansible_user_dir }}/iipsrv"
-
-build_parallelism: "{{ ansible_processor_vcpus + 1 }}"

@@ -2,13 +2,13 @@
 
 - name: Add PPA key
   apt_key:
-    id: "7F0CEB10"
-    url: "http://keyserver.ubuntu.com:11371/pks/lookup?op=get&search=0x9ECBEC467F0CEB10"
+    id: "EA312927"
+    keyserver: "keyserver.ubuntu.com"
   sudo: yes
 
 - name: Add PPA
   apt_repository:
-    repo: "deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen"
+    repo: "deb https://repo.mongodb.org/apt/ubuntu {{ ansible_distribution_release }}/mongodb-org/3.2 multiverse"
   sudo: yes
 
 - name: Install package

@@ -1,5 +1,5 @@
 ---
 
 dependencies:
+  - role: vips
   - role: girder
-  - role: large_image

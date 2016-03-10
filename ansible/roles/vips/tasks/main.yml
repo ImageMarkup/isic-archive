@@ -60,15 +60,6 @@
   args:
     chdir: "{{ vips_path }}"
     creates: "{{ vips_path }}/tools/vips"
+  notify: Install
 
-# TODO: make this not execute every time
-- name: Install
-  command: "make install"
-  args:
-    chdir: "{{ vips_path }}"
-  sudo: yes
-
-# TODO: make this not execute every time
-- name: Update installed shared libs
-  command: ldconfig
-  sudo: yes
+- meta: flush_handlers

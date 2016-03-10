@@ -5,8 +5,6 @@
   roles:
     - role: base
 
-    - role: mongodb
-
     - role: isic
 
     - role: nginx

@@ -1,0 +1,3 @@
+---
+
+large_image_path: "{{ girder_path }}/plugins/large_image"

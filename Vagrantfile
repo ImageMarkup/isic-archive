@@ -17,11 +17,14 @@ Vagrant.configure("2") do |config|
 
   config.vm.provision "ansible" do |ansible|
     ansible.playbook = "ansible/vagrant-playbook.yml"
-    # ansible.extra_vars
+    # Ansible has a bug where the "--module-path" option is not respected
+    # ansible.raw_arguments = ["--module-path=" + File.expand_path("ansible/library")]
+    ENV["ANSIBLE_LIBRARY"] = File.expand_path("ansible/library")
   end
 
   config.vm.provider "virtualbox" do |virtualbox|
     virtualbox.name = "isic-archive.dev"
+    virtualbox.memory = 1024
   end
 
   config.ssh.forward_agent = true

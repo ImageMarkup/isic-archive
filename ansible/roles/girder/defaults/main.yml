@@ -2,4 +2,3 @@
 
 girder_version: "master"
 girder_path: "{{ ansible_user_dir }}/girder"
-

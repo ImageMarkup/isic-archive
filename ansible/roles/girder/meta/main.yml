@@ -1,5 +1,6 @@
 ---
 
 dependencies:
+  - role: mongodb
   - role: nodejs
   - role: python

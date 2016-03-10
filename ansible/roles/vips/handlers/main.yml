@@ -4,3 +4,14 @@
   command: "git clean -fdx"
   args:
     chdir: "{{ vips_path }}"
+
+- name: Install
+  command: "make install"
+  args:
+    chdir: "{{ vips_path }}"
+  sudo: yes
+  notify: Update installed shared libs
+
+- name: Update installed shared libs
+  command: ldconfig
+  sudo: yes

@@ -3,11 +3,18 @@
 #- name: Download
 #  git:
 #    repo: "https://github.com/ImageMarkup/isic-archive.git"
-#    dest: "{{ girder_path }}"
-#    version: "{{ girder_version }}"
+#    dest: "{{ isic_archive_path }}"
+##    version: "{{ isic_archive_version }}"
 #    update: no
 #    force: yes
-#  #notify: Rebuild Girder
+#  notify: Build Girder
+
+- name: Symlink
+  file:
+    src: "{{ isic_archive_path }}"
+    dest: "{{ girder_path }}/plugins/isic_archive"
+    state: link
+  notify: Build Girder
 
 - name: Install package dependencies
   apt:
@@ -34,5 +41,4 @@
     - pillow
     - enum34
 
-## local config
-# TODO: rebuild Girder
+## TODO: local config
