@@ -14,13 +14,3 @@
     mode: 0644
   sudo: yes
   notify: Restart Supervisor
-
-- name: Deploy IIP Supervisor config file
-  template:
-    src: "iip.conf.j2"
-    dest: "/etc/supervisor/conf.d/iip.conf"
-    owner: root
-    group: root
-    mode: 0644
-  sudo: yes
-  notify: Restart Supervisor

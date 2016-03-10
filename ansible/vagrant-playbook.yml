@@ -12,6 +12,5 @@
       site_hostname: isic-archive.dev
 
     - role: supervisor
-      iip_path: "{{ ansible_user_dir }}/iipsrv"
       girder_path: "{{ ansible_user_dir }}/girder"
       python_dist_path: "{{ ansible_user_dir }}/env"
