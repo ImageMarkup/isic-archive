@@ -1,3 +1,3 @@
 ---
 
-isic_archive_path: "{{ girder_path }}/isic_archive"
+isic_archive_path: "{{ ansible_user_dir }}/isic_archive"
