@@ -28,7 +28,7 @@
     name: "{{ item }}"
     executable: "{{ python_dist_path }}/bin/conda"
   with_items:
-    - anaconda
+    - scikit-image
     - opencv
     - cffi
 
