@@ -21,10 +21,10 @@
   sudo: yes
   notify: Restart Nginx
 
-- name: Deploy uda site config file
+- name: Deploy Girder site config file
   template:
-    src: uda.conf.j2
-    dest: "/etc/nginx/conf.d/uda.conf"
+    src: girder.conf.j2
+    dest: "/etc/nginx/conf.d/girder.conf"
     owner: root
     group: root
     mode: 0644
