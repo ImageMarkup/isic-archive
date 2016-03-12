@@ -11,7 +11,7 @@
   git:
     repo: "https://github.com/DigitalSlideArchive/large_image.git"
     dest: "{{ large_image_path }}"
-    version: f4be12def1a07595ed51e621feb7868c820a2fdc
+    version: aa10cfbe971335e37896490708ffd1f693cc72bc
     update: no
     force: yes
   notify: Build Girder
@@ -19,7 +19,7 @@
 - name: Install Numpy
   conda:
     name: numpy
-    version: 1.10.4
+    version: 1.10.2
     executable: "{{ python_dist_path }}/bin/conda"
 
 - name: Install Python dependencies

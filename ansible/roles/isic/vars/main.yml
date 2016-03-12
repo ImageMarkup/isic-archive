@@ -1,5 +1,5 @@
 ---
 
-girder_version: "18796e2353b6f41da73d235c391ac8f36fdc2cd6"
+girder_version: "b4fc81cb2d6b4eba26c1a3b9e6b62d97513dbcf"
 python_dist: "conda"
 python_dist_path: "{{ ansible_user_dir }}/env"
