@@ -9,7 +9,6 @@ from girder.utility.server import staticFile
 
 from . import constants
 from . import api
-from .image_utility import zoomifyhandler, thumbnailhandler, fifHandler
 from .provision_utility import initialSetup, onUserCreated
 from .task_utility import UDAResource, TaskHandler
 from .upload import uploadHandler
@@ -88,17 +87,6 @@ def load(info):
     clearRouteDocs()
 
     info['apiRoot'].uda = UDAResource(info['pluginRootDir'])
-
-    # "/api/v1/item/:id/thumbnail" -> returns a thumbnail of the image
-    info['apiRoot'].item.route('GET', (':item_id', 'thumbnail'), thumbnailhandler)
-
-    # "/api/v1/item/:id/zoomify/:p1" -> returns a zoomify xml if available
-    info['apiRoot'].item.route('GET', (':item_id', 'zoomify', ':p1'), zoomifyhandler)
-    # "/api/v1/item/:id/zoomify/:p1/:p2"
-    info['apiRoot'].item.route('GET', (':item_id', 'zoomify', ':p1', ':p2'), zoomifyhandler)
-
-    # "/api/v1/item/:id/fif/:fifparams" -> returns the IIP FIF endpoint for an item
-    info['apiRoot'].item.route('GET', (':item_id', 'fif', ':fifparams'), fifHandler)
 
     # TODO: nest these under a "/isic" path
     info['apiRoot'].annotation = api.AnnotationResource(info['pluginRootDir'])

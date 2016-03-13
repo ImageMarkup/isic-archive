@@ -221,7 +221,7 @@ def _zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_u
 
                 # upload converted image
                 with open(converted_file_path, 'rb') as converted_file_obj:
-                    ModelImporter.model('upload').uploadFromFile(
+                    converted_file =  ModelImporter.model('upload').uploadFromFile(
                         obj=converted_file_obj,
                         size=os.path.getsize(converted_file_path),
                         name=converted_file_name,
@@ -237,6 +237,11 @@ def _zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_u
                     'originalFilename': original_file_relpath,
                     'convertedFilename': converted_file_name,
                 })
+
+                image_item['largeImage'] = converted_file['_id']
+                image_item['largeImageSourceName'] = 'tiff'
+                ModelImporter.model('image', 'isic_archive').save(image_item)
+
 
 
 def _csvUploadHandler(upload_folder, upload_item, upload_file, upload_file_path, upload_user):

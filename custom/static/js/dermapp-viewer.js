@@ -14,8 +14,8 @@ var olViewer = derm_app.factory('olViewer',
             var self = this;
 
             // Instance variables
-            this.image_source = undefined;
             this.image_layer = undefined;
+            self.image_metadata = undefined;
 
             this.map = undefined;
             this.draw_mode = undefined;
@@ -79,7 +79,9 @@ var olViewer = derm_app.factory('olViewer',
                 };
             })();
 
-            this.vector_source = new ol.source.Vector();
+            this.vector_source = new ol.source.Vector({
+                wrapX: false
+            });
             this.vector_layer = new ol.layer.Vector({
                 source: this.vector_source,
                 style: styleFunction
@@ -124,12 +126,13 @@ var olViewer = derm_app.factory('olViewer',
             // initialize map (imageviewer)
             this.map = new ol.Map({
                 renderer: 'canvas',
-                target: mapContainer
+                target: mapContainer,
+                logo: false
             });
 
             // set map event handlers
             this.map.on('singleclick', function(evt) {
-                var click_coords = [evt.coordinate[0], -evt.coordinate[1]];
+                var click_coords = self.flipYCoord(evt.coordinate);
 
                 if (self.draw_mode === 'navigate') {
                     self.last_click_location = click_coords;
@@ -456,10 +459,10 @@ var olViewer = derm_app.factory('olViewer',
                     self.vector_source.clear();
                     var f = new ol.format.GeoJSON();
 
-                    // flip the sign of the y-coordinates
+                    // translate and flip the y-coordinates
                     var coordinates = response.geometry.coordinates[0];
                     for (var j=0; j<coordinates.length; j++) {
-                        coordinates[j][1] = -1 * coordinates[j][1];
+                        coordinates[j][1] = self.flipYCoord(coordinates[j])[1];
                     }
 
                     var featobj = f.readFeature(response);
@@ -526,84 +529,76 @@ var olViewer = derm_app.factory('olViewer',
 //                return this.segmentannotator.getAllData();
             },
 
-//          designed for the Girder-based url-rewrite.
+            flipYCoord: function (coord) {
+                return [
+                    coord[0],
+                    this.image_metadata.maxBaseY - coord[1]
+                ];
+            },
+
+
             loadImageWithURL: function (image_id) {
                 var self = this;
 
                 self.current_image_id = image_id;
-                var base_url = '/api/v1/item/' + image_id;
-                self.segmentation_list = [];
+                var tiles_url = '/api/v1/item/' + image_id + '/tiles';
 
-                self.zoomify_url = base_url + '/zoomify';
-                self.data_url = window.location.protocol + '//' + window.location.hostname +  base_url + '/fif';
+                $http.get(tiles_url).success(function (metadata) {
+                    self.image_metadata = metadata;
 
-                var image_properties_xml = self.zoomify_url  + '/ImageProperties.xml';
+                    // OpenLayers has no apparant way to crop an image to not
+                    // include the padding at the bottom/right edges (maybe it's
+                    // in 'tileGrid'?); so; instead tell OpenLayers that the
+                    // extent of the image actually includes the padding; it will
+                    // typicallly not be visible (though perhaps we should ignore
+                    // events on the extra region?)
+                    metadata.maxBaseX = metadata.tileWidth * Math.pow(2, metadata.levels - 1);
+                    metadata.maxBaseY = metadata.tileHeight * Math.pow(2, metadata.levels - 1);
 
-                $http.get(image_properties_xml).then(function (hresp) {
-                    /* Parse a Zoomify protocol metadata request
-                    */
-                    var parseMetaData = function (response) {
-                        // Simply split the reponse as a string
-                        var tmp = response.split('"');
-                        var w = parseInt(tmp[1]);
-                        var h = parseInt(tmp[3]);
-                        var ts = parseInt(tmp[11]);
-                        // Calculate the number of resolutions - smallest fits into a tile
-                        var max = (w>h)? w : h;
-                        var n = 1;
-                        while ( max > ts ) {
-                          max = Math.floor( max/2 );
-                          n++;
-                        }
-                        var result = {
-                          max_size: { w: w, h: h },
-                          tileSize: { w: ts, h: ts },
-                          num_resolutions: n
-                        };
-                        return result;
-                    };
-
-                    var metadata = parseMetaData(hresp.data);
-                    // $log.debug(metadata);
-
-                    self.imageCenter = [metadata.max_size.w / 2, - metadata.max_size.h / 2];
-
-                    self.proj = new ol.proj.Projection({
-                        code: 'ZOOMIFY',
+                    var projection = new ol.proj.Projection({
+                        code: 'pixel',
                         units: 'pixels',
-                        extent: [0, 0, metadata.max_size.w, metadata.max_size.h]
-                    });
-
-                    // https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes
-                    var crossOrigin = 'use-credentials';
-
-                    self.image_source = new ol.source.Zoomify({
-                        url: self.zoomify_url + '/',
-                        size: [metadata.max_size.w, metadata.max_size.h],
-                        crossOrigin: crossOrigin
+                        //extent: [0, 0, metadata.sizeX, metadata.sizeY],
+                        extent: [0, 0, metadata.maxBaseX, metadata.maxBaseY],
+                        //worldExtent: [0, 0, metadata.sizeX, metadata.sizeY],
+                        worldExtent: [0, 0, metadata.maxBaseX, metadata.maxBaseY],
+                        axisOrientation: 'enu',
+                        global: true
                     });
 
                     self.image_layer = new ol.layer.Tile({
-                       source: self.image_source,
-                       preload: 1
+                        source: new ol.source.XYZ({
+                            tileSize: [metadata.tileWidth, metadata.tileHeight],
+                            url: tiles_url + '/zxy/{z}/{x}/{y}',
+                            crossOrigin: 'use-credentials',
+                            maxZoom: metadata.levels,
+                            wrapX: false,
+                            projection: projection
+                            //tileGrid: new ol.tilegrid.TileGrid({
+                            //    extent: [0.0, 0.0, metadata.sizeX, metadata.sizeY],
+                            //    //tileSize: [metadata.tileWidth, metadata.tileHeight]
+                            //})
+                        }),
+                        preload: 1
+                        //extent: [0, 0, metadata.sizeX, metadata.sizeY]
                     });
 
-                    self.nativeSize = metadata.max_size;
-
-                    self.view = new ol.View({
-                      projection: self.proj,
-                      center: self.imageCenter,
-                      zoom: 2,
-                      maxZoom: metadata.num_resolutions
+                    var view = new ol.View({
+                        minZoom: 0,
+                        maxZoom: metadata.levels,
+                        center: self.flipYCoord([
+                            metadata.sizeX / 2,
+                            metadata.sizeY / 2
+                        ]),
+                        zoom: 2,
+                        projection: projection
                     });
-
                     self.map.addLayer(self.image_layer);
                     self.map.addLayer(self.vector_layer);
-                    self.map.setView(self.view);
+                    self.map.setView(view);
                 });
             }
         };
         return olViewer;
     }
 );
-

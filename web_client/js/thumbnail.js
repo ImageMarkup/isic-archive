@@ -1,23 +1,10 @@
-// Show thumbnails on the item page
-girder.wrap(girder.views.ItemView, 'render', function (render) {
-    // ItemView is a special case in which rendering is done asynchronously,
-    // so we must listen for a render event.
-    this.once('g:rendered', function () {
-        // TODO: only add if this is an image item
-        new girder.views.ThumbnailWidget({
-            el: $('<div>', {class: '.g-item-thumbnail'})
-                .insertAfter(this.$('.g-item-info')),
-            parentView: this,
-            itemModel: this.model
-        });
-    }, this);
-    render.call(this);
-});
-
 girder.views.ThumbnailWidget = girder.View.extend({
     initialize: function (settings) {
-        this.itemModel = settings.itemModel;
-        this.render();
+        this.itemModel = settings.imageModel;
+        // TODO: find a better way to determine if this Item is an Image
+        if (this.itemModel.get('largeImage')) {
+            this.render();
+        }
     },
 
     render: function () {
@@ -26,3 +13,7 @@ girder.views.ThumbnailWidget = girder.View.extend({
         }));
     }
 });
+
+// Hijack the large_image's 'ImageViewerSelectWidget' to render ThumbnailWidget
+// and hide the default viewers in 'ImageViewerSelectWidget'
+girder.views.ImageViewerSelectWidget = girder.views.ThumbnailWidget
