@@ -24,6 +24,8 @@ module.exports = function (grunt) {
     }
 
     grunt.config.merge({
+        // This step will fail if '<%= pluginDir %>/isic_archive' is a symlink
+        /*
         symlink: {
             'plugin-isic_archive-bower': {
                 files: [{
@@ -38,5 +40,6 @@ module.exports = function (grunt) {
                 dependencies: ['shell:plugin-isic_archive']
             }
         }
+        */
     });
 };
