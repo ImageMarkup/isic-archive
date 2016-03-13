@@ -25,20 +25,19 @@
 
 - name: Install Conda dependencies
   conda:
-    name: "{{ item }}"
+    name: "{{ item.name }}"
+    version: "{{ item.version }}"
     executable: "{{ python_dist_path }}/bin/conda"
   with_items:
-    - scikit-image
-    - opencv
-    - cffi
+    - { name: numpy, version: 1.10.2 }
+    - { name: scipy, version: 0.16.0 }
+    - { name: scikit-image, version: 0.12.3 }
+    - { name: opencv, version: 2.4.10 }
 
 - name: Install Python dependencies
   pip:
-    name: "{{ item }}"
+    requirements: "{{ isic_archive_path }}/requirements.txt"
     virtualenv: "{{ python_dist_path }}"
-  with_items:
-    - geojson
-    - pillow
-    - enum34
+  sudo: yes if python_dist == "system" else no
 
 ## TODO: local config
