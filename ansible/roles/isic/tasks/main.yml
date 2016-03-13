@@ -29,6 +29,7 @@
     version: "{{ item.version }}"
     executable: "{{ python_dist_path }}/bin/conda"
   with_items:
+    - { name: libgfortran, version: 1.0.0 }
     - { name: numpy, version: 1.10.2 }
     - { name: scipy, version: 0.16.0 }
     - { name: scikit-image, version: 0.12.3 }
