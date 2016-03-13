@@ -209,7 +209,7 @@ def _zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_u
                     ModelImporter.model('upload').uploadFromFile(
                         obj=original_file_obj,
                         size=os.path.getsize(original_file_path),
-                        name='%s.%s' % (
+                        name='%s%s' % (
                             image_item['name'],
                             os.path.splitext(original_file_name)[1]
                         ),
@@ -232,7 +232,7 @@ def _zipUploadHandler(upload_collection, upload_file, upload_file_path, upload_u
                     )
                 os.remove(converted_file_path)
 
-                ModelImporter.model('item').setMetadata(image_item, {
+                ModelImporter.model('image', 'isic_archive').setMetadata(image_item, {
                     # provide full and possibly-qualified path as originalFilename
                     'originalFilename': original_file_relpath,
                     'convertedFilename': converted_file_name,

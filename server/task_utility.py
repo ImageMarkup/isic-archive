@@ -185,13 +185,6 @@ class UDAResource(Resource):
         contents = self.getBodyJson()
 
         # verify that all images are in folder
-
-        image_ids = set(
-            image['_id']
-            for image in
-            self.model('image', 'isic_archive').find
-        )
-
         flagged_image_items = [
             self.model('item').load(image_item_id, force=True)
             for image_item_id in contents['flagged']
