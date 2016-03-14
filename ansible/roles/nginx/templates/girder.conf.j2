@@ -21,6 +21,24 @@ server {
     }
 }
 
+{% if upstream_proxy %}
+server {
+    listen 80;
+    server_name isic-archive.upstream;
+
+    location / {
+        proxy_pass http://localhost:{{ girder_port }};
+    }
+    location /api/v1 {
+        proxy_pass https://isic-archive.com;
+    }
+    location /uda/task/p {
+        proxy_pass https://isic-archive.com;
+    }
+}
+
+{% endif %}
+
 server {
     listen 80 default_server;
     server_name {% if ssl %}{{ site_hostname }}{% endif %} www.{{ site_hostname }};
