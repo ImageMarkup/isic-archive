@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <title>ISIC MultiRater Viewer</title>
+    <meta name="generator" content="Bootply" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href="css/bootstrap-slider.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/jquery-ui.css">
+    <link href="css/jquery-ui.theme.css" rel="stylesheet">
+    <link href="css/bootstrap.css" rel="stylesheet">
+
+    <link href="css/multirater.css" rel="stylesheet">
+
+
+    <!-- <link rel="stylesheet" href="css/girder.ext.min.css">
+    <link rel="stylesheet" href="css/girder.app.min.css">
+ -->
+
+
+
+    
+    <script src="js/jquery-2.1.3.js"></script>
+    <script src="js/jquery-ui.js"></script>
+    <script src="js/bootstrap.js"></script>
+    <script src="js/d3.v3.min.js" charset="utf-8"></script>
+    <script src="js/bootstrap-slider.js"></script>
+    <!-- <script src="js/jquery.svg.js"></script> -->
+    <script src="js/osd-filters/osd_filters.js"></script>
+
+    <script src="js/openseadragon.js"></script>
+    <script src="js/openseadragon-svg-overlay.js"></script>
+
+<script src="js/multirater_legacy.js"></script>
+
+<script src="js/multirater.js"></script>
+
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.1/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.1/js/select2.min.js"></script>
+
+
+
+  <!--<script src="js/girder.ext.min.js"></script>-->
+
+   <!-- <script src="js/girder.app.min.js"></script>-->
+    <!-- <script src="js/girder_connector.js"></script> -->
+
+
+   
+</head>
+
+<body>
+    <!-- begin template -->
+    <div class="container">
+        <!-- Static navbar -->
+        <nav class="navbar navbar-default navbar-fixed-top  ">
+            <div class="container-fluid">
+                <div class="navbar-header navbar-custom" style="padding-left:5px;padding-right:5px">
+                    <a class="navbar-brand" href="#" style="color:blue">ISIC MultiViewer</a>
+                </div>
+                <div id="navbar" class="navbar-collapse collapse">
+                    <ul class="nav navbar-nav">
+                        <li class="active"><a a href="http://isic-archive.com">Home</a></li>
+                        <li><a href="#">About</a></li>
+                        </li>
+                    </ul>
+                    <div class="navbar-right ">
+                        <span class="navbar-right right-side-button navbar-btn btn-sm">Overlay Opacity: <input id="opacity_slider" data-slider-id='op_slider' type="text" data-slider-min="0" data-slider-max="1" data-slider-step="0.05" data-slider-value="0.5"/></span>
+                        <button id="tile_toggle" class="btn btn-default navbar-right navbar-btn btn-sm ">Hide Overlays</button>
+                        <button class="btn btn-sm navbar-btn" id="login">Login</button>
+                        <button class="btn btn-sm navbar-btn" id="register">Register</button>
+                        <label class="hidden" id="name"></label>
+                        <button class="btn  hidden" id="logout">Logout</button>
+                        <button id="tile_toggle" class="btn btn-default navbar-right navbar-btn btn-sm ">Hide Overlays</button>
+                        <button id="tile_button" class="btn  btn-default navbar-right  navbar-btn btn-sm ">Show superpixels</button>
+                        <button id="tile_boundaries" class="btn btn-default navbar-right navbar-btn btn-sm">Lsn Boundaries</button>
+                        <button id="show_magic" class="btn btn-default navbar-right navbar-btn btn-sm"> Filters</button>
+                    </div>
+                </div>
+                <!--/.nav-collapse -->
+            </div>
+            <!--/.container-fluid -->
+    </div>
+    <!-- Need to cleanup class assignment for these buttons... this seems redundant -->
+    </nav>
+    <div class="container-fluid" id="main">
+        <div class="row inforow">
+            <div class="col-md-3 vcenter">
+                <p class="text-center">
+                    <h3>Data Set<select id="data_source_dd"></select></h3>
+                </p>
+            </div>
+            <div class="col-md-3 vcenter">
+                <p class="text-center" style="vertical-align:middle">
+                    <b>Image List</b>
+                    <select id='image_list_dd' style="width: 50%"></select>
+                </p>
+            </div>
+            <div class="col-md-3 vcenter">
+                <p>
+                    <span id="feature_info_stats" class=""></span>
+                    <span id="tile_info_stats" class=""></span>
+                </p>
+            </div>
+            <div class="col-md-3 vcenter">
+                <p class="text-center">
+                    <h3>Cur Feature</h3>
+                </p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-4" id="left">
+                <!-- <div id="slider" width="300px !important"></div> -->
+                <div class="panel panel-default">
+                    <div class="panel-heading" align="center">Please select the raters to overlay</div>
+                    <div id="rater_info">
+                        <div id="tile_opacity"></div>
+                        <span id="displayed_data_info" class="h6">
+                        <ul id="rater_color_list"></ul>
+                        </span>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <!-- <div class="panel-heading" align="center"><b>Feature Selector</b></div>-->
+                    <!--<div id="feature_btn_group" class="btn-group btn-group-single featurebtns_wrapper" data-toggle="buttons-radio"></div>-->
+                    <!--<div id="feature_btn_group" class="featurebtns_wrapper" data-toggle="buttons-radio"></div>-->
+                    <div id="feature_accordion"></div>
+                </div>
+                <div id="curimg_feats"></div>
+                <!-- I am debating creating a second set of buttons listing what's in the current image? -->
+            </div>
+            <div class="col-xs-8">
+                <div id="openseadragon1" style="width: 100%; height: 600px; border: 1px solid blue" class="openseadragon"></div>
+            </div>
+        </div>
+        <!-- end template -->
+        <!-- script references -->
+
+<!-- I should probably have the filter dialog code inject these divs directly -->
+<div id="filter_dialog" title="Apply Filters">
+    Filter set will appear here
+</div>
+ <div class="modal fade" id="dialog-container"></div>
+</body>
+
+</html>
