@@ -1,0 +1,157 @@
+<style>
+    .right-side-button {
+        float: right;
+        padding-right: 20px;
+        margin-right: 20px;
+    }
+    
+    .panel-heading a:after {
+        font-family: 'Glyphicons Halflings';
+        content: "\e114";
+        float: right;
+        color: grey;
+    }
+    
+    .panel-heading a.collapsed:after {
+        content: "\e080";
+    }
+    /* Overriding radio buttons so I can add some space and curve the borders */
+    
+    .feature_btns {
+        /*border-top-right-radius: 4px !important;
+    border-bottom-right-radius: 4px !important  ;*/
+        border-radius: 4px !important;
+        margin: 2px !important;
+        padding: 2px !important;
+         font-size: 12px !important;
+    }
+    
+    .btn-group-single > .btn:first-child {
+        border-top-right-radius: 4px;
+        border-bottom-right-radius: 4px;
+    }
+    
+    .navbar-brand {
+        color: yellow !important;
+    }
+    /*  .navbar-brand {
+        position: absolute;
+        width: 100%;
+        left: 0;
+        text-align: left;
+        margin: auto;
+    }*/
+    
+    .slider-selection {
+        background: #BABABA;
+    }
+    
+    #opacity_slider .slider-selection {
+        background: #BABABA;
+    }
+    
+    .rtr {
+        padding: 10px;
+        margin: 10px;
+    }
+    
+    .featurebtns-example {
+        margin: 2px !important;
+        margin-bottom: 2px !important;
+        padding: 2px !important;
+    }
+    
+    .button-panel {
+        margin: 2px !important;
+        margin-bottom: 2px !important;
+        padding: 2px !important;
+    }
+
+.navbar-custom { color: #0000FF; background-color: #0000FF; }
+
+
+ 
+    .vcenter {
+        display: inline-block;
+        vertical-align: middle;
+        float: none;
+    }
+    
+    .right-side-button {
+        float: right;
+        padding-right: 20px;
+        margin-right: 20px;
+    }
+    
+    .panel-heading a:after {
+        font-family: 'Glyphicons Halflings';
+        content: "\e114";
+        float: right;
+        color: grey;
+    }
+    
+    .panel-heading a.collapsed:after {
+        content: "\e080";
+    }
+    /* Overriding radio buttons so I can add some space and curve the borders */
+    
+    .feature_btns {
+        /*border-top-right-radius: 4px !important;
+    border-bottom-right-radius: 4px !important  ;*/
+        border-radius: 4px !important;
+        margin: 2px !important;
+        padding: 2px !important;
+    }
+    
+    .btn-group-single > .btn:first-child {
+        border-top-right-radius: 4px;
+        border-bottom-right-radius: 4px;
+    }
+    
+    .navbar-brand {
+        color: yellow !important;
+    }
+    /*  .navbar-brand {
+        position: absolute;
+        width: 100%;
+        left: 0;
+        text-align: left;
+        margin: auto;
+    }*/
+    
+    .slider-selection {
+        background: #BABABA;
+    }
+    
+    #opacity_slider .slider-selection {
+        background: #BABABA;
+    }
+    
+    .rtr {
+        padding: 10px;
+        margin: 10px;
+    }
+    
+    .featurebtns-example {
+        margin: 2px !important;
+        margin-bottom: 2px !important;
+        padding: 2px !important;
+    }
+    
+    .button-panel {
+        margin: 2px !important;
+        margin-bottom: 2px !important;
+        padding: 2px !important;
+    }
+    
+    .navbar-custom {
+        color: #0000FF;
+        background-color: #0000FF;
+    }
+    
+    .inforow {
+        height: 60px;
+    }
+    
+
+    </style>
