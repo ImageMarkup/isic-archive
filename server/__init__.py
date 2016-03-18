@@ -69,6 +69,8 @@ def load(info):
         pass
     info['serverRoot'].uda = Root()
 
+    info['serverRoot'].uda.multirater = staticFile(os.path.join(info['pluginRootDir'], 'custom', 'multirater.html'))
+
     # "/uda/gallery" -> returns a single page gallery
     info['serverRoot'].uda.gallery = staticFile(os.path.join(info['pluginRootDir'], 'custom', 'gallery.html'))
 
