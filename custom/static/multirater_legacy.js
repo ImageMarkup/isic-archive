@@ -51,7 +51,7 @@ $(document).ready(function() {
 
  dg_viewer = OpenSeadragon({
     id: "openseadragon1",
-    prefixUrl: "images/openseadragon-bin-2.0.0/images/",
+    prefixUrl: "/static/built/plugins/isic_archive/extra/bower_components/openseadragon/built-openseadragon/openseadragon/images/",
     showNavigator: true
 });
 
