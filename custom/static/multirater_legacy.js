@@ -35,7 +35,7 @@ var feature_groups = [{
     'feature_group': 'ImageSpecific',
     'feature_abbrev': 'THISSTRINGWILLNEVERMATCH'
 
-}]
+}];
 
 var new_geodata;
 var my_data = {};
@@ -43,7 +43,7 @@ var my_data = {};
 var dg_viewer;
 
 var OpacitySlider;
-var study_url = 'https://isic-archive.com/api/v1/study'
+var study_url = 'https://isic-archive.com/api/v1/study';
 
 $(document).ready(function() {
 
@@ -52,7 +52,7 @@ $(document).ready(function() {
  dg_viewer = OpenSeadragon({
     id: "openseadragon1",
     prefixUrl: "images/openseadragon-bin-2.0.0/images/",
-    showNavigator: true,
+    showNavigator: true
 });
 
 svg_layer = dg_viewer.svgOverlay(); //need to move to onload handler
@@ -61,7 +61,7 @@ svg_layer = dg_viewer.svgOverlay(); //need to move to onload handler
     OpacitySlider = $('#opacity_slider').bootstrapSlider({}); //I can set these options at run time
     OpacitySlider.change(function(val) {
         new_slider_value = val.value.newValue;
-        console.log('new slider value is' + new_slider_value)
+        console.log('new slider value is' + new_slider_value);
         $(".tileClass").attr('opacity', new_slider_value);
     });
     //TODO:  Should be able to set the change function in the slider constructor.. not sure of the syntax
@@ -162,7 +162,7 @@ function update_rater_overlays(imageName) {
     new_mark_superpixels();
 }
 
-//COME HERE LATER--- ADD SOME FUNCTION THAT RUNS ON DOCUMENT COMPLETION THAT LOADS THE IMAGE FOR THE VIEWER AND 
+//COME HERE LATER--- ADD SOME FUNCTION THAT RUNS ON DOCUMENT COMPLETION THAT LOADS THE IMAGE FOR THE VIEWER AND
 //THE PROPER OVERLAY
 
 //need to add a callback function to this as well... hmm so want to load the geodata than push it to the SVG

@@ -29,7 +29,7 @@ function loadSVGTileData(imageName) {
                 $.each(result, function(i, contour) {
                     geo_array.push(JSON.parse(contour))
                 });
-                //GEO ARRAY IS NOW generated with contours... so can call another function to generate an SVG layer a well // 
+                //GEO ARRAY IS NOW generated with contours... so can call another function to generate an SVG layer a well //
             }
         });
 
@@ -41,8 +41,6 @@ function loadSVGTileData(imageName) {
     $(".tileClass").remove();
 
     my_points = contourdata_to_shape(new_geodata, img_width);
-
-
 
     //This generates the pretty multicolor tile image
     $.each(my_points, function(k, point_list) {
@@ -85,9 +83,9 @@ function new_mark_superpixels(sp_info) {
 
             if (raters_for_tile.length == 1) {
                 //In this case the tile is colored for the individual rater.... otherwise it's a color palette
-                //Currently I am going 
+                //Currently I am going
                 //var a = fruits.indexOf("Apple");
-                rater_index = raters.indexOf(raters_for_tile[0])
+                rater_index = raters.indexOf(raters_for_tile[0]);
                     // console.log(raters_for_tile,rater_index)
 
                 $("#tile" + tileID).css('fill', colours[rater_index]);
@@ -98,7 +96,6 @@ function new_mark_superpixels(sp_info) {
         }
 
     });
-
 
     $(".tileClass").hover(function() {
         //  console.log(this.id);
@@ -113,19 +110,17 @@ function new_mark_superpixels(sp_info) {
         pix_raters = superpixel_markup_info[current_feature][tile_num];
         //remember this may contain ALL raters who assessed this feature, so need to make sure there's not a "0.0" there which means that rater
         //didn't actually mark that specific superpixel with the given feature
-        rft = []
+        rft = [];
         $.each(pix_raters, function(k, v) {
                 if (v != '0.0') {
                     rft.push(k);
                 }
-            })
+            });
             //console.log(rft);
         $("#tile_info_stats").append("<br>Raters: " + JSON.stringify(rft));
-
-
     });
 
-};
+}
 
 
 function lesionboundary_to_svgshape( lesionBoundary_Dict, img_width)
@@ -149,7 +144,7 @@ function lesionboundary_to_svgshape( lesionBoundary_Dict, img_width)
          $.each(coord_info, function(k, v) {
                  console.log(k,v[0],v[1]);
                  coord_string += `${(v[0]* x_scale_factor ) },${ ( v[1] * y_scale_factor) } `;
-             }) // the |0 made them all integers
+             }); // the |0 made them all integers
          console.log(coord_string);
        // polygon_svg_str = `<polygon points="${coord_string}" style="fill:${colours[ random(9)]};stroke;purple;stroke-width:1;opacity:0.5" id="boundary0" class="boundaryClass" />`;
     //     labelindex = contour.properties.labelindex;
@@ -180,9 +175,9 @@ function contourdata_to_shape(contours, img_width) {
         coord_string = "";
         $.each(coord_info, function(k, v) {
                 coord_string += `${(v[0]* x_scale_factor ) },${ ( v[1] * y_scale_factor) } `;
-            }) // the |0 made them all integers
+            }); // the |0 made them all integers
 
-        polygon_svg_str = `<polygon points="${coord_string}" style="fill:${colours[ random(9)]};stroke;purple;stroke-width:1;opacity:0.5" id="tile${contour.properties.labelindex}" class="tileClass" />`;
+        polygon_svg_str = `<polygon points="${coord_string}" style="fill: ${colours[ random(9)]}; stroke; purple; stroke-width: 1; opacity: 0.5;" id="tile${contour.properties.labelindex}" class="tileClass" />`;
         labelindex = contour.properties.labelindex;
 
         polygon_list.push({
@@ -227,16 +222,16 @@ function load_image_list(study_uid) {
         //TO DO:  Load the image data now??
         ///Need to remember to first clear the image list
         //Now I need to iterate through each item and add it to the image list...
-        first_imageuid = ''
+        first_imageuid = '';
 
         $("#image_list_dd").empty();
         $.each(new_img_list, function(k, v) {
-            if (k == 0) {
+            if (k === 0) {
                 first_imageuid = v['_id']
-            };
+            }
             var new_img = `<option id="${v['_id']}" value="${v['_id']}">${v['name']}</option>`;
             $("#image_list_dd").append(new_img);
-        })
+        });
         $("#image_list_dd").select2(); //Reinitialize the dynamic search widget
 
         //console.log('should be trying to load', first_imageuid);
@@ -258,14 +253,14 @@ function load_avail_studies() {
         //Also now load the feature button by iterating through them
         $.each(avail_studies, function(k, v) {
                 //      console.log(v,k);
-                if (k == 0) {
+                if (k === 0) {
                     first_studyid = v['_id']
-                };
+                }
 
-                dtoa = '<option id="' + v['_id'] + '" value="' + v['_id'] + '">' + v.name + '</option>'
+                dtoa = '<option id="' + v['_id'] + '" value="' + v['_id'] + '">' + v.name + '</option>';
                 $("#data_source_dd").append(dtoa);
                 avail_studies_dict[v.name] = v;
-            })
+            });
             //Now that I have a list of all available studies, I can go ahead and populate the image list
             //This should use the function I defined above..
         load_image_list(first_studyid);
@@ -281,7 +276,7 @@ function load_feature_list(cur_study_uid) {
     //AJAX Call to hit the API EndPoint and get the list of features for the given project and/or Image
     //I think to make the UI cleaner and so the buttons don't move around, we will load all of the buttons associated
     //with a project...
-    avail_features = []
+    avail_features = [];
         //I need to determine the featureset uid for this study
     $.each(avail_studies, function(i, v) {
         console.log(i, v);
@@ -289,14 +284,14 @@ function load_feature_list(cur_study_uid) {
         if (v['_id'] == cur_study_uid) {
             featureset_uid = v.meta.featuresetId;
         } //Probably should do a break here??
-    })
+    });
 
     $.getJSON('https://isic-archive.com/api/v1/featureset/' + featureset_uid, function(data) {
-        console.log(data)
+        console.log(data);
         avail_features = data['region_features'];
         //I am going to disable buttons on the feature list if that feature isn't present in the currnet image...
         console.log("newly available features are");
-        console.log(avail_features)
+        console.log(avail_features);
             //Probably put the code to create the widget her eas well?
         current_feature_set = avail_features;
         create_featurelist_widget(current_feature_set, feature_groups, 'feature_accordion');
@@ -309,7 +304,7 @@ function create_featurelist_widget(full_feature_set, feature_grouping, widget_di
     //which also serves as the name of the individual accordion piece
     //Clear the current widget
     if (  $("#"+widget_div).accordion('instance') )
-            { $("#"+widget_div).accordion('destroy') };
+            { $("#"+widget_div).accordion('destroy') }
 
     $("#"+widget_div).empty();
 
@@ -333,7 +328,7 @@ function create_featurelist_widget(full_feature_set, feature_grouping, widget_di
                 feat_without_class = feat['id'].replace(cur_grp.feature_abbrev + '_', '');
                 //To save Space I am removing the feature Class i.e. net col oth
                 //TO DO:  Need to figure out/clarify what class I should put this in so it actually displays
-                var rb = `  <button class="feature_btns btn btn-xs" style="font-size:10px" data-toggle="tooltip" data-placement="top" title="${feat['id']}" id="feat_${feat['id']}" value="${feat['id']}" >${feat_without_class}</button>`;
+                var rb = `  <button class="feature_btns btn btn-xs" style="font-size: 10px;" data-toggle="tooltip" data-placement="top" title="${feat['id']}" id="feat_${feat['id']}" value="${feat['id']}" >${feat_without_class}</button>`;
                 button_data_for_cur_grp += rb;
             }
             //Now push the new radio buttons to that div
@@ -364,7 +359,7 @@ function create_featurelist_widget(full_feature_set, feature_grouping, widget_di
         //     //So I need to check the state of the button to either draw or clear a given tile(s) colors for a rater..
         cur_slider_value = OpacitySlider.val();
         cur_opacity = 100;
-        var new_opacity = (cur_opacity == 0) ? cur_slider_value : 0;
+        var new_opacity = (cur_opacity === 0) ? cur_slider_value : 0;
         $('.tileClass').attr('opacity', cur_slider_value);
         new_mark_superpixels();
         //hide_unannotated_features(superpixel_markup_info);
@@ -388,7 +383,7 @@ function get_image_annotation_data(study_id, image_id) {
         avail_annotations = data;
         //I am going to disable buttons on the feature list if that feature isn't present in the currnet image...
         console.log("newly available annotations are");
-        console.log(avail_annotations)
+        console.log(avail_annotations);
 
         ftl = generate_image_annotation_summaries(avail_annotations);
 
@@ -410,10 +405,10 @@ function generate_image_annotation_summaries(image_annotation_data) {
 
     //console.log(image_annotation_data);
     rater_data = []; //This will keep track of the raters that have marked up this particular image...
-    total_tiles = null; //This keeps track of the number of tiles and/or superpixels in the image... 
+    total_tiles = null; //This keeps track of the number of tiles and/or superpixels in the image...
 
     features_seen_in_image = {};
-    tile_data = {}
+    tile_data = {};
         //http://localhost:1234/api/TileInfo/ALL/UDA2_pilot_060  Thsi basically shows me how I created the data...
 
     //Each annotation ahs image features and region features... for now I'll just focus on region features
@@ -430,11 +425,11 @@ function generate_image_annotation_summaries(image_annotation_data) {
                 tiles = rf.length; //may want to add a check and make sure all the tiles are the same length???
             })
         }
-    )
+    );
 
     //Now that i now the features seen in the image, I can create a combined array for each tile.... may want to refactor this at some point
 
-    feature_tilelevel_info = {}
+    feature_tilelevel_info = {};
 
     $.each(Object.keys(features_seen_in_image), function(k, cur_feature) {
         //console.log("Generating compiled data for", cur_feature)
@@ -443,12 +438,12 @@ function generate_image_annotation_summaries(image_annotation_data) {
         //I now need to initialize this so that each tile has an element created
         for (i = 0; i <= tiles; i++) {
             feature_tilelevel_info[cur_feature][i] = {};
-        } //Initialize the dictionary 
+        } //Initialize the dictionary
 
         //Now I need to iterate through each raters annotation...
         $.each(image_annotation_data, function(ak, av) {
             cur_rater = av.user.login;
-            cur_region_data = av.annotations.region_features
+            cur_region_data = av.annotations.region_features;
             if (cur_region_data[cur_feature]) {
                 //So it's possible that this feature might not actually be annotated/available in a given annotation
                 //so this makes sure the key exists..
@@ -460,7 +455,7 @@ function generate_image_annotation_summaries(image_annotation_data) {
 
             }
            // console.log(ak, av);
-        })
+        });
         //console.log(feature_tilelevel_info);
 
     });
@@ -482,7 +477,7 @@ function hide_unannotated_features(superpixel_markup_info) {
     //TODO Need to clean up logic below; for some reason if I reset all the buttons above and then ran the below code, nothing got set
     //Not sure if I was running into a race condition?
 
-    feats_in_cur_image = []
+    feats_in_cur_image = [];
 
     ///Hmm... the feature list.... hm
     //annotated_feature_list = superpixel_markup_info
@@ -518,7 +513,7 @@ function hide_unannotated_features(superpixel_markup_info) {
                 //cur_slider_value = $("#slider").slider("option", "value");
                 cur_opacity = 100;
                 cur_slider_value = OpacitySlider.val();
-                var new_opacity = (cur_opacity == 0) ? cur_slider_value : 0;
+                var new_opacity = (cur_opacity === 0) ? cur_slider_value : 0;
                 $('.tileClass').attr('opacity', new_opacity);
             }
         });
@@ -536,7 +531,7 @@ function get_image_data(image_uid) {
     $.getJSON('https://isic-archive.com/api/v1/image/' + image_uid, function(data) {
         cur_image_metadata = data;
         //Need to pass the image metadata
-        load_new_image_from_api(cur_image_metadata)
+        load_new_image_from_api(cur_image_metadata);
             //Now load the superpixel data..
             //console.log("trying to load superpixel data");
         study_id = $("#data_source_dd").val();
@@ -561,10 +556,10 @@ function get_image_data(image_uid) {
                 'height': 435,
                 'width': 356,
             }]
-        }
+        };
         $(".boundaryClass").remove();
         dg_viewer.clearOverlays();
-        dg_viewer.open(defaultimg_not_avail);;
+        dg_viewer.open(defaultimg_not_avail);
 
     });
 
@@ -576,16 +571,16 @@ function load_new_image_from_api(image_metadata) {
     $(".tileClass").remove();
     //IMPORTANT ISSUE HERE.. OSD NEEDS TO BE PATCHED OR I NEED THE BELOW HACK WHICH HARD CODES THE .JPG... it wasn't figuring this out on its own
     base_url = `https://isic-archive.com/api/v1/image/${image_metadata['_id']}/`;
-    image_filename_url = base_url + 'download?contentDisposition=inline&.jpg' //Please note this hack, without the .jpg osd couldn't read
+    image_filename_url = base_url + 'download?contentDisposition=inline&.jpg';  //Please note this hack, without the .jpg osd couldn't read
 
     new_tile_source = {
             'type': 'legacy-image-pyramid',
             levels: [{
                 'url': image_filename_url,
                 'height': image_metadata.meta.acquisition.pixelsY,
-                'width': image_metadata.meta.acquisition.pixelsX,
+                'width': image_metadata.meta.acquisition.pixelsX
             }]
-        }
+        };
         //update_rater_overlays(image_name);  <<TO DOO!!!!
     dg_viewer.open(new_tile_source);
 
@@ -611,7 +606,7 @@ function load_rater_list(study_uid) {
     $.each(raters, function(n, v) {
         //$("#rater_color_list").append(`<li><span style="color:${colours[n]}">${v}</span></li>`);
         $("#rater_color_list").append(
-            `<span class="btn btn-default rater_span "><input type='checkbox' class="overlay_toggle" name="${v}" value="${v}" id="show_${v}" class="rater_buttons "><label for="show_${v}" style="color:${colours[n]}">${v}</label></input></span>`);
+            `<span class="btn btn-default rater_span "><input type='checkbox' class="overlay_toggle" name="${v}" value="${v}" id="show_${v}" class="rater_buttons "><label for="show_${v}" style="color: ${colours[n]};">${v}</label></input></span>`);
     });
 
 }
@@ -620,13 +615,13 @@ function load_rater_list(study_uid) {
 
 function get_avail_image_segmentations(image_uid)
   {
-console.log('should be getting segmentations for'+image_uid)
+    console.log('should be getting segmentations for'+image_uid);
     //Now query the segmentation API
-     
+
     segmentation_URL =  'https://isic-archive.com/api/v1/' + '/segmentation?imageId='+image_uid;
     console.log(segmentation_URL);
-    
-    cur_image_segmentations = []
+
+    cur_image_segmentations = [];
 
     $.getJSON(segmentation_URL, function(data) {
         cur_image_segmentations = data;
@@ -634,7 +629,7 @@ console.log('should be getting segmentations for'+image_uid)
         //I now need to get and then render the boundary--- for now I'll just render the first one
         get_segmentation_boundaries(cur_image_segmentations);
     })
-  
+
 }
 
 function get_segmentation_boundaries( img_segmentation_list)
@@ -644,7 +639,7 @@ function get_segmentation_boundaries( img_segmentation_list)
 
         //I will just get the first one...
         segmentation_boundaries_URL =  'https://isic-archive.com/api/v1/segmentation/' + img_segmentation_list[0]['_id'];
-        
+
         lesion_boundary_data = [];
         $.getJSON(segmentation_boundaries_URL, function(data) {
                 lesion_boundary_data = data;
@@ -655,9 +650,8 @@ function get_segmentation_boundaries( img_segmentation_list)
                 //the geometry now contains the info I need to render it...
                 lesionboundary_to_svgshape( lesion_boundary_data, dg_viewer.viewport.contentSize.x);
 
+                //DAMN IT--- these x,y coordinates are taken from the original image, not the cropped image I think
 
-                    //DAMN IT--- these x,y coordinates are taken from the original image, not the cropped image I think
-             
         });
 
     }
@@ -669,7 +663,7 @@ function get_segmentation_superpixels( img_segmentation_list)
 
         //I will just get the first one...
         segmentation_boundaries_URL =  'https://isic-archive.com/api/v1/segmentation/' + img_segmentation_list[0]['_id'];
-        console.log(img_segmentation_list[0])
+        console.log(img_segmentation_list[0]);
         lesion_boundary_data = [];
         $.getJSON(segmentation_boundaries_URL, function(data) {
                 lesion_boundary_data = data;
@@ -682,10 +676,7 @@ function get_segmentation_superpixels( img_segmentation_list)
 
 
                     //DAMN IT--- these x,y coordinates are taken from the original image, not the cropped image I think
-             
+
         });
 
     }
-
-
-
