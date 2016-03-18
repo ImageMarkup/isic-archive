@@ -26,10 +26,6 @@
     }
 
 
-
-
-
-
 color_filter_html = `<div id="filter_dialog" title="Apply Filters">
         Filter set will appear here
         <div style="width:200px">contrast (<a href=# onclick="$('#set_contrast').val(100);
@@ -88,7 +84,6 @@ color_filter_html = `<div id="filter_dialog" title="Apply Filters">
         <br>
     </div>`
 
-
 svg_color_filters = `<filter id="colorMeMatrix">
     <feColorMatrix in="SourceGraphic"
       type="matrix"
@@ -97,9 +92,3 @@ svg_color_filters = `<filter id="colorMeMatrix">
               0 0 0 0 0
               0 0 0 1 0" />
   </filter>`;
-
-
-
-
-
-
