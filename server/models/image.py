@@ -1,15 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import collections
 import datetime
-import os
 import six
 
 import geojson
-from requests.packages.urllib3.util import Url
 
-from girder.api.rest import getUrlParts
 from girder.constants import AccessType
 from girder.models.model_base import AccessException, GirderException
 from girder.models.item import Item
@@ -80,37 +76,6 @@ class Image(Item):
         # Scikit-Image is ~70ms faster at loading images
         image_data = ScikitSegmentationHelper.loadImage(image_file_stream)
         return image_data
-
-
-    def multiresolutionFile(self, image):
-        return self.model('file').findOne({
-            'itemId': image['_id'],
-            'name': image['meta']['convertedFilename']
-        })
-
-
-    def tileServerURL(self, image, width=None):
-        image_file = self.multiresolutionFile(image)
-        assetstore = self.model('assetstore').load(image_file['assetstoreId'])
-        file_path = os.path.join(assetstore['root'], image_file['path'])
-
-        # the ordering of query string parameters to IIP critically matters
-        query_params = collections.OrderedDict()
-        query_params['FIF'] = file_path
-        if width:
-            query_params['WID'] = width
-        query_params['CVT'] = 'jpeg'
-
-        # TODO: this won't work if the server's DNS doesn't know its own canonical hostname
-        current_location = getUrlParts()
-        url = Url(
-            scheme=current_location.scheme,
-            host=current_location.netloc,
-            port=None,
-            path='/fcgi-bin/iipsrv.fcgi',
-            query='&'.join('%s=%s' % item for item in query_params.viewitems())
-        )
-        return url.url
 
 
     def flag(self, image, reason, user):
