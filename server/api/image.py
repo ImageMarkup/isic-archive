@@ -73,16 +73,13 @@ class ImageResource(Resource):
     @access.public
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def thumbnail(self, image, params):
-        # TODO: fix width to be used
         width = int(params.get('width', 256))
 
-        tileData, tileMime = self.model('image_item', 'large_image').getTile(
-            image, 0, 0, 0
-        )
-        # TODO: crop padding from tileData
+        thumbData, thumbMime = self.model('image_item', 'large_image')\
+            .getThumbnail(image, width=width)
 
-        cherrypy.response.headers['Content-Type'] = tileMime
-        return lambda: tileData
+        cherrypy.response.headers['Content-Type'] = thumbMime
+        return lambda: thumbData
 
 
     @describeRoute(

@@ -11,7 +11,7 @@
   git:
     repo: "https://github.com/DigitalSlideArchive/large_image.git"
     dest: "{{ large_image_path }}"
-    version: aa10cfbe971335e37896490708ffd1f693cc72bc
+    version: 0f463be3ea90a2bda08b80fab51eadbc42706bc2
     update: no
     force: yes
   notify: Build Girder
