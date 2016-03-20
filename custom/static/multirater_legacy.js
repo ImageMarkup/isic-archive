@@ -132,7 +132,7 @@ svg_layer = dg_viewer.svgOverlay(); //need to move to onload handler
         $('[data-toggle="tooltip"]').tooltip()
     })
 
-    $("#image_list_dd").select2();
+    $("#image_list_dd").select2({'width':200});
     //end of READY function
 
     //Load the feature set... so this is based on the data that's stores in avail_studies; may want to consider making this a dict

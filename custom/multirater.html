@@ -59,14 +59,14 @@
                     <!-- This is a hack-- not sure why bootstrap is overwriting these top two lines...-->
                     <br>
                     <h3>Data Set<select id="data_source_dd"></select></h3>
-                    <h3>Image List <select id='image_list_dd'></select> </h3>
+                    <span><b>Image List:</b> <select id='image_list_dd' ></select> </span>
                     <div id="rater_info"></div>
                 </p>
                 <span id="feature_info_stats" class=""></span>
                 <span id="tile_info_stats" class=""></span>
                 </p>
-                <div class="panel panel-default">
-                    <div class="panel-heading" align="center">Please select the raters to overlay</div>
+                
+                <div class="panel panel-default"> <!-- Figure out proper class for this-->
                     <ul id="rater_color_list"></ul>
                 </div>
                 <div id="feature_accordion"></div>
@@ -74,7 +74,7 @@
                     <div id="feature_info_stats" class="col-xs-4"></div>
                     <div id="tile_info_stats" class="col-xs-4"></div>
                     <div id="rater_info_stats" class="col-xs-4"></div>
-                    <div id="tile_opacity" style="display:none"></div>
+                    <div id="tile_opacity" ></div>
                     <div id="curimg_feats"></div>
                     <div id="filter_dialog" title="Apply Filters">
                         Filter set will appear here

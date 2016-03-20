@@ -4,13 +4,162 @@ function random(range) {
     return Math.floor(Math.random() * range);
 }
 
+/* Reorganizing these functions slightly to try and place them in the order they are called*/
 
-//sample images uda2pilot isic_0001135
+var remote_api_url = 'https://isic-archive.com/api/v1/'
+var local_api_url = '/api/v1/'
 
-//54e771eabae47850e86ce39d   this is a segmentation... probably need supserpixels as well...
-//"imageId": "54e755ffbae47850e86ce076",
+var api_url = remote_api_url;  ///Change this depending on if ur using local devel or want to use the remote api.
 
 
+function load_avail_studies() {
+    //This requires no parameters ; this gets the available study data
+    first_studyid = ''; //Will keep track of the first_studyid and once the data is loaded, load the image set associated with it
+
+    $.getJSON(study_url, function(data) {
+        avail_studies = data;
+        //I am going to disable buttons on the feature list if that feature isn't present in the currnet image...
+        //Also now load the feature button by iterating through them
+        $.each(avail_studies, function(k, v) {
+                if (k === 0)  first_studyid = v['_id'];
+                dtoa = '<option id="' + v['_id'] + '" value="' + v['_id'] + '">' + v.name + '</option>';
+                $("#data_source_dd").append(dtoa);
+                avail_studies_dict[v.name] = v;
+            });
+            //Now that I have a list of all available studies, I can go ahead and populate the image list
+            //This should use the function I defined above..
+        load_image_list(first_studyid);
+        load_feature_list(first_studyid); //This will populate the feature widget..
+        load_rater_list(first_studyid); //I think this is another endpoint...
+        return (avail_studies);
+    });
+}
+
+//Once a data set is loaded, I need to load the associated images and features
+function load_image_list(study_uid) {
+    var get_img_list_url = api_url+ 'study/' + study_uid + '/images/';
+
+    $.getJSON(get_img_list_url, function(data) {
+        new_img_list = data;
+        //This currently returns an _id and a name _id: "54e77f6fbae478166c01e546"  name: "ISIC_0001160"
+        //Now I need to iterate through each item and add it to the image list...
+        first_imageuid = '';
+        $("#image_list_dd").empty();
+        $.each(new_img_list, function(k, v) {
+            if (k === 0)  first_imageuid = v['_id'];
+            var new_img = `<option id="${v['_id']}" value="${v['_id']}">${v['name']}</option>`;
+            $("#image_list_dd").append(new_img);
+        });
+        $("#image_list_dd").select2({'width':200}); //Reinitialize the dynamic search widget
+       //So I now need to actually get some metadata for the first image, which then calls another function to load the data..
+        get_image_data(first_imageuid);
+    });
+}
+
+//Load the features for the given study I just select
+function load_feature_list(cur_study_uid) {
+    console.log("I just received",cur_study_uid,"for the study uid")
+    //AJAX Call to hit the API EndPoint and get the list of features for the given project and/or Image
+    //I think to make the UI cleaner and so the buttons don't move around, we will load all of the buttons associated
+    //with a project...
+    avail_features = [];
+        //I need to determine the featureset uid for this study
+        //The avail_studies is an array that lists all the metadata for a given study (including the UID)
+        //So I need to loop through it to find the UID for the study that was just selected, 
+        //Once I have that, I need to figure out the FEATURESET Uid 
+    $.each(avail_studies, function(i, v) {
+        ///console.log(i, v);
+        //console.log(v.meta.featuresetId);
+        if (v['_id'] == cur_study_uid) {
+            featureset_uid = v.meta.featuresetId;
+        } //Probably should do a break here?? Don't really need to continue the for statement
+    });
+
+    $.getJSON(api_url+ 'featureset/' + featureset_uid, function(data) {
+        console.log(data);
+        avail_features = data['region_features'];
+        //I am going to disable buttons on the feature list if that feature isn't present in the currnet image...
+        current_feature_set = avail_features;  //I am making this a global variable for now, may not be necessary long term
+        create_featurelist_widget(current_feature_set, feature_groups, 'feature_accordion');
+    });
+}
+
+
+//This will actually create the widget of buttons associated with a set of features
+//This creates an accordion, and will group the buttons based on a "top leavel" feature which also serves as the name of the
+// individual accordion piece;  the names/features should change each time I change data sets as a dataset i.e. a specific
+// study should be associated with a specific feature set
+    
+
+function create_featurelist_widget(full_feature_set, feature_grouping, widget_div) {
+    //Clear the current widget
+    if (  $("#"+widget_div).accordion('instance') ) $("#"+widget_div).accordion('destroy');
+
+    $("#"+widget_div).empty();
+
+
+    $.each(feature_grouping, function(idx, cur_grp) {
+        //So this actually creates the Top Level labels for the accordion widget, buttons need to be added after these are craetd
+        console.log(idx, cur_grp);
+        //First thing I need to do is create an h3 (or h4 ) tag for the group
+        $("#" + widget_div).append(` <h4>${cur_grp['feature_group']}</h4><div id="featbtn_${cur_grp['feature_group']}"></div>`);
+        //Now I need to figure out which buttons to add to this feature
+        //TO DO:  REMEMBER F THE FEATURE GROUP HAS A SPACE... JAVASCRIPT WILL EXPLODE
+
+        button_data_for_cur_grp = [];
+        $.each(full_feature_set, function(idx, feat) {
+            //print "Should be lookining for";
+            //console.log( cur_grp.feature_abbrev,feat);
+            //  console.log(feat);
+
+            //There are noew properties now... need to see if i should look at the check box features or other properties
+            if (feat['id'].startsWith(cur_grp.feature_abbrev)) {
+                feat_without_class = feat['id'].replace(cur_grp.feature_abbrev + '_', '');
+                //To save Space I am removing the feature Class i.e. net col oth
+                //TO DO:  Need to figure out/clarify what class I should put this in so it actually displays
+                var rb = `  <button class="feature_btns btn btn-xs" style="font-size: 10px;" data-toggle="tooltip" data-placement="top" title="${feat['id']}" id="feat_${feat['id']}" value="${feat['id']}" >${feat_without_class}</button>`;
+                button_data_for_cur_grp += rb;
+            }
+            //Now push the new radio buttons to that div
+        });
+        $("#featbtn_" + cur_grp['feature_group']).append(button_data_for_cur_grp);
+
+    });
+    $("#" + widget_div).accordion({
+        collapsible: true
+    });
+    //The accordion has now been created, add click handlers to the buttons
+    // annotated_feature_list = avail_features;
+
+
+    annotated_feature_list = avail_features;
+
+    $("#feature_accordion button").click(function() {
+        console.log(this.id); // points to the clicked input button
+        current_feature = this.value;
+        $("#feature_info_stats").empty();
+        //ALSO ADDI N SOME STATS TO INDICATE HOW MANY TILES WERE MARKED FOR THIS FEATURE...
+        cfd = superpixel_markup_info[current_feature]; //Current Feature data
+        if (!cfd) {
+            $("#feature_info_stats").append("Feature " + current_feature + " NOT in this image");
+        } else {
+            $("#feature_info_stats").append("Feature" + current_feature + " present");
+        }
+        //     //So I need to check the state of the button to either draw or clear a given tile(s) colors for a rater..
+        cur_slider_value = OpacitySlider.val();
+        cur_opacity = 100;
+        var new_opacity = (cur_opacity === 0) ? cur_slider_value : 0;
+        $('.tileClass').attr('opacity', cur_slider_value);
+        new_mark_superpixels();
+        //hide_unannotated_features(superpixel_markup_info);
+    });
+}
+
+
+//After I have the features and list of images, I need to load data relevant to the current image being displayed
+//Basically get the list of annotations, segmentations and metadata for that object
+
+    
 function loadSVGTileData(imageName) {
     console.log('need to load svg data for' + imageName);
     SVG_file = image_info_list[imageName].superpixel_svg;
@@ -212,159 +361,8 @@ function show_all_tiles() {
     });
 }
 
-function load_image_list(study_uid) {
-
-    var get_img_list_url = 'https://isic-archive.com/api/v1/study/' + study_uid + '/images/';
-
-    $.getJSON(get_img_list_url, function(data) {
-        new_img_list = data;
-        //This currently returns an _id and a name _id: "54e77f6fbae478166c01e546"  name: "ISIC_0001160"
-        //TO DO:  Load the image data now??
-        ///Need to remember to first clear the image list
-        //Now I need to iterate through each item and add it to the image list...
-        first_imageuid = '';
-
-        $("#image_list_dd").empty();
-        $.each(new_img_list, function(k, v) {
-            if (k === 0) {
-                first_imageuid = v['_id']
-            }
-            var new_img = `<option id="${v['_id']}" value="${v['_id']}">${v['name']}</option>`;
-            $("#image_list_dd").append(new_img);
-        });
-        $("#image_list_dd").select2(); //Reinitialize the dynamic search widget
-
-        //console.log('should be trying to load', first_imageuid);
-       //So I now need to actually get some metadata for the first image, which then calls another function to load the data..
-        get_image_data(first_imageuid);
-
-    });
-
-}
-
-function load_avail_studies() {
-    //This requires no parameters ; this gets the available study data
-    first_studyid = ''; //Will keep track of the first_studyid and once the data is loaded, load the image set associated with it
-
-    $.getJSON(study_url, function(data) {
-        avail_studies = data;
-        //I am going to disable buttons on the feature list if that feature isn't present in the currnet image...
-        //console.log(avail_studies)
-        //Also now load the feature button by iterating through them
-        $.each(avail_studies, function(k, v) {
-                //      console.log(v,k);
-                if (k === 0) {
-                    first_studyid = v['_id']
-                }
-
-                dtoa = '<option id="' + v['_id'] + '" value="' + v['_id'] + '">' + v.name + '</option>';
-                $("#data_source_dd").append(dtoa);
-                avail_studies_dict[v.name] = v;
-            });
-            //Now that I have a list of all available studies, I can go ahead and populate the image list
-            //This should use the function I defined above..
-        load_image_list(first_studyid);
-        //console.log
-        load_feature_list(first_studyid); //This will populate the feature widget..
-        load_rater_list(first_studyid); //I think this is another endpoint...
-        return (avail_studies);
-    });
-}
 
 
-function load_feature_list(cur_study_uid) {
-    //AJAX Call to hit the API EndPoint and get the list of features for the given project and/or Image
-    //I think to make the UI cleaner and so the buttons don't move around, we will load all of the buttons associated
-    //with a project...
-    avail_features = [];
-        //I need to determine the featureset uid for this study
-    $.each(avail_studies, function(i, v) {
-        console.log(i, v);
-        console.log(v.meta.featuresetId);
-        if (v['_id'] == cur_study_uid) {
-            featureset_uid = v.meta.featuresetId;
-        } //Probably should do a break here??
-    });
-
-    $.getJSON('https://isic-archive.com/api/v1/featureset/' + featureset_uid, function(data) {
-        console.log(data);
-        avail_features = data['region_features'];
-        //I am going to disable buttons on the feature list if that feature isn't present in the currnet image...
-        console.log("newly available features are");
-        console.log(avail_features);
-            //Probably put the code to create the widget her eas well?
-        current_feature_set = avail_features;
-        create_featurelist_widget(current_feature_set, feature_groups, 'feature_accordion');
-    });
-}
-
-function create_featurelist_widget(full_feature_set, feature_grouping, widget_div) {
-    //This will actually create the widget of buttons associated with a set of features
-    //This creates an accordion, and will group the buttons based on a "top leavel" feature
-    //which also serves as the name of the individual accordion piece
-    //Clear the current widget
-    if (  $("#"+widget_div).accordion('instance') )
-            { $("#"+widget_div).accordion('destroy') }
-
-    $("#"+widget_div).empty();
-
-
-    $.each(feature_grouping, function(idx, cur_grp) {
-        //So this actually creates the Top Level labels for the accordion widget, buttons need to be added after these are craetd
-        console.log(idx, cur_grp);
-        //First thing I need to do is create an h3 (or h4 ) tag for the group
-        $("#" + widget_div).append(` <h4>${cur_grp['feature_group']}</h4><div id="featbtn_${cur_grp['feature_group']}"></div>`);
-        //Now I need to figure out which buttons to add to this feature
-        //TO DO:  REMEMBER F THE FEATURE GROUP HAS A SPACE... JAVASCRIPT WILL EXPLODE
-
-        button_data_for_cur_grp = [];
-        $.each(full_feature_set, function(idx, feat) {
-            //print "Should be lookining for";
-            //console.log( cur_grp.feature_abbrev,feat);
-            //  console.log(feat);
-
-            //There are noew properties now... need to see if i should look at the check box features or other properties
-            if (feat['id'].startsWith(cur_grp.feature_abbrev)) {
-                feat_without_class = feat['id'].replace(cur_grp.feature_abbrev + '_', '');
-                //To save Space I am removing the feature Class i.e. net col oth
-                //TO DO:  Need to figure out/clarify what class I should put this in so it actually displays
-                var rb = `  <button class="feature_btns btn btn-xs" style="font-size: 10px;" data-toggle="tooltip" data-placement="top" title="${feat['id']}" id="feat_${feat['id']}" value="${feat['id']}" >${feat_without_class}</button>`;
-                button_data_for_cur_grp += rb;
-            }
-            //Now push the new radio buttons to that div
-        });
-        $("#featbtn_" + cur_grp['feature_group']).append(button_data_for_cur_grp);
-
-    });
-    $("#" + widget_div).accordion({
-        collapsible: true
-    });
-    //The accordion has now been created, add click handlers to the buttons
-    // annotated_feature_list = avail_features;
-
-
-    annotated_feature_list = avail_features;
-
-    $("#feature_accordion button").click(function() {
-        console.log(this.id); // points to the clicked input button
-        current_feature = this.value;
-        $("#feature_info_stats").empty();
-        //ALSO ADDI N SOME STATS TO INDICATE HOW MANY TILES WERE MARKED FOR THIS FEATURE...
-        cfd = superpixel_markup_info[current_feature]; //Current Feature data
-        if (!cfd) {
-            $("#feature_info_stats").append("Feature " + current_feature + " NOT in this image");
-        } else {
-            $("#feature_info_stats").append("Feature" + current_feature + " present");
-        }
-        //     //So I need to check the state of the button to either draw or clear a given tile(s) colors for a rater..
-        cur_slider_value = OpacitySlider.val();
-        cur_opacity = 100;
-        var new_opacity = (cur_opacity === 0) ? cur_slider_value : 0;
-        $('.tileClass').attr('opacity', cur_slider_value);
-        new_mark_superpixels();
-        //hide_unannotated_features(superpixel_markup_info);
-    });
-}
 
 
 function get_image_annotation_data(study_id, image_id) {
@@ -604,13 +602,13 @@ function load_rater_list(study_uid) {
 
     raters = ['braunr', 'haroldr', 'carrerac', 'marghooa']; //TO REMOVE ONCE I CAN LOAD THESE THINGS
     $.each(raters, function(n, v) {
-        //$("#rater_color_list").append(`<li><span style="color:${colours[n]}">${v}</span></li>`);
+        //TO DO:  FIX ECMA SCRIPT AND ALSO FIGURE OUT PROPER BUTTON WIDGET FOR THIS
         $("#rater_color_list").append(
-            `<span class="btn btn-default rater_span "><input type='checkbox' class="overlay_toggle" name="${v}" value="${v}" id="show_${v}" class="rater_buttons "><label for="show_${v}" style="color: ${colours[n]};">${v}</label></input></span>`);
+    `<span class="btn btn-default "><label for="show_${v}" style="color:${colours[n]}">${v}</label></span>`);
+
     });
 
 }
-
 
 
 function get_avail_image_segmentations(image_uid)
