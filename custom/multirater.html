@@ -1,44 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link href="/static/img/Girder_Favicon.png" rel="icon" type="image/png">
-
     <title>ISIC Archive: MultiRater Viewer</title>
     <meta name="description" content="ISIC Archive: MultiRater Viewer">
-
     <!-- jQuery -->
     <script src="/static/built/plugins/isic_archive/extra/bower_components/jquery/dist/jquery.min.js"></script>
-
     <!-- Flatstrap ("Bootstrap without all the extra stuff") -->
     <script src="/static/built/plugins/isic_archive/extra/bower_components/flatstrap/dist/js/bootstrap.min.js"></script>
     <link href="/static/built/plugins/isic_archive/extra/bower_components/flatstrap/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css">
-
     <!-- jQuery UI -->
     <script src="/static/built/plugins/isic_archive/extra/bower_components/jquery-ui/jquery-ui.js"></script>
     <link href="/static/built/plugins/isic_archive/extra/bower_components/jquery-ui/themes/ui-lightness/jquery-ui.css" rel="stylesheet" type="text/css">
-
     <!-- Bootstrap Slider -->
     <script src="/static/built/plugins/isic_archive/extra/bower_components/seiyria-bootstrap-slider/dist/bootstrap-slider.min.js"></script>
     <link href="/static/built/plugins/isic_archive/extra/bower_components/seiyria-bootstrap-slider/dist/css/bootstrap-slider.min.css" rel="stylesheet" type="text/css">
-
     <!-- D3 -->
     <script src="/static/built/plugins/isic_archive/extra/bower_components/d3/d3.min.js"></script>
-
     <!-- OpenSeadragon -->
     <script src="/static/built/plugins/isic_archive/extra/bower_components/openseadragon/built-openseadragon/openseadragon/openseadragon.min.js"></script>
-
     <!-- SVG Overlay for OpenSeadragon -->
-    <script src="/uda/static/svg-overlay/openseadragon-svg-overlay.js"></script>
-
+    <!-- to fix, submodule was not pulling from git pull recurse-submodules -->
+    <script src="/uda/static/openseadragon-svg-overlay.js"></script>
     <!-- Select2 -->
     <script src="/static/built/plugins/isic_archive/extra/bower_components/select2/dist/js/select2.min.js"></script>
     <link href="/static/built/plugins/isic_archive/extra/bower_components/select2/dist/css/select2.min.css" rel="stylesheet" type="text/css">
-
     <script src="/uda/static/osd_filters.js"></script>
     <script src="/uda/static/multirater_legacy.js"></script>
     <script src="/uda/static/multirater.js"></script>
@@ -46,92 +37,57 @@
 </head>
 
 <body>
-    <!-- begin template -->
-    <div class="container">
-        <!-- Static navbar -->
-        <nav class="navbar navbar-default navbar-fixed-top  ">
-            <div class="container-fluid">
-                <div class="navbar-header navbar-custom" style="padding-left: 5px; padding-right: 5px;">
-                    <a class="navbar-brand" href="#" style="color: blue;">ISIC MultiViewer</a>
-                </div>
-                <div id="navbar" class="navbar-collapse collapse">
-                    <ul class="nav navbar-nav">
-                        <li class="active"><a a href="http://isic-archive.com">Home</a></li>
-                        <li><a href="#">About</a></li>
-                    </ul>
-                    <div class="navbar-right ">
-                        <span class="navbar-right right-side-button navbar-btn btn-sm">Overlay Opacity: <input id="opacity_slider" data-slider-id='op_slider' type="text" data-slider-min="0" data-slider-max="1" data-slider-step="0.05" data-slider-value="0.5"/></span>
-                        <button id="tile_toggle" class="btn btn-default navbar-right navbar-btn btn-sm ">Hide Overlays</button>
-                        <label class="hidden" id="name"></label>
-                        <button id="tile_button" class="btn  btn-default navbar-right  navbar-btn btn-sm ">Show superpixels</button>
-                        <button id="tile_boundaries" class="btn btn-default navbar-right navbar-btn btn-sm">Lsn Boundaries</button>
-                        <button id="show_magic" class="btn btn-default navbar-right navbar-btn btn-sm"> Filters</button>
-                    </div>
-                </div>
-                <!--/.nav-collapse -->
-            </div>
-            <!--/.container-fluid -->
-        </nav>
-    </div>
+    <nav class="navbar navbar-custom navbar-fixed-top " role="navigation">
+        <div class="navbar navbar-fixed-top navbar-left   ">
+            <a class="navbar-brand" style="color:blue;" href="#">ISIC MultiRater Viewer</a>
+        </div>
+        <div class="navbar-right navbar navbar-fixed-top right-side-button ">
+            <span class="navbar-right right-side-button navbar-btn btn-sm">Overlay Opacity: <input id="opacity_slider" data-slider-id='op_slider' type="text" data-slider-min="0" data-slider-max="1" data-slider-step="0.05" data-slider-value="0.5"/></span>
+            <button id="tile_toggle" class="btn btn-default navbar-right navbar-btn btn-sm ">Hide Overlays</button>
+            <button id="tile_button" class="btn  btn-default navbar-right  navbar-btn btn-sm ">Show superpixels</button>
+            <button id="tile_boundaries" class="btn btn-default navbar-right navbar-btn btn-sm">Lsn Boundaries</button>
+            <!-- <button id="show_magic" class="btn btn-default navbar-right navbar-btn btn-sm"> Filters</button>  -->
+            <!-- HIDING COLOR FILTERS FOR NOW -->
+        </div>
+    </nav>
     <!-- Need to cleanup class assignment for these buttons... this seems redundant -->
     <div class="container-fluid" id="main">
-        <div class="row inforow">
-            <div class="col-md-3 vcenter">
-                <p class="text-center">
-                    <h3>Data Set<select id="data_source_dd"></select></h3>
-                </p>
-            </div>
-            <div class="col-md-3 vcenter">
-                <p class="text-center" style="vertical-align: middle;">
-                    <b>Image List</b>
-                    <select id='image_list_dd' style="width: 50%;"></select>
-                </p>
-            </div>
-            <div class="col-md-3 vcenter">
-                <p>
-                    <span id="feature_info_stats" class=""></span>
-                    <span id="tile_info_stats" class=""></span>
-                </p>
-            </div>
-            <div class="col-md-3 vcenter">
-                <p class="text-center">
-                    <h3>Cur Feature</h3>
-                </p>
-            </div>
-        </div>
         <div class="row">
             <div class="col-xs-4" id="left">
-                <!-- <div id="slider" width="300px !important"></div> -->
+                <p class="text-center">
+                    <br>
+                    <!-- This is a hack-- not sure why bootstrap is overwriting these top two lines...-->
+                    <br>
+                    <h3>Data Set<select id="data_source_dd"></select></h3>
+                    <h3>Image List <select id='image_list_dd'></select> </h3>
+                    <div id="rater_info"></div>
+                </p>
+                <span id="feature_info_stats" class=""></span>
+                <span id="tile_info_stats" class=""></span>
+                </p>
                 <div class="panel panel-default">
                     <div class="panel-heading" align="center">Please select the raters to overlay</div>
-                    <div id="rater_info">
-                        <div id="tile_opacity"></div>
-                        <span id="displayed_data_info" class="h6">
-                        <ul id="rater_color_list"></ul>
-                        </span>
+                    <ul id="rater_color_list"></ul>
+                </div>
+                <div id="feature_accordion"></div>
+                <div style="display: none;">
+                    <div id="feature_info_stats" class="col-xs-4"></div>
+                    <div id="tile_info_stats" class="col-xs-4"></div>
+                    <div id="rater_info_stats" class="col-xs-4"></div>
+                    <div id="tile_opacity" style="display:none"></div>
+                    <div id="curimg_feats"></div>
+                    <div id="filter_dialog" title="Apply Filters">
+                        Filter set will appear here
                     </div>
                 </div>
-                <div class="panel panel-default">
-                    <!-- <div class="panel-heading" align="center"><b>Feature Selector</b></div>-->
-                    <!--<div id="feature_btn_group" class="btn-group btn-group-single featurebtns_wrapper" data-toggle="buttons-radio"></div>-->
-                    <!--<div id="feature_btn_group" class="featurebtns_wrapper" data-toggle="buttons-radio"></div>-->
-                    <div id="feature_accordion"></div>
-                </div>
-                <div id="curimg_feats"></div>
-                <!-- I am debating creating a second set of buttons listing what's in the current image? -->
             </div>
             <div class="col-xs-8">
                 <div id="openseadragon1" style="width: 100%; height: 600px; border: 1px solid blue;" class="openseadragon"></div>
             </div>
         </div>
     </div>
-    <!-- end template -->
-    <!-- script references -->
-
-    <!-- I should probably have the filter dialog code inject these divs directly -->
-    <div id="filter_dialog" title="Apply Filters">
-        Filter set will appear here
-    </div>
+    
     <div class="modal fade" id="dialog-container"></div>
 </body>
+
 </html>
