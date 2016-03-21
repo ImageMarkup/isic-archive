@@ -1,3 +1,4 @@
 ---
 
 large_image_path: "{{ girder_path }}/plugins/large_image"
+large_image_version: "0f463be3ea90a2bda08b80fab51eadbc42706bc2"
