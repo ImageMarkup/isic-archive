@@ -5,7 +5,7 @@ import datetime
 import json
 import os
 
-from girder.constants import AccessType, SettingKey
+from girder.constants import AccessType
 from girder.utility.model_importer import ModelImporter
 
 from . import constants
@@ -159,8 +159,6 @@ def setupUdaTestUser(phase, username, password, label):
 def initialSetup(info):
     if ModelImporter.model('setting').get(constants.PluginSettings.DEMO_MODE, None) is None:
         ModelImporter.model('setting').set(constants.PluginSettings.DEMO_MODE, False)
-
-    ModelImporter.model('setting').set(SettingKey.USER_DEFAULT_FOLDERS, 'none')
 
     ISIC.Phase0 = _ISICCollection(
         collection_name='Phase 0',

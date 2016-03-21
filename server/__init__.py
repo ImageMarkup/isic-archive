@@ -4,7 +4,9 @@
 import os
 
 from girder import events
+from girder.constants import SettingKey
 from girder.models.model_base import ValidationException
+from girder.utility.model_importer import ModelImporter
 from girder.utility.server import staticFile
 
 from . import constants
@@ -48,6 +50,7 @@ def load(info):
     events.bind('model.setting.validate', 'isic', validateSettings)
     events.bind('data.process', 'uploadHandler', uploadHandler)
     events.bind('model.user.save.created', 'onUserCreated', onUserCreated)
+    ModelImporter.model('setting').set(SettingKey.USER_DEFAULT_FOLDERS, 'none')
 
     # create all necessary users, groups, collections, etc
     initialSetup(info)
