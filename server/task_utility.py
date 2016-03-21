@@ -23,7 +23,7 @@ from .provision_utility import _ISICCollection
 def getItemsInFolder(folder):
     return list(ModelImporter.model('folder').childItems(
         folder,
-        filters={'meta.convertedFilename': {'$exists': True}}
+        filters={'meta.originalFilename': {'$exists': True}}
     ))
 
 

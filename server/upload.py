@@ -254,7 +254,6 @@ def _imageUploadHandler(upload_info):
             )
         os.remove(converted_file_path)
 
-        image_item['meta']['convertedFilename'] = converted_file_name
         image_item['largeImage'] = converted_file['_id']
         image_item['largeImageSourceName'] = 'tiff'
         ModelImporter.model('image', 'isic_archive').save(image_item)
