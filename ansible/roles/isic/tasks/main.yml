@@ -41,4 +41,13 @@
     virtualenv: "{{ python_dist_path }}"
   sudo: yes if python_dist == "system" else no
 
-## TODO: local config
+## TODO: add girder.local.cfg file
+
+- name: Download mskcc_gallery
+  git:
+    repo: "https://github.com/ImageMarkup/mskcc_gallery.git"
+    dest: "{{ girder_path }}/plugins/mskcc_gallery"
+    version: master
+    update: yes
+    force: yes
+  notify: Build Girder
