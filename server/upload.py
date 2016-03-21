@@ -156,6 +156,8 @@ class ZipFileOpener(object):
 
 
 def _zipUploadHandler(upload_info):
+    Image = ModelImporter.model('image', 'isic_archive')
+
     images_folder = ModelImporter.model('folder').createFolder(
         parent=upload_info['collection'],
         name=os.path.splitext(upload_info['file']['name'])[0],
@@ -180,10 +182,14 @@ def _zipUploadHandler(upload_info):
                     increment=1,
                     message='Extracting "%s"' % original_file_name)
 
-                image_item = ModelImporter.model('image', 'isic_archive').createImage(
+                image_item = Image.createImage(
                     creator=upload_info['user'],
                     parentFolder=images_folder
                 )
+                Image.setMetadata(image_item, {
+                    # provide full and possibly-qualified path as originalFilename
+                    'originalFilename': original_file_relpath
+                })
 
                 # upload original image
                 image_mimetype = mimetypes.guess_type(original_file_name)[0]
@@ -200,14 +206,12 @@ def _zipUploadHandler(upload_info):
                         user=upload_info['user'],
                         mimeType=image_mimetype,
                     )
-
-                ModelImporter.model('image', 'isic_archive').setMetadata(image_item, {
-                    # provide full and possibly-qualified path as originalFilename
-                    'originalFilename': original_file_relpath
-                })
+                    # image_item is dirty at this point, since its 'size' has
+                    # changed in the database
 
 
 def _imageUploadHandler(upload_info):
+    Image = ModelImporter.model('image', 'isic_archive')
     image_item = upload_info['item']
 
     with TempDir() as temp_dir:
@@ -254,9 +258,11 @@ def _imageUploadHandler(upload_info):
             )
         os.remove(converted_file_path)
 
+        # reload image_item, since its 'size' has changed in the database
+        image_item = Image.load(image_item['_id'], force=True)
         image_item['largeImage'] = converted_file['_id']
         image_item['largeImageSourceName'] = 'tiff'
-        ModelImporter.model('image', 'isic_archive').save(image_item)
+        Image.save(image_item)
 
 
 def _csvUploadHandler(upload_info):
