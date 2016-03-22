@@ -16,4 +16,4 @@ girder.views.ThumbnailWidget = girder.View.extend({
 
 // Hijack the large_image's 'ImageViewerSelectWidget' to render ThumbnailWidget
 // and hide the default viewers in 'ImageViewerSelectWidget'
-girder.views.ImageViewerSelectWidget = girder.views.ThumbnailWidget
+girder.views.ImageViewerSelectWidget = girder.views.ThumbnailWidget;

@@ -265,8 +265,10 @@ def _imageUploadHandler(upload_info):
         # reload image_item, since its 'size' has changed in the database
         image_item = Image.load(image_item['_id'], force=True)
 
-        image_item['largeImage'] = converted_file['_id']
-        image_item['largeImageSourceName'] = 'tiff'
+        image_item['largeImage'] = {
+            'fileId': converted_file['_id'],
+            'sourceName': 'tiff'
+        }
         Image.save(image_item)
 
 

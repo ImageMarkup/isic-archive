@@ -3,4 +3,4 @@
 girder_version: "1.5.0"
 python_dist: "conda"
 python_dist_path: "{{ ansible_user_dir }}/env"
-large_image_version: "0f463be3ea90a2bda08b80fab51eadbc42706bc2"
+large_image_version: "3a087579a77ee66fede87cf2b8f1f2faa7e91b4d"
