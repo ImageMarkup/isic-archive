@@ -43,7 +43,8 @@ class Image(Item):
             description=''
         )
         self.setMetadata(image, {
-            'clinical': {}
+            'clinical': {},
+            'acquisition': {}
         })
 
         self.model('setting').set(

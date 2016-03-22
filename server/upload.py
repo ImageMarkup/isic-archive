@@ -206,8 +206,13 @@ def _zipUploadHandler(upload_info):
                         user=upload_info['user'],
                         mimeType=image_mimetype,
                     )
-                    # image_item is dirty at this point, since its 'size' has
-                    # changed in the database
+                # reload image_item, since its 'size' has changed in the database
+                image_item = Image.load(image_item['_id'], force=True)
+
+                image_data = Image.imageData(image_item)
+                image_item['meta']['acquisition']['pixelsY'] = image_data.shape[0]
+                image_item['meta']['acquisition']['pixelsX'] = image_data.shape[1]
+                Image.save(image_item)
 
 
 def _imageUploadHandler(upload_info):
@@ -257,9 +262,9 @@ def _imageUploadHandler(upload_info):
                 mimeType='image/tiff',
             )
         os.remove(converted_file_path)
-
         # reload image_item, since its 'size' has changed in the database
         image_item = Image.load(image_item['_id'], force=True)
+
         image_item['largeImage'] = converted_file['_id']
         image_item['largeImageSourceName'] = 'tiff'
         Image.save(image_item)
