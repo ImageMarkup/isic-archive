@@ -116,15 +116,6 @@ class SegmentationResource(Resource):
             force=True, exc=True,
             fields=userSummaryFields)
 
-        # Deal with a bug in Girder
-        # TODO: Remove this
-        import six
-        segmentation['creator'] = {
-            k: v
-            for k, v in six.viewitems(segmentation['creator'])
-            if k in userSummaryFields
-        }
-
         return segmentation
 
 

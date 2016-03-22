@@ -106,14 +106,6 @@ class AnnotationResource(Resource):
             return_dict.pop('userId'),
             force=True, exc=True,
             fields=userSummaryFields)
-        # Deal with a bug in Girder
-        # TODO: Remove this
-        import six
-        return_dict['user'] = {
-            k: v
-            for k, v in six.viewitems(return_dict['user'])
-            if k in userSummaryFields
-        }
 
         return return_dict
 
