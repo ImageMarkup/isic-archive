@@ -77,7 +77,7 @@ derm_app.controller('SegmentationController', [
             // flip the sign of the y-coordinates
             var coordinates = feature.geometry.coordinates[0];
             for (var j=0; j<coordinates.length; j++) {
-                coordinates[j][1] = -1 * coordinates[j][1];
+                coordinates[j] = $rootScope.imageviewer.flipYCoord(coordinates[j]);
             }
             delete feature.id;
             delete feature.properties.hexcolor;

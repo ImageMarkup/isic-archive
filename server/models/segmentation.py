@@ -192,8 +192,7 @@ class Segmentation(Model):
     def validate(self, doc):
         try:
             assert set(six.viewkeys(doc)) == {
-                '_id', 'imageId', 'skill', 'creatorId', 'lesionBoundary',
-                'created'}
+                'imageId', 'skill', 'creatorId', 'lesionBoundary', 'created'}
 
             assert isinstance(doc['imageId'], ObjectId)
             assert self.model('image', 'isic_archive').find(
@@ -239,12 +238,13 @@ class Segmentation(Model):
             for coord in doc['lesionBoundary']['geometry']['coordinates'][0]:
                 assert isinstance(coord, list)
                 assert len(coord) == 2
-                assert isinstance(coord[0], (int, float))
-                assert isinstance(coord[1], (int, float))
+                for val in coord:
+                    assert isinstance(val, (int, float))
+                    assert val >= 0
 
             assert isinstance(doc['created'], datetime.datetime)
 
-        except AssertionError:
+        except (AssertionError, KeyError):
             # TODO: message
             raise ValidationException('')
         return doc
