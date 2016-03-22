@@ -1,25 +1,19 @@
 'use strict';
-/*jslint browser: true*/
-/*global angular*/
 
-// Initialization of angular root application
-var review_app = angular.module('DermApp', ['ngSanitize', 'mousetrap']);
+var derm_app = angular.module('DermApp');
 
-review_app.config(function ($httpProvider) {
-    $httpProvider.defaults.xsrfCookieName = 'girderToken';
-    $httpProvider.defaults.xsrfHeaderName = 'Girder-Token';
-});
+var REFRESH_INTERVAL = 5000;
 
-var appController = review_app.controller('TaskController', ['$scope', '$http', '$interval',
+derm_app.controller('TaskController', ['$scope', '$http', '$interval',
     function ($scope, $http, $interval) {
-
         $scope.task_list = [];
         $scope.update = function () {
             $http.get('/api/v1/uda/task').success(function (data) {
                 $scope.task_list = data;
             });
         };
-        $interval($scope.update, 5000);
+        $interval($scope.update, REFRESH_INTERVAL);
 
         $scope.update();
-    }]);
+    }
+]);
