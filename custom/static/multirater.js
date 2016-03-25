@@ -5,12 +5,9 @@ function random(range) {
 }
 
 /* Reorganizing these functions slightly to try and place them in the order they are called*/
-
 var remote_api_url = 'https://isic-archive.com/api/v1/'
 var local_api_url = '/api/v1/'
-
-var api_url = remote_api_url;  ///Change this depending on if ur using local devel or want to use the remote api.
-
+var api_url = remote_api_url; ///Change this depending on if ur using local devel or want to use the remote api.
 
 function load_avail_studies() {
     //This requires no parameters ; this gets the available study data
@@ -21,13 +18,13 @@ function load_avail_studies() {
         //I am going to disable buttons on the feature list if that feature isn't present in the currnet image...
         //Also now load the feature button by iterating through them
         $.each(avail_studies, function(k, v) {
-                if (k === 0)  first_studyid = v['_id'];
-                dtoa = '<option id="' + v['_id'] + '" value="' + v['_id'] + '">' + v.name + '</option>';
-                $("#data_source_dd").append(dtoa);
-                avail_studies_dict[v.name] = v;
-            });
-            //Now that I have a list of all available studies, I can go ahead and populate the image list
-            //This should use the function I defined above..
+            if (k === 0) first_studyid = v['_id'];
+            dtoa = '<option id="' + v['_id'] + '" value="' + v['_id'] + '">' + v.name + '</option>';
+            $("#data_source_dd").append(dtoa);
+            avail_studies_dict[v.name] = v;
+        });
+        //Now that I have a list of all available studies, I can go ahead and populate the image list
+        //This should use the function I defined above..
         load_image_list(first_studyid);
         load_feature_list(first_studyid); //This will populate the feature widget..
         load_rater_list(first_studyid); //I think this is another endpoint...
@@ -37,7 +34,7 @@ function load_avail_studies() {
 
 //Once a data set is loaded, I need to load the associated images and features
 function load_image_list(study_uid) {
-    var get_img_list_url = api_url+ 'study/' + study_uid + '/images/';
+    var get_img_list_url = api_url + 'study/' + study_uid + '/images/';
 
     $.getJSON(get_img_list_url, function(data) {
         new_img_list = data;
@@ -46,27 +43,27 @@ function load_image_list(study_uid) {
         first_imageuid = '';
         $("#image_list_dd").empty();
         $.each(new_img_list, function(k, v) {
-            if (k === 0)  first_imageuid = v['_id'];
+            if (k === 0) first_imageuid = v['_id'];
             var new_img = `<option id="${v['_id']}" value="${v['_id']}">${v['name']}</option>`;
             $("#image_list_dd").append(new_img);
         });
-        $("#image_list_dd").select2({'width':200}); //Reinitialize the dynamic search widget
-       //So I now need to actually get some metadata for the first image, which then calls another function to load the data..
+        $("#image_list_dd").select2({ 'width': 200 }); //Reinitialize the dynamic search widget
+        //So I now need to actually get some metadata for the first image, which then calls another function to load the data..
         get_image_data(first_imageuid);
     });
 }
 
 //Load the features for the given study I just select
 function load_feature_list(cur_study_uid) {
-    console.log("I just received",cur_study_uid,"for the study uid")
-    //AJAX Call to hit the API EndPoint and get the list of features for the given project and/or Image
-    //I think to make the UI cleaner and so the buttons don't move around, we will load all of the buttons associated
-    //with a project...
+    console.log("I just received", cur_study_uid, "for the study uid")
+        //AJAX Call to hit the API EndPoint and get the list of features for the given project and/or Image
+        //I think to make the UI cleaner and so the buttons don't move around, we will load all of the buttons associated
+        //with a project...
     avail_features = [];
-        //I need to determine the featureset uid for this study
-        //The avail_studies is an array that lists all the metadata for a given study (including the UID)
-        //So I need to loop through it to find the UID for the study that was just selected, 
-        //Once I have that, I need to figure out the FEATURESET Uid 
+    //I need to determine the featureset uid for this study
+    //The avail_studies is an array that lists all the metadata for a given study (including the UID)
+    //So I need to loop through it to find the UID for the study that was just selected, 
+    //Once I have that, I need to figure out the FEATURESET Uid 
     $.each(avail_studies, function(i, v) {
         ///console.log(i, v);
         //console.log(v.meta.featuresetId);
@@ -75,11 +72,11 @@ function load_feature_list(cur_study_uid) {
         } //Probably should do a break here?? Don't really need to continue the for statement
     });
 
-    $.getJSON(api_url+ 'featureset/' + featureset_uid, function(data) {
+    $.getJSON(api_url + 'featureset/' + featureset_uid, function(data) {
         console.log(data);
         avail_features = data['region_features'];
         //I am going to disable buttons on the feature list if that feature isn't present in the currnet image...
-        current_feature_set = avail_features;  //I am making this a global variable for now, may not be necessary long term
+        current_feature_set = avail_features; //I am making this a global variable for now, may not be necessary long term
         create_featurelist_widget(current_feature_set, feature_groups, 'feature_accordion');
     });
 }
@@ -89,18 +86,18 @@ function load_feature_list(cur_study_uid) {
 //This creates an accordion, and will group the buttons based on a "top leavel" feature which also serves as the name of the
 // individual accordion piece;  the names/features should change each time I change data sets as a dataset i.e. a specific
 // study should be associated with a specific feature set
-    
+
 
 function create_featurelist_widget(full_feature_set, feature_grouping, widget_div) {
     //Clear the current widget
-    if (  $("#"+widget_div).accordion('instance') ) $("#"+widget_div).accordion('destroy');
+    if ($("#" + widget_div).accordion('instance')) $("#" + widget_div).accordion('destroy');
 
-    $("#"+widget_div).empty();
+    $("#" + widget_div).empty();
 
 
     $.each(feature_grouping, function(idx, cur_grp) {
         //So this actually creates the Top Level labels for the accordion widget, buttons need to be added after these are craetd
-        console.log(idx, cur_grp);
+
         //First thing I need to do is create an h3 (or h4 ) tag for the group
         $("#" + widget_div).append(` <h4>${cur_grp['feature_group']}</h4><div id="featbtn_${cur_grp['feature_group']}"></div>`);
         //Now I need to figure out which buttons to add to this feature
@@ -108,9 +105,6 @@ function create_featurelist_widget(full_feature_set, feature_grouping, widget_di
 
         button_data_for_cur_grp = [];
         $.each(full_feature_set, function(idx, feat) {
-            //print "Should be lookining for";
-            //console.log( cur_grp.feature_abbrev,feat);
-            //  console.log(feat);
 
             //There are noew properties now... need to see if i should look at the check box features or other properties
             if (feat['id'].startsWith(cur_grp.feature_abbrev)) {
@@ -125,33 +119,24 @@ function create_featurelist_widget(full_feature_set, feature_grouping, widget_di
         $("#featbtn_" + cur_grp['feature_group']).append(button_data_for_cur_grp);
 
     });
-    $("#" + widget_div).accordion({
-        collapsible: true
-    });
+    $("#" + widget_div).accordion({ collapsible: true });
     //The accordion has now been created, add click handlers to the buttons
-    // annotated_feature_list = avail_features;
-
 
     annotated_feature_list = avail_features;
 
     $("#feature_accordion button").click(function() {
-        console.log(this.id); // points to the clicked input button
+        //console.log(this.id); // points to the clicked input button
         current_feature = this.value;
         $("#feature_info_stats").empty();
         //ALSO ADDI N SOME STATS TO INDICATE HOW MANY TILES WERE MARKED FOR THIS FEATURE...
         cfd = superpixel_markup_info[current_feature]; //Current Feature data
-        if (!cfd) {
-            $("#feature_info_stats").append("Feature " + current_feature + " NOT in this image");
-        } else {
-            $("#feature_info_stats").append("Feature" + current_feature + " present");
-        }
+        if (!cfd) { $("#feature_info_stats").append("Feature " + current_feature + " NOT in this image"); } else { $("#feature_info_stats").append("Feature" + current_feature + " present") }
         //     //So I need to check the state of the button to either draw or clear a given tile(s) colors for a rater..
         cur_slider_value = OpacitySlider.val();
         cur_opacity = 100;
         var new_opacity = (cur_opacity === 0) ? cur_slider_value : 0;
         $('.tileClass').attr('opacity', cur_slider_value);
         new_mark_superpixels();
-        //hide_unannotated_features(superpixel_markup_info);
     });
 }
 
@@ -159,7 +144,56 @@ function create_featurelist_widget(full_feature_set, feature_grouping, widget_di
 //After I have the features and list of images, I need to load data relevant to the current image being displayed
 //Basically get the list of annotations, segmentations and metadata for that object
 
-    
+function get_image_data(image_uid) {
+    //So becore I can actually load the image itself (i.e. the URL), I need to get the image metadata which contains
+    //a lot of various but useful parameters I will eventually need
+    //I also need to get the segmentations aka superpixels and annotations once I have grabbed the data..
+    $.getJSON(api_url + 'image/' + image_uid, function(data) {
+        cur_image_metadata = data;
+        load_new_image_from_api(cur_image_metadata);
+        study_id = $("#data_source_dd").val();
+        console.log(cur_image_metadata); //Need to get the segmentation data as well....
+        get_image_annotation_data(study_id, image_uid);
+        get_avail_image_segmentations(image_uid);
+    }).fail(function() {
+        // alert('You do not have access to this image...');
+        //This is currently a simpsons scene
+        defaultimg_not_avail = {
+            'type': 'legacy-image-pyramid',
+            levels: [{
+                'url': 'https://c1.staticflickr.com/3/2150/2101058680_64fa63971e.jpg',
+                'height': 435,
+                'width': 356,
+            }]
+        };
+        $(".boundaryClass").remove();
+        dg_viewer.clearOverlays();
+        dg_viewer.open(defaultimg_not_avail);
+    });
+}
+
+
+function get_image_annotation_data(study_id, image_id) {
+    //So in order for the UI to function properly, I need to grab all of the annotations available for the currnetly displayed image, and then build
+    //a new object that contains some summary information for the image...
+
+    $("#data_source_dd").val(); //The Study ID can be obtained from the current data_source_dd
+    annotationsAvailable = api_url + 'annotation?studyId=' + study_id + '&imageId=' + image_id + '&details=true';
+    //Now get all available annotations     Please note, by adding the details=true I get all the annotations in a single query
+    //without that, I will jsut get the ID of the individual annotations
+    $.getJSON(annotationsAvailable, function(data) {
+        avail_annotations = data;
+        //I am going to disable buttons on the feature list if that feature isn't present in the currnet image...
+        //FTL basically looks through every possible annotation for ALL raters and sees if ANYONE has marked up a feature or nt
+        //If no one has marked it up, we then hide that button so it's not clickable
+        ftl = generate_image_annotation_summaries(avail_annotations);
+        hide_unannotated_features(ftl); //Need to make sure this async is set properly.. may need to call this function
+        //within the GIAS function
+    })
+}
+
+
+
 function loadSVGTileData(imageName) {
     console.log('need to load svg data for' + imageName);
     SVG_file = image_info_list[imageName].superpixel_svg;
@@ -235,7 +269,7 @@ function new_mark_superpixels(sp_info) {
                 //Currently I am going
                 //var a = fruits.indexOf("Apple");
                 rater_index = raters.indexOf(raters_for_tile[0]);
-                    // console.log(raters_for_tile,rater_index)
+                // console.log(raters_for_tile,rater_index)
 
                 $("#tile" + tileID).css('fill', colours[rater_index]);
 
@@ -261,19 +295,18 @@ function new_mark_superpixels(sp_info) {
         //didn't actually mark that specific superpixel with the given feature
         rft = [];
         $.each(pix_raters, function(k, v) {
-                if (v != '0.0') {
-                    rft.push(k);
-                }
-            });
-            //console.log(rft);
+            if (v != '0.0') {
+                rft.push(k);
+            }
+        });
+        //console.log(rft);
         $("#tile_info_stats").append("<br>Raters: " + JSON.stringify(rft));
     });
 
 }
 
 
-function lesionboundary_to_svgshape( lesionBoundary_Dict, img_width)
-{
+function lesionboundary_to_svgshape(lesionBoundary_Dict, img_width) {
     //Probably should come this with the function below..
     scale_factor = 1;
     polygon_list = [];
@@ -287,18 +320,18 @@ function lesionboundary_to_svgshape( lesionBoundary_Dict, img_width)
 
     // $.each(contours, function(index, contour) {
     //     coord_info = contour.geometry.coordinates;
-            coord_info = lesionBoundary_Dict.lesionBoundary.geometry.coordinates[0];
-            console.log(coord_info);
-         coord_string = "";
-         $.each(coord_info, function(k, v) {
-                 console.log(k,v[0],v[1]);
-                 coord_string += `${(v[0]* x_scale_factor ) },${ ( v[1] * y_scale_factor) } `;
-             }); // the |0 made them all integers
-         console.log(coord_string);
-       // polygon_svg_str = `<polygon points="${coord_string}" style="fill:${colours[ random(9)]};stroke;purple;stroke-width:1;opacity:0.5" id="boundary0" class="boundaryClass" />`;
+    coord_info = lesionBoundary_Dict.lesionBoundary.geometry.coordinates[0];
+    console.log(coord_info);
+    coord_string = "";
+    $.each(coord_info, function(k, v) {
+        console.log(k, v[0], v[1]);
+        coord_string += `${(v[0]* x_scale_factor ) },${ ( v[1] * y_scale_factor) } `;
+    }); // the |0 made them all integers
+    console.log(coord_string);
+    // polygon_svg_str = `<polygon points="${coord_string}" style="fill:${colours[ random(9)]};stroke;purple;stroke-width:1;opacity:0.5" id="boundary0" class="boundaryClass" />`;
     //     labelindex = contour.properties.labelindex;
-         d3.select(svg_layer.node()).append("polygon").attr("points", coord_string).style('fill', 'blue').attr('opacity', 0.2).attr('class', 'boundaryClass').attr('id', 'boundary0');
-         //.attr('stroke','blue');
+    d3.select(svg_layer.node()).append("polygon").attr("points", coord_string).style('fill', 'blue').attr('opacity', 0.2).attr('class', 'boundaryClass').attr('id', 'boundary0');
+    //.attr('stroke','blue');
     // });
     //     polygon_list.push({
     //         'coords': coord_string,
@@ -323,8 +356,8 @@ function contourdata_to_shape(contours, img_width) {
 
         coord_string = "";
         $.each(coord_info, function(k, v) {
-                coord_string += `${(v[0]* x_scale_factor ) },${ ( v[1] * y_scale_factor) } `;
-            }); // the |0 made them all integers
+            coord_string += `${(v[0]* x_scale_factor ) },${ ( v[1] * y_scale_factor) } `;
+        }); // the |0 made them all integers
 
         polygon_svg_str = `<polygon points="${coord_string}" style="fill: ${colours[ random(9)]}; stroke; purple; stroke-width: 1; opacity: 0.5;" id="tile${contour.properties.labelindex}" class="tileClass" />`;
         labelindex = contour.properties.labelindex;
@@ -365,32 +398,6 @@ function show_all_tiles() {
 
 
 
-function get_image_annotation_data(study_id, image_id) {
-    //So in order for the UI to function properly, I need to grab all of the annotations available for the currnetly displayed image, and then build
-    //a new object that contains some summary information for the image...
-
-    //The Study ID can be obtained from
-    $("#data_source_dd").val();
-
-    annotationsAvailable = 'https://isic-archive.com/api/v1/annotation?studyId=' + study_id + '&imageId=' + image_id + '&details=true';
-
-    //Now get all available annotations     Please note, by adding the details=true I get all the annotations in a single query
-    //without that, I will jsut get the ID of the individual annotations
-
-    $.getJSON(annotationsAvailable, function(data) {
-        avail_annotations = data;
-        //I am going to disable buttons on the feature list if that feature isn't present in the currnet image...
-        console.log("newly available annotations are");
-        console.log(avail_annotations);
-
-        ftl = generate_image_annotation_summaries(avail_annotations);
-
-        hide_unannotated_features(ftl); //Need to make sure this async is set properly.. may need to call this function
-        //within the GIAS function
-    })
-}
-
-
 //     //Probably put the code to create the widget her eas well?
 //     // current_feature_set = avail_features;
 //     // create_featurelist_widget(current_feature_set, feature_groups, 'feature_accordion');
@@ -407,7 +414,7 @@ function generate_image_annotation_summaries(image_annotation_data) {
 
     features_seen_in_image = {};
     tile_data = {};
-        //http://localhost:1234/api/TileInfo/ALL/UDA2_pilot_060  Thsi basically shows me how I created the data...
+    //http://localhost:1234/api/TileInfo/ALL/UDA2_pilot_060  Thsi basically shows me how I created the data...
 
     //Each annotation ahs image features and region features... for now I'll just focus on region features
     $.each(image_annotation_data, function(k, v) //this cycles through all of the available annotations
@@ -452,7 +459,7 @@ function generate_image_annotation_summaries(image_annotation_data) {
                 })
 
             }
-           // console.log(ak, av);
+            // console.log(ak, av);
         });
         //console.log(feature_tilelevel_info);
 
@@ -483,7 +490,7 @@ function hide_unannotated_features(superpixel_markup_info) {
     $.each(annotated_feature_list, function(index, value) {
         //console.log(index, value);
         ///This needs to be adapted for the new layout we are using..
-       // console.log(value);
+        // console.log(value);
 
         if (img_avail_features.indexOf(value.id) < 0) { //feature is not present
             //the ID of the feature buttons actually have feat_ prepended to the feature name..
@@ -519,49 +526,7 @@ function hide_unannotated_features(superpixel_markup_info) {
 
 }
 
-function get_image_data(image_uid) {
-    //So becore I can actually load the image itself (i.e. the URL), I need to get the image metadata which contains
-    //a lot of various but useful parameters I will eventually need
 
-    //I also need to get the segmentation aka superpixels once I haev grabbed the data..
-
-
-    $.getJSON('https://isic-archive.com/api/v1/image/' + image_uid, function(data) {
-        cur_image_metadata = data;
-        //Need to pass the image metadata
-        load_new_image_from_api(cur_image_metadata);
-            //Now load the superpixel data..
-            //console.log("trying to load superpixel data");
-        study_id = $("#data_source_dd").val();
-
-
-        console.log(cur_image_metadata);//Need to get the segmentation data as well....
-        get_image_annotation_data(study_id, image_uid);
-
-
-          get_avail_image_segmentations(image_uid);
-        //             hide_unannotated_features(superpixel_markup_info);
-        //             //Also add in something to actual  lly display this..
-        //             new_mark_superpixels();
-
-    }).fail(function() {
-        // alert('You do not have access to this image...');
-        //This is currently a simpsons scene
-        defaultimg_not_avail = {
-            'type': 'legacy-image-pyramid',
-            levels: [{
-                'url': 'https://c1.staticflickr.com/3/2150/2101058680_64fa63971e.jpg',
-                'height': 435,
-                'width': 356,
-            }]
-        };
-        $(".boundaryClass").remove();
-        dg_viewer.clearOverlays();
-        dg_viewer.open(defaultimg_not_avail);
-
-    });
-
-}
 
 function load_new_image_from_api(image_metadata) {
     //The image metadata is pulled from the API
@@ -569,17 +534,17 @@ function load_new_image_from_api(image_metadata) {
     $(".tileClass").remove();
     //IMPORTANT ISSUE HERE.. OSD NEEDS TO BE PATCHED OR I NEED THE BELOW HACK WHICH HARD CODES THE .JPG... it wasn't figuring this out on its own
     base_url = `https://isic-archive.com/api/v1/image/${image_metadata['_id']}/`;
-    image_filename_url = base_url + 'download?contentDisposition=inline&.jpg';  //Please note this hack, without the .jpg osd couldn't read
+    image_filename_url = base_url + 'download?contentDisposition=inline&.jpg'; //Please note this hack, without the .jpg osd couldn't read
 
     new_tile_source = {
-            'type': 'legacy-image-pyramid',
-            levels: [{
-                'url': image_filename_url,
-                'height': image_metadata.meta.acquisition.pixelsY,
-                'width': image_metadata.meta.acquisition.pixelsX
-            }]
-        };
-        //update_rater_overlays(image_name);  <<TO DOO!!!!
+        'type': 'legacy-image-pyramid',
+        levels: [{
+            'url': image_filename_url,
+            'height': image_metadata.meta.acquisition.pixelsY,
+            'width': image_metadata.meta.acquisition.pixelsX
+        }]
+    };
+    //update_rater_overlays(image_name);  <<TO DOO!!!!
     dg_viewer.open(new_tile_source);
 
     //Now that the new image is loaded, should next load the actual markup data for this image
@@ -604,19 +569,18 @@ function load_rater_list(study_uid) {
     $.each(raters, function(n, v) {
         //TO DO:  FIX ECMA SCRIPT AND ALSO FIGURE OUT PROPER BUTTON WIDGET FOR THIS
         $("#rater_color_list").append(
-    `<span class="btn btn-default "><label for="show_${v}" style="color:${colours[n]}">${v}</label></span>`);
+            `<span class="btn btn-default "><label for="show_${v}" style="color:${colours[n]}">${v}</label></span>`);
 
     });
 
 }
 
 
-function get_avail_image_segmentations(image_uid)
-  {
-    console.log('should be getting segmentations for'+image_uid);
+function get_avail_image_segmentations(image_uid) {
+    console.log('should be getting segmentations for' + image_uid);
     //Now query the segmentation API
 
-    segmentation_URL =  'https://isic-archive.com/api/v1/' + '/segmentation?imageId='+image_uid;
+    segmentation_URL = 'https://isic-archive.com/api/v1/' + '/segmentation?imageId=' + image_uid;
     console.log(segmentation_URL);
 
     cur_image_segmentations = [];
@@ -630,51 +594,49 @@ function get_avail_image_segmentations(image_uid)
 
 }
 
-function get_segmentation_boundaries( img_segmentation_list)
-    {
-        console.log('need to get oundaries now');
-        console.log(img_segmentation_list);
+function get_segmentation_boundaries(img_segmentation_list) {
+    console.log('need to get oundaries now');
+    console.log(img_segmentation_list);
 
-        //I will just get the first one...
-        segmentation_boundaries_URL =  'https://isic-archive.com/api/v1/segmentation/' + img_segmentation_list[0]['_id'];
+    //I will just get the first one...
+    segmentation_boundaries_URL = 'https://isic-archive.com/api/v1/segmentation/' + img_segmentation_list[0]['_id'];
 
-        lesion_boundary_data = [];
-        $.getJSON(segmentation_boundaries_URL, function(data) {
-                lesion_boundary_data = data;
-                console.log(lesion_boundary_data);
-                console.log('GOT THE BOUNDARY??');
-                //Since for now I am only going to bother rendering a single one, I may as well parse it now..
-                console.log(lesion_boundary_data.lesionBoundary);
-                //the geometry now contains the info I need to render it...
-                lesionboundary_to_svgshape( lesion_boundary_data, dg_viewer.viewport.contentSize.x);
+    lesion_boundary_data = [];
+    $.getJSON(segmentation_boundaries_URL, function(data) {
+        lesion_boundary_data = data;
+        console.log(lesion_boundary_data);
+        console.log('GOT THE BOUNDARY??');
+        //Since for now I am only going to bother rendering a single one, I may as well parse it now..
+        console.log(lesion_boundary_data.lesionBoundary);
+        //the geometry now contains the info I need to render it...
+        lesionboundary_to_svgshape(lesion_boundary_data, dg_viewer.viewport.contentSize.x);
 
-                //DAMN IT--- these x,y coordinates are taken from the original image, not the cropped image I think
+        //DAMN IT--- these x,y coordinates are taken from the original image, not the cropped image I think
 
-        });
+    });
 
-    }
+}
 
-function get_segmentation_superpixels( img_segmentation_list)
-    {
-        console.log('need to get superpixels');
-        console.log(img_segmentation_list);
+function get_segmentation_superpixels(img_segmentation_list) {
+    console.log('need to get superpixels');
+    console.log(img_segmentation_list);
 
-        //I will just get the first one...
-        segmentation_boundaries_URL =  'https://isic-archive.com/api/v1/segmentation/' + img_segmentation_list[0]['_id'];
-        console.log(img_segmentation_list[0]);
-        lesion_boundary_data = [];
-        $.getJSON(segmentation_boundaries_URL, function(data) {
-                lesion_boundary_data = data;
-                console.log(lesion_boundary_data);
-                console.log('GOT THE BOUNDARY??');
-                //Since for now I am only going to bother rendering a single one, I may as well parse it now..
-               // console.log(lesion_boundary_data.lesionBoundary);
-                //the geometry now contains the info I need to render it...
-                lesionboundary_to_svgshape( lesion_boundary_data, dg_viewer.viewport.contentSize.x);
+    //I will just get the first one...
+    segmentation_boundaries_URL = 'https://isic-archive.com/api/v1/segmentation/' + img_segmentation_list[0]['_id'];
+    console.log(img_segmentation_list[0]);
+    lesion_boundary_data = [];
+    $.getJSON(segmentation_boundaries_URL, function(data) {
+        lesion_boundary_data = data;
+        console.log(lesion_boundary_data);
+        console.log('GOT THE BOUNDARY??');
+        //Since for now I am only going to bother rendering a single one, I may as well parse it now..
+        // console.log(lesion_boundary_data.lesionBoundary);
+        //the geometry now contains the info I need to render it...
+        lesionboundary_to_svgshape(lesion_boundary_data, dg_viewer.viewport.contentSize.x);
 
 
-                    //DAMN IT--- these x,y coordinates are taken from the original image, not the cropped image I think
+        //DAMN IT--- these x,y coordinates are taken from the original image, not the cropped image I think
 
-        });
+    });
 
-    }
+}

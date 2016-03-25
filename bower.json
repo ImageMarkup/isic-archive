@@ -30,7 +30,11 @@
     "seiyria-bootstrap-slider": "6.1.6",
     "d3": "3.4.8",
     "openseadragon": "2.0.0",
-    "select2": "4.0.1"
+    "select2": "4.0.1", 
+    "dhtmlx": "4.5.1",
+
+    "webix": "3.2.0"
+
   },
   "private": true
 }

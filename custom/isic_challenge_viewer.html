@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Viewing Challenge Data Sets</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+	
+ 	<!-- jQuery -->
+    <script  src="/static/built/plugins/isic_archive/extra/bower_components/jquery/dist/jquery.min.js"></script>
+   
+	<script  src="/uda/static/dhtmlx/dhtmlx.js"></script>
+	<link   href="/uda/static/dhtmlx/dhtmlx.css" rel="stylesheet" >
+
+
+	 <script src="/static/built/plugins/isic_archive/extra/bower_components/openseadragon/built-openseadragon/openseadragon/openseadragon.min.js"></script>
+
+
+
+    <script src="/static/built/plugins/isic_archive/extra/bower_components/flatstrap/dist/js/bootstrap.min.js"></script>
+    <link  href="/static/built/plugins/isic_archive/extra/bower_components/flatstrap/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <!-- jQuery UI -->
+
+    <style type="text/css">
+	.large_img_view {
+		width:1200px;
+        height:300px;
+        border:1px solid black;
+	}
+
+
+	</style>
+
+
+
+	<script>
+		function update_main_img( new_img_url,image_id)
+			{
+			$("#liv_parent").attr('src',new_img_url);
+			$("#cur_image").text("You are vewing"+new_img_url+image_id)
+
+			}
+
+
+		var myDataView;
+		function doOnLoad() {
+			myDataView = new dhtmlXDataView({
+				container:"data_container",
+				type:'dataImgOnly'
+				
+			});
+			myDataView.load("/uda/ip_load/phase1test.json","json");
+		}
+
+		dhtmlx.Type.add(dhtmlXDataView,{
+			name:"dataImgOnly",
+			template:"#imgname# <img id=#id# onmouseover=update_main_img(this.src,this.id)  height=100 src='#image_path#'> ",
+			height:120
+		});
+		dhtmlx.Type.add(dhtmlXDataView,{
+			name:"dataImgOverlay",
+			template:"#imgname# <img id=#id# onmouseover=update_main_img(this.src,this.id) height=100 style='background:url(#image_path#)' src='#overlay_path#'>",
+			height:120
+		});
+	</script>
+	
+</head>
+<body onload="doOnLoad();">
+	<h3>ISIC Challenge Data</h3>
+	<h4 id="cur_image">Viewing....</h4>
+	<div class="large_img_view">
+		<span>
+			<img height="290" id="liv_parent">
+			<img height="290" id="liv_segment">
+			<img height="290" id="liv_combined">
+		</span>
+
+		</div>
+	<input type="button" name="" value="Image" onclick="myDataView.define('type','dataImgOnly')">
+	<input type="button" name="" value="Image w/Overlay" onclick="myDataView.define('type','dataImgOverlay')">
+
+	
+
+	<div id="data_container" style="border:1px solid #A4BED4; background-color:white;width:1400px;height:800px;"></div>
+
+
+	<div id="phase1_container"></div>
+	<div id="phase2_container"></div>
+	<div id="phase3_container"></div>
+
+</body>
+</html>
+
