@@ -1,92 +1,179 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-	<title>Viewing Challenge Data Sets</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-	<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-	
- 	<!-- jQuery -->
-    <script  src="/static/built/plugins/isic_archive/extra/bower_components/jquery/dist/jquery.min.js"></script>
-   
-	<script  src="/uda/static/dhtmlx/dhtmlx.js"></script>
-	<link   href="/uda/static/dhtmlx/dhtmlx.css" rel="stylesheet" >
-
-
-	 <script src="/static/built/plugins/isic_archive/extra/bower_components/openseadragon/built-openseadragon/openseadragon/openseadragon.min.js"></script>
-
-
-
+    <title>Viewing Challenge Data Sets</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- jQuery -->
+    <script src="/static/built/plugins/isic_archive/extra/bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="/uda/static/dhtmlx/dhtmlx.js"></script>
+    <link href="/uda/static/dhtmlx/dhtmlx.css" rel="stylesheet">
+    <script src="/static/built/plugins/isic_archive/extra/bower_components/openseadragon/built-openseadragon/openseadragon/openseadragon.min.js"></script>
     <script src="/static/built/plugins/isic_archive/extra/bower_components/flatstrap/dist/js/bootstrap.min.js"></script>
-    <link  href="/static/built/plugins/isic_archive/extra/bower_components/flatstrap/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="/static/built/plugins/isic_archive/extra/bower_components/flatstrap/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css">
     <!-- jQuery UI -->
-
     <style type="text/css">
-	.large_img_view {
-		width:1200px;
-        height:300px;
-        border:1px solid black;
+    body {
+        height: 100%;
+        width: 100%;
+    }
+    
+    .large_img_view {
+        width: 1200px;
+        height: 300px;
+        border: 1px solid black;
+        /* background-color: blue;*/
+    }
+    
+    #opacitySlider {
+        width: 160px;
+        height: 30px;
+    }
+
+	.invert{
+    -webkit-filter: invert(100%);
 	}
 
+    </style>
+    <script>
+    function update_main_img(image_id) {
+        cur_image = myDataView.item(image_id)
 
-	</style>
+        new_img_url = cur_image['image_path'];
+        cur_image_name = cur_image['imgname'];
+        new_img_overlay = cur_image['overlay_path'];
+
+        $("#liv_parent").attr('src', new_img_url);
+        $("#cur_image").text("You are viewing " + cur_image_name);
+        $("#liv_segment").attr('src', new_img_overlay);
+
+        //Now create a view with both combined
+        $("#liv_combined").css("background", "url(" + new_img_overlay + ")");
+        $("#liv_combined").attr('src', new_img_url);
+        console.log(new_img_overlay);
+
+        $("#liv_combined_image").attr('src', new_img_url);
+        $("#liv_combined_overlay").attr('src', new_img_overlay);
+
+
+    }
+
+
+    var myDataView;
+
+    function doOnLoad() {
+        myDataView = new dhtmlXDataView({
+            container: "data_container",
+            type: 'dataImgOnly',
+            pager: {
+                container: "paging_here",
+                size: 21,
+                group: 8
+            }
+
+        });
+        myDataView.load("/uda/ip_load/phase1test.json", "json");
+
+        // Initialize Slider
+        opSlider = new dhtmlXSlider({
+            parent: "opacitySlider",
+            size: 150,
+            value: 0.8,
+            step: 0.05,
+            min: 0,
+            max: 1
+        });
+
+        opSlider.attachEvent("onChange", function(value) {
+            $("#liv_combined_overlay").css('opacity', value);
+        });
+
+        update_main_img(1); //this probably won't work... its probably going to try and run before the data above is loaded
+    }
+
+
+    // Views for Phase 1  , some will work for Phase 2 as well
+    dhtmlx.Type.add(dhtmlXDataView, {
+        name: "dataImgOnly",
+        height: 'auto',
+        template: "#imgname# <img id=#id# onmouseover=update_main_img(this.id)  height=100 src='#image_path#'> ",
+        height: 120
+    });
+    dhtmlx.Type.add(dhtmlXDataView, {
+        name: "dataImgOverlay",
+        height: 'auto',
+        template: "#imgname# <img id=#id# onmouseover=update_main_img(this.id) height=100 style='background:url(#image_path#)' src='#overlay_path#'>",
+        height: 120
+    });
+
+   dhtmlx.Type.add(dhtmlXDataView, {
+        name: "dataSuperpixelOverlay",
+        height: 'auto',
+        template: "#imgname# <img id=#id# onmouseover=update_main_img(this.id) height=100 style='background:url(#image_path#)' src='#superpixel_path#'>",
+        height: 120
+    });
 
 
 
-	<script>
-		function update_main_img( new_img_url,image_id)
-			{
-			$("#liv_parent").attr('src',new_img_url);
-			$("#cur_image").text("You are vewing"+new_img_url+image_id)
-
-			}
-
-
-		var myDataView;
-		function doOnLoad() {
-			myDataView = new dhtmlXDataView({
-				container:"data_container",
-				type:'dataImgOnly'
-				
-			});
-			myDataView.load("/uda/ip_load/phase1test.json","json");
-		}
-
-		dhtmlx.Type.add(dhtmlXDataView,{
-			name:"dataImgOnly",
-			template:"#imgname# <img id=#id# onmouseover=update_main_img(this.src,this.id)  height=100 src='#image_path#'> ",
-			height:120
-		});
-		dhtmlx.Type.add(dhtmlXDataView,{
-			name:"dataImgOverlay",
-			template:"#imgname# <img id=#id# onmouseover=update_main_img(this.src,this.id) height=100 style='background:url(#image_path#)' src='#overlay_path#'>",
-			height:120
-		});
-	</script>
-	
+    </script>
 </head>
+
 <body onload="doOnLoad();">
-	<h3>ISIC Challenge Data</h3>
-	<h4 id="cur_image">Viewing....</h4>
-	<div class="large_img_view">
-		<span>
-			<img height="290" id="liv_parent">
-			<img height="290" id="liv_segment">
-			<img height="290" id="liv_combined">
+    <h3>ISIC Challenge Data</h3>
+    <div id="a_tabbar" class="dhtmlxTabBar" style="width:100%; height:890px;">
+        <div id="tabphase1" name="Phase 1 Data" selected="1" style="display: none;">
+            <span><span id="cur_image">Viewing....</span><span id="opacitySlider"></span>
+            <input type="button" name="" value="Image" onclick="myDataView.define('type','dataImgOnly')">
+            <input type="button" name="" value="Image w/Overlay" onclick="myDataView.define('type','dataImgOverlay')">
+            </span>
+            <div class="large_img_view">
+                <span>
+			<img height="290"  id="liv_parent">
+			<img height="290" class="invert" id="liv_segment">
+			<span>
+			<img style="position:absolute" height="290" id="liv_combined_image">
+			<img style="position:absolute" height="290"  id="liv_combined_overlay">
+			<span>
 		</span>
+            </div>
+            <div id="paging_here" style="width:596px;height:46px;"></div>
+            <div id="data_container" style="border:1px solid #A4BED4; background-color:white;width:1400px;height:800px;"></div>
+        </div>
+        <div id="tabphase2" name="Phase 2" style="display: none;">
+            TO ADD:add an about button 
+             <span><span id="cur_image_p2">Viewing....</span><span id="opacitySlider"></span>
+            <input type="button" name="" value="Image" onclick="p2_DataView.define('type','dataImgOnly')">
+            <input type="button" name="" value="Image w/Superpixels" onclick="p2_DataView.define('type','dataImgOverlay')">
+            </span>
+            <div class="large_img_view">
+                <span>
+			<img height="290"  id="liv_parent_p2">
+			<img height="290"  id="liv_segment_p2">
+			<span>
+			<img style="position:absolute" height="290" id="liv_combined_image_p2">
+			<img style="position:absolute" height="290"  id="liv_combined_overlay_p2">
+			<span>
+		</span>
+            </div>
+            <div id="paging_here_p2" style="width:596px;height:46px;"></div>
+            <div id="data_container_p2" style="border:1px solid #A4BED4; background-color:white;width:1400px;height:800px;">
+            	
+            </div>
+        </div>
 
-		</div>
-	<input type="button" name="" value="Image" onclick="myDataView.define('type','dataImgOnly')">
-	<input type="button" name="" value="Image w/Overlay" onclick="myDataView.define('type','dataImgOverlay')">
-
-	
-
-	<div id="data_container" style="border:1px solid #A4BED4; background-color:white;width:1400px;height:800px;"></div>
 
 
-	<div id="phase1_container"></div>
-	<div id="phase2_container"></div>
-	<div id="phase3_container"></div>
+        
+        <div id="tabphase3" name="Phase 3">
+            Stay tuned for phase 3
+        </div>
+        <div id="tab_info" name="info">
+        Each tab has the images and associated metadata for Phases 1, 2 and 3 of the ISIC challenge hosted at:
 
+        For the Phase 1 Data, as you hover over an image, a larger view is shown at the top.  You can also change the opacity of the overlay (the slider) to allow you to inspect the segmentation and the image in a single view.
+        </div>
+    </div>
 </body>
-</html>
 
+</html>
