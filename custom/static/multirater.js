@@ -330,7 +330,7 @@ function lesionboundary_to_svgshape(lesionBoundary_Dict, img_width) {
     console.log(coord_string);
     // polygon_svg_str = `<polygon points="${coord_string}" style="fill:${colours[ random(9)]};stroke;purple;stroke-width:1;opacity:0.5" id="boundary0" class="boundaryClass" />`;
     //     labelindex = contour.properties.labelindex;
-    d3.select(svg_layer.node()).append("polygon").attr("points", coord_string).style('fill', 'blue').attr('opacity', 0.2).attr('class', 'boundaryClass').attr('id', 'boundary0');
+    d3.select(svg_layer.node()).append("polygon").attr("points", coord_string).style('fill', 'blue').attr('opacity', 1.0).attr('class', 'boundaryClass').attr('id', 'boundary0');
     //.attr('stroke','blue');
     // });
     //     polygon_list.push({
