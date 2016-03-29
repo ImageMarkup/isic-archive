@@ -14,7 +14,6 @@ Vagrant.configure("2") do |config|
 
   config.vm.synced_folder ".", "/home/vagrant/isic_archive"
   config.vm.synced_folder ".", "/vagrant", disabled: true
-  config.vm.synced_folder "../..", "/home/vagrant/girder"
 
   config.vm.provision "ansible" do |ansible|
     ansible.playbook = "ansible/vagrant-playbook.yml"
