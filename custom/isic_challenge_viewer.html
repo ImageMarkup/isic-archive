@@ -82,13 +82,28 @@
 		loadSVGTileData(rr.svgjson_file)
         //Now create a view with both combined
         
-        // $("#liv_combined_image_p2").attr('src', new_img_url);
-        // $("#liv_combined_overlay_p2").attr('src', superpixel_overlay);
     }
 
 
     var p1_DataView;
     var p2_DataView; //making these public
+
+    function p1_load_done()
+    {
+		// This callback is executed when phase1 data is loaded
+		fi  = p1_DataView.first(); //First Item in this phase
+		update_main_img(fi);
+    }
+
+
+    function p2_load_done()
+    {
+		// This callback is executed when phase1 data is loaded
+		fi  = p2_DataView.first(); //First Item in this phase
+		p2_update_main_img(fi);
+    }
+
+
 
     function doOnLoad() {
         p1_DataView = new dhtmlXDataView({
@@ -101,7 +116,7 @@
             }
 
         });
-        p1_DataView.load("/uda/ip_load/phase1test.json", "json");
+        p1_DataView.load("/uda/ip_load/phase1test.json", "json", p1_load_done);
 
         p2_DataView = new dhtmlXDataView({
             container: "p2_data_container",
@@ -114,7 +129,7 @@
 
         });
 
-        p2_DataView.load("/uda/ip_load/phase2test.json", "json");
+        p2_DataView.load("/uda/ip_load/phase2test.json", "json", p2_load_done);
         // Initialize Slider for Phase 1
         opSlider = new dhtmlXSlider({
             parent: "opacitySlider",
@@ -126,7 +141,7 @@
         });
 
         opSlider.attachEvent("onChange", function(value) {
-            $("#liv_combined_overlay").css('opacity', value);
+            $("#p1_liv_combined_overlay").css('opacity', value);
         });
 
         p2_opSlider = new dhtmlXSlider({
@@ -138,10 +153,10 @@
             max: 1
         });
 
-        p2_opSlider.attachEvent("onChange", function(value) {
-            $("#liv_combined_overlay_p2").css('opacity', value);
-        });
-        // update_main_img(1); //this probably won't work... its probably going to try and run before the data above is loaded
+        // p2_opSlider.attachEvent("onChange", function(value) {
+        //     $("#p2_liv_combined_overlay").css('opacity', value);
+        // });
+        // // update_main_img(1); //this probably won't work... its probably going to try and run before the data above is loaded
     }
 
 
@@ -149,7 +164,7 @@
     dhtmlx.Type.add(dhtmlXDataView, {
         name: "p1_dataImgOnly",
         height: 'auto',
-        template: "#imgname# <img id=#id# onmouseover=update_main_img(this.id,this.phase)  height=100 src='#image_path#'> ",
+        template: "#imgname# <img id=#id# onmouseover=update_main_img(this.id)  height=100 src='#image_path#'> ",
         height: 120
     });
     dhtmlx.Type.add(dhtmlXDataView, {
@@ -206,7 +221,7 @@
             </span>
             <div class="large_img_view">
                 <span>
-              	  <svg height="290" viewport="0 0 1000 1000" id="p2_svg_target"> </svg>
+              	  <svg height="290" viewBox="0 0 1000 1000" id="p2_svg_target"> </svg>
                 <img height="290" style="position:absolute" id="p2_liv_parent">
               
                </span>

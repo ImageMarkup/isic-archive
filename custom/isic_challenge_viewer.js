@@ -4,42 +4,44 @@ function random(range) {
     return Math.floor(Math.random() * range);
 }
 
-
-function contourdata_to_shape(contours, img_width) {
-    scale_factor = 1;
-    polygon_list = [];
-
-    //Openseadragon uses the image width for bo the x and y scale factor... probably should rename this pixel factor
-    x_scale_factor = 1.0 / img_width;
-    y_scale_factor = 1.0 / img_width;
-
-    x_scale_factor = 1;
-    y_scale_factor = 1;
+var my_points; //Making this global for debugging
 
 
-    $.each(contours, function(index, contour) {
-        coord_info = contour.geometry.coordinates;
+// function contourdata_to_shape(contours, img_width) {
+//     scale_factor = 1;
+//     polygon_list = [];
 
-        coord_string = "";
-        $.each(coord_info, function(k, v) {
-            coord_string += `${(v[0]* x_scale_factor ) },${ ( v[1] * y_scale_factor) } `;
-        }); // the |0 made them all integers
+//     //Openseadragon uses the image width for bo the x and y scale factor... probably should rename this pixel factor
+//     x_scale_factor = 1.0 / img_width;
+//     y_scale_factor = 1.0 / img_width;
 
-        polygon_svg_str = `<polygon points="${coord_string}" style="fill: ${colours[ random(9)]}; stroke; purple; stroke-width: 1; opacity: 0.5;" id="tile${contour.properties.labelindex}" class="tileClass" />`;
-        labelindex = contour.properties.labelindex;
+//     x_scale_factor = 1;
+//     y_scale_factor = 1;
 
-        polygon_list.push({
-            'coords': coord_string,
-            'labelindex': contour.properties.labelindex
-        });
-    });
 
-    //Need to add the below function to a callback function for above..
-    $(".tileClass").hover(function() {
-        console.log(this.id)
-    });
-    return polygon_list;
-}
+//     $.each(contours, function(index, contour) {
+//         coord_info = contour.geometry.coordinates;
+
+//         coord_string = "";
+//         $.each(coord_info, function(k, v) {
+//             coord_string += `${(v[0]* x_scale_factor ) },${ ( v[1] * y_scale_factor) } `;
+//         }); // the |0 made them all integers
+
+//         //polygon_svg_str = `<polygon points="${coord_string}" style="fill: ${colours[ random(9)]}; stroke; purple; stroke-width: 1; opacity: 0.5;" id="tile${contour.properties.labelindex}" class="tileClass" />`;
+//         labelindex = contour.properties.labelindex;
+
+//         polygon_list.push({
+//             'coords': coord_string,
+//             'labelindex': contour.properties.labelindex
+//         });
+//     });
+
+//     //Need to add the below function to a callback function for above..
+//     $(".tileClass").hover(function() {
+//         console.log(this.id)
+//     });
+//     return polygon_list;
+// }
 
 
 
@@ -75,17 +77,19 @@ function loadSVGTileData(svg_json) {
 
     //  This will iterate through all the tiles and color them a different color to show the tile overlays
     $(".tileClass").remove();
-    my_points = contourdata_to_shape(new_geodata, img_width);
+    //my_points = contourdata_to_shape(new_geodata, img_width);
     //This generates the pretty multicolor tile image
+	//	console.log(my_points);
+	my_points = geo_array;
+	//console.log(my_points);
     $.each(my_points, function(k, point_list) {
-        //
-
         col = colours[ random(9)];
-        d3.select("#p2_svg_target").append("polygon").attr("points", point_list.coords).style('fill', col).attr('opacity', 1.0).attr('class', 'tileClass').attr('id', 'tile' + point_list.labelindex)
+
+        	//my_points[2].geometry.coordinates.join(' ')  I need to flatten the coords into a string
+        //console.log(point_list);
+        d3.select("#p2_svg_target").append("polygon").attr("points", point_list.geometry.coordinates ).style('fill', col).attr('opacity', 0.9).attr('class', 'tileClass').attr('id', 'tile' + point_list.properties.labelindex);
     });
 }
-
-
 
 
 
