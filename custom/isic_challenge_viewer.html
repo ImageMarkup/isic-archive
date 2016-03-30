@@ -79,7 +79,7 @@
         
         //Now update the SVG IMAGE
         rr = p2_DataView.item(image_id)
-		loadSVGTileData(rr.svgjson_file)
+		loadSVGTileData(rr)
         //Now create a view with both combined
         
     }
@@ -153,10 +153,10 @@
             max: 1
         });
 
-        // p2_opSlider.attachEvent("onChange", function(value) {
-        //     $("#p2_liv_combined_overlay").css('opacity', value);
-        // });
-        // // update_main_img(1); //this probably won't work... its probably going to try and run before the data above is loaded
+        p2_opSlider.attachEvent("onChange", function(value) {
+            $(".tileClass").css('opacity', value);
+        });
+        
     }
 
 
@@ -214,14 +214,18 @@
         <div id="tabphase2" name="Phase 2" style="display: none;">
             TO ADD:add an about button
             <span><span id="cur_image_p2">Viewing....</span><span id="p2_opacitySlider"></span>
-            <input type="button" name="" value="Image" onclick="p2_DataView.define('type','p2_dataImgOnly')">
-            <input type="button" name="" value="Image w/Superpixels" onclick="p2_DataView.define('type','p2_dataSuperpixelOverlay')">
-            <input type="button" name="" value="Globules" onclick="">
-            <input type="button" name="" value="Streaks" onclick="">
+            <input type="button" name="" value="Image Only" onclick="p2_DataView.define('type','p2_dataImgOnly')">
+            <input type="button" name="" value="Image w/Metadata" onclick="p2_DataView.define('type','p2_dataSuperpixelOverlay')">
+            <input type="button" name="" value="Globules" onclick="show_features(this.id,'globules')">
+            <input type="button" name="" value="Streaks" onclick="show_features(this.id,'streaks')">
             </span>
             <div class="large_img_view">
                 <span>
-              	  <svg height="290" viewBox="0 0 1000 1000" id="p2_svg_target"> </svg>
+              	  <svg height="290" viewBox="0 0 1000 1000" id="p2_svg_target"> 
+
+              	  	<image width="500" height="500" id="p2_baseimgsvg" xlink:href="http://isic-archive.dev/uda/static/isic_challenge/ISBI2016_ISIC_Part2_Training_Data/ISIC_0000001.jpg" >
+
+              	  </svg>
                 <img height="290" style="position:absolute" id="p2_liv_parent">
               
                </span>
