@@ -164,27 +164,27 @@
     dhtmlx.Type.add(dhtmlXDataView, {
         name: "p1_dataImgOnly",
         height: 'auto',
-        template: "#imgname# <img id=#id# onmouseover=update_main_img(this.id)  height=100 src='#image_path#'> ",
+        template: "#imgname# <img id=#id# onclick=update_main_img(this.id)  height=100 src='#image_path#'> ",
         height: 120
     });
     dhtmlx.Type.add(dhtmlXDataView, {
         name: "p1_dataImgOverlay",
         height: 'auto',
-        template: "#imgname# <img id=#id# onmouseover=update_main_img(this.id) height=100 style='background:url(#image_path#)' src='#overlay_path#'>",
+        template: "#imgname# <img id=#id# onclick=update_main_img(this.id) height=100 style='background:url(#image_path#)' src='#overlay_path#'>",
         height: 120
     });
 
     dhtmlx.Type.add(dhtmlXDataView, {
         name: "p2_dataImgOnly",
         height: 'auto',
-        template: "#imgname# <img id=#id# onmouseover=p2_update_main_img(this.id)  height=100 src='#image_path#'> ",
+        template: "#imgname# <img id=#id# onclick=p2_update_main_img(this.id)  height=100 src='#image_path#'> ",
         height: 120
     });
 
     dhtmlx.Type.add(dhtmlXDataView, {
         name: "p2_dataSuperpixelOverlay",
         height: 'auto',
-        template: "#imgname# S: #streaks_count# G: #globules_count# <img id=#id# onmouseover=p2_update_main_img(this.id) height=100 src='#image_path#' style='background:url(#image_path#)' >",
+        template: "#imgname# S: #streaks_count# G: #globules_count# <img id=#id# onclick=p2_update_main_img(this.id) height=100 src='#image_path#' style='background:url(#image_path#)' >",
         height: 140
     });
     </script>
@@ -212,12 +212,12 @@
             <div id="p1_data_container" style="border:1px solid #A4BED4; background-color:white;width:1400px;height:800px;"></div>
         </div>
         <div id="tabphase2" name="Phase 2" style="display: none;">
-            TO ADD:add an about button
+            
             <span><span id="cur_image_p2">Viewing....</span><span id="p2_opacitySlider"></span>
             <input type="button" name="" value="Image Only" onclick="p2_DataView.define('type','p2_dataImgOnly')">
             <input type="button" name="" value="Image w/Metadata" onclick="p2_DataView.define('type','p2_dataSuperpixelOverlay')">
-            <input type="button" name="" value="Globules" onclick="show_features(this.id,'globules')">
-            <input type="button" name="" value="Streaks" onclick="show_features(this.id,'streaks')">
+            <input type="button" name="" color="green" style="background-color:green"  value="Globules" onclick="show_features(this.id,'globules',this.style)">
+            <input type="button" name="" color="blue" style="background-color:blue" value="Streaks" onclick="show_features(this.id,'streaks',this.style)">
             </span>
             <div class="large_img_view">
                 <span>
