@@ -16,12 +16,13 @@
     <script src="/static/built/plugins/isic_archive/extra/bower_components/d3/d3.js"></script>
     <script src="isic_challenge_viewer.js"></script>
     <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
-
-	<script src="/static/built/plugins/isic_archive/extra/bower_components/openseadragon/built-openseadragon/openseadragon/openseadragon.js"></script>
-
- <script src="/uda/static/openseadragon-svg-overlay.js"></script>
     <!-- PREVENTS ANNOYING FACICON.ICO REQUEST -->
-    <!-- jQuery UI -->
+    <script src="/static/built/plugins/isic_archive/extra/bower_components/openseadragon/built-openseadragon/openseadragon/openseadragon.js"></script>
+    <script src="/uda/static/openseadragon-svg-overlay.js"></script>
+    <script src="isic_challenge_onLoad.js"></script>
+
+    <script src="isic_fetchviagirder.js"> </script>
+
     <style type="text/css">
     body {
         height: 100%;
@@ -44,211 +45,18 @@
         -webkit-filter: invert(100%);
     }
     </style>
-    <script>
-    function p2_load_osd( imageID, phase)
-
-    	{
-    		console.log('You are trying to load an image for OSD!!'+imageID)
-
-    		//This is only working for phase 2, although simple switch for phase 1..
-
-    	imageInfo = p2_DataView.item(imageID);
-
-
-    new_tile_source = {
-        'type': 'legacy-image-pyramid',
-        levels: [{
-            'url': imageInfo.image_path,
-            'height': imageInfo.image_height,
-            'width': imageInfo.image_width
-        }]
-    };
-    //update_rater_overlays(image_name);  <<TO DOO!!!!
-    osd_viewer.open(new_tile_source);
-
-    //Add in a hook to display what image you are looking at, as well as the globules/streaks count...
-
-    	}
-
-
-    function update_main_img(image_id) {
-        /* Going to make this vary based on the phase */
-        cur_image = p1_DataView.item(image_id)
-
-        new_img_url = cur_image['image_path'];
-        cur_image_name = cur_image['imgname'];
-        new_img_overlay = cur_image['overlay_path'];
-
-        $("#cur_image").text("You are viewing " + cur_image_name);
-
-        $("#p1_liv_parent").attr('src', new_img_url);
-        
-        $("#p1_liv_segment").attr('src', new_img_overlay);
-
-        //Now create a view with both combined
-        $("#p1_liv_combined").css("background", "url(" + new_img_overlay + ")");
-        $("#p1_liv_combined").attr('src', new_img_url);
-        console.log(new_img_overlay);
-
-        $("#p1_liv_combined_image").attr('src', new_img_url);
-        $("#p1_liv_combined_overlay").attr('src', new_img_overlay);
-
-    }
-
-    function p2_update_main_img(image_id) {
-
-        /* Going to make this vary based on the phase */
-        cur_image = p2_DataView.item(image_id)
-        new_img_url = cur_image['image_path'];
-        cur_image_name = cur_image['imgname'];
-        
-        $("#p2_liv_parent").attr('src', new_img_url);
-        $("#cur_image_p2").text("You are viewing " + cur_image_name);
-        //Now update the SVG IMAGE
-        rr = p2_DataView.item(image_id);  //Updating global rr variable for debugging, 
-		loadSVGTileData(rr)
-        //Now create a view with both combined
-    }
-
-
-    var p1_DataView;
-    var p2_DataView; //making these public
-
-    function p1_load_done()
-    {
-		// This callback is executed when phase1 data is loaded
-		fi  = p1_DataView.first(); //First Item in this phase
-		update_main_img(fi);
-    }
-
-
-    function p2_load_done()
-    {
-		// This callback is executed when phase1 data is loaded
-		fi  = p2_DataView.first(); //First Item in this phase
-		p2_update_main_img(fi);
-    }
-
-
-
-    function doOnLoad() {
-        p1_DataView = new dhtmlXDataView({
-            container: "p1_data_container",
-            type: 'p1_dataImgOnly',
-            pager: {
-                container: "paging_here",
-                size: 40,
-                group: 8
-            }
-
-        });
-        p1_DataView.load("/uda/ip_load/phase1test.json", "json", p1_load_done);
-
-        p2_DataView = new dhtmlXDataView({
-            container: "p2_data_container",
-            type: 'p2_dataImgOnly',
-            pager: {
-                container: "pager_p2",
-                size: 40,
-                group: 8
-            }
-
-        });
-
-        p2_DataView.load("/uda/ip_load/phase2test.json", "json", p2_load_done);
-        // Initialize Slider for Phase 1
-        opSlider = new dhtmlXSlider({
-            parent: "opacitySlider",
-            size: 150,
-            value: 0.8,
-            step: 0.05,
-            min: 0,
-            max: 1
-        });
-
-        opSlider.attachEvent("onChange", function(value) {
-            $("#p1_liv_combined_overlay").css('opacity', value);
-        });
-
-        p2_opSlider = new dhtmlXSlider({
-            parent: "p2_opacitySlider",
-            size: 150,
-            value: 0.8,
-            step: 0.05,
-            min: 0,
-            max: 1
-        });
-
-        p2_opSlider.attachEvent("onChange", function(value) {
-            $(".tileClass").css('opacity', value);
-        });
-
-
-        //Also create an OSD container
-        configure_osd( 'osd_container' );
-	
-        
-    }
-
-
-    // Views for Phase 1  , some will work for Phase 2 as well
-    dhtmlx.Type.add(dhtmlXDataView, {
-        name: "p1_dataImgOnly",
-        height: 'auto',
-        template: "#imgname# <img id=#id# onclick=update_main_img(this.id)  height=100 src='#image_path#'> ",
-        height: 120
-    });
-    dhtmlx.Type.add(dhtmlXDataView, {
-        name: "p1_dataImgOverlay",
-        height: 'auto',
-        template: "#imgname# <img id=#id# onclick=update_main_img(this.id) height=100 style='background:url(#image_path#)' src='#overlay_path#'>",
-        height: 120
-    });
-
-    dhtmlx.Type.add(dhtmlXDataView, {
-        name: "p2_dataImgOnly",
-        height: 'auto',
-        template: "#imgname# <img id=#id# onclick=p2_update_main_img(this.id) onDblClick=p2_load_osd(this.id,'phase2') height=100 src='#image_path#' > ",
-        height: 120
-    });
-
-    dhtmlx.Type.add(dhtmlXDataView, {
-        name: "p2_dataSuperpixelOverlay",
-        height: 'auto',
-        template: "#imgname# S: #streaks_count# G: #globules_count# <img id=#id# onclick=p2_update_main_img(this.id) height=100 src='#image_path#' onDblClick=p2_load_osd(this.id,'phase2') >",
-        height: 140
-    });
-
-
-    function filter_p2( filter_properties)
-    	{
-    		//This shoule eventually be much smarter, and filter based on what buttons or facets are done
-    		console.log('You clicked'+filter_properties);	
-    		p2_DataView.filter(); //resets all the filters
-   
-    			//This filters out any images that don't have any markup data
-
-		 p2_DataView.filter( function(obj,value) 
-		 	{ if(obj.streaks_count>value && obj.globules_count > value) return true; return false} , 1) 
-
-
-    	}
-
-    </script>
 </head>
 
 <body onload="doOnLoad();">
     <h3>ISIC Challenge Data</h3>
-    <div id="a_tabbar" class="dhtmlxTabBar" style="width:100%; height:890px;">
-        <div id="tabphase1" name="Phase 1 Data" selected="1" style="display: none;">
-            <span><span id="cur_image">Viewing....</span><span id="opacitySlider"></span>
-            <input type="button" name="" value="Image" onclick="myDataView.define('type','p1_dataImgOnly')">
-            <input type="button" name="" value="Image w/Overlay" onclick="myDataView.define('type','p1_dataImgOverlay')">
-
-
-            </span>
-            <div class="large_img_view">
-                <span>
+    <div id="isbi_tabbar" style="width:100%; height:890px;"></div>
+    <div id="tabphase1" name="Phase 1 Data" selected="1" style="display: none;">
+        <span><span id="cur_image">Viewing....</span><span id="opacitySlider"></span>
+        <input type="button" value="Image" onclick="p1_DataView.define('type','p1_dataImgOnly')">
+        <input type="button" value="Image w/Overlay" onclick="p1_DataView.define('type','p1_dataImgOverlay')">
+        </span>
+        <div class="large_img_view">
+            <span>
 			<img height="290"  id="p1_liv_parent">
 			<img height="290" class="invert" id="p1_liv_segment">
 			<span>
@@ -256,23 +64,20 @@
 			<img style="position:absolute" height="290"  id="p1_liv_combined_overlay">
 			<span>
 		</span>
-            </div>
-            <div id="paging_here" style="width:596px;height:46px;"></div>
-            <div id="p1_data_container" style="border:1px solid #A4BED4; background-color:white;width:1400px;height:800px;"></div>
         </div>
-        <div id="tabphase2" name="Phase 2" style="display: none;">
-            
-            <span><span id="cur_image_p2">Viewing....</span><span id="p2_opacitySlider"></span>
-            <input type="button" name="" value="Image Only" onclick="p2_DataView.define('type','p2_dataImgOnly')">
-            <input type="button" name="" value="Image w/Metadata" onclick="p2_DataView.define('type','p2_dataSuperpixelOverlay')">
-            <input type="button" name="" color="green" style="background-color:green"  value="Globules" onclick="show_features(this.id,'globules',this.style)">
-            <input type="button" name="" color="blue" style="background-color:blue;color:white" value="Streaks" onclick="show_features(this.id,'streaks',this.style)">
-                 <input type="button" value="Hide UnMarkedud" id="filterBlanks" onclick=filter_p2(this.id) >
-
-
-            </span>
-            <div class="large_img_view">
-                <span>
+        <div id="paging_here" style="width:596px;height:46px;"></div>
+        <div id="p1_data_container" style="border:1px solid #A4BED4; background-color:white;width:1400px;height:800px;"></div>
+    </div>
+    <div id="tabphase2" name="Phase 2" style="display: none;">
+        <span><span id="cur_image_p2">Viewing....</span><span id="p2_opacitySlider"></span>
+        <input type="button" class="btn btn-default" value="Image Only" onclick="p2_DataView.define('type','p2_dataImgOnly')">
+        <input type="button" class="btn btn-default" value="Image w/Metadata" onclick="p2_DataView.define('type','p2_dataSuperpixelOverlay')">
+        <input type="button" class="btn" color="green" style="background-color:green;color:white" value="Globules" onclick="show_features(this.id,'globules',this.style)">
+        <input type="button" class="btn" color="blue" style="background-color:blue;color:white" value="Streaks" onclick="show_features(this.id,'streaks',this.style)">
+        <input type="button" value="Hide UnMarkedud" id="filterBlanks" onclick=filter_p2(this.id)>
+        </span>
+        <div class="large_img_view">
+            <span>
               	  <svg height="290" viewBox="0 0 1000 1000" id="p2_svg_target"> 
 
               	  	<image width="500" height="500" id="p2_baseimgsvg" xlink:href="http://isic-archive.dev/uda/static/isic_challenge/ISBI2016_ISIC_Part2_Training_Data/ISIC_0000001.jpg" >
@@ -281,21 +86,48 @@
                 <img height="290" style="position:absolute" id="p2_liv_parent">
               
                </span>
-            </div>
-            <div id="pager_p2" style="width:596px;height:46px;"></div>
-            <div id="p2_data_container" style="border:1px solid #A4BED4; background-color:white;width:1400px;height:800px;">
-            </div>
         </div>
-        <div id="tabphase3" name="Phase 3">
-            Stay tuned for phase 3
-        </div>
-        <div id="tab_info" name="info">
-            Each tab has the images and associated metadata for Phases 1, 2 and 3 of the ISIC challenge hosted at: For the Phase 1 Data, as you hover over an image, a larger view is shown at the top. You can also change the opacity of the overlay (the slider) to allow you to inspect the segmentation and the image in a single view.
-        </div>
-        <div id="tab_zoomed" name="Zoomed Data">
-            <div id="osd_container" style="width: 100%; height: 600px; border: 1px solid blue;" class="openseadragon"></div>
+        <div id="pager_p2" style="width:596px;height:46px;"></div>
+        <div id="p2_data_container" style="border:1px solid #A4BED4; background-color:white;width:1400px;height:800px;">
         </div>
     </div>
+    <div id="tabphase3" style="display:none;" name="Phase 3">
+        Stay tuned for phase 3
+    </div>
+    <div id="tab_info" name="Info">
+        Each tab has the images and associated metadata for Phases 1, 2 and 3 of the ISIC challenge hosted at: For the Phase 1 Data, as you hover over an image, a larger view is shown at the top. You can also change the opacity of the overlay (the slider) to allow you to inspect the segmentation and the image in a single view.
+        <span id="challenge_stats"></span>
+    </div>
+    <div id="tab_zoomed" style="display:none;" name="Zoomed Data">
+        <div class="container ">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            <div class="panel-title">
+                                <h3 style="text-align:center">Image Info</h3></div>
+                        </div>
+                        <div class="panel-body">
+                            <span id="osd_image_stats"></span>
+                        </div>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel_body">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" id="btn_osd_streaks" class="btn btn-default">Streaks</button>
+                                <button type="button" id="btn_osd_globules" class="btn btn-default">Globs</button>
+                                <button type="button" id="btn_osd_both" class="btn btn-default">Both</button>
+                                <button type="button" id="btn_osd_both" class="btn btn-default">SuperPix</button>
+                            </div>
+                            <span id="osd_tile_slider"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div id="osd_container" style="width: 100%; height: 600px; border: 1px solid blue;" class="openseadragon"></div>
+                </div>
+            </div>
+        </div>
 </body>
 
 </html>

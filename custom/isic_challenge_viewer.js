@@ -3,8 +3,44 @@
 function random(range) {
     return Math.floor(Math.random() * range);
 }
-
 var my_points; //Making this global for debugging
+
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0; i<ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1);
+        if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
+    }
+    return "";
+}
+
+
+
+$.ajax({
+  url: "/api/v1/dataset",
+headers: {'Girder-Token': getCookie('girderToken')},
+
+})
+  .done(function( data ) {
+    if ( console && console.log ) {
+      console.log( "Sample of data:", data );
+    }
+  });
+
+
+
+function osd_colorTiles(feature_to_display)
+    {
+        //Given the feature to display, this will update the SVG OSD image
+        console.log("should be rendering feature",feature_to_display)
+
+    }
+
+///Headers: {'Girder-Authorization': getCookie('girderToken')},
+
 
 
 
@@ -21,8 +57,6 @@ function loadSVGTileData(image_info) {
             update_SVG_layer(geo_array, image_info); //Now that I have an array of polygons from the SVGJSON file, I can load them
         })
 }
-
-
 
 function update_SVG_layer(SVG_json, image_info) {
     // This will update the current phase 2 image with an SVG containing the image boundaries...
@@ -56,100 +90,72 @@ function update_SVG_layer(SVG_json, image_info) {
 function show_features(image_id, feature_to_display, style) {
     //Given an image_id, this will display the superpixels that have been marked up for that image
     $(".tileClass").attr('opacity', 0);
-
     btn_color = style['background-color'];
     //This is a lame hack, rr gets updated with the latest image I am looking at
     sup_pix_for_feat = rr[feature_to_display];
     //console.log(sup_pix_for_feat);
     $.each(sup_pix_for_feat, function(k, v) {
-            if (v != 0) {
-                $("#tile" + k).attr('opacity', 0.8);
-                $("#tile" + k).css('fill', btn_color)
-            		}
-      	  })
+        if (v != 0) {
+            $("#tile" + k).attr('opacity', 0.8);
+            $("#tile" + k).css('fill', btn_color)
+        }
+    })
+}
+
+var osd_viewer; //Makign this publically scoped for debugging...
+
+function configure_osd(container_to_use) {
+    //Given a target container, this will instantiate an openseadragon viewer
+    osd_viewer = OpenSeadragon({
+        'id': container_to_use,
+        'prefixUrl': '/static/built/plugins/isic_archive/extra/bower_components/openseadragon/built-openseadragon/openseadragon/images/',
+        'navigationPosition': 'UPPER_RIGHT',
+        'showNavigation': true,
+        'maxZoomLevel': 4,
+        'showRotationControl': true,        // Show rotation buttons
+    })
+
+    defaultimg_not_avail = {
+        'type': 'legacy-image-pyramid',
+        levels: [{
+            'url': 'https://c1.staticflickr.com/3/2150/2101058680_64fa63971e.jpg',
+            'height': 435,
+            'width': 356,
+        }]
+    };
+
+    osd_viewer.open(defaultimg_not_avail);
+    //Will now bind an SVG object to the viewer so I can do fun D3 stuff
+    osd_svg_layer = osd_viewer.svgOverlay();
 
 }
 
 
-var osd_viewer; //Makign this publically scoped for debugging...
+function renderOSD_SVG_Tiles(image_info) {
+    //This is a bit annoying, but I have to reformat the SVGJSON file to make it compatible with Openseadragon
+    //so instead of using integers, I have to divid everything by the image_width, but since I am storing
+    //the coordinates as strings, I have to do a lot of very non-intuitive text parsing to do this.. 
+    //May try and reformat the incoming SVGJSON file to just return everything as an array, as flattening
+    //an array is a lot easier to read than converting a string to an array back to a string
 
-function configure_osd( container_to_use )
-	{
+    $(".osdTileClass").remove();
+    $.getJSON(rr.svgjson_file).done(function(contour_array) {
+        //Irritatingly, the returned data is a string, not a JSON file, not sure why I am doing this wrong
+        wid = image_info.image_width;
+        //Now iterate through the countours
+        $.each(contour_array, function(idx, row) {
 
-		//Given a target container, this will instantiate an openseadragon viewer
-		osd_viewer = OpenSeadragon(
-				{
-					'id': container_to_use,
-					'prefixUrl': '/static/built/plugins/isic_archive/extra/bower_components/openseadragon/built-openseadragon/openseadragon/images/',
-					'navigationPosition':  'UPPER_RIGHT',
-					'showNavigation': true,
-                    'maxZoomLevel': 4,
-                 
-                    // Show rotation buttons
-                    'showRotationControl': true,
-
-						}
-			)
-
-
-	defaultimg_not_avail = {
-            'type': 'legacy-image-pyramid',
-            levels: [{
-                'url': 'https://c1.staticflickr.com/3/2150/2101058680_64fa63971e.jpg',
-                'height': 435,
-                'width': 356,
-            }]
-        };
-      
-       osd_viewer.open(defaultimg_not_avail);
-
-       //Will now bind an SVG object to the viewer so I can do fun D3 stuff
-       osd_svg_layer = osd_viewer.svgOverlay(); 
-
-	}
-
-
-
-function renderOSD_SVG_Tiles( image_info)
-    {
-        //This is a bit annoying, but I have to reformat the SVGJSON file to make it compatible with Openseadragon
-        //so instead of using integers, I have to divid everything by the image_width, but since I am storing
-        //the coordinates as strings, I have to do a lot of very non-intuitive text parsing to do this.. 
-        //May try and reformat the incoming SVGJSON file to just return everything as an array, as flattening
-        //an array is a lot easier to read than converting a string to an array back to a string
-
-        $(".osdTileClass").remove();
-
-        $.getJSON(rr.svgjson_file).done( function(contour_array) { 
-            //Irritatingly, the returned data is a string, not a JSON file, not sure why I am doing this wrong
-
-
-            wid = image_info.image_width;
-            //Now iterate through the countours
-            $.each(contour_array, function(idx,row){
-
-                cntr = JSON.parse(row);
-                unscaled_coords = cntr.geometry.coordinates.trim().split(" ");
-                //Convert this temporarily to an xy array, and then convert it back..
-                unscaled_xy_array = [];
-                $.each(unscaled_coords, function( idx2, row2)  {  dt= row2.split(','); unscaled_xy_array.push( {'x':dt[0]/wid, 'y':dt[1]/wid}  )  }     )
-                flattened_string = "";
-                $.each(unscaled_xy_array, function(idx3,xy) { flattened_string += ' '+ xy.x + ','+xy.y                       })
+            cntr = JSON.parse(row);
+            unscaled_coords = cntr.geometry.coordinates.trim().split(" ");
+            //Convert this temporarily to an xy array, and then convert it back..
+            unscaled_xy_array = [];
+            $.each(unscaled_coords, function(idx2, row2) { dt = row2.split(',');
+                unscaled_xy_array.push({ 'x': dt[0] / wid, 'y': dt[1] / wid }) })
+            flattened_string = "";
+            $.each(unscaled_xy_array, function(idx3, xy) { flattened_string += ' ' + xy.x + ',' + xy.y })
                 //Now I can actually push this to d3
-                d3.select(osd_svg_layer.node()).append("polygon").attr('points', flattened_string).style('fill','blue').attr('opacity',0.5).attr('class','osdTileClass')
+            d3.select(osd_svg_layer.node()).append("polygon").attr('points', flattened_string).style('fill', 'blue').attr('opacity', 0.5).attr('class', 'osdTileClass')
+        })
+    });
 
-
-            })
-
-            
-
-
-             });
-
-// xy_array = [];
-// $.each(scaled_coords, function(idx,vals)  { dt = vals.split(',');  xy_array.push( {'x':dt[0]/rr.image_width, 'y':dt[1]/rr.image_width } ) });
-// flattened_string = "";
-// $.each(xy_array, function(idx,xy) { flattened_string += ' '+ xy.x + ','+xy.y                       })
-
-
-    }
+}
