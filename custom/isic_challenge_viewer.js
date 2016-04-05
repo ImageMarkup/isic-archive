@@ -9,10 +9,10 @@ var my_points; //Making this global for debugging
 function getCookie(cname) {
     var name = cname + "=";
     var ca = document.cookie.split(';');
-    for(var i=0; i<ca.length; i++) {
+    for (var i = 0; i < ca.length; i++) {
         var c = ca[i];
-        while (c.charAt(0)==' ') c = c.substring(1);
-        if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
+        while (c.charAt(0) == ' ') c = c.substring(1);
+        if (c.indexOf(name) == 0) return c.substring(name.length, c.length);
     }
     return "";
 }
@@ -20,26 +20,39 @@ function getCookie(cname) {
 
 
 $.ajax({
-  url: "/api/v1/dataset",
-headers: {'Girder-Token': getCookie('girderToken')},
+        url: "/api/v1/dataset",
+        headers: { 'Girder-Token': getCookie('girderToken') },
 
-})
-  .done(function( data ) {
-    if ( console && console.log ) {
-      console.log( "Sample of data:", data );
-    }
-  });
+    })
+    .done(function(data) {
+        if (console && console.log) {
+            console.log("Sample of data:", data);
+        }
+    });
 
 
 
-function osd_colorTiles(feature_to_display)
-    {
-        //Given the feature to display, this will update the SVG OSD image
-        console.log("should be rendering feature",feature_to_display)
+function osd_colorTiles(feature_to_display, style) {
+    //Given the feature to display, this will update the SVG OSD image
+    console.log("should be rendering feature", feature_to_display);
 
-    }
+    $(".osdTileClass").attr('opacity', 0); //make all tiles 0
 
-///Headers: {'Girder-Authorization': getCookie('girderToken')},
+    feat = feature_to_display.replace('btn_osd_','');
+
+    btn_color = style['background-color'];
+    //     //This is a lame hack, rr gets updated with the latest image I am looking at
+    sup_pix_for_feat = rr[feat];
+    //     //console.log(sup_pix_for_feat);
+    $.each(sup_pix_for_feat, function(k, v) {
+        if (v != 0) {
+            $("#osdtile" + k).attr('opacity', 0.8);
+            $("#osdtile" + k).css('fill', btn_color)
+        }
+    })
+
+
+}
 
 
 
@@ -112,7 +125,7 @@ function configure_osd(container_to_use) {
         'navigationPosition': 'UPPER_RIGHT',
         'showNavigation': true,
         'maxZoomLevel': 4,
-        'showRotationControl': true,        // Show rotation buttons
+        'showRotationControl': true, // Show rotation buttons
     })
 
     defaultimg_not_avail = {
@@ -149,12 +162,15 @@ function renderOSD_SVG_Tiles(image_info) {
             unscaled_coords = cntr.geometry.coordinates.trim().split(" ");
             //Convert this temporarily to an xy array, and then convert it back..
             unscaled_xy_array = [];
-            $.each(unscaled_coords, function(idx2, row2) { dt = row2.split(',');
-                unscaled_xy_array.push({ 'x': dt[0] / wid, 'y': dt[1] / wid }) })
+            $.each(unscaled_coords, function(idx2, row2) {
+                dt = row2.split(',');
+                unscaled_xy_array.push({ 'x': dt[0] / wid, 'y': dt[1] / wid })
+            })
             flattened_string = "";
             $.each(unscaled_xy_array, function(idx3, xy) { flattened_string += ' ' + xy.x + ',' + xy.y })
                 //Now I can actually push this to d3
-            d3.select(osd_svg_layer.node()).append("polygon").attr('points', flattened_string).style('fill', 'blue').attr('opacity', 0.5).attr('class', 'osdTileClass')
+            //    console.log(cntr);
+            d3.select(osd_svg_layer.node()).append("polygon").attr('points', flattened_string).style('fill', 'blue').attr('opacity', 0.5).attr('class', 'osdTileClass').attr('id', 'osdtile' + cntr.properties.labelindex);
         })
     });
 
