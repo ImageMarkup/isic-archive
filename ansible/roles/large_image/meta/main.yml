@@ -1,5 +1,5 @@
 ---
 
 dependencies:
-  - role: vips
+  - role: DigitalSlideArchive.vips
   - role: girder
