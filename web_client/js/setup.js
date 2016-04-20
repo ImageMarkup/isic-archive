@@ -25,6 +25,11 @@ girder.wrap(girder.views.LayoutGlobalNavView, 'render', function (render) {
             target: 'isic-tasks'
         });
     }
+    this.navItems.push({
+        name: 'Forum',
+        icon: 'icon-chat',
+        target: 'isic-forum'
+    });
     this.navItems = this.navItems.concat(this.defaultNavItems);
     if (girder.currentUser && girder.currentUser.get('admin')) {
         this.navItems.push({
@@ -61,4 +66,9 @@ girder.router.route('isic-studies', 'isic-studies', function () {
 girder.router.route('isic-tasks', 'isic-tasks', function () {
     'use strict';
     window.location.replace('/uda/task');
+});
+
+girder.router.route('isic-forum', 'isic-forum', function () {
+    'use strict';
+    window.location.replace('http://forum.isic-archive.com');
 });
