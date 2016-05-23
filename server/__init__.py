@@ -4,16 +4,49 @@
 import os
 
 from girder import events
-from girder.constants import SettingKey
+from girder.constants import SettingKey, PACKAGE_DIR, STATIC_ROOT_DIR
 from girder.models.model_base import ValidationException
 from girder.utility.model_importer import ModelImporter
 from girder.utility.server import staticFile
+from girder.utility.webroot import WebrootBase
 
 from . import constants
 from . import api
 from .provision_utility import initialSetup, onUserCreated
 from .task_utility import UDAResource, TaskHandler
 from .upload import uploadHandler
+
+
+class Webroot(WebrootBase):
+    """
+    The webroot endpoint simply serves the main index HTML file.
+    """
+    def __init__(self, templatePath=None):
+        if not templatePath:
+            templatePath = os.path.join(PACKAGE_DIR, os.pardir, 'plugins',
+                                        'isic-archive', 'server', 'webroot.mako')
+        super(Webroot, self).__init__(templatePath)
+
+        self.vars = {
+            'apiRoot': '/api/v1',
+            'staticRoot': '/static',
+            'title': 'ISIC Archive'
+            }
+
+    def _renderHTML(self):
+        self.vars['pluginCss'] = []
+        self.vars['pluginJs'] = []
+        builtDir = os.path.join(
+            STATIC_ROOT_DIR, 'clients', 'web', 'static', 'built', 'plugins')
+        self.vars['plugins'] = ModelImporter.model('setting').get(
+            SettingKey.PLUGINS_ENABLED, ())
+        for plugin in self.vars['plugins']:
+            if os.path.exists(os.path.join(builtDir, plugin, 'plugin.min.css')):
+                self.vars['pluginCss'].append(plugin)
+            if os.path.exists(os.path.join(builtDir, plugin, 'plugin.min.js')):
+                self.vars['pluginJs'].append(plugin)
+
+        return super(Webroot, self)._renderHTML()
 
 
 def validateSettings(event):
@@ -43,7 +76,7 @@ def clearRouteDocs():
 
 def load(info):
     # set the title of the HTML pages
-    info['serverRoot'].updateHtmlVars({'title': 'ISIC Archive'})
+    # info['serverRoot'].updateHtmlVars({'title': 'ISIC Archive'})
 
     # add event listeners
     # note, 'model.setting.validate' must be bound before initialSetup is called
@@ -98,3 +131,8 @@ def load(info):
     info['apiRoot'].image = api.ImageResource()
     info['apiRoot'].segmentation = api.SegmentationResource()
     info['apiRoot'].study = api.StudyResource()
+
+    # Move girder app to /girder, serve isic-archive app from /
+    info['serverRoot'], info['serverRoot'].girder = (Webroot(),
+                                                     info['serverRoot'])
+    info['serverRoot'].api = info['serverRoot'].girder.api
