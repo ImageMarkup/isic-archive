@@ -53,7 +53,7 @@ module.exports = function (grunt) {
     // the web client not living in web_client, but rather web_external
     var configureIsicArchive = function () {
         var pluginName = "isic_archive";
-        var pluginDir = "plugins/isic-archive";
+        var pluginDir = "plugins/isic_archive";
         var staticDir = 'clients/web/static/built/plugins/' + pluginName;
         var sourceDir = "web_external";
 

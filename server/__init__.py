@@ -24,7 +24,7 @@ class Webroot(WebrootBase):
     def __init__(self, templatePath=None):
         if not templatePath:
             templatePath = os.path.join(PACKAGE_DIR, os.pardir, 'plugins',
-                                        'isic-archive', 'server', 'webroot.mako')
+                                        'isic_archive', 'server', 'webroot.mako')
         super(Webroot, self).__init__(templatePath)
 
         self.vars = {
@@ -132,7 +132,7 @@ def load(info):
     info['apiRoot'].segmentation = api.SegmentationResource()
     info['apiRoot'].study = api.StudyResource()
 
-    # Move girder app to /girder, serve isic-archive app from /
+    # Move girder app to /girder, serve isic_archive app from /
     info['serverRoot'], info['serverRoot'].girder = (Webroot(),
                                                      info['serverRoot'])
     info['serverRoot'].api = info['serverRoot'].girder.api
