@@ -76,7 +76,7 @@ def clearRouteDocs():
 
 def load(info):
     # set the title of the HTML pages
-    # info['serverRoot'].updateHtmlVars({'title': 'ISIC Archive'})
+    info['serverRoot'].updateHtmlVars({'title': 'ISIC Archive'})
 
     # add event listeners
     # note, 'model.setting.validate' must be bound before initialSetup is called
@@ -132,7 +132,8 @@ def load(info):
     info['apiRoot'].segmentation = api.SegmentationResource()
     info['apiRoot'].study = api.StudyResource()
 
+    # Serve isic app from /isic
+    info['serverRoot'].isic = Webroot()
     # Move girder app to /girder, serve isic_archive app from /
-    info['serverRoot'], info['serverRoot'].girder = (Webroot(),
-                                                     info['serverRoot'])
-    info['serverRoot'].api = info['serverRoot'].girder.api
+    # info['serverRoot'].girder = info['serverRoot']
+    # info['serverRoot'].api = info['serverRoot'].girder.api
