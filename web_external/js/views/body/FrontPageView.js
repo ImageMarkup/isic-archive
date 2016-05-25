@@ -1,6 +1,6 @@
 isic.views.FrontPageView = girder.views.FrontPageView.extend({
     events: {
-        'click .i-example-button': function () {
+        'click .isic-example-button': function () {
             isic.router.navigate('example', {trigger: true});
         }
     },
@@ -11,7 +11,7 @@ isic.views.FrontPageView = girder.views.FrontPageView.extend({
     },
 
     render: function () {
-        this.$el.addClass('i-body-nopad');
+        this.$el.addClass('isic-body-nopad');
 
         this.$el.html(isic.templates.frontPage({
             apiRoot: girder.apiRoot,

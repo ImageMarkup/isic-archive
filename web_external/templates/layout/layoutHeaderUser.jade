@@ -1,8 +1,8 @@
-.i-current-user-text
+.isic-current-user-text
   if (user)
-    .i-portrait-wrapper
-    .i-user-link-wrapper
-      a.i-user-link(data-toggle="dropdown", data-target="#g-user-action-menu")
+    .isic-portrait-wrapper
+    .isic-user-link-wrapper
+      a.isic-user-link(data-toggle="dropdown", data-target="#g-user-action-menu")
         | #{user.get('firstName')} #{user.get('lastName')}
         i.icon-down-open
       #g-user-action-menu.dropdown
@@ -17,7 +17,7 @@
               i.icon-logout
               | Log out
   else
-    .i-login-link-wrapper
+    .isic-login-link-wrapper
       a.g-register Register
       |  or
       a.g-login  Log In

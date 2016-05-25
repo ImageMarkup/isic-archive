@@ -35,7 +35,7 @@ isic.views.LayoutHeaderUserView = isic.View.extend({
         }));
 
         if (girder.currentUser) {
-            this.$('.i-portrait-wrapper').css(
+            this.$('.isic-portrait-wrapper').css(
                 'background-image', 'url(' +
                 girder.currentUser.getGravatarUrl(36) + ')');
         }

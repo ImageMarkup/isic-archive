@@ -4,7 +4,7 @@ isic.App = girder.App.extend({
         this.$el.html(isic.templates.layout());
 
         new isic.views.LayoutHeaderView({
-            el: this.$('#i-app-header-container'),
+            el: this.$('#isic-app-header-container'),
             parentView: this
         }).render();
 
@@ -12,7 +12,7 @@ isic.App = girder.App.extend({
     },
 
     navigateTo: function () {
-        this.$('#g-app-body-container').removeClass('i-body-nopad');
+        this.$('#g-app-body-container').removeClass('isic-body-nopad');
         return girder.App.prototype.navigateTo.apply(this, arguments);
     },
 

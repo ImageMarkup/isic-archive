@@ -11,7 +11,7 @@ isic.views.LayoutHeaderView = isic.View.extend({
         });
 
         new isic.views.LayoutHeaderUserView({
-            el: this.$('.i-current-user-wrapper'),
+            el: this.$('.isic-current-user-wrapper'),
             parentView: this
         }).render();
     }
