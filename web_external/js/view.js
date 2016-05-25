@@ -1,1 +1,1 @@
-isic_archive.View = girder.View.extend({});
+isic.View = girder.View.extend({});

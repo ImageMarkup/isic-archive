@@ -1,8 +1,8 @@
 $(function () {
-    isic_archive.events.trigger('g:appload.before');
-    isic_archive.mainApp = new isic_archive.App({
+    isic.events.trigger('g:appload.before');
+    isic.mainApp = new isic.App({
         el: 'body',
         parentView: null
     });
-    isic_archive.events.trigger('g:appload.after');
+    isic.events.trigger('g:appload.after');
 });

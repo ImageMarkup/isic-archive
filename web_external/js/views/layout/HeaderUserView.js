@@ -1,4 +1,4 @@
-isic_archive.views.LayoutHeaderUserView = isic_archive.View.extend({
+isic.views.LayoutHeaderUserView = isic.View.extend({
 
     events: {
         'click a.g-login': function () {
@@ -20,7 +20,7 @@ isic_archive.views.LayoutHeaderUserView = isic_archive.View.extend({
         },
 
         'click a.g-my-settings': function () {
-            isic_archive.router.navigate('useraccount/' + girder.currentUser.get('_id') +
+            isic.router.navigate('useraccount/' + girder.currentUser.get('_id') +
                                     '/info', {trigger: true});
         }
     },
@@ -30,7 +30,7 @@ isic_archive.views.LayoutHeaderUserView = isic_archive.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic_archive.templates.layoutHeaderUser({
+        this.$el.html(isic.templates.layoutHeaderUser({
             user: girder.currentUser
         }));
 

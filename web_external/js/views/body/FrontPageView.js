@@ -1,7 +1,7 @@
-isic_archive.views.FrontPageView = girder.views.FrontPageView.extend({
+isic.views.FrontPageView = girder.views.FrontPageView.extend({
     events: {
         'click .i-example-button': function () {
-            isic_archive.router.navigate('example', {trigger: true});
+            isic.router.navigate('example', {trigger: true});
         }
     },
 
@@ -13,7 +13,7 @@ isic_archive.views.FrontPageView = girder.views.FrontPageView.extend({
     render: function () {
         this.$el.addClass('i-body-nopad');
 
-        this.$el.html(isic_archive.templates.frontPage({
+        this.$el.html(isic.templates.frontPage({
             apiRoot: girder.apiRoot,
             staticRoot: girder.staticRoot,
             currentUser: girder.currentUser,
@@ -24,6 +24,6 @@ isic_archive.views.FrontPageView = girder.views.FrontPageView.extend({
     }
 });
 
-isic_archive.router.route('', 'index', function () {
-    girder.events.trigger('g:navigateTo', isic_archive.views.FrontPageView);
+isic.router.route('', 'index', function () {
+    girder.events.trigger('g:navigateTo', isic.views.FrontPageView);
 });

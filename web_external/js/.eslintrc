@@ -1,6 +1,6 @@
 {
     "extends": "../../../../.eslintrc",
     "globals": {
-        "isic_archive": true
+        "isic": true
     }
 }

@@ -70,7 +70,7 @@ module.exports = function (grunt) {
                 files: files
             });
             grunt.config.set('jade.' + pluginName + '.options', {
-                namespace: 'isic_archive.templates'
+                namespace: 'isic.templates'
             });
             grunt.config.set('watch.jade_' + pluginName + '_app', {
                 files: [jadeDir + '/**/*.jade'],

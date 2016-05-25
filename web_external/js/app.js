@@ -1,9 +1,9 @@
-isic_archive.App = girder.App.extend({
+isic.App = girder.App.extend({
 
     render: function () {
-        this.$el.html(isic_archive.templates.layout());
+        this.$el.html(isic.templates.layout());
 
-        new isic_archive.views.LayoutHeaderView({
+        new isic.views.LayoutHeaderView({
             el: this.$('#i-app-header-container'),
             parentView: this
         }).render();
@@ -27,9 +27,9 @@ isic_archive.App = girder.App.extend({
 
         if (girder.currentUser) {
             girder.eventStream.open();
-            isic_archive.router.navigate(route, {trigger: true});
+            isic.router.navigate(route, {trigger: true});
         } else {
-            isic_archive.router.navigate('/', {trigger: true});
+            isic.router.navigate('/', {trigger: true});
         }
     }
 });

@@ -1,8 +1,8 @@
-/*global isic_archive:true*/
+/*global isic:true*/
 
-var isic_archive = isic_archive || {};
+var isic = isic || {};
 
-_.extend(isic_archive, {
+_.extend(isic, {
     models: {},
     collections: {},
     views: {},
