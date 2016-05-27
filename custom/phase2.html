@@ -163,9 +163,8 @@
                             <div class="btn">Lesion-level</div>
                         </div>
                     </div>
-                    <div class="step-content" ng-repeat="feature_group in features">
-                        <h4>{{ feature_group.header }}</h4>
-                        <div ng-repeat="feature in $scope.featureset.image_features track by feature.id">
+                    <div class="step-content">
+                        <div ng-repeat="feature in featureset.image_features track by feature.id">
                             <div ng-switch="feature.type">
                                 <div ng-switch-when="select">
                                     <label>{{ feature.name.join(': ') }}</label>
