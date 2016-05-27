@@ -5,6 +5,7 @@ from girder.api import access
 from girder.api.rest import Resource, loadmodel
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
+from girder.models.model_base import ValidationException
 
 
 class DatasetResource(Resource):
@@ -14,6 +15,7 @@ class DatasetResource(Resource):
 
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getDataset)
+        self.route('POST', (), self.createDataset)
 
 
     @describeRoute(
@@ -48,3 +50,51 @@ class DatasetResource(Resource):
     def getDataset(self, dataset, params):
         return self.model('dataset', 'isic_archive').filter(
             dataset, self.getCurrentUser())
+
+    @describeRoute(
+        Description('Create a lesion image dataset.')
+        .param('uploadFolderId', 'The ID of the folder that contains images '
+               'and metadata.')
+        .param('name', 'Name of the dataset.')
+        .param('description', 'Description of the dataset.', required=False)
+        .param('license', 'License of the dataset.', required=False)
+        .param('signature', 'Signature of license agreement.', required=False)
+        .param('anonymous', 'Whether to use an anonymous attribution for the '
+               'dataset', dataType='boolean', required=False)
+        .param('attribution', 'Attribution of the dataset.', required=False)
+    )
+    @access.user
+    def createDataset(self, params):
+        self.requireParams(('uploadFolderId', 'name'), params)
+
+        user = self.getCurrentUser()
+        uploadFolderId = params.get('uploadFolderId', None)
+        if not uploadFolderId:
+            raise ValidationException(
+                'No files were uploaded.', 'uploadFolderId')
+        uploadFolder = self.model('folder').load(
+            uploadFolderId, user=user, level=AccessType.READ, force=True)
+        if not uploadFolder:
+            raise ValidationException(
+                'Invalid upload folder ID.', 'uploadFolderId')
+
+        name = params['name'].strip()
+        description = params.get('description', '').strip()
+        license = params.get('license', '').strip()
+
+        # Enforce valid licensing metadata only at API level
+        signature = params.get('signature', '').strip()
+        if not signature:
+            raise ValidationException(
+                'Signature must be specified.', 'signature')
+        anonymous = self.boolParam('anonymous', params, False)
+        attribution = params.get('attribution', '').strip()
+        if not anonymous and not attribution:
+            raise ValidationException(
+                'Attribution must be specified when not contributing '
+                'anonymously.', 'attribution')
+
+        return self.model('dataset', 'isic_archive').processDataset(
+            uploadFolder=uploadFolder, user=user, name=name,
+            description=description, license=license, signature=signature,
+            anonymous=anonymous, attribution=attribution)

@@ -1,8 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import mimetypes
+
 from girder.constants import AccessType
 from girder.models.folder import Folder
+from girder.models.model_base import ValidationException
+
+from ..upload import CSV_FORMATS, ZIP_FORMATS, handleCsv, handleImage, handleZip
 
 
 class Dataset(Folder):
@@ -104,4 +109,93 @@ class Dataset(Folder):
     def validate(self, doc, **kwargs):
         # TODO: implement
         # raise ValidationException
+
+        # Validate name. This is redundant, because Folder also validates the
+        # name, but this allows for a more specific error message.
+        doc['name'] = doc['name'].strip()
+        if not doc['name']:
+            raise ValidationException('Dataset name must not be empty.', 'name')
         return Folder.validate(self, doc, **kwargs)
+
+    def processDataset(self, uploadFolder, user, name, description, license,
+            signature, anonymous, attribution):
+        """
+        Process an uploaded dataset. This upload folder is expected to contain a
+        .zip file of images and a .csv file that contains metadata about the
+        images. The images are extracted to a new folder in the "Phase 0"
+        collection and then processed.
+        """
+        if not uploadFolder:
+            raise ValidationException(
+                'No files were uploaded.', 'uploadFolder')
+
+        zipFileItems = [f for f in self.model('folder').childItems(uploadFolder)
+                        if mimetypes.guess_type(f['name'], strict=False)[0] in
+                        ZIP_FORMATS]
+        if not zipFileItems:
+            raise ValidationException(
+                'No .zip files were uploaded.', 'uploadFolder')
+
+        csvFileItems = [f for f in self.model('folder').childItems(uploadFolder)
+                        if mimetypes.guess_type(f['name'], strict=False)[0] in
+                        CSV_FORMATS]
+        if not csvFileItems:
+            raise ValidationException(
+                'No .csv files were uploaded.', 'uploadFolder')
+
+        # Create dataset folder
+        collection = self.model('collection').findOne({'name': 'Phase 0'})
+        # XXX: improve error message if folder already exists
+        datasetFolder = self.createFolder(
+            parent=collection,
+            name=name,
+            description=description,
+            parentType='collection',
+            creator=user
+        )
+        datasetFolder = self.copyAccessPolicies(
+            src=collection,
+            dest=datasetFolder,
+            save=False
+        )
+        datasetFolder = self.setUserAccess(
+            doc=datasetFolder,
+            user=user,
+            level=AccessType.READ,
+            save=False
+        )
+
+        # Set dataset license agreement metadata
+        self.setMetadata(datasetFolder, {
+            'signature': signature,
+            'anonymous': anonymous,
+            'attribution': attribution
+        })
+
+        # Process zip files
+        for item in zipFileItems:
+            zipFiles = self.model('item').childFiles(item)
+            for zipFile in zipFiles:
+                handleZip(datasetFolder, user, zipFile)
+
+        # Process extracted images
+        for item in self.childImages(datasetFolder):
+            handleImage(item, user, license)
+
+        # Process metadata in CSV files
+        for item in csvFileItems:
+            csvFiles = self.model('item').childFiles(item)
+            for csvFile in csvFiles:
+                handleCsv(datasetFolder, user, csvFile)
+
+        datasetFolder = self.save(datasetFolder)
+
+        # Move metadata item to dataset folder. This preserves any parsing
+        # errors that were added to the item for review.
+        for item in csvFileItems:
+            self.model('item').move(item, datasetFolder)
+
+        # Delete uploaded files
+        self.model('folder').clean(uploadFolder)
+
+        return datasetFolder

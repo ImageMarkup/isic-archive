@@ -36,36 +36,6 @@ IMAGE_FORMATS = [
 ]
 
 
-def uploadHandler(event):
-    upload_info = {
-        'file': event.info['file'],
-        'assetstore': event.info['assetstore']
-    }
-
-    upload_info['file_mimetype'] = upload_info['file']['mimeType']
-    if upload_info['file_mimetype'] == 'application/octet-stream':
-        upload_info['file_mimetype'] = mimetypes.guess_type(upload_info['file']['name'], strict=False)[0]
-
-    upload_info['file_path'] = os.path.join(upload_info['assetstore']['root'], upload_info['file']['path'])
-
-    upload_info['item'] = ModelImporter.model('item').load(upload_info['file']['itemId'], force=True)
-    upload_info['folder'] = ModelImporter.model('folder').load(upload_info['item']['folderId'], force=True)
-    upload_info['collection'] = ModelImporter.model('collection').load(upload_info['folder']['parentId'], force=True)
-
-    upload_info['user'] = ModelImporter.model('user').load(upload_info['item']['creatorId'], force=True)
-
-
-    if upload_info['collection']['name'] == 'Phase 0':
-        if upload_info['folder']['name'] == 'dropzip':
-            if upload_info['file_mimetype'] in ZIP_FORMATS:
-                _zipUploadHandler(upload_info)
-        else:
-            if upload_info['file_mimetype'] in IMAGE_FORMATS:
-                _imageUploadHandler(upload_info)
-            elif upload_info['file_mimetype'] in CSV_FORMATS:
-                _csvUploadHandler(upload_info)
-
-
 class TempDir(object):
     def __init__(self):
         pass
@@ -155,22 +125,19 @@ class ZipFileOpener(object):
             return iter(file_list), len(file_list)
 
 
-def _zipUploadHandler(upload_info):
+def handleZip(images_folder, user, zip_file):
     Image = ModelImporter.model('image', 'isic_archive')
 
-    images_folder = ModelImporter.model('folder').createFolder(
-        parent=upload_info['collection'],
-        name=os.path.splitext(upload_info['file']['name'])[0],
-        description='',
-        parentType='collection',
-        creator=upload_info['user']
-    )
+    # Get full path of zip file in assetstore
+    assetstore = ModelImporter.model('assetstore').getCurrent()
+    assetstore_adapter = assetstore_utilities.getAssetstoreAdapter(assetstore)
+    full_path = assetstore_adapter.fullPath(zip_file)
 
-    with ZipFileOpener(upload_info['file_path']) as (file_list, file_count):
+    with ZipFileOpener(full_path) as (file_list, file_count):
         with ProgressContext(
                 on=True,
-                user=upload_info['user'],
-                title='Processing "%s"' % upload_info['file']['name'],
+                user=user,
+                title='Processing "%s"' % zip_file['name'],
                 total=file_count,
                 state=ProgressState.ACTIVE,
                 current=0) as progress:
@@ -183,7 +150,7 @@ def _zipUploadHandler(upload_info):
                     message='Extracting "%s"' % original_file_name)
 
                 image_item = Image.createImage(
-                    creator=upload_info['user'],
+                    creator=user,
                     parentFolder=images_folder
                 )
                 Image.setMetadata(image_item, {
@@ -203,7 +170,7 @@ def _zipUploadHandler(upload_info):
                         ),
                         parentType='item',
                         parent=image_item,
-                        user=upload_info['user'],
+                        user=user,
                         mimeType=image_mimetype,
                     )
                 # reload image_item, since its 'size' has changed in the database
@@ -215,18 +182,24 @@ def _zipUploadHandler(upload_info):
                 Image.save(image_item)
 
 
-def _imageUploadHandler(upload_info):
+def handleImage(image_item, user, license):
     Image = ModelImporter.model('image', 'isic_archive')
-    image_item = upload_info['item']
+    Item = ModelImporter.model('item')
+
+    assetstore = ModelImporter.model('assetstore').getCurrent()
+    assetstore_adapter = assetstore_utilities.getAssetstoreAdapter(assetstore)
 
     with TempDir() as temp_dir:
         converted_file_name = '%s.tif' % image_item['name']
         converted_file_path = os.path.join(temp_dir, converted_file_name)
 
+        image_item_files = Item.childFiles(image_item)
+        full_path = assetstore_adapter.fullPath(image_item_files[0])
+
         convert_command = (
             '/usr/local/bin/vips',
             'tiffsave',
-            '\'%s\'' % upload_info['file_path'],
+            '\'%s\'' % full_path,
             '\'%s\'' % converted_file_path,
             '--compression', 'jpeg',
             '--Q', '90',
@@ -258,7 +231,7 @@ def _imageUploadHandler(upload_info):
                 name=converted_file_name,
                 parentType='item',
                 parent=image_item,
-                user=upload_info['user'],
+                user=user,
                 mimeType='image/tiff',
             )
         os.remove(converted_file_path)
@@ -269,50 +242,60 @@ def _imageUploadHandler(upload_info):
             'fileId': converted_file['_id'],
             'sourceName': 'tiff'
         }
+        if license:
+            image_item['license'] = license
+
         Image.save(image_item)
 
 
-def _csvUploadHandler(upload_info):
+def handleCsv(dataset_folder, user, csv_file):
     dataset_folder_ids = [
         folder['_id']
         for folder in ModelImporter.model('folder').find({
-            'name': upload_info['folder']['name']
+            'name': dataset_folder['name']
         })
     ]
     # TODO: ensure that dataset_folder_ids are UDA folders / in UDA phases
 
+    assetstore = ModelImporter.model('assetstore').getCurrent()
+    assetstore_adapter = assetstore_utilities.getAssetstoreAdapter(assetstore)
+    full_path = assetstore_adapter.fullPath(csv_file)
+
     parse_errors = list()
-    with open(upload_info['file_path'], 'rUb') as upload_file_obj,\
+    with open(full_path, 'rUb') as upload_file_obj,\
         ProgressContext(
             on=True,
-            user=upload_info['user'],
-            title='Processing "%s"' % upload_info['file']['name'],
+            user=user,
+            title='Processing "%s"' % csv_file['name'],
             state=ProgressState.ACTIVE,
             message='Parsing CSV') as progress:
 
         # csv.reader(csvfile, delimiter=',', quotechar='"')
         csv_reader = csv.DictReader(upload_file_obj)
 
-        if 'isic_id' not in csv_reader.fieldnames:
+        if 'filename' not in csv_reader.fieldnames:
             # TODO: error
             return
 
         for csv_row in csv_reader:
-            isic_id = csv_row.pop('isic_id', None)
-            if not isic_id:
-                parse_errors.append('No "isic_id" field in row %d' % csv_reader.line_num)
+            filename = csv_row.pop('filename', None)
+            if not filename:
+                parse_errors.append('No "filename" field in row %d' % csv_reader.line_num)
                 continue
 
-            # TODO: require upload_info['user'] to match image creator?
+            # TODO: require 'user' to match image creator?
+            # XXX: index on meta.originalFilename?
             image_items = ModelImporter.model('image', 'isic_archive').find({
-                'name': isic_id,
+                'meta.originalFilename': filename,
                 'folderId': {'$in': dataset_folder_ids}
             })
             if not image_items.count():
-                parse_errors.append('No image found with isic_id "%s"' % isic_id)
+                parse_errors.append(
+                    'No image found with original filename "%s"' % filename)
                 continue
             elif image_items.count() > 1:
-                parse_errors.append('Multiple images found with isic_id "%s"' % isic_id)
+                parse_errors.append(
+                    'Multiple images found with original filename "%s"' % filename)
                 continue
             else:
                 image_item = image_items.next()
@@ -327,11 +310,13 @@ def _csvUploadHandler(upload_info):
         # TODO: eventually don't store whole string in memory
         parse_errors_str = '\n'.join(parse_errors)
 
+        parent_item = ModelImporter.model('item').load(csv_file['itemId'], force=True)
+
         upload = ModelImporter.model('upload').createUpload(
             user=getAdminUser(),
             name='parse_errors.txt',
             parentType='item',
-            parent=upload_info['item'],
+            parent=parent_item,
             size=len(parse_errors_str),
             mimeType='text/plain',
         )

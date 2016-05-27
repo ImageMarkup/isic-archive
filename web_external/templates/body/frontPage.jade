@@ -2,5 +2,6 @@
   .isic-frontpage-container
     .isic-example-button.isic-frontpage-button
       | Example view
-    .isic-upload-dataset-button.isic-frontpage-button
-      | Upload dataset
+    if currentUser
+      .isic-upload-dataset-button.isic-frontpage-button
+        | Upload dataset
