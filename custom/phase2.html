@@ -157,7 +157,7 @@
                 <div class="clearfix"></div>
 
                 <!-- Step content -->
-                <div ng-controller="ImageFeatureAnnotationController">
+                <div ng-controller="ImageFeatureAnnotationController" ng-if="featureset.image_features.length">
                     <div class="step-header">
                         <div class="btn-group">
                             <div class="btn">Lesion-level</div>
@@ -191,7 +191,7 @@
                     </div>
                 </div>
 
-                <div ng-controller="RegionFeatureAnnotationController">
+                <div ng-controller="RegionFeatureAnnotationController" ng-if="featureset.region_features.length">
                     <div class="step-header">
                         <div class="btn-group">
                             <div class="btn">Regional</div>
