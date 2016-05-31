@@ -153,11 +153,6 @@ class Dataset(Folder):
             parentType='collection',
             creator=user
         )
-        datasetFolder = self.copyAccessPolicies(
-            src=collection,
-            dest=datasetFolder,
-            save=False
-        )
         datasetFolder = self.setUserAccess(
             doc=datasetFolder,
             user=user,
