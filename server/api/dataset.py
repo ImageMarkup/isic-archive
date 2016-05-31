@@ -94,7 +94,7 @@ class DatasetResource(Resource):
                 'Attribution must be specified when not contributing '
                 'anonymously.', 'attribution')
 
-        return self.model('dataset', 'isic_archive').processDataset(
+        return self.model('dataset', 'isic_archive').ingestDataset(
             uploadFolder=uploadFolder, user=user, name=name,
             description=description, license=license, signature=signature,
             anonymous=anonymous, attribution=attribution)

@@ -129,10 +129,10 @@ class Dataset(Folder):
             raise ValidationException('Dataset name must not be empty.', 'name')
         return Folder.validate(self, doc, **kwargs)
 
-    def processDataset(self, uploadFolder, user, name, description, license,
+    def ingestDataset(self, uploadFolder, user, name, description, license,
             signature, anonymous, attribution):
         """
-        Process an uploaded dataset. This upload folder is expected to contain a
+        Ingest an uploaded dataset. This upload folder is expected to contain a
         .zip file of images and a .csv file that contains metadata about the
         images. The images are extracted to a new folder in the "Phase 0"
         collection and then processed.
