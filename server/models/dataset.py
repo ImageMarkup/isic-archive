@@ -7,7 +7,19 @@ from girder.constants import AccessType
 from girder.models.folder import Folder
 from girder.models.model_base import ValidationException
 
-from ..upload import CSV_FORMATS, ZIP_FORMATS, handleCsv, handleImage, handleZip
+from ..upload import handleCsv, handleImage, handleZip
+
+ZIP_FORMATS = [
+    'multipart/x-zip',
+    'application/zip',
+    'application/zip-compressed',
+    'application/x-zip-compressed',
+]
+
+CSV_FORMATS = [
+    'text/csv',
+    'application/vnd.ms-excel'
+]
 
 
 class Dataset(Folder):

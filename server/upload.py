@@ -17,18 +17,6 @@ from girder.utility.progress import ProgressContext
 
 from .provision_utility import getAdminUser
 
-ZIP_FORMATS = [
-    'multipart/x-zip',
-    'application/zip',
-    'application/zip-compressed',
-    'application/x-zip-compressed',
-]
-
-CSV_FORMATS = [
-    'text/csv',
-    'application/vnd.ms-excel'
-]
-
 IMAGE_FORMATS = [
     'image/jpeg',
     'image/png'
