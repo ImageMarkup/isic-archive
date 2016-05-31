@@ -17,12 +17,6 @@ from girder.utility.progress import ProgressContext
 
 from .provision_utility import getAdminUser
 
-IMAGE_FORMATS = [
-    'image/jpeg',
-    'image/png'
-    # Do not add TIFF until recursive events are prevented
-]
-
 
 class TempDir(object):
     def __init__(self):
