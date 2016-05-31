@@ -173,7 +173,7 @@ class Dataset(Folder):
         )
 
         # Set dataset license agreement metadata
-        self.setMetadata(datasetFolder, {
+        datasetFolder = self.setMetadata(datasetFolder, {
             'signature': signature,
             'anonymous': anonymous,
             'attribution': attribution
