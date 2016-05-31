@@ -58,7 +58,7 @@ class DatasetResource(Resource):
         .param('name', 'Name of the dataset.')
         .param('description', 'Description of the dataset.', required=False)
         .param('license', 'License of the dataset.', required=False)
-        .param('signature', 'Signature of license agreement.', required=False)
+        .param('signature', 'Signature of license agreement.', required=True)
         .param('anonymous', 'Whether to use an anonymous attribution for the '
                'dataset', dataType='boolean', required=False)
         .param('attribution', 'Attribution of the dataset.', required=False)
