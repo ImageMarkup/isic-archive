@@ -19,9 +19,9 @@ isic.views.UploadDatasetView = isic.View.extend({
             // Update attribution name field sensitivity
             var target = $(event.target);
             if (target.val() === 'anonymous') {
-                this.$('#isic-dataset-attribution-name').attr('disabled', true);
+                this.$('#isic-dataset-attribution-name').prop('disabled', true);
             } else {
-                this.$('#isic-dataset-attribution-name').attr('disabled', false);
+                this.$('#isic-dataset-attribution-name').prop('disabled', false);
             }
         },
         'change #isic-dataset-license': function (event) {
@@ -29,18 +29,18 @@ isic.views.UploadDatasetView = isic.View.extend({
             var target = $(event.target);
             var anonymous = this.$('#isic-dataset-attribution-anonymous');
             if (target.val() === 'CC-0') {
-                anonymous.attr('disabled', false);
+                anonymous.prop('disabled', false);
             } else {
                 if (anonymous.prop('checked')) {
                     this.$('#isic-dataset-attribution-attributed-to').prop('checked', true);
                     this.$('#isic-dataset-attribution-attributed-to').change();
                 }
-                anonymous.attr('disabled', true);
+                anonymous.prop('disabled', true);
             }
         },
         'submit #isic-dataset-form': function (event) {
             event.preventDefault();
-            this.$('#isic-dataset-submit').attr('disabled', 'true');
+            this.$('#isic-dataset-submit').prop('disabled', true);
             this.submitDataset();
         }
     },
@@ -200,7 +200,7 @@ isic.views.UploadDatasetView = isic.View.extend({
                 noText: 'OK',
                 escapedHtml: true
             });
-            this.$('#isic-dataset-submit').attr('disabled', 'false');
+            this.$('#isic-dataset-submit').prop('disabled', false);
         }, this));
     },
 
