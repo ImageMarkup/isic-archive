@@ -266,7 +266,7 @@ def handleCsv(dataset_folder, user, csv_file):
                 continue
 
             # TODO: require 'user' to match image creator?
-            # XXX: index on meta.originalFilename?
+            # TODO: index on meta.originalFilename?
             image_items = ModelImporter.model('image', 'isic_archive').find({
                 'meta.originalFilename': filename,
                 'folderId': {'$in': dataset_folder_ids}

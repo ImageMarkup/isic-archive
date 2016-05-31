@@ -157,7 +157,7 @@ class Dataset(Folder):
 
         # Create dataset folder
         collection = self.model('collection').findOne({'name': 'Phase 0'})
-        # XXX: improve error message if folder already exists
+        # TODO: improve error message if folder already exists
         datasetFolder = self.createFolder(
             parent=collection,
             name=name,

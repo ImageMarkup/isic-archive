@@ -91,7 +91,7 @@ isic.views.UploadDatasetView = isic.View.extend({
     },
 
     filesSelected: function (files) {
-        // XXX: could validate based on file extension
+        // TODO: could validate based on file extension
     },
     uploadStarted: function (files) {
         // Prepare isic_upload folder in user's home and start upload
@@ -169,7 +169,7 @@ isic.views.UploadDatasetView = isic.View.extend({
         var attribution = $('#isic-dataset-attribution-name').val();
 
         // Post dataset
-        // XXX: processing happens synchronously; revisit using jobs?
+        // TODO: processing happens synchronously; revisit using jobs?
         girder.restRequest({
             type: 'POST',
             path: 'dataset',
@@ -184,7 +184,7 @@ isic.views.UploadDatasetView = isic.View.extend({
             },
             error: null
         }).done(_.bind(function () {
-            // XXX: if updated to use jobs, navigate to job status page instead
+            // TODO: if updated to use jobs, navigate to job status page instead
             girder.confirm({
                 text: '<h4>Dataset successfully submitted.</h4>',
                 yesClass: 'hidden',
@@ -193,7 +193,7 @@ isic.views.UploadDatasetView = isic.View.extend({
             });
             isic.router.navigate('', {trigger: true});
         }, this)).error(_.bind(function (resp) {
-            // XXX: add custom error dialog instead of using confirm dialog
+            // TODO: add custom error dialog instead of using confirm dialog
             girder.confirm({
                 text: '<h4>Error submitting dataset</h4><br>' + resp.responseJSON.message,
                 yesClass: 'hidden',
