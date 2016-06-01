@@ -201,6 +201,6 @@ class Dataset(Folder):
             self.model('item').move(item, datasetFolder)
 
         # Delete uploaded files
-        self.model('folder').clean(uploadFolder)
+        # self.model('folder').clean(uploadFolder)
 
         return datasetFolder
