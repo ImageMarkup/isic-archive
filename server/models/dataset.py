@@ -195,8 +195,6 @@ class Dataset(Folder):
             for csvFile in csvFiles:
                 handleCsv(datasetFolder, user, csvFile)
 
-        datasetFolder = self.save(datasetFolder)
-
         # Move metadata item to dataset folder. This preserves any parsing
         # errors that were added to the item for review.
         for item in csvFileItems:
