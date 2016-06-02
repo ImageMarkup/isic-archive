@@ -211,7 +211,8 @@ isic.views.UploadDatasetView = isic.View.extend({
     updateUploadWidget: function () {
         var visible = false;
         var uploadList = [];
-        if (this.uploadingImages()) {
+        var uploadingImages = this.uploadingImages();
+        if (uploadingImages) {
             if (this.uploadedZipFiles.length) {
                 visible = false;
                 uploadList = this.uploadedZipFiles;
@@ -226,13 +227,13 @@ isic.views.UploadDatasetView = isic.View.extend({
                 visible = true;
             }
         }
-        if (visible) {
-            this.$('.isic-upload-widget-container').show();
-            this.$('.isic-upload-reset-container').hide();
-        } else {
-            this.$('.isic-upload-widget-container').hide();
-            this.$('.isic-upload-reset-container').show();
-        }
+
+        this.$('.isic-upload-description-container').toggle(visible);
+        this.$('.isic-upload-description-zip').toggle(uploadingImages);
+        this.$('.isic-upload-description-csv').toggle(!uploadingImages);
+        this.$('.isic-upload-widget-container').toggle(visible);
+        this.$('.isic-upload-reset-container').toggle(!visible);
+
         this.uploadWidget.render();
         this.$('.isic-upload-list').text(
             'Uploaded: ' + uploadList.join(', '));
