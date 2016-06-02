@@ -168,6 +168,17 @@ def initialSetup(info):
         group_description='Users responsible for uploading raw images & metadata, and doing initial QC'
     )
 
+    # Create empty "dataset contributors" group
+    if not ModelImporter.model('group').findOne(
+        {'name': 'Dataset Contributors'}):
+        contributorsGroup = ModelImporter.model('group').createGroup(
+            name='Dataset Contributors',
+            creator=getAdminUser(),
+            description='Users that can create datasets',
+            public=True
+        )
+        ModelImporter.model('group').removeUser(contributorsGroup, getAdminUser())
+
     ISIC.Flagged = _ISICCollection(
         collection_name='Flagged Images',
         collection_description='Images that have been flagged for any reason',

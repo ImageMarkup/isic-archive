@@ -5,7 +5,7 @@ from girder.api import access
 from girder.api.rest import Resource, loadmodel
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
-from girder.models.model_base import ValidationException
+from girder.models.model_base import AccessException, ValidationException
 
 
 class DatasetResource(Resource):
@@ -67,7 +67,13 @@ class DatasetResource(Resource):
     def createDataset(self, params):
         self.requireParams(('uploadFolderId', 'name'), params)
 
+        # Require that user be a member of the Dataset Contributors group
         user = self.getCurrentUser()
+        contributorsGroup = self.model('group').findOne({'name': 'Dataset Contributors'})
+        if not contributorsGroup or contributorsGroup['_id'] not in user['groups']:
+            raise AccessException(
+                'Only dataset contributors can create datasets.')
+
         uploadFolderId = params.get('uploadFolderId', None)
         if not uploadFolderId:
             raise ValidationException(
