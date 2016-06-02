@@ -50,7 +50,7 @@ isic.views.UploadDatasetView = isic.View.extend({
 
         this.uploadedZipFiles = [];
         this.uploadedCsvFiles = [];
-        this.uploadFolderId = null;
+        this.uploadFolder = null;
 
         this.render();
     },
@@ -94,50 +94,30 @@ isic.views.UploadDatasetView = isic.View.extend({
         // TODO: could validate based on file extension
     },
     uploadStarted: function (files) {
-        // Prepare isic_upload folder in user's home and start upload
-        var uploadFolder = null;
-        var folderCollection = new girder.collections.FolderCollection();
-        folderCollection.once('g:changed', function () {
-            if (folderCollection.isEmpty()) {
-                // Create isic_upload folder
-                uploadFolder = new girder.models.FolderModel({
-                    name: 'isic_upload',
-                    parentType: 'user',
-                    parentId: girder.currentUser.get('_id'),
-                    description: 'ISIC uploads'
-                });
+        // Prepare upload folder in user's home and start upload
+        if (this.uploadFolder) {
+            // Folder already created
+            this.startUpload(this.uploadFolder);
+        } else {
+            // Create new upload folder with unique name
+            this.uploadFolder = new girder.models.FolderModel({
+                name: 'isic_upload_' + Date.now(),
+                parentType: 'user',
+                parentId: girder.currentUser.get('_id'),
+                description: 'ISIC uploads'
+            });
 
-                uploadFolder.once('g:saved', function () {
-                    this.startUpload(uploadFolder);
-                }, this).once('g:error', function () {
-                    girder.events.trigger('g:alert', {
-                        icon: 'cancel',
-                        text: 'Could not create upload folder.',
-                        type: 'error',
-                        timeout: 4000
-                    });
-                }, this).save();
-            } else {
-                // Use existing isic_upload folder, but clean it first
-                uploadFolder = folderCollection.first();
-                if (_.isEmpty(this.uploadedZipFiles) &&
-                    _.isEmpty(this.uploadedCsvFiles)) {
-                    var path = 'folder/' + uploadFolder.id + '/contents';
-                    girder.restRequest({
-                        type: 'DELETE',
-                        path: path
-                    }).done(_.bind(function () {
-                        this.startUpload(uploadFolder);
-                    }, this));
-                } else {
-                    this.startUpload(uploadFolder);
-                }
-            }
-        }, this).fetch({
-            parentType: 'user',
-            parentId: girder.currentUser.get('_id'),
-            name: 'isic_upload'
-        });
+            this.uploadFolder.once('g:saved', function () {
+                this.startUpload(this.uploadFolder);
+            }, this).once('g:error', function () {
+                girder.events.trigger('g:alert', {
+                    icon: 'cancel',
+                    text: 'Could not create upload folder.',
+                    type: 'error',
+                    timeout: 4000
+                });
+            }, this).save();
+        }
     },
 
     uploadFinished: function (files) {
@@ -151,9 +131,6 @@ isic.views.UploadDatasetView = isic.View.extend({
     },
 
     startUpload: function (folder) {
-        // Record upload folder ID
-        this.uploadFolderId = folder.id;
-
         // Configure upload widget and begin upload
         this.uploadWidget.parentType = 'folder';
         this.uploadWidget.parent = folder;
@@ -174,7 +151,7 @@ isic.views.UploadDatasetView = isic.View.extend({
             type: 'POST',
             path: 'dataset',
             data: {
-                uploadFolderId: this.uploadFolderId,
+                uploadFolderId: this.uploadFolder.id,
                 name: name,
                 description: description,
                 license: license,
@@ -262,7 +239,7 @@ isic.views.UploadDatasetView = isic.View.extend({
                 }
             }, this).fetch({
                 name: name,
-                folderId: this.uploadFolderId
+                folderId: this.uploadFolder.id
             });
         }, this);
     }
