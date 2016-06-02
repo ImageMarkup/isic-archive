@@ -73,7 +73,7 @@ class DatasetResource(Resource):
             raise ValidationException(
                 'No files were uploaded.', 'uploadFolderId')
         uploadFolder = self.model('folder').load(
-            uploadFolderId, user=user, level=AccessType.READ)
+            uploadFolderId, user=user, level=AccessType.WRITE)
         if not uploadFolder:
             raise ValidationException(
                 'Invalid upload folder ID.', 'uploadFolderId')
