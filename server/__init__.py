@@ -14,7 +14,6 @@ from . import constants
 from . import api
 from .provision_utility import initialSetup, onUserCreated
 from .task_utility import UDAResource, TaskHandler
-from .upload import uploadHandler
 
 
 class Webroot(WebrootBase):
@@ -81,7 +80,6 @@ def load(info):
     # add event listeners
     # note, 'model.setting.validate' must be bound before initialSetup is called
     events.bind('model.setting.validate', 'isic', validateSettings)
-    events.bind('data.process', 'uploadHandler', uploadHandler)
     events.bind('model.user.save.created', 'onUserCreated', onUserCreated)
     ModelImporter.model('setting').set(SettingKey.USER_DEFAULT_FOLDERS, 'none')
 
