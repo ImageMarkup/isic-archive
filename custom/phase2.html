@@ -148,7 +148,8 @@
                                     </div>
                                     <div ng-switch-when="radio">
                                         <div ng-repeat="feature_option in feature.options track by feature_option.id">
-                                            <label>
+                                            <label class="isic-annotation-feature-option"
+                                                   ng-class="{selected: feature_option.id === annotation_values[feature.id]}">
                                                 <input
                                                         type="radio"
                                                         ng-model="annotation_values[feature.id]"
@@ -160,7 +161,7 @@
                                     </div>
                                 </div>
                                 <div ng-show="showReview">
-                                    <label>{{ feature_selected_option_name(feature) }}</label>
+                                    <label class="isic-annotation-feature-option selected">{{ feature_selected_option_name(feature) }}</label>
                                 </div>
                             </accordion-group>
                         </accordion>
