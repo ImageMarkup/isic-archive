@@ -15,7 +15,7 @@ class DatasetResource(Resource):
 
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getDataset)
-        self.route('POST', (), self.createDataset)
+        self.route('POST', (), self.ingestDataset)
 
 
     @describeRoute(
@@ -64,7 +64,7 @@ class DatasetResource(Resource):
         .param('attribution', 'Attribution of the dataset.', required=False)
     )
     @access.user
-    def createDataset(self, params):
+    def ingestDataset(self, params):
         self.requireParams(('uploadFolderId', 'name'), params)
 
         # Require that user be a member of the Dataset Contributors group
