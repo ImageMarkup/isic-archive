@@ -19,21 +19,7 @@
 }
 
 .isic-annotation-body {
-    /*padding-top: 7px;*/
-    padding-left: 5px;
-    padding-right: 5px;
-    background: #161515;
-    /*padding-bottom: 7px;*/
-}
-
-.isic-annotation-feature-image {
-    /*padding: ;*/
-}
-.isic-annotation-feature-image:nth-child(even) {
-    background: #484848;
-}
-.isic-annotation-feature-image:nth-child(odd) {
-    background: #333333;
+    padding: 0px 5px;
 }
 
 .isic-annotation-feature-region {
