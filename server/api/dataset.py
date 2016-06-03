@@ -48,8 +48,12 @@ class DatasetResource(Resource):
     @access.public
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
     def getDataset(self, dataset, params):
-        return self.model('dataset', 'isic_archive').filter(
+        output = self.model('dataset', 'isic_archive').filter(
             dataset, self.getCurrentUser())
+        del output['_accessLevel']
+        output['_modelType'] = 'dataset'
+        output.update(dataset['meta'])
+        return output
 
     @describeRoute(
         Description('Create a lesion image dataset.')
@@ -100,6 +104,7 @@ class DatasetResource(Resource):
                 'Attribution must be specified when not contributing '
                 'anonymously.', 'attribution')
 
+        # TODO: make this return only the dataset fields
         return self.model('dataset', 'isic_archive').ingestDataset(
             uploadFolder=uploadFolder, user=user, name=name,
             description=description, license=license, signature=signature,

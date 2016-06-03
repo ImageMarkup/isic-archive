@@ -30,12 +30,10 @@ class Dataset(Folder):
 
         self._filterKeys[AccessType.READ].clear()
         self.exposeFields(level=AccessType.READ, fields=(
-            '_id', 'name', 'description', 'meta', 'created', 'creatorId',
-            'updated',
+            '_id', 'name', 'description', 'created', 'creatorId', 'updated',
             # TODO: re-add once converted files no longer contributes to size
             # 'size',
         ))
-
         self.summaryFields = ('_id', 'name', 'updated')
 
 
