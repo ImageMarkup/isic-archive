@@ -1,0 +1,72 @@
+.isic-annotation {
+    /* "image" or "region" feature */
+}
+
+.isic-annotation-header {
+    background: #282727;
+    color: #fff;
+    /*font-size: 12pt;*/
+    /*font-weight: 300;*/
+    /*margin-top:10px;*/
+    /*margin-bottom:10px;*/
+    padding: 10px 6px 6px 10px;
+    border-bottom: 1px solid #333;
+
+    /*-webkit-box-shadow: 0px 4px 7px 2px rgba(0,0,0,0.7);*/
+    /*-moz-box-shadow: 1px 7px 11px 2px rgba(0,0,0,0.7);*/
+
+    box-shadow: 0px 4px 4px 5px rgba(0,0,0,0.7);
+}
+
+.isic-annotation-body {
+    /*padding-top: 7px;*/
+    padding-left: 5px;
+    padding-right: 5px;
+    background: #161515;
+    /*padding-bottom: 7px;*/
+}
+
+.isic-annotation-feature-image {
+    /*padding: ;*/
+}
+.isic-annotation-feature-image:nth-child(even) {
+    background: #484848;
+}
+.isic-annotation-feature-image:nth-child(odd) {
+    background: #333333;
+}
+
+.isic-annotation-feature-region {
+    /* this ancestor must have a non-static position,
+       so children can have absolute position with respect to this */
+    position: relative;
+}
+.isic-annotation-feature-region:hover {
+    color: #ffcc00;
+}
+.isic-annotation-feature-region.selected {
+    weight: 700;
+    width: 100%;
+    color: #ffcc00;
+}
+.isic-annotation-feature-region > .overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+}
+
+.isic-overview-frame {
+    position: absolute;
+    z-index: 5000;
+    top: 5px;
+    right: 5px;
+    border: 5px solid #282727;
+}
+
+#toolContainer {
+    /*height: 100%;*/
+    height: 600px;
+    overflow: scroll;;
+}

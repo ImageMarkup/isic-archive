@@ -140,6 +140,14 @@ derm_app.controller('ImageFeatureAnnotationController', ['$scope', '$log',
             // TODO: reset drop-downs
         });
 
+        $scope.feature_selected_option_name = function (feature) {
+            var selected_option_id = $scope.annotation_values[feature.id];
+            var selected_option = feature.options.find(function (option) {
+                return option.id === selected_option_id;
+            });
+            return selected_option ? selected_option.name : "";
+        };
+
         $scope.selected = function () {
             $log.debug("selected", $scope.annotation_values);
         };

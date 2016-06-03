@@ -68,46 +68,7 @@
     <script src="/uda/static/js/dermapp-labels.js"></script>
     <script src="/uda/static/js/dermapp-viewer.js"></script>
     <link href="/uda/static/css/derm.css" rel="stylesheet" type="text/css">
-
-    <style>
-        #toolContainer {
-            /*height: 100%;*/
-            height: 600px;
-            overflow: scroll;;
-        }
-
-        .isic-overview-frame {
-            position: absolute;
-            z-index: 5000;
-            top: 5px;
-            right: 5px;
-            border: 5px solid #282727;
-        }
-
-        .isic-annotation-feature {
-            /* this ancestor must have a non-static position,
-               so children can have absolute position with respect to this */
-            position: relative;
-        }
-
-        .isic-annotation-feature:hover {
-            color: #ffcc00;
-        }
-
-        .isic-annotation-feature.selected {
-            weight: 700;
-            width: 100%;
-            color: #ffcc00;
-        }
-
-        .isic-annotation-feature > .overlay {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-        }
-    </style>
+    <link href="/uda/static/css/isic-phase2.css" rel="stylesheet" type="text/css">
 </head>
 <body>
     <div id="angular_id" ng-controller="ApplicationController">
@@ -125,7 +86,7 @@
                             <span ng-cloak ng-show="image"><b>Image:</b> {{ image.name }}</span>
                         </div>
                         <div class="btn" ng-controller="UserController">
-                            <span ng-cloak ng-show="user"><b>User:</b> {{ user.firstName}} {{ user.lastName }} ({{ user.login }})</span>
+                            <span ng-cloak ng-show="user"><b>User:</b> {{ user.firstName }} {{ user.lastName }} ({{ user.login }})</span>
                         </div>
                     </div>
                     <div class="btn">
@@ -157,24 +118,20 @@
                 <div class="clearfix"></div>
 
                 <!-- Step content -->
-                <div ng-controller="ImageFeatureAnnotationController" ng-if="featureset.image_features.length">
-                    <div class="step-header">
-                        <div class="btn-group">
-                            <div class="btn">Lesion-level</div>
-                        </div>
-                    </div>
-                    <div class="step-content">
-                        <div ng-repeat="feature in featureset.image_features track by feature.id">
-                            <div ng-switch="feature.type">
+                <div ng-controller="ImageFeatureAnnotationController" ng-if="featureset.image_features.length" class="isic-annotation">
+                    <h3 class="isic-annotation-header">Lesion-level</h3>
+                    <div class="isic-annotation-body">
+                        <div ng-repeat="feature in featureset.image_features track by feature.id" class="isic-annotation-feature-image">
+                            <h4>{{ feature.name.join(': ') }}</h4>
+                            <div ng-switch="feature.type" ng-show="!showReview">
                                 <div ng-switch-when="select">
-                                    <label>{{ feature.name.join(': ') }}</label>
                                     <ui-select
                                             ng-model="annotation_values[feature.id]"
                                             search-enabled="false"
                                             on-select="selected($item, $model)"
                                             on-remove="selected($item, $model)"
                                             theme="bootstrap">
-                                        <ui-select-match placeholder="{{ feature.name }}">
+                                        <ui-select-match placeholder="{{ feature.name.join(': ') }}">
                                             {{ $select.selected.name }}
                                         </ui-select-match>
                                         <ui-select-choices repeat="option.id as option in feature.options">
@@ -186,13 +143,28 @@
                                         <span>√</span>
                                     </div>
                                 </div>
+                                <div ng-switch-when="radio">
+                                    <div ng-repeat="feature_option in feature.options track by feature_option.id">
+                                        <label>
+                                            <input
+                                                    type="radio"
+                                                    ng-model="annotation_values[feature.id]"
+                                                    name="{{ feature.id }}"
+                                                    value="{{ feature_option.id }}">
+                                            {{ feature_option.name }}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div ng-show="showReview">
+                                <label>{{ feature_selected_option_name(feature) }}</label>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div ng-controller="RegionFeatureAnnotationController" ng-if="featureset.region_features.length">
-                    <div class="step-header">
+                <div ng-controller="RegionFeatureAnnotationController" ng-if="featureset.region_features.length" class="isic-annotation">
+                    <div class="isic-annotation-header">
                         <div class="btn-group">
                             <div class="btn">Regional</div>
                         </div>
@@ -202,7 +174,7 @@
                             <label class="btn" ng-model="certaintyModel" btn-radio="'possible'">50%?</label>
                         </div>
                     </div>
-                    <div class="step-content">
+                    <div class="isic-annotation-body">
                         <div ng-show="!showReview" ng-cloak>
                             <i class="glyphicon glyphicon-info-sign"></i>
                             <span> Click a feature sub-heading to select for markup.</span>
@@ -216,7 +188,7 @@
                                     ng-repeat="(feature_group_name, feature_group) in feature_groups track by feature_group_name"
                                     heading="{{ feature_group_name }}"
                                     is-open="true">
-                                <div class="isic-annotation-feature"
+                                <div class="isic-annotation-feature-region"
                                      ng-repeat="feature in feature_group track by feature.id"
                                      ng-show="!showReview || featureHasPositiveTile(feature.id)"
                                      ng-class="{selected: selected_feature_id === feature.id}">

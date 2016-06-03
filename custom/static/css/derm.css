@@ -379,56 +379,11 @@
         z-index: 200;
     }
 
-    .step-header {
-        background: #282727;
-        color: #fff;
-        font-size: 12pt;
-        /*font-weight: 300;*/
-        /*margin-top:10px;*/
-        /*margin-bottom:10px;*/
-        padding: 6px;
-        padding-top:10px;
-        padding-left: 10px;
-        border-bottom: 1px solid #333;
-
-        /*-webkit-box-shadow: 0px 4px 7px 2px rgba(0,0,0,0.7);*/
-        /*-moz-box-shadow: 1px 7px 11px 2px rgba(0,0,0,0.7);*/
-
-        box-shadow: 0px 4px 4px 5px rgba(0,0,0,0.7);
-
-
-    }
-
     .content-group {
         padding-top: 9px;
         padding-bottom: 5px;
         padding-left: 24px;
     }
-
-
-    /*.step-header:hover {*/
-        /*background-color: #1a191c;*/
-
-
-    /*}*/
-
-
-
-    .step-content {
-        /*padding-top: 7px;*/
-        padding-left: 5px;
-        padding-right: 5px;
-        background: #161515;
-        /*padding-bottom: 7px;*/
-    }
-
-    .step-active
-    {
-        color: #fff;
-        font-weight: 500;
-
-    }
-
 
     .btn.active
     {
