@@ -11,6 +11,16 @@ isic.views.FrontPageView = girder.views.FrontPageView.extend({
 
     initialize: function () {
         girder.cancelRestRequests('fetch');
+
+        this.datasetContributor = false;
+
+        // Check whether user has permission to contribute datasets
+        var datasetModel = new girder.models.IsicDatasetModel();
+        datasetModel.userCanContribute(girder.currentUser, _.bind(function (datasetContributor) {
+            this.datasetContributor = datasetContributor;
+            this.render();
+        }, this));
+
         this.render();
     },
 
@@ -20,7 +30,7 @@ isic.views.FrontPageView = girder.views.FrontPageView.extend({
         this.$el.html(isic.templates.frontPage({
             apiRoot: girder.apiRoot,
             staticRoot: girder.staticRoot,
-            currentUser: girder.currentUser,
+            datasetContributor: this.datasetContributor,
             versionInfo: girder.versionInfo
         }));
 

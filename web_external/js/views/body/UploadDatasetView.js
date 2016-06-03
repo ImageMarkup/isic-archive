@@ -246,9 +246,13 @@ isic.views.UploadDatasetView = isic.View.extend({
 });
 
 isic.router.route('uploadDataset', 'uploadDataset', function (id) {
-    if (girder.currentUser) {
-        girder.events.trigger('g:navigateTo', isic.views.UploadDatasetView);
-    } else {
-        isic.router.navigate('', {trigger: true});
-    }
+    // Route to index if user doesn't have permission to contribute datasets
+    var datasetModel = new girder.models.IsicDatasetModel();
+    datasetModel.userCanContribute(girder.currentUser, _.bind(function (datasetContributor) {
+        if (datasetContributor) {
+            girder.events.trigger('g:navigateTo', isic.views.UploadDatasetView);
+        } else {
+            isic.router.navigate('', {trigger: true});
+        }
+    }, this));
 });
