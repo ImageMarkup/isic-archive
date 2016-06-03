@@ -52,7 +52,7 @@ class Dataset(Folder):
             'parentId': {'$in': datasetCollectionIds}
         }).count():
             raise ValidationException(
-                'A Dataset with this name already exists.')
+                'A dataset with this name already exists.')
 
         datasetFolder = self.createFolder(
             parent=self.model('collection').findOne({'name': 'Phase 0'}),
