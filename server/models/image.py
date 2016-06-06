@@ -57,7 +57,10 @@ class Image(Item):
         return self.model('file').findOne({
             'itemId': image['_id'],
             # TODO: make this more robust (original image may not be a JPEG)
-            'name': '%s.jpg' % image['name']
+            'name': {'$in': [
+                '%s.jpg' % image['name'],
+                '%s.png' % image['name']
+            ]}
         })
 
 
