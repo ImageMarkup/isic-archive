@@ -49,6 +49,7 @@ class Dataset(Folder):
             ]}
         }).distinct('_id')
         if self.model('folder').find({
+            'name': name,
             'parentId': {'$in': datasetCollectionIds}
         }).count():
             raise ValidationException(
