@@ -4,6 +4,10 @@ isic.views.FrontPageView = girder.views.FrontPageView.extend({
             isic.router.navigate('example', {trigger: true});
         },
 
+        'click .isic-studies-button': function () {
+            isic.router.navigate('studies', {trigger: true});
+        },
+
         'click .isic-upload-dataset-button': function () {
             isic.router.navigate('uploadDataset', {trigger: true});
         }
