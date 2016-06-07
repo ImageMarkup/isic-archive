@@ -25,6 +25,7 @@ class StudyResource(Resource):
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getStudy)
         self.route('GET', (':id', 'user'), self.getStudyUsers)
+        self.route('GET', (':id', 'segmentation'), self.getStudySegmentations)
         self.route('GET', (':id', 'image'), self.getStudyImages)
         self.route('GET', (':id', 'task'), self.redirectTask)
         self.route('POST', (), self.createStudy)
@@ -172,9 +173,24 @@ class StudyResource(Resource):
                 'login', pymongo.ASCENDING)
             ]
 
+    @describeRoute(
+        Description('Get the segmentations that comprise a study.')
+            .param('id', 'The ID of the study.', paramType='path')
+            .errorResponse('ID was invalid.')
+    )
+    @access.public
+    @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
+    def getStudySegmentations(self, study, params):
+        summary_fields = ['_id']
+        return [
+            {field: image[field] for field in summary_fields}
+            for image in
+            # TODO: sort this output
+            self.model('study', 'isic_archive').getSegmentations(study)
+            ]
 
     @describeRoute(
-        Description('Get the images that comprise a study.')
+        Description('Get the images (from segmentations) that comprise a study.')
         .param('id', 'The ID of the study.', paramType='path')
         .errorResponse('ID was invalid.')
     )

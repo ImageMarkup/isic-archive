@@ -67,9 +67,7 @@ class Study(Folder):
 
     def addAnnotator(self, study, annotator_user, creator_user, segmentations=None):
         if not segmentations:
-            raise Exception('No list of segmentatoins provided')
-            # TODO: add a "getSegmentations" method to attempt to look them up
-            segmentations = self.getImages(study)
+            segmentations = self.getSegmentations(study)
 
         annotator_folder = self.model('folder').createFolder(
             parent=study,
@@ -110,6 +108,13 @@ class Study(Folder):
             '_id': {'$in': annotator_folders.distinct('meta.userId')}
         })
 
+    def getSegmentations(self, study):
+        image_ids = self.model('annotation', 'isic_archive').find({
+            'meta.studyId': study['_id']
+        }).distinct('meta.segmentationId')
+        return self.model('segmentation', 'isic_archive').find({
+            '_id': {'$in': image_ids}
+        })
 
     def getImages(self, study):
         image_ids = self.model('annotation', 'isic_archive').find({
