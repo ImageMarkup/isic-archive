@@ -25,16 +25,18 @@ class DatasetResource(Resource):
     )
     @access.public
     def find(self, params):
+        Dataset = self.model('dataset', 'isic_archive')
+
         limit, offset, sort = self.getPagingParameters(params, 'lowerName')
 
         return [
             {
                 field: dataset[field]
                 for field in
-                self.model('dataset', 'isic_archive').summaryFields
+                Dataset.summaryFields
             }
             for dataset in
-            self.model('dataset', 'isic_archive').list(
+            Dataset.list(
                 user=self.getCurrentUser(),
                 limit=limit, offset=offset, sort=sort)
         ]

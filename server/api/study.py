@@ -24,8 +24,8 @@ class StudyResource(Resource):
 
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getStudy)
-        self.route('GET', (':id', 'users'), self.getStudyUsers)
-        self.route('GET', (':id', 'images'), self.getStudyImages)
+        self.route('GET', (':id', 'user'), self.getStudyUsers)
+        self.route('GET', (':id', 'image'), self.getStudyImages)
         self.route('GET', (':id', 'task'), self.redirectTask)
         self.route('POST', (), self.createStudy)
 
@@ -41,29 +41,41 @@ class StudyResource(Resource):
     @access.public
     def find(self, params):
         Study = self.model('study', 'isic_archive')
-        filters = dict()
 
+        limit, offset, sort = self.getPagingParameters(params, 'lowerName')
+
+        annotator_user = None
         if params.get('user'):
             if params['user'] == 'me':
-                filters['annotator_user'] = self.getCurrentUser()
+                annotator_user = self.getCurrentUser()
             else:
-                filters['annotator_user'] = self.model('user').load(
+                annotator_user = self.model('user').load(
                     id=params['user'],
                     level=AccessType.READ,
                     user=self.getCurrentUser()
                 )
 
+        state = None
         if params.get('state'):
             try:
-                filters['state'] = Study.State(params['state'])
+                state = Study.State(params['state'])
             except ValueError:
                 raise RestException('Query parameter "state" may only be "active" or "complete".')
 
-        return list(Study.filterResultsByPermission(
-            Study.find(**filters),
-            self.getCurrentUser(),
-            level=AccessType.READ
-        ))
+        return [
+            {
+                field: study[field]
+                for field in
+                Study.summaryFields
+                }
+            for study in
+            Study.filterResultsByPermission(
+                Study.find(query=None, annotator_user=annotator_user,
+                           state=state, sort=sort),
+                user=self.getCurrentUser(),
+                level=AccessType.READ, limit=limit, offset=offset
+            )
+        ]
 
 
     @describeRoute(
@@ -83,8 +95,12 @@ class StudyResource(Resource):
             return functools.partial(self._getStudyCSVStream, study)
 
         else:
-            return self.model('study', 'isic_archive').filter(study, self.getCurrentUser())
-
+            output = self.model('study', 'isic_archive').filter(
+                study, self.getCurrentUser())
+            del output['_accessLevel']
+            output['_modelType'] = 'study'
+            output.update(study['meta'])
+            return output
 
     def _getStudyCSVStream(self, study):
         featureset = self.model('featureset', 'isic_archive').load(study['meta']['featuresetId'])

@@ -13,7 +13,15 @@ class Study(Folder):
         ACTIVE = 'active'
         COMPLETE = 'complete'
 
-    # TODO: add indexes in "initialize"
+    def initialize(self):
+        super(Study, self).initialize()
+        # TODO: add indexes
+
+        self._filterKeys[AccessType.READ].clear()
+        self.exposeFields(level=AccessType.READ, fields=(
+            '_id', 'name', 'description', 'created', 'creatorId', 'updated'
+        ))
+        self.summaryFields = ('_id', 'name', 'updated')
 
     def loadStudyCollection(self):
         # assumes collection has been created by provision_utility
@@ -150,6 +158,14 @@ class Study(Folder):
             })
         return study_query
 
+    def list(self, user=None, limit=0, offset=0, sort=None):
+        """
+        Return a paginated list of studies that a user may access.
+        """
+        cursor = self.find({}, sort=sort)
+        return self.filterResultsByPermission(
+            cursor=cursor, user=user, level=AccessType.READ, limit=limit,
+            offset=offset)
 
     def find(self, query=None, annotator_user=None, state=None, **kwargs):
         study_query = self._find_query_filter(query, annotator_user, state)
