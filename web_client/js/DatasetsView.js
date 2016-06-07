@@ -88,7 +88,7 @@ girder.views.IsicDatasetWidget = girder.View.extend({
             parentView: this
         }).render();
 
-        this.imageCollection = new girder.collections.IsicImageCollection();
+        this.imageCollection = new isic.collections.ImageCollection();
         this.imageCollection.on('g:changed', function () {
             this.render();
         }, this).fetch({
@@ -105,16 +105,3 @@ girder.views.IsicDatasetWidget = girder.View.extend({
         return this;
     }
 });
-
-
-girder.models.IsicImageModel = girder.Model.extend({
-
-});
-
-girder.collections.IsicImageCollection = girder.Collection.extend({
-    resourceName: 'image',
-    model: girder.models.IsicImageModel
-    // TODO: make pageLimit unlimited, or add pagination to the view
-});
-
-
