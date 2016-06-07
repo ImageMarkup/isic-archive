@@ -29,6 +29,8 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         image_data_array = numpy.fromstring(image_data_bytes, dtype=numpy.uint8)
         del image_data_bytes
         image_data = cv2.imdecode(image_data_array, cv2.CV_LOAD_IMAGE_COLOR)
+        if image_data.shape[2] == 4:
+            image_data = image_data[:, :, :3]
         # OpenCV loads images as BGR, and cv2.floodFill doesn't work correctly
         #   with array views
         image_data = image_data[:, :, ::-1].copy()

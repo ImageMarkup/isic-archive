@@ -26,7 +26,11 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         :return: A Numpy array with the RGB image data.
         :rtype: numpy.ndarray
         """
-        return skimage.io.imread(image_data_stream)
+        image_data = skimage.io.imread(image_data_stream)
+        if image_data.shape[2] == 4:
+            # cv2.floodFill doesn't work correctly with array views
+            image_data = image_data[:, :, :3].copy()
+        return image_data
 
 
     @classmethod
