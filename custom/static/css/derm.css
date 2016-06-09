@@ -1,460 +1,409 @@
-    body {
-        /*background: #272822 !important;*/
-        background: #000;
-        font-family: "Avenir", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
-        font-weight: 300;
-        color: #ccc;
-    }
+* {
+    border-radius: 0  !important;
+}
 
+body {
+    /*background: #272822 !important;*/
+    background: #000;
+    font-family: "Avenir", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+    font-weight: 300;
+    color: #ccc;
+}
 
+h2, h3, h4 {
+    font-family: "Avenir", "HelveticaNeue-CondensedBold", Helvetica, Arial, sans-serif;
+    color: #fff;
+}
 
-    * {
-      border-radius: 0  !important;
-    }
+#map {
+    height: 700px;
+    /*width: 100%;*/
+    /*background-image:url('static/images/gridme.png');*/
+    /*background-repeat:repeat;*/
+    /*background: #1d1e18;*/
+    /*padding: 0px !important;*/
+    /*border: 1px solid #333;*/
+    background: #000;
+}
 
-
-
-    h2, h3, h4 {
-        font-family: "Avenir", "HelveticaNeue-CondensedBold", Helvetica, Arial, sans-serif;
-        color: #fff;
-    }
-
-    #map {
-        height: 700px;
-        /*width: 100%;*/
-        /*background-image:url('static/images/gridme.png');*/
-        /*background-repeat:repeat;*/
-        /*background: #1d1e18;*/
-        /*padding: 0px !important;*/
-        /*border: 1px solid #333;*/
-        background: #000;
-    }
-
-
-    #annotatorcontainer {
-    }
-
+#annotatorcontainer {
+}
 
 .panel .panel-body {
     background-color: #333;
 }
 
-    #toolContainer {
-
-        color: #fff;
-
-        /*width: 500px;*/
-        /*left: 10px;*/
-        /*top: 10px;*/
-
-        /*position: absolute;*/
-
-        padding: 0px;
-        background: black;
-        /*background-image:url('/uda/static/dark_fish_skin.png') !important;*/
-        background-repeat:repeat;
-        /*box-shadow: 0px 0px 10px rgba(0,0,0,0.9);*/
-
-    }
-
-    .nopad {
-        padding: 0px;
-    }
-
-    #hoverBar {
-
-        width: 100px;
-        height: 100px;
-        position: absolute;
-        bottom: 0px;
-        left: 10px;
-
-    }
-
-
-    #verticalToolbar {
-
-        width:100%;
-        overflow: auto;
-        overflow-y: scroll;
-        overflow-x: hidden;
-
-
-    }
-
-
-
-
-
-
-
-    .progress {
-        height: 5px !important;
-        padding: 0px !important;
-        margin: 0px !important;
-
-    }
-
-    .pagination {
-        margin: 0px !important;
-        margin-top: 10px !important;
-    }
-
-    .imagePreview {
-        padding: 1px;
-        /*padding-top: 10px;*/
-        margin-left: 5px;
-        /*min-height: 200px;*/
-        /*max-height: 300px;*/
-        overflow-x: hidden;
-        overflow-y: scroll;
-    }
-
-    .imagePreviewInner {
-        width: 480px;
-    }
-
-
-
-    div.wrapper{
-        float:left; /* important */
-        position:relative; /* important(so we can absolutely position the description div */
-    }
-    div.description{
-        position:absolute; /* absolute position (so we can position it where we want)*/
-        bottombottom:0px; /* position will be on bottom */
-        left:0px;
-        width:100%;
-        /* styling below */
-        background-color:transparent;
-        font-family: 'Avenir Next';
-        font-weight: 700;
-        /*font-size:13px;*/
-        color:white;
-        /*opacity:0.6; *//* transparency */
-        /*filter:alpha(opacity=60); *//* IE transparency */
-    }
-
-    /*div.description{*/
-        /*position:absolute; *//* absolute position (so we can position it where we want)*/
-        /*bottombottom:0px; *//* position will be on bottom */
-        /*left:0px;*/
-        /*width:100%;*/
-        /* styling below */
-        /*background-color:black;*/
-        /*font-family: 'Avenir Next';*/
-        /*font-weight: 700;*/
-        /*font-size:13px;*/
-        /*color:white;*/
-        /*opacity:0.6; *//* transparency */
-        /*filter:alpha(opacity=60); *//* IE transparency */
-    /*}*/
-
-    p.description_content{
-        padding:3px;
-        padding-left: 10px;
-        margin:0px;
-    }
-
-    .givedropshadow {
-        box-shadow: 0px 0px 10px rgba(0,0,0,0.9);
-    }
-
-
-
-    .imagethumb {
-
-        z-index: 1;
-        height: 90px;
-        width: 90px;
-        margin: 2px;
-        /*border: 1px solid #999;*/
-        float: left;
-    }
-
-    .imagedone {
-        z-index: 2;
-        height: 90px;
-        width: 90px;
-        margin: 2px;
-        border: 1px solid #999;
-        float: left;
-        position: relative;
-
-    }
-
-    .imagethumb:hover {
-        border: 1px solid #fff;
-    }
-
-
-
-
-    /* Annotation List CSS */
-
-    #annotationListView {
-        min-height: 100px;
-        max-height: 190px;
-        overflow: auto;
-        overflow-y: scroll;
-        overflow-x: hidden;
-    }
-
-    #annotationListView ul,ol {
-        margin:0px !important;
-    }
-
-    #annotationListView li {
-        padding: 2px;
-        list-style-image: none;
-        list-style-position: outside;
-        list-style-type: none;
-        border-bottom: 1px solid #b2b2b2;
-    }
-
-
-
-
-    .advancedoptions {
-        /*margin-top:5px;*/
-        padding-top:5px;
-        width: 100%;
-        float:left;
-    }
-
-
-    .select_group {
-        /*border: 1px solid #999;*/
-        background-color: #222;
-        min-width: 60px;
-        height: 26px;
-        padding: 2px;
-        padding-left: 5px;
-        padding-right: 5px;
-    }
-
-
-    .optionitem {
-
-        /*max-width: 60px;*/
-        /*height: 65px;*/
-        float: left;
-
-        /*margin-left: 5px;*/
-        /*margin-top: 3px;*/
-        margin-bottom: 5px;
-
-        height: 90px;
-        width: 90px;
-        margin: 2px;
-        margin-left:3px;
-        border: 1px solid #999;
-
-        /*margin: 1px;*/
-        /*border: 1px solid #999;*/
-    }
-
-    .optionimage {
-        height: 77px;
-        width: 117px;
-    }
-
-
-    .lowertoolbar
-    {
-        /*background-color:black;*/
-
-        /*background-color: rgb(62, 64, 54);*/
-        /*background: #282727;*/
-        /*background-color: rgb(62, 64, 54);*/
-        width: 100%;
-        padding-top: 4px;
-        padding-bottom: 4px;
-        float:left;
-    }
-
-
-    .lowertoolbar > div {
-        margin-left: 6px;
-        /*margin-right: 10px;*/
-        padding-right: 6px;
-    }
-
-
-
-    .choiceoption {
-        margin-top: 10px;
-        margin-left: 5px;
-    }
-
-    .btncontainer {
-        max-height: 28px;
-        width: 120px;
-        float: left;
-        margin-left: 4px;
-        /*background-color: #fff;*/
-    }
-
-    .btnimage {
-
-        max-height: 28px;
-
-    }
-
-    .btn:hover {
-        color: #eee;
-    }
-
-
-    .modal-content {
-        /*background-color: rgb(39, 40, 34);*/
-        background-color: #000;
-        border: 1px solid #666;
-    }
-
-    .modal-body {
-        text-align: center;
-    }
-
-
-
-    .thumbnailImg
-    {
-        width: 60px;
-
-    }
-
-    .thumbnailSelector
-    {
-        height: 120px;
-        width: 200px;
-        overflow: auto;
-        box-shadow: inset 0px 0px 10px rgba(0,0,0,0.9);
-
-    }
-
-    .thumbspacer {
-        float: left;
-        margin: 1px;
-        border: 1px dashed #333333;
-    }
-
-    .thumbborder
-    {
-        float: left;
-        border: 1px solid #00ccff;
-        margin: 1px;
-    }
-
-    .isichead {
-
-        background: #171616;
-        /*background-color: rgb(62, 64, 54);*/
-        /*background: #000;*/
-        color: #fff;
-
-        /*height: 50px;*/
-        font-weight: 300;
-        padding: 6px;
-        /*margin-top: 10px;*/
-        /*margin-bottom: 10px;*/
-        padding-top:10px;
-        padding-left: 10px;
-        border-bottom: 1px solid #333;
-
-    }
-
-    .isictitle {
-        font-size: 15pt;
-        /*font-family: "HelveticaNeue-CondensedBold", Helvetica, Arial, sans-serif;*/
-    }
-
-    .isicuser {
-        margin-top: 0px;
-
-    }
-
-    nav {
-        width: 100%;
-        z-index: 200;
-    }
-
-    .content-group {
-        padding-top: 9px;
-        padding-bottom: 5px;
-        padding-left: 24px;
-    }
-
-    .btn.active
-    {
-        color:#fff;
-        background: #0099ff;
-    }
-
-    /**
-     * The zoomslider in the third map shall be horizontal, placed in the top-right
-     * corner, smaller and orange.
-     */
-    #map .ol-zoomslider {
-      top: 10px;
-      left: auto;
-      right: 10px;
-      background-color: rgba(122,122,122,0.2);
-      width: 200px;
-      height: 20px;
-      padding: 0;
-      box-shadow: 0 0 5px rgb(33,33,33);
-      border-radius: 10px;
-    }
-
-    #map .ol-zoomslider:hover {
-      background-color: rgba(200,200,200,0.3);
-    }
-
-    #map .ol-zoomslider-thumb {
-      height: 20px;
-      width: 20px;
-      margin: 0;
-      filter: none;
-      background-color: rgba(255,255,255,0.6);
-      border-radius: 10px;
-    }
-    #map a.ol-zoomslider-handle:hover {
-      background-color: rgba(255,255,255,0.7);
-    }
-
-
-    .ol-zoom {
-        display: none;
-    }
-
-    .ol-logo {
-        display: none;
-    }
-
-    .labelgreen {
-
-        color: #aeaeae;
-
-    }
-
+#toolContainer {
+    /*height: 100%;*/
+    height: 600px;
+    overflow-y: scroll;
+
+    color: #fff;
+
+    /*width: 500px;*/
+    /*left: 10px;*/
+    /*top: 10px;*/
+
+    /*position: absolute;*/
+
+    padding: 0px;
+    background: black;
+    /*background-image:url('/uda/static/dark_fish_skin.png') !important;*/
+    background-repeat: repeat;
+    /*box-shadow: 0px 0px 10px rgba(0,0,0,0.9);*/
+}
+
+.nopad {
+    padding: 0px;
+}
+
+#hoverBar {
+
+    width: 100px;
+    height: 100px;
+    position: absolute;
+    bottom: 0px;
+    left: 10px;
+}
+
+#verticalToolbar {
+    width: 100%;
+    overflow: auto;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+.progress {
+    height: 5px !important;
+    padding: 0px !important;
+    margin: 0px !important;
+}
+
+.pagination {
+    margin: 0px !important;
+    margin-top: 10px !important;
+}
+
+.imagePreview {
+    padding: 1px;
+    /*padding-top: 10px;*/
+    margin-left: 5px;
+    /*min-height: 200px;*/
+    /*max-height: 300px;*/
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+.imagePreviewInner {
+    width: 480px;
+}
+
+div.wrapper {
+    float:left; /* important */
+    position:relative; /* important(so we can absolutely position the description div */
+}
+
+div.description {
+    position:absolute; /* absolute position (so we can position it where we want)*/
+    bottombottom:0px; /* position will be on bottom */
+    left:0px;
+    width:100%;
+    /* styling below */
+    background-color:transparent;
+    font-family: 'Avenir Next';
+    font-weight: 700;
+    /*font-size:13px;*/
+    color:white;
+    /*opacity:0.6; *//* transparency */
+    /*filter:alpha(opacity=60); *//* IE transparency */
+}
+
+/*div.description{*/
+    /*position:absolute; *//* absolute position (so we can position it where we want)*/
+    /*bottombottom:0px; *//* position will be on bottom */
+    /*left:0px;*/
+    /*width:100%;*/
+    /* styling below */
+    /*background-color:black;*/
+    /*font-family: 'Avenir Next';*/
+    /*font-weight: 700;*/
+    /*font-size:13px;*/
+    /*color:white;*/
+    /*opacity:0.6; *//* transparency */
+    /*filter:alpha(opacity=60); *//* IE transparency */
+/*}*/
+
+p.description_content{
+    padding:3px;
+    padding-left: 10px;
+    margin:0px;
+}
+
+.givedropshadow {
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.9);
+}
+
+.imagethumb {
+    z-index: 1;
+    height: 90px;
+    width: 90px;
+    margin: 2px;
+    /*border: 1px solid #999;*/
+    float: left;
+}
+
+.imagedone {
+    z-index: 2;
+    height: 90px;
+    width: 90px;
+    margin: 2px;
+    border: 1px solid #999;
+    float: left;
+    position: relative;
+}
+
+.imagethumb:hover {
+    border: 1px solid #fff;
+}
+
+/* Annotation List CSS */
+
+#annotationListView {
+    min-height: 100px;
+    max-height: 190px;
+    overflow: auto;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+#annotationListView ul,ol {
+    margin:0px !important;
+}
+
+#annotationListView li {
+    padding: 2px;
+    list-style-image: none;
+    list-style-position: outside;
+    list-style-type: none;
+    border-bottom: 1px solid #b2b2b2;
+}
+
+.advancedoptions {
+    /*margin-top:5px;*/
+    padding-top:5px;
+    width: 100%;
+    float:left;
+}
+
+.select_group {
+    /*border: 1px solid #999;*/
+    background-color: #222;
+    min-width: 60px;
+    height: 26px;
+    padding: 2px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.optionitem {
+    /*max-width: 60px;*/
+    /*height: 65px;*/
+    float: left;
+
+    /*margin-left: 5px;*/
+    /*margin-top: 3px;*/
+    margin-bottom: 5px;
+
+    height: 90px;
+    width: 90px;
+    margin: 2px;
+    margin-left:3px;
+    border: 1px solid #999;
+
+    /*margin: 1px;*/
+    /*border: 1px solid #999;*/
+}
+
+.optionimage {
+    height: 77px;
+    width: 117px;
+}
+
+.lowertoolbar {
+    /*background-color:black;*/
+
+    /*background-color: rgb(62, 64, 54);*/
+    /*background: #282727;*/
+    /*background-color: rgb(62, 64, 54);*/
+    width: 100%;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    float:left;
+}
+
+
+.lowertoolbar > div {
+    margin-left: 6px;
+    /*margin-right: 10px;*/
+    padding-right: 6px;
+}
+
+.choiceoption {
+    margin-top: 10px;
+    margin-left: 5px;
+}
+
+.btncontainer {
+    max-height: 28px;
+    width: 120px;
+    float: left;
+    margin-left: 4px;
+    /*background-color: #fff;*/
+}
+
+.btnimage {
+    max-height: 28px;
+}
+
+.btn:hover {
+    color: #eee;
+}
+
+.modal-content {
+    /*background-color: rgb(39, 40, 34);*/
+    background-color: #000;
+    border: 1px solid #666;
+}
+
+.modal-body {
+    text-align: center;
+}
+
+.thumbnailImg {
+    width: 60px;
+}
+
+.thumbnailSelector {
+    height: 120px;
+    width: 200px;
+    overflow: auto;
+    box-shadow: inset 0px 0px 10px rgba(0,0,0,0.9);
+}
+
+.thumbspacer {
+    float: left;
+    margin: 1px;
+    border: 1px dashed #333333;
+}
+
+.thumbborder {
+    float: left;
+    border: 1px solid #00ccff;
+    margin: 1px;
+}
+
+.isichead {
+    background: #171616;
+    /*background-color: rgb(62, 64, 54);*/
+    /*background: #000;*/
+    color: #fff;
+
+    /*height: 50px;*/
+    font-weight: 300;
+    padding: 6px;
+    /*margin-top: 10px;*/
+    /*margin-bottom: 10px;*/
+    padding-top:10px;
+    padding-left: 10px;
+    border-bottom: 1px solid #333;
+}
+
+.isictitle {
+    font-size: 15pt;
+    /*font-family: "HelveticaNeue-CondensedBold", Helvetica, Arial, sans-serif;*/
+}
+
+.isicuser {
+    margin-top: 0px;
+}
+
+nav {
+    width: 100%;
+    z-index: 200;
+}
+
+.content-group {
+    padding-top: 9px;
+    padding-bottom: 5px;
+    padding-left: 24px;
+}
+
+.btn.active {
+    color:#fff;
+    background: #0099ff;
+}
+
+/**
+ * The zoomslider in the third map shall be horizontal, placed in the top-right
+ * corner, smaller and orange.
+ */
+#map .ol-zoomslider {
+  top: 10px;
+  left: auto;
+  right: 10px;
+  background-color: rgba(122,122,122,0.2);
+  width: 200px;
+  height: 20px;
+  padding: 0;
+  box-shadow: 0 0 5px rgb(33,33,33);
+  border-radius: 10px;
+}
+
+#map .ol-zoomslider:hover {
+  background-color: rgba(200,200,200,0.3);
+}
+
+#map .ol-zoomslider-thumb {
+  height: 20px;
+  width: 20px;
+  margin: 0;
+  filter: none;
+  background-color: rgba(255,255,255,0.6);
+  border-radius: 10px;
+}
+
+#map a.ol-zoomslider-handle:hover {
+  background-color: rgba(255,255,255,0.7);
+}
+
+.ol-zoom {
+    display: none;
+}
+
+.ol-logo {
+    display: none;
+}
+
+.labelgreen {
+    color: #aeaeae;
+}
 
 .modal.fade {
-  opacity: 1;
+    opacity: 1;
 }
 
 .modal.fade .modal-dialog, .modal.in .modal-dialog {
-  -webkit-transform: translate(0, 0);
-  -ms-transform: translate(0, 0);
-  transform: translate(0, 0);
+    -webkit-transform: translate(0, 0);
+    -ms-transform: translate(0, 0);
+    transform: translate(0, 0);
 }
 
 .modal-backdrop {
-   opacity: 0.8 !important;
+    opacity: 0.8 !important;
 }
 
 .hideli {
-    list-style:none;
+    list-style: none;
 }
 
 .markupsmalllabel {
@@ -462,86 +411,97 @@
 }
 
 .markupwell {
-
     padding-left: 7px;
     /*background: #111;*/
     /*background-image:url('/uda/static/dark_fish_skin.png') !important;*/
     /*background-repeat:repeat;*/
     /*box-shadow: inset 0px 0px 5px rgba(0,0,0,0.3) ;*/
-
 }
 
+nav {
+    margin-left: 10px;
+}
 
-    nav {
-        margin-left: 10px;
-    }
-    nav ul ul {
-        display: none;
-    }
-    nav ul li:hover > ul {
-        display: block;
-    }
-    nav ul {
-        background: #efefef;
-        /*background: linear-gradient(top, #efefef 0%, #bbbbbb 100%);*/
-        /*background: -moz-linear-gradient(top, #efefef 0%, #bbbbbb 100%);*/
-        /*background: -webkit-linear-gradient(top, #efefef 0%,#bbbbbb 100%);*/
-        /*box-shadow: 0px 0px 9px rgba(0,0,0,0.15);*/
-        /*padding: 0 20px;*/
-        /*border-radius: 10px;*/
-        list-style: none;
-        position: relative;
-        display: inline-table;
-        padding: 0px !important;
-    }
-    nav ul:after {
-        content: "";
-        clear: both;
-        display: block;
-    }
-    nav ul li {
-        float: left;
-    }
-    nav ul li:hover {
-        background: #4b545f;
-        /*background: linear-gradient(top, #4f5964 0%, #5f6975 40%);*/
-        /*background: -moz-linear-gradient(top, #4f5964 0%, #5f6975 40%);*/
-        /*background: -webkit-linear-gradient(top, #4f5964 0%,#5f6975 40%);*/
-    }
-    nav ul li:hover a {
-        border: 1px solid #1a1c1e;
-    }
-    nav ul li a {
-        display: block;
-        border: 1px solid #000;
-        /*padding: 25px 40px;*/
-        /*color: #757575; text-decoration: none;*/
-    }
-    nav ul ul {
-        /*background: #5f6975; */
-        /*border-radius: 0px; padding: 0;*/
-        position: absolute;
-        top: 100%;
-    }
-    nav ul ul li {
-        float: none;
-        /*border-top: 1px solid #6b727c;*/
-        /*border-bottom: 1px solid #575f6a; */
-        position: relative;
-    }
-    nav ul ul li a {
-        border: 1px solid #555;
-        /*padding: 15px 40px;*/
-        /*color: #fff;*/
-    }
-    nav ul ul li a:hover {
-        /*background: #4b545f;*/
-    }
-    nav ul ul ul {
-        position: absolute;
-        left: 100%;
-        top: 0;
-    }
-    .fawhite {
-        color: #fff;
-    }
+nav ul ul {
+    display: none;
+}
+
+nav ul li:hover > ul {
+    display: block;
+}
+
+nav ul {
+    background: #efefef;
+    /*background: linear-gradient(top, #efefef 0%, #bbbbbb 100%);*/
+    /*background: -moz-linear-gradient(top, #efefef 0%, #bbbbbb 100%);*/
+    /*background: -webkit-linear-gradient(top, #efefef 0%,#bbbbbb 100%);*/
+    /*box-shadow: 0px 0px 9px rgba(0,0,0,0.15);*/
+    /*padding: 0 20px;*/
+    /*border-radius: 10px;*/
+    list-style: none;
+    position: relative;
+    display: inline-table;
+    padding: 0px !important;
+}
+
+nav ul:after {
+    content: "";
+    clear: both;
+    display: block;
+}
+
+nav ul li {
+    float: left;
+}
+
+nav ul li:hover {
+    background: #4b545f;
+    /*background: linear-gradient(top, #4f5964 0%, #5f6975 40%);*/
+    /*background: -moz-linear-gradient(top, #4f5964 0%, #5f6975 40%);*/
+    /*background: -webkit-linear-gradient(top, #4f5964 0%,#5f6975 40%);*/
+}
+
+nav ul li:hover a {
+    border: 1px solid #1a1c1e;
+}
+
+nav ul li a {
+    display: block;
+    border: 1px solid #000;
+    /*padding: 25px 40px;*/
+    /*color: #757575; text-decoration: none;*/
+}
+
+nav ul ul {
+    /*background: #5f6975; */
+    /*border-radius: 0px; padding: 0;*/
+    position: absolute;
+    top: 100%;
+}
+
+nav ul ul li {
+    float: none;
+    /*border-top: 1px solid #6b727c;*/
+    /*border-bottom: 1px solid #575f6a; */
+    position: relative;
+}
+
+nav ul ul li a {
+    border: 1px solid #555;
+    /*padding: 15px 40px;*/
+    /*color: #fff;*/
+}
+
+nav ul ul li a:hover {
+    /*background: #4b545f;*/
+}
+
+nav ul ul ul {
+    position: absolute;
+    left: 100%;
+    top: 0;
+}
+
+.fawhite {
+    color: #fff;
+}
