@@ -222,6 +222,11 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
 
     @classmethod
     def _RGBTounit64(cls, val):
+        """
+        Decode an RGB representation of a superpixel label into its native scalar value.
+        :param val: A single pixel, or a 3-channel image.
+        :type val: numpy.ndarray of uint8, with a shape [3] or [n, m, 3]
+        """
         return \
             (val[..., 0].astype(numpy.uint64)) + \
             (val[..., 1].astype(numpy.uint64) << numpy.uint64(8)) + \
