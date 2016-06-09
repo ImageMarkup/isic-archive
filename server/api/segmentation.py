@@ -175,5 +175,5 @@ class SegmentationResource(Resource):
     @loadmodel(model='segmentation', plugin='isic_archive')
     def getSuperpixels(self, segmentation, params):
         Segmentation = self.model('segmentation', 'isic_archive')
-        superpixels_file = Segmentation.superpixelsFile(segmentation, 1.1)
+        superpixels_file = Segmentation.superpixelsFile(segmentation)
         return self.model('file').download(superpixels_file, headers=True)
