@@ -92,7 +92,7 @@ class StudyResource(Resource):
         if params.get('format') == 'csv':
             cherrypy.response.stream = True
             cherrypy.response.headers['Content-Type'] = 'text/csv'
-            cherrypy.response.headers['Content-Disposition'] = 'attachment; filename="%s"' % study['name']
+            cherrypy.response.headers['Content-Disposition'] = 'attachment; filename="%s.csv"' % study['name']
             return functools.partial(self._getStudyCSVStream, study)
 
         else:
@@ -104,14 +104,18 @@ class StudyResource(Resource):
             return output
 
     def _getStudyCSVStream(self, study):
-        featureset = self.model('featureset', 'isic_archive').load(study['meta']['featuresetId'])
+        Study = self.model('study', 'isic_archive')
+        Featureset = self.model('featureset', 'isic_archive')
+        Image = self.model('image', 'isic_archive')
+
+        featureset = Featureset.load(study['meta']['featuresetId'])
         csv_fields = tuple(itertools.chain(
             ('study_name', 'study_id',
              'user_login_name', 'user_id',
-             # TOOD: replace 'image_name' with 'isic_lesion_id'
-             'image_name', 'image_id',
-             'superpixel_id'),
-            # (feature['id'] for feature in featureset['image_features']),
+             'segmentation_id',
+             'image_name', 'image_id'),
+            (feature['id'] for feature in featureset['image_features']),
+            ('superpixel_id',),
             (feature['id'] for feature in featureset['region_features'])
         ))
 
@@ -123,31 +127,52 @@ class StudyResource(Resource):
         response_body.seek(0)
         response_body.truncate()
 
-        for annotator_user, image_item in itertools.product(
-            self.model('study', 'isic_archive').getAnnotators(study).sort('login', pymongo.ASCENDING),
-            self.model('study', 'isic_archive').getImages(study).sort('name', pymongo.ASCENDING)
+        segmentations = list(Study.getSegmentations(study))
+        images = Image.find({'_id': {'$in': [
+            segmentation['imageId'] for segmentation in segmentations]}})
+        images = {image['_id']: image for image in images}
+        for segmentation in segmentations:
+            segmentation['image'] = images.pop(segmentation.pop('imageId'))
+        segmentations.sort(
+            key=lambda segmentation: segmentation['image']['name'])
+
+        for annotator_user, segmentation in itertools.product(
+            Study.getAnnotators(study).sort('login', pymongo.ASCENDING),
+            segmentations
         ):
             # this will iterate either 0 or 1 times
-            for annotation in self.model('study', 'isic_archive').childAnnotations(
+            for annotation in Study.childAnnotations(
                 study=study,
                 annotator_user=annotator_user,
-                image_item=image_item,
-                state=self.model('study', 'isic_archive').State.COMPLETE
+                segmentation=segmentation,
+                state=Study.State.COMPLETE
             ):
+                out_dict_base = {
+                    'study_name': study['name'],
+                    'study_id': str(study['_id']),
+                    'user_login_name': annotator_user['login'],
+                    'user_id': str(annotator_user['_id']),
+                    'segmentation_id': str(segmentation['_id']),
+                    'image_name': segmentation['image']['name'],
+                    'image_id': str(segmentation['image']['_id'])
+                }
+
+                out_dict = out_dict_base.copy()
+                for image_feature in featureset['image_features']:
+                    if image_feature['id'] in annotation['meta']['annotations']:
+                        out_dict[image_feature['id']] = annotation['meta']['annotations'][image_feature['id']]
+                csv_writer.writerow(out_dict)
+                yield response_body.getvalue()
+                response_body.seek(0)
+                response_body.truncate()
+
                 # TODO: move this into the query
                 if 'region_features' in annotation['meta']['annotations']:
                     superpixel_count = len(annotation['meta']['annotations']['region_features'].itervalues().next())
                     for superpixel_num in xrange(superpixel_count):
 
-                        out_dict = {
-                            'study_name': study['name'],
-                            'study_id': str(study['_id']),
-                            'user_login_name': annotator_user['login'],
-                            'user_id': str(annotator_user['_id']),
-                            'image_name': image_item['name'],
-                            'image_id': str(image_item['_id']),
-                            'superpixel_id': superpixel_num,
-                        }
+                        out_dict = out_dict_base.copy()
+                        out_dict['superpixel_id'] = superpixel_num
                         for feature_name, feature_value in annotation['meta']['annotations']['region_features'].iteritems():
                             out_dict[feature_name] = feature_value[superpixel_num]
 
