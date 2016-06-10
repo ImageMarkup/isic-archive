@@ -24,9 +24,6 @@ class StudyResource(Resource):
 
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getStudy)
-        self.route('GET', (':id', 'user'), self.getStudyUsers)
-        self.route('GET', (':id', 'segmentation'), self.getStudySegmentations)
-        self.route('GET', (':id', 'image'), self.getStudyImages)
         self.route('GET', (':id', 'task'), self.redirectTask)
         self.route('POST', (), self.createStudy)
 
@@ -68,7 +65,7 @@ class StudyResource(Resource):
                 field: study[field]
                 for field in
                 Study.summaryFields
-                }
+            }
             for study in
             Study.filterResultsByPermission(
                 Study.find(query=None, annotator_user=annotator_user,
@@ -89,6 +86,11 @@ class StudyResource(Resource):
     @access.public
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
     def getStudy(self, study, params):
+        Study = self.model('study', 'isic_archive')
+        Featureset = self.model('featureset', 'isic_archive')
+        Segmentation = self.model('segmentation', 'isic_archive')
+        Image = self.model('image', 'isic_archive')
+
         if params.get('format') == 'csv':
             cherrypy.response.stream = True
             cherrypy.response.headers['Content-Type'] = 'text/csv'
@@ -96,11 +98,45 @@ class StudyResource(Resource):
             return functools.partial(self._getStudyCSVStream, study)
 
         else:
-            output = self.model('study', 'isic_archive').filter(
-                study, self.getCurrentUser())
+            output = Study.filter(study, self.getCurrentUser())
             del output['_accessLevel']
             output['_modelType'] = 'study'
-            output.update(study['meta'])
+
+            output['featureset'] = Featureset.load(
+                id=study['meta']['featuresetId'],
+                fields=Featureset.summaryFields
+            )
+
+            userSummaryFields = ('_id', 'login', 'firstName', 'lastName')
+            output['users'] = [
+                {field: user[field] for field in userSummaryFields}
+                for user in
+                Study.getAnnotators(study).sort('login', pymongo.ASCENDING)
+            ]
+
+            output['segmentations'] = [
+                {
+                    field: segmentation[field]
+                    for field in Segmentation.summaryFields
+                }
+                for segmentation in
+                Study.getSegmentations(study)
+            ]
+
+            images = Image.find(
+                {'_id': {'$in': [
+                    segmentation['imageId']
+                    for segmentation in output['segmentations']
+                ]}},
+                fields=Image.summaryFields
+            )
+            images = {image['_id']: image for image in images}
+            for segmentation in output['segmentations']:
+                segmentation['image'] = images.pop(segmentation.pop('imageId'))
+
+            output['segmentations'].sort(
+                key=lambda segmentation: segmentation['image']['name'])
+
             return output
 
     def _getStudyCSVStream(self, study):
@@ -155,55 +191,6 @@ class StudyResource(Resource):
                         yield response_body.getvalue()
                         response_body.seek(0)
                         response_body.truncate()
-
-
-    @describeRoute(
-        Description('Get the annotator users that comprise a study.')
-        .param('id', 'The ID of the study.', paramType='path')
-        .errorResponse('ID was invalid.')
-    )
-    @access.public
-    @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
-    def getStudyUsers(self, study, params):
-        summary_fields = ['_id', 'login']
-        return [
-            {field: user[field] for field in summary_fields}
-            for user in
-            self.model('study', 'isic_archive').getAnnotators(study).sort(
-                'login', pymongo.ASCENDING)
-            ]
-
-    @describeRoute(
-        Description('Get the segmentations that comprise a study.')
-            .param('id', 'The ID of the study.', paramType='path')
-            .errorResponse('ID was invalid.')
-    )
-    @access.public
-    @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
-    def getStudySegmentations(self, study, params):
-        summary_fields = ['_id']
-        return [
-            {field: image[field] for field in summary_fields}
-            for image in
-            # TODO: sort this output
-            self.model('study', 'isic_archive').getSegmentations(study)
-            ]
-
-    @describeRoute(
-        Description('Get the images (from segmentations) that comprise a study.')
-        .param('id', 'The ID of the study.', paramType='path')
-        .errorResponse('ID was invalid.')
-    )
-    @access.public
-    @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
-    def getStudyImages(self, study, params):
-        summary_fields = ['_id', 'name']
-        return [
-            {field: image[field] for field in summary_fields}
-            for image in
-            self.model('study', 'isic_archive').getImages(study).sort(
-                'name', pymongo.ASCENDING)
-            ]
 
 
     @describeRoute(

@@ -28,7 +28,6 @@ class Image(Item):
             # TODO: re-add once converted file no longer contributes to size
             # 'size',
         ))
-
         self.summaryFields = ('_id', 'name', 'updated')
 
 
