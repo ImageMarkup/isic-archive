@@ -1,48 +1,23 @@
 .isic-study-users-container
   h4 Users
   .isic-study-users-content
-    if users
-      if users.length
-        - var logins = users.pluck('login')
-        = logins.join(', ')
-      else
-        | (no users)
+    if study.get('users').length
+      - var logins = _.pluck(study.get('users'), 'login')
+      = logins.join(', ')
     else
-      i.icon-error (error)
+      | (no users)
 
 .isic-study-featureset-container
   h4 Featureset
   .isic-study-featureset-content
-    if featureset
-      | #{featureset.get('name')}, version #{featureset.get('version')}
-    else
-      i.icon-error (error)
-
-.isic-study-images-container
-  h4 Images
-    if images
-      |  (#{images.length})
-  .isic-study-images-content
-    if images
-      if images.length
-        - var imageNames = images.pluck('name')
-        = imageNames.join(', ')
-      else
-        | (no images)
-    else
-      i.icon-error (error)
+    | #{study.get('featureset').name}, version #{study.get('featureset').version}
 
 .isic-study-segmentations-container
   h4 Segmentations
-    if segmentations
-      |  (#{segmentations.length})
+    |  (#{study.get('segmentations').length})
   .isic-study-segmentations-content
-    if segmentations
-      if segmentations.length
-        - var segmentationsIds = segmentations.pluck('_id')
-        = segmentationsIds.join(', ')
-      else
-        | (no segmentations)
+    if study.get('segmentations').length
+      - var segmentationsIds = _.pluck(study.get('segmentations'), '_id')
+      = segmentationsIds.join(', ')
     else
-      i.icon-error (error)
-
+      | (no segmentations)

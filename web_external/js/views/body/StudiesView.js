@@ -35,22 +35,19 @@ isic.views.StudiesView = isic.View.extend({
 
     renderStudy: function (index, container) {
         if (container.children().length === 0) {
+            var studyId = this.studies.at(index).id;
+
             // Display loading indicator
             new girder.views.LoadingAnimation({
                 el: container,
                 parentView: this
             }).render();
 
-            // Fetch study details
-            var study = new isic.models.StudyModel({
-                _id: this.studies.at(index).id
-            }).once('g:fetched', function () {
-                new isic.views.StudyView({ // eslint-disable-line no-new
-                    el: container,
-                    study: study,
-                    parentView: this
-                });
-            }, this).fetch();
+            new isic.views.StudyView({ // eslint-disable-line no-new
+                el: container,
+                id: studyId,
+                parentView: this
+            });
         }
     }
 });
