@@ -19,7 +19,7 @@ isic.views.FrontPageView = girder.views.FrontPageView.extend({
         this.datasetContributor = false;
 
         // Check whether user has permission to contribute datasets
-        var datasetModel = new girder.models.IsicDatasetModel();
+        var datasetModel = new isic.models.DatasetModel();
         datasetModel.userCanContribute(girder.currentUser, _.bind(function (datasetContributor) {
             this.datasetContributor = datasetContributor;
             this.render();
