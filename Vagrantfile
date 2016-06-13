@@ -1,5 +1,5 @@
-# -*- mode: ruby -*-
-# vi: set ft=ruby :
+# Required for Ansible Galaxy
+Vagrant.require_version ">=1.8.0"
 
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/trusty64"
@@ -26,6 +26,7 @@ Vagrant.configure("2") do |config|
     end
   config.vm.provision provisioner_type do |ansible|
     ansible.playbook = "ansible/vagrant-playbook.yml"
+    ansible.galaxy_role_file = "ansible/requirements.yml"
     # Ansible has a bug where the "--module-path" option is not respected
     # ansible.raw_arguments = ["--module-path=" + File.expand_path("ansible/library")]
     ENV["ANSIBLE_LIBRARY"] = File.expand_path("ansible/library")
