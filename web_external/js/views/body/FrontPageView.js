@@ -4,6 +4,10 @@ isic.views.FrontPageView = girder.views.FrontPageView.extend({
             isic.router.navigate('example', {trigger: true});
         },
 
+        'click .isic-studies-button': function () {
+            isic.router.navigate('studies', {trigger: true});
+        },
+
         'click .isic-upload-dataset-button': function () {
             isic.router.navigate('uploadDataset', {trigger: true});
         }
@@ -15,7 +19,7 @@ isic.views.FrontPageView = girder.views.FrontPageView.extend({
         this.datasetContributor = false;
 
         // Check whether user has permission to contribute datasets
-        var datasetModel = new girder.models.IsicDatasetModel();
+        var datasetModel = new isic.models.DatasetModel();
         datasetModel.userCanContribute(girder.currentUser, _.bind(function (datasetContributor) {
             this.datasetContributor = datasetContributor;
             this.render();

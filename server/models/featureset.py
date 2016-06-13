@@ -20,6 +20,7 @@ class Featureset(Model):
             'image_features',
             'region_features'
         ))
+        self.summaryFields = ('_id', 'name', 'version')
 
 
     def createFeatureset(self, name, version, creator):

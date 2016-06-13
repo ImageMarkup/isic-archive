@@ -1,0 +1,32 @@
+.isic-study-users-container
+  h4 Users
+  .isic-study-users-content
+    if study.get('users').length
+      ul
+        each user in study.get('users')
+          li #{user.firstName} #{user.lastName} (#{user.login})
+    else
+      | (no users)
+
+.isic-study-featureset-container
+  h4 Featureset
+  .isic-study-featureset-content
+    | #{study.get('featureset').name}, version #{study.get('featureset').version}
+
+.isic-study-segmentations-container
+  h4 Segmentations
+    |  (#{study.get('segmentations').length})
+  .isic-study-segmentations-content
+    if study.get('segmentations').length
+      table
+        tr
+          th.isic-study-segmentations-content-name Image Name
+          th.isic-study-segmentations-content-segmentationid Segmentation Id
+          th.isic-study-segmentations-content-imageid Image Id
+        each segmentation in study.get('segmentations')
+          tr
+            td.isic-study-segmentations-content-name= segmentation.image.name
+            td.isic-study-segmentations-content-segmentationid= segmentation._id
+            td.isic-study-segmentations-content-imageid= segmentation.image._id
+    else
+      | (no segmentations)

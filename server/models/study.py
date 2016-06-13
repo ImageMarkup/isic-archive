@@ -109,11 +109,11 @@ class Study(Folder):
         })
 
     def getSegmentations(self, study):
-        image_ids = self.model('annotation', 'isic_archive').find({
+        segmentation_ids = self.model('annotation', 'isic_archive').find({
             'meta.studyId': study['_id']
         }).distinct('meta.segmentationId')
         return self.model('segmentation', 'isic_archive').find({
-            '_id': {'$in': image_ids}
+            '_id': {'$in': segmentation_ids}
         })
 
     def getImages(self, study):

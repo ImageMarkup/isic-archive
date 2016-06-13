@@ -105,6 +105,8 @@ module.exports = function (grunt) {
                 jsDir + '/isic_archive-version.js',
                 jsDir + '/view.js',
                 jsDir + '/app.js',
+                jsDir + '/models/**/*.js',
+                jsDir + '/collections/**/*.js',
                 jsDir + '/views/**/*.js'
             ];
             files[staticDir + '/main.min.js'] = [
