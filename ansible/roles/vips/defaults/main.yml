@@ -1,6 +1,0 @@
----
-
-vips_version: 65930cf8665aa8b3e890f7b449031f738397313f  # 8.2.2
-vips_path: "{{ ansible_user_dir }}/vips"
-
-build_parallelism: "{{ ansible_processor_vcpus + 1 }}"
