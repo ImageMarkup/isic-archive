@@ -31,7 +31,7 @@ Vagrant.configure("2") do |config|
     # ansible.raw_arguments = ["--module-path=" + File.expand_path("ansible/library")]
     ENV["ANSIBLE_LIBRARY"] = File.expand_path("ansible/library")
     if provisioner_type == "ansible_local"
-      ansible.provisioning_path = "/home/vagrant/digital_slide_archive"
+      ansible.provisioning_path = "/home/vagrant/isic_archive"
     end
   end
 
