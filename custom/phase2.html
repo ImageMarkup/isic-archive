@@ -121,8 +121,8 @@
                 <div ng-controller="ImageFeatureAnnotationController" ng-if="featureset.image_features.length" class="isic-annotation">
                     <h3 class="isic-annotation-header">Lesion-level</h3>
                     <div class="isic-annotation-body">
-                        <accordion close-others="false">
-                            <accordion-group
+                        <uib-accordion close-others="false">
+                            <uib-accordion-group
                                         ng-repeat="feature in featureset.image_features track by feature.id"
                                         heading="{{ feature.name.join(': ') }}"
                                         is-open="true">
@@ -163,8 +163,8 @@
                                 <div ng-show="showReview">
                                     <label class="isic-annotation-feature-option selected">{{ feature_selected_option_name(feature) }}</label>
                                 </div>
-                            </accordion-group>
-                        </accordion>
+                            </uib-accordion-group>
+                        </uib-accordion>
                     </div>
                 </div>
 
@@ -186,8 +186,8 @@
                             <i class="glyphicon glyphicon-info-sign"></i>
                             <span> Mouse over a feature name to display markup.</span>
                         </div>
-                        <accordion close-others="false">
-                            <accordion-group
+                        <uib-accordion close-others="false">
+                            <uib-accordion-group
                                     ng-repeat="(feature_group_name, feature_group) in feature_groups track by feature_group_name"
                                     heading="{{ feature_group_name }}"
                                     is-open="true">
@@ -206,8 +206,8 @@
                                           class="pull-right" >√</span>
                                     <span>{{ feature.name.slice(1).join(': ') || feature.name[0] }}</span>
                                 </div>
-                            </accordion-group>
-                        </accordion>
+                            </uib-accordion-group>
+                        </uib-accordion>
                     </div>
                 </div>
 
