@@ -90,7 +90,7 @@ derm_app.controller('AnnotationController', [
             if (!$scope.study || !$scope.study.$resolved) {
                 return;
             }
-            $scope.featureset = Featureset.get({'id': $scope.study.featuresetId});
+            $scope.featureset = Featureset.get({'id': $scope.study.featureset._id});
         });
 
         /* Submit an annotation task.
