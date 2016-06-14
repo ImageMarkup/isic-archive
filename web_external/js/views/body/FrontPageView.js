@@ -1,10 +1,10 @@
 isic.views.FrontPageView = girder.views.FrontPageView.extend({
     events: {
-        'click .isic-studies-button': function () {
+        'click .isic-button-studies': function () {
             isic.router.navigate('studies', {trigger: true});
         },
 
-        'click .isic-upload-dataset-button': function () {
+        'click .isic-button-dataset-upload': function () {
             isic.router.navigate('uploadDataset', {trigger: true});
         }
     },

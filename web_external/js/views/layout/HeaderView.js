@@ -1,5 +1,16 @@
 isic.views.LayoutHeaderView = isic.View.extend({
     events: {
+        'click .isic-link-home': function () {
+            isic.router.navigate('index', {trigger: true});
+        },
+
+        'click .isic-link-dataset-upload': function () {
+            isic.router.navigate('uploadDataset', {trigger: true});
+        },
+
+        'click .isic-link-studies': function () {
+            isic.router.navigate('studies', {trigger: true});
+        }
     },
 
     render: function () {
