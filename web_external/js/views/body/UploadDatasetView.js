@@ -142,6 +142,7 @@ isic.views.UploadDatasetView = isic.View.extend({
         var signature = $('#isic-dataset-agreement-signature').val();
         var anonymous = $('#isic-dataset-attribution-anonymous').prop('checked');
         var attribution = $('#isic-dataset-attribution-name').val();
+        var uploadFolderId = this.uploadFolder ? this.uploadFolder.id : null;
 
         // Post dataset
         // TODO: processing happens synchronously; revisit using jobs?
@@ -149,7 +150,7 @@ isic.views.UploadDatasetView = isic.View.extend({
             type: 'POST',
             path: 'dataset',
             data: {
-                uploadFolderId: this.uploadFolder.id,
+                uploadFolderId: uploadFolderId,
                 name: name,
                 description: description,
                 license: license,
