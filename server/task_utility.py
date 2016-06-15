@@ -8,12 +8,11 @@ import os
 import random
 
 import cherrypy
-import pymongo
 
 from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel
 from girder.api.describe import Description
-from girder.constants import AccessType
+from girder.constants import AccessType, SortDir
 from girder.models.model_base import AccessException
 from girder.utility.model_importer import ModelImporter
 
@@ -367,7 +366,7 @@ class TaskHandler(Resource):
                 state=self.model('study', 'isic_archive').State.ACTIVE,
                 limit=1
             )
-            next_annotation = active_annotations.sort('name', pymongo.ASCENDING).next()
+            next_annotation = active_annotations.sort('name', SortDir.ASCENDING).next()
         except StopIteration:
             raise RestException('Study "%s" has no annotation tasks for this user.' % study['_id'])
 

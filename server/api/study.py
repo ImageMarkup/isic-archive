@@ -7,12 +7,11 @@ import functools
 import itertools
 
 import cherrypy
-import pymongo
 
 from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel
 from girder.api.describe import Description, describeRoute
-from girder.constants import AccessType
+from girder.constants import AccessType, SortDir
 from girder.models.model_base import AccessException, ValidationException
 
 from ..provision_utility import ISIC
@@ -113,7 +112,7 @@ class StudyResource(Resource):
             output['users'] = [
                 {field: user[field] for field in userSummaryFields}
                 for user in
-                Study.getAnnotators(study).sort('login', pymongo.ASCENDING)
+                Study.getAnnotators(study).sort('login', SortDir.ASCENDING)
             ]
 
             output['segmentations'] = [
@@ -175,7 +174,7 @@ class StudyResource(Resource):
             key=lambda segmentation: segmentation['image']['name'])
 
         for annotator_user, segmentation in itertools.product(
-            Study.getAnnotators(study).sort('login', pymongo.ASCENDING),
+            Study.getAnnotators(study).sort('login', SortDir.ASCENDING),
             segmentations
         ):
             # this will iterate either 0 or 1 times
