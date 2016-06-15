@@ -314,6 +314,10 @@ class StudyResource(Resource):
         self.requireParams('userId', params)
 
         creatorUser = self.getCurrentUser()
+        if not (creatorUser.get('admin', False) or
+                study['creatorId'] == creatorUser['id']):
+            raise AccessException('Only the study creator may add additional '
+                                  'annotator users to this study')
 
         annotatorUser = self.model('user').load(
             id=params['userId'], force=True)
