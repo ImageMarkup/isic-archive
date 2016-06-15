@@ -1,17 +1,10 @@
 isic.views.StudyView = isic.View.extend({
     initialize: function (settings) {
-        if (settings.study) {
-            this.study = settings.study;
+        this.study = new isic.models.StudyModel({
+            _id: settings.id
+        }).once('g:fetched', function () {
             this.render();
-        } else if (settings.id) {
-            this.study = new isic.models.StudyModel({
-                _id: settings.id
-            }).once('g:fetched', function () {
-                this.render();
-            }, this).fetch();
-        } else {
-            // TODO: usage error
-        }
+        }, this).fetch();
     },
 
     render: function () {
