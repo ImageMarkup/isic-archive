@@ -5,6 +5,7 @@ import csv
 from cStringIO import StringIO
 import functools
 import itertools
+import json
 
 import cherrypy
 
@@ -260,15 +261,27 @@ class StudyResource(Resource):
                'The annotators user IDs of the study, as a JSON array.')
         .param('segmentationIds',
                'The segmentation IDs of the study, as a JSON array.')
+        .consumes('application/x-www-form-urlencoded')
         .errorResponse('Write access was denied on the parent folder.', 403)
     )
     @access.user
     def createStudy(self, params):
-        if cherrypy.request.headers['Content-Type'] == 'application/json':
+        isJson = cherrypy.request.headers['Content-Type'] == 'application/json'
+        if isJson:
             params = self.getBodyJson()
         self.requireParams(
             ('name', 'featuresetId', 'userIds', 'segmentationIds'),
             params)
+
+        if not isJson:
+            try:
+                params['userIds'] = json.loads(params['userIds'])
+            except ValueError:
+                raise RestException('Invalid JSON passed in userIds parameter.')
+            try:
+                params['segmentationIds'] = json.loads(params['segmentationIds'])
+            except ValueError:
+                raise RestException('Invalid JSON passed in segmentationIds parameter.')
 
         studyName = params['name'].strip()
 
@@ -301,6 +314,7 @@ class StudyResource(Resource):
         Description('Add a user as an annotator of a study.')
         .param('id', 'The ID of the study.', paramType='path')
         .param('userId', 'The ID of the user.')
+        .consumes('application/x-www-form-urlencoded')
         .errorResponse('ID was invalid.')
         .errorResponse('You don\'t have permission to add a study annotator.',
                        403)
