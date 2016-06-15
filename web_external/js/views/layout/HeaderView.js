@@ -16,12 +16,9 @@ isic.views.LayoutHeaderView = isic.View.extend({
     initialize: function () {
         this.datasetContributor = false;
 
-        // Check whether user has permission to contribute datasets
-        var datasetModel = new isic.models.DatasetModel();
-        datasetModel.userCanContribute(girder.currentUser, _.bind(function (datasetContributor) {
-            this.datasetContributor = datasetContributor;
-            this.render();
-        }, this));
+        this._updateUserInfo();
+
+        girder.events.on('g:login', this._updateUserInfo, this);
 
         this.render();
     },
@@ -40,5 +37,16 @@ isic.views.LayoutHeaderView = isic.View.extend({
             el: this.$('.isic-current-user-wrapper'),
             parentView: this
         }).render();
+    },
+
+    _updateUserInfo: function (){
+        // Check whether user has permission to contribute datasets
+        var datasetModel = new isic.models.DatasetModel();
+        datasetModel.userCanContribute(girder.currentUser).then(_.bind(function (datasetContributor) {
+            if (this.datasetContributor != datasetContributor) {
+                this.datasetContributor = datasetContributor;
+                this.render();
+            }
+        }, this));
     }
 });

@@ -4,26 +4,32 @@ isic.models.DatasetModel = girder.Model.extend({
     /**
      * Check whether user is a member of the dataset contributor group.
      *
-     * The callback is called with a boolean argument. When true, the user is a
-     * member of the dataset contributor group.
+     * Returns a promise that is resolved with a single boolean argument that
+     * indicates whether the user is a member of the dataset contributor group.
      *
      */
-    userCanContribute: function (user, callback) {
-        var groups = new girder.collections.GroupCollection();
-        groups.once('g:changed', function () {
-            if (!groups.isEmpty()) {
-                var groupId = groups.first().id;
-                var userGroups = girder.currentUser.get('groups');
-                var datasetContributor = _.contains(userGroups, groupId);
-                callback(datasetContributor);
-            } else {
-                callback(false);
-            }
-        }, this).once('g:error', function () {
-            callback(false);
-        }, this).fetch({
-            text: 'Dataset Contributors',
-            exact: true
-        });
+    userCanContribute: function (user) {
+        var deferred = $.Deferred();
+        if (user) {
+            var groups = new girder.collections.GroupCollection();
+            groups.once('g:changed', function () {
+                if (!groups.isEmpty()) {
+                    var groupId = groups.first().id;
+                    var userGroups = user.get('groups');
+                    var datasetContributor = _.contains(userGroups, groupId);
+                    deferred.resolve(datasetContributor);
+                } else {
+                    deferred.resolve(false);
+                }
+            }, this).once('g:error', function () {
+                deferred.reject();
+            }, this).fetch({
+                text: 'Dataset Contributors',
+                exact: true
+            });
+        } else {
+            deferred.resolve(false);
+        }
+        return deferred.promise();
     }
 });
