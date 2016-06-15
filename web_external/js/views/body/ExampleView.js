@@ -1,6 +1,5 @@
 isic.views.ExampleView = isic.View.extend({
     initialize: function (settings) {
-        girder.cancelRestRequests('fetch');
         this.render();
     },
 

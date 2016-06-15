@@ -46,8 +46,6 @@ isic.views.UploadDatasetView = isic.View.extend({
     },
 
     initialize: function (settings) {
-        girder.cancelRestRequests('fetch');
-
         this.uploadedZipFiles = [];
         this.uploadedCsvFiles = [];
         this.uploadFolder = null;
@@ -144,6 +142,7 @@ isic.views.UploadDatasetView = isic.View.extend({
         var signature = $('#isic-dataset-agreement-signature').val();
         var anonymous = $('#isic-dataset-attribution-anonymous').prop('checked');
         var attribution = $('#isic-dataset-attribution-name').val();
+        var uploadFolderId = this.uploadFolder ? this.uploadFolder.id : null;
 
         // Post dataset
         // TODO: processing happens synchronously; revisit using jobs?
@@ -151,7 +150,7 @@ isic.views.UploadDatasetView = isic.View.extend({
             type: 'POST',
             path: 'dataset',
             data: {
-                uploadFolderId: this.uploadFolder.id,
+                uploadFolderId: uploadFolderId,
                 name: name,
                 description: description,
                 license: license,
@@ -248,7 +247,7 @@ isic.views.UploadDatasetView = isic.View.extend({
 isic.router.route('uploadDataset', 'uploadDataset', function (id) {
     // Route to index if user doesn't have permission to contribute datasets
     var datasetModel = new isic.models.DatasetModel();
-    datasetModel.userCanContribute(girder.currentUser, _.bind(function (datasetContributor) {
+    datasetModel.userCanContribute(girder.currentUser).then(_.bind(function (datasetContributor) {
         if (datasetContributor) {
             girder.events.trigger('g:navigateTo', isic.views.UploadDatasetView);
         } else {

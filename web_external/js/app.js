@@ -6,7 +6,7 @@ isic.App = girder.App.extend({
         new isic.views.LayoutHeaderView({
             el: this.$('#isic-app-header-container'),
             parentView: this
-        }).render();
+        });
 
         return this;
     },

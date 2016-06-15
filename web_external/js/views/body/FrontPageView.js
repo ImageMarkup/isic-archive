@@ -1,28 +1,27 @@
 isic.views.FrontPageView = girder.views.FrontPageView.extend({
     events: {
-        'click .isic-example-button': function () {
-            isic.router.navigate('example', {trigger: true});
-        },
-
-        'click .isic-studies-button': function () {
+        'click .isic-button-studies': function () {
             isic.router.navigate('studies', {trigger: true});
         },
 
-        'click .isic-upload-dataset-button': function () {
+        'click .isic-button-dataset-upload': function () {
             isic.router.navigate('uploadDataset', {trigger: true});
         }
     },
 
     initialize: function () {
-        girder.cancelRestRequests('fetch');
-
         this.datasetContributor = false;
 
-        // Check whether user has permission to contribute datasets
+        // Check whether user has permission to contribute datasets.
+        //
+        // This view is recreated if user logs in/out, so there's no need to
+        // observe the 'g:login' event.
         var datasetModel = new isic.models.DatasetModel();
-        datasetModel.userCanContribute(girder.currentUser, _.bind(function (datasetContributor) {
-            this.datasetContributor = datasetContributor;
-            this.render();
+        datasetModel.userCanContribute(girder.currentUser).then(_.bind(function (datasetContributor) {
+            if (this.datasetContributor != datasetContributor) {
+                this.datasetContributor = datasetContributor;
+                this.render();
+            }
         }, this));
 
         this.render();
