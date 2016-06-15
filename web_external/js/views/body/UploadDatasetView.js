@@ -46,8 +46,6 @@ isic.views.UploadDatasetView = isic.View.extend({
     },
 
     initialize: function (settings) {
-        girder.cancelRestRequests('fetch');
-
         this.uploadedZipFiles = [];
         this.uploadedCsvFiles = [];
         this.uploadFolder = null;

@@ -14,8 +14,6 @@ isic.views.StudiesView = isic.View.extend({
     },
 
     initialize: function (settings) {
-        girder.cancelRestRequests('fetch');
-
         // TODO: filter by state?
         this.studies = new isic.collections.StudyCollection();
         this.studies.once('g:changed', function () {

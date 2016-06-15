@@ -10,8 +10,6 @@ isic.views.FrontPageView = girder.views.FrontPageView.extend({
     },
 
     initialize: function () {
-        girder.cancelRestRequests('fetch');
-
         this.datasetContributor = false;
 
         // Check whether user has permission to contribute datasets

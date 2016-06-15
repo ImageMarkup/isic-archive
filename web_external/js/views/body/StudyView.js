@@ -1,7 +1,5 @@
 isic.views.StudyView = isic.View.extend({
     initialize: function (settings) {
-        girder.cancelRestRequests('fetch');
-
         if (settings.study) {
             this.study = settings.study;
             this.render();
