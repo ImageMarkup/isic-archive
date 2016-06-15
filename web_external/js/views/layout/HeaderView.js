@@ -13,8 +13,23 @@ isic.views.LayoutHeaderView = isic.View.extend({
         }
     },
 
+    initialize: function () {
+        this.datasetContributor = false;
+
+        // Check whether user has permission to contribute datasets
+        var datasetModel = new isic.models.DatasetModel();
+        datasetModel.userCanContribute(girder.currentUser, _.bind(function (datasetContributor) {
+            this.datasetContributor = datasetContributor;
+            this.render();
+        }, this));
+
+        this.render();
+    },
+
     render: function () {
-        this.$el.html(isic.templates.layoutHeader());
+        this.$el.html(isic.templates.layoutHeader({
+            datasetContributor: this.datasetContributor
+        }));
 
         this.$('a[title]').tooltip({
             placement: 'bottom',

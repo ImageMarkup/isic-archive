@@ -2,8 +2,9 @@
   .isic-icons-wrapper
     a.isic-link-home(title="Home", href="#")
       i.icon-home
-    a.isic-link-dataset-upload(title="Upload Dataset", href="#uploadDataset")
-      i.icon-upload
+    if datasetContributor
+      a.isic-link-dataset-upload(title="Upload Dataset", href="#uploadDataset")
+        i.icon-upload
     a.isic-link-studies(title="Annotation Studies", href="#studies")
       i.icon-eye
   .isic-current-user-wrapper
