@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import cherrypy
+
 from girder.api import access
 from girder.api.rest import Resource, loadmodel
 from girder.api.describe import Description, describeRoute
@@ -71,6 +73,8 @@ class DatasetResource(Resource):
     )
     @access.user
     def ingestDataset(self, params):
+        if cherrypy.request.headers['Content-Type'] == 'application/json':
+            params = self.getBodyJson()
         self.requireParams(('uploadFolderId', 'name'), params)
 
         # Require that user be a member of the Dataset Contributors group or
