@@ -13,6 +13,7 @@ from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
+from girder.models.model_base import AccessException, ValidationException
 
 from ..provision_utility import ISIC
 
@@ -26,6 +27,7 @@ class StudyResource(Resource):
         self.route('GET', (':id',), self.getStudy)
         self.route('GET', (':id', 'task'), self.redirectTask)
         self.route('POST', (), self.createStudy)
+        self.route('POST', (':id', 'user'), self.addAnnotator)
 
 
     @describeRoute(
@@ -243,30 +245,87 @@ class StudyResource(Resource):
         else:
             raise RestException('No active annotations for this user in this study.')
 
+    def _requireStudyCreator(self, user):
+        """Require that user is a designated study creator or site admin."""
+        studyCreatorsGroup = self.model('group').findOne({'name': 'Study Creators'})
+        if not studyCreatorsGroup or studyCreatorsGroup['_id'] not in user['groups']:
+            if not user.get('admin', False):
+                raise AccessException(
+                    'Only members of the Study Creators group can create studies.')
 
     @describeRoute(
         Description('Create an annotation study.')
-        .param('body', 'JSON containing the study parameters.', paramType='body')
+        .param('name', 'The name of the study.', required=True)
+        .param('featuresetId', 'The featureset ID of the study.', required=True)
         .errorResponse('Write access was denied on the parent folder.', 403)
     )
-    @access.admin
+    @access.user
     def createStudy(self, params):
-        body_json = self.getBodyJson()
+        # Support using both query parameters and arguments as JSON (legacy)
+        body_json = None
+        try:
+            body_json = self.getBodyJson()
+        except RestException:
+            pass
 
-        self.requireParams(('name', 'annotatorIds', 'segmentationIds', 'featuresetId'), body_json)
+        study = None
 
-        study_name = body_json['name']
-        creator_user = self.getCurrentUser()
-        annotator_users = [
-            self.model('user').load(
-                annotator_id, user=creator_user, level=AccessType.READ)
-            for annotator_id in body_json['annotatorIds']
-        ]
-        segmentations = [
-            self.model('segmentation', 'isic_archive').load(segmentation_id)
-            for segmentation_id in body_json['segmentationIds']
-        ]
-        featureset = self.model('featureset', 'isic_archive').load(body_json['featuresetId'])
+        if body_json is not None:
+            # Use JSON
+            self.requireParams(('name', 'annotatorIds', 'segmentationIds', 'featuresetId'), body_json)
 
-        self.model('study', 'isic_archive').createStudy(
-            study_name, creator_user, featureset, annotator_users, segmentations)
+            name = body_json['name']
+            user = self.getCurrentUser()
+            self._requireStudyCreator(user)
+            annotator_users = [
+                self.model('user').load(
+                    annotator_id, user=user, level=AccessType.READ)
+                for annotator_id in body_json['annotatorIds']
+            ]
+            segmentations = [
+                self.model('segmentation', 'isic_archive').load(segmentation_id)
+                for segmentation_id in body_json['segmentationIds']
+            ]
+            featureset = self.model('featureset', 'isic_archive').load(body_json['featuresetId'])
+            if not featureset:
+                raise ValidationException('Invalid featureset ID.', 'featuresetId')
+
+            study = self.model('study', 'isic_archive').createStudy(
+                name, user, featureset, annotator_users, segmentations)
+        else:
+            # Use query parameters
+            self.requireParams(('name', 'featuresetId'), params)
+            user = self.getCurrentUser()
+            self._requireStudyCreator(user)
+
+            name = params['name'].strip()
+
+            featureset = self.model('featureset', 'isic_archive').load(
+                params.get('featuresetId'))
+            if not featureset:
+                raise ValidationException('Invalid featureset ID.', 'featuresetId')
+
+            study = self.model('study', 'isic_archive').createStudy(
+                name, user, featureset, [], [])
+
+        # TODO return nothing? return full study? return 201 + Location header?
+        return study
+
+    @describeRoute(
+        Description('Add a user as an annotator of a study.')
+        .param('id', 'The ID of the study.', paramType='path')
+        .param('userId', 'The ID of the user.')
+        .errorResponse('ID was invalid.')
+        .errorResponse('You don\'t have permission to add a study annotator.', 403)
+    )
+    @access.user
+    @loadmodel(model='study', plugin='isic_archive', level=AccessType.WRITE)
+    def addAnnotator(self, study, params):
+        self.requireParams('userId', params)
+        user = self.getCurrentUser()
+
+        annotator_user = self.model('user').load(
+            id=params['userId'], force=True)
+
+        self.model('study', 'isic_archive').addAnnotator(
+            study, annotator_user, user)
