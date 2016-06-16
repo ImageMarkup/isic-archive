@@ -255,13 +255,15 @@ class StudyResource(Resource):
 
     @describeRoute(
         Description('Create an annotation study.')
-        .param('name', 'The name of the study.')
-        .param('featuresetId', 'The featureset ID of the study.')
+        .param('name', 'The name of the study.', paramType='form')
+        .param('featuresetId', 'The featureset ID of the study.',
+               paramType='form')
         .param('userIds',
-               'The annotators user IDs of the study, as a JSON array.')
+               'The annotators user IDs of the study, as a JSON array.',
+                paramType='form')
         .param('segmentationIds',
-               'The segmentation IDs of the study, as a JSON array.')
-        .consumes('application/x-www-form-urlencoded')
+               'The segmentation IDs of the study, as a JSON array.',
+               paramType='form')
         .errorResponse('Write access was denied on the parent folder.', 403)
     )
     @access.user
@@ -313,8 +315,7 @@ class StudyResource(Resource):
     @describeRoute(
         Description('Add a user as an annotator of a study.')
         .param('id', 'The ID of the study.', paramType='path')
-        .param('userId', 'The ID of the user.')
-        .consumes('application/x-www-form-urlencoded')
+        .param('userId', 'The ID of the user.', paramType='form')
         .errorResponse('ID was invalid.')
         .errorResponse('You don\'t have permission to add a study annotator.',
                        403)
