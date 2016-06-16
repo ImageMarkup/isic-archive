@@ -1,4 +1,21 @@
 isic.views.StudyView = isic.View.extend({
+    events: {
+        'click .isic-study-add-user-button': function () {
+            if (!this.studyAddUserWidget) {
+                this.studyAddUserWidget = new isic.views.StudyAddUserWidget({
+                    el: $('#g-dialog-container'),
+                    study: this.study,
+                    parentView: this
+                }).on('g:saved', function () {
+                    this.study.once('g:fetched', _.bind(function () {
+                        this.render();
+                    }, this)).fetch();
+                }, this);
+            }
+            this.studyAddUserWidget.render();
+        }
+    },
+
     initialize: function (settings) {
         girder.cancelRestRequests('fetch');
 
@@ -20,6 +37,10 @@ isic.views.StudyView = isic.View.extend({
         this.$el.html(isic.templates.studyPage({
             study: this.study
         }));
+
+        this.$('.isic-tooltip').tooltip({
+            delay: 100
+        });
 
         return this;
     }
