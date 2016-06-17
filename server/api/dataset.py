@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import cherrypy
+
 from girder.api import access
 from girder.api.rest import Resource, loadmodel
 from girder.api.describe import Description, describeRoute
@@ -62,23 +64,31 @@ class DatasetResource(Resource):
         .param('uploadFolderId', 'The ID of the folder that contains images '
                'and metadata.')
         .param('name', 'Name of the dataset.')
-        .param('description', 'Description of the dataset.', required=False)
-        .param('license', 'License of the dataset.', required=False)
-        .param('signature', 'Signature of license agreement.', required=True)
+        .param('description', 'Description of the dataset.', required=False,
+               paramType='form')
+        .param('license', 'License of the dataset.', required=False,
+               paramType='form')
+        .param('signature', 'Signature of license agreement.', required=True,
+               paramType='form')
         .param('anonymous', 'Whether to use an anonymous attribution for the '
-               'dataset', dataType='boolean', required=False)
-        .param('attribution', 'Attribution of the dataset.', required=False)
+               'dataset', dataType='boolean', required=False, paramType='form')
+        .param('attribution', 'Attribution of the dataset.', required=False,
+               paramType='form')
     )
     @access.user
     def ingestDataset(self, params):
+        if cherrypy.request.headers['Content-Type'] == 'application/json':
+            params = self.getBodyJson()
         self.requireParams(('uploadFolderId', 'name'), params)
 
-        # Require that user be a member of the Dataset Contributors group
+        # Require that user be a member of the Dataset Contributors group or
+        # site admin
         user = self.getCurrentUser()
         contributorsGroup = self.model('group').findOne({'name': 'Dataset Contributors'})
-        if not contributorsGroup or contributorsGroup['_id'] not in user['groups']:
-            raise AccessException(
-                'Only dataset contributors can create datasets.')
+        if not contributorsGroup  or contributorsGroup['_id'] not in user['groups']:
+            if not user.get('admin', False):
+                raise AccessException(
+                    'Only dataset contributors can create datasets.')
 
         uploadFolderId = params.get('uploadFolderId', None)
         if not uploadFolderId:

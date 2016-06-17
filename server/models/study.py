@@ -5,6 +5,7 @@ from enum import Enum
 
 from girder.constants import AccessType
 from girder.models.folder import Folder
+from girder.models.model_base import ValidationException
 
 
 class Study(Folder):
@@ -68,6 +69,9 @@ class Study(Folder):
     def addAnnotator(self, study, annotator_user, creator_user, segmentations=None):
         if not segmentations:
             segmentations = self.getSegmentations(study)
+
+        if self.childAnnotations(study, annotator_user).count():
+            raise ValidationException('Annotator user is already part of the study.')
 
         annotator_folder = self.model('folder').createFolder(
             parent=study,

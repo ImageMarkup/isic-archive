@@ -5,14 +5,15 @@ import csv
 from cStringIO import StringIO
 import functools
 import itertools
+import json
 
 import cherrypy
-import pymongo
 
 from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel
 from girder.api.describe import Description, describeRoute
-from girder.constants import AccessType
+from girder.constants import AccessType, SortDir
+from girder.models.model_base import AccessException, ValidationException
 
 from ..provision_utility import ISIC
 
@@ -26,6 +27,7 @@ class StudyResource(Resource):
         self.route('GET', (':id',), self.getStudy)
         self.route('GET', (':id', 'task'), self.redirectTask)
         self.route('POST', (), self.createStudy)
+        self.route('POST', (':id', 'user'), self.addAnnotator)
 
 
     @describeRoute(
@@ -111,7 +113,7 @@ class StudyResource(Resource):
             output['users'] = [
                 {field: user[field] for field in userSummaryFields}
                 for user in
-                Study.getAnnotators(study).sort('login', pymongo.ASCENDING)
+                Study.getAnnotators(study).sort('login', SortDir.ASCENDING)
             ]
 
             output['segmentations'] = [
@@ -173,7 +175,7 @@ class StudyResource(Resource):
             key=lambda segmentation: segmentation['image']['name'])
 
         for annotator_user, segmentation in itertools.product(
-            Study.getAnnotators(study).sort('login', pymongo.ASCENDING),
+            Study.getAnnotators(study).sort('login', SortDir.ASCENDING),
             segmentations
         ):
             # this will iterate either 0 or 1 times
@@ -243,30 +245,97 @@ class StudyResource(Resource):
         else:
             raise RestException('No active annotations for this user in this study.')
 
+    def _requireStudyCreator(self, user):
+        """Require that user is a designated study creator or site admin."""
+        studyCreatorsGroup = self.model('group').findOne({'name': 'Study Creators'})
+        if not studyCreatorsGroup or studyCreatorsGroup['_id'] not in user['groups']:
+            if not user.get('admin', False):
+                raise AccessException(
+                    'Only members of the Study Creators group can create studies.')
 
     @describeRoute(
         Description('Create an annotation study.')
-        .param('body', 'JSON containing the study parameters.', paramType='body')
+        .param('name', 'The name of the study.', paramType='form')
+        .param('featuresetId', 'The featureset ID of the study.',
+               paramType='form')
+        .param('userIds',
+               'The annotators user IDs of the study, as a JSON array.',
+                paramType='form')
+        .param('segmentationIds',
+               'The segmentation IDs of the study, as a JSON array.',
+               paramType='form')
         .errorResponse('Write access was denied on the parent folder.', 403)
     )
-    @access.admin
+    @access.user
     def createStudy(self, params):
-        body_json = self.getBodyJson()
+        isJson = cherrypy.request.headers['Content-Type'] == 'application/json'
+        if isJson:
+            params = self.getBodyJson()
+        self.requireParams(
+            ('name', 'featuresetId', 'userIds', 'segmentationIds'),
+            params)
 
-        self.requireParams(('name', 'annotatorIds', 'segmentationIds', 'featuresetId'), body_json)
+        if not isJson:
+            try:
+                params['userIds'] = json.loads(params['userIds'])
+            except ValueError:
+                raise RestException('Invalid JSON passed in userIds parameter.')
+            try:
+                params['segmentationIds'] = json.loads(params['segmentationIds'])
+            except ValueError:
+                raise RestException('Invalid JSON passed in segmentationIds parameter.')
 
-        study_name = body_json['name']
-        creator_user = self.getCurrentUser()
-        annotator_users = [
+        studyName = params['name'].strip()
+
+        creatorUser = self.getCurrentUser()
+        self._requireStudyCreator(creatorUser)
+
+        featureset = self.model('featureset', 'isic_archive').load(
+            params['featuresetId'])
+        if not featureset:
+            raise ValidationException('Invalid featureset ID.', 'featuresetId')
+
+        annotatorUsers = [
             self.model('user').load(
-                annotator_id, user=creator_user, level=AccessType.READ)
-            for annotator_id in body_json['annotatorIds']
+                annotatorUserId, user=creatorUser, level=AccessType.READ)
+            for annotatorUserId in params['userIds']
         ]
-        segmentations = [
-            self.model('segmentation', 'isic_archive').load(segmentation_id)
-            for segmentation_id in body_json['segmentationIds']
-        ]
-        featureset = self.model('featureset', 'isic_archive').load(body_json['featuresetId'])
 
-        self.model('study', 'isic_archive').createStudy(
-            study_name, creator_user, featureset, annotator_users, segmentations)
+        segmentations = [
+            self.model('segmentation', 'isic_archive').load(segmentationId)
+            for segmentationId in params['segmentationIds']
+        ]
+
+        study = self.model('study', 'isic_archive').createStudy(
+            studyName, creatorUser, featureset, annotatorUsers, segmentations)
+
+        # TODO return nothing? return full study? return 201 + Location header?
+        return study
+
+    @describeRoute(
+        Description('Add a user as an annotator of a study.')
+        .param('id', 'The ID of the study.', paramType='path')
+        .param('userId', 'The ID of the user.', paramType='form')
+        .errorResponse('ID was invalid.')
+        .errorResponse('You don\'t have permission to add a study annotator.',
+                       403)
+    )
+    @access.user
+    @loadmodel(model='study', plugin='isic_archive', level=AccessType.WRITE)
+    def addAnnotator(self, study, params):
+        if cherrypy.request.headers['Content-Type'] == 'application/json':
+            params = self.getBodyJson()
+        self.requireParams('userId', params)
+
+        creatorUser = self.getCurrentUser()
+        if not (creatorUser.get('admin', False) or
+                study['creatorId'] == creatorUser['id']):
+            raise AccessException('Only the study creator may add additional '
+                                  'annotator users to this study')
+
+        annotatorUser = self.model('user').load(
+            id=params['userId'], force=True)
+
+        self.model('study', 'isic_archive').addAnnotator(
+            study, annotatorUser, creatorUser)
+        # TODO: return?

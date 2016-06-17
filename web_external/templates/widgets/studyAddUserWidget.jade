@@ -1,0 +1,19 @@
+.modal-dialog
+  .modal-content
+    .modal-header
+      button.close(data-dismiss="modal", aria-hidden="true", type="button") &times;
+      h4.modal-title
+        | Add user
+      i.icon-eye
+      = study.get('name')
+    .modal-body
+      | Search for a user:
+      .isic-search-field-container
+      | Selected user:
+      .isic-user-container
+        | (none)
+    .modal-footer
+      a.btn.btn-small.btn-default(data-dismiss="modal") Cancel
+      button.isic-add-user-ok-button.btn.btn-small.btn-primary
+        i.icon-edit
+        | OK
