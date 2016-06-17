@@ -64,12 +64,16 @@ class DatasetResource(Resource):
         .param('uploadFolderId', 'The ID of the folder that contains images '
                'and metadata.')
         .param('name', 'Name of the dataset.')
-        .param('description', 'Description of the dataset.', required=False)
-        .param('license', 'License of the dataset.', required=False)
-        .param('signature', 'Signature of license agreement.', required=True)
+        .param('description', 'Description of the dataset.', required=False,
+               paramType='form')
+        .param('license', 'License of the dataset.', required=False,
+               paramType='form')
+        .param('signature', 'Signature of license agreement.', required=True,
+               paramType='form')
         .param('anonymous', 'Whether to use an anonymous attribution for the '
-               'dataset', dataType='boolean', required=False)
-        .param('attribution', 'Attribution of the dataset.', required=False)
+               'dataset', dataType='boolean', required=False, paramType='form')
+        .param('attribution', 'Attribution of the dataset.', required=False,
+               paramType='form')
     )
     @access.user
     def ingestDataset(self, params):
