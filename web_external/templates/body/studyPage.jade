@@ -3,7 +3,7 @@
     a.isic-study-add-user-button.btn.btn-default.btn-sm.isic-tooltip(
       title="Add user")
       i.icon-plus
-  .isic-study-users-content
+  .isic-listing-content.isic-study-users-content
     if study.get('users').length
       ul
         each user in study.get('users')
@@ -13,13 +13,13 @@
 
 .isic-study-featureset-container
   h4 Featureset
-  .isic-study-featureset-content
+  .isic-listing-content.isic-study-featureset-content
     | #{study.get('featureset').name}, version #{study.get('featureset').version}
 
 .isic-study-segmentations-container
   h4 Segmentations
     |  (#{study.get('segmentations').length})
-  .isic-study-segmentations-content
+  .isic-listing-content.isic-study-segmentations-content
     if study.get('segmentations').length
       table
         tr
