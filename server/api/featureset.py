@@ -66,7 +66,7 @@ class FeaturesetResource(Resource):
         output = Featureset.filter(featureset)
 
         userSummaryFields = ('_id', 'login', 'firstName', 'lastName')
-        creator = User.load(output.pop('creatorId'))
+        creator = User.load(output.pop('creatorId'), force=True)
         output['creator'] = {
             field: creator[field]
             for field in
