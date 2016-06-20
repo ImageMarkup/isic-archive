@@ -60,7 +60,20 @@ class FeaturesetResource(Resource):
     @access.public
     @loadmodel(model='featureset', plugin='isic_archive')
     def getFeatureset(self, featureset, params):
-        return self.model('featureset', 'isic_archive').filter(featureset)
+        Featureset = self.model('featureset', 'isic_archive')
+        User = self.model('user')
+
+        output = Featureset.filter(featureset)
+
+        userSummaryFields = ('_id', 'login', 'firstName', 'lastName')
+        creator = User.load(output.pop('creatorId'))
+        output['creator'] = {
+            field: creator[field]
+            for field in
+            userSummaryFields
+        }
+
+        return output
 
 
     # @access.admin
