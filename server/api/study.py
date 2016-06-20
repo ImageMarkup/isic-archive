@@ -32,6 +32,7 @@ class StudyResource(Resource):
 
     @describeRoute(
         Description('Return a list of annotation studies.')
+        .pagingParams(defaultSort='lowerName')
         .param('state', 'Filter studies to those at a given state',
                paramType='query', required=False, enum=('active', 'complete'))
         .param('user', 'Filter studies to those containing a user ID, or "me".',
