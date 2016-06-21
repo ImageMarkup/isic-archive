@@ -11,7 +11,7 @@ class Featureset(Model):
 
     def initialize(self):
         self.name = 'featureset'
-        self.exposeFields(AccessType.READ, (
+        self.exposeFields(AccessType.READ, [
             '_id',
             'name',
             'creatorId',
@@ -19,8 +19,9 @@ class Featureset(Model):
             'version',
             'image_features',
             'region_features'
-        ))
-        self.summaryFields = ('_id', 'name', 'version')
+        ])
+        self.summaryFields = ['_id', 'name', 'version']
+        self.prefixSearchFields = ['name']
 
 
     def createFeatureset(self, name, version, creator):

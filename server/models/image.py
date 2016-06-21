@@ -22,13 +22,14 @@ class Image(Item):
         super(Image, self).initialize()
 
         self._filterKeys[AccessType.READ].clear()
-        self.exposeFields(level=AccessType.READ, fields=(
+        self.exposeFields(level=AccessType.READ, fields=[
             '_id', 'name', 'description', 'meta', 'created', 'creatorId',
             'updated',
             # TODO: re-add once converted file no longer contributes to size
             # 'size',
-        ))
-        self.summaryFields = ('_id', 'name', 'updated')
+        ])
+        self.summaryFields = ['_id', 'name', 'updated']
+        self.prefixSearchFields = ['lowerName', 'name']
 
 
     def createImage(self, creator, parentFolder):
