@@ -28,8 +28,11 @@ isic.views.LayoutHeaderView = isic.View.extend({
             datasetContributor: this.datasetContributor
         }));
 
+        // Specify trigger for tooltip to ensure that tooltip hides when button
+        // is clicked. See http://stackoverflow.com/a/33585981/2522042.
         this.$('a[title]').tooltip({
             placement: 'bottom',
+            trigger: 'hover',
             delay: {show: 300}
         });
 

@@ -1,4 +1,4 @@
-isic.views.StudiesView = isic.View.extend({
+isic.views.FeaturesetsView = isic.View.extend({
     // TODO refactor
     events: {
         'show.bs.collapse .isic-listing-panel-collapse': function (event) {
@@ -7,7 +7,7 @@ isic.views.StudiesView = isic.View.extend({
 
             var viewIndex = window.parseInt(target.attr('data-model-index'), 10);
             var viewContainer = target.find('.isic-listing-panel-body');
-            this.renderStudy(viewIndex, viewContainer);
+            this.renderFeatureset(viewIndex, viewContainer);
         },
         'hide.bs.collapse .isic-listing-panel-collapse': function (event) {
             $(event.target).parent().find('.icon-down-open').removeClass('icon-down-open').addClass('icon-right-open');
@@ -17,8 +17,8 @@ isic.views.StudiesView = isic.View.extend({
     initialize: function (settings) {
         this.loaded = false;
 
-        this.studies = new isic.collections.StudyCollection();
-        this.studies.once('g:changed', function () {
+        this.featuresets = new isic.collections.FeaturesetCollection();
+        this.featuresets.once('g:changed', function () {
             this.loaded = true;
             this.render();
         }, this).fetch();
@@ -28,8 +28,8 @@ isic.views.StudiesView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.listingPage({
-            title: 'Annotation Studies',
-            models: this.studies.models,
+            title: 'Featuresets',
+            models: this.featuresets.models,
             loaded: this.loaded
         }));
 
@@ -44,9 +44,9 @@ isic.views.StudiesView = isic.View.extend({
         return this;
     },
 
-    renderStudy: function (index, container) {
+    renderFeatureset: function (index, container) {
         if (container.children().length === 0) {
-            var studyId = this.studies.at(index).id;
+            var featuresetId = this.featuresets.at(index).id;
 
             // Display loading indicator
             new girder.views.LoadingAnimation({
@@ -54,15 +54,15 @@ isic.views.StudiesView = isic.View.extend({
                 parentView: this
             }).render();
 
-            new isic.views.StudyView({ // eslint-disable-line no-new
+            new isic.views.FeaturesetView({ // eslint-disable-line no-new
                 el: container,
-                id: studyId,
+                id: featuresetId,
                 parentView: this
             });
         }
     }
 });
 
-isic.router.route('studies', 'studies', function (id) {
-    girder.events.trigger('g:navigateTo', isic.views.StudiesView);
+isic.router.route('featuresets', 'featuresets', function (id) {
+    girder.events.trigger('g:navigateTo', isic.views.FeaturesetsView);
 });

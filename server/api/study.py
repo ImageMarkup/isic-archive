@@ -32,6 +32,7 @@ class StudyResource(Resource):
 
     @describeRoute(
         Description('Return a list of annotation studies.')
+        .pagingParams(defaultSort='lowerName')
         .param('state', 'Filter studies to those at a given state',
                paramType='query', required=False, enum=('active', 'complete'))
         .param('user', 'Filter studies to those containing a user ID, or "me".',
@@ -92,6 +93,7 @@ class StudyResource(Resource):
         Featureset = self.model('featureset', 'isic_archive')
         Segmentation = self.model('segmentation', 'isic_archive')
         Image = self.model('image', 'isic_archive')
+        User = self.model('user')
 
         if params.get('format') == 'csv':
             cherrypy.response.stream = True
@@ -110,8 +112,20 @@ class StudyResource(Resource):
             )
 
             userSummaryFields = ('_id', 'login', 'firstName', 'lastName')
+
+            creator = User.load(output.pop('creatorId'), force=True)
+            output['creator'] = {
+                field: creator[field]
+                for field in
+                userSummaryFields
+            }
+
             output['users'] = [
-                {field: user[field] for field in userSummaryFields}
+                {
+                    field: user[field]
+                    for field in
+                    userSummaryFields
+                }
                 for user in
                 Study.getAnnotators(study).sort('login', SortDir.ASCENDING)
             ]

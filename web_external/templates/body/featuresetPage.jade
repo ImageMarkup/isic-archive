@@ -1,0 +1,20 @@
+.isic-featureset-version-container
+  h4 Version
+  .isic-listing-content.isic-featureset-version-content
+   = featureset.get('version')
+
+.isic-featureset-creator-container
+  h4 Creator
+  .isic-listing-content.isic-featureset-creator-content
+   - var user = featureset.get('creator')
+   | #{user.firstName} #{user.lastName} (#{user.login})
+
+.isic-featureset-image-features-container
+  h4 Image features
+  .isic-listing-content.isic-featureset-image-features-content
+    pre.pre-scrollable= stringify(featureset.get('image_features'))
+
+.isic-featureset-region-features-container
+  h4 Region features
+  .isic-listing-content.isic-featureset-region-features-content
+    pre.pre-scrollable= stringify(featureset.get('region_features'))
