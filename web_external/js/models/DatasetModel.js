@@ -11,22 +11,26 @@ isic.models.DatasetModel = girder.Model.extend({
     userCanContribute: function (user) {
         var deferred = $.Deferred();
         if (user) {
-            var groups = new girder.collections.GroupCollection();
-            groups.once('g:changed', function () {
-                if (!groups.isEmpty()) {
-                    var groupId = groups.first().id;
-                    var userGroups = user.get('groups');
-                    var datasetContributor = _.contains(userGroups, groupId);
-                    deferred.resolve(datasetContributor);
-                } else {
-                    deferred.resolve(false);
-                }
-            }, this).once('g:error', function () {
-                deferred.reject();
-            }, this).fetch({
-                text: 'Dataset Contributors',
-                exact: true
-            });
+            if (user.get('admin')) {
+                deferred.resolve(true);
+            } else {
+                var groups = new girder.collections.GroupCollection();
+                groups.once('g:changed', function () {
+                    if (!groups.isEmpty()) {
+                        var groupId = groups.first().id;
+                        var userGroups = user.get('groups');
+                        var datasetContributor = _.contains(userGroups, groupId);
+                        deferred.resolve(datasetContributor);
+                    } else {
+                        deferred.resolve(false);
+                    }
+                }, this).once('g:error', function () {
+                    deferred.reject();
+                }, this).fetch({
+                    text: 'Dataset Contributors',
+                    exact: true
+                });
+            }
         } else {
             deferred.resolve(false);
         }
