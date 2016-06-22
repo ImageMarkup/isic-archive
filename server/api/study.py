@@ -259,13 +259,13 @@ class StudyResource(Resource):
         else:
             raise RestException('No active annotations for this user in this study.')
 
-    def _requireStudyCreator(self, user):
-        """Require that user is a designated study creator or site admin."""
-        studyCreatorsGroup = self.model('group').findOne({'name': 'Study Creators'})
-        if not studyCreatorsGroup or studyCreatorsGroup['_id'] not in user['groups']:
+    def _requireStudyAdmin(self, user):
+        """Require that user is a designated study admin or site admin."""
+        studyAdminsGroup = self.model('group').findOne({'name': 'Study Administrators'})
+        if not studyAdminsGroup or studyAdminsGroup['_id'] not in user['groups']:
             if not user.get('admin', False):
                 raise AccessException(
-                    'Only members of the Study Creators group can create studies.')
+                    'Only members of the Study Administrators group can create or modify studies.')
 
     @describeRoute(
         Description('Create an annotation study.')
@@ -302,7 +302,7 @@ class StudyResource(Resource):
         studyName = params['name'].strip()
 
         creatorUser = self.getCurrentUser()
-        self._requireStudyCreator(creatorUser)
+        self._requireStudyAdmin(creatorUser)
 
         featureset = self.model('featureset', 'isic_archive').load(
             params['featuresetId'])
@@ -344,10 +344,7 @@ class StudyResource(Resource):
         self.requireParams('userId', params)
 
         creatorUser = self.getCurrentUser()
-        if not (creatorUser.get('admin', False) or
-                study['creatorId'] == creatorUser['id']):
-            raise AccessException('Only the study creator may add additional '
-                                  'annotator users to this study')
+        self._requireStudyAdmin(creatorUser)
 
         annotatorUser = self.model('user').load(
             id=params['userId'], force=True)

@@ -211,7 +211,7 @@ def initialSetup(info):
         collection_name='Annotation Studies',
         collection_description='Clinical feature annotation studies',
         public=True,
-        group_name='Study Creators',
+        group_name='Study Administrators',
         group_description='Annotation study creators and administrators'
     )
 
