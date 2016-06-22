@@ -8,19 +8,29 @@ isic.views.CreateStudyView = isic.View.extend({
 
         'click a.isic-user-list-entry-action-remove': function (event) {
             var target = $(event.currentTarget);
-            var listEntry = target.closest('.isic-user-list-entry');
+            target.tooltip('hide');
+
+            var listEntry = target.closest('.isic-list-entry');
             var userId = listEntry.data('userid');
-
-            // TODO explicitly remove tooltips?
-
             listEntry.remove();
 
             this._removeUser(userId);
+        },
+
+        'click a.isic-featureset-list-entry-action-remove': function (event) {
+            var target = $(event.currentTarget);
+            target.tooltip('hide');
+
+            var listEntry = target.closest('.isic-list-entry');
+            listEntry.remove();
+
+            this._removeFeatureset();
         }
     },
 
     initialize: function (settings) {
         this.userIds = [];
+        this.featuresetId = null;
 
         this.userSearchWidget = new girder.views.SearchFieldWidget({
             placeholder: 'Search users...',
@@ -51,14 +61,26 @@ isic.views.CreateStudyView = isic.View.extend({
         this.$el.html(isic.templates.createStudyPage({
         }));
 
+        this._makeTooltips();
+
         this.userSearchWidget.setElement(
             this.$('.isic-study-user-search-field-container')).render();
-        // this.featuresetSearchWidget.setElement(
-        //     this.$('.isic-study-featureset-search-field-container')).render();
+        this.featuresetSearchWidget.setElement(
+            this.$('.isic-study-featureset-search-field-container')).render();
 
         this.$('input#isic-study-name').focus();
 
         return this;
+    },
+
+    _makeTooltips: function () {
+        this.$('.isic-list-entry-action-remove').tooltip({
+            placement: 'bottom',
+            animation: false,
+            delay: {
+                show: 100
+            }
+        });
     },
 
     _addUser: function (user) {
@@ -75,7 +97,7 @@ isic.views.CreateStudyView = isic.View.extend({
             user: user
         }));
 
-        // TODO tooltips
+        this._makeTooltips();
 
         userList.animate({
             scrollTop: userList[0].scrollHeight
@@ -91,16 +113,31 @@ isic.views.CreateStudyView = isic.View.extend({
 
     _addFeatureset: function (featureset) {
         this.featuresetSearchWidget.resetState();
-        // TODO
+
+        // Remove existing entries
+        this.$('.isic-featureset-list-entry').remove();
+
+        // Add new entry
+        // TODO show or link to featureset details
+        this.$('#isic-study-featureset-list').append(isic.templates.featuresetListEntry({
+            featureset: featureset
+        }));
+
+        this._makeTooltips();
+
+        this.featuresetId = featureset.id;
+    },
+
+    _removeFeatureset: function () {
+        this.featuresetId = null;
     },
 
     submitStudy: function () {
         var name = $('#isic-study-name').val();
-        var featuresetId = null;
-        var userIds = this.userIds;
-        var segmentationIds = null;
+        var featuresetId = this.featuresetId;
+        var userIds = JSON.stringify(this.userIds);
+        var segmentationIds = JSON.stringify([]);
 
-        // TODO
         girder.restRequest({
             type: 'POST',
             path: 'study',
@@ -113,12 +150,13 @@ isic.views.CreateStudyView = isic.View.extend({
             error: null
         }).done(_.bind(function () {
             girder.confirm({
-                text: '<h4>Study created.</h4>',
+                text: '<h4>Study created</h4><br>' + name,
                 yesClass: 'hidden',
                 noText: 'OK',
                 escapedHtml: true
             });
-            isic.router.navigate('', {trigger: true});
+            // TODO route directly to study
+            isic.router.navigate('studies', {trigger: true});
         }, this)).error(_.bind(function (resp) {
             // TODO: add custom error dialog instead of using confirm dialog
             girder.confirm({
@@ -133,6 +171,13 @@ isic.views.CreateStudyView = isic.View.extend({
 });
 
 isic.router.route('createStudy', 'createStudy', function (id) {
-    // TODO check whether user can create studies
-    girder.events.trigger('g:navigateTo', isic.views.CreateStudyView);
+    // Route to index if user isn't a study administrator
+    var studyModel = new isic.models.StudyModel();
+    studyModel.isAdministrator(girder.currentUser).then(_.bind(function (studyAdmin) {
+        if (studyAdmin) {
+            girder.events.trigger('g:navigateTo', isic.views.CreateStudyView);
+        } else {
+            isic.router.navigate('', {trigger: true});
+        }
+    }, this));
 });

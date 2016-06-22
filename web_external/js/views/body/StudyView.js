@@ -17,6 +17,8 @@ isic.views.StudyView = isic.View.extend({
     },
 
     initialize: function (settings) {
+        this.studyAdmin = settings.studyAdmin;
+
         this.study = new isic.models.StudyModel({
             _id: settings.id
         }).once('g:fetched', function () {
@@ -26,7 +28,8 @@ isic.views.StudyView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.studyPage({
-            study: this.study
+            study: this.study,
+            studyAdmin: this.studyAdmin
         }));
 
         this.$('.isic-tooltip').tooltip({

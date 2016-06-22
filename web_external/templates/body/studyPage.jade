@@ -1,8 +1,9 @@
 .isic-study-users-container
   h4 Users
-    a.isic-study-add-user-button.btn.btn-default.btn-sm.isic-tooltip(
-      title="Add user")
-      i.icon-plus
+    if studyAdmin
+      a.isic-study-add-user-button.btn.btn-default.btn-sm.isic-tooltip(
+        title="Add user")
+        i.icon-plus
   .isic-listing-content.isic-study-users-content
     if study.get('users').length
       ul

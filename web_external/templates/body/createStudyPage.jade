@@ -1,4 +1,4 @@
-.isic-create-study-container
+.isic-form-page.isic-create-study-container
   h2.isic-page-title Create annotation study
 
   .isic-form-container
@@ -13,18 +13,21 @@
 
     .isic-form-group
       h3 Users
-      .isic-study-user-list-container
-        .isic-study-user-list-title #[i.icon-user] Selected users
-        #isic-study-user-list
+      .isic-list-container.isic-study-user-list-container
+        .isic-list-title.isic-study-user-list-title #[i.icon-user] Selected users
+        .isic-list#isic-study-user-list
       p.
         Select users to include in the study.
-      .isic-study-user-search-field-container
+      .isic-study-search-field-container.isic-study-user-search-field-container
 
     .isic-form-group
       h3 Featureset
+      .isic-list-container.isic-study-featureset-list-container
+        .isic-list-title.isic-study-featureset-list-title #[i.icon-th] Selected featureset
+        .isic-list#isic-study-featureset-list
       p.
         Select a featureset for the study.
-      .isic-study-featureset-search-field-container
+      .isic-study-search-field-container.isic-study-featureset-search-field-container
 
   p
     form#isic-study-form(role="form")

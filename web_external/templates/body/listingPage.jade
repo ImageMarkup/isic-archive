@@ -1,7 +1,8 @@
 .isic-listing-header
   .isic-listing-title
     h2
-      = title
+      block title
+        = title
     h4
       if loaded
         if models.length === 0
