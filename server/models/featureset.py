@@ -21,7 +21,7 @@ class Featureset(Model):
             'region_features'
         ])
         self.summaryFields = ['_id', 'name', 'version']
-        self.prefixSearchFields = ['name']
+        self.prefixSearchFields = [('name', 'i')]
 
 
     def createFeatureset(self, name, version, creator):
