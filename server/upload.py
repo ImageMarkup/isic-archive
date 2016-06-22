@@ -138,7 +138,7 @@ def handleZip(images_folder, user, zip_file):
                 )
                 Image.setMetadata(image_item, {
                     # provide full and possibly-qualified path as originalFilename
-                    'originalFilename': original_file_relpath
+                    'originalFilename': os.path.splitext(original_file_relpath)
                 })
 
                 # upload original image
@@ -149,7 +149,7 @@ def handleZip(images_folder, user, zip_file):
                         size=os.path.getsize(original_file_path),
                         name='%s%s' % (
                             image_item['name'],
-                            os.path.splitext(original_file_name)[1]
+                            os.path.splitext(original_file_name)[1].lower()
                         ),
                         parentType='item',
                         parent=image_item,
