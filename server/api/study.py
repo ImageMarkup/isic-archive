@@ -196,7 +196,7 @@ class StudyResource(Resource):
             # this will iterate either 0 or 1 times
             for annotation in Study.childAnnotations(
                 study=study,
-                annotator_user=annotator_user,
+                annotatorUser=annotator_user,
                 segmentation=segmentation,
                 state=Study.State.COMPLETE
             ):

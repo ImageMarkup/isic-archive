@@ -1,28 +1,44 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+###############################################################################
+#  Copyright Kitware Inc.
+#
+#  Licensed under the Apache License, Version 2.0 ( the "License" );
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+###############################################################################
+
 from girder.constants import AccessType
-from girder.models.item import Item
+from girder.models.item import Item as ItemModel
 
 
-class Annotation(Item):
-
-    def createAnnotation(self, study, segmentation, creator_user, annotator_folder):
+class Annotation(ItemModel):
+    def createAnnotation(self, study, segmentation, creatorUser,
+                         annotatorFolder):
         image = self.model('image', 'isic_archive').load(
-            segmentation['imageId'], user=creator_user, level=AccessType.READ)
+            segmentation['imageId'], user=creatorUser, level=AccessType.READ)
 
-        annotation_item = self.createItem(
-            folder=annotator_folder,
+        annotationItem = self.createItem(
+            folder=annotatorFolder,
             name=image['name'],
             description='',
-            creator=creator_user
+            creator=creatorUser
         )
         # "setMetadata" will always save
         self.setMetadata(
-            item=annotation_item,
+            item=annotationItem,
             metadata={
                 'studyId': study['_id'],
-                'userId': annotator_folder['meta']['userId'],
+                'userId': annotatorFolder['meta']['userId'],
                 'segmentationId': segmentation['_id'],
                 'imageId': image['_id'],
                 'startTime': None,
@@ -30,29 +46,26 @@ class Annotation(Item):
                 'annotations': None
             }
         )
-        return annotation_item
+        return annotationItem
 
-
-    def _find_query_filter(self, query):
-        annotation_query = {
-            'baseParentId': self.model('study', 'isic_archive').loadStudyCollection()['_id']
+    def _findQueryFilter(self, query):
+        Study = self.model('study', 'isic_archive')
+        annotationQuery = {
+            'baseParentId': Study.loadStudyCollection()['_id']
         }
         if query:
-            annotation_query.update(query)
-        return annotation_query
-
+            annotationQuery.update(query)
+        return annotationQuery
 
     def find(self, query=None, **kwargs):
-        annotation_query = self._find_query_filter(query)
-        return Item.find(self, annotation_query, **kwargs)
-
+        annotationQuery = self._findQueryFilter(query)
+        return super(Annotation, self).find(annotationQuery, **kwargs)
 
     def findOne(self, query=None, **kwargs):
-        annotation_query = self._find_query_filter(query)
-        return Item.findOne(self, annotation_query, **kwargs)
-
+        annotationQuery = self._findQueryFilter(query)
+        return super(Annotation, self).findOne(annotationQuery, **kwargs)
 
     def validate(self, doc):
         # TODO: implement
         # raise ValidationException
-        return Item.validate(self, doc)
+        return super(Annotation, self).validate(doc)

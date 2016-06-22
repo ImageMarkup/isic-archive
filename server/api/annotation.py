@@ -64,9 +64,9 @@ class AnnotationResource(Resource):
         # TODO: limit fields returned
         annotations = Study.childAnnotations(
             study=study,
-            annotator_user=annotator_user,
+            annotatorUser=annotator_user,
             segmentation=segmentation,
-            image_item=image
+            imageItem=image
         )
 
         return list(

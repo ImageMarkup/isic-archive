@@ -141,7 +141,7 @@ class UDAResource(Resource):
                         'name': study['name'],
                         'count': self.model('study', 'isic_archive').childAnnotations(
                             study=study,
-                            annotator_user=self.getCurrentUser(),
+                            annotatorUser=self.getCurrentUser(),
                             state=self.model('study', 'isic_archive').State.ACTIVE
                         ).count(),
                         'url': task_url % {'study_id': study['_id']}
@@ -374,7 +374,7 @@ class TaskHandler(Resource):
         try:
             active_annotations = self.model('study', 'isic_archive').childAnnotations(
                 study=study,
-                annotator_user=self.getCurrentUser(),
+                annotatorUser=self.getCurrentUser(),
                 state=self.model('study', 'isic_archive').State.ACTIVE,
                 limit=1
             )
