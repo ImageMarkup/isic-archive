@@ -55,8 +55,23 @@ class Dataset(Folder):
             raise ValidationException(
                 'A dataset with this name already exists.')
 
-        datasetFolder = self.createFolder(
+        datasetQcFolder = self.createFolder(
             parent=self.model('collection').findOne({'name': 'Phase 0'}),
+            name=name,
+            description=description,
+            parentType='collection',
+            creator=creatorUser
+        )
+        datasetQcFolder = self.setUserAccess(
+            doc=datasetQcFolder,
+            user=creatorUser,
+            # TODO: make admin
+            level=AccessType.READ,
+            save=False
+        )
+
+        datasetFolder = self.createFolder(
+            parent=self.model('collection').findOne({'name': 'Lesion Images'}),
             name=name,
             description=description,
             parentType='collection',
@@ -69,7 +84,8 @@ class Dataset(Folder):
             level=AccessType.READ,
             save=False
         )
-        return self.save(datasetFolder)
+
+        return self.save(datasetQcFolder), self.save(datasetFolder)
 
 
     def childImages(self, dataset, limit=0, offset=0, sort=None, filters=None,
@@ -155,9 +171,14 @@ class Dataset(Folder):
                 'No .csv files were uploaded.', 'uploadFolder')
 
         # Create dataset folder
-        datasetFolder = self.createDataset(name, description, user)
+        datasetQcFolder, datasetFolder = self.createDataset(name, description, user)
 
         # Set dataset license agreement metadata
+        datasetQcFolder = self.setMetadata(datasetQcFolder, {
+            'signature': signature,
+            'anonymous': anonymous,
+            'attribution': attribution
+        })
         datasetFolder = self.setMetadata(datasetFolder, {
             'signature': signature,
             'anonymous': anonymous,
@@ -168,24 +189,24 @@ class Dataset(Folder):
         for item in zipFileItems:
             zipFiles = self.model('item').childFiles(item)
             for zipFile in zipFiles:
-                handleZip(datasetFolder, user, zipFile)
+                handleZip(datasetQcFolder, user, zipFile)
 
         # Process extracted images
-        for item in self.childImages(datasetFolder):
+        for item in self.childImages(datasetQcFolder):
             handleImage(item, user, license)
 
         # Process metadata in CSV files
         for item in csvFileItems:
             csvFiles = self.model('item').childFiles(item)
             for csvFile in csvFiles:
-                handleCsv(datasetFolder, user, csvFile)
+                handleCsv(datasetQcFolder, user, csvFile)
 
         # Move metadata item to dataset folder. This preserves any parsing
         # errors that were added to the item for review.
         for item in csvFileItems:
-            self.model('item').move(item, datasetFolder)
+            self.model('item').move(item, datasetQcFolder)
 
         # Delete uploaded files
         # self.model('folder').clean(uploadFolder)
 
-        return datasetFolder
+        return datasetQcFolder
