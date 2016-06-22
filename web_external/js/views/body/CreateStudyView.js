@@ -150,7 +150,7 @@ isic.views.CreateStudyView = isic.View.extend({
             error: null
         }).done(_.bind(function () {
             girder.confirm({
-                text: '<h4>Study created</h4><br>' + name,
+                text: '<h4>Study <b>"' + name + '"</b> created</h4>',
                 yesClass: 'hidden',
                 noText: 'OK',
                 escapedHtml: true
