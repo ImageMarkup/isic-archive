@@ -42,11 +42,11 @@ isic.views.LayoutHeaderView = isic.View.extend({
         }).render();
     },
 
-    _updateUserInfo: function (){
+    _updateUserInfo: function () {
         // Check whether user has permission to contribute datasets
         var datasetModel = new isic.models.DatasetModel();
         datasetModel.userCanContribute(girder.currentUser).then(_.bind(function (datasetContributor) {
-            if (this.datasetContributor != datasetContributor) {
+            if (this.datasetContributor !== datasetContributor) {
                 this.datasetContributor = datasetContributor;
                 this.render();
             }
