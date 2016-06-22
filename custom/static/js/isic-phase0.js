@@ -44,16 +44,9 @@ isic_app.controller('ApplicationController',
 
                     image.diagnosis_strings = [];
                     [
-                        'diagnosis',
-                        'Diagnosis',
-                        'diagnosis_short',
-                        'pathology diagnosis',
-                        'pathology diagnosis subtype',
                         'benign_malignant',
-                        'ben_mal',
-                        'malignant',
-                        'Location',
-                        'localization'
+                        'diagnosis data',
+                        'pathology'
                     ].forEach(function (key) {
                         var value = image.meta.clinical[key];
                         if (value) {
