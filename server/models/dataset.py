@@ -189,6 +189,7 @@ class Dataset(Folder):
         for item in zipFileItems:
             zipFiles = self.model('item').childFiles(item)
             for zipFile in zipFiles:
+                # TODO: gracefully clean up after exceptions in handleZip
                 handleZip(datasetQcFolder, user, zipFile)
 
         # Process extracted images
