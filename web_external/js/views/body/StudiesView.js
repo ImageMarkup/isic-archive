@@ -20,6 +20,7 @@ isic.views.StudiesView = isic.View.extend({
     initialize: function (settings) {
         this.loaded = false;
         this.studyAdmin = false;
+        this.studies = new isic.collections.StudyCollection();
 
         // Check whether user has permission to create studies
         // TODO re-render open study listings if this changes
@@ -31,7 +32,6 @@ isic.views.StudiesView = isic.View.extend({
             }
         }, this));
 
-        this.studies = new isic.collections.StudyCollection();
         this.studies.once('g:changed', function () {
             this.loaded = true;
             this.render();
