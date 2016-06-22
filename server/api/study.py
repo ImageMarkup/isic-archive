@@ -335,8 +335,10 @@ class StudyResource(Resource):
                        403)
     )
     @access.user
-    @loadmodel(model='study', plugin='isic_archive', level=AccessType.WRITE)
+    @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
     def addAnnotator(self, study, params):
+        # TODO: make the loadmodel decorator use AccessType.WRITE,
+        # once permissions work
         if cherrypy.request.headers['Content-Type'] == 'application/json':
             params = self.getBodyJson()
         self.requireParams('userId', params)
