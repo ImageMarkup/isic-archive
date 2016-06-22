@@ -1,0 +1,31 @@
+.isic-create-study-container
+  h2.isic-page-title Create annotation study
+
+  .isic-form-container
+    .isic-form-group
+      h3 Basic information
+      p.
+        Enter a name for the new annotation study.
+      .form-group
+        label(for="isic-study-name") Name
+        input#isic-study-name.form-control.input-sm(
+          type="text")
+
+    .isic-form-group
+      h3 Users
+      .isic-study-user-list-container
+        .isic-study-user-list-title #[i.icon-user] Selected users
+        #isic-study-user-list
+      p.
+        Select users to include in the study.
+      .isic-study-user-search-field-container
+
+    .isic-form-group
+      h3 Featureset
+      p.
+        Select a featureset for the study.
+      .isic-study-featureset-search-field-container
+
+  p
+    form#isic-study-form(role="form")
+      button#isic-study-submit.btn.btn-primary.btn-md(type="submit") Submit
