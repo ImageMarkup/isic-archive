@@ -58,8 +58,14 @@ class ImageResource(Resource):
     @access.public
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def getImage(self, image, params):
-        return self.model('image', 'isic_archive').filter(
+        output = self.model('image', 'isic_archive').filter(
             image, self.getCurrentUser())
+
+        if 'originalFilename' in output['meta']:
+            if not self.getCurrentUser()['admin']:
+                del output['meta']['originalFilename']
+
+        return output
 
 
     @describeRoute(
