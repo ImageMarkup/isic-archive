@@ -62,13 +62,16 @@ class Dataset(Folder):
             parentType='collection',
             creator=creatorUser
         )
-        datasetFolder = self.setUserAccess(
-            doc=datasetFolder,
-            user=creatorUser,
-            # TODO: make admin
-            level=AccessType.READ,
-            save=False
-        )
+        # The uploader may already have greater access via inheritance from
+        # Phase 0, which should not be overwritten
+        if not self.hasAccess(datasetFolder, creatorUser, AccessType.READ):
+            datasetFolder = self.setUserAccess(
+                doc=datasetFolder,
+                user=creatorUser,
+                # TODO: make admin
+                level=AccessType.READ,
+                save=False
+            )
         return self.save(datasetFolder)
 
 
