@@ -16,7 +16,7 @@ from girder.constants import AccessType, SortDir
 from girder.models.model_base import AccessException
 from girder.utility.model_importer import ModelImporter
 
-from .provision_utility import _ISICCollection
+from .provision_utility import _ISICCollection, getAdminUser
 
 
 def getItemsInFolder(folder):
@@ -175,6 +175,9 @@ class UDAResource(Resource):
     @access.user
     @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
     def p0TaskComplete(self, folder, params):
+        Folder = self.model('folder')
+        Item = self.model('item')
+
         # verify user's access to folder and phase
         phase0_collection = self.model('collection').findOne({'name': 'Phase 0'})
         self.model('collection').requireAccess(phase0_collection, self.getCurrentUser(), AccessType.READ)
@@ -185,14 +188,14 @@ class UDAResource(Resource):
 
         # verify that all images are in folder
         flagged_image_items = [
-            self.model('item').load(image_item_id, force=True)
+            Item.load(image_item_id, force=True)
             for image_item_id in contents['flagged']
         ]
         for image_item in flagged_image_items:
             if image_item['folderId'] != folder['_id']:
                 raise RestException('Flagged image %s is not inside folder %s' % (image_item['_id'], folder['_id']))
         good_image_items = [
-            self.model('item').load(image_item_id, force=True)
+            Item.load(image_item_id, force=True)
             for image_item_id in contents['good']
         ]
         for image_item in good_image_items:
@@ -212,24 +215,33 @@ class UDAResource(Resource):
 
         # move good images into phase 1a folder
         phase1a_collection = self.model('collection').findOne({'name': 'Phase 1a'})
-        phase1a_images = _ISICCollection.createFolder(
+
+        phase1a_images = Folder.createFolder(
+            parent=phase1a_collection,
             name=folder['name'],
             description=folder['description'],
-            parent=phase1a_collection,
-            parent_type='collection'
+            parentType='collection',
+            public=None,
+            creator=getAdminUser(),
+            allowRename=False,
+            reuseExisting=True
         )
+        if not phase1a_images.get('meta'):
+            phase1a_images = Folder.setMetadata(
+                phase1a_images, folder['meta'])
+
         for image_item in good_image_items:
             qc_metadata = {
                 'qc_user': self.getCurrentUser()['_id'],
                 'qc_result': 'ok',
                 'qc_stop_time': datetime.datetime.utcnow(),
             }
-            self.model('item').setMetadata(image_item, qc_metadata)
-            self.model('item').move(image_item, phase1a_images)
+            Item.setMetadata(image_item, qc_metadata)
+            Item.move(image_item, phase1a_images)
 
         # remove empty folders in original collection
-        if self.model('folder').subtreeCount(folder) == 1:
-            self.model('folder').remove(folder)
+        if Folder.subtreeCount(folder) == 1:
+            Folder.remove(folder)
 
         return {'status': 'success'}
 
