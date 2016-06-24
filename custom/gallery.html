@@ -246,12 +246,15 @@
                                 <span>Updated <b>{{folder_details.updated}}</b></span>
                             </div>
                         </div>
-                        <div class="pull-right">
-                            <div class="btn btn-info" ng-click="submitFlagged()">
-                                <span>Submit only flagged</span>
+                        <div class="btn-group pull-right">
+                            <!--<div class="btn btn-info" ng-click="submitFlagged()">-->
+                                <!--<span>Submit only flagged</span>-->
+                            <!--</div>-->
+                            <div class="btn" disabled>
+                                <span>Flagged images will be quarantined. Non-flagged images will be submitted for segmentation.</span>
                             </div>
                             <div class="btn btn-success" ng-click="submitAll()">
-                                <span>Submit all</span>
+                                <span>Submit</span>
                             </div>
                         </div>
                     </div>
