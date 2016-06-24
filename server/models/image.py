@@ -105,10 +105,9 @@ class Image(Item):
                 raise AccessException(
                     'User does not have permission to flag these images.')
 
-        datasets = [
-            self.model('dataset', 'isic_archive').load(
-                dataset_id, force=True)
-            for dataset_id in
+        phase0_folders = [
+            self.model('folder').load(phase0_folder, force=True, exc=True)
+            for phase0_folder in
             set(image['folderId'] for image in images)
         ]
 
@@ -116,13 +115,13 @@ class Image(Item):
             {'name': 'Flagged Images'})
 
         dataset_flagged_folders = {
-            dataset['_id']: _ISICCollection.createFolder(
-                name=dataset['name'],
+            phase0_folder['_id']: _ISICCollection.createFolder(
+                name=phase0_folder['name'],
                 description='',
                 parent=flagged_collection,
                 parent_type='collection'
             )
-            for dataset in datasets
+            for phase0_folder in phase0_folders
         }
 
         flag_metadata = {
