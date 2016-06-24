@@ -131,6 +131,9 @@ class Study(FolderModel):
             Annotation.createAnnotation(
                 study, segmentation, creatorUser, annotatorFolder)
 
+    def getFeatureset(self, study):
+        return self.model('featureset', 'isic_archive').load(
+            study['meta']['featuresetId'], exc=True)
 
     def getAnnotators(self, study):
         Folder = self.model('folder')

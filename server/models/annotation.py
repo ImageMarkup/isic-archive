@@ -17,8 +17,14 @@
 #  limitations under the License.
 ###############################################################################
 
+import datetime
+import six
+
+from bson import ObjectId
+
 from girder.constants import AccessType
 from girder.models.item import Item as ItemModel
+from girder.models.model_base import ValidationException
 
 
 class Annotation(ItemModel):
@@ -66,6 +72,63 @@ class Annotation(ItemModel):
         return super(Annotation, self).findOne(annotationQuery, **kwargs)
 
     def validate(self, doc):
-        # TODO: implement
-        # raise ValidationException
+        Study = self.model('study', 'isic_archive')
+        # If annotation is fully created
+        if doc.get('meta') and 'studyId' in doc['meta']:
+            for field in ['studyId', 'userId', 'segmentationId', 'imageId']:
+                if not isinstance(doc['meta'].get(field), ObjectId):
+                    raise ValidationException(
+                        'Annotation field "%s" must be an ObjectId' % field)
+
+            study = Study.load(doc['meta']['studyId'], force=True)
+            if not study:
+                raise ValidationException(
+                    'Annotation field "studyId" must reference an existing '
+                    'Study.')
+
+            # If annotation is complete
+            if doc['meta'].get('stopTime'):
+                if not isinstance(doc['meta'].get('status'), six.string_types):
+                    raise ValidationException(
+                        'Annotation field "status" must be a string.')
+                for field in ['startTime', 'stopTime']:
+                    if not isinstance(doc['meta'].get(field),
+                                      datetime.datetime):
+                        raise ValidationException(
+                            'Annotation field "%s" must be a datetime.' % field)
+
+                if not isinstance(doc['meta'].get('annotations'), dict):
+                    raise ValidationException(
+                        'Annotation field "annotations" must be a mapping '
+                        '(dict).')
+                featureset = Study.getFeatureset(study)
+                featuresetImageFeatures = {
+                    feature['id']: feature
+                    for feature in
+                    featureset['image_features']
+                }
+                featuresetRegionFeatures = {
+                    feature['id']: feature
+                    for feature in
+                    featureset['region_features']
+                }
+                for featureId, featureValue in doc['meta']['annotations']:
+                    if featureId in featuresetImageFeatures:
+                        featureOptions = set(
+                            option['id']
+                            for option in
+                            featuresetImageFeatures[featureId]['options'])
+                        if featureValue not in featureOptions:
+                            raise ValidationException(
+                                'Annotation feature "%s" has invalid '
+                                'value "%s".' % (featureId, featureValue))
+                    elif featureId in featuresetRegionFeatures:
+                        if featureValue not in [0, 2, 3]:
+                            raise ValidationException(
+                                'Annotation feature "%s" has invalid '
+                                'value "%s".' % (featureId, featureValue))
+                    else:
+                        raise ValidationException(
+                            'Annotation has invalid feature "%s".' % featureId)
+
         return super(Annotation, self).validate(doc)
