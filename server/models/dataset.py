@@ -55,37 +55,24 @@ class Dataset(Folder):
             raise ValidationException(
                 'A dataset with this name already exists.')
 
-        datasetQcFolder = self.createFolder(
+        datasetFolder = self.createFolder(
             parent=self.model('collection').findOne({'name': 'Phase 0'}),
             name=name,
             description=description,
             parentType='collection',
             creator=creatorUser
         )
-        datasetQcFolder = self.setUserAccess(
-            doc=datasetQcFolder,
-            user=creatorUser,
-            # TODO: make admin
-            level=AccessType.READ,
-            save=False
-        )
-
-        datasetFolder = self.createFolder(
-            parent=self.model('collection').findOne({'name': 'Lesion Images'}),
-            name=name,
-            description=description,
-            parentType='collection',
-            creator=creatorUser
-        )
-        datasetFolder = self.setUserAccess(
-            doc=datasetFolder,
-            user=creatorUser,
-            # TODO: make admin
-            level=AccessType.READ,
-            save=False
-        )
-
-        return self.save(datasetQcFolder), self.save(datasetFolder)
+        # The uploader may already have greater access via inheritance from
+        # Phase 0, which should not be overwritten
+        if not self.hasAccess(datasetFolder, creatorUser, AccessType.READ):
+            datasetFolder = self.setUserAccess(
+                doc=datasetFolder,
+                user=creatorUser,
+                # TODO: make admin
+                level=AccessType.READ,
+                save=False
+            )
+        return self.save(datasetFolder)
 
 
     def childImages(self, dataset, limit=0, offset=0, sort=None, filters=None,
@@ -171,14 +158,9 @@ class Dataset(Folder):
                 'No .csv files were uploaded.', 'uploadFolder')
 
         # Create dataset folder
-        datasetQcFolder, datasetFolder = self.createDataset(name, description, user)
+        datasetFolder = self.createDataset(name, description, user)
 
         # Set dataset license agreement metadata
-        datasetQcFolder = self.setMetadata(datasetQcFolder, {
-            'signature': signature,
-            'anonymous': anonymous,
-            'attribution': attribution
-        })
         datasetFolder = self.setMetadata(datasetFolder, {
             'signature': signature,
             'anonymous': anonymous,
@@ -189,24 +171,25 @@ class Dataset(Folder):
         for item in zipFileItems:
             zipFiles = self.model('item').childFiles(item)
             for zipFile in zipFiles:
-                handleZip(datasetQcFolder, user, zipFile)
+                # TODO: gracefully clean up after exceptions in handleZip
+                handleZip(datasetFolder, user, zipFile)
 
         # Process extracted images
-        for item in self.childImages(datasetQcFolder):
+        for item in self.childImages(datasetFolder):
             handleImage(item, user, license)
 
         # Process metadata in CSV files
         for item in csvFileItems:
             csvFiles = self.model('item').childFiles(item)
             for csvFile in csvFiles:
-                handleCsv(datasetQcFolder, user, csvFile)
+                handleCsv(datasetFolder, user, csvFile)
 
         # Move metadata item to dataset folder. This preserves any parsing
         # errors that were added to the item for review.
         for item in csvFileItems:
-            self.model('item').move(item, datasetQcFolder)
+            self.model('item').move(item, datasetFolder)
 
         # Delete uploaded files
         # self.model('folder').clean(uploadFolder)
 
-        return datasetQcFolder
+        return datasetFolder

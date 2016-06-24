@@ -10,6 +10,7 @@ import subprocess
 import tempfile
 import zipfile
 
+from girder.models.model_base import ValidationException
 from girder.models.notification import ProgressState
 from girder.utility import assetstore_utilities
 from girder.utility.model_importer import ModelImporter
@@ -136,8 +137,7 @@ def handleZip(images_folder, user, zip_file):
                     parentFolder=images_folder
                 )
                 Image.setMetadata(image_item, {
-                    # provide full and possibly-qualified path as originalFilename
-                    'originalFilename': original_file_relpath
+                    'originalFilename': os.path.splitext(original_file_name)[0]
                 })
 
                 # upload original image
@@ -148,7 +148,7 @@ def handleZip(images_folder, user, zip_file):
                         size=os.path.getsize(original_file_path),
                         name='%s%s' % (
                             image_item['name'],
-                            os.path.splitext(original_file_name)[1]
+                            os.path.splitext(original_file_name)[1].lower()
                         ),
                         parentType='item',
                         parent=image_item,
@@ -255,12 +255,14 @@ def handleCsv(dataset_folder, user, csv_file):
         # csv.reader(csvfile, delimiter=',', quotechar='"')
         csv_reader = csv.DictReader(upload_file_obj)
 
-        if 'filename' not in csv_reader.fieldnames:
-            # TODO: error
-            return
+        for filenameField in csv_reader.fieldnames:
+            if filenameField.lower() == 'filename':
+                break
+        else:
+            raise ValidationException('No "filename" field found in CSV.')
 
         for csv_row in csv_reader:
-            filename = csv_row.pop('filename', None)
+            filename = csv_row.pop(filenameField, None)
             if not filename:
                 parse_errors.append('No "filename" field in row %d' % csv_reader.line_num)
                 continue

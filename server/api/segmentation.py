@@ -10,7 +10,7 @@ from girder.api.rest import Resource, RestException, loadmodel, rawResponse
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 
-from ..provision_utility import ISIC, _ISICCollection
+from ..provision_utility import ISIC, getAdminUser
 
 
 class SegmentationResource(Resource):
@@ -54,6 +54,7 @@ class SegmentationResource(Resource):
     @access.user
     def createSegmentation(self, params):
         Segmentation = self.model('segmentation', 'isic_archive')
+        Folder = self.model('folder')
 
         body_json = self.getBodyJson()
         self.requireParams(('imageId', 'lesionBoundary'), body_json)
@@ -85,13 +86,21 @@ class SegmentationResource(Resource):
             next_phase_collection = ISIC.LesionImages.collection
         else:
             next_phase_collection = ISIC.Phase1b.collection
-        original_folder = self.model('folder').load(image['folderId'], force=True)
-        next_phase_folder = _ISICCollection.createFolder(
+        original_folder = Folder.load(image['folderId'], force=True)
+        next_phase_folder = Folder.createFolder(
+            parent=next_phase_collection,
             name=original_folder['name'],
             description=original_folder['description'],
-            parent=next_phase_collection,
-            parent_type='collection'
+            parentType='collection',
+            public=None,
+            creator=getAdminUser(),
+            allowRename=False,
+            reuseExisting=True
         )
+        if not next_phase_folder.get('meta'):
+            next_phase_folder = Folder.setMetadata(
+                next_phase_folder, original_folder['meta'])
+
         self.model('item').move(image, next_phase_folder)
 
         return segmentation

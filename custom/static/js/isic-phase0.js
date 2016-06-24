@@ -40,20 +40,13 @@ isic_app.controller('ApplicationController',
             $http.get(images_url).success(function (data) {
                 $scope.image_list = [];
                 data.forEach(function (image) {
-                    image.thumbnail = '/api/v1/image/' + image._id + '/thumbnail?width=768';
+                    image.thumbnail = '/api/v1/image/' + image._id + '/download?contentDisposition=inline';
 
                     image.diagnosis_strings = [];
                     [
-                        'diagnosis',
-                        'Diagnosis',
-                        'diagnosis_short',
-                        'pathology diagnosis',
-                        'pathology diagnosis subtype',
                         'benign_malignant',
-                        'ben_mal',
-                        'malignant',
-                        'Location',
-                        'localization'
+                        'diagnosis data',
+                        'pathology'
                     ].forEach(function (key) {
                         var value = image.meta.clinical[key];
                         if (value) {

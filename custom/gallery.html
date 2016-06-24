@@ -63,7 +63,7 @@
     <!-- ISIC App -->
     <script src="/uda/static/js/isic-app.js"></script>
     <script src="/uda/static/js/isic-user-controller.js"></script>
-    <script src="/uda/static/js/image-review.js"></script>
+    <script src="/uda/static/js/isic-phase0.js"></script>
 
     <!-- (WIP) Lightbox2 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.8.1/js/lightbox.min.js"></script>
@@ -246,12 +246,15 @@
                                 <span>Updated <b>{{folder_details.updated}}</b></span>
                             </div>
                         </div>
-                        <div class="pull-right">
-                            <div class="btn btn-info" ng-click="submitFlagged()">
-                                <span>Submit only flagged</span>
+                        <div class="btn-group pull-right">
+                            <!--<div class="btn btn-info" ng-click="submitFlagged()">-->
+                                <!--<span>Submit only flagged</span>-->
+                            <!--</div>-->
+                            <div class="btn" disabled>
+                                <span>Flagged images will be quarantined. Non-flagged images will be submitted for segmentation.</span>
                             </div>
                             <div class="btn btn-success" ng-click="submitAll()">
-                                <span>Submit all</span>
+                                <span>Submit</span>
                             </div>
                         </div>
                     </div>

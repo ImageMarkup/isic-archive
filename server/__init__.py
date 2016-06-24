@@ -4,6 +4,7 @@
 import os
 
 from girder import events
+from girder.api.rest import getCurrentUser
 from girder.api.v1 import resource
 from girder.constants import SettingKey, PACKAGE_DIR, STATIC_ROOT_DIR
 from girder.models.model_base import ValidationException
@@ -66,6 +67,15 @@ def validateSettings(event):
         event.preventDefault().stopPropagation()
 
 
+def onGetItem(event):
+    itemResponse = event.info['returnVal']
+
+    # Hide the 'originalFilename' metadata on Images from non-site admins
+    if 'originalFilename' in itemResponse.get('meta', {}):
+        if not getCurrentUser()['admin']:
+            del itemResponse['meta']['originalFilename']
+
+
 def clearRouteDocs():
     from girder.api.docs import routes
     # preserve the user token login operation
@@ -82,6 +92,7 @@ def load(info):
     # note, 'model.setting.validate' must be bound before initialSetup is called
     events.bind('model.setting.validate', 'isic', validateSettings)
     events.bind('model.user.save.created', 'onUserCreated', onUserCreated)
+    events.bind('rest.get.item/:id.after', 'onGetItem', onGetItem)
     ModelImporter.model('setting').set(SettingKey.USER_DEFAULT_FOLDERS, 'none')
 
     # add custom model searching
