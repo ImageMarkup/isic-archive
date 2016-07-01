@@ -165,7 +165,8 @@ class StudyResource(Resource):
             ('study_name', 'study_id',
              'user_login_name', 'user_id',
              'segmentation_id',
-             'image_name', 'image_id'),
+             'image_name', 'image_id',
+             'flag_status', 'elapsed_seconds'),
             (feature['id'] for feature in featureset['image_features']),
             ('superpixel_id',),
             (feature['id'] for feature in featureset['region_features'])
@@ -199,6 +200,10 @@ class StudyResource(Resource):
                 segmentation=segmentation,
                 state=Study.State.COMPLETE
             ):
+                elapsed_seconds = \
+                    int((annotation['meta']['stopTime'] -
+                         annotation['meta']['startTime']).total_seconds())
+
                 out_dict_base = {
                     'study_name': study['name'],
                     'study_id': str(study['_id']),
@@ -206,7 +211,9 @@ class StudyResource(Resource):
                     'user_id': str(annotator_user['_id']),
                     'segmentation_id': str(segmentation['_id']),
                     'image_name': segmentation['image']['name'],
-                    'image_id': str(segmentation['image']['_id'])
+                    'image_id': str(segmentation['image']['_id']),
+                    'flag_status': annotation['meta']['status'],
+                    'elapsed_seconds': elapsed_seconds
                 }
 
                 out_dict = out_dict_base.copy()
