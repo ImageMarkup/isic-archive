@@ -71,7 +71,8 @@ def onGetItem(event):
 
     # Hide the 'originalFilename' metadata on Images from non-site admins
     if 'originalFilename' in itemResponse.get('meta', {}):
-        if not getCurrentUser()['admin']:
+        currentUser = getCurrentUser()
+        if not (currentUser and currentUser['admin']):
             del itemResponse['meta']['originalFilename']
 
 

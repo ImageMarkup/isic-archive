@@ -62,7 +62,8 @@ class ImageResource(Resource):
             image, self.getCurrentUser())
 
         if 'originalFilename' in output['meta']:
-            if not self.getCurrentUser()['admin']:
+            currentUser = self.getCurrentUser()
+            if not (currentUser and currentUser['admin']):
                 del output['meta']['originalFilename']
 
         return output
