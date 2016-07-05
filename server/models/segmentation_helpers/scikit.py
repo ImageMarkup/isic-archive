@@ -27,6 +27,12 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         :rtype: numpy.ndarray
         """
         image_data = skimage.io.imread(image_data_stream)
+
+        if image_data.shape == (2,):
+            # Some images seem to have a 2nd layer, which should be ignored
+            # https://github.com/scikit-image/scikit-image/issues/2154
+            image_data = image_data[0]
+
         if image_data.shape[2] == 4:
             # cv2.floodFill doesn't work correctly with array views
             image_data = image_data[:, :, :3].copy()
