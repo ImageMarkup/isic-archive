@@ -56,7 +56,7 @@ class DatasetResource(Resource):
             dataset, self.getCurrentUser())
         del output['_accessLevel']
         output['_modelType'] = 'dataset'
-        output.update(dataset['meta'])
+        output.update(dataset.get('meta', {}))
         return output
 
     @describeRoute(
