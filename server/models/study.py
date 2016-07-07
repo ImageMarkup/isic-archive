@@ -123,7 +123,6 @@ class Study(FolderModel):
             Annotation.createAnnotation(
                 study, segmentation, creatorUser, annotatorFolder)
 
-
     def addSegmentation(self, study, segmentation, creatorUser):
         Folder = self.model('folder')
         Annotation = self.model('annotation', 'isic_archive')
@@ -208,11 +207,9 @@ class Study(FolderModel):
         studyQuery = self._findQueryFilter(query, annotator_user, state)
         return super(Study, self).find(studyQuery, **kwargs)
 
-
     def findOne(self, query=None, annotator_user=None, state=None, **kwargs):
         studyQuery = self._findQueryFilter(query, annotator_user, state)
         return super(Study, self).findOne(studyQuery, **kwargs)
-
 
     def validate(self, doc, **kwargs):
         # TODO: implement

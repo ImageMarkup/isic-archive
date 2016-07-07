@@ -52,7 +52,6 @@ class Dataset(FolderModel):
         ])
         self.summaryFields = ('_id', 'name', 'updated')
 
-
     def createDataset(self, name, description, creatorUser):
         # Look for duplicate names in any of the dataset-containing collections
         datasetCollectionIds = self.model('collection').find({
@@ -91,7 +90,7 @@ class Dataset(FolderModel):
         return self.save(datasetFolder)
 
     def childImages(self, dataset, limit=0, offset=0, sort=None, filters=None,
-                   **kwargs):
+                    **kwargs):
         if not filters:
             filters = {}
 
@@ -143,7 +142,7 @@ class Dataset(FolderModel):
         return super(Dataset, self).validate(doc, **kwargs)
 
     def ingestDataset(self, uploadFolder, user, name, description, license,
-            signature, anonymous, attribution):
+                      signature, anonymous, attribution):
         """
         Ingest an uploaded dataset. This upload folder is expected to contain a
         .zip file of images and a .csv file that contains metadata about the

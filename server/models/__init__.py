@@ -17,9 +17,14 @@
 #  limitations under the License.
 ###############################################################################
 
+# Deal with a bug where PEP257 crashes when parsing __all__
+# flake8: noqa
+
 from .annotation import Annotation
 from .dataset import Dataset
 from .featureset import Featureset
 from .image import Image
 from .segmentation import Segmentation
 from .study import Study
+
+__all__ = [Annotation, Dataset, Featureset, Image, Segmentation, Study]

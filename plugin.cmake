@@ -25,4 +25,3 @@ add_eslint_test(
   ESLINT_CONFIG_FILE "${CMAKE_CURRENT_LIST_DIR}/web_external/js/.eslintrc.js"
   ESLINT_IGNORE_FILE "${CMAKE_CURRENT_LIST_DIR}/web_external/js/.eslintignore"
 )
-

@@ -71,7 +71,7 @@ class Annotation(ItemModel):
         annotationQuery = self._findQueryFilter(query)
         return super(Annotation, self).findOne(annotationQuery, **kwargs)
 
-    def validate(self, doc):
+    def validate(self, doc):  # noqa - C901
         Study = self.model('study', 'isic_archive')
         # If annotation is fully created
         if doc.get('meta') and 'studyId' in doc['meta']:

@@ -3,7 +3,7 @@ isic.App = girder.App.extend({
     render: function () {
         this.$el.html(isic.templates.layout());
 
-        new isic.views.LayoutHeaderView({
+        this.headerView = new isic.views.LayoutHeaderView({
             el: this.$('#isic-app-header-container'),
             parentView: this
         });
