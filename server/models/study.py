@@ -1,15 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+###############################################################################
+#  Copyright Kitware Inc.
+#
+#  Licensed under the Apache License, Version 2.0 ( the "License" );
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+###############################################################################
+
 from enum import Enum
 
 from girder.constants import AccessType
-from girder.models.folder import Folder
+from girder.models.folder import Folder as FolderModel
 from girder.models.model_base import ValidationException
 
 
-class Study(Folder):
-
+class Study(FolderModel):
     class State(Enum):
         ACTIVE = 'active'
         COMPLETE = 'complete'
@@ -30,118 +45,131 @@ class Study(Folder):
         # TODO: cache this value
         return self.model('collection').findOne({'name': 'Annotation Studies'})
 
-
-    def createStudy(self, name, creator_user, featureset, annotator_users, segmentations):
+    def createStudy(self, name, creatorUser, featureset, annotatorUsers,
+                    segmentations):
         # this may raise a ValidationException if the name already exists
-        study_folder = self.createFolder(
+        studyFolder = self.createFolder(
             parent=self.loadStudyCollection(),
             name=name,
             description='',
             parentType='collection',
             public=None,
-            creator=creator_user
+            creator=creatorUser
         )
-        study_folder = self.copyAccessPolicies(
+        studyFolder = self.copyAccessPolicies(
             src=self.loadStudyCollection(),
-            dest=study_folder,
+            dest=studyFolder,
             save=False
         )
-        study_folder = self.setUserAccess(
-            doc=study_folder,
-            user=creator_user,
+        studyFolder = self.setUserAccess(
+            doc=studyFolder,
+            user=creatorUser,
             # TODO: make admin
             level=AccessType.READ,
             save=False
         )
         # "setMetadata" will always save
-        study_folder = self.setMetadata(
-            folder=study_folder,
+        studyFolder = self.setMetadata(
+            folder=studyFolder,
             metadata={
                 'featuresetId': featureset['_id']
             }
         )
 
-        for annotator_user in annotator_users:
-            self.addAnnotator(study_folder, annotator_user, creator_user, segmentations)
+        for annotatorUser in annotatorUsers:
+            self.addAnnotator(studyFolder, annotatorUser, creatorUser,
+                              segmentations)
 
-        return study_folder
+        return studyFolder
 
-
-    def addAnnotator(self, study, annotator_user, creator_user, segmentations=None):
+    def addAnnotator(self, study, annotatorUser, creatorUser,
+                     segmentations=None):
+        Annotation = self.model('annotation', 'isic_archive')
         if not segmentations:
             segmentations = self.getSegmentations(study)
 
-        if self.childAnnotations(study, annotator_user).count():
-            raise ValidationException('Annotator user is already part of the study.')
+        if self.childAnnotations(
+                study=study,
+                annotatorUser=annotatorUser).count():
+            raise ValidationException(
+                'Annotator user is already part of the study.')
 
-        annotator_folder = self.model('folder').createFolder(
+        annotatorFolder = self.createFolder(
             parent=study,
-            name='%(login)s (%(firstName)s %(lastName)s)' % annotator_user,
+            name='%(login)s (%(firstName)s %(lastName)s)' % annotatorUser,
             description='',
             parentType='folder',
             public=True,
-            creator=creator_user
+            creator=creatorUser
         )
-        # study creator accesses will already have been copied to this sub-folder
-        # TODO: all users from the study don't need access; this should be changed and migrated
-        self.model('folder').setUserAccess(
-            doc=annotator_folder,
-            user=annotator_user,
+        # study creator accesses will already have been copied to this
+        # sub-folder
+        # TODO: all users from the study don't need access; this should be
+        # changed and migrated
+        self.setUserAccess(
+            doc=annotatorFolder,
+            user=annotatorUser,
             # TODO: make write
             level=AccessType.READ,
             save=True
         )
-        self.model('folder').setMetadata(
-            folder=annotator_folder,
+        self.setMetadata(
+            folder=annotatorFolder,
             metadata={
-                'userId': annotator_user['_id']
+                'userId': annotatorUser['_id']
             }
         )
 
         for segmentation in segmentations:
-            self.model('annotation', 'isic_archive').createAnnotation(study, segmentation, creator_user, annotator_folder)
+            Annotation.createAnnotation(
+                study, segmentation, creatorUser, annotatorFolder)
 
+    def addSegmentation(self, study, segmentation, creatorUser):
+        Folder = self.model('folder')
+        Annotation = self.model('annotation', 'isic_archive')
+        for annotatorFolder in Folder.find({'parentId': study['_id']}):
+            Annotation.createAnnotation(
+                study, segmentation, creatorUser, annotatorFolder)
 
-    def addImage(self, study, segmentation, creator_user):
-        for annotator_folder in self.model('folder').find({'parentId': study['_id']}):
-            self.model('annotation', 'isic_archive').createAnnotation(study, segmentation, creator_user, annotator_folder)
-
+    def getFeatureset(self, study):
+        return self.model('featureset', 'isic_archive').load(
+            study['meta']['featuresetId'], exc=True)
 
     def getAnnotators(self, study):
-        annotator_folders = self.model('folder').find({'parentId': study['_id']})
-        return self.model('user').find({
-            '_id': {'$in': annotator_folders.distinct('meta.userId')}
+        Folder = self.model('folder')
+        User = self.model('user')
+        annotatorFolders = Folder.find({'parentId': study['_id']})
+        return User.find({
+            '_id': {'$in': annotatorFolders.distinct('meta.userId')}
         })
 
     def getSegmentations(self, study):
-        segmentation_ids = self.model('annotation', 'isic_archive').find({
-            'meta.studyId': study['_id']
-        }).distinct('meta.segmentationId')
-        return self.model('segmentation', 'isic_archive').find({
-            '_id': {'$in': segmentation_ids}
-        })
+        Annotation = self.model('annotation', 'isic_archive')
+        Segmentation = self.model('segmentation', 'isic_archive')
+        segmentationIds = Annotation.find(
+            {'meta.studyId': study['_id']}).distinct('meta.segmentationId')
+        return Segmentation.find({'_id': {'$in': segmentationIds}})
 
     def getImages(self, study):
-        image_ids = self.model('annotation', 'isic_archive').find({
-            'meta.studyId': study['_id']
-        }).distinct('meta.imageId')
-        return self.model('image', 'isic_archive').find({
-            '_id': {'$in': image_ids}
-        })
+        Annotation = self.model('annotation', 'isic_archive')
+        Image = self.model('image', 'isic_archive')
+        imageIds = Annotation.find({
+            'meta.studyId': study['_id']}).distinct('meta.imageId')
+        return Image.find({'_id': {'$in': imageIds}})
 
-
-    def childAnnotations(self, study=None, annotator_user=None,
-                         segmentation=None, image_item=None, state=None,
+    def childAnnotations(self, study=None, annotatorUser=None,
+                         segmentation=None, imageItem=None, state=None,
                          **kwargs):
+        Annotation = self.model('annotation', 'isic_archive')
         query = dict()
         if study:
             query['meta.studyId'] = study['_id']
-        if annotator_user:
-            query['meta.userId'] = annotator_user['_id']
+        if annotatorUser:
+            query['meta.userId'] = annotatorUser['_id']
         if segmentation:
             query['meta.segmentationId'] = segmentation['_id']
-        if image_item:
-            query['meta.imageId'] = image_item['_id']
+        if imageItem:
+            query['meta.imageId'] = imageItem['_id']
         if state:
             if state == self.State.ACTIVE:
                 query['meta.stopTime'] = None
@@ -149,24 +177,23 @@ class Study(Folder):
                 query['meta.stopTime'] = {'$ne': None}
             else:
                 raise ValueError('"state" must be an instance of State')
-        return self.model('annotation', 'isic_archive').find(query, **kwargs)
+        return Annotation.find(query, **kwargs)
 
-
-    def _find_query_filter(self, query, annotator_user, state):
-        study_query = {
+    def _findQueryFilter(self, query, annotatorUser, state):
+        studyQuery = {
             'parentId': self.loadStudyCollection()['_id']
         }
         if query:
-            study_query.update(query)
-        if state or annotator_user:
+            studyQuery.update(query)
+        if state or annotatorUser:
             annotations = self.childAnnotations(
-                annotator_user=annotator_user,
+                annotatorUser=annotatorUser,
                 state=state
             )
-            study_query.update({
+            studyQuery.update({
                 '_id': {'$in': annotations.distinct('meta.studyId')}
             })
-        return study_query
+        return studyQuery
 
     def list(self, user=None, limit=0, offset=0, sort=None):
         """
@@ -178,16 +205,13 @@ class Study(Folder):
             offset=offset)
 
     def find(self, query=None, annotator_user=None, state=None, **kwargs):
-        study_query = self._find_query_filter(query, annotator_user, state)
-        return Folder.find(self, study_query, **kwargs)
-
+        studyQuery = self._findQueryFilter(query, annotator_user, state)
+        return super(Study, self).find(studyQuery, **kwargs)
 
     def findOne(self, query=None, annotator_user=None, state=None, **kwargs):
-        study_query = self._find_query_filter(query, annotator_user, state)
-        return Folder.findOne(self, study_query, **kwargs)
-
+        studyQuery = self._findQueryFilter(query, annotator_user, state)
+        return super(Study, self).findOne(studyQuery, **kwargs)
 
     def validate(self, doc, **kwargs):
         # TODO: implement
-        # raise ValidationException
-        return Folder.validate(self, doc, **kwargs)
+        return super(Study, self).validate(doc, **kwargs)

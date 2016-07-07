@@ -1,6 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+###############################################################################
+#  Copyright Kitware Inc.
+#
+#  Licensed under the Apache License, Version 2.0 ( the "License" );
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+###############################################################################
+
 import cv2
 import numpy
 
@@ -9,71 +25,68 @@ from .base import BaseSegmentationHelper
 
 class OpenCVSegmentationHelper(BaseSegmentationHelper):
     @classmethod
-    def loadImage(cls, image_data_stream):
+    def loadImage(cls, imageDataStream):
         """
         Load an image into an RGB array.
-        :param image_data_stream: A file-like object containing the encoded
+        :param imageDataStream: A file-like object containing the encoded
         (JPEG, etc.) image data.
-        :type image_data_stream: file-like object
+        :type imageDataStream: file-like object
         :return: A Numpy array with the RGB image data.
         :rtype: numpy.ndarray
         """
-        if hasattr(image_data_stream, 'getvalue'):
+        if hasattr(imageDataStream, 'getvalue'):
             # This is more efficient for BytesIO objects
-            image_data_bytes = image_data_stream.getvalue()
-        elif hasattr(image_data_stream, 'read'):
-            image_data_bytes = image_data_stream.read()
+            imageDataBytes = imageDataStream.getvalue()
+        elif hasattr(imageDataStream, 'read'):
+            imageDataBytes = imageDataStream.read()
         else:
-            raise ValueError('image_data_stream must be a file-like object.')
+            raise ValueError('imageDataStream must be a file-like object.')
 
-        image_data_array = numpy.fromstring(image_data_bytes, dtype=numpy.uint8)
-        del image_data_bytes
-        image_data = cv2.imdecode(image_data_array, cv2.CV_LOAD_IMAGE_COLOR)
-        if image_data.shape[2] == 4:
-            image_data = image_data[:, :, :3]
+        imageDataArray = numpy.fromstring(imageDataBytes, dtype=numpy.uint8)
+        del imageDataBytes
+        imageData = cv2.imdecode(imageDataArray, cv2.CV_LOAD_IMAGE_COLOR)
+        if imageData.shape[2] == 4:
+            imageData = imageData[:, :, :3]
         # OpenCV loads images as BGR, and cv2.floodFill doesn't work correctly
         #   with array views
-        image_data = image_data[:, :, ::-1].copy()
-        return image_data
-
+        imageData = imageData[:, :, ::-1].copy()
+        return imageData
 
     @classmethod
     def writeImage(cls, image, encoding='png'):
         # TODO: cv2.imencode
         raise NotImplementedError()
 
-
     @classmethod
-    def segment(cls, image, seed_coord, tolerance):
-        mask_image = cls._floodFill(
+    def segment(cls, image, seedCoord, tolerance):
+        maskImage = cls._floodFill(
             image,
-            seed_coord,
+            seedCoord,
             tolerance,
             connectivity=8,
-            pad_output=True
+            padOutput=True
         )
         # TODO: for _binaryOpening to work, a new _floodFill must be run on the
         #   mask image afterwards, or else _maskToContour will fail
-        # mask_image = cls._binaryOpening(mask_image, padded_input=True)
-        contour_coords = cls._maskToContour(
-            mask_image,
-            padded_input=True,
+        # maskImage = cls._binaryOpening(maskImage, padded_input=True)
+        contourCoords = cls._maskToContour(
+            maskImage,
+            paddedInput=True,
             safe=False
         )
-        return contour_coords
-
+        return contourCoords
 
     @classmethod
-    def _floodFill(cls, image, seed_coord, tolerance, connectivity=8,
-                   pad_output=False):
+    def _floodFill(cls, image, seedCoord, tolerance, connectivity=8,
+                   padOutput=False):
         """
         Segment an image into a region connected to a seed point, using OpenCV.
 
         :param image: The image to be segmented.
         :type image: numpy.ndarray
-        :param seed_coord: The point inside the connected region where the
+        :param seedCoord: The point inside the connected region where the
         segmentation will start.
-        :type seed_coord: list
+        :type seedCoord: list
         :param tolerance: The maximum color/intensity difference between the
         seed point and a point in the connected region.
         :type tolerance: int
@@ -82,64 +95,62 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
           * 4 for edge pixels
           * 8 for edge and corner pixels
         :type connectivity: int
-        :param pad_output: (optional)  Return the output with a 1-pixel wide
+        :param padOutput: (optional)  Return the output with a 1-pixel wide
         padded border.
-        :type pad_output: bool
+        :type padOutput: bool
         :returns: A binary label mask, with an extra 1-pixel wide padded border.
-        The values are either ``0`` or ``fill_value``.
+        The values are either ``0`` or ``fillValue``.
         :rtype: numpy.ndarray
         """
         # create padded mask to store output
-        mask_image = numpy.zeros(
+        maskImage = numpy.zeros(
             image.shape[:2] + numpy.array([2, 2]), numpy.uint8)
-        fill_value = 1
+        fillValue = 1
 
         flags = 0
         flags |= connectivity
-        flags |= (fill_value << 8)  # fill value is
+        flags |= (fillValue << 8)  # fill value is
         # compare each candidate to the seed, not its nearest neighbor; for
         #   lesion images, the gradient is too shallow for even very small
         #   tolerances to work with a neared neighbor comparison
         flags |= cv2.FLOODFILL_FIXED_RANGE
         flags |= cv2.FLOODFILL_MASK_ONLY
 
-        area, (bounds_x, bounds_y, bounds_width, bounds_height) = cv2.floodFill(
+        area, (boundsX, boundsY, boundsWidth, boundsHeight) = cv2.floodFill(
             image=image,
-            mask=mask_image,
-            seedPoint=tuple(seed_coord),
+            mask=maskImage,
+            seedPoint=tuple(seedCoord),
             newVal=(0,) * 3,  # this is ignored, due to FLOODFILL_MASK_ONLY
             loDiff=(tolerance,) * 3,
             upDiff=(tolerance,) * 3,
             flags=flags
         )
 
-        if not pad_output:
-            mask_image = mask_image[1:-1, 1:-1]
+        if not padOutput:
+            maskImage = maskImage[1:-1, 1:-1]
 
-        return mask_image
-
+        return maskImage
 
     @classmethod
-    def _structuringElement(cls, shape, radius, element_type=bool):
+    def _structuringElement(cls, shape, radius, elementType=bool):
         size = (radius * 2) + 1
 
         if shape == 'circle':
             # This is broken and does not return a true circle, but there is
             #   no way to change the major/semi-major axes
-            shape_key = cv2.MORPH_ELLIPSE
+            shapeKey = cv2.MORPH_ELLIPSE
         elif shape == 'cross':
-            shape_key = cv2.MORPH_CROSS
+            shapeKey = cv2.MORPH_CROSS
         elif shape == 'square':
-            shape_key = cv2.MORPH_RECT
+            shapeKey = cv2.MORPH_RECT
         else:
             raise ValueError('Unknown element shape value.')
 
-        element = cv2.getStructuringElement(shape_key, (size, size))
-        return element.astype(element_type)
-
+        element = cv2.getStructuringElement(shapeKey, (size, size))
+        return element.astype(elementType)
 
     @classmethod
-    def _binaryOpening(cls, image, element_shape='circle', element_radius=5,
+    def _binaryOpening(cls, image, elementShape='circle', elementRadius=5,
                        padded_input=False):
         if image.dtype != numpy.uint8:
             raise TypeError('image must be an array of uint8.')
@@ -147,54 +158,53 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         # This is the only version that returns a true circle
         from .scikit import ScikitSegmentationHelper
         element = ScikitSegmentationHelper._structuringElement(
-            element_shape, element_radius, image.dtype.type)
+            elementShape, elementRadius, image.dtype.type)
 
-        morphed_image = cv2.morphologyEx(
+        morphedImage = cv2.morphologyEx(
             src=image,
             op=cv2.MORPH_OPEN,
             kernel=element
         )
 
         if padded_input:
-            morphed_image[[0, -1], :] = 1
-            morphed_image[:, [0, -1]] = 1
+            morphedImage[[0, -1], :] = 1
+            morphedImage[:, [0, -1]] = 1
 
-        return morphed_image
-
+        return morphedImage
 
     @classmethod
-    def _maskToContour(cls, mask_image, padded_input=False, safe=True):
+    def _maskToContour(cls, maskImage, paddedInput=False, safe=True):
         """
         Extract the contour line within a segmented label mask, using OpenCV.
 
-        :param mask_image: A binary label mask. Values are considered as only 0
+        :param maskImage: A binary label mask. Values are considered as only 0
         or non-0.
-        :type mask_image: numpy.ndarray of numpy.uint8
-        :param padded_input: Whether the mask_image already includes a 1-pixel
+        :type maskImage: numpy.ndarray of numpy.uint8
+        :param paddedInput: Whether the mask_image already includes a 1-pixel
         wide padded border.
-        :type padded_input: bool
+        :type paddedInput: bool
         :param safe: Guarantee that the image_mask will not be modified. This is
         slower.
         :type safe: bool
         :return: An array of point pairs.
         :rtype: numpy.ndarray
         """
-        if mask_image.dtype != numpy.uint8:
-            raise TypeError('mask_image must be an array of uint8.')
+        if maskImage.dtype != numpy.uint8:
+            raise TypeError('maskImage must be an array of uint8.')
 
-        if not padded_input:
-            padded_mask_image = numpy.zeros(
-                mask_image.shape + numpy.array([2, 2]),
-                mask_image.dtype
+        if not paddedInput:
+            paddedMaskImage = numpy.zeros(
+                maskImage.shape + numpy.array([2, 2]),
+                maskImage.dtype
             )
-            padded_mask_image[1:-1, 1:-1] = mask_image
-            mask_image = padded_mask_image
-            del padded_mask_image
+            paddedMaskImage[1:-1, 1:-1] = maskImage
+            maskImage = paddedMaskImage
+            del paddedMaskImage
         elif safe:
-            mask_image = numpy.copy(mask_image)
+            maskImage = numpy.copy(maskImage)
 
         contours, hierarchy = cv2.findContours(
-            image=mask_image,
+            image=maskImage,
             mode=cv2.RETR_EXTERNAL,
             method=cv2.CHAIN_APPROX_SIMPLE,
             # compensate for the image's 1-pixel padding
@@ -206,7 +216,7 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         #   these, but this is slower and the seed point is not available for
         #   many older segmentations; so, simply select the largest component
         #   instead
-        largest_contour = max(
+        largestContour = max(
             contours,
             # TODO: use a better measure of region size than simply the number
             #   of defining points
@@ -214,11 +224,11 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         )
 
         # contour initially looks like [ [[0,1]], [[0,2]] ], so squeeze it
-        largest_contour = numpy.squeeze(largest_contour)
+        largestContour = numpy.squeeze(largestContour)
         # place a duplicate of the first value at the end
-        largest_contour = numpy.append(
-            largest_contour,
-            largest_contour[0:1],
+        largestContour = numpy.append(
+            largestContour,
+            largestContour[0:1],
             axis=0
         )
-        return largest_contour
+        return largestContour

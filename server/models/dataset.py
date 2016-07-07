@@ -1,10 +1,27 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+###############################################################################
+#  Copyright Kitware Inc.
+#
+#  Licensed under the Apache License, Version 2.0 ( the "License" );
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+###############################################################################
+
+
 import mimetypes
 
 from girder.constants import AccessType
-from girder.models.folder import Folder
+from girder.models.folder import Folder as FolderModel
 from girder.models.model_base import ValidationException
 
 from ..upload import handleCsv, handleImage, handleZip
@@ -22,20 +39,18 @@ CSV_FORMATS = [
 ]
 
 
-class Dataset(Folder):
-
+class Dataset(FolderModel):
     def initialize(self):
         super(Dataset, self).initialize()
         # TODO: add indexes
 
         self._filterKeys[AccessType.READ].clear()
-        self.exposeFields(level=AccessType.READ, fields=(
+        self.exposeFields(level=AccessType.READ, fields=[
             '_id', 'name', 'description', 'created', 'creatorId', 'updated',
             # TODO: re-add once converted files no longer contributes to size
             # 'size',
-        ))
+        ])
         self.summaryFields = ('_id', 'name', 'updated')
-
 
     def createDataset(self, name, description, creatorUser):
         # Look for duplicate names in any of the dataset-containing collections
@@ -74,9 +89,8 @@ class Dataset(Folder):
             )
         return self.save(datasetFolder)
 
-
     def childImages(self, dataset, limit=0, offset=0, sort=None, filters=None,
-                   **kwargs):
+                    **kwargs):
         if not filters:
             filters = {}
 
@@ -88,18 +102,18 @@ class Dataset(Folder):
         return self.model('image', 'isic_archive').find(
             q, limit=limit, offset=offset, sort=sort, **kwargs)
 
-    def _find_query_filter(self, query):
+    def _findQueryFilter(self, query):
         # assumes collection has been created by provision_utility
         # TODO: cache this value
-        dataset_collection = self.model('collection').findOne({
+        datasetCollection = self.model('collection').findOne({
             'name': 'Lesion Images'})
 
-        dataset_query = {
-            'parentId': dataset_collection['_id']
+        datasetQuery = {
+            'parentId': datasetCollection['_id']
         }
         if query:
-            dataset_query.update(query)
-        return dataset_query
+            datasetQuery.update(query)
+        return datasetQuery
 
     def list(self, user=None, limit=0, offset=0, sort=None):
         """
@@ -111,28 +125,24 @@ class Dataset(Folder):
             offset=offset)
 
     def find(self, query=None, **kwargs):
-        dataset_query = self._find_query_filter(query)
-        return Folder.find(self, dataset_query, **kwargs)
-
+        datasetQuery = self._findQueryFilter(query)
+        return super(Dataset, self).find(datasetQuery, **kwargs)
 
     def findOne(self, query=None, **kwargs):
-        dataset_query = self._find_query_filter(query)
-        return Folder.findOne(self, dataset_query, **kwargs)
-
+        datasetQuery = self._findQueryFilter(query)
+        return super(Dataset, self).findOne(datasetQuery, **kwargs)
 
     def validate(self, doc, **kwargs):
         # TODO: implement
-        # raise ValidationException
-
         # Validate name. This is redundant, because Folder also validates the
         # name, but this allows for a more specific error message.
         doc['name'] = doc['name'].strip()
         if not doc['name']:
             raise ValidationException('Dataset name must not be empty.', 'name')
-        return Folder.validate(self, doc, **kwargs)
+        return super(Dataset, self).validate(doc, **kwargs)
 
     def ingestDataset(self, uploadFolder, user, name, description, license,
-            signature, anonymous, attribution):
+                      signature, anonymous, attribution):
         """
         Ingest an uploaded dataset. This upload folder is expected to contain a
         .zip file of images and a .csv file that contains metadata about the

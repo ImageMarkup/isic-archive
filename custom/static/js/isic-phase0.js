@@ -40,6 +40,10 @@ isic_app.controller('ApplicationController',
             $http.get(images_url).success(function (data) {
                 $scope.image_list = [];
                 data.forEach(function (image) {
+                    if (image.name.endsWith('.csv')) {
+                        return;
+                    }
+
                     image.thumbnail = '/api/v1/image/' + image._id + '/download?contentDisposition=inline';
 
                     image.diagnosis_strings = [];
