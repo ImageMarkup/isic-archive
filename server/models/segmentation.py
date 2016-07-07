@@ -1,6 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+###############################################################################
+#  Copyright Kitware Inc.
+#
+#  Licensed under the Apache License, Version 2.0 ( the "License" );
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+###############################################################################
+
 import datetime
 import six
 
@@ -17,39 +33,35 @@ from .segmentation_helpers import ScikitSegmentationHelper
 
 
 class Segmentation(Model):
-
     class Skill(Enum):
         NOVICE = 'novice'
         EXPERT = 'expert'
-
 
     def initialize(self):
         self.name = 'segmentation'
         self.ensureIndices(['imageId', 'created'])
 
-        self.exposeFields(AccessType.READ, (
+        self.exposeFields(AccessType.READ, [
             'imageId',
             'skill',
             'creatorId',
             'startTime'
             'stopTime'
             'created'
-        ))
+        ])
         self.summaryFields = ('_id', 'imageId', 'skill')
         events.bind('model.item.remove_with_kwargs',
                     'isic_archive.gc_segmentation',
                     self._onDeleteItem)
 
-
     def getUserSkill(self, user):
-        expert_group = self.model('group').findOne({'name': 'Phase 1b'})
-        if expert_group['_id'] in user['groups']:
+        expertGroup = self.model('group').findOne({'name': 'Phase 1b'})
+        if expertGroup['_id'] in user['groups']:
             return self.Skill.EXPERT
-        novice_group = self.model('group').findOne({'name': 'Phase 1a'})
-        if novice_group['_id'] in user['groups']:
+        noviceGroup = self.model('group').findOne({'name': 'Phase 1a'})
+        if noviceGroup['_id'] in user['groups']:
             return self.Skill.NOVICE
         return None
-
 
     def createSegmentation(self, image, skill, creator, lesionBoundary):
         if not isinstance(skill, self.Skill):
@@ -71,36 +83,34 @@ class Segmentation(Model):
 
         return segmentation
 
-
     def boundaryThumbnail(self, segmentation, image=None, width=256):
         Image = self.model('image', 'isic_archive')
         if not image:
             image = Image.load(segmentation['imageId'], force=True, exc=True)
 
-        pil_image_data = PIL_Image.fromarray(Image.imageData(image))
-        pil_draw = PIL_ImageDraw.Draw(pil_image_data)
-        pil_draw.line(
-            list(six.moves.map(tuple, segmentation['lesionBoundary']['geometry']['coordinates'][0])),
+        pilImageData = PIL_Image.fromarray(Image.imageData(image))
+        pilDraw = PIL_ImageDraw.Draw(pilImageData)
+        pilDraw.line(
+            list(six.moves.map(tuple,
+                               segmentation['lesionBoundary']
+                                           ['geometry']['coordinates'][0])),
             fill=(0, 255, 0),  # TODO: make color an option
             width=5
         )
 
         return ScikitSegmentationHelper.writeImage(
-            numpy.asarray(pil_image_data), 'jpeg', width)
-
+            numpy.asarray(pilImageData), 'jpeg', width)
 
     def generateSuperpixels(self, segmentation, image=None):
         Image = self.model('image', 'isic_archive')
         if not image:
             image = Image.load(segmentation['imageId'], force=True, exc=True)
 
-        image_data = Image.imageData(image)
+        imageData = Image.imageData(image)
         # coords = segmentation['lesionBoundary']['geometry']['coordinates'][0]
 
-        superpixels = ScikitSegmentationHelper.superpixels(image_data)
-
+        superpixels = ScikitSegmentationHelper.superpixels(imageData)
         return superpixels
-
 
     def saveSuperpixels(self, segmentation, superpixels, version):
         """
@@ -116,7 +126,7 @@ class Segmentation(Model):
 
         self.removeSuperpixels(segmentation)
 
-        superpixels_file = self.model('upload').uploadFromFile(
+        superpixelsFile = self.model('upload').uploadFromFile(
             obj=superpixels,
             size=len(superpixels.getvalue()),
             name='%s_superpixels.png' % segmentation['_id'],
@@ -125,23 +135,21 @@ class Segmentation(Model):
         )
         # Uploads re-lookup the passed "parent" item, so it can't be set in
         #  uploadFromFile
-        superpixels_file['itemId'] = segmentation['_id']
-        superpixels_file['superpixelVersion'] = version
-        superpixels_file = self.model('file').save(superpixels_file)
-        return superpixels_file
-
+        superpixelsFile['itemId'] = segmentation['_id']
+        superpixelsFile['superpixelVersion'] = version
+        superpixelsFile = self.model('file').save(superpixelsFile)
+        return superpixelsFile
 
     def removeSuperpixels(self, segmentation, **kwargs):
-        superpixels_file = self.superpixelsFile(segmentation)
-        if superpixels_file:
+        superpixelsFile = self.superpixelsFile(segmentation)
+        if superpixelsFile:
             fileKwargs = kwargs.copy()
             fileKwargs.pop('updateItemSize', None)
             # If the file has an itemId, Girder will attempt to update folder
             #   sizes (which don't exist)
-            superpixels_file['itemId'] = None
-            self.model('file').remove(superpixels_file, updateItemSize=False,
+            superpixelsFile['itemId'] = None
+            self.model('file').remove(superpixelsFile, updateItemSize=False,
                                       **fileKwargs)
-
 
     def superpixelsFile(self, segmentation, version=None):
         """
@@ -154,27 +162,25 @@ class Segmentation(Model):
             query['superpixelVersion'] = version
         return self.model('file').findOne(query)
 
-
     def superpixelsData(self, segmentation, version=None):
         """
         :type segmentation: dict
         :type version: float or None
         :rtype: numpy.ndarray
         """
-        superpixels_file = self.superpixelsFile(segmentation, version)
-        if not superpixels_file:
+        superpixelsFile = self.superpixelsFile(segmentation, version)
+        if not superpixelsFile:
             raise GirderException('No superpixels file in segmentation.')
 
         # TODO: reduce duplication with Image.imageData
-        superpixels_file_stream = six.BytesIO()
-        superpixels_file_stream.writelines(
-            self.model('file').download(superpixels_file, headers=False)()
+        superpixelsFileStream = six.BytesIO()
+        superpixelsFileStream.writelines(
+            self.model('file').download(superpixelsFile, headers=False)()
         )
 
         # Scikit-Image is ~70ms faster at loading images
-        superpixels = ScikitSegmentationHelper.loadImage(superpixels_file_stream)
+        superpixels = ScikitSegmentationHelper.loadImage(superpixelsFileStream)
         return superpixels
-
 
     def _onDeleteItem(self, event):
         item = event.info['document']
@@ -184,11 +190,9 @@ class Segmentation(Model):
         }):
             self.remove(segmentation, **event.info['kwargs'])
 
-
     def remove(self, segmentation, **kwargs):
         self.removeSuperpixels(segmentation, **kwargs)
         super(Segmentation, self).remove(segmentation)
-
 
     def validate(self, doc):
         try:

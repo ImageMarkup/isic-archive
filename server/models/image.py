@@ -1,6 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+###############################################################################
+#  Copyright Kitware Inc.
+#
+#  Licensed under the Apache License, Version 2.0 ( the "License" );
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+###############################################################################
+
 import datetime
 import six
 
@@ -8,7 +24,7 @@ import geojson
 
 from girder.constants import AccessType
 from girder.models.model_base import AccessException, GirderException
-from girder.models.item import Item
+from girder.models.item import Item as ItemModel
 
 from .. import constants
 from ..provision_utility import _ISICCollection
@@ -16,27 +32,25 @@ from .segmentation_helpers import ScikitSegmentationHelper, \
     OpenCVSegmentationHelper
 
 
-class Image(Item):
-
+class Image(ItemModel):
     def initialize(self):
         super(Image, self).initialize()
 
         self._filterKeys[AccessType.READ].clear()
-        self.exposeFields(level=AccessType.READ, fields=(
+        self.exposeFields(level=AccessType.READ, fields=[
             '_id', 'name', 'description', 'meta', 'created', 'creatorId',
             'updated',
             # TODO: re-add once converted file no longer contributes to size
             # 'size',
-        ))
+        ])
         self.summaryFields = ('_id', 'name', 'updated')
 
-
     def createImage(self, creator, parentFolder):
-        new_isic_id = self.model('setting').get(
+        newIsicId = self.model('setting').get(
             constants.PluginSettings.MAX_ISIC_ID, default=-1) + 1
 
         image = self.createItem(
-            name='ISIC_%07d' % new_isic_id,
+            name='ISIC_%07d' % newIsicId,
             creator=creator,
             folder=parentFolder,
             description=''
@@ -47,10 +61,9 @@ class Image(Item):
         })
 
         self.model('setting').set(
-            constants.PluginSettings.MAX_ISIC_ID, new_isic_id)
+            constants.PluginSettings.MAX_ISIC_ID, newIsicId)
 
         return image
-
 
     def originalFile(self, image):
         return self.model('file').findOne({
@@ -62,28 +75,25 @@ class Image(Item):
             ]}
         })
 
-
     def imageData(self, image):
         """
         Return the RGB image data associated with this image.
 
         :rtype: numpy.ndarray
         """
-        image_file = self.originalFile(image)
+        imageFile = self.originalFile(image)
 
-        image_file_stream = six.BytesIO()
-        image_file_stream.writelines(
-            self.model('file').download(image_file, headers=False)()
+        imageFileStream = six.BytesIO()
+        imageFileStream.writelines(
+            self.model('file').download(imageFile, headers=False)()
         )
 
         # Scikit-Image is ~70ms faster at loading images
-        image_data = ScikitSegmentationHelper.loadImage(image_file_stream)
-        return image_data
-
+        imageData = ScikitSegmentationHelper.loadImage(imageFileStream)
+        return imageData
 
     def flag(self, image, reason, user):
         self.flagMultiple([image], reason, user)
-
 
     def flagMultiple(self, images, reason, user):
         # TODO: change to use direct permissions on the images
@@ -96,85 +106,82 @@ class Image(Item):
         ):
             # Check if all images are part of annotation studies that this user
             #   is part of
-            image_ids = list(set(image['_id'] for image in images))
+            imageIds = list(set(image['_id'] for image in images))
             annotations = self.model('annotation', 'isic_archive').find({
-                'imageId': {'$in': image_ids},
+                'imageId': {'$in': imageIds},
                 'userId': user['_id']
             })
-            if len(image_ids) != len(annotations):
+            if len(imageIds) != len(annotations):
                 raise AccessException(
                     'User does not have permission to flag these images.')
 
-        phase0_folders = [
-            self.model('folder').load(phase0_folder, force=True, exc=True)
-            for phase0_folder in
+        phase0Folders = [
+            self.model('folder').load(phase0Folder, force=True, exc=True)
+            for phase0Folder in
             set(image['folderId'] for image in images)
         ]
 
-        flagged_collection = self.model('collection').findOne(
+        flaggedCollection = self.model('collection').findOne(
             {'name': 'Flagged Images'})
 
-        dataset_flagged_folders = {
-            phase0_folder['_id']: _ISICCollection.createFolder(
-                name=phase0_folder['name'],
+        datasetFlaggedFolders = {
+            phase0Folder['_id']: _ISICCollection.createFolder(
+                name=phase0Folder['name'],
                 description='',
-                parent=flagged_collection,
+                parent=flaggedCollection,
                 parent_type='collection'
             )
-            for phase0_folder in phase0_folders
+            for phase0Folder in phase0Folders
         }
 
-        flag_metadata = {
+        flagMetadata = {
             'flaggedUserId': user['_id'],
             'flaggedTime': datetime.datetime.utcnow(),
             'flaggedReason': reason,
         }
         for image in images:
-            self.model('item').setMetadata(image, flag_metadata)
+            self.model('item').setMetadata(image, flagMetadata)
             # TODO: deal with any existing studies with this image
-            self.model('item').move(image, dataset_flagged_folders[image['folderId']])
+            self.model('item').move(image,
+                                    datasetFlaggedFolders[image['folderId']])
 
-
-    def doSegmentation(self, image, seed_coord, tolerance):
+    def doSegmentation(self, image, seedCoord, tolerance):
         """
         Run a lesion segmentation.
 
         :param image: A Girder Image item.
-        :param seed_coord: X, Y coordinates of the segmentation seed point.
-        :type seed_coord: tuple[int]
+        :param seedCoord: X, Y coordinates of the segmentation seed point.
+        :type seedCoord: tuple[int]
         :param tolerance: The intensity tolerance value for the segmentation.
         :type tolerance: int
         :return: The lesion segmentation, as a GeoJSON Polygon Feature.
         :rtype: geojson.Feature
         """
-        image_data = self.imageData(image)
+        imageData = self.imageData(image)
 
         if not(
-            # The image_data has a shape of (rows, cols), the seed is (x, y)
-            0.0 <= seed_coord[0] <= image_data.shape[1] and
-            0.0 <= seed_coord[1] <= image_data.shape[0]
+            # The imageData has a shape of (rows, cols), the seed is (x, y)
+            0.0 <= seedCoord[0] <= imageData.shape[1] and
+            0.0 <= seedCoord[1] <= imageData.shape[0]
         ):
-            raise GirderException('seed_coord is out of bounds')
+            raise GirderException('seedCoord is out of bounds')
 
         # OpenCV is significantly faster at segmentation right now
-        contour_coords = OpenCVSegmentationHelper.segment(
-            image_data, seed_coord, tolerance)
+        contourCoords = OpenCVSegmentationHelper.segment(
+            imageData, seedCoord, tolerance)
 
-        contour_feature = geojson.Feature(
+        contourFeature = geojson.Feature(
             geometry=geojson.Polygon(
-                coordinates=(contour_coords.tolist(),)
+                coordinates=(contourCoords.tolist(),)
             ),
             properties={
                 'source': 'autofill',
-                'seedPoint': seed_coord,
+                'seedPoint': seedCoord,
                 'tolerance': tolerance
             }
         )
-
-        return contour_feature
-
+        return contourFeature
 
     def validate(self, doc):
         # TODO: implement
-        # raise ValidationException
-        return Item.validate(self, doc)
+        return super(Image, self).validate(doc)

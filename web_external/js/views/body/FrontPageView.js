@@ -18,7 +18,7 @@ isic.views.FrontPageView = girder.views.FrontPageView.extend({
         // observe the 'g:login' event.
         var datasetModel = new isic.models.DatasetModel();
         datasetModel.userCanContribute(girder.currentUser).then(_.bind(function (datasetContributor) {
-            if (this.datasetContributor != datasetContributor) {
+            if (this.datasetContributor !== datasetContributor) {
                 this.datasetContributor = datasetContributor;
                 this.render();
             }

@@ -1,6 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+###############################################################################
+#  Copyright Kitware Inc.
+#
+#  Licensed under the Apache License, Version 2.0 ( the "License" );
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+###############################################################################
+
 import collections
 import itertools
 import six
@@ -17,27 +33,26 @@ from .base import BaseSegmentationHelper
 
 class ScikitSegmentationHelper(BaseSegmentationHelper):
     @classmethod
-    def loadImage(cls, image_data_stream):
+    def loadImage(cls, imageDataStream):
         """
         Load an image into an RGB array.
-        :param image_data_stream: A file-like object containing the encoded
+        :param imageDataStream: A file-like object containing the encoded
         (JPEG, etc.) image data.
-        :type image_data_stream: file-like object
+        :type imageDataStream: file-like object
         :return: A Numpy array with the RGB image data.
         :rtype: numpy.ndarray
         """
-        image_data = skimage.io.imread(image_data_stream)
+        imageData = skimage.io.imread(imageDataStream)
 
-        if image_data.shape == (2,):
+        if imageData.shape == (2,):
             # Some images seem to have a 2nd layer, which should be ignored
             # https://github.com/scikit-image/scikit-image/issues/2154
-            image_data = image_data[0]
+            imageData = imageData[0]
 
-        if image_data.shape[2] == 4:
+        if imageData.shape[2] == 4:
             # cv2.floodFill doesn't work correctly with array views
-            image_data = image_data[:, :, :3].copy()
-        return image_data
-
+            imageData = imageData[:, :, :3].copy()
+        return imageData
 
     @classmethod
     def writeImage(cls, image, encoding='png', width=None):
@@ -45,122 +60,115 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
             factor = float(width) / image.shape[1]
             image = skimage.transform.rescale(image, factor)
 
-        image_stream = six.BytesIO()
-        skimage.io.imsave(image_stream, image, format_str=encoding)
-        image_stream.seek(0)
-        return image_stream
-
+        imageStream = six.BytesIO()
+        skimage.io.imsave(imageStream, image, format_str=encoding)
+        imageStream.seek(0)
+        return imageStream
 
     @classmethod
-    def segment(cls, image, seed_coord, tolerance):
-        mask_image = cls._floodFill(
+    def segment(cls, image, seedCoord, tolerance):
+        maskImage = cls._floodFill(
             image,
-            seed_coord,
+            seedCoord,
             tolerance,
             connectivity=8
         )
-        # mask_image = cls._binaryOpening(mask_image)
-        contour_coords = cls._maskToContour(mask_image)
-        return contour_coords
-
+        # maskImage = cls._binaryOpening(maskImage)
+        contourCoords = cls._maskToContour(maskImage)
+        return contourCoords
 
     @classmethod
     def _clippedAdd(cls, array, value):
-        type_info = numpy.iinfo(array.dtype)
-        new_array = array.astype(int)
-        new_array += value
-        return new_array.clip(type_info.min, type_info.max).astype(array.dtype)
-
+        typeInfo = numpy.iinfo(array.dtype)
+        newArray = array.astype(int)
+        newArray += value
+        return newArray.clip(typeInfo.min, typeInfo.max).astype(array.dtype)
 
     @classmethod
-    def _floodFill(cls, image, seed_coord, tolerance, connectivity=8):
-        seed_value = image[seed_coord[1], seed_coord[0]]
-        seed_value_min = cls._clippedAdd(seed_value, -tolerance)
-        seed_value_max = cls._clippedAdd(seed_value, tolerance)
+    def _floodFill(cls, image, seedCoord, tolerance, connectivity=8):
+        seedValue = image[seedCoord[1], seedCoord[0]]
+        seedValueMin = cls._clippedAdd(seedValue, -tolerance)
+        seedValueMax = cls._clippedAdd(seedValue, tolerance)
 
         if connectivity == 4:
-            connectivity_arg = 1
-            pass
+            connectivityArg = 1
         elif connectivity == 8:
-            connectivity_arg = 2
+            connectivityArg = 2
         else:
             raise ValueError('Unknown connectivity value.')
 
-        mask_image = skimage.measure.label(
+        maskImage = skimage.measure.label(
             numpy.all(
                 numpy.logical_and(
-                    image >= seed_value_min,
-                    image <= seed_value_max
+                    image >= seedValueMin,
+                    image <= seedValueMax
                 ),
                 2
             ).astype(int),
             return_num=False,
-            connectivity=connectivity_arg
+            connectivity=connectivityArg
         )
 
-        mask_image = numpy.equal(
-            mask_image, mask_image[seed_coord[1], seed_coord[0]])
-        return mask_image
-
+        maskImage = numpy.equal(
+            maskImage, maskImage[seedCoord[1], seedCoord[0]])
+        return maskImage
 
     @classmethod
-    def _structuringElement(cls, shape, radius, element_type=bool):
+    def _structuringElement(cls, shape, radius, elementType=bool):
         size = (radius * 2) + 1
 
         if shape == 'circle':
-            element = skimage.morphology.disk(radius, element_type)
+            element = skimage.morphology.disk(radius, elementType)
         elif shape == 'cross':
-            element = numpy.zeros((size, size), element_type)
-            element[:, size // 2] = element_type(True)
-            element[size // 2, :] = element_type(True)
+            element = numpy.zeros((size, size), elementType)
+            element[:, size // 2] = elementType(True)
+            element[size // 2, :] = elementType(True)
         elif shape == 'square':
-            element = skimage.morphology.square(size, element_type)
+            element = skimage.morphology.square(size, elementType)
         else:
             raise ValueError('Unknown element shape value.')
 
         return element
 
-
     @classmethod
-    def _binaryOpening(cls, image, element_shape='circle', element_radius=5):
-        element = cls._structuringElement(element_shape, element_radius, bool)
+    def _binaryOpening(cls, image, elementShape='circle', elementRadius=5):
+        element = cls._structuringElement(elementShape, elementRadius, bool)
 
-        morphed_image = skimage.morphology.binary_opening(
+        morphedImage = skimage.morphology.binary_opening(
             image=image,
             selem=element
         )
-        return morphed_image
-
+        return morphedImage
 
     @classmethod
     def _collapseCoords(cls, coords):
-        collapsed_coords = [coords[0]]
-        collapsed_coords.extend([
+        collapsedCoords = [coords[0]]
+        collapsedCoords.extend([
             coord
-            for prev_coord, coord, next_coord in itertools.izip(coords[0:], coords[1:], coords[2:])
-            if numpy.cross(next_coord - prev_coord, coord - prev_coord) != 0
+            for prevCoord, coord, nextCoord in itertools.izip(
+                coords[0:], coords[1:], coords[2:])
+            if numpy.cross(nextCoord - prevCoord, coord - prevCoord) != 0
         ])
-        collapsed_coords.append(coords[-1])
-        collapsed_coords = numpy.array(collapsed_coords)
-        return collapsed_coords
-
+        collapsedCoords.append(coords[-1])
+        collapsedCoords = numpy.array(collapsedCoords)
+        return collapsedCoords
 
     @classmethod
-    def _maskToContour(cls, mask_image):
+    def _maskToContour(cls, maskImage):
         """
         Extract the contour line within a segmented label mask, using
         Scikit-Image.
 
-        :param mask_image: A binary label mask.
-        :type mask_image: numpy.ndarray of bool
+        :param maskImage: A binary label mask.
+        :type maskImage: numpy.ndarray of bool
         :return: An array of point pairs.
         :rtype: numpy.ndarray
         """
-        if mask_image.dtype != bool:
-            raise TypeError('mask_image must be an array of bool.')
+        if maskImage.dtype != bool:
+            raise TypeError('maskImage must be an array of bool.')
 
         coords = skimage.measure.find_contours(
-            array=mask_image.astype(numpy.double),
+            array=maskImage.astype(numpy.double),
             level=0.5,
             fully_connected='low',
             positive_orientation='low'
@@ -169,43 +177,41 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         coords = cls._collapseCoords(coords)
         return coords
 
-
     @classmethod
     def _contourToMask(cls, image, coords):
-        mask_image = skimage.measure.grid_points_in_poly(
+        maskImage = skimage.measure.grid_points_in_poly(
             shape=image.shape[:2],
             verts=numpy.fliplr(coords)
         )
-        return mask_image
-
+        return maskImage
 
     @classmethod
-    def _slic(cls, image, num_segments=None, segment_size=None):
+    def _slic(cls, image, numSegments=None, segmentSize=None):
         compactness = 0.01  # make superpixels highly deformable
-        max_iter = 10
+        maxIter = 10
         sigma = 2.0
 
-        if num_segments and segment_size:
-            raise ValueError('Only one of num_segments or segment_size may be set.')
-        elif num_segments:
+        if numSegments and segmentSize:
+            raise ValueError(
+                'Only one of numSegments or segmentSize may be set.')
+        elif numSegments:
             pass
-        elif segment_size:
-            num_segments = (image.shape[0] * image.shape[1]) / (segment_size ** 2)
+        elif segmentSize:
+            numSegments = (image.shape[0] * image.shape[1]) / (segmentSize ** 2)
         else:
-            raise ValueError('One of num_segments or segment_size must be set.')
+            raise ValueError('One of numSegments or segmentSize must be set.')
 
-        label_image = skimage.segmentation.slic(
+        labelImage = skimage.segmentation.slic(
             image,
-            n_segments=num_segments,
+            n_segments=numSegments,
             compactness=compactness,
-            max_iter=max_iter,
+            max_iter=maxIter,
             sigma=sigma,
             enforce_connectivity=True,
             min_size_factor=0.5,
             slic_zero=True
         )
-        return label_image
-
+        return labelImage
 
     class _PersistentCounter(object):
         def __init__(self):
@@ -216,7 +222,6 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
             self.value += 1
             return ret
 
-
     @classmethod
     def _uint64ToRGB(cls, val):
         return numpy.dstack((
@@ -225,11 +230,11 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
             (val >> numpy.uint64(16)).astype(numpy.uint8)
         ))
 
-
     @classmethod
     def _RGBTounit64(cls, val):
         """
-        Decode an RGB representation of a superpixel label into its native scalar value.
+        Decode an RGB representation of a superpixel label into its native
+        scalar value.
         :param val: A single pixel, or a 3-channel image.
         :type val: numpy.ndarray of uint8, with a shape [3] or [n, m, 3]
         """
@@ -238,48 +243,47 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
             (val[..., 1].astype(numpy.uint64) << numpy.uint64(8)) + \
             (val[..., 2].astype(numpy.uint64) << numpy.uint64(16))
 
-
     @classmethod
     def superpixels(cls, image):
-        superpixel_labels = cls._slic(image, num_segments=1000)
-        superpixels = cls._uint64ToRGB(superpixel_labels)
+        superpixelLabels = cls._slic(image, numSegments=1000)
+        superpixels = cls._uint64ToRGB(superpixelLabels)
         return superpixels
-
 
     @classmethod
     def superpixels_legacy(cls, image, coords):
-        mask_image = cls._contourToMask(image, coords)
+        maskImage = cls._contourToMask(image, coords)
 
         from .opencv import OpenCVSegmentationHelper
         # This operation is much faster in OpenCV
-        mask_image = OpenCVSegmentationHelper._binaryOpening(
-            mask_image.astype(numpy.uint8),
-            element_shape='circle',
-            element_radius=5
+        maskImage = OpenCVSegmentationHelper._binaryOpening(
+            maskImage.astype(numpy.uint8),
+            elementShape='circle',
+            elementRadius=5
         ).astype(bool)
 
-        inside_image = image.copy()
-        inside_image[numpy.logical_not(mask_image)] = 0
-        inside_superpixel_labels = cls._slic(inside_image, segment_size=20)
+        insideImage = image.copy()
+        insideImage[numpy.logical_not(maskImage)] = 0
+        insideSuperpixelLabels = cls._slic(insideImage, segmentSize=20)
 
-        outside_image = image.copy()
-        outside_image[mask_image] = 0
-        outside_superpixel_labels = cls._slic(outside_image, segment_size=60)
+        outsideImage = image.copy()
+        outsideImage[maskImage] = 0
+        outsideSuperpixelLabels = cls._slic(outsideImage, segmentSize=60)
 
         # https://stackoverflow.com/questions/16210738/implementation-of-numpy-in1d-for-2d-arrays
-        inside_superpixel_mask = numpy.in1d(
-            inside_superpixel_labels.flat,
-            numpy.unique(inside_superpixel_labels[mask_image])
-        ).reshape(inside_superpixel_labels.shape)
+        insideSuperpixelMask = numpy.in1d(
+            insideSuperpixelLabels.flat,
+            numpy.unique(insideSuperpixelLabels[maskImage])
+        ).reshape(insideSuperpixelLabels.shape)
 
-        combined_superpixel_labels = outside_superpixel_labels.copy()
-        combined_superpixel_labels[inside_superpixel_mask] = \
-            inside_superpixel_labels[inside_superpixel_mask] + \
-            outside_superpixel_labels.max() + 10000
+        combinedSuperpixelLabels = outsideSuperpixelLabels.copy()
+        combinedSuperpixelLabels[insideSuperpixelMask] = \
+            insideSuperpixelLabels[insideSuperpixelMask] + \
+            outsideSuperpixelLabels.max() + 10000
 
-        label_values = collections.defaultdict(cls._PersistentCounter())
-        for value in numpy.nditer(combined_superpixel_labels, op_flags=['readwrite']):
-            value[...] = label_values[value.item()]
+        labelValues = collections.defaultdict(cls._PersistentCounter())
+        for value in numpy.nditer(combinedSuperpixelLabels,
+                                  op_flags=['readwrite']):
+            value[...] = labelValues[value.item()]
 
-        combined_superpixels = cls._uint64ToRGB(combined_superpixel_labels)
-        return combined_superpixels
+        combinedSuperpixels = cls._uint64ToRGB(combinedSuperpixelLabels)
+        return combinedSuperpixels
