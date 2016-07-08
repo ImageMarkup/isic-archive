@@ -43,7 +43,8 @@ class Image(ItemModel):
             # TODO: re-add once converted file no longer contributes to size
             # 'size',
         ])
-        self.summaryFields = ('_id', 'name', 'updated')
+        self.summaryFields = ['_id', 'name', 'updated']
+        self.prefixSearchFields = ['lowerName', 'name']
 
     def createImage(self, creator, parentFolder):
         newIsicId = self.model('setting').get(

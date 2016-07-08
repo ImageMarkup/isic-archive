@@ -35,7 +35,8 @@ class Featureset(Model):
             'image_features',
             'region_features'
         ])
-        self.summaryFields = ('_id', 'name', 'version')
+        self.summaryFields = ['_id', 'name', 'version']
+        self.prefixSearchFields = [('name', 'i')]
 
     def createFeatureset(self, name, version, creator):
         now = datetime.datetime.utcnow()

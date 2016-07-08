@@ -307,12 +307,16 @@ class StudyResource(Resource):
                 raise RestException('Invalid JSON passed in segmentationIds parameter.')
 
         studyName = params['name'].strip()
+        if not studyName:
+            raise ValidationException('Name must not be empty.', 'name')
 
         creatorUser = self.getCurrentUser()
         self._requireStudyAdmin(creatorUser)
 
-        featureset = self.model('featureset', 'isic_archive').load(
-            params['featuresetId'])
+        featuresetId = params['featuresetId']
+        if not featuresetId:
+            raise ValidationException('Invalid featureset ID.', 'featuresetId')
+        featureset = self.model('featureset', 'isic_archive').load(featuresetId)
         if not featureset:
             raise ValidationException('Invalid featureset ID.', 'featuresetId')
 

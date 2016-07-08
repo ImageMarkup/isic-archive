@@ -37,7 +37,8 @@ class Study(FolderModel):
         self.exposeFields(level=AccessType.READ, fields=[
             '_id', 'name', 'description', 'created', 'creatorId', 'updated'
         ])
-        self.summaryFields = ('_id', 'name', 'updated')
+        self.summaryFields = ['_id', 'name', 'updated']
+        self.prefixSearchFields = ['lowerName', 'name']
 
     def loadStudyCollection(self):
         # assumes collection has been created by provision_utility

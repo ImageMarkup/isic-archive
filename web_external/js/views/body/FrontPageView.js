@@ -6,6 +6,10 @@ isic.views.FrontPageView = girder.views.FrontPageView.extend({
 
         'click .isic-button-dataset-upload': function () {
             isic.router.navigate('uploadDataset', {trigger: true});
+        },
+
+        'click .isic-button-featuresets': function () {
+            isic.router.navigate('featuresets', {trigger: true});
         }
     },
 

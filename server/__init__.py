@@ -5,6 +5,7 @@ import os
 
 from girder import events
 from girder.api.rest import getCurrentUser
+from girder.api.v1 import resource
 from girder.constants import SettingKey, PACKAGE_DIR, STATIC_ROOT_DIR
 from girder.models.model_base import ValidationException
 from girder.utility.model_importer import ModelImporter
@@ -94,6 +95,13 @@ def load(info):
     events.bind('model.user.save.created', 'onUserCreated', onUserCreated)
     events.bind('rest.get.item/:id.after', 'onGetItem', onGetItem)
     ModelImporter.model('setting').set(SettingKey.USER_DEFAULT_FOLDERS, 'none')
+
+    # add custom model searching
+    resource.allowedSearchTypes.update({
+        'image.isic_archive',
+        'featureset.isic_archive',
+        'study.isic_archive',
+    })
 
     # create all necessary users, groups, collections, etc
     initialSetup(info)
