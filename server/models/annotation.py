@@ -112,7 +112,8 @@ class Annotation(ItemModel):
                     for feature in
                     featureset['region_features']
                 }
-                for featureId, featureValue in doc['meta']['annotations']:
+                for featureId, featureValue in six.viewitems(
+                        doc['meta']['annotations']):
                     if featureId in featuresetImageFeatures:
                         featureOptions = set(
                             option['id']
