@@ -228,7 +228,7 @@ class UDAResource(Resource):
         )
         if not phase1a_images.get('meta'):
             phase1a_images = Folder.setMetadata(
-                phase1a_images, folder['meta'])
+                phase1a_images, folder.get('meta', {}))
 
         for image_item in good_image_items:
             qc_metadata = {

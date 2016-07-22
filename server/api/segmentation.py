@@ -99,7 +99,7 @@ class SegmentationResource(Resource):
         )
         if not next_phase_folder.get('meta'):
             next_phase_folder = Folder.setMetadata(
-                next_phase_folder, original_folder['meta'])
+                next_phase_folder, original_folder.get('meta', {}))
 
         self.model('item').move(image, next_phase_folder)
 
