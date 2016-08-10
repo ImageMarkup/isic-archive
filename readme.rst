@@ -71,8 +71,17 @@ Usage
 
   # from within the "isic-archive" sub-directory
   vagrant ssh
-  cd isic-archive
-  npm install
+  cd ~/girder
+  npm install --production
+
+* To automatically rebuild the front-end code as changed files are saved, start
+  and leave running:
+::
+
+  # from within the "isic-archive" sub-directory
+  vagrant ssh
+  cd ~/girder
+  ./node_modules/grunt-cli/bin/grunt watch
 
 .. |build-status| image:: https://travis-ci.org/ImageMarkup/isic-archive.svg?branch=master
     :target: https://travis-ci.org/ImageMarkup/isic-archive
