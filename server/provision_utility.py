@@ -18,12 +18,13 @@ def onUserCreated(event):
 
     # make all users private
     user['public'] = False
-    User.setGroupAccess(
-        doc=user,
-        group=Group.findOne({'name': 'Study Administrators'}),
-        level=AccessType.READ,
-        save=False
-    )
+    if user['login'] != 'udastudy':
+        User.setGroupAccess(
+            doc=user,
+            group=Group.findOne({'name': 'Study Administrators'}),
+            level=AccessType.READ,
+            save=False
+        )
     User.save(user)
 
     if ModelImporter.model('setting').get(constants.PluginSettings.DEMO_MODE):
