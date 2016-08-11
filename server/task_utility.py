@@ -131,7 +131,7 @@ class UDAResource(Resource):
                 # TODO: this could be done more efficiently, without duplicate queries,
                 #   but let's wait until this API refactored
                 study_list = self.model('study', 'isic_archive').find(
-                    annotator_user=self.getCurrentUser(),
+                    annotatorUser=self.getCurrentUser(),
                     state=self.model('study', 'isic_archive').State.ACTIVE
                 )
                 if not study_list.count():

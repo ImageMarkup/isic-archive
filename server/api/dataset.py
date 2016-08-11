@@ -1,6 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+###############################################################################
+#  Copyright Kitware Inc.
+#
+#  Licensed under the Apache License, Version 2.0 ( the "License" );
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+###############################################################################
+
 import cherrypy
 
 from girder.api import access
@@ -18,7 +34,6 @@ class DatasetResource(Resource):
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getDataset)
         self.route('POST', (), self.ingestDataset)
-
 
     @describeRoute(
         Description('Return a list of lesion image datasets.')
@@ -42,7 +57,6 @@ class DatasetResource(Resource):
                 user=self.getCurrentUser(),
                 limit=limit, offset=offset, sort=sort)
         ]
-
 
     @describeRoute(
         Description('Return a lesion image dataset\'s details.')
@@ -84,8 +98,10 @@ class DatasetResource(Resource):
         # Require that user be a member of the Dataset Contributors group or
         # site admin
         user = self.getCurrentUser()
-        contributorsGroup = self.model('group').findOne({'name': 'Dataset Contributors'})
-        if not contributorsGroup  or contributorsGroup['_id'] not in user['groups']:
+        contributorsGroup = self.model('group').findOne({
+            'name': 'Dataset Contributors'})
+        if not contributorsGroup or \
+                contributorsGroup['_id'] not in user['groups']:
             if not user.get('admin', False):
                 raise AccessException(
                     'Only dataset contributors can create datasets.')
@@ -102,7 +118,7 @@ class DatasetResource(Resource):
 
         name = params['name'].strip()
         description = params.get('description', '').strip()
-        license = params.get('license', '').strip()
+        licenseValue = params.get('license', '').strip()
 
         # Enforce valid licensing metadata only at API level
         signature = params.get('signature', '').strip()
@@ -119,5 +135,5 @@ class DatasetResource(Resource):
         # TODO: make this return only the dataset fields
         return self.model('dataset', 'isic_archive').ingestDataset(
             uploadFolder=uploadFolder, user=user, name=name,
-            description=description, license=license, signature=signature,
+            description=description, license=licenseValue, signature=signature,
             anonymous=anonymous, attribution=attribution)

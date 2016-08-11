@@ -1,6 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+###############################################################################
+#  Copyright Kitware Inc.
+#
+#  Licensed under the Apache License, Version 2.0 ( the "License" );
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+###############################################################################
+
 import cherrypy
 
 from girder.api import access
@@ -22,7 +38,6 @@ class ImageResource(Resource):
 
         self.route('POST', (':id', 'flag'), self.flag)
         self.route('POST', (':id', 'segment'), self.doSegmentation)
-
 
     @describeRoute(
         Description('Return a list of lesion images.')
@@ -49,7 +64,6 @@ class ImageResource(Resource):
                 dataset, limit=limit, offset=offset, sort=sort)
         ]
 
-
     @describeRoute(
         Description('Return an image\'s details.')
         .param('id', 'The ID of the image.', paramType='path')
@@ -67,7 +81,6 @@ class ImageResource(Resource):
                 del output['meta']['originalFilename']
 
         return output
-
 
     @describeRoute(
         Description('Return an image\'s thumbnail.')
@@ -87,7 +100,6 @@ class ImageResource(Resource):
 
         cherrypy.response.headers['Content-Type'] = thumbMime
         return lambda: thumbData
-
 
     @describeRoute(
         Description('Download an image\'s high-quality original binary data.')
@@ -116,7 +128,6 @@ class ImageResource(Resource):
                 'inline; filename="%s"' % original_file['name']
         return file_stream
 
-
     @describeRoute(
         Description('Flag an image with a problem.')
         .param('id', 'The ID of the image.', paramType='path')
@@ -125,14 +136,13 @@ class ImageResource(Resource):
     @access.user
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def flag(self, image, params):
-        body_json = self.getBodyJson()
-        self.requireParams(('reason',), body_json)
+        bodyJson = self.getBodyJson()
+        self.requireParams(('reason',), bodyJson)
 
         self.model('image', 'isic_archive').flag(
-            image, body_json['reason'], self.getCurrentUser())
+            image, bodyJson['reason'], self.getCurrentUser())
 
         return {'status': 'success'}
-
 
     @describeRoute(
         Description('Run and return a new semi-automated segmentation.')
@@ -147,26 +157,26 @@ class ImageResource(Resource):
     @access.user
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def doSegmentation(self, image, params):
-        body_json = self.getBodyJson()
-        self.requireParams(('seed', 'tolerance'), body_json)
+        bodyJson = self.getBodyJson()
+        self.requireParams(('seed', 'tolerance'), bodyJson)
 
         # validate parameters
-        seed_coord = body_json['seed']
+        seedCoord = bodyJson['seed']
         if not (
-            isinstance(seed_coord, list) and
-            len(seed_coord) == 2 and
-            all(isinstance(value, int) for value in seed_coord)
+            isinstance(seedCoord, list) and
+            len(seedCoord) == 2 and
+            all(isinstance(value, int) for value in seedCoord)
         ):
             raise RestException('Submitted "seed" must be a coordinate pair.')
 
-        tolerance = body_json['tolerance']
+        tolerance = bodyJson['tolerance']
         if not isinstance(tolerance, int):
             raise RestException('Submitted "tolerance" must be an integer.')
 
         try:
-            contour_feature = self.model('image', 'isic_archive').doSegmentation(
-                image, seed_coord, tolerance)
+            contourFeature = self.model('image', 'isic_archive').doSegmentation(
+                image, seedCoord, tolerance)
         except GirderException as e:
             raise RestException(e.message)
 
-        return contour_feature
+        return contourFeature

@@ -1,6 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+###############################################################################
+#  Copyright Kitware Inc.
+#
+#  Licensed under the Apache License, Version 2.0 ( the "License" );
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+###############################################################################
+
 import datetime
 
 from girder.api import access
@@ -8,19 +24,15 @@ from girder.api.rest import Resource, RestException, loadmodel
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
 
-from ..provision_utility import ISIC
-
 
 class AnnotationResource(Resource):
-    def __init__(self, plugin_root_dir):
+    def __init__(self):
         super(AnnotationResource, self).__init__()
         self.resourceName = 'annotation'
-        self.plugin_root_dir = plugin_root_dir
 
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getAnnotation)
         self.route('PUT', (':id',), self.submitAnnotation)
-
 
     @describeRoute(
         Description('Return a list of annotations.')
@@ -45,12 +57,12 @@ class AnnotationResource(Resource):
             params['studyId'], user=self.getCurrentUser(),
             level=AccessType.READ, exc=True)
 
-        annotator_user = self.model('user').load(
+        annotatorUser = self.model('user').load(
             params['userId'], force=True, exc=True) \
             if 'userId' in params else None
 
         segmentation = self.model('segmentation', 'isic_archive').load(
-            params['segmentationId'], force=True, exc=True) \
+            params['segmentationId'], exc=True) \
             if 'segmentationId' in params else None
 
         image = self.model('image', 'isic_archive').load(
@@ -59,17 +71,17 @@ class AnnotationResource(Resource):
 
         # TODO: add state
 
-        # TODO: add limit, offset
+        # TODO: add limit, offset, sort
 
         # TODO: limit fields returned
         annotations = Study.childAnnotations(
             study=study,
-            annotatorUser=annotator_user,
+            annotatorUser=annotatorUser,
             segmentation=segmentation,
             imageItem=image
         )
 
-        return list(
+        return [
             {
                 '_id': annotation['_id'],
                 'name': annotation['name'],
@@ -83,44 +95,46 @@ class AnnotationResource(Resource):
                          else 'active'
             }
             for annotation in annotations
-        )
-
+        ]
 
     @describeRoute(
         Description('Get annotation details.')
-        .param('annotation_id', 'The ID of the annotation to be fetched.', paramType='path')
+        .param('id', 'The ID of the annotation to be fetched.',
+               paramType='path')
         .errorResponse()
     )
     @access.public
     @loadmodel(model='annotation', plugin='isic_archive', level=AccessType.READ)
     def getAnnotation(self, annotation, params):
-
-        return_dict = {
+        output = {
             '_id': annotation['_id'],
             'name': annotation['name']
         }
-        return_dict.update(annotation['meta'])
+        output.update(annotation['meta'])
 
         userSummaryFields = ['_id', 'login', 'firstName', 'lastName']
-        return_dict['user'] = self.model('user').load(
-            return_dict.pop('userId'),
+        output['user'] = self.model('user').load(
+            output.pop('userId'),
             force=True, exc=True,
             fields=userSummaryFields)
 
-        return return_dict
-
+        return output
 
     @describeRoute(
         Description('Submit a completed annotation.')
-        .param('annotation_id', 'The ID of the annotation to be submitted.', paramType='path')
-        .param('body', 'JSON containing the annotation parameters.', paramType='body', required=True)
+        .param('id', 'The ID of the annotation to be submitted.',
+               paramType='path')
+        .param('body', 'JSON containing the annotation parameters.',
+               paramType='body', required=True)
         .errorResponse()
     )
     @access.user
     @loadmodel(model='annotation', plugin='isic_archive', level=AccessType.READ)
     def submitAnnotation(self, annotation, params):
-        if annotation['baseParentId'] != ISIC.AnnotationStudies.collection['_id']:
-            raise RestException('Annotation id references a non-annotation item.')
+        Study = self.model('study', 'isic_archive')
+        if annotation['baseParentId'] != Study.loadStudyCollection()['_id']:
+            raise RestException(
+                'Annotation id references a non-annotation item.')
 
         if annotation['meta']['userId'] != self.getCurrentUser()['_id']:
             raise RestException('Current user does not own this annotation.')
@@ -128,14 +142,15 @@ class AnnotationResource(Resource):
         if annotation['meta'].get('stopTime'):
             raise RestException('Annotation is already complete.')
 
-        body_json = self.getBodyJson()
-        self.requireParams(('status', 'startTime', 'stopTime', 'annotations'), body_json)
+        bodyJson = self.getBodyJson()
+        self.requireParams(('status', 'startTime', 'stopTime', 'annotations'),
+                           bodyJson)
 
-        annotation['meta']['status'] = body_json['status']
+        annotation['meta']['status'] = bodyJson['status']
         annotation['meta']['startTime'] = \
-            datetime.datetime.utcfromtimestamp(body_json['startTime'] / 1000.0)
+            datetime.datetime.utcfromtimestamp(bodyJson['startTime'] / 1000.0)
         annotation['meta']['stopTime'] = \
-            datetime.datetime.utcfromtimestamp(body_json['stopTime'] / 1000.0)
-        annotation['meta']['annotations'] = body_json['annotations']
+            datetime.datetime.utcfromtimestamp(bodyJson['stopTime'] / 1000.0)
+        annotation['meta']['annotations'] = bodyJson['annotations']
 
         self.model('annotation', 'isic_archive').save(annotation)

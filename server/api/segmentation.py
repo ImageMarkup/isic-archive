@@ -1,6 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+###############################################################################
+#  Copyright Kitware Inc.
+#
+#  Licensed under the Apache License, Version 2.0 ( the "License" );
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+###############################################################################
+
 import datetime
 
 import cherrypy
@@ -25,7 +41,6 @@ class SegmentationResource(Resource):
 
         self.route('GET', (':id', 'superpixels'), self.getSuperpixels)
 
-
     @describeRoute(
         Description('List the segmentations for an image.')
         .param('imageId', 'The ID of the image.', paramType='query')
@@ -45,7 +60,6 @@ class SegmentationResource(Resource):
             fields=['_id', 'skill', 'created']
         ))
 
-
     @describeRoute(
         Description('Add a segmentation to an image.')
         .param('image_id', 'The ID of the image.', paramType='body')
@@ -56,23 +70,26 @@ class SegmentationResource(Resource):
         Segmentation = self.model('segmentation', 'isic_archive')
         Folder = self.model('folder')
 
-        body_json = self.getBodyJson()
-        self.requireParams(('imageId', 'lesionBoundary'), body_json)
+        bodyJson = self.getBodyJson()
+        self.requireParams(('imageId', 'lesionBoundary'), bodyJson)
 
         user = self.getCurrentUser()
 
         image = self.model('image', 'isic_archive').load(
-            body_json['imageId'], level=AccessType.READ, user=user)
+            bodyJson['imageId'], level=AccessType.READ, user=user)
 
-        lesionBoundary = body_json['lesionBoundary']
-        lesionBoundary['properties']['startTime'] = datetime.datetime.utcfromtimestamp(
-            lesionBoundary['properties']['startTime'] / 1000.0)
-        lesionBoundary['properties']['stopTime'] = datetime.datetime.utcfromtimestamp(
-            lesionBoundary['properties']['stopTime'] / 1000.0)
+        lesionBoundary = bodyJson['lesionBoundary']
+        lesionBoundary['properties']['startTime'] = \
+            datetime.datetime.utcfromtimestamp(
+                lesionBoundary['properties']['startTime'] / 1000.0)
+        lesionBoundary['properties']['stopTime'] = \
+            datetime.datetime.utcfromtimestamp(
+                lesionBoundary['properties']['stopTime'] / 1000.0)
 
         skill = Segmentation.getUserSkill(user)
         if skill is None:
-            raise RestException('Current user is not authorized to create segmentations.')
+            raise RestException(
+                'Current user is not authorized to create segmentations.')
 
         segmentation = Segmentation.createSegmentation(
             image=image,
@@ -83,12 +100,12 @@ class SegmentationResource(Resource):
 
         # Move image item to next collection
         if skill == Segmentation.Skill.EXPERT:
-            next_phase_collection = ISIC.LesionImages.collection
+            nextPhaseCollection = ISIC.LesionImages.collection
         else:
-            next_phase_collection = ISIC.Phase1b.collection
+            nextPhaseCollection = ISIC.Phase1b.collection
         original_folder = Folder.load(image['folderId'], force=True)
         next_phase_folder = Folder.createFolder(
-            parent=next_phase_collection,
+            parent=nextPhaseCollection,
             name=original_folder['name'],
             description=original_folder['description'],
             parentType='collection',
@@ -104,7 +121,6 @@ class SegmentationResource(Resource):
         self.model('item').move(image, next_phase_folder)
 
         return segmentation
-
 
     @describeRoute(
         Description('Get a segmentation for an image.')
@@ -127,7 +143,6 @@ class SegmentationResource(Resource):
 
         return segmentation
 
-
     @describeRoute(
         Description('Get a thumbnail, showing a segmentation.')
         .param('id', 'The ID of the segmentation.', paramType='path')
@@ -143,6 +158,7 @@ class SegmentationResource(Resource):
     @rawResponse
     @loadmodel(model='segmentation', plugin='isic_archive')
     def thumbnail(self, segmentation, params):
+        Segmentation = self.model('segmentation', 'isic_archive')
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and \
                 contentDisp not in {'inline', 'attachment'}:
@@ -156,22 +172,21 @@ class SegmentationResource(Resource):
 
         width = int(params.get('width', 256))
 
-        thumbnail_image_stream = self.model('segmentation', 'isic_archive').boundaryThumbnail(
+        thumbnailImageStream = Segmentation.boundaryThumbnail(
             segmentation, image, width)
-        thumbnail_image_data = thumbnail_image_stream.getvalue()
+        thumbnailImageData = thumbnailImageStream.getvalue()
 
         cherrypy.response.headers['Content-Type'] = 'image/jpeg'
-        content_name = '%s_segmentation_thumbnail.jpg' % image['_id']
+        contentName = '%s_segmentation_thumbnail.jpg' % image['_id']
         if contentDisp == 'inline':
             cherrypy.response.headers['Content-Disposition'] = \
-                'inline; filename="%s"' % content_name
+                'inline; filename="%s"' % contentName
         else:
             cherrypy.response.headers['Content-Disposition'] = \
-                'attachment; filename="%s"' % content_name
-        cherrypy.response.headers['Content-Length'] = len(thumbnail_image_data)
+                'attachment; filename="%s"' % contentName
+        cherrypy.response.headers['Content-Length'] = len(thumbnailImageData)
 
-        return thumbnail_image_data
-
+        return thumbnailImageData
 
     @describeRoute(
         Description('Get the superpixels for this segmentation, as a'
@@ -184,5 +199,5 @@ class SegmentationResource(Resource):
     @loadmodel(model='segmentation', plugin='isic_archive')
     def getSuperpixels(self, segmentation, params):
         Segmentation = self.model('segmentation', 'isic_archive')
-        superpixels_file = Segmentation.superpixelsFile(segmentation)
-        return self.model('file').download(superpixels_file, headers=True)
+        superpixelsFile = Segmentation.superpixelsFile(segmentation)
+        return self.model('file').download(superpixelsFile, headers=True)

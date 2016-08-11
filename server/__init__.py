@@ -143,7 +143,7 @@ def load(info):
     info['apiRoot'].uda = UDAResource(info['pluginRootDir'])
 
     # TODO: nest these under a "/isic" path
-    info['apiRoot'].annotation = api.AnnotationResource(info['pluginRootDir'])
+    info['apiRoot'].annotation = api.AnnotationResource()
     info['apiRoot'].dataset = api.DatasetResource()
     info['apiRoot'].featureset = api.FeaturesetResource()
     info['apiRoot'].image = api.ImageResource()
