@@ -204,12 +204,12 @@ class Study(FolderModel):
             cursor=cursor, user=user, level=AccessType.READ, limit=limit,
             offset=offset)
 
-    def find(self, query=None, annotator_user=None, state=None, **kwargs):
-        studyQuery = self._findQueryFilter(query, annotator_user, state)
+    def find(self, query=None, annotatorUser=None, state=None, **kwargs):
+        studyQuery = self._findQueryFilter(query, annotatorUser, state)
         return super(Study, self).find(studyQuery, **kwargs)
 
-    def findOne(self, query=None, annotator_user=None, state=None, **kwargs):
-        studyQuery = self._findQueryFilter(query, annotator_user, state)
+    def findOne(self, query=None, annotatorUser=None, state=None, **kwargs):
+        studyQuery = self._findQueryFilter(query, annotatorUser, state)
         return super(Study, self).findOne(studyQuery, **kwargs)
 
     def validate(self, doc, **kwargs):
