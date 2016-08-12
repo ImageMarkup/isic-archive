@@ -5,6 +5,8 @@ isic.views.AboutView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.aboutPage({
+            apiRoot: girder.apiRoot,
+            staticRoot: girder.staticRoot,
         }));
 
         return this;
