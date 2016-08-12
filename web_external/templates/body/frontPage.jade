@@ -1,74 +1,56 @@
 .isic-body-nopad
   .isic-frontpage-container
-    h1 ISIC Archive
-    h2 The International Skin Imaging Collaboration: Melanoma Project
-    p The International Skin Imaging Collaboration: Melanoma Project is an
-      |  academia-industry partnership designed to facilitate the application of
-      |  digital skin imaging to help reduce melanoma mortality. The current era
-      |  of smart-phone mobile technology presents an exciting opportunity for
-      |  the application of digital photography as an aid to early diagnosis of
-      |  melanoma. However, the promise of digitally assisted melanoma diagnosis
-      |  is currently hampered by:
-    ol(type='a')
-      li A lack of standards for dermatologic imaging, and
-      li Limited access of educators and developers to large numbers of
-        |  high quality clinically annotated skin lesion images.
-    p The ISIC aims to address both of these challenges by proposing
-      |  international standards for dermatologic imaging and creating a large
-      |  open source public archive of annotated high quality skin images.
-    h2 Goals of the ISIC Archive
-    p Current efforts in melanoma education and diagnosis typically rely on
-      |  small convenience samples of images which vary in both image quality
-      |  and quality of annotation. The ISIC archive has been developed to
-      |  provide a large public repository of expertly annotated high quality
-      |  skin images for use by:
-    ul
-      li Clinicians and educators to improve diagnostic skills and provide
-        | clinical support in the identification of  skin cancer
-      li The general public for self-education about melanoma and the benefits
-        | of early detection,
-      li Developers to develop and test algorithms for skin cancer triage and
-        |  diagnosis
-    h2 Organization of the ISIC Melanoma Project and Archive
-    p The ISIC Melanoma Project draws upon the melanoma and imaging expertise
-      |  of the international community of dermatologists and vendors interested
-      |  in standards development for skin imaging modalities. Memorial Sloan
-      |  Kettering Cancer Center serves as the coordinating center for the
-      |  project. Several professional societies are engaged in this effort,
-      |  including the International Dermoscopy Society (IDS) and the
-      |  International Society for Digital Imaging of the Skin (ISDIS). The
-      |  leaders of the collaboration are enumerated on the project’s website
-      |  at
-      a(href='http://www.isdis.net/index.php/isic-project')  http://www.isdis.net/index.php/isic-project
-      | .
-    p The open source  ISIC Archive software has been developed and is being
-      |  maintained by Kitware, Inc., under the direction of Dr. David Gutman
-      |  of Emory University.  IBM is providing image analysis support for the
-      |  active learning component of the morphologic annotation and mark-up of
-      |  the images in the archive. Images are contributed to the archive by
-      |  donor institutions and individuals with assurance of appropriate
-      |  permissions and anonymity of the source images as well as assurances
-      |  of the quality of the clinical annotations.  Images in the archive are
-      |  available for public use under the
-      a(href='https://creativecommons.org/about/cc0')  Creative Commons 0 license
-      | .
-    h2 Annotation and Mark-up of the ISIC Archive images
-    p To enhance the usefulness of the ISIC archive images, the individual
-      |  lesion images are annotated with clinical (e.g., pathology diagnosis)
-      |  and technical (e.g., EXIF header content) attributes. In addition, a
-      |  process has been developed to append morphologic annotations to the
-      |  images at the lesion level (e.g., symmetry) and at the sub-lesion level
-      |  (e.g., the presence of pigment network in a specific region within a
-      |  lesion).  The initial focus of the archive and annotations has been on
-      |  dermoscopic images- as these are most diagnostic for melanoma. For a
-      |  description of dermoscopy please visit the website of the International
-      |  Dermoscopy Society at
-      a(href='http://www.dermoscopy-ids.org/')  http://www.dermoscopy-ids.org/
-    p Crowd sourcing techniques supervised by experts on pigmented lesions are
-      |  being developed and used to provide preliminary annotation and mark up
-      |  of the numerous images being gathered into the archive. An active
-      |  learning approach will be used to refine semi-automated annotation
-      |  and mark-up tools under development by IBM. Vendors and developers
-      |  are welcome to contribute automated annotation tools for inclusion in
-      |  the active learning process.
-    img(src='#{staticRoot}/built/plugins/isic_archive/extra/isic-archive-overview-diagram.png')
+    .isic-header
+      .isic-site-title ISIC 
+      .isic-site-desc International Skin Imaging Collaboration
+    .isic-banner-menu
+      .isic-banner-menu-buttons
+        ul
+          li About ISIC
+          li Upload Dataset
+          li Annotation Studies
+          li Feature Sets
+    .isic-body-items
+      .isic-gallery
+        .isic-section-text Gallery of Current Images
+        iframe.isic-frame(src='#{staticRoot}/built/plugins/isic_archive/extra/img/lesiondatasets.png')
+        .isic-datasets
+          .isic-section-text Current Datasets
+          .isic-datasets-body
+            .isic-datasets-bodyh2 ISIC_UDA-1:
+            .isic-datasets-bodyp
+              | Twelve pigmented lesion clinics from Europe, the United States and Australia contributed lesions to the is data set. The data set includes 557 cutaneous melanoctic lesions from adults (>=18 years of age) with either a definitive histopathologic diagnosis (for excised lesions), or a documented history of being clinically benign through review of serial clinical images acquired at least 6 months apart. Lesions were excluded from the data set if there was equivocal histopathology, unacceptable image quality, or if the lesions were located on the face, acral or mucosal sites.
+            .isic-datasets-bodyh2 ISIC_UDA-2:
+            .isic-datasets-bodyp
+              | This dataset contains 44 high quality lesion images of melanomas and benign lesions. Along with the image data, metadata is available related to patient age, diagnosis, gender, and anatomic location. For this dataset, 4 expert dermoscopists independently reviewed and annotated all the lesions images for dermoscopic patterns and structures.
+            .isic-datasets-bodyh2 ISIC_MSK-1:
+            .isic-datasets-bodyp
+              | The lesions included in this data set were acquired from a single pigmented lesion clinic. This data set only includes lesions that were excised. Relevant clinical metadata such as diagnosis, anatomic location, gender age and clinical impression of the lesion are included with each lesion image.
+            .isic-datasets-bodyh2 ISIC_MSK-2:
+            .isic-datasets-bodyp
+              | Benign and malignant skin lesions. Biopsy-confirmed melanocytic and non-melanocytic lesions.
+            .isic-datasets-bodyh2 ISIC_SONIC-1:
+            .isic-datasets-bodyp
+              | Moles in children. Benign melanocytic lesions from a pediatric population. The benign nature of the lesions is based on clinical assessment and/or no change on serial imaging.
+      .isic-intro
+        .isic-section-text Introduction
+        .isic-intro-body
+          p
+            | The International Skin Imaging Collaboration: Melanoma Project is an academia-industry partnership designed to facilitate the application of digital skin imaging to help reduce melanoma mortality. The current era of smart-phone mobile technology presents an exciting opportunity for the application of digital photography as an aid to early diagnosis of melanoma. However, the promise of digitally assisted melanoma diagnosis is currently hampered by:
+            li A lack of standards for dermatologic imaging, and
+            li
+              | Limited access of educators and developers to large numbers of high quality clinically annotated skin lesion images.
+          h2 Goals
+          |             The ISIC aims to address both of these challenges by proposing international standards for dermatologic imaging and creating a large open source public archive of annotated high quality skin images.
+          p
+            | Current efforts in melanoma education and diagnosis typically rely on small convenience samples of images which vary in both image quality and quality of annotation. The ISIC archive has been developed to provide a large public repository of expertly annotated high quality skin images for use by:
+            li
+              | Clinicians and educators to improve diagnostic skills and provide clinical support in the identification of skin cancer
+            li
+              | The general public for self-education about melanoma and the benefits of early detection,
+            li Developers to develop and test algorithms for skin cancer triage and diagnosis
+          h2 Annotation
+          p
+            | To enhance the usefulness of the ISIC archive images, the individual lesion images are annotated with clinical (e.g., pathology diagnosis) and technical (e.g., EXIF header content) attributes. In addition, a process has been developed to append morphologic annotations to the images at the lesion level (e.g., symmetry) and at the sub-lesion level (e.g., the presence of pigment network in a specific region within a lesion). The initial focus of the archive and annotations has been on dermoscopic images- as these are most diagnostic for melanoma. An example of lesion annotation is shown here:
+          img(src='#{staticRoot}/built/plugins/isic_archive/extra/img/annotation.png', alt='ISIC Annotation', style='width:524px; height:228px;')
+          br
