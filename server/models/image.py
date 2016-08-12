@@ -93,6 +93,27 @@ class Image(ItemModel):
         imageData = ScikitSegmentationHelper.loadImage(imageFileStream)
         return imageData
 
+    def _findQueryFilter(self, query):
+        # assumes collection has been created by provision_utility
+        # TODO: cache this value
+        imageCollection = self.model('collection').findOne({
+            'name': 'Lesion Images'})
+
+        datasetQuery = {
+            'baseParentId': imageCollection['_id']
+        }
+        if query:
+            datasetQuery.update(query)
+        return datasetQuery
+
+    def find(self, query=None, **kwargs):
+        imageQuery = self._findQueryFilter(query)
+        return super(Image, self).find(imageQuery, **kwargs)
+
+    def findOne(self, query=None, **kwargs):
+        imageQuery = self._findQueryFilter(query)
+        return super(Image, self).findOne(imageQuery, **kwargs)
+
     def flag(self, image, reason, user):
         self.flagMultiple([image], reason, user)
 

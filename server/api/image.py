@@ -42,26 +42,35 @@ class ImageResource(Resource):
     @describeRoute(
         Description('Return a list of lesion images.')
         .pagingParams(defaultSort='lowerName')
-        .param('datasetId', 'The ID of the dataset to use.', required=True)
+        .param('datasetId', 'The ID of the dataset to use.', required=False)
         .errorResponse()
     )
     @access.public
     def find(self, params):
-        self.requireParams('datasetId', params)
+        Dataset = self.model('dataset', 'isic_archive')
+        Image = self.model('image', 'isic_archive')
+
         user = self.getCurrentUser()
         limit, offset, sort = self.getPagingParameters(params, 'lowerName')
 
-        dataset = self.model('dataset', 'isic_archive').load(
-            id=params['datasetId'], user=user, level=AccessType.READ, exc=True)
+        filters = {}
+        if 'datasetId' in params:
+            # ensure the user has access to the dataset
+            dataset = Dataset.load(
+                id=params['datasetId'], user=user, level=AccessType.READ,
+                exc=True)
+            filters['folderId'] = dataset['_id']
+
         return [
             {
                 field: image[field]
                 for field in
-                self.model('image', 'isic_archive').summaryFields
+                Image.summaryFields
             }
             for image in
-            self.model('dataset', 'isic_archive').childImages(
-                dataset, limit=limit, offset=offset, sort=sort)
+            Image.filterResultsByPermission(
+                Image.find(filters, sort=sort),
+                user=user, level=AccessType.READ, limit=limit, offset=offset)
         ]
 
     @describeRoute(
