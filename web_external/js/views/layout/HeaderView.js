@@ -10,6 +10,10 @@ isic.views.LayoutHeaderView = isic.View.extend({
 
         'click .isic-link-studies': function () {
             isic.router.navigate('studies', {trigger: true});
+        },
+
+        'click .isic-link-featuresets': function () {
+            isic.router.navigate('featuresets', {trigger: true});
         }
     },
 
