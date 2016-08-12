@@ -18,6 +18,10 @@ isic.views.LayoutHeaderView = isic.View.extend({
 
         'click .isic-link-featuresets': function () {
             isic.router.navigate('featuresets', {trigger: true});
+        },
+
+        'click .isic-link-tasks': function () {
+            isic.router.navigate('tasks', {trigger: true});
         }
     },
 
