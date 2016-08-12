@@ -4,6 +4,10 @@ isic.views.LayoutHeaderView = isic.View.extend({
             isic.router.navigate('index', {trigger: true});
         },
 
+        'click .isic-link-forum': function () {
+            isic.router.navigate('forum', {trigger: true});
+        },
+
         'click .isic-link-dataset-upload': function () {
             isic.router.navigate('uploadDataset', {trigger: true});
         },
