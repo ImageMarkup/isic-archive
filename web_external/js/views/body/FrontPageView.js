@@ -1,18 +1,4 @@
 isic.views.FrontPageView = girder.views.FrontPageView.extend({
-    events: {
-        'click .isic-button-studies': function () {
-            isic.router.navigate('studies', {trigger: true});
-        },
-
-        'click .isic-button-dataset-upload': function () {
-            isic.router.navigate('uploadDataset', {trigger: true});
-        },
-
-        'click .isic-button-featuresets': function () {
-            isic.router.navigate('featuresets', {trigger: true});
-        }
-    },
-
     initialize: function () {
         this.datasetContributor = false;
 
@@ -32,8 +18,6 @@ isic.views.FrontPageView = girder.views.FrontPageView.extend({
     },
 
     render: function () {
-        this.$el.addClass('isic-body-nopad');
-
         this.$el.html(isic.templates.frontPage({
             apiRoot: girder.apiRoot,
             staticRoot: girder.staticRoot,
