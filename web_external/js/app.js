@@ -8,6 +8,11 @@ isic.App = girder.App.extend({
             parentView: this
         });
 
+        new isic.views.LayoutFooterView({ // eslint-disable-line no-new
+            el: this.$('#isic-app-footer-container'),
+            parentView: this
+        });
+
         return this;
     },
 
