@@ -37,7 +37,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.provider "virtualbox" do |virtualbox|
     virtualbox.name = "isic-archive.dev"
-    virtualbox.memory = 1024
+    virtualbox.memory = 1536
   end
 
   config.ssh.forward_agent = true
