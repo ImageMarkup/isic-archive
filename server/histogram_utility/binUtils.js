@@ -71,9 +71,10 @@ function extractValue (attrName, dataItem) {
   var attrChain = attrName.split('.');
   var i;
   for (i = 0; i < attrChain.length; i += 1) {
-    if (o) {
+    if (o.hasOwnProperty(attrChain[i])) {
       o = o[attrChain[i]];
     } else {
+      o = undefined;
       break;
     }
   }
