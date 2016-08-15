@@ -111,7 +111,15 @@ class Image(ItemModel):
         return super(Image, self).find(imageQuery, **kwargs)
 
     def findOne(self, query=None, **kwargs):
-        imageQuery = self._findQueryFilter(query)
+        if '_id' in query:
+            # Allow loading images directly by id from other collections
+            # TODO: this actually allows any item to be loaded as an image,
+            # which is not intended
+            # TODO: remove this, once all images are in the "Lesion Images"
+            # collection
+            imageQuery = query
+        else:
+            imageQuery = self._findQueryFilter(query)
         return super(Image, self).findOne(imageQuery, **kwargs)
 
     def flag(self, image, reason, user):
