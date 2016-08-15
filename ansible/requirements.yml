@@ -1,6 +1,6 @@
 ---
 
 - src: DigitalSlideArchive.vips
-  version: v0.1
+  version: v0.2
 
 - src: nodesource.node
