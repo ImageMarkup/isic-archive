@@ -156,7 +156,11 @@ def handleZip(images_folder, user, zip_file):
                         mimeType=image_mimetype,
                     )
                 # reload image_item, since its 'size' has changed in the database
-                image_item = Image.load(image_item['_id'], force=True)
+                # image_item = Image.load(image_item['_id'], force=True)
+                # TODO: Phase 0 images are not yet in "Lesion Images" yet, so
+                # 'find' and 'load' will not find them.
+                image_item = ModelImporter.model('item').load(
+                    image_item['_id'], force=True)
 
                 image_data = Image.imageData(image_item)
                 image_item['meta']['acquisition']['pixelsY'] = image_data.shape[0]
