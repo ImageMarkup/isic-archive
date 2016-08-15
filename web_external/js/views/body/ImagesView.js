@@ -9,6 +9,7 @@ isic.views.ImagesView = isic.View.extend({
     render: function () {
         this.$el.html(isic.templates.imagesPage({
         }));
+        this.$el.html('<p>hi, there</p>');
 
         return this;
     }
