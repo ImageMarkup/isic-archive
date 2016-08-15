@@ -1,6 +1,10 @@
 import os
 import json
+import execjs
 from querylang import astToMongo
+
+
+TRUE_VALUES = set([True, 'true', 1, 'True'])
 
 
 class HistogramUtility():
@@ -41,15 +45,7 @@ class HistogramUtility():
 
         return result
 
-    def fillInDefaultParams(self, params):
-        # Populate params with default settings
-        # where settings haven't been specified
-        params['filter'] = params.get('filter', None)
-        if params['filter'] is not None:
-            params['filter'] = json.loads(params['filter'])
-        params['limit'] = params.get('limit', 0)
-        params['offset'] = params.get('offset', 0)
-
+    def hardCodeBinSettings(self, params):
         '''
         Here we hard-code settings about which attributes we want, and how to
         retrieve them. For details on the meaning of these settings, see the
@@ -57,16 +53,16 @@ class HistogramUtility():
         https://github.com/Kitware/candela/blob/master/app/resonant-laboratory/server/datasetItem.py
 
         In the future, it should be easy to adapt inferSchema() in the same file
-        to auto-detect this information.
+        to auto-detect this information instead of hard-coding it.
         '''
-        params['binSettings'] = {
+        params['binSettings'] = json.dumps({
             'folderId': {
                 'coerceToType': 'string'
             },
-            'acquisition.pixelsX': {
+            'meta.acquisition.pixelsX': {
                 'coerceToType': 'integer'
             },
-            'acquisition.pixelsY': {
+            'meta.acquisition.pixelsY': {
                 'coerceToType': 'integer'
             },
             'meta.clinical.benign_malignant': {
@@ -78,16 +74,101 @@ class HistogramUtility():
             'meta.clinical.age': {
                 'coerceToType': 'number',
                 'lowBound': 0,
-                'highBound': 100,
-                'binCount': 10
+                'highBound': 100
             }
-        }
+        })
 
         return params
 
+    def fillInDefaultHistogramParams(self, params):
+        # Populate params with default settings
+        # where settings haven't been specified
+        params['filter'] = params.get('filter', None)
+        if params['filter'] is not None:
+            params['filter'] = json.loads(params['filter'])
+        params['limit'] = params.get('limit', None)
+        params['offset'] = params.get('offset', 0)
+
+        binSettings = json.loads(params.get('binSettings', '{}'))
+        for attrName in binSettings.iterkeys():
+            binSettings[attrName] = binSettings.get(attrName, {})
+
+            # Get user-defined or default type coercion setting
+            coerceToType = binSettings[attrName].get('coerceToType', 'object')
+            binSettings[attrName]['coerceToType'] = coerceToType
+
+            # Get user-defined or default interpretation setting
+            if binSettings[attrName]['coerceToType'] is 'object':
+                interpretation = binSettings[attrName]['interpretation'] = 'categorical'
+            else:
+                interpretation = binSettings[attrName].get('interpretation', 'categorical')
+                binSettings[attrName]['interpretation'] = interpretation
+
+            # Get any user-defined special bins (the defaults are
+            # listed in histogram_reduce.js)
+            specialBins = json.loads(binSettings[attrName].get('specialBins', '[]'))
+            binSettings[attrName]['specialBins'] = specialBins
+
+            # Get user-defined or default number of bins
+            numBins = binSettings[attrName].get('numBins', 10)
+            binSettings[attrName]['numBins'] = numBins
+
+            # For ordinal binning, we need some more details:
+            if interpretation == 'ordinal':
+                if coerceToType == 'string' or coerceToType == 'object':
+                    # Use the locale to construct the bins
+                    lowBound = None
+                    highBound = None
+                    locale = binSettings[attrName].get('locale', None)
+                    if locale is None:
+                        # Default is to try to extract locale information
+                        # from the Accept-Language header, with 'en' as
+                        # a backup (TODO: do smarter things with alternative
+                        # locales)
+                        locale = cherrypy.request.headers.get('Accept-Language', 'en')
+                        if ',' in locale:
+                            locale = locale.split(',')[0].strip()
+                        if ';' in locale:
+                            locale = locale.split(';')[0].strip()
+                else:
+                    # Use default or user-defined low/high boundary values
+                    # to construct the bins
+                    locale = None
+                    lowBound = binSettings[attrName].get('lowBound', None)
+                    highBound = binSettings[attrName].get('highBound', None)
+                    if lowBound is None or highBound is None:
+                        raise RestException('There are no observed values of ' +
+                                            'type ' + coerceToType + ', so it is ' +
+                                            'impossible to automatically determine ' +
+                                            'low/high bounds for an ordinal interpretation.' +
+                                            ' Please supply bounds or change to "categorical".')
+                    binSettings[attrName]['lowBound'] = lowBound
+                    binSettings[attrName]['highBound'] = highBound
+
+                # Pre-populate the bins with human-readable names
+                binUtilsCode = execjs.compile('var LOCALE_INDEXES = ' +
+                                              self.foreignCode['localeIndexes.json'] + ';\n' +
+                                              self.foreignCode['binUtils.js'])
+                binSettings[attrName]['ordinalBins'] = binUtilsCode.call('createBins',
+                                                                         coerceToType,
+                                                                         numBins,
+                                                                         lowBound,
+                                                                         highBound,
+                                                                         locale)['bins']
+            else:
+                pass
+                # We can ignore the ordinalBins parameter if we're being
+                # categorical. TODO: the fancier 2-pass idea in histogram_reduce.js
+                # would necessitate that we do something different here
+
+        params['binSettings'] = binSettings
+        params['cache'] = params.get('cache', False) in TRUE_VALUES
+
+        return params, binSettings
+
     def getHistograms(self, collection, params):
-        params = self.fillInDefaultParams(params)
-        binSettings = params['binSettings']
+        params = self.hardCodeBinSettings(params)
+        params, binSettings = self.fillInDefaultHistogramParams(params)
 
         # Construct and run the histogram MapReduce code
         mapScript = 'function map () {\n' + \
