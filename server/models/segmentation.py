@@ -49,7 +49,7 @@ class Segmentation(Model):
             'stopTime'
             'created'
         ])
-        self.summaryFields = ('_id', 'imageId', 'skill')
+        self.summaryFields = ['_id', 'imageId', 'skill']
         events.bind('model.item.remove_with_kwargs',
                     'isic_archive.gc_segmentation',
                     self._onDeleteItem)
