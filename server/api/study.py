@@ -129,14 +129,12 @@ class StudyResource(Resource):
                 fields=Featureset.summaryFields
             )
 
-            userSummaryFields = ('_id', 'login', 'firstName', 'lastName')
+            userSummaryFields = ['_id', 'login', 'firstName', 'lastName']
 
-            creator = User.load(output.pop('creatorId'), force=True)
-            output['creator'] = {
-                field: creator[field]
-                for field in
-                userSummaryFields
-            }
+            output['creator'] = User.load(
+                output.pop('creatorId'),
+                force=True, exc=True,
+                fields=userSummaryFields)
 
             output['users'] = [
                 {

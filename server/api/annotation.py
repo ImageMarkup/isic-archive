@@ -106,6 +106,7 @@ class AnnotationResource(Resource):
     @access.public
     @loadmodel(model='annotation', plugin='isic_archive', level=AccessType.READ)
     def getAnnotation(self, annotation, params):
+        User = self.model('user')
         output = {
             '_id': annotation['_id'],
             'name': annotation['name']
@@ -113,7 +114,7 @@ class AnnotationResource(Resource):
         output.update(annotation['meta'])
 
         userSummaryFields = ['_id', 'login', 'firstName', 'lastName']
-        output['user'] = self.model('user').load(
+        output['user'] = User.load(
             output.pop('userId'),
             force=True, exc=True,
             fields=userSummaryFields)

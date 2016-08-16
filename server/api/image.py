@@ -83,6 +83,13 @@ class ImageResource(Resource):
     def getImage(self, image, params):
         output = self.model('image', 'isic_archive').filter(
             image, self.getCurrentUser())
+        User = self.model('user')
+
+        userSummaryFields = ['_id', 'login', 'firstName', 'lastName']
+        output['creator'] = User.load(
+            output.pop('creatorId'),
+            force=True, exc=True,
+            fields=userSummaryFields)
 
         if 'originalFilename' in output['meta']:
             currentUser = self.getCurrentUser()

@@ -67,10 +67,17 @@ class DatasetResource(Resource):
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
     def getDataset(self, dataset, params):
         output = self.model('dataset', 'isic_archive').filter(
+        User = self.model('user')
             dataset, self.getCurrentUser())
         del output['_accessLevel']
         output['_modelType'] = 'dataset'
         output.update(dataset.get('meta', {}))
+        userSummaryFields = ['_id', 'login', 'firstName', 'lastName']
+        output['creator'] = User.load(
+            output.pop('creatorId'),
+            force=True, exc=True,
+            fields=userSummaryFields)
+
         return output
 
     @describeRoute(
