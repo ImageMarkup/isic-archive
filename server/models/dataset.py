@@ -50,7 +50,7 @@ class Dataset(FolderModel):
             # TODO: re-add once converted files no longer contributes to size
             # 'size',
         ])
-        self.summaryFields = ('_id', 'name', 'updated')
+        self.summaryFields = ['_id', 'name', 'updated']
 
     def createDataset(self, name, description, creatorUser):
         # Look for duplicate names in any of the dataset-containing collections

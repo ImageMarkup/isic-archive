@@ -106,17 +106,33 @@ class AnnotationResource(Resource):
     @access.public
     @loadmodel(model='annotation', plugin='isic_archive', level=AccessType.READ)
     def getAnnotation(self, annotation, params):
+        User = self.model('user')
+        Image = self.model('image', 'isic_archive')
+
         output = {
             '_id': annotation['_id'],
+            '_modelType': 'annotation',
             'name': annotation['name']
         }
         output.update(annotation['meta'])
 
         userSummaryFields = ['_id', 'login', 'firstName', 'lastName']
-        output['user'] = self.model('user').load(
+        output['user'] = User.load(
             output.pop('userId'),
             force=True, exc=True,
             fields=userSummaryFields)
+
+        # output['image'] = Image.load(
+        #     output.pop('imageId'),
+        #     force=True, exc=True,
+        #     fields=Image.summaryFields)
+        # TODO: remove once AccessControlMixin.load is fixed upstream
+        from girder.models.model_base import Model
+        output['image'] = Model.load(
+            Image,
+            output.pop('imageId'),
+            exc=True,
+            fields=Image.summaryFields)
 
         return output
 
