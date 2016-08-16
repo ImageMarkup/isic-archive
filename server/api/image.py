@@ -81,11 +81,12 @@ class ImageResource(Resource):
     @access.public
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def getImage(self, image, params):
-        output = self.model('image', 'isic_archive').filter(
-            image, self.getCurrentUser())
+        Image = self.model('image', 'isic_archive')
         User = self.model('user')
 
+        output = Image.filter(image, self.getCurrentUser())
         output['_modelType'] = 'image'
+
         userSummaryFields = ['_id', 'login', 'firstName', 'lastName']
         output['creator'] = User.load(
             output.pop('creatorId'),
