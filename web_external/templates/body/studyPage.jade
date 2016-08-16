@@ -18,10 +18,10 @@
     | #{study.get('featureset').name}, version #{study.get('featureset').version}
 
 .isic-study-segmentations-container
-  h4 Segmentations
-    |  (#{study.get('segmentations').length})
+  h4 Images
+    |  (#{study.get('images').length})
   .isic-listing-content.isic-study-segmentations-content
-    if study.get('segmentations').length
+    if study.get('images').length
       table
         tr
           th.isic-study-segmentations-content-name Image Name

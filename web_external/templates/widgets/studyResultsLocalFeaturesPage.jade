@@ -1,0 +1,17 @@
+- var title = 'Local Features'
+- var hasFeaturesClass = hasLocalFeatures ? '' : 'hidden';
+- var noFeaturesClass = hasLocalFeatures ? 'hidden' : '';
+if hasFeatureset
+  h4 #{title} (#{featureset.name()}, version #{featureset.get('version')})
+else
+  h4 #{title}
+
+select#isic-study-results-select-local-feature-container.form-control.input-sm(disabled class=hasFeaturesClass)
+  option(selected disabled)
+    | Select...
+
+.isic-study-results-local-features-content(class=noFeaturesClass)
+  | N/A
+
+.isic-study-results-local-features-content(class=hasFeaturesClass)
+  #isic-study-results-local-features-image-container

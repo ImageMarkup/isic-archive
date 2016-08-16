@@ -1,0 +1,16 @@
+- var title = 'Global Features'
+if hasFeatureset
+  h4 #{title} (#{featureset.name()}, version #{featureset.get('version')})
+else
+  h4 #{title}
+
+.isic-study-results-global-features-content
+  if hasGlobalFeatures
+    table.table.table-condensed.isic-study-results-global-features-table
+      thead
+        tr
+          th ID
+          th Value
+      tbody#isic-study-results-global-features-table-body
+  else
+    | N/A
