@@ -136,16 +136,17 @@ class StudyResource(Resource):
                 force=True, exc=True,
                 fields=userSummaryFields)
 
-            output['users'] = [
-                {
-                    field: user[field]
-                    for field in
-                    userSummaryFields
-                }
-                for user in
-                Study.getAnnotators(study).sort('login', SortDir.ASCENDING)
-            ]
+            output['users'] = list(
+                Study.getAnnotators(
+                    study, userSummaryFields
+                ).sort('login', SortDir.ASCENDING))
 
+            output['images'] = list(
+                Study.getImages(
+                    study, Image.summaryFields
+                ).sort('lowerName', SortDir.ASCENDING))
+
+            # TODO: remove this
             output['segmentations'] = [
                 {
                     field: segmentation[field]
@@ -154,20 +155,6 @@ class StudyResource(Resource):
                 for segmentation in
                 Study.getSegmentations(study)
             ]
-
-            images = Image.find(
-                {'_id': {'$in': [
-                    segmentation['imageId']
-                    for segmentation in output['segmentations']
-                ]}},
-                fields=Image.summaryFields
-            )
-            images = {image['_id']: image for image in images}
-            for segmentation in output['segmentations']:
-                segmentation['image'] = images.pop(segmentation.pop('imageId'))
-
-            output['segmentations'].sort(
-                key=lambda segmentation: segmentation['image']['name'])
 
             return output
 
