@@ -122,9 +122,16 @@ class AnnotationResource(Resource):
             force=True, exc=True,
             fields=userSummaryFields)
 
-        output['image'] = Image.load(
+        # output['image'] = Image.load(
+        #     output.pop('imageId'),
+        #     force=True, exc=True,
+        #     fields=Image.summaryFields)
+        # TODO: remove once AccessControlMixin.load is fixed upstream
+        from girder.models.model_base import Model
+        output['image'] = Model.load(
+            Image,
             output.pop('imageId'),
-            force=True, exc=True,
+            exc=True,
             fields=Image.summaryFields)
 
         return output
