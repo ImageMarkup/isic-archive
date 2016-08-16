@@ -109,6 +109,7 @@ class AnnotationResource(Resource):
         User = self.model('user')
         output = {
             '_id': annotation['_id'],
+            '_modelType': 'annotation',
             'name': annotation['name']
         }
         output.update(annotation['meta'])

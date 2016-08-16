@@ -85,6 +85,7 @@ class ImageResource(Resource):
             image, self.getCurrentUser())
         User = self.model('user')
 
+        output['_modelType'] = 'image'
         userSummaryFields = ['_id', 'login', 'firstName', 'lastName']
         output['creator'] = User.load(
             output.pop('creatorId'),
