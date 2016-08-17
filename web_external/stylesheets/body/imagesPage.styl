@@ -1,0 +1,152 @@
+/* Fix a couple of bootstrap settings */
+/*ul.g-global-nav {
+  margin-bottom: 0px;
+}
+
+div#g-app-body-container {
+  padding: 0px;
+}*/
+
+.isicDatasetTitle {
+  margin-top: 0px;
+}
+
+#galleryContent {
+  position: relative;
+  width: 100%;
+  min-height: 500px;
+  height: calc(100vh - 135px);
+  margin: -10px;
+  background-color: #505050;
+}
+
+#galleryContent #summaryFilter {
+  position: absolute;
+  right: -20px;
+  top: 0px;
+  bottom: 0px;
+  width: 300px;
+  overflow: auto;
+  background-color: #505050;
+  color: white;
+}
+
+#galleryContent #summaryFilter #summary,
+#galleryContent #summaryFilter #filters {
+  width: 100%;
+  padding: 1em;
+}
+
+#galleryContent #summaryFilter .summaryChunk {
+  text-align: center;
+}
+
+#galleryContent #summaryFilter #buttonChunk {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+#galleryContent #summaryFilter .bigNumber {
+  font-size: 1.5em;
+}
+
+#galleryContent #summaryFilter #numberImages {
+  color: #00a84b;
+}
+#galleryContent #summaryFilter #totalDenominator {
+  color: #0088ff;
+}
+
+#galleryContent #summaryFilter .button {
+  padding: 0.5em 1em 0.5em 1em;
+  margin: 0.5em;
+  background-color: rgba(255, 255, 255, 0.75);
+  color: black;
+  border-radius: 2em;
+}
+#galleryContent #summaryFilter .button:hover {
+  background-color: white;
+}
+
+#galleryContent #summaryFilter #filters li > input:checked + * {
+ display: none;
+}
+
+#galleryContent #summaryFilter #filters li > input + * {
+ display: block;
+}
+
+#galleryContent #summaryFilter #filters li > input {
+ display: none;
+}
+
+#galleryContent #summaryFilter #filters label {
+ cursor: pointer;
+}
+
+#galleryContent #summaryFilter #filters li {
+  list-style: none;
+}
+
+#galleryContent #summaryFilter li.histogramBar {
+  position: relative;
+  height: 2em;
+  white-space: nowrap;
+}
+#galleryContent #summaryFilter li.histogramBar div.barLabel {
+  position: absolute;
+  right: calc(100% - 75px);
+  text-align: right;
+}
+#galleryContent #summaryFilter li.histogramBar div.initialBar {
+  position: absolute;
+  left: 80px;
+  text-align: left;
+  color: rgba(0,0,0,0);
+  background-color: #0088ff;
+}
+#galleryContent #summaryFilter li.histogramBar div.selectedBar {
+  position: absolute;
+  left: 80px;
+  text-align: right;
+  color: white;
+  background-color: #00a84b;
+}
+
+
+#galleryContent #pageContent {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  height: 100%;
+  width: calc(100% - 280px);
+  overflow: auto;
+}
+
+#galleryContent #pageContent #description {
+  position: absolute;
+  left: 0px;
+  width: 100%;
+  top: 0px;
+}
+#galleryContent #pageContent #descriptionContent {
+  position: relative;
+  padding: 2em;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: rgba(255, 255, 255, 0.85);
+  max-width: 550px;
+}
+
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #3f3b3b;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.75);
+  border-radius: 10px;
+}
