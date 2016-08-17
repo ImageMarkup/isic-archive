@@ -1,4 +1,5 @@
 /*globals girder, jQuery, d3, Image*/
+/*eslint-disable*/
 var LOG_IMAGE_FETCHES = false;
 
 var INITIAL_IMAGES_TO_FETCH = 150;
