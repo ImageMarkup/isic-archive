@@ -58,8 +58,6 @@ class Dataset(FolderModel):
             'name': {'$in': [
                 'Phase 0',
                 'Flagged Images',
-                'Phase 1a',
-                'Phase 1b',
                 'Lesion Images'
             ]}
         }).distinct('_id')
@@ -106,7 +104,7 @@ class Dataset(FolderModel):
         # assumes collection has been created by provision_utility
         # TODO: cache this value
         datasetCollection = self.model('collection').findOne({
-            'name': 'Lesion Images'})
+            'name': 'Lesion Images'}, fields={'_id': 1})
 
         datasetQuery = {
             'parentId': datasetCollection['_id']

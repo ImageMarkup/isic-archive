@@ -35,8 +35,6 @@ def addUserToAllUDAGroups(user):
     # group should already exist
     for collection in [
         ISIC.Phase0,
-        ISIC.Phase1a,
-        ISIC.Phase1b,
         ISIC.LesionImages,
         ISIC.AnnotationStudies,
     ]:
@@ -140,8 +138,6 @@ class _ISICCollection(ModelImporter):
 # this will be populated in 'initialSetup'
 class ISIC(object):
     Phase0 = None
-    Phase1a = None
-    Phase1b = None
     LesionImages = None
     AnnotationStudies = None
 
@@ -193,21 +189,7 @@ def initialSetup(info):
         public=False
     )
 
-    ISIC.Phase1a = _ISICCollection(
-        collection_name='Phase 1a',
-        collection_description='Images that have passed initial QC review',
-        public=True,
-        group_name='Phase 1a',
-        group_description='Users responsible for setting the normal and lesion boundaries, as well as defining the paint-by-number threshold'
-    )
 
-    ISIC.Phase1b = _ISICCollection(
-        collection_name='Phase 1b',
-        collection_description='Images that have passed novice review',
-        public=True,
-        group_name='Phase 1b',
-        group_description='Users responsible for boundary review and editing of boundaries if necessary'
-    )
 
     ISIC.LesionImages = _ISICCollection(
         collection_name='Lesion Images',
