@@ -44,16 +44,14 @@ class TaskResource(Resource):
             # Filter viewable images out of all items
             {'$match': {
                 'folderId': {'$in': [
-                    dataset['_id'] for dataset in Dataset.list(user=user)]}}
-            }
+                    dataset['_id'] for dataset in Dataset.list(user=user)]}}}
         ]
 
     def _pipeline1ImagesFromDataset(self, dataset):
         return [
             # Filter only images in dataset out of all items
             {'$match': {
-                'folderId': dataset['_id']}
-            }
+                'folderId': dataset['_id']}}
         ]
 
     def _pipeline2ImagesWithSegmentations(self):
@@ -61,30 +59,26 @@ class TaskResource(Resource):
             # Drop extra fields in images (probably not necessary)
             {'$project': {
                 '_id': 1,
-                'folderId': 1}
-            },
+                'folderId': 1}},
             # Join all segmentations into images
             {'$lookup': {
                 'from': 'segmentation',
                 'localField': '_id',
                 'foreignField': 'imageId',
-                'as': 'segmentations'}
-            },
+                'as': 'segmentations'}},
             # Drop extra fields from embedded segmentations
             {'$project': {
                 '_id': 1,
                 'folderId': 1,
                 'segmentations._id': 1,
-                'segmentations.skill': 1}
-            }
+                'segmentations.skill': 1}}
         ]
 
     def _pipeline3MissingSegmentations(self):
         return [
             # Get only images with no segmentations
             {'$match': {
-                'segmentations': []}
-            }
+                'segmentations': []}}
         ]
 
     def _pipeline3NoExpertSegmentations(self):
@@ -92,8 +86,7 @@ class TaskResource(Resource):
         return [
             # Get only images with no expert segmentations
             {'$match': {
-                'segmentations.skill': {'$nin': [Segmentation.Skill.EXPERT]}}
-            }
+                'segmentations.skill': {'$nin': [Segmentation.Skill.EXPERT]}}}
         ]
 
     def _pipeline4CountImage(self):
@@ -101,42 +94,35 @@ class TaskResource(Resource):
             # Count results by dataset id
             {'$group': {
                 '_id': '$folderId',
-                'count': {'$sum': 1}}
-            },
+                'count': {'$sum': 1}}},
             # Join dataset details into counts
             {'$lookup': {
                 'from': 'folder',
                 'localField': '_id',
                 'foreignField': '_id',
-                'as': 'dataset'}
-            },
+                'as': 'dataset'}},
             # Drop extra dataset details
             {'$project': {
                 '_id': 0,
                 'dataset._id': 1,
                 'dataset.name': 1,
-                'count': 1}
-            },
+                'count': 1}},
             # Flatten dataset array (which is always 1 element)
             {'$unwind': {
-                'path': '$dataset'}
-            },
+                'path': '$dataset'}},
             # Sort results by dataset name
             {'$sort': {
-                'dataset.name': SortDir.ASCENDING}
-            }
+                'dataset.name': SortDir.ASCENDING}}
         ]
 
     def _pipeline4RandomImage(self):
         return [
             # Get a random image
             {'$sample': {
-                'size': 1}
-            },
+                'size': 1}},
             # Drop segmentation fields
             {'$project': {
-                '_id': 1}
-            }
+                '_id': 1}}
         ]
 
     @describeRoute(
