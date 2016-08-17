@@ -64,21 +64,59 @@
         </a>
         <div class="row">
             <div class="col-lg-6">
-                <div class="panel-group" ng-repeat="phase in task_list track by phase.name">
+                <div class="panel-group" ng-if="qc_tasks">
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <div class="panel-title">
-                                <span>{{ phase.name }}</span>
-                                <span class="badge pull-right">{{ phase.count }}</span>
+                                <span>Phase 0</span>
+                                <span class="badge pull-right">{{ qc_tasks_total }}</span>
                             </div>
-                            <i>{{ phase.description }}</i>
+                            <i>Images to QC</i>
                         </div>
                         <ul class="list-group">
                             <a class="list-group-item"
-                               ng-repeat="dataset in phase.datasets track by dataset.url"
-                               href="{{ dataset.url }}">
-                                <span class="btn-link">{{ dataset.name }}</span>
-                                <span class="badge">{{ dataset.count }}</span>
+                               ng-repeat="task_group in qc_tasks track by task_group.dataset._id"
+                               href="/uda/task/p0/{{ task_group.dataset._id }}">
+                                <span class="btn-link">{{ task_group.dataset.name }}</span>
+                                <span class="badge">{{ task_group.count }}</span>
+                            </a>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel-group" ng-if="segmentation_tasks">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="panel-title">
+                                <span>Lesion Segmentation</span>
+                                <span class="badge pull-right">{{ segmentation_tasks_total }}</span>
+                            </div>
+                            <i>Segment boundaries between lesion and normal skin</i>
+                        </div>
+                        <ul class="list-group">
+                            <a class="list-group-item"
+                               ng-repeat="task_group in segmentation_tasks track by task_group.dataset._id"
+                               href="/api/v1/task/me/segmentation/redirect?datasetId={{ task_group.dataset._id }}">
+                                <span class="btn-link">{{ task_group.dataset.name }}</span>
+                                <span class="badge">{{ task_group.count }}</span>
+                            </a>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel-group" ng-if="annotation_tasks">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="panel-title">
+                                <span>Annotation Studies</span>
+                                <span class="badge pull-right">{{ annotation_tasks_total }}</span>
+                            </div>
+                            <i>Clinical feature annotation studies</i>
+                        </div>
+                        <ul class="list-group">
+                            <a class="list-group-item"
+                               ng-repeat="task_group in annotation_tasks track by task_group.study._id"
+                               href="/api/v1/task/me/annotation/redirect?datasetId={{ task_group.study._id }}">
+                                <span class="btn-link">{{ task_group.study.name }}</span>
+                                <span class="badge">{{ task_group.count }}</span>
                             </a>
                         </ul>
                     </div>

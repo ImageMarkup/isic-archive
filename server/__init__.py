@@ -149,6 +149,7 @@ def load(info):
     info['apiRoot'].image = api.ImageResource()
     info['apiRoot'].segmentation = api.SegmentationResource()
     info['apiRoot'].study = api.StudyResource()
+    info['apiRoot'].task = api.TaskResource()
 
     # Serve isic app from /isic
     info['serverRoot'].isic = Webroot()

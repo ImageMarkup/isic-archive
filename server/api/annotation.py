@@ -89,9 +89,9 @@ class AnnotationResource(Resource):
                 'userId': annotation['meta']['userId'],
                 'segmentationId': annotation['meta']['segmentationId'],
                 'imageId': annotation['meta']['imageId'],
-                'state': Study.State.COMPLETE \
-                         if annotation['meta']['stopTime'] is not None \
-                         else Study.State.ACTIVE
+                'state': (Study.State.COMPLETE
+                          if annotation['meta']['stopTime'] is not None
+                          else Study.State.ACTIVE)
             }
             for annotation in annotations
         ]

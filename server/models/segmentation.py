@@ -54,10 +54,12 @@ class Segmentation(Model):
                     self._onDeleteItem)
 
     def getUserSkill(self, user):
-        expertGroup = self.model('group').findOne({'name': 'Phase 1b'})
+        expertGroup = self.model('group').findOne({
+            'name': 'Segmentation Experts'})
         if expertGroup['_id'] in user['groups']:
             return self.Skill.EXPERT
-        noviceGroup = self.model('group').findOne({'name': 'Phase 1a'})
+        noviceGroup = self.model('group').findOne({
+            'name': 'Segmentation Novices'})
         if noviceGroup['_id'] in user['groups']:
             return self.Skill.NOVICE
         return None

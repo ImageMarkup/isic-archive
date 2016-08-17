@@ -161,6 +161,8 @@ def setupUdaTestUser(phase, username, password, label):
 
 
 def initialSetup(info):
+    Group = ModelImporter.model('group')
+
     if ModelImporter.model('setting').get(constants.PluginSettings.DEMO_MODE, None) is None:
         ModelImporter.model('setting').set(constants.PluginSettings.DEMO_MODE, False)
 
@@ -173,15 +175,15 @@ def initialSetup(info):
     )
 
     # Create empty "dataset contributors" group
-    if not ModelImporter.model('group').findOne(
+    if not Group.findOne(
         {'name': 'Dataset Contributors'}):
-        contributorsGroup = ModelImporter.model('group').createGroup(
+        contributorsGroup = Group.createGroup(
             name='Dataset Contributors',
             creator=getAdminUser(),
             description='Users that can create datasets',
             public=True
         )
-        ModelImporter.model('group').removeUser(contributorsGroup, getAdminUser())
+        Group.removeUser(contributorsGroup, getAdminUser())
 
     ISIC.Flagged = _ISICCollection(
         collection_name='Flagged Images',
@@ -189,7 +191,23 @@ def initialSetup(info):
         public=False
     )
 
+    if not Group.findOne({'name': 'Segmentation Novices'}):
+        segmentationNovicesGroup = Group.createGroup(
+            name='Segmentation Novices',
+            creator=getAdminUser(),
+            description='Users able to tentatively segment lesion boundaries',
+            public=True
+        )
+        Group.removeUser(segmentationNovicesGroup, getAdminUser())
 
+    if not Group.findOne({'name': 'Segmentation Experts'}):
+        segmentationExpertsGroup = Group.createGroup(
+            name='Segmentation Experts',
+            creator=getAdminUser(),
+            description='Users able to definitively segment lesion boundaries',
+            public=True
+        )
+        Group.removeUser(segmentationExpertsGroup, getAdminUser())
 
     ISIC.LesionImages = _ISICCollection(
         collection_name='Lesion Images',
@@ -241,18 +259,6 @@ def initialSetup(info):
             username='udauploader',
             password='udauploader',
             label='Uploader',
-        )
-        setupUdaTestUser(
-            phase=ISIC.Phase1a,
-            username='udanovice',
-            password='udanovice',
-            label='Novice',
-        )
-        setupUdaTestUser(
-            phase=ISIC.Phase1b,
-            username='udaexpert',
-            password='udaexpert',
-            label='Trained',
         )
         setupUdaTestUser(
             phase=ISIC.AnnotationStudies,
