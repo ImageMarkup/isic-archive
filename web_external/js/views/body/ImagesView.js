@@ -1,52 +1,7 @@
 /*globals girder, jQuery, d3, Image*/
-// var extraDir = '/static/built/plugins/mskcc-gallery/extra/';
-
-// Cheap testing settings:
-/*
-var CATEGORICAL_ATTRS_TO_QUERY = [
-  'meta.p1a.image.meta.localization',
-  'meta.p1a.image.meta.gender',
-  'meta.p1a.image.meta.ben_mal'
-];
-var QUANTITATIVE_ATTRS_TO_QUERY = {
-  'meta.p1a.image.meta.age': {
-    'min': 0,
-    'max': 100,
-    'binCount': 10
-  }
-};
-var HUMAN_NAMES = {
-  'Folder Counts': 'Study',
-  'meta.p1a.image.meta.localization': 'Localization',
-  'meta.p1a.image.meta.gender': 'Gender',
-  'meta.p1a.image.meta.ben_mal': 'Benign/Malignant',
-  'meta.p1a.image.meta.age': 'Age'
-};
-*/
 var LOG_IMAGE_FETCHES = false;
 
 var INITIAL_IMAGES_TO_FETCH = 150;
-
-// Server settings:
-var CATEGORICAL_ATTRS_TO_QUERY = [
-  // 'meta.clinical.localization',
-  'meta.clinical.sex',
-  'meta.clinical.benign_malignant'
-];
-var QUANTITATIVE_ATTRS_TO_QUERY = {
-  'meta.clinical.age': {
-    'min': 0,
-    'max': 100,
-    'binCount': 10
-  }
-};
-var HUMAN_NAMES = {
-  'Folder Counts': 'Study',
-  // 'meta.clinical.localization': 'Localization',
-  'meta.clinical.sex': 'Sex',
-  'meta.clinical.benign_malignant': 'Benign/Malignant',
-  'meta.clinical.age': 'Age'
-};
 
 function widthWithoutScrollbar(selector) {
   var tempDiv = jQuery('<div/>');
@@ -55,6 +10,11 @@ function widthWithoutScrollbar(selector) {
   tempDiv.remove();
   return elemwidth;
 }
+
+// We scaled the images based on how many
+// are currently selected; for now we'll hard
+// code this (and probably change it in the future)
+var temp_download_size = 10000;
 
 isic.views.ImagesView = isic.View.extend({
   initialize: function () {
@@ -66,22 +26,7 @@ isic.views.ImagesView = isic.View.extend({
     self.currentImageOffset = 0;
     self.imageIds = [];
 
-    self.filterSettings = [];
-
-    self.fetchHistograms(self.createQueryString(), function (histograms) {
-      self.initialHistograms = histograms;
-      self.currentHistograms = histograms;
-      self.render();
-    });
-
     self.$el.html(isic.templates.imagesPage());
-    /*self.$el.find('#descriptionContent').html(
-      girder.templates.isicDatasetDescriptions());*/
-    self.browsing = true;
-    self.toggleCollapse();
-    self.$el.find('#collapseButton').on('click', function () {
-      self.toggleCollapse();
-    });
     self.fetchImageTimeout = null;
     self.fetchImages();
 
@@ -109,45 +54,6 @@ isic.views.ImagesView = isic.View.extend({
       }, 300);
     });
   },
-  toggleCollapse: function () {
-    var self = this;
-
-    self.browsing = !self.browsing;
-    if (self.browsing) {
-      jQuery('#description').hide();
-      jQuery('#galleryContent').attr('class', 'collapsed');
-      jQuery('#collapseButton').text('About');
-    } else {
-      jQuery('#description').show();
-      jQuery('#galleryContent').attr('class', 'normal');
-      jQuery('#collapseButton').text('Browse Images');
-    }
-    self.render();
-  },
-  fetchHistograms: function (queryString, callback) {
-    girder.restRequest({
-      path: 'item/getHistograms',
-      data: {
-        'filterQuery': queryString,
-        'collection': 'Lesion Images',
-        'categoricalAttrs': CATEGORICAL_ATTRS_TO_QUERY.join(','),
-        'quantitativeAttrs': JSON.stringify(QUANTITATIVE_ATTRS_TO_QUERY)
-      }
-    }).done(callback);
-  },
-  createQueryString: function () {
-    var self = this;
-    var result;
-    if (self.filterSettings.length === 0) {
-      result = {}
-    } else {
-      result = {
-        '$and': self.filterSettings
-      };
-    }
-    result = JSON.stringify(result);
-    return result;
-  },
   fetchImages: function (numberToFetch) {
     var self = this;
 
@@ -169,16 +75,6 @@ isic.views.ImagesView = isic.View.extend({
           return;
         }
       }
-    }
-    if (self.currentHistograms &&
-      self.imageIds.length >= self.currentHistograms['Total Count']) {
-      // We've already fetched all the images that match
-      // our filterSettings, so return
-      return;
-    }
-
-    if (LOG_IMAGE_FETCHES) {
-      console.log('fetching ' + numberToFetch + ' images...');
     }
 
     girder.restRequest({
@@ -324,159 +220,6 @@ isic.views.ImagesView = isic.View.extend({
       minAndMax = minAndMaxIndices();
     }
   },
-  renderHistograms: function () {
-    var self = this;
-
-    // Update the count of selected images
-    // (hide the pane and don't draw anything
-    // if we haven't gotten the first counts
-    // back yet)
-    var currentImages;
-    var totalImages;
-
-    if (self.initialHistograms) {
-      currentImages = self.currentHistograms['Total Count'];
-      totalImages = self.initialHistograms['Total Count'];
-
-      d3.select('#numberImages').text(currentImages);
-      d3.select('#totalDenominator').text(totalImages);
-      d3.select('#downloadSize').text(function () {
-        var bytes = self.currentHistograms['Total Size'];
-        return girder.formatSize(bytes);
-      });
-      jQuery('#summaryFilter').show();
-    } else {
-      jQuery('#summaryFilter').hide();
-      return false;
-    }
-
-    // Okay, let's get the list of all histograms that there are
-    var histogramKeys = Object.keys(self.initialHistograms);
-    histogramKeys.splice(histogramKeys.indexOf('Total Count'), 1);
-    histogramKeys.splice(histogramKeys.indexOf('Total Size'), 1);
-
-    // Calculate the scales for each histogram
-    var histogramScales = {};
-    histogramKeys.forEach(function (d) {
-      var largestCount = 0;
-      self.initialHistograms[d].forEach(function (bin) {
-        largestCount = Math.max(largestCount, bin.count);
-      });
-
-      histogramScales[d] = d3.scale.linear()
-        .domain([0, largestCount])
-        .range([0, 100]); // Hard-coded size of the histogram
-    });
-
-    // And let's add them in a big list
-    var histograms = d3.select('#filters').selectAll('li.filterTool')
-      .data(histogramKeys, function (d) {
-        return d;
-      });
-
-    var histogramsEnter = histograms.enter().append('li')
-      .attr('class', 'filterTool');
-
-    // Add some sneaky stuff (we use these labels / checkboxes
-    // to show/hide the sections with CSS)
-    histogramsEnter.append('label')
-      .text(function (d) {
-        return HUMAN_NAMES[d];
-      })
-      .attr('for', function (d) {
-        return 'histogramCheckbox_' + d;
-      });
-    histogramsEnter.append('input')
-      .attr('type', 'checkbox')
-      .attr('id', function (d) {
-        return 'histogramCheckbox_' + d;
-      });
-
-    // And now the bars inside
-    histogramsEnter.append('ul').attr('class', 'filterToolContent');
-
-    // Okay, now let's construct the histograms inside
-    var bars = histograms.selectAll('ul.filterToolContent')
-      .selectAll('li.histogramBar').data(function (d) {
-        // We want the set of bins that exist. If it's
-        // a quantitative histogram, sort by lowBound,
-        // otherwise sort by descending bin size in the
-        // current selection
-        var bins = Object.keys(self.initialHistograms[d]);
-        // Note: Object.keys is a little confusing, since
-        // this is an array (Object.keys gives us an array of
-        // integers, that we re-sort below)
-
-        bins.sort(function (a, b) {
-          if (self.initialHistograms[d][a].lowBound !== undefined &&
-            self.initialHistograms[d][b].lowBound !== undefined) {
-            return self.initialHistograms[d][a].lowBound -
-              self.initialHistograms[d][b].lowBound;
-          } else {
-            var aCount = self.currentHistograms[d][a];
-            var bCount = self.currentHistograms[d][b];
-            if (!aCount) {
-              aCount = 0;
-            } else {
-              aCount = aCount.count;
-            }
-            if (!bCount) {
-              bCount = 0;
-            } else {
-              bCount = bCount.count;
-            }
-            return bCount - aCount;
-          }
-        });
-
-        return bins;
-      }, function (d) {
-        return d;
-      });
-
-    var barsEnter = bars.enter().append('li')
-      .attr('class', 'histogramBar');
-    barsEnter.append('div').attr('class', 'barLabel');
-    barsEnter.append('div').attr('class', 'initialBar');
-    barsEnter.append('div').attr('class', 'selectedBar');
-
-    d3.selectAll('div.barLabel').text(function (binNo) {
-      var d = d3.select(this.parentNode.parentNode).datum();
-      var spec = self.initialHistograms[d][binNo];
-      var label;
-      if (spec.hasOwnProperty('lowBound')) {
-        label = spec.lowBound.toFixed(0) + '-' + spec.highBound.toFixed(0);
-      } else {
-        label = spec['_id'];
-        if (label === null) {
-          label = '< No data >';
-        }
-        if (label === '') {
-          label = '< Blank >';
-        }
-      }
-      return label;
-    });
-    d3.selectAll('div.initialBar').text(function (binNo) {
-      var d = d3.select(this.parentNode.parentNode).datum();
-      return self.initialHistograms[d][binNo].count;
-    }).style('width', function (binNo) {
-      var d = d3.select(this.parentNode.parentNode).datum();
-      return histogramScales[d](self.initialHistograms[d][binNo].count) + 'px';
-    }).style('text-indent', function (binNo) {
-      var d = d3.select(this.parentNode.parentNode).datum();
-      return (5 + histogramScales[d](self.initialHistograms[d][binNo].count)) + 'px';
-    });
-    d3.selectAll('div.selectedBar').text(function (binNo) {
-      var d = d3.select(this.parentNode.parentNode).datum();
-      return self.currentHistograms[d][binNo].count;
-    }).style('width', function (binNo) {
-      var d = d3.select(this.parentNode.parentNode).datum();
-      return histogramScales[d](self.currentHistograms[d][binNo].count) + 'px';
-    });
-
-    return true;
-  },
   renderImages: function () {
     var self = this;
 
@@ -487,10 +230,10 @@ isic.views.ImagesView = isic.View.extend({
     // inverse relationship with the size of the download, so
     // more, smaller thumbnails show up when the download is large)
     var columnScale = d3.scale.linear()
-      .domain([0, self.initialHistograms['Total Count']])
+      .domain([0, temp_download_size])
       .range([256, 256 / 4]); // Shrink the thumbnails by as much as a quarter
 
-    var imageWidth = columnScale(self.currentHistograms['Total Count']);
+    var imageWidth = columnScale(temp_download_size);
 
     var imagePadding = 5;
 
@@ -617,10 +360,7 @@ isic.views.ImagesView = isic.View.extend({
   },
   render: function () {
     var self = this;
-
-    if (self.renderHistograms()) {
-      self.renderImages();
-    }
+    self.renderImages();
   }
 });
 
