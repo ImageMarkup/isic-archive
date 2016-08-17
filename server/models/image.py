@@ -132,7 +132,7 @@ class Image(ItemModel):
                 {'name': groupName}
             )['_id'] in user.get('groups', [])
             for groupName in
-            ['Phase 0', 'Phase 1a', 'Phase 1b']
+            ['Phase 0', 'Segmentation Novices', 'Segmentation Experts']
         ):
             # Check if all images are part of annotation studies that this user
             #   is part of

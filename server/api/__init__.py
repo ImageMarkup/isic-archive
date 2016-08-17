@@ -26,6 +26,7 @@ from .featureset import FeaturesetResource
 from .image import ImageResource
 from .segmentation import SegmentationResource
 from .study import StudyResource
+from .task import TaskResource
 
 __all__ = [AnnotationResource, DatasetResource, FeaturesetResource,
-           ImageResource, SegmentationResource, StudyResource]
+           ImageResource, SegmentationResource, StudyResource, TaskResource]

@@ -70,10 +70,10 @@ derm_app.controller('AnnotationController', [
                 return;
             }
             $scope.study = Study.get({'id': $scope.annotation.studyId});
-            $scope.image = Image.get({'id': $scope.annotation.imageId});
+            $scope.image = Image.get({'id': $scope.annotation.image._id});
 
             $rootScope.imageviewer.loadPainting(
-                $scope.annotation.imageId,
+                $scope.annotation.image._id,
                 $scope.annotation.segmentationId,
                 function () {
                     // this callback is being executed from non-Angular code, so we must
@@ -83,7 +83,7 @@ derm_app.controller('AnnotationController', [
                     });
                 }
             );
-            $scope.overview_image_url = '/api/v1/image/' + $scope.annotation.imageId + '/thumbnail?width=256';
+            $scope.overview_image_url = '/api/v1/image/' + $scope.annotation.image._id + '/thumbnail?width=256';
             start_time = Date.now();
         });
         $scope.$watch('study && study._id', function () {

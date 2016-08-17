@@ -35,8 +35,6 @@ def addUserToAllUDAGroups(user):
     # group should already exist
     for collection in [
         ISIC.Phase0,
-        ISIC.Phase1a,
-        ISIC.Phase1b,
         ISIC.LesionImages,
         ISIC.AnnotationStudies,
     ]:
@@ -140,8 +138,6 @@ class _ISICCollection(ModelImporter):
 # this will be populated in 'initialSetup'
 class ISIC(object):
     Phase0 = None
-    Phase1a = None
-    Phase1b = None
     LesionImages = None
     AnnotationStudies = None
 
@@ -165,6 +161,8 @@ def setupUdaTestUser(phase, username, password, label):
 
 
 def initialSetup(info):
+    Group = ModelImporter.model('group')
+
     if ModelImporter.model('setting').get(constants.PluginSettings.DEMO_MODE, None) is None:
         ModelImporter.model('setting').set(constants.PluginSettings.DEMO_MODE, False)
 
@@ -177,15 +175,15 @@ def initialSetup(info):
     )
 
     # Create empty "dataset contributors" group
-    if not ModelImporter.model('group').findOne(
+    if not Group.findOne(
         {'name': 'Dataset Contributors'}):
-        contributorsGroup = ModelImporter.model('group').createGroup(
+        contributorsGroup = Group.createGroup(
             name='Dataset Contributors',
             creator=getAdminUser(),
             description='Users that can create datasets',
             public=True
         )
-        ModelImporter.model('group').removeUser(contributorsGroup, getAdminUser())
+        Group.removeUser(contributorsGroup, getAdminUser())
 
     ISIC.Flagged = _ISICCollection(
         collection_name='Flagged Images',
@@ -193,21 +191,23 @@ def initialSetup(info):
         public=False
     )
 
-    ISIC.Phase1a = _ISICCollection(
-        collection_name='Phase 1a',
-        collection_description='Images that have passed initial QC review',
-        public=True,
-        group_name='Phase 1a',
-        group_description='Users responsible for setting the normal and lesion boundaries, as well as defining the paint-by-number threshold'
-    )
+    if not Group.findOne({'name': 'Segmentation Novices'}):
+        segmentationNovicesGroup = Group.createGroup(
+            name='Segmentation Novices',
+            creator=getAdminUser(),
+            description='Users able to tentatively segment lesion boundaries',
+            public=True
+        )
+        Group.removeUser(segmentationNovicesGroup, getAdminUser())
 
-    ISIC.Phase1b = _ISICCollection(
-        collection_name='Phase 1b',
-        collection_description='Images that have passed novice review',
-        public=True,
-        group_name='Phase 1b',
-        group_description='Users responsible for boundary review and editing of boundaries if necessary'
-    )
+    if not Group.findOne({'name': 'Segmentation Experts'}):
+        segmentationExpertsGroup = Group.createGroup(
+            name='Segmentation Experts',
+            creator=getAdminUser(),
+            description='Users able to definitively segment lesion boundaries',
+            public=True
+        )
+        Group.removeUser(segmentationExpertsGroup, getAdminUser())
 
     ISIC.LesionImages = _ISICCollection(
         collection_name='Lesion Images',
@@ -259,18 +259,6 @@ def initialSetup(info):
             username='udauploader',
             password='udauploader',
             label='Uploader',
-        )
-        setupUdaTestUser(
-            phase=ISIC.Phase1a,
-            username='udanovice',
-            password='udanovice',
-            label='Novice',
-        )
-        setupUdaTestUser(
-            phase=ISIC.Phase1b,
-            username='udaexpert',
-            password='udaexpert',
-            label='Trained',
         )
         setupUdaTestUser(
             phase=ISIC.AnnotationStudies,
