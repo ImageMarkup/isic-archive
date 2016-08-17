@@ -74,9 +74,8 @@ class StudyResource(Resource):
 
         state = None
         if params.get('state'):
-            try:
-                state = Study.State(params['state'])
-            except ValueError:
+            state = params['state']
+            if state not in {Study.State.ACTIVE, Study.State.COMPLETE}:
                 raise RestException('Query parameter "state" may only '
                                     'be "active" or "complete".')
 

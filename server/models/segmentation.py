@@ -21,7 +21,6 @@ import datetime
 import six
 
 from bson import ObjectId
-from enum import Enum
 import numpy
 from PIL import Image as PIL_Image, ImageDraw as PIL_ImageDraw
 
@@ -33,7 +32,7 @@ from .segmentation_helpers import ScikitSegmentationHelper
 
 
 class Segmentation(Model):
-    class Skill(Enum):
+    class Skill(object):
         NOVICE = 'novice'
         EXPERT = 'expert'
 
@@ -64,14 +63,11 @@ class Segmentation(Model):
         return None
 
     def createSegmentation(self, image, skill, creator, lesionBoundary):
-        if not isinstance(skill, self.Skill):
-            raise TypeError('skill must be an instance of Skill')
-
         now = datetime.datetime.utcnow()
 
         segmentation = self.save({
             'imageId': image['_id'],
-            'skill': skill.value,
+            'skill': skill,
             'creatorId': creator['_id'],
             'lesionBoundary': lesionBoundary,
             'created': now
@@ -203,8 +199,7 @@ class Segmentation(Model):
             assert self.model('image', 'isic_archive').find(
                 {'_id': doc['imageId']}).count()
 
-            # TODO: better use of Enum
-            assert doc['skill'] in {'novice', 'expert'}
+            assert doc['skill'] in {self.Skill.NOVICE, self.Skill.EXPERT}
 
             assert isinstance(doc['creatorId'], ObjectId)
             assert self.model('user').find(

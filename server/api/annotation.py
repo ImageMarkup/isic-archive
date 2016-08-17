@@ -89,10 +89,9 @@ class AnnotationResource(Resource):
                 'userId': annotation['meta']['userId'],
                 'segmentationId': annotation['meta']['segmentationId'],
                 'imageId': annotation['meta']['imageId'],
-                # TODO: change to State enum and ensure it serializes
-                'state': 'complete' \
+                'state': Study.State.COMPLETE \
                          if annotation['meta']['stopTime'] is not None \
-                         else 'active'
+                         else Study.State.ACTIVE
             }
             for annotation in annotations
         ]

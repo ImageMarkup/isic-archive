@@ -17,15 +17,13 @@
 #  limitations under the License.
 ###############################################################################
 
-from enum import Enum
-
 from girder.constants import AccessType
 from girder.models.folder import Folder as FolderModel
 from girder.models.model_base import ValidationException
 
 
 class Study(FolderModel):
-    class State(Enum):
+    class State(object):
         ACTIVE = 'active'
         COMPLETE = 'complete'
 
@@ -176,7 +174,7 @@ class Study(FolderModel):
             elif state == self.State.COMPLETE:
                 query['meta.stopTime'] = {'$ne': None}
             else:
-                raise ValueError('"state" must be an instance of State')
+                raise ValueError('"state" must be "active" or "complete".')
         return Annotation.find(query, **kwargs)
 
     def _findQueryFilter(self, query, annotatorUser, state):
