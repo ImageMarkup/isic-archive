@@ -64,7 +64,7 @@
         </a>
         <div class="row">
             <div class="col-lg-6">
-                <div class="panel-group" ng-if="qc_tasks">
+                <div class="panel-group" ng-if="qc_tasks_total">
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <div class="panel-title">
@@ -83,7 +83,7 @@
                         </ul>
                     </div>
                 </div>
-                <div class="panel-group" ng-if="segmentation_tasks">
+                <div class="panel-group" ng-if="segmentation_tasks_total">
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <div class="panel-title">
@@ -102,7 +102,7 @@
                         </ul>
                     </div>
                 </div>
-                <div class="panel-group" ng-if="annotation_tasks">
+                <div class="panel-group" ng-if="annotation_tasks_total">
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <div class="panel-title">
@@ -114,7 +114,7 @@
                         <ul class="list-group">
                             <a class="list-group-item"
                                ng-repeat="task_group in annotation_tasks track by task_group.study._id"
-                               href="/api/v1/task/me/annotation/redirect?datasetId={{ task_group.study._id }}">
+                               href="/api/v1/task/me/annotation/redirect?studyId={{ task_group.study._id }}">
                                 <span class="btn-link">{{ task_group.study.name }}</span>
                                 <span class="badge">{{ task_group.count }}</span>
                             </a>

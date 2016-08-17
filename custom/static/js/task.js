@@ -19,6 +19,9 @@ derm_app.controller('TaskController', ['$scope', '$http', '$interval',
                 $scope.segmentation_tasks_total = data.reduce(function (total, task_group) {
                     return total + task_group.count;
                 }, 0);
+            }).error(function() {
+                $scope.segmentation_tasks = [];
+                $scope.segmentation_tasks_total = 0;
             });
             $http.get('/api/v1/task/me/annotation').success(function (data) {
                 $scope.annotation_tasks = data;
