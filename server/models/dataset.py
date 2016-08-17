@@ -183,7 +183,7 @@ class Dataset(FolderModel):
                 handleZip(datasetFolder, user, zipFile)
 
         # Process extracted images
-        for item in self.childImages(datasetFolder):
+        for item in self.model('folder').childItems(datasetFolder):
             handleImage(item, user, license)
 
         # Process metadata in CSV files
