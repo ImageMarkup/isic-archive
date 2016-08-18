@@ -90,6 +90,15 @@ Usage
   vagrant ssh
   sudo supervisorctl restart girderapp
 
+* To inspect various logs:
+::
+
+  # Girder's console output
+  tail -F /tmp/girderapp-std*
+
+  # Mongodb's console output
+  tail -F /var/log/mongodb/mongod.log
+
 .. |build-status| image:: https://travis-ci.org/ImageMarkup/isic-archive.svg?branch=master
     :target: https://travis-ci.org/ImageMarkup/isic-archive
     :alt: Build Status
