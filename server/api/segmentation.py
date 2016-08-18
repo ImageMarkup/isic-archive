@@ -26,8 +26,6 @@ from girder.api.rest import Resource, RestException, loadmodel, rawResponse
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 
-from ..provision_utility import ISIC, getAdminUser
-
 
 class SegmentationResource(Resource):
     def __init__(self,):
@@ -68,7 +66,6 @@ class SegmentationResource(Resource):
     @access.user
     def createSegmentation(self, params):
         Segmentation = self.model('segmentation', 'isic_archive')
-        Folder = self.model('folder')
 
         bodyJson = self.getBodyJson()
         self.requireParams(('imageId', 'lesionBoundary'), bodyJson)
@@ -97,29 +94,6 @@ class SegmentationResource(Resource):
             creator=user,
             lesionBoundary=lesionBoundary
         )
-
-        # Move image item to next collection
-        if skill == Segmentation.Skill.EXPERT:
-            nextPhaseCollection = ISIC.LesionImages.collection
-        else:
-            nextPhaseCollection = ISIC.Phase1b.collection
-        original_folder = Folder.load(image['folderId'], force=True)
-        next_phase_folder = Folder.createFolder(
-            parent=nextPhaseCollection,
-            name=original_folder['name'],
-            description=original_folder['description'],
-            parentType='collection',
-            public=None,
-            creator=getAdminUser(),
-            allowRename=False,
-            reuseExisting=True
-        )
-        if not next_phase_folder.get('meta'):
-            next_phase_folder = Folder.setMetadata(
-                next_phase_folder, original_folder.get('meta', {}))
-
-        self.model('item').move(image, next_phase_folder)
-
         return segmentation
 
     @describeRoute(

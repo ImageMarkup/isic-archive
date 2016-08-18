@@ -50,7 +50,7 @@ class Dataset(FolderModel):
             # TODO: re-add once converted files no longer contributes to size
             # 'size',
         ])
-        self.summaryFields = ('_id', 'name', 'updated')
+        self.summaryFields = ['_id', 'name', 'updated']
 
     def createDataset(self, name, description, creatorUser):
         # Look for duplicate names in any of the dataset-containing collections
@@ -58,8 +58,6 @@ class Dataset(FolderModel):
             'name': {'$in': [
                 'Phase 0',
                 'Flagged Images',
-                'Phase 1a',
-                'Phase 1b',
                 'Lesion Images'
             ]}
         }).distinct('_id')
@@ -106,7 +104,7 @@ class Dataset(FolderModel):
         # assumes collection has been created by provision_utility
         # TODO: cache this value
         datasetCollection = self.model('collection').findOne({
-            'name': 'Lesion Images'})
+            'name': 'Lesion Images'}, fields={'_id': 1})
 
         datasetQuery = {
             'parentId': datasetCollection['_id']
@@ -185,7 +183,7 @@ class Dataset(FolderModel):
                 handleZip(datasetFolder, user, zipFile)
 
         # Process extracted images
-        for item in self.childImages(datasetFolder):
+        for item in self.model('folder').childItems(datasetFolder):
             handleImage(item, user, license)
 
         # Process metadata in CSV files

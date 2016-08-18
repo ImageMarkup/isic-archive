@@ -17,15 +17,13 @@
 #  limitations under the License.
 ###############################################################################
 
-from enum import Enum
-
 from girder.constants import AccessType
 from girder.models.folder import Folder as FolderModel
 from girder.models.model_base import ValidationException
 
 
 class Study(FolderModel):
-    class State(Enum):
+    class State(object):
         ACTIVE = 'active'
         COMPLETE = 'complete'
 
@@ -135,13 +133,13 @@ class Study(FolderModel):
         return self.model('featureset', 'isic_archive').load(
             study['meta']['featuresetId'], exc=True)
 
-    def getAnnotators(self, study):
+    def getAnnotators(self, study, fields=None):
         Folder = self.model('folder')
         User = self.model('user')
         annotatorFolders = Folder.find({'parentId': study['_id']})
         return User.find({
             '_id': {'$in': annotatorFolders.distinct('meta.userId')}
-        })
+        }, fields=fields)
 
     def getSegmentations(self, study):
         Annotation = self.model('annotation', 'isic_archive')
@@ -150,12 +148,12 @@ class Study(FolderModel):
             {'meta.studyId': study['_id']}).distinct('meta.segmentationId')
         return Segmentation.find({'_id': {'$in': segmentationIds}})
 
-    def getImages(self, study):
+    def getImages(self, study, fields=None):
         Annotation = self.model('annotation', 'isic_archive')
         Image = self.model('image', 'isic_archive')
         imageIds = Annotation.find({
             'meta.studyId': study['_id']}).distinct('meta.imageId')
-        return Image.find({'_id': {'$in': imageIds}})
+        return Image.find({'_id': {'$in': imageIds}}, fields=fields)
 
     def childAnnotations(self, study=None, annotatorUser=None,
                          segmentation=None, imageItem=None, state=None,
@@ -176,7 +174,7 @@ class Study(FolderModel):
             elif state == self.State.COMPLETE:
                 query['meta.stopTime'] = {'$ne': None}
             else:
-                raise ValueError('"state" must be an instance of State')
+                raise ValueError('"state" must be "active" or "complete".')
         return Annotation.find(query, **kwargs)
 
     def _findQueryFilter(self, query, annotatorUser, state):

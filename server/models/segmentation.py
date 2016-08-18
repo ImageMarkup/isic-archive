@@ -21,7 +21,6 @@ import datetime
 import six
 
 from bson import ObjectId
-from enum import Enum
 import numpy
 from PIL import Image as PIL_Image, ImageDraw as PIL_ImageDraw
 
@@ -33,7 +32,7 @@ from .segmentation_helpers import ScikitSegmentationHelper
 
 
 class Segmentation(Model):
-    class Skill(Enum):
+    class Skill(object):
         NOVICE = 'novice'
         EXPERT = 'expert'
 
@@ -49,29 +48,28 @@ class Segmentation(Model):
             'stopTime'
             'created'
         ])
-        self.summaryFields = ('_id', 'imageId', 'skill')
+        self.summaryFields = ['_id', 'imageId', 'skill']
         events.bind('model.item.remove_with_kwargs',
                     'isic_archive.gc_segmentation',
                     self._onDeleteItem)
 
     def getUserSkill(self, user):
-        expertGroup = self.model('group').findOne({'name': 'Phase 1b'})
+        expertGroup = self.model('group').findOne({
+            'name': 'Segmentation Experts'})
         if expertGroup['_id'] in user['groups']:
             return self.Skill.EXPERT
-        noviceGroup = self.model('group').findOne({'name': 'Phase 1a'})
+        noviceGroup = self.model('group').findOne({
+            'name': 'Segmentation Novices'})
         if noviceGroup['_id'] in user['groups']:
             return self.Skill.NOVICE
         return None
 
     def createSegmentation(self, image, skill, creator, lesionBoundary):
-        if not isinstance(skill, self.Skill):
-            raise TypeError('skill must be an instance of Skill')
-
         now = datetime.datetime.utcnow()
 
         segmentation = self.save({
             'imageId': image['_id'],
-            'skill': skill.value,
+            'skill': skill,
             'creatorId': creator['_id'],
             'lesionBoundary': lesionBoundary,
             'created': now
@@ -203,8 +201,7 @@ class Segmentation(Model):
             assert self.model('image', 'isic_archive').find(
                 {'_id': doc['imageId']}).count()
 
-            # TODO: better use of Enum
-            assert doc['skill'] in {'novice', 'expert'}
+            assert doc['skill'] in {self.Skill.NOVICE, self.Skill.EXPERT}
 
             assert isinstance(doc['creatorId'], ObjectId)
             assert self.model('user').find(

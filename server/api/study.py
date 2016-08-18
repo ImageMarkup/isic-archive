@@ -74,9 +74,8 @@ class StudyResource(Resource):
 
         state = None
         if params.get('state'):
-            try:
-                state = Study.State(params['state'])
-            except ValueError:
+            state = params['state']
+            if state not in {Study.State.ACTIVE, Study.State.COMPLETE}:
                 raise RestException('Query parameter "state" may only '
                                     'be "active" or "complete".')
 
@@ -129,25 +128,24 @@ class StudyResource(Resource):
                 fields=Featureset.summaryFields
             )
 
-            userSummaryFields = ('_id', 'login', 'firstName', 'lastName')
+            userSummaryFields = ['_id', 'login', 'firstName', 'lastName']
 
-            creator = User.load(output.pop('creatorId'), force=True)
-            output['creator'] = {
-                field: creator[field]
-                for field in
-                userSummaryFields
-            }
+            output['creator'] = User.load(
+                output.pop('creatorId'),
+                force=True, exc=True,
+                fields=userSummaryFields)
 
-            output['users'] = [
-                {
-                    field: user[field]
-                    for field in
-                    userSummaryFields
-                }
-                for user in
-                Study.getAnnotators(study).sort('login', SortDir.ASCENDING)
-            ]
+            output['users'] = list(
+                Study.getAnnotators(
+                    study, userSummaryFields
+                ).sort('login', SortDir.ASCENDING))
 
+            output['images'] = list(
+                Study.getImages(
+                    study, Image.summaryFields
+                ).sort('lowerName', SortDir.ASCENDING))
+
+            # TODO: remove this
             output['segmentations'] = [
                 {
                     field: segmentation[field]
@@ -156,20 +154,6 @@ class StudyResource(Resource):
                 for segmentation in
                 Study.getSegmentations(study)
             ]
-
-            images = Image.find(
-                {'_id': {'$in': [
-                    segmentation['imageId']
-                    for segmentation in output['segmentations']
-                ]}},
-                fields=Image.summaryFields
-            )
-            images = {image['_id']: image for image in images}
-            for segmentation in output['segmentations']:
-                segmentation['image'] = images.pop(segmentation.pop('imageId'))
-
-            output['segmentations'].sort(
-                key=lambda segmentation: segmentation['image']['name'])
 
             return output
 
