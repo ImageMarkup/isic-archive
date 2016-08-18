@@ -116,6 +116,9 @@ def load(info):
         'tools.staticdir.dir': app_path
     }
 
+    # Move girder app to /girder, serve isic_archive app from /
+    info['serverRoot'], info['serverRoot'].girder = (Webroot(), info['serverRoot'])
+    info['serverRoot'].api = info['serverRoot'].girder.api
 
     # add dynamic root routes
     # root endpoints -> where a user may go and expect a UI
@@ -150,9 +153,3 @@ def load(info):
     info['apiRoot'].segmentation = api.SegmentationResource()
     info['apiRoot'].study = api.StudyResource()
     info['apiRoot'].task = api.TaskResource()
-
-    # Serve isic app from /isic
-    info['serverRoot'].isic = Webroot()
-    # Move girder app to /girder, serve isic_archive app from /
-    # info['serverRoot'].girder = info['serverRoot']
-    # info['serverRoot'].api = info['serverRoot'].girder.api

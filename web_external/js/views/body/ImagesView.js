@@ -268,7 +268,7 @@ isic.views.ImagesView = isic.View.extend({
       .on('click', function (d) {
         // TODO: show a lightbox
         // For now, jump to the item in girder
-        window.open('#item/' + d);
+        window.open('girder#item/' + d);
       });
 
     // Construct a position/height lookup dict
