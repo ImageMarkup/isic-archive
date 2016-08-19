@@ -1,117 +1,80 @@
-/*globals girder, jQuery, d3, Image*/
+/*globals girder, jQuery, d3, Image, Backbone, _*/
 /*eslint-disable*/
 var LOG_IMAGE_FETCHES = false;
 
 var INITIAL_IMAGES_TO_FETCH = 150;
-
-function widthWithoutScrollbar(selector) {
-  var tempDiv = jQuery('<div/>');
-  jQuery(selector).append(tempDiv);
-  var elemwidth = tempDiv.width();
-  tempDiv.remove();
-  return elemwidth;
-}
 
 // We scaled the images based on how many
 // are currently selected; for now we'll hard
 // code this (and probably change it in the future)
 var temp_download_size = 10000;
 
-isic.views.ImagesView = isic.View.extend({
+isic.views.ImagesSubViews = isic.views.ImagesSubViews || {};
+
+isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
   initialize: function () {
     var self = this;
     self.imageCache = {};
+    self.loadedImages = {};
     self.imageColumnLookup = {};
     self.imageColumns = [];
 
-    self.currentImageOffset = 0;
     self.imageIds = [];
-
-    self.$el.html(isic.templates.imagesPage());
-    self.fetchImageTimeout = null;
-    self.fetchImages();
 
     // Re-render when the window
     // changes size
     window.onresize = function () {
       self.render();
     };
-    // Load more images when we hit the bottom
-    // of the content area
-    jQuery('#isic-images-pageContent').on('scroll', function () {
-      // If we haven't sent an initial request,
-      // do it immediately (don't wait for the
-      // scroll to finish to start fetching images)
-      if (self.fetchImageTimeout === null) {
-        // self.fetchImages();
-      } else {
-        // Otherwise debounce the scrolling
-        window.clearTimeout(self.fetchImageTimeout);
-      }
-
-      self.fetchImageTimeout = window.setTimeout(function () {
-        self.fetchImageTimeout = null;
-        self.fetchImages();
-      }, 300);
-    });
   },
-  fetchImages: function (numberToFetch) {
+  setImages: function (imageIds) {
     var self = this;
 
-    if (!numberToFetch) {
-      if (self.averageImageSize === undefined) {
-        numberToFetch = INITIAL_IMAGES_TO_FETCH;
-      } else {
-        // Estimate how many more images we need
-        var bounds = jQuery('#isic-images-preview')[0].getBoundingClientRect();
-        var content = jQuery('#isic-images-pageContent');
-        var spaceLeft = content.scrollTop() + content.height() - bounds.bottom;
-        numberToFetch = Math.floor(self.imageColumns.length *
-          (spaceLeft / self.averageImageSize));
+    self.imageIds = imageIds;
+    self.loadedImages = {};
 
-        if (numberToFetch <= 0) {
-          // If a negligible amount of space is left,
-          // don't bother getting any more until
-          // the user scrolls again
-          return;
-        }
+    // Start fetching the images now... don't wait
+    // around for the call in render()
+    self.imageIds.forEach(function (i) {
+      if (!self.imageCache.hasOwnProperty(i)) {
+        self.imageCache[i] = new Image();
+        self.imageCache[i].addEventListener('load', function () {
+          if (!self.imageCache[i].width || !self.imageCache[i].height) {
+            self.handleBadImage(i);
+          } else {
+            self.loadedImages[i] = true;
+          }
+          self.render();
+        });
+        self.imageCache[i].addEventListener('error', function () {
+          self.handleBadImage(i);
+        });
+        self.imageCache[i].src = girder.apiRoot + '/image/' + i +
+            '/thumbnail';
       }
-    }
-
-    girder.restRequest({
-      path: 'image',
-      data: {
-        'limit': numberToFetch,
-        'offset': self.currentImageOffset
-      }
-    }).done(function (newImageList) {
-      var newImageIds = newImageList.map(function(obj) {
-        return obj._id;
-      });
-      self.imageIds = self.imageIds.concat(newImageIds);
-
-      // Start fetching the images now... don't wait
-      // around for the call in render()
-      newImageIds.forEach(function (i) {
-        if (!self.imageCache.hasOwnProperty(i)) {
-          self.imageCache[i] = new Image();
-          self.imageCache[i].src = girder.apiRoot + '/image/' + i +
-              '/thumbnail';
-        }
-      });
-
-      self.currentImageOffset += newImageIds.length;
-
-      if (LOG_IMAGE_FETCHES) {
-        console.log(newImageIds.length + ' images received for a total of ' +
-          self.currentImageOffset);
-      }
-
-      self.render();
-
-      // Go get more if we need them
-      self.fetchImages();
     });
+
+    // Clear out any old IDs after a while
+    // (don't do it immediately in case the
+    // user is flipping back and forth between
+    // pages)
+    window.setTimeout(function () {
+      Object.keys(self.imageCache).forEach(function (i) {
+        if (self.imageIds.indexOf(i) === -1) {
+          delete self.imageCache[i];
+          delete self.loadedImages[i];
+        }
+      });
+    }, 100000);
+
+    self.render();
+  },
+  handleBadImage: function (imageId) {
+    var self = this;
+    // The image didn't load correctly; replace it with the "no thumbnail
+    // available" image
+    self.imageCache[imageId].src = girder.staticRoot +
+      '/built/plugins/isic_archive/extra/img/noThumbnail.svg';
   },
   rearrangeColumns: function (numColumns) {
     var self = this;
@@ -124,25 +87,22 @@ isic.views.ImagesView = isic.View.extend({
     */
 
     // Remove any images that aren't here any more
-    // TODO(maybe): this is suboptimal in a bunch of ways...
-    for (imageId in self.imageColumnLookup) {
+    Object.keys(self.imageColumnLookup).forEach(function (imageId) {
       if (self.imageIds.indexOf(imageId) === -1) {
         myColumn = self.imageColumnLookup[imageId];
         myIndex = self.imageColumns[myColumn].indexOf(imageId);
 
         self.imageColumns[myColumn].splice(myIndex, 1);
-
         delete self.imageColumnLookup[imageId];
-        delete self.imageCache[imageId];
       }
-    }
+    });
 
     // Figure out which new images need placing
     var imagesToPlace = [];
 
-    self.imageIds.forEach(function (imageId) {
+    Object.keys(self.loadedImages).forEach(function (imageId) {
       if (!self.imageColumnLookup.hasOwnProperty(imageId)) {
-        // For some reason, browser seem to be
+        // For some reason, browsers seem to be
         // loading the images backwards. For a
         // better top-down effect (especially
         // when images are fetched in bulk), I'm
@@ -158,10 +118,12 @@ isic.views.ImagesView = isic.View.extend({
     }
     while (self.imageColumns.length > numColumns) {
       var dyingColumn = self.imageColumns.pop();
-      dyingColumn.forEach(function (imageId) {
-        delete self.imageColumnLookup[imageId];
-        imagesToPlace.push(imageId);
-      });
+      if (dyingColumn) {
+        dyingColumn.forEach(function (imageId) {
+          delete self.imageColumnLookup[imageId];
+          imagesToPlace.push(imageId);
+        });
+      }
     }
 
     // Helper function for placing/balancing
@@ -217,15 +179,21 @@ isic.views.ImagesView = isic.View.extend({
       imageId = self.imageColumns[minAndMax.max].pop();
       self.imageColumns[minAndMax.min].push(imageId);
       self.imageColumnLookup[imageId] = minAndMax.min;
-
       minAndMax = minAndMaxIndices();
     }
   },
-  renderImages: function () {
+  render: _.debounce(function () {
     var self = this;
 
-    // Figure out how much space we have to play with
-    var width = widthWithoutScrollbar('#isic-images-pageContent');
+    if (!this.addedSvgElement) {
+      d3.select(this.el).append('svg')
+        .attr('id', 'preview');
+    }
+
+    // Temporarily force scroll bars so that we can account for their width
+    this.$el.css('overflow', 'scroll');
+    var width = this.el.clientWidth;
+    this.$el.css('overflow', '');
 
     // We want the width of each column of images to have an
     // inverse relationship with the size of the download, so
@@ -242,6 +210,7 @@ isic.views.ImagesView = isic.View.extend({
     // are flush with the edge
     var numColumns = Math.floor((width - imagePadding) /
       (imageWidth + imagePadding));
+    numColumns = Math.max(numColumns, 1);
     imageWidth = (width - imagePadding) / numColumns - imagePadding;
 
     // Okay, we know how many columns we can fit...
@@ -249,7 +218,7 @@ isic.views.ImagesView = isic.View.extend({
     self.rearrangeColumns(numColumns);
 
     // Okay, time to draw / move the pictures:
-    var images = d3.select('#isic-images-preview').selectAll('image')
+    var images = d3.select('#preview').selectAll('image')
       .data(self.imageIds, function (d) {
         return d;
       });
@@ -263,12 +232,12 @@ isic.views.ImagesView = isic.View.extend({
         },
         'preserveAspectRatio': 'xMinYMin',
         'x': width / 2, // Start new images at the middle of the
-        'y': jQuery('#isic-images-preview').height() // bottom of the screen
+        'y': jQuery('#preview').height() // bottom of the screen
       })
       .on('click', function (d) {
         // TODO: show a lightbox
         // For now, jump to the item in girder
-        window.open('girder#item/' + d);
+        window.open('#item/' + d);
       });
 
     // Construct a position/height lookup dict
@@ -277,7 +246,6 @@ isic.views.ImagesView = isic.View.extend({
     // until we know them)
     var placementLookup = {};
     var tallestHeight = 0;
-    self.averageImageSize = 0;
     var missingImages = 0;
     var availableImages = 0;
     self.imageColumns.forEach(function (column, index) {
@@ -285,36 +253,9 @@ isic.views.ImagesView = isic.View.extend({
       column.forEach(function (imageId) {
         // Calculate the natural height of the image
         var height;
-        if (!self.imageCache[imageId].width ||
-          !self.imageCache[imageId].height) {
-          missingImages += 1;
-
-          // The image hasn't loaded yet, so just assume
-          // it's the same as the width for now (will get
-          // fixed on the next render call)
-          height = imageWidth;
-
-          // While we're here, trigger an image reload
-          // in case there was a server error the first time
-          var url = girder.apiRoot + '/image/' + imageId + '/thumbnail';
-          self.imageCache[imageId] = new Image();
-          self.imageCache[imageId].src = url;
-          d3.select('#image' + imageId).attr('xlink:href', url);
-
-          // Wait a second, and try another render call to
-          // fix any artifacts
-          if (self.renderTimeout !== undefined) {
-            window.clearTimeout(self.renderTimeout);
-          }
-          self.renderTimeout = window.setTimeout(function () {
-            self.render();
-          }, 1000);
-        } else {
-          availableImages += 1;
-
-          height = self.imageCache[imageId].height * imageWidth /
-            self.imageCache[imageId].width;
-        }
+        availableImages += 1;
+        height = self.imageCache[imageId].height * imageWidth /
+          self.imageCache[imageId].width;
         placementLookup[imageId] = {
           x: imagePadding + index * (imageWidth + imagePadding),
           y: y,
@@ -322,30 +263,22 @@ isic.views.ImagesView = isic.View.extend({
         };
         y += height + imagePadding;
 
-        self.averageImageSize += height;
         if (y > tallestHeight) {
           tallestHeight = y;
         }
       });
     });
-    if (self.imageIds.length > 0) {
-      self.averageImageSize = self.averageImageSize / self.imageIds.length;
-    } else {
-      self.averageImageSize = undefined;
-    }
-    if (LOG_IMAGE_FETCHES) {
-      console.log(availableImages + '/' + (missingImages + availableImages) +
-        ' successfully rendered.');
-    }
 
     // After all that, we finally know how much space we need
-    d3.select('#isic-images-preview').attr({
+    d3.select('#preview').attr({
       'width': width,
       'height': tallestHeight
     });
 
     // Animation time! Move / resize stuff:
-    images.transition().duration(500)
+    images.filter(function (d) {
+      return placementLookup.hasOwnProperty(d);
+    }).transition().duration(500)
       .attr({
         width: imageWidth,
         height: function (d) {
@@ -358,13 +291,5 @@ isic.views.ImagesView = isic.View.extend({
           return placementLookup[d].y;
         }
       });
-  },
-  render: function () {
-    var self = this;
-    self.renderImages();
-  }
-});
-
-isic.router.route('images', 'images', function (id) {
-    girder.events.trigger('g:navigateTo', isic.views.ImagesView);
+  }, 300)
 });

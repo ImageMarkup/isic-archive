@@ -1,20 +1,35 @@
-/* patch backbone's awkward padding enforcement */
-#g-app-body-container {
-  padding: 0px !important;
-}
-
 #galleryContent {
   position: relative;
   width: 100%;
   min-height: 12em;
-  height: calc(100vh - 12em);
+  height: calc(100vh - 13em);
+  overflow: auto;
+  display: flex;
 }
 
-#galleryContent #isic-images-pageContent {
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  height: 100%;
-  width: 100%;
-  overflow: auto;
+#studyPane,
+#studyTextPane,
+#histogramPane,
+#imageDetailsPane {
+  max-width: 20em;
+}
+
+#studyPane {
+  background-color: #ffffcc;
+}
+#studyTextPane {
+  background-color: #c7e9b4;
+}
+#imageWall {
+  background-color: #7fcdbb;
+  overflow-y: auto;
+}
+#pagingPane {
+  background-color: #41b6c4;
+}
+#histogramPane {
+  background-color: #2c7fb8;
+}
+#imageDetailsPane {
+  background-color: #253494;
 }
