@@ -107,7 +107,6 @@ class StudyResource(Resource):
     def getStudy(self, study, params):
         Study = self.model('study', 'isic_archive')
         Featureset = self.model('featureset', 'isic_archive')
-        Segmentation = self.model('segmentation', 'isic_archive')
         Image = self.model('image', 'isic_archive')
         User = self.model('user')
 
@@ -145,28 +144,16 @@ class StudyResource(Resource):
                     study, Image.summaryFields
                 ).sort('lowerName', SortDir.ASCENDING))
 
-            # TODO: remove this
-            output['segmentations'] = [
-                {
-                    field: segmentation[field]
-                    for field in Segmentation.summaryFields
-                }
-                for segmentation in
-                Study.getSegmentations(study)
-            ]
-
             return output
 
     def _getStudyCSVStream(self, study):
         Study = self.model('study', 'isic_archive')
         Featureset = self.model('featureset', 'isic_archive')
-        Image = self.model('image', 'isic_archive')
 
         featureset = Featureset.load(study['meta']['featuresetId'])
         csvFields = tuple(itertools.chain(
             ('study_name', 'study_id',
              'user_login_name', 'user_id',
-             'segmentation_id',
              'image_name', 'image_id',
              'flag_status', 'elapsed_seconds'),
             (feature['id'] for feature in featureset['image_features']),
@@ -182,24 +169,18 @@ class StudyResource(Resource):
         responseBody.seek(0)
         responseBody.truncate()
 
-        segmentations = list(Study.getSegmentations(study))
-        images = Image.find({'_id': {'$in': [
-            segmentation['imageId'] for segmentation in segmentations]}})
-        images = {image['_id']: image for image in images}
-        for segmentation in segmentations:
-            segmentation['image'] = images.pop(segmentation.pop('imageId'))
-        segmentations.sort(
-            key=lambda segmentation: segmentation['image']['name'])
+        images = list(
+            Study.getImages(study).sort('lowerName', SortDir.ASCENDING))
 
-        for annotatorUser, segmentation in itertools.product(
+        for annotatorUser, image in itertools.product(
             Study.getAnnotators(study).sort('login', SortDir.ASCENDING),
-            segmentations
+                images
         ):
             # this will iterate either 0 or 1 times
             for annotation in Study.childAnnotations(
                 study=study,
                 annotatorUser=annotatorUser,
-                segmentation=segmentation,
+                image=image,
                 state=Study.State.COMPLETE
             ):
                 elapsedSeconds = \
@@ -211,9 +192,8 @@ class StudyResource(Resource):
                     'study_id': str(study['_id']),
                     'user_login_name': annotatorUser['login'],
                     'user_id': str(annotatorUser['_id']),
-                    'segmentation_id': str(segmentation['_id']),
-                    'image_name': segmentation['image']['name'],
-                    'image_id': str(segmentation['image']['_id']),
+                    'image_name': image['name'],
+                    'image_id': str(image['_id']),
                     'flag_status': annotation['meta']['status'],
                     'elapsed_seconds': elapsedSeconds
                 }
@@ -291,8 +271,8 @@ class StudyResource(Resource):
         .param('userIds',
                'The annotators user IDs of the study, as a JSON array.',
                paramType='form')
-        .param('segmentationIds',
-               'The segmentation IDs of the study, as a JSON array.',
+        .param('imageIds',
+               'The image IDs of the study, as a JSON array.',
                paramType='form')
         .errorResponse('Write access was denied on the parent folder.', 403)
     )
@@ -302,7 +282,7 @@ class StudyResource(Resource):
         if isJson:
             params = self.getBodyJson()
         self.requireParams(
-            ('name', 'featuresetId', 'userIds', 'segmentationIds'),
+            ('name', 'featuresetId', 'userIds', 'imageIds'),
             params)
 
         if not isJson:
@@ -311,11 +291,11 @@ class StudyResource(Resource):
             except ValueError:
                 raise RestException('Invalid JSON passed in userIds parameter.')
             try:
-                params['segmentationIds'] = json.loads(
-                    params['segmentationIds'])
+                params['imageIds'] = json.loads(
+                    params['imageIds'])
             except ValueError:
                 raise RestException(
-                    'Invalid JSON passed in segmentationIds parameter.')
+                    'Invalid JSON passed in imageIds parameter.')
 
         studyName = params['name'].strip()
         if not studyName:
@@ -337,13 +317,14 @@ class StudyResource(Resource):
             for annotatorUserId in params['userIds']
         ]
 
-        segmentations = [
-            self.model('segmentation', 'isic_archive').load(segmentationId)
-            for segmentationId in params['segmentationIds']
+        images = [
+            self.model('image', 'isic_archive').load(
+                imageId, user=creatorUser, level=AccessType.READ)
+            for imageId in params['imageIds']
         ]
 
         study = self.model('study', 'isic_archive').createStudy(
-            studyName, creatorUser, featureset, annotatorUsers, segmentations)
+            studyName, creatorUser, featureset, annotatorUsers, images)
 
         # TODO return nothing? return full study? return 201 + Location header?
         return study
