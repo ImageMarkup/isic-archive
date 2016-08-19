@@ -36,7 +36,7 @@
   position: relative;
   padding: 0.5em;
   margin: 0.5em;
-  border: 1px solid #dddddd;
+  border: 1px solid #DDDDDD;
   border-radius: 3px;
 }
 
@@ -75,30 +75,41 @@
   flex-wrap: nowrap;
   align-items: center;
 }
-#galleryContent #pagingPane img {
-  width: 1.75em;
-  height: 1.75em;
-  margin: 1em;
+#galleryContent #pagingPane .button {
+  margin: 0.5em;
+  cursor: pointer;
   border: 1px solid transparent;
   border-radius: 3px;
   padding: 3px;
-  cursor: pointer;
 }
-#galleryContent #pagingPane img.selected {
+#galleryContent #pagingPane .button img {
+  width: 1em;
+  height: 1em;
+}
+#galleryContent #pagingPane .button.selected img {
+  -webkit-filter: url(#recolorImageTo00ABFF);
   filter: url(#recolorImageTo00ABFF);
 }
-#galleryContent #pagingPane img:hover {
-  filter: url(#recolorImageTo444499);
-  border: 1px solid #e2e2e2;
+#galleryContent #pagingPane .button:hover {
+  border: 1px solid #E2E2E2;
   background: linear-gradient(to bottom, #fff 60%, #f6f6f6 100%);
+}
+#galleryContent #pagingPane .button:hover img {
+  -webkit-filter: url(#recolorImageTo444499);
+  filter: url(#recolorImageTo444499);
 }
 #galleryContent #pagingPane #pageSizeControl {
   margin: 1em;
   white-space: nowrap;
 }
+#galleryContent #pagingPane #pageSizeControl label {
+  margin: 0px;
+  vertical-align: middle;
+}
 #galleryContent #pagingPane #pageSizeControl input {
+  margin-left: 1em;
   text-align: center;
-  width: 6em;
+  width: 4em;
 }
 
 /* Histogram pane */

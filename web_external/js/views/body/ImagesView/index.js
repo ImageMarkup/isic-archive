@@ -33,6 +33,12 @@ isic.views.ImagesView = isic.View.extend({
 
     self.listenTo(self.pagingPane, 'iv:toggleHistogram',
       function () {
+        // Regardless of whether this goes on or off,
+        // we want to remove hide the selected item details
+        // (i.e. if we're turning it off, we want to close
+        // the sidebar. If we're turning it on, we want to
+        // show the histograms, not the individual selection)
+        self.imageWall.selectImage(null);
         self.render();
       });
   },
@@ -57,9 +63,8 @@ isic.views.ImagesView = isic.View.extend({
   render: function () {
     var self = this;
     if (!(self.addedTemplate)) {
-      self.$el.html(isic.templates.imagesPage({
-          staticRoot: girder.staticRoot,
-      }));
+      self.$el.html(isic.templates.imagesPage());
+      recolorImageFilters(['#00ABFF', '#444499']);
       self.histogramPane.setElement(self.$el.find('#histogramPane')[0]);
       self.histogramPane.addedDomListeners = false;
       self.imageWall.setElement(self.$el.find('#imageWall')[0]);
@@ -73,19 +78,22 @@ isic.views.ImagesView = isic.View.extend({
     self.imageWall.render();
     self.pagingPane.render();
 
-    if (self.pagingPane.showHistograms) {
-      self.$el.find('#histogramPane').css('display', '');
-      self.histogramPane.render();
-    } else {
-      self.$el.find('#histogramPane').css('display', 'none');
-    }
-
-    console.log(self.imageWall.selectedImageId);
+    // Only show either the histogram or selected pane at a time
+    // (don't show both)
     if (self.imageWall.selectedImageId) {
       self.$el.find('#imageDetailsPane').css('display', '');
       self.imageDetailsPane.render();
+
+      self.$el.find('#histogramPane').css('display', 'none');
     } else {
       self.$el.find('#imageDetailsPane').css('display', 'none');
+
+      if (self.pagingPane.showHistograms) {
+        self.$el.find('#histogramPane').css('display', '');
+        self.histogramPane.render();
+      } else {
+        self.$el.find('#histogramPane').css('display', 'none');
+      }
     }
   }
 });

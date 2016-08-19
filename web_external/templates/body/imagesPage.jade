@@ -6,15 +6,15 @@
       p This pane will contain rendered markdown, describing a selected study in detail
   .growing.flexColumn
     #pagingPane.pane
-      img#seekFirst(src='#{staticRoot}/built/plugins/isic_archive/extra/img/seekFirst.svg')
-      img#seekPrev(src='#{staticRoot}/built/plugins/isic_archive/extra/img/seekPrev.svg')
+      #seekFirst.button
+      #seekPrev.button
       #pageSizeControl
         label(for='#pageSize') Page Size:
         input#pageSize(type='number',value='50')
-      img#seekNext(src='#{staticRoot}/built/plugins/isic_archive/extra/img/seekNext.svg')
-      img#seekLast(src='#{staticRoot}/built/plugins/isic_archive/extra/img/seekLast.svg')
+      #seekNext.button
+      #seekLast.button
       .spacer
-      img#toggleHistogram(src='#{staticRoot}/built/plugins/isic_archive/extra/img/histogram.svg')
+      #toggleHistogram.button
     .growing.flexRow
       #imageWall.pane.growing
       #histogramPane.fixedWidth.pane

@@ -184,6 +184,11 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
       minAndMax = minAndMaxIndices();
     }
   },
+  selectImage: function (imageId) {
+    var self = this;
+    self.selectedImageId = imageId;
+    self.trigger('iv:selectImage', imageId);
+  },
   render: _.debounce(function () {
     var self = this;
     var svg;
@@ -252,12 +257,7 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
         return null;
       }
     }).on('click', function (d) {
-      if (self.selectedImageId === d) {
-        self.selectedImageId = null;
-      } else {
-        self.selectedImageId = d;
-      }
-      self.trigger('iv:selectImage', d);
+      self.selectImage(d === self.selectedImageId ? null : d);
     });
 
     // Construct a position/height lookup dict

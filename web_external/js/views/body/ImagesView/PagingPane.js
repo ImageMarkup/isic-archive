@@ -10,6 +10,17 @@ isic.views.ImagesSubViews.PagingPane = Backbone.View.extend({
   },
   render: function () {
     var self = this;
+    if (!self.addedImages) {
+      d3.select(this.el).selectAll('.button')
+        .append('img')
+        .attr('src', function () {
+          var imgName = this.parentNode.getAttribute('id');
+          return girder.staticRoot +
+            '/built/plugins/isic_archive/extra/img/' +
+            imgName + '.svg';
+        });
+      self.addedImages = true;
+    }
     if (!self.addedDomListeners) {
       self.$el.find('#toggleHistogram').on('click', function () {
         self.showHistograms = !self.showHistograms;
