@@ -1,0 +1,20 @@
+/* patch backbone's awkward padding enforcement */
+#g-app-body-container {
+  padding: 0px !important;
+}
+
+#galleryContent {
+  position: relative;
+  width: 100%;
+  min-height: 12em;
+  height: calc(100vh - 12em);
+}
+
+#galleryContent #isic-images-pageContent {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+}
