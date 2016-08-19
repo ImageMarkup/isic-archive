@@ -5,9 +5,7 @@ if hasFeatureset
 else
   h4 #{title}
 
-select#isic-study-results-select-local-feature-container.form-control.input-sm(disabled class=hasFeaturesClass)
-  option(selected disabled)
-    | Select...
+div#isic-study-results-select-local-feature-container(class=hasFeaturesClass)
 
 .isic-study-results-local-features-content(class=noFeaturesClass)
   | N/A

@@ -4,6 +4,9 @@
 
 // Model for a feature
 isic.models.FeatureModel = Backbone.Model.extend({
+    name: function () {
+        return this.get('name');
+    }
 });
 
 // Model for a feature image
@@ -34,111 +37,63 @@ isic.collections.FeatureCollection = Backbone.Collection.extend({
     }
 });
 
-// Base view for a single model in an option tag
-isic.views.StudyResultsOptionView = isic.View.extend({
-    tagName: 'option',
-
-    render: function () {
-        this.$el.html(this.getName());
-        this.$el.attr('value', this.model.id);
-        return this;
-    },
-
-    getName: function () {
-        return this.model.get('name');
-    }
-});
-
 // Base view for a collection of models in a select tag
 isic.views.StudyResultsSelectView = isic.View.extend({
     events: {
         'change': 'modelChanged'
     },
 
-    initialize: function () {
-        this.listenTo(this.collection, 'reset', this.addModels);
+    initialize: function (options) {
+        this.title = options.title;
+        this.selectId = 'isic-study-results-select-view-select-' +
+            isic.views.StudyResultsSelectView._count;
+        this.getName = options.getName || this._defaultGetName;
+        this.listenTo(this.collection, 'reset', this.render);
+
+        this.render();
+
+        ++isic.views.StudyResultsSelectView._count;
     },
 
     modelChanged: function () {
-        this.trigger('changed', this.$el.val());
+        this.trigger('changed', this._element().val());
     },
 
     setEnabled: function (val) {
         if (val) {
-            this.$el.removeAttr('disabled');
+            this._element().removeAttr('disabled');
         } else {
-            this.$el.attr('disabled', 'disabled');
+            this._element().attr('disabled', 'disabled');
         }
     },
 
-    addModel: function (model) {
-        var modelView = this.newOptionView({
-            model: model,
-            parentView: this
-        });
-        this.modelViews.push(modelView);
-        this.$el.append(modelView.render().el);
+    update: function () {
+        this.render();
+        this._element().selectedIndex = 0;
+        this.setEnabled(true);
     },
 
-    addModels: function () {
-        _.each(this.modelViews, function (view) {
-            view.remove();
-            view.destroy(); // necessary to unregister from parent view
-        });
-        this.modelViews = [];
-        this.collection.each(this.addModel, this);
+    render: function () {
+        this.$el.html(isic.templates.studyResultsSelectView({
+            title: this.title,
+            selectId: this.selectId,
+            getName: this.getName,
+            models: this.collection.models
+        }));
 
-        this.$el[0].selectedIndex = 0;
+        return this;
+    },
 
-        this.setEnabled(true);
+    _element: function () {
+        return this.$('select');
+    },
+
+    _defaultGetName: function (model) {
+        return model.name();
     }
-});
-
-// View for a single study in an option tag
-isic.views.StudyResultsStudyView = isic.views.StudyResultsOptionView.extend({
-});
-
-// View for a collection of studies in a select tag
-isic.views.StudyResultsSelectStudyView = isic.views.StudyResultsSelectView.extend({
-    newOptionView: function (params) {
-        return new isic.views.StudyResultsStudyView(params);
-    }
-});
-
-// View for a single image in an option tag
-isic.views.StudyResultsImageView = isic.views.StudyResultsOptionView.extend({
-});
-
-// View for a collection of images in a select tag
-isic.views.StudyResultsSelectImageView = isic.views.StudyResultsSelectView.extend({
-    newOptionView: function (params) {
-        return new isic.views.StudyResultsImageView(params);
-    }
-});
-
-// View for a single user in an option tag
-isic.views.StudyResultsUserView = isic.views.StudyResultsOptionView.extend({
-    getName: function () {
-        return this.model.name() + ' (' + this.model.get('login') + ')';
-    }
-});
-
-// View for a collection of users in a select tag
-isic.views.StudyResultsSelectUserView = isic.views.StudyResultsSelectView.extend({
-    newOptionView: function (params) {
-        return new isic.views.StudyResultsUserView(params);
-    }
-});
-
-// View for a single feature in an option tag
-isic.views.StudyResultsFeatureView = isic.views.StudyResultsOptionView.extend({
-});
-
-// View for a collection of features in a select tag
-isic.views.StudyResultsSelectFeatureView = isic.views.StudyResultsSelectView.extend({
-    newOptionView: function (params) {
-        return new isic.views.StudyResultsFeatureView(params);
-    }
+}, {
+    // Class properties
+    _count: 0
 });
 
 // Collection of global feature result models
@@ -167,47 +122,16 @@ isic.collections.GlobalFeatureResultCollection = Backbone.Collection.extend({
     }
 });
 
-// View for a global feature table row
-isic.views.StudyResultsGlobalFeaturesTableRowView = isic.View.extend({
-    tagName: 'tr',
-
+// View for a global feature table
+isic.views.StudyResultsGlobalFeaturesTableView = isic.View.extend({
     initialize: function (settings) {
-        this.listenTo(this.model, 'change', this.render);
+        this.listenTo(this.collection, 'reset', this.render);
     },
 
     render: function () {
-        this.$el.html(isic.templates.studyResultsGlobalFeatureTableRow({
-            feature: this.model
+        this.$el.html(isic.templates.studyResultsGlobalFeaturesTable({
+            features: this.collection.models
         }));
-
-        return this;
-    }
-});
-
-// View for a global feature table
-isic.views.StudyResultsGlobalFeaturesTableView = isic.View.extend({
-    tagName: 'tbody',
-
-    initialize: function (settings) {
-        this.listenTo(this.collection, 'reset', this.addModels);
-    },
-
-    addModel: function (model) {
-        var rowView = new isic.views.StudyResultsGlobalFeaturesTableRowView({
-            model: model,
-            parentView: this
-        });
-        this.rowViews.push(rowView);
-        this.$el.append(rowView.render().el);
-    },
-
-    addModels: function () {
-        _.each(this.rowViews, function (view) {
-            view.remove();
-            view.destroy(); // necessary to unregister from parent view
-        });
-        this.rowViews = [];
-        this.collection.each(this.addModel, this);
     }
 });
 
@@ -240,7 +164,7 @@ isic.views.StudyResultsGlobalFeaturesView = isic.View.extend({
         }));
 
         this.tableView.setElement(
-            this.$('#isic-study-results-global-features-table-body')).render();
+            this.$('#isic-study-results-global-features-table')).render();
 
         return this;
     },
@@ -287,7 +211,8 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
         this.listenTo(this.featureset, 'change', this.updateFeatureCollection);
         this.listenTo(this.annotation, 'change', this.updateFeatureImageModel);
 
-        this.selectFeatureView = new isic.views.StudyResultsSelectFeatureView({
+        this.selectFeatureView = new isic.views.StudyResultsSelectView({
+            title: 'Feature',
             collection: this.features,
             parentView: this
         });
@@ -356,17 +281,23 @@ isic.views.StudyResultsView = isic.View.extend({
         this.featureset = new isic.models.FeaturesetModel();
         this.annotation = new isic.models.AnnotationModel();
 
-        this.selectStudyView = new isic.views.StudyResultsSelectStudyView({
+        this.selectStudyView = new isic.views.StudyResultsSelectView({
+            title: 'Study',
             collection: this.studies,
             parentView: this
         });
 
-        this.selectImageView = new isic.views.StudyResultsSelectImageView({
+        this.selectImageView = new isic.views.StudyResultsSelectView({
+            title: 'Image',
             collection: this.images,
             parentView: this
         });
 
-        this.selectUserView = new isic.views.StudyResultsSelectUserView({
+        this.selectUserView = new isic.views.StudyResultsSelectView({
+            title: 'User',
+            getName: function (model) {
+                return model.get('login');
+            },
             collection: this.users,
             parentView: this
         });

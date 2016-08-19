@@ -4,20 +4,9 @@
   .isic-form-container
     .isic-form-group.isic-study-results-form-group
 
-      label.control-label(for="isic-study-results-study") Study
-      select#isic-study-results-select-study-container.form-control.input-sm
-        option(selected disabled value='')
-          | Select...
-
-      label.control-label(for="isic-study-results-image") Image
-      select#isic-study-results-select-image-container.form-control.input-sm(disabled)
-        option(selected disabled)
-          | Select...
-
-      label.control-label(for="isic-study-results-user") User
-      select#isic-study-results-select-user-container.form-control.input-sm(disabled)
-        option(selected disabled)
-          | Select...
+      #isic-study-results-select-study-container
+      #isic-study-results-select-image-container
+      #isic-study-results-select-user-container
 
     .isic-form-group.isic-study-results-form-group
       #isic-study-results-global-features-container
