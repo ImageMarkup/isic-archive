@@ -21,6 +21,8 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
 
     self.imageIds = [];
 
+    self.selectedImageId = null;
+
     // Re-render when the window
     // changes size
     window.onresize = function () {
@@ -184,17 +186,25 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
   },
   render: _.debounce(function () {
     var self = this;
+    var svg;
 
     if (!this.addedSvgElement) {
-      d3.select(this.el).append('svg')
+      svg = d3.select(this.el).append('svg')
         .attr('id', 'preview');
+      svg.append('g')
+        .attr('id', 'previewContents');
+      svg.append('rect')
+        .attr('id', 'highlightOutline');
+      this.addedSvgElement = true;
+    } else {
+      svg = d3.select(this.el).select('svg');
     }
 
     // Temporarily hide the SVG element and force scroll bars
     // so that we can figure out the actual amount of space that
     // the flex box is giving us
     this.$el.css('overflow', 'scroll');
-    d3.select('#preview').attr({
+    svg.attr({
       'width': 0,
     });
     var width = this.el.clientWidth;
@@ -223,27 +233,32 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
     self.rearrangeColumns(numColumns);
 
     // Okay, time to draw / move the pictures:
-    var images = d3.select('#preview').selectAll('image')
-      .data(self.imageIds, function (d) {
+    var images = svg.select('#previewContents').selectAll('image')
+      .data(Object.keys(self.loadedImages), function (d) {
         return d;
       });
     images.enter().append('image')
-      .attr({
-        'id': function (d) {
-          return 'image' + d;
-        },
-        'xlink:href': function (d) {
-          return self.imageCache[d].src;
-        },
-        'preserveAspectRatio': 'xMinYMin',
-        'x': width / 2, // Start new images at the middle of the
-        'y': jQuery('#preview').height() // bottom of the screen
-      })
-      .on('click', function (d) {
-        // TODO: show a lightbox
-        // For now, jump to the item in girder
-        window.open('#item/' + d);
-      });
+      .attr('preserveAspectRatio', 'xMinYMin')
+      .attr('x', width / 2) // Start new images at the middle of the
+      .attr('y', jQuery('#preview').height()); // bottom of the screen
+    images.attr('id', function (d) {
+      return 'image' + d;
+    }).attr('xlink:href', function (d) {
+      return self.imageCache[d].src;
+    }).attr('class', function (d) {
+      if (d === self.selectedImageId) {
+        return 'selected';
+      } else {
+        return null;
+      }
+    }).on('click', function (d) {
+      if (self.selectedImageId === d) {
+        self.selectedImageId = null;
+      } else {
+        self.selectedImageId = d;
+      }
+      self.trigger('iv:selectImage', d);
+    });
 
     // Construct a position/height lookup dict
     // (we want to animate everything at the same
@@ -274,7 +289,7 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
     });
 
     // After all that, we finally know how much space we need
-    d3.select('#preview').attr({
+    svg.attr({
       'width': width,
       'height': tallestHeight
     });
@@ -295,5 +310,30 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
           return placementLookup[d].y;
         }
       });
+
+    // Draw + animate the highlight rect
+    if (self.selectedImageId) {
+      var parentOutline = svg.node().getBoundingClientRect();
+      var originalOutline = svg.select('#image' + self.selectedImageId)
+        .node().getBoundingClientRect();
+      svg.select('#highlightOutline')
+        .attr({
+          x: originalOutline.left - parentOutline.left,
+          y: originalOutline.top - parentOutline.top,
+          width: originalOutline.width,
+          height: originalOutline.height
+        })
+        .style('display', null)
+        .transition().duration(500)
+        .attr({
+          x: placementLookup[self.selectedImageId].x,
+          y: placementLookup[self.selectedImageId].y,
+          width: imageWidth,
+          height: placementLookup[self.selectedImageId].height
+        });
+    } else {
+      svg.select('#highlightOutline')
+        .style('display', 'none');
+    }
   }, 300)
 });

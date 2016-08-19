@@ -1,23 +1,35 @@
 /* page-wide styles */
 #galleryContent {
   position: relative;
-  width: 100%;
   min-height: 12em;
   height: calc(100vh - 13em);
   display: flex;
+  width: 100%;
+  flex-wrap: nowrap;
+  -ms-user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+}
+#galleryContent .flexRow {
+  display: flex;
+  width: 100%;
   flex-wrap: nowrap;
 }
-
-#galleryContent .column {
+#galleryContent .flexColumn {
   display: flex;
   flex-direction: column;
   height: 100%;
+  flex-wrap: nowrap;
 }
 #galleryContent .fixedWidth {
-  min-width: 20em;
-  max-width: 45em;
-  flex-basis: 45em;
+  min-width: 32em;
+  max-width: 32em;
+  flex-basis: 32em;
   overflow-y: auto;
+}
+#galleryContent .spacer,
+#galleryContent .growing {
+  flex-grow: 1;
 }
 
 #galleryContent .pane {
@@ -25,10 +37,7 @@
   padding: 0.5em;
   margin: 0.5em;
   border: 1px solid #dddddd;
-}
-
-#galleryContent .spacer {
-  flex-grow: 1;
+  border-radius: 3px;
 }
 
 /* Study pane */
@@ -45,19 +54,30 @@
 #galleryContent #imageWall {
   overflow-y: auto;
   overflow-x: hidden;
-  flex-grow: 1;
+  min-width: 32em;
+}
+#galleryContent #imageWall image {
+  cursor: pointer;
+}
+#galleryContent #imageWall rect#highlightOutline {
+  fill: none;
+  stroke: #00ABFF;
+  stroke-width: 4px;
 }
 
 /* Paging pane */
 #galleryContent #pagingPane {
-  flex-basis: 6em;
+  flex-basis: 3em;
+  height: 3em;
+  max-height: 3em;
+  min-height: 3em;
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
 }
 #galleryContent #pagingPane img {
-  width: 1.5em;
-  height: 1.5em;
+  width: 1.75em;
+  height: 1.75em;
   margin: 1em;
   border: 1px solid transparent;
   border-radius: 3px;

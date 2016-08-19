@@ -10,6 +10,7 @@ isic.views.ImagesView = isic.View.extend({
     self.histogramPane = new isic.views.ImagesSubViews.HistogramPane();
     self.imageWall = new isic.views.ImagesSubViews.ImageWall();
     self.pagingPane = new isic.views.ImagesSubViews.PagingPane();
+    self.imageDetailsPane = new isic.views.ImagesSubViews.ImageDetailsPane();
 
     window.onresize = function () {
       self.render();
@@ -26,7 +27,8 @@ isic.views.ImagesView = isic.View.extend({
 
     self.listenTo(self.imageWall, 'iv:selectImage',
       function (imageId) {
-        self.selectImage(imageId);
+        self.imageDetailsPane.updateDetails(imageId);
+        self.render();
       });
 
     self.listenTo(self.pagingPane, 'iv:toggleHistogram',
@@ -64,14 +66,27 @@ isic.views.ImagesView = isic.View.extend({
       self.imageWall.addedDomListeners = false;
       self.pagingPane.setElement(self.$el.find('#pagingPane')[0]);
       self.pagingPane.addedDomListeners = false;
+      self.imageDetailsPane.setElement(self.$el.find('#imageDetailsPane')[0]);
+      self.imageDetailsPane.addedDomListeners = false;
       self.addedTemplate = true;
     }
-    self.histogramPane.render();
     self.imageWall.render();
     self.pagingPane.render();
 
-    self.$el.find('#histogramPane')
-      .css('display', self.pagingPane.showHistograms ? '' : 'none');
+    if (self.pagingPane.showHistograms) {
+      self.$el.find('#histogramPane').css('display', '');
+      self.histogramPane.render();
+    } else {
+      self.$el.find('#histogramPane').css('display', 'none');
+    }
+
+    console.log(self.imageWall.selectedImageId);
+    if (self.imageWall.selectedImageId) {
+      self.$el.find('#imageDetailsPane').css('display', '');
+      self.imageDetailsPane.render();
+    } else {
+      self.$el.find('#imageDetailsPane').css('display', 'none');
+    }
   }
 });
 
