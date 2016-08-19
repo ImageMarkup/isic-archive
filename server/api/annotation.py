@@ -40,8 +40,6 @@ class AnnotationResource(Resource):
                paramType='query', required=True)
         .param('userId', 'The ID of the user to filter by.',
                paramType='query', required=False)
-        .param('segmentationId', 'The ID of the segmentation to filter by.',
-               paramType='query', required=False)
         .param('imageId', 'The ID of the image to filter by.',
                paramType='query', required=False)
         .errorResponse()
@@ -61,10 +59,6 @@ class AnnotationResource(Resource):
             params['userId'], force=True, exc=True) \
             if 'userId' in params else None
 
-        segmentation = self.model('segmentation', 'isic_archive').load(
-            params['segmentationId'], exc=True) \
-            if 'segmentationId' in params else None
-
         image = self.model('image', 'isic_archive').load(
             params['imageId'], force=True, exc=True) \
             if 'imageId' in params else None
@@ -77,8 +71,7 @@ class AnnotationResource(Resource):
         annotations = Study.childAnnotations(
             study=study,
             annotatorUser=annotatorUser,
-            segmentation=segmentation,
-            imageItem=image
+            image=image
         )
 
         return [
@@ -87,7 +80,6 @@ class AnnotationResource(Resource):
                 'name': annotation['name'],
                 'studyId': annotation['meta']['studyId'],
                 'userId': annotation['meta']['userId'],
-                'segmentationId': annotation['meta']['segmentationId'],
                 'imageId': annotation['meta']['imageId'],
                 'state': (Study.State.COMPLETE
                           if annotation['meta']['stopTime'] is not None

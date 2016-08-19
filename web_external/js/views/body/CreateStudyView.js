@@ -136,7 +136,7 @@ isic.views.CreateStudyView = isic.View.extend({
         var name = $('#isic-study-name').val();
         var featuresetId = this.featuresetId;
         var userIds = JSON.stringify(this.userIds);
-        var segmentationIds = JSON.stringify([]);
+        var imageIds = JSON.stringify([]);
 
         girder.restRequest({
             type: 'POST',
@@ -145,7 +145,7 @@ isic.views.CreateStudyView = isic.View.extend({
                 name: name,
                 featuresetId: featuresetId,
                 userIds: userIds,
-                segmentationIds: segmentationIds
+                imageIds: imageIds
             },
             error: null
         }).done(_.bind(function () {

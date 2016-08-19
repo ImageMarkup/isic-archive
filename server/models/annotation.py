@@ -22,17 +22,13 @@ import six
 
 from bson import ObjectId
 
-from girder.constants import AccessType
 from girder.models.item import Item as ItemModel
 from girder.models.model_base import ValidationException
 
 
 class Annotation(ItemModel):
-    def createAnnotation(self, study, segmentation, creatorUser,
+    def createAnnotation(self, study, image, creatorUser,
                          annotatorFolder):
-        image = self.model('image', 'isic_archive').load(
-            segmentation['imageId'], user=creatorUser, level=AccessType.READ)
-
         annotationItem = self.createItem(
             folder=annotatorFolder,
             name=image['name'],
@@ -45,7 +41,6 @@ class Annotation(ItemModel):
             metadata={
                 'studyId': study['_id'],
                 'userId': annotatorFolder['meta']['userId'],
-                'segmentationId': segmentation['_id'],
                 'imageId': image['_id'],
                 'startTime': None,
                 'stopTime': None,
@@ -75,7 +70,7 @@ class Annotation(ItemModel):
         Study = self.model('study', 'isic_archive')
         # If annotation is fully created
         if doc.get('meta') and 'studyId' in doc['meta']:
-            for field in ['studyId', 'userId', 'segmentationId', 'imageId']:
+            for field in ['studyId', 'userId', 'imageId']:
                 if not isinstance(doc['meta'].get(field), ObjectId):
                     raise ValidationException(
                         'Annotation field "%s" must be an ObjectId' % field)
