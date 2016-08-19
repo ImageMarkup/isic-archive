@@ -44,7 +44,7 @@ class Study(FolderModel):
         return self.model('collection').findOne({'name': 'Annotation Studies'})
 
     def createStudy(self, name, creatorUser, featureset, annotatorUsers,
-                    segmentations):
+                    images):
         # this may raise a ValidationException if the name already exists
         studyFolder = self.createFolder(
             parent=self.loadStudyCollection(),
@@ -76,15 +76,15 @@ class Study(FolderModel):
 
         for annotatorUser in annotatorUsers:
             self.addAnnotator(studyFolder, annotatorUser, creatorUser,
-                              segmentations)
+                              images)
 
         return studyFolder
 
     def addAnnotator(self, study, annotatorUser, creatorUser,
-                     segmentations=None):
+                     images=None):
         Annotation = self.model('annotation', 'isic_archive')
-        if not segmentations:
-            segmentations = self.getSegmentations(study)
+        if not images:
+            images = self.getImages(study)
 
         if self.childAnnotations(
                 study=study,
@@ -118,16 +118,16 @@ class Study(FolderModel):
             }
         )
 
-        for segmentation in segmentations:
+        for image in images:
             Annotation.createAnnotation(
-                study, segmentation, creatorUser, annotatorFolder)
+                study, image, creatorUser, annotatorFolder)
 
-    def addSegmentation(self, study, segmentation, creatorUser):
+    def addImage(self, study, image, creatorUser):
         Folder = self.model('folder')
         Annotation = self.model('annotation', 'isic_archive')
         for annotatorFolder in Folder.find({'parentId': study['_id']}):
             Annotation.createAnnotation(
-                study, segmentation, creatorUser, annotatorFolder)
+                study, image, creatorUser, annotatorFolder)
 
     def getFeatureset(self, study):
         return self.model('featureset', 'isic_archive').load(
@@ -141,13 +141,6 @@ class Study(FolderModel):
             '_id': {'$in': annotatorFolders.distinct('meta.userId')}
         }, fields=fields)
 
-    def getSegmentations(self, study):
-        Annotation = self.model('annotation', 'isic_archive')
-        Segmentation = self.model('segmentation', 'isic_archive')
-        segmentationIds = Annotation.find(
-            {'meta.studyId': study['_id']}).distinct('meta.segmentationId')
-        return Segmentation.find({'_id': {'$in': segmentationIds}})
-
     def getImages(self, study, fields=None):
         Annotation = self.model('annotation', 'isic_archive')
         Image = self.model('image', 'isic_archive')
@@ -156,18 +149,15 @@ class Study(FolderModel):
         return Image.find({'_id': {'$in': imageIds}}, fields=fields)
 
     def childAnnotations(self, study=None, annotatorUser=None,
-                         segmentation=None, imageItem=None, state=None,
-                         **kwargs):
+                         image=None, state=None, **kwargs):
         Annotation = self.model('annotation', 'isic_archive')
         query = dict()
         if study:
             query['meta.studyId'] = study['_id']
         if annotatorUser:
             query['meta.userId'] = annotatorUser['_id']
-        if segmentation:
-            query['meta.segmentationId'] = segmentation['_id']
-        if imageItem:
-            query['meta.imageId'] = imageItem['_id']
+        if image:
+            query['meta.imageId'] = image['_id']
         if state:
             if state == self.State.ACTIVE:
                 query['meta.stopTime'] = None

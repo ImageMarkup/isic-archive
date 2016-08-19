@@ -17,20 +17,18 @@
   .isic-listing-content.isic-study-featureset-content
     | #{study.get('featureset').name}, version #{study.get('featureset').version}
 
-.isic-study-segmentations-container
-  h4 Segmentations
-    |  (#{study.get('segmentations').length})
-  .isic-listing-content.isic-study-segmentations-content
-    if study.get('segmentations').length
+.isic-study-images-container
+  h4 Images
+    |  (#{study.get('images').length})
+  .isic-listing-content.isic-study-images-content
+    if study.get('images').length
       table
         tr
-          th.isic-study-segmentations-content-name Image Name
-          th.isic-study-segmentations-content-segmentationid Segmentation Id
-          th.isic-study-segmentations-content-imageid Image Id
-        each segmentation in study.get('segmentations')
+          th.isic-study-images-content-name Image Name
+          th.isic-study-images-content-imageid Image Id
+        each image in study.get('images')
           tr
-            td.isic-study-segmentations-content-name= segmentation.image.name
-            td.isic-study-segmentations-content-segmentationid= segmentation._id
-            td.isic-study-segmentations-content-imageid= segmentation.image._id
+            td.isic-study-images-content-name= image.name
+            td.isic-study-images-content-imageid= image._id
     else
-      | (no segmentations)
+      | (no images)
