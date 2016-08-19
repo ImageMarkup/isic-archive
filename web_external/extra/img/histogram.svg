@@ -5,13 +5,9 @@
 <style type="text/css">
 	.st0{fill:#444444;}
 </style>
-<g>
-	<g>
-		<g>
-			<polygon class="st0" points="267.8,253.3 18,6 18,506 			"/>
-			<polygon class="st0" points="475.8,253.3 226,6 226,506 			"/>
-			<rect x="424.6" y="6" class="st0" width="69.4" height="500"/>
-		</g>
-	</g>
-</g>
+<rect x="6.7" y="221" class="st0" width="88.4" height="152.4"/>
+<rect x="143.4" y="113" class="st0" width="88.4" height="260.4"/>
+<rect x="280.2" y="6" class="st0" width="88.4" height="367.4"/>
+<rect x="416.9" y="63" class="st0" width="88.4" height="310.4"/>
+<rect x="6.7" y="417.6" class="st0" width="498.6" height="88.4"/>
 </svg>

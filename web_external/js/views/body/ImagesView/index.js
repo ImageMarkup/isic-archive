@@ -9,16 +9,30 @@ isic.views.ImagesView = isic.View.extend({
     // Initialize our subviews
     self.histogramPane = new isic.views.ImagesSubViews.HistogramPane();
     self.imageWall = new isic.views.ImagesSubViews.ImageWall();
-
-    self.listenTo(self.histogramPane, 'imagesView:changedFilters',
-      function () {
-        self.updateCurrentPage();
-      });
+    self.pagingPane = new isic.views.ImagesSubViews.PagingPane();
 
     window.onresize = function () {
       self.render();
     };
+    self.attachListeners();
     self.updateCurrentPage();
+  },
+  attachListeners: function () {
+    var self = this;
+    self.listenTo(self.histogramPane, 'iv:changeFilters',
+      function () {
+        self.updateCurrentPage();
+      });
+
+    self.listenTo(self.imageWall, 'iv:selectImage',
+      function (imageId) {
+        self.selectImage(imageId);
+      });
+
+    self.listenTo(self.pagingPane, 'iv:toggleHistogram',
+      function () {
+        self.render();
+      });
   },
   updateCurrentPage: function () {
     var self = this;
@@ -41,15 +55,23 @@ isic.views.ImagesView = isic.View.extend({
   render: function () {
     var self = this;
     if (!(self.addedTemplate)) {
-      self.$el.html(isic.templates.imagesPage());
-      self.$el.find('#histogramPane')[0]
-        .appendChild(self.histogramPane.el);
-      self.$el.find('#imageWall')[0]
-        .appendChild(self.imageWall.el);
+      self.$el.html(isic.templates.imagesPage({
+          staticRoot: girder.staticRoot,
+      }));
+      self.histogramPane.setElement(self.$el.find('#histogramPane')[0]);
+      self.histogramPane.addedDomListeners = false;
+      self.imageWall.setElement(self.$el.find('#imageWall')[0]);
+      self.imageWall.addedDomListeners = false;
+      self.pagingPane.setElement(self.$el.find('#pagingPane')[0]);
+      self.pagingPane.addedDomListeners = false;
       self.addedTemplate = true;
     }
     self.histogramPane.render();
     self.imageWall.render();
+    self.pagingPane.render();
+
+    self.$el.find('#histogramPane')
+      .css('display', self.pagingPane.showHistograms ? '' : 'none');
   }
 });
 

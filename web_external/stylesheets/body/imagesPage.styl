@@ -1,35 +1,92 @@
+/* page-wide styles */
 #galleryContent {
   position: relative;
   width: 100%;
   min-height: 12em;
   height: calc(100vh - 13em);
-  overflow: auto;
   display: flex;
+  flex-wrap: nowrap;
 }
 
-#studyPane,
-#studyTextPane,
-#histogramPane,
-#imageDetailsPane {
-  max-width: 20em;
+#galleryContent .column {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
-
-#studyPane {
-  background-color: #ffffcc;
-}
-#studyTextPane {
-  background-color: #c7e9b4;
-}
-#imageWall {
-  background-color: #7fcdbb;
+#galleryContent .fixedWidth {
+  min-width: 20em;
+  max-width: 45em;
+  flex-basis: 45em;
   overflow-y: auto;
 }
-#pagingPane {
-  background-color: #41b6c4;
+
+#galleryContent .pane {
+  position: relative;
+  padding: 0.5em;
+  margin: 0.5em;
+  border: 1px solid #dddddd;
 }
-#histogramPane {
-  background-color: #2c7fb8;
+
+#galleryContent .spacer {
+  flex-grow: 1;
 }
-#imageDetailsPane {
-  background-color: #253494;
+
+/* Study pane */
+#galleryContent #studyPane {
+
+}
+
+/* Study text pane */
+#galleryContent #studyTextPane {
+
+}
+
+/* Image wall */
+#galleryContent #imageWall {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex-grow: 1;
+}
+
+/* Paging pane */
+#galleryContent #pagingPane {
+  flex-basis: 6em;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+#galleryContent #pagingPane img {
+  width: 1.5em;
+  height: 1.5em;
+  margin: 1em;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 3px;
+  cursor: pointer;
+}
+#galleryContent #pagingPane img.selected {
+  filter: url(#recolorImageTo00ABFF);
+}
+#galleryContent #pagingPane img:hover {
+  filter: url(#recolorImageTo444499);
+  border: 1px solid #e2e2e2;
+  background: linear-gradient(to bottom, #fff 60%, #f6f6f6 100%);
+}
+#galleryContent #pagingPane #pageSizeControl {
+  margin: 1em;
+  white-space: nowrap;
+}
+#galleryContent #pagingPane #pageSizeControl input {
+  text-align: center;
+  width: 6em;
+}
+
+/* Histogram pane */
+#galleryContent #histogramPane {
+
+}
+
+/* Image details pane */
+#galleryContent #imageDetailsPane {
+
 }

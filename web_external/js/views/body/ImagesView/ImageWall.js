@@ -190,8 +190,13 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
         .attr('id', 'preview');
     }
 
-    // Temporarily force scroll bars so that we can account for their width
+    // Temporarily hide the SVG element and force scroll bars
+    // so that we can figure out the actual amount of space that
+    // the flex box is giving us
     this.$el.css('overflow', 'scroll');
+    d3.select('#preview').attr({
+      'width': 0,
+    });
     var width = this.el.clientWidth;
     this.$el.css('overflow', '');
 
@@ -262,11 +267,10 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
           height: height
         };
         y += height + imagePadding;
-
-        if (y > tallestHeight) {
-          tallestHeight = y;
-        }
       });
+      if (y > tallestHeight) {
+        tallestHeight = y;
+      }
     });
 
     // After all that, we finally know how much space we need

@@ -1,13 +1,22 @@
 #galleryContent
-  #studyPane
-    p This will contain the overview histogram, listing each study
-  #studyTextPane
-    p This pane will contain text, describing a selected study
-  #imageWall
-    p This is the image gallery, showing the current page of images
-  #pagingPane
-    p This will contain tools for changing pages
-  #histogramPane
+  #studyPanes.fixedWidth.column
+    #studyPane.pane
+      p This will contain the overview histogram, summarizing each study
+    #studyTextPane.pane
+      p This pane will contain rendered markdown, describing a selected study in detail
+  #imagePanes.column
+    #pagingPane.pane
+      img#seekFirst(src='#{staticRoot}/built/plugins/isic_archive/extra/img/seekFirst.svg')
+      img#seekPrev(src='#{staticRoot}/built/plugins/isic_archive/extra/img/seekPrev.svg')
+      #pageSizeControl
+        label(for='#pageSize') Page Size:
+        input#pageSize(type='number',value='50')
+      img#seekNext(src='#{staticRoot}/built/plugins/isic_archive/extra/img/seekNext.svg')
+      img#seekLast(src='#{staticRoot}/built/plugins/isic_archive/extra/img/seekLast.svg')
+      .spacer
+      img#toggleHistogram(src='#{staticRoot}/built/plugins/isic_archive/extra/img/histogram.svg')
+    #imageWall.pane
+  #histogramPane.fixedWidth.pane
     p This will contain histograms, allowing users to filter images by metadata.
       These are the possible histograms that will be layered within each other:
     ol
@@ -15,5 +24,5 @@
       li Study histograms, describing the selected study
       li Filter histograms, describing the current filtered set of images
       li Page histograms, describing the currently visible images
-  #imageDetailsPane
+  #imageDetailsPane.fixedWidth.pane
     p This pane will show details about a selected image
