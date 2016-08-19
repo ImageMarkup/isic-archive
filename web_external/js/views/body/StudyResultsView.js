@@ -233,6 +233,7 @@ isic.views.StudyResultsGlobalFeaturesView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.studyResultsGlobalFeaturesPage({
+            title: 'Global Features',
             hasFeatureset: !_.isUndefined(this.featureset.id),
             hasGlobalFeatures: !_.isEmpty(this.featureset.get('image_features')),
             featureset: this.featureset
@@ -319,6 +320,7 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.studyResultsLocalFeaturesPage({
+            title: 'Local Features',
             hasFeatureset: !_.isUndefined(this.featureset.id),
             hasLocalFeatures: !_.isEmpty(this.featureset.get('region_features')),
             featureset: this.featureset
@@ -460,7 +462,7 @@ isic.views.StudyResultsView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.studyResultsPage({
-            title: 'Study Results'
+            title: 'Annotation Study Results'
         }));
 
         this.selectStudyView.setElement(
