@@ -65,13 +65,13 @@ isic.views.ImagesView = isic.View.extend({
     if (!(self.addedTemplate)) {
       self.$el.html(isic.templates.imagesPage());
       recolorImageFilters(['#00ABFF', '#444499']);
-      self.histogramPane.setElement(self.$el.find('#histogramPane')[0]);
+      self.histogramPane.setElement(self.$el.find('#isic-images-histogramPane')[0]);
       self.histogramPane.addedDomListeners = false;
-      self.imageWall.setElement(self.$el.find('#imageWall')[0]);
+      self.imageWall.setElement(self.$el.find('#isic-images-imageWall')[0]);
       self.imageWall.addedDomListeners = false;
-      self.pagingPane.setElement(self.$el.find('#pagingPane')[0]);
+      self.pagingPane.setElement(self.$el.find('#isic-images-pagingPane')[0]);
       self.pagingPane.addedDomListeners = false;
-      self.imageDetailsPane.setElement(self.$el.find('#imageDetailsPane')[0]);
+      self.imageDetailsPane.setElement(self.$el.find('#isic-images-imageDetailsPane')[0]);
       self.imageDetailsPane.addedDomListeners = false;
       self.addedTemplate = true;
     }
@@ -81,18 +81,18 @@ isic.views.ImagesView = isic.View.extend({
     // Only show either the histogram or selected pane at a time
     // (don't show both)
     if (self.imageWall.selectedImageId) {
-      self.$el.find('#imageDetailsPane').css('display', '');
+      self.$el.find('#isic-images-imageDetailsPane').css('display', '');
       self.imageDetailsPane.render();
 
-      self.$el.find('#histogramPane').css('display', 'none');
+      self.$el.find('#isic-images-histogramPane').css('display', 'none');
     } else {
-      self.$el.find('#imageDetailsPane').css('display', 'none');
+      self.$el.find('#isic-images-imageDetailsPane').css('display', 'none');
 
       if (self.pagingPane.showHistograms) {
-        self.$el.find('#histogramPane').css('display', '');
+        self.$el.find('#isic-images-histogramPane').css('display', '');
         self.histogramPane.render();
       } else {
-        self.$el.find('#histogramPane').css('display', 'none');
+        self.$el.find('#isic-images-histogramPane').css('display', 'none');
       }
     }
   }
