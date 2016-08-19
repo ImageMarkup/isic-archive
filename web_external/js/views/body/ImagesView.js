@@ -38,7 +38,7 @@ isic.views.ImagesView = isic.View.extend({
     };
     // Load more images when we hit the bottom
     // of the content area
-    jQuery('#pageContent').on('scroll', function () {
+    jQuery('#isic-images-pageContent').on('scroll', function () {
       // If we haven't sent an initial request,
       // do it immediately (don't wait for the
       // scroll to finish to start fetching images)
@@ -63,8 +63,8 @@ isic.views.ImagesView = isic.View.extend({
         numberToFetch = INITIAL_IMAGES_TO_FETCH;
       } else {
         // Estimate how many more images we need
-        var bounds = jQuery('#preview')[0].getBoundingClientRect();
-        var content = jQuery('#pageContent');
+        var bounds = jQuery('#isic-images-preview')[0].getBoundingClientRect();
+        var content = jQuery('#isic-images-pageContent');
         var spaceLeft = content.scrollTop() + content.height() - bounds.bottom;
         numberToFetch = Math.floor(self.imageColumns.length *
           (spaceLeft / self.averageImageSize));
@@ -225,7 +225,7 @@ isic.views.ImagesView = isic.View.extend({
     var self = this;
 
     // Figure out how much space we have to play with
-    var width = widthWithoutScrollbar('#pageContent');
+    var width = widthWithoutScrollbar('#isic-images-pageContent');
 
     // We want the width of each column of images to have an
     // inverse relationship with the size of the download, so
@@ -249,7 +249,7 @@ isic.views.ImagesView = isic.View.extend({
     self.rearrangeColumns(numColumns);
 
     // Okay, time to draw / move the pictures:
-    var images = d3.select('#preview').selectAll('image')
+    var images = d3.select('#isic-images-preview').selectAll('image')
       .data(self.imageIds, function (d) {
         return d;
       });
@@ -263,7 +263,7 @@ isic.views.ImagesView = isic.View.extend({
         },
         'preserveAspectRatio': 'xMinYMin',
         'x': width / 2, // Start new images at the middle of the
-        'y': jQuery('#preview').height() // bottom of the screen
+        'y': jQuery('#isic-images-preview').height() // bottom of the screen
       })
       .on('click', function (d) {
         // TODO: show a lightbox
@@ -339,7 +339,7 @@ isic.views.ImagesView = isic.View.extend({
     }
 
     // After all that, we finally know how much space we need
-    d3.select('#preview').attr({
+    d3.select('#isic-images-preview').attr({
       'width': width,
       'height': tallestHeight
     });
