@@ -2,8 +2,14 @@
   .fixedWidth.flexColumn
     #isic-images-studyPane.pane
       p This will contain the overview histogram, summarizing each study
-    #isic-images-studyTextPane.pane
-      p This pane will contain rendered markdown, describing a selected study in detail
+    #isic-images-histogramPane.pane
+      p This will contain histograms, allowing users to filter images by metadata.
+        These are the possible histograms that will be layered within each other:
+      ol
+        li Overview histograms, describing the entire dataset
+        li Study histograms, describing the selected study
+        li Filter histograms, describing the current filtered set of images
+        li Page histograms, describing the currently visible images
   .growing.flexColumn
     #isic-images-pagingPane.pane
       #isic-images-seekFirst.button
@@ -13,17 +19,7 @@
         input#isic-images-pageSize(type='number',value='50')
       #isic-images-seekNext.button
       #isic-images-seekLast.button
-      .spacer
-      #isic-images-toggleHistogram.button
     .growing.flexRow
       #isic-images-imageWall.pane.growing
-      #isic-images-histogramPane.fixedWidth.pane
-        p This will contain histograms, allowing users to filter images by metadata.
-          These are the possible histograms that will be layered within each other:
-        ol
-          li Overview histograms, describing the entire dataset
-          li Study histograms, describing the selected study
-          li Filter histograms, describing the current filtered set of images
-          li Page histograms, describing the currently visible images
       #isic-images-imageDetailsPane.fixedWidth.pane
         p This pane will show details about a selected image
