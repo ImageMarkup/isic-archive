@@ -84,6 +84,7 @@ isic.views.ImagesView = isic.View.extend({
         } else {
             self.$el.find('#isic-images-imageDetailsPane').css('display', 'none');
         }
+        return self;
     }
 });
 

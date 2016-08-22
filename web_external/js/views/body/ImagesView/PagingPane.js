@@ -20,5 +20,6 @@ isic.views.ImagesSubViews.PagingPane = Backbone.View.extend({
                 });
             self.addedImages = true;
         }
+        return self;
     }
 });
