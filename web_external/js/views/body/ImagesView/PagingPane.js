@@ -3,6 +3,10 @@
 isic.views.ImagesSubViews = isic.views.ImagesSubViews || {};
 
 isic.views.ImagesSubViews.PagingPane = Backbone.View.extend({
+    initialize: function (params) {
+        var self = this;
+        self.parentView = params.parentView;
+    },
     render: function () {
         var self = this;
         if (!self.addedImages) {

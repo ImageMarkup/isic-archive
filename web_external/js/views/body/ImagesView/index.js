@@ -5,11 +5,16 @@ isic.views.ImagesSubViews = isic.views.ImagesSubViews || {};
 isic.views.ImagesView = isic.View.extend({
     initialize: function () {
         var self = this;
+        self.selectedImageId = null;
+
         // Initialize our subviews
-        self.histogramPane = new isic.views.ImagesSubViews.HistogramPane();
-        self.imageWall = new isic.views.ImagesSubViews.ImageWall();
-        self.pagingPane = new isic.views.ImagesSubViews.PagingPane();
-        self.imageDetailsPane = new isic.views.ImagesSubViews.ImageDetailsPane();
+        var params = {
+            parentView: self
+        };
+        self.histogramPane = new isic.views.ImagesSubViews.HistogramPane(params);
+        self.imageWall = new isic.views.ImagesSubViews.ImageWall(params);
+        self.pagingPane = new isic.views.ImagesSubViews.PagingPane(params);
+        self.imageDetailsPane = new isic.views.ImagesSubViews.ImageDetailsPane(params);
 
         window.onresize = function () {
             self.render();
@@ -20,15 +25,23 @@ isic.views.ImagesView = isic.View.extend({
     attachListeners: function () {
         var self = this;
         self.listenTo(self.histogramPane, 'iv:changeFilters',
-          function () {
-              self.updateCurrentPage();
-          });
+            function () {
+                self.updateCurrentPage();
+            });
 
         self.listenTo(self.imageWall, 'iv:selectImage',
-          function (imageId) {
-              self.imageDetailsPane.updateDetails(imageId);
-              self.render();
-          });
+            function (imageId) {
+                self.selectedImageId = imageId;
+                self.imageDetailsPane.updateDetails(imageId);
+                self.render();
+            });
+
+        self.listenTo(self.imageDetailsPane, 'iv:deselectImage',
+            function () {
+                self.selectedImageId = null;
+                self.imageWall.selectImage(null);
+                self.render();
+            });
     },
     updateCurrentPage: function () {
         var self = this;
@@ -51,7 +64,9 @@ isic.views.ImagesView = isic.View.extend({
     render: function () {
         var self = this;
         if (!(self.addedTemplate)) {
-            self.$el.html(isic.templates.imagesPage());
+            self.$el.html(isic.templates.imagesPage({
+                staticRoot: girder.staticRoot
+            }));
             recolorImageFilters(['#00ABFF', '#444499']);
             self.histogramPane.setElement(self.$el.find('#isic-images-histogramPane')[0]);
             self.imageWall.setElement(self.$el.find('#isic-images-imageWall')[0]);
@@ -63,9 +78,7 @@ isic.views.ImagesView = isic.View.extend({
         self.pagingPane.render();
         self.histogramPane.render();
 
-        // Only show either the histogram or selected pane at a time
-        // (don't show both)
-        if (self.imageWall.selectedImageId) {
+        if (self.selectedImageId) {
             self.$el.find('#isic-images-imageDetailsPane').css('display', '');
             self.imageDetailsPane.render();
         } else {
