@@ -260,6 +260,21 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
     }
 });
 
+// View for an image
+isic.views.StudyResultsImageView = isic.View.extend({
+    initialize: function (settings) {
+        this.listenTo(this.model, 'change', this.render);
+    },
+
+    render: function () {
+        var imageUrl = this.model.id ? this.model.downloadUrl({contentDisposition: 'inline'}) : null;
+
+        this.$el.html(isic.templates.studyResultsImagePage({
+            imageUrl: imageUrl
+        }));
+    }
+});
+
 // View for the results of an annotation study
 isic.views.StudyResultsView = isic.View.extend({
     initialize: function (settings) {
@@ -272,6 +287,8 @@ isic.views.StudyResultsView = isic.View.extend({
         this.users = new girder.collections.UserCollection();
         this.users.pageLimit = Number.MAX_SAFE_INTEGER;
 
+        this.image = new isic.models.ImageModel();
+        this.user = new girder.models.UserModel();
         this.featureset = new isic.models.FeaturesetModel();
         this.annotation = new isic.models.AnnotationModel();
 
@@ -308,6 +325,11 @@ isic.views.StudyResultsView = isic.View.extend({
             parentView: this
         });
 
+        this.imageView = new isic.views.StudyResultsImageView({
+            model: this.image,
+            parentView: this
+        });
+
         this.studies.fetch();
 
         this.listenTo(this.selectStudyView, 'changed', this.studyChanged);
@@ -321,8 +343,8 @@ isic.views.StudyResultsView = isic.View.extend({
         this.images.reset();
         this.users.reset();
 
-        delete this.imageId;
-        delete this.userId;
+        this.image.clear();
+        this.user.clear();
 
         this.selectImageView.setEnabled(false);
         this.selectUserView.setEnabled(false);
@@ -355,20 +377,20 @@ isic.views.StudyResultsView = isic.View.extend({
     },
 
     imageChanged: function (imageId) {
-        this.imageId = imageId;
+        this.image.set('_id', imageId);
         this.annotation.clear();
         this.fetchAnnotation();
     },
 
     userChanged: function (userId) {
-        this.userId = userId;
+        this.user.set('_id', userId);
         this.annotation.clear();
         this.fetchAnnotation();
     },
 
     fetchAnnotation: function () {
-        if (!_.has(this, 'imageId') ||
-            !_.has(this, 'userId')) {
+        if (!this.image.id ||
+            !this.user.id) {
             return;
         }
 
@@ -380,8 +402,8 @@ isic.views.StudyResultsView = isic.View.extend({
             }
         }, this).fetch({
             studyId: this.study.id,
-            userId: this.userId,
-            imageId: this.imageId
+            userId: this.user.id,
+            imageId: this.image.id
         });
     },
 
@@ -400,6 +422,8 @@ isic.views.StudyResultsView = isic.View.extend({
             this.$('#isic-study-results-global-features-container')).render();
         this.localFeaturesView.setElement(
             this.$('#isic-study-results-local-features-container')).render();
+        this.imageView.setElement(
+            this.$('#isic-study-results-image-container')).render();
 
         return this;
     }
