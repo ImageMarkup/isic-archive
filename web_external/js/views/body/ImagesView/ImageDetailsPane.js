@@ -23,6 +23,6 @@ isic.views.ImagesSubViews.ImageDetailsPane = Backbone.View.extend({
         }
 
         self.$el.find('pre').html(self.parentView.selectedImageId);
-        return self;
+        return this;
     }
 });

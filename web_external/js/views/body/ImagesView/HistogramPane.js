@@ -8,7 +8,6 @@ isic.views.ImagesSubViews.HistogramPane = Backbone.View.extend({
         self.parentView = params.parentView;
     },
     render: function () {
-        var self = this;
-        return self;
+        return this;
     }
 });
