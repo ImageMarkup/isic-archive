@@ -1,0 +1,19 @@
+{
+    "extends": "semistandard",
+    "rules": {
+        "indent": [2, 4, {"SwitchCase": 1}],
+        "space-before-function-paren": [2, {"anonymous": "always", "named": "never"}],
+        "one-var": 0,
+        "no-throw-literal": 0
+    },
+    "env": {
+        "browser": false
+    },
+    "plugins": [
+    ],
+    "globals": {
+        "print": true
+    },
+    "settings": {
+    }
+}
