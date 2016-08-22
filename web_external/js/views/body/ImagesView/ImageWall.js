@@ -39,23 +39,26 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
                 });
                 self.imageCache[i].src = girder.apiRoot + '/image/' + i +
                     '/thumbnail?width=' + imageSize;
+            } else {
+                // If we already have the image cached, we can call render right
+                // away (it gets debounced, so we // don't have to worry about
+                // tons of render calls)
+                self.loadedImages[i] = true;
+                self.render();
             }
         });
 
-        // Clear out any old IDs after a while
-        // (don't do it immediately in case the
-        // user is flipping back and forth between
-        // pages)
-        window.setTimeout(function () {
+        // Clear out any old IDs after a while (don't do it immediately in case
+        // the user is flipping back and forth between pages)
+        window.clearTimeout(self.cleanupTimeout);
+        self.cleanupTimeout = window.setTimeout(function () {
             Object.keys(self.imageCache).forEach(function (i) {
                 if (self.model.get('imageIds').indexOf(i) === -1) {
                     delete self.imageCache[i];
                     delete self.loadedImages[i];
                 }
             });
-        }, 100000);
-
-        self.render();
+        }, 10000);
     },
     handleBadImage: function (imageId) {
         var self = this;
@@ -255,11 +258,8 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
                 return d;
             });
         images.enter().append('image')
-            .attr('preserveAspectRatio', 'xMinYMin')
-            .attr('x', width) // Start new images on the right side
-            .attr('y', function (d) {
-                return placementLookup[d].y;
-            });
+            .attr('preserveAspectRatio', 'xMinYMin');
+        images.exit().remove();
         images.attr('id', function (d) {
             return 'image' + d;
         }).attr('xlink:href', function (d) {
@@ -270,45 +270,26 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
             } else {
                 return null;
             }
+        }).attr({
+            width: imageWidth,
+            height: function (d) {
+                return placementLookup[d].height;
+            },
+            x: function (d) {
+                return placementLookup[d].x;
+            },
+            y: function (d) {
+                return placementLookup[d].y;
+            }
         }).on('click', function (d) {
             self.selectImage(d === self.model.get('selectedImageId') ? null : d);
         });
 
-        // Animation time! Move / resize stuff:
-        images.transition().duration(500)
-            .attr({
-                width: imageWidth,
-                height: function (d) {
-                    return placementLookup[d].height;
-                },
-                x: function (d) {
-                    return placementLookup[d].x;
-                },
-                y: function (d) {
-                    return placementLookup[d].y;
-                }
-            });
-        // Move images that are on the previous page to the left
-        images.exit().transition().duration(500)
-            .attr({
-                x: -imageWidth
-            }).remove();
-
-        // Draw + animate the highlight rect
+        // Draw the highlight rect
         var selectedImageId = self.model.get('selectedImageId');
         if (selectedImageId) {
-            var parentOutline = svg.node().getBoundingClientRect();
-            var originalOutline = svg.select('#image' + selectedImageId)
-                .node().getBoundingClientRect();
             svg.select('#highlightOutline')
-                .attr({
-                    x: originalOutline.left - parentOutline.left,
-                    y: originalOutline.top - parentOutline.top,
-                    width: originalOutline.width,
-                    height: originalOutline.height
-                })
                 .style('display', null)
-                .transition().duration(500)
                 .attr({
                     x: placementLookup[selectedImageId].x,
                     y: placementLookup[selectedImageId].y,
@@ -319,5 +300,5 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
             svg.select('#highlightOutline')
                 .style('display', 'none');
         }
-    }, 300)
+    }, 50)
 });
