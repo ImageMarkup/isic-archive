@@ -51,7 +51,7 @@ isic.views.ImagesView = isic.View.extend({
 
         self.toggleDetailsPane();
 
-        return self;
+        return this;
     }
 });
 

@@ -132,7 +132,7 @@ isic.views.ImagesSubViews.PagingPane = Backbone.View.extend({
         self.updateControls();
         self.renderBars();
 
-        return self;
+        return this;
     },
     seekFirst: function () {
         var self = this;
