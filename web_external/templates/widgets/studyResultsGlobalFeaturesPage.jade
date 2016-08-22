@@ -1,0 +1,10 @@
+if hasFeatureset
+  h4 #{title} (#{featureset.name()}, version #{featureset.get('version')})
+else
+  h4 #{title}
+
+.isic-study-results-global-features-content
+  if hasGlobalFeatures
+    #isic-study-results-global-features-table
+  else
+    | N/A

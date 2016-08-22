@@ -1,0 +1,14 @@
+- var hasFeaturesClass = hasLocalFeatures ? '' : 'hidden';
+- var noFeaturesClass = hasLocalFeatures ? 'hidden' : '';
+if hasFeatureset
+  h4 #{title} (#{featureset.name()}, version #{featureset.get('version')})
+else
+  h4 #{title}
+
+div#isic-study-results-select-local-feature-container(class=hasFeaturesClass)
+
+.isic-study-results-local-features-content(class=noFeaturesClass)
+  | N/A
+
+.isic-study-results-local-features-content(class=hasFeaturesClass)
+  #isic-study-results-local-features-image-container
