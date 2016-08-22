@@ -1,9 +1,8 @@
 /*globals girder, jQuery, d3, Image, Backbone, _*/
 
-// We scaled the images based on how many
-// are currently selected; for now we'll hard
-// code this (and probably change it in the future)
-var tempDownloadSize = 10000;
+// For now we'll hard code this (and probably change it in the future),
+// depending on the page size
+var imageSize = 128;
 
 isic.views.ImagesSubViews = isic.views.ImagesSubViews || {};
 
@@ -39,7 +38,7 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
                     self.handleBadImage(i);
                 });
                 self.imageCache[i].src = girder.apiRoot + '/image/' + i +
-                    '/thumbnail';
+                    '/thumbnail?width=' + imageSize;
             }
         });
 
@@ -201,14 +200,7 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
         var width = this.el.clientWidth;
         this.$el.css('overflow', '');
 
-        // We want the width of each column of images to have an
-        // inverse relationship with the size of the download, so
-        // more, smaller thumbnails show up when the download is large)
-        var columnScale = d3.scale.linear()
-            .domain([0, tempDownloadSize])
-            .range([256, 256 / 4]); // Shrink the thumbnails by as much as a quarter
-
-        var imageWidth = columnScale(tempDownloadSize);
+        var imageWidth = imageSize; // TODO: something fancier...?
 
         var imagePadding = 5;
 
@@ -223,33 +215,7 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
         // figure out where all the images go:
         self.rearrangeColumns(numColumns);
 
-        // Okay, time to draw / move the pictures:
-        var images = svg.select('#previewContents').selectAll('image')
-            .data(Object.keys(self.loadedImages), function (d) {
-                return d;
-            });
-        images.enter().append('image')
-            .attr('preserveAspectRatio', 'xMinYMin')
-            .attr('x', width / 2) // Start new images at the middle of the
-            .attr('y', jQuery('#preview').height()); // bottom of the screen
-        images.attr('id', function (d) {
-            return 'image' + d;
-        }).attr('xlink:href', function (d) {
-            return self.imageCache[d].src;
-        }).attr('class', function (d) {
-            if (d === self.model.get('selectedImageId')) {
-                return 'selected';
-            } else {
-                return null;
-            }
-        }).on('click', function (d) {
-            self.selectImage(d === self.model.get('selectedImageId') ? null : d);
-        });
-
         // Construct a position/height lookup dict
-        // (we want to animate everything at the same
-        // time, so don't actually set these values
-        // until we know them)
         var placementLookup = {};
         var tallestHeight = 0;
         var availableImages = 0;
@@ -279,10 +245,37 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
             'height': tallestHeight
         });
 
+        // Okay, time to draw the pictures (in their initial positions)
+        var imageList = Object.keys(self.loadedImages)
+            .filter(function (d) {
+                return placementLookup.hasOwnProperty(d);
+            });
+        var images = svg.select('#previewContents').selectAll('image')
+            .data(imageList, function (d) {
+                return d;
+            });
+        images.enter().append('image')
+            .attr('preserveAspectRatio', 'xMinYMin')
+            .attr('x', width) // Start new images on the right side
+            .attr('y', function (d) {
+                return placementLookup[d].y;
+            });
+        images.attr('id', function (d) {
+            return 'image' + d;
+        }).attr('xlink:href', function (d) {
+            return self.imageCache[d].src;
+        }).attr('class', function (d) {
+            if (d === self.model.get('selectedImageId')) {
+                return 'selected';
+            } else {
+                return null;
+            }
+        }).on('click', function (d) {
+            self.selectImage(d === self.model.get('selectedImageId') ? null : d);
+        });
+
         // Animation time! Move / resize stuff:
-        images.filter(function (d) {
-            return placementLookup.hasOwnProperty(d);
-        }).transition().duration(500)
+        images.transition().duration(500)
             .attr({
                 width: imageWidth,
                 height: function (d) {
@@ -295,6 +288,11 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
                     return placementLookup[d].y;
                 }
             });
+        // Move images that are on the previous page to the left
+        images.exit().transition().duration(500)
+            .attr({
+                x: -imageWidth
+            }).remove();
 
         // Draw + animate the highlight rect
         var selectedImageId = self.model.get('selectedImageId');

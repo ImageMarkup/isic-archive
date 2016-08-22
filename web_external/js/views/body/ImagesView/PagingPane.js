@@ -10,6 +10,9 @@ isic.views.ImagesSubViews.PagingPane = Backbone.View.extend({
     render: function () {
         var self = this;
         if (!self.addedImages) {
+            // Sneaky hack: the image file name is part of the id; use the id to
+            // attach the correct src attribute, as well as the appropriate
+            // event listeners
             d3.select(this.el).selectAll('.button')
                 .append('img')
                 .attr('src', function () {
@@ -17,8 +20,43 @@ isic.views.ImagesSubViews.PagingPane = Backbone.View.extend({
                     return girder.staticRoot +
                     '/built/plugins/isic_archive/extra/img/' +
                     imgName + '.svg';
+                })
+                .on('click', function () {
+                    var funcName = this.parentNode.getAttribute('id').slice(12);
+                    self[funcName].apply(self, arguments);
                 });
             self.addedImages = true;
         }
+    },
+    seekFirst: function () {
+        var self = this;
+        self.model.set('offset', 0);
+    },
+    seekPrev: function () {
+        var self = this;
+        var page = {
+            limit: self.model.get('limit'),
+            offset: self.model.get('offset')
+        };
+        page.offset -= page.limit;
+        self.model.set(page);
+    },
+    seekNext: function () {
+        var self = this;
+        var page = {
+            limit: self.model.get('limit'),
+            offset: self.model.get('offset')
+        };
+        page.offset += page.limit;
+        self.model.set(page);
+    },
+    seekLast: function () {
+        // TODO
+        /*
+        var self = this;
+        var imageCount = self.get('histograms').__passedFilters__[0].count;
+        var limit = self.model.get('limit');
+        self.model.set('offset', Math.floor(imageCount / limit) * limit);
+        */
     }
 });
