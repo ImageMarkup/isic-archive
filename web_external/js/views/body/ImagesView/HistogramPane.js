@@ -1,13 +1,12 @@
-/*globals girder, jQuery, d3, Image, backbone*/
-/*eslint-disable*/
+/*globals girder, jQuery, Image*/
 
 isic.views.ImagesSubViews = isic.views.ImagesSubViews || {};
 
 isic.views.ImagesSubViews.HistogramPane = Backbone.View.extend({
-  initialize: function () {
+    initialize: function () {
 
-  },
-  render: function () {
-    
-  }
+    },
+    render: function () {
+        return this;
+    }
 });

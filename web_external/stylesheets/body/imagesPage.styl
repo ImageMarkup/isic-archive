@@ -1,123 +1,114 @@
-/* page-wide styles */
-#galleryContent {
-  position: relative;
-  min-height: 12em;
-  height: calc(100vh - 13em);
-  display: flex;
-  width: 100%;
-  flex-wrap: nowrap;
-  -ms-user-select: none;
-  -moz-user-select: none;
-  -webkit-user-select: none;
-}
-#galleryContent .flexRow {
-  display: flex;
-  width: 100%;
-  flex-wrap: nowrap;
-}
-#galleryContent .flexColumn {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  flex-wrap: nowrap;
-}
-#galleryContent .fixedWidth {
-  min-width: 32em;
-  max-width: 32em;
-  flex-basis: 32em;
-  overflow-y: auto;
-}
-#galleryContent .spacer,
-#galleryContent .growing {
-  flex-grow: 1;
-}
+#galleryContent
+  position relative
+  min-height 12em
+  height calc(100vh - 13em)
+  display flex
+  width 100%
+  flex-wrap nowrap
+  -ms-user-select none
+  -moz-user-select none
+  -webkit-user-select none
 
-#galleryContent .pane {
-  position: relative;
-  padding: 0.5em;
-  margin: 0.5em;
-  border: 1px solid #DDDDDD;
-  border-radius: 3px;
-}
+  .flexRow
+    display flex
+    width 100%
+    flex-wrap nowrap
 
-/* Study pane */
-#galleryContent #isic-images-studyPane {
+  .flexColumn
+    display flex
+    flex-direction column
+    height 100%
+    flex-wrap nowrap
 
-}
+  .fixedWidth
+    min-width 32em
+    max-width 32em
+    flex-basis 32em
+    overflow-y auto
 
-/* Study text pane */
-#galleryContent #isic-images-studyTextPane {
+  .spacer
+  .growing
+    flex-grow 1
 
-}
+  .pane
+    position relative;
+    padding 0.5em;
+    margin 0.5em;
+    border 1px solid #DDDDDD;
+    border-radius 3px;
 
-/* Image wall */
-#galleryContent #isic-images-imageWall {
-  overflow-y: auto;
-  overflow-x: hidden;
-  min-width: 32em;
-}
-#galleryContent #isic-images-imageWall image {
-  cursor: pointer;
-}
-#galleryContent #isic-images-imageWall rect#highlightOutline {
-  fill: none;
-  stroke: #00ABFF;
-  stroke-width: 4px;
-}
+  /* Study pane */
+  #isic-images-studyPane
+    /*! NoOp */
 
-/* Paging pane */
-#galleryContent #isic-images-pagingPane {
-  flex-basis: 3em;
-  height: 3em;
-  max-height: 3em;
-  min-height: 3em;
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-}
-#galleryContent #isic-images-pagingPane .button {
-  margin: 0.5em;
-  cursor: pointer;
-  border: 1px solid transparent;
-  border-radius: 3px;
-  padding: 3px;
-}
-#galleryContent #isic-images-pagingPane .button img {
-  width: 1em;
-  height: 1em;
-}
-#galleryContent #isic-images-pagingPane .button.selected img {
-  -webkit-filter: url(#recolorImageTo00ABFF);
-  filter: url(#recolorImageTo00ABFF);
-}
-#galleryContent #isic-images-pagingPane .button:hover {
-  border: 1px solid #E2E2E2;
-  background: linear-gradient(to bottom, #fff 60%, #f6f6f6 100%);
-}
-#galleryContent #isic-images-pagingPane .button:hover img {
-  -webkit-filter: url(#recolorImageTo444499);
-  filter: url(#recolorImageTo444499);
-}
-#galleryContent #isic-images-pagingPane #isic-images-pageSizeControl {
-  margin: 1em;
-  white-space: nowrap;
-}
-#galleryContent #isic-images-pagingPane #isic-images-pageSizeControl label {
-  margin: 0px;
-  vertical-align: middle;
-}
-#galleryContent #isic-images-pagingPane #isic-images-pageSizeControl input {
-  margin-left: 1em;
-  text-align: center;
-  width: 4em;
-}
+  /* Study text pane */
+  #isic-images-studyTextPane
+    /*! NoOp */
 
-/* Histogram pane */
-#galleryContent #isic-images-histogramPane {
+  /* Image wall */
+  #isic-images-imageWall
+    overflow-y auto
+    overflow-x hidden
+    min-width 32em
 
-}
+    image
+      cursor pointer
 
-/* Image details pane */
-#galleryContent #isic-images-imageDetailsPane {
+    rect#highlightOutline
+      fill none
+      stroke #00ABFF
+      stroke-width 4px
 
-}
+  /* Paging pane */
+  #isic-images-pagingPane
+    flex-basis 3em
+    height 3em
+    max-height 3em
+    min-height 3em
+    display flex
+    flex-wrap nowrap
+    align-items center
+
+    .button
+      margin 0.5em
+      cursor pointer
+      border 1px solid transparent
+      border-radius 3px
+      padding 3px
+
+      img
+        width 1em
+        height 1em
+
+        .selected
+          -webkit-filter url(#recolorImageTo00ABFF)
+          filter url(#recolorImageTo00ABFF)
+
+    .button:hover
+      border 1px solid #E2E2E2
+      background linear-gradient(to bottom, #fff 60%, #f6f6f6 100%)
+
+      img
+        -webkit-filter url(#recolorImageTo444499)
+        filter url(#recolorImageTo444499)
+
+    #isic-images-pageSizeControl
+      margin 1em
+      white-space nowrap
+
+      label
+        margin 0
+        vertical-align middle
+
+      input
+        margin-left 1em
+        text-align center
+        width 4em
+
+  /* Histogram pane */
+  #isic-images-histogramPane
+    /*! NoOp */
+
+  /* Image details pane */
+  #isic-images-imageDetailsPane
+    /*! NoOp */
