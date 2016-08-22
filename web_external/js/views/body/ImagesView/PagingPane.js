@@ -13,7 +13,7 @@ isic.views.ImagesSubViews.PagingPane = Backbone.View.extend({
             // Sneaky hack: the image file name is part of the id; use the id to
             // attach the correct src attribute, as well as the appropriate
             // event listeners
-            d3.select(this.el).selectAll('.button')
+            d3.select(self.el).selectAll('.button')
                 .append('img')
                 .attr('src', function () {
                     var imgName = this.parentNode.getAttribute('id').slice(12);
@@ -25,6 +25,15 @@ isic.views.ImagesSubViews.PagingPane = Backbone.View.extend({
                     var funcName = this.parentNode.getAttribute('id').slice(12);
                     self[funcName].apply(self, arguments);
                 });
+            // Listen for page size adjustments
+            self.$el.find('#isic-images-pageSize').on('change', function () {
+                self.model.set('limit', this.value);
+                // Invalid values will be capped; update the field if that happens
+                var newLimit = self.model.get('limit');
+                if (newLimit !== this.value) {
+                    this.value = newLimit;
+                }
+            });
             self.addedImages = true;
         }
     },

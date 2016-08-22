@@ -43,7 +43,7 @@ isic.views.ImagesViewModel = Backbone.Model.extend({
         };
 
         // Validate that the paging settings make sense
-        requestParams.limit = Math.max(0, requestParams.limit);
+        requestParams.limit = Math.max(1, requestParams.limit);
         // Don't allow pages of more than 250 images
         requestParams.limit = Math.min(250, requestParams.limit);
 
