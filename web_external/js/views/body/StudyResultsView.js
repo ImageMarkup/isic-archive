@@ -45,14 +45,11 @@ isic.views.StudyResultsSelectView = isic.View.extend({
 
     initialize: function (options) {
         this.title = options.title;
-        this.selectId = 'isic-study-results-select-view-select-' +
-            isic.views.StudyResultsSelectView._count;
+        this.selectId = _.uniqueId('isic-study-results-select-view-select-');
         this.getName = options.getName || this._defaultGetName;
         this.listenTo(this.collection, 'reset', this.render);
 
         this.render();
-
-        ++isic.views.StudyResultsSelectView._count;
     },
 
     modelChanged: function () {
@@ -91,9 +88,6 @@ isic.views.StudyResultsSelectView = isic.View.extend({
     _defaultGetName: function (model) {
         return model.name();
     }
-}, {
-    // Class properties
-    _count: 0
 });
 
 // Collection of global feature result models
