@@ -8,32 +8,23 @@ var tempDownloadSize = 10000;
 isic.views.ImagesSubViews = isic.views.ImagesSubViews || {};
 
 isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
-    initialize: function (params) {
+    initialize: function () {
         var self = this;
         self.imageCache = {};
         self.loadedImages = {};
         self.imageColumnLookup = {};
         self.imageColumns = [];
 
-        self.imageIds = [];
-
-        self.parentView = params.parentView;
-
-        // Re-render when the window
-        // changes size
-        window.onresize = function () {
-            self.render();
-        };
+        self.listenTo(self.model, 'change:selectedImageId', self.render);
+        self.listenTo(self.model, 'change:imageIds', self.setImages);
     },
-    setImages: function (imageIds) {
+    setImages: function () {
         var self = this;
-
-        self.imageIds = imageIds;
         self.loadedImages = {};
 
         // Start fetching the images now... don't wait
         // around for the call in render()
-        self.imageIds.forEach(function (i) {
+        self.model.get('imageIds').forEach(function (i) {
             if (!self.imageCache.hasOwnProperty(i)) {
                 self.imageCache[i] = new Image();
                 self.imageCache[i].addEventListener('load', function () {
@@ -58,7 +49,7 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
         // pages)
         window.setTimeout(function () {
             Object.keys(self.imageCache).forEach(function (i) {
-                if (self.imageIds.indexOf(i) === -1) {
+                if (self.model.get('imageIds').indexOf(i) === -1) {
                     delete self.imageCache[i];
                     delete self.loadedImages[i];
                 }
@@ -86,7 +77,7 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
 
         // Remove any images that aren't here any more
         Object.keys(self.imageColumnLookup).forEach(function (imageId) {
-            if (self.imageIds.indexOf(imageId) === -1) {
+            if (self.model.get('imageIds').indexOf(imageId) === -1) {
                 myColumn = self.imageColumnLookup[imageId];
                 myIndex = self.imageColumns[myColumn].indexOf(imageId);
 
@@ -182,7 +173,7 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
     },
     selectImage: function (imageId) {
         var self = this;
-        self.trigger('iv:selectImage', imageId);
+        self.model.set('selectedImageId', imageId);
     },
     render: _.debounce(function () {
         var self = this;
@@ -246,13 +237,13 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
         }).attr('xlink:href', function (d) {
             return self.imageCache[d].src;
         }).attr('class', function (d) {
-            if (d === self.parentView.selectedImageId) {
+            if (d === self.model.get('selectedImageId')) {
                 return 'selected';
             } else {
                 return null;
             }
         }).on('click', function (d) {
-            self.selectImage(d === self.parentView.selectedImageId ? null : d);
+            self.selectImage(d === self.model.get('selectedImageId') ? null : d);
         });
 
         // Construct a position/height lookup dict
@@ -306,9 +297,10 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
             });
 
         // Draw + animate the highlight rect
-        if (self.parentView.selectedImageId) {
+        var selectedImageId = self.model.get('selectedImageId');
+        if (selectedImageId) {
             var parentOutline = svg.node().getBoundingClientRect();
-            var originalOutline = svg.select('#image' + self.parentView.selectedImageId)
+            var originalOutline = svg.select('#image' + selectedImageId)
                 .node().getBoundingClientRect();
             svg.select('#highlightOutline')
                 .attr({
@@ -320,10 +312,10 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
                 .style('display', null)
                 .transition().duration(500)
                 .attr({
-                    x: placementLookup[self.parentView.selectedImageId].x,
-                    y: placementLookup[self.parentView.selectedImageId].y,
+                    x: placementLookup[selectedImageId].x,
+                    y: placementLookup[selectedImageId].y,
                     width: imageWidth,
-                    height: placementLookup[self.parentView.selectedImageId].height
+                    height: placementLookup[selectedImageId].height
                 });
         } else {
             svg.select('#highlightOutline')

@@ -5,11 +5,11 @@ isic.views.ImagesSubViews = isic.views.ImagesSubViews || {};
 isic.views.ImagesView = isic.View.extend({
     initialize: function () {
         var self = this;
-        self.selectedImageId = null;
+        self.model = new isic.views.ImagesViewModel();
 
         // Initialize our subviews
         var params = {
-            parentView: self
+            model: self.model
         };
         self.histogramPane = new isic.views.ImagesSubViews.HistogramPane(params);
         self.imageWall = new isic.views.ImagesSubViews.ImageWall(params);
@@ -19,47 +19,17 @@ isic.views.ImagesView = isic.View.extend({
         window.onresize = function () {
             self.render();
         };
-        self.attachListeners();
-        self.updateCurrentPage();
-    },
-    attachListeners: function () {
-        var self = this;
-        self.listenTo(self.histogramPane, 'iv:changeFilters',
-            function () {
-                self.updateCurrentPage();
-            });
+        self.listenTo(self.model, 'change:selectedImageId', self.toggleDetailsPane);
 
-        self.listenTo(self.imageWall, 'iv:selectImage',
-            function (imageId) {
-                self.selectedImageId = imageId;
-                self.imageDetailsPane.updateDetails(imageId);
-                self.render();
-            });
-
-        self.listenTo(self.imageDetailsPane, 'iv:deselectImage',
-            function () {
-                self.selectedImageId = null;
-                self.imageWall.selectImage(null);
-                self.render();
-            });
+        self.render();
     },
-    updateCurrentPage: function () {
+    toggleDetailsPane: function () {
         var self = this;
-        // TODO: pass in filters and paging settings
-        // var filterString = self.histogramPane.getFilterString();
-        girder.restRequest({
-            path: 'image',
-            data: {
-                'limit': 50,
-                'offset': 0
-            }
-        }).done(function (resp) {
-            var newImageIds = resp.map(function (imageObj) {
-                return imageObj._id;
-            });
-            self.imageWall.setImages(newImageIds);
-            self.render();
-        });
+        if (self.model.get('selectedImageId') !== null) {
+            self.$el.find('#isic-images-imageDetailsPane').css('display', '');
+        } else {
+            self.$el.find('#isic-images-imageDetailsPane').css('display', 'none');
+        }
     },
     render: function () {
         var self = this;
@@ -77,13 +47,9 @@ isic.views.ImagesView = isic.View.extend({
         self.imageWall.render();
         self.pagingPane.render();
         self.histogramPane.render();
+        self.imageDetailsPane.render();
 
-        if (self.selectedImageId) {
-            self.$el.find('#isic-images-imageDetailsPane').css('display', '');
-            self.imageDetailsPane.render();
-        } else {
-            self.$el.find('#isic-images-imageDetailsPane').css('display', 'none');
-        }
+        self.toggleDetailsPane();
     }
 });
 
