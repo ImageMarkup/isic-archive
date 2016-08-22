@@ -300,5 +300,6 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
             svg.select('#highlightOutline')
                 .style('display', 'none');
         }
+        return self;
     }, 50)
 });
