@@ -165,7 +165,6 @@ class ImageResource(Resource):
     )
     @access.public
     def histogram(self, params):
-        user = self.getCurrentUser()
         # TODO: ideally we should access images via the image route, but it
         # doesn't give us the folderId - which we need in order to bin by study
         # collection = self.model('image', 'isic_archive').collection
