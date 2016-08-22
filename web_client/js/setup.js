@@ -6,18 +6,7 @@
 girder.wrap(girder.views.LayoutGlobalNavView, 'render', function (render) {
     'use strict';
 
-    this.navItems = [
-        {
-            name: 'Lesion Datasets',
-            icon: 'icon-picture',
-            target: 'isic-datasets'
-        },
-        {
-            name: 'Annotation Studies',
-            icon: 'icon-eye',
-            target: 'isic-studies'
-        }
-    ];
+    this.navItems = [];
     if (girder.currentUser) {
         this.navItems.push({
             name: 'Your Tasks',
@@ -25,11 +14,6 @@ girder.wrap(girder.views.LayoutGlobalNavView, 'render', function (render) {
             target: 'isic-tasks'
         });
     }
-    this.navItems.push({
-        name: 'Forum',
-        icon: 'icon-chat',
-        target: 'isic-forum'
-    });
     this.navItems = this.navItems.concat(this.defaultNavItems);
     if (girder.currentUser && girder.currentUser.get('admin')) {
         this.navItems.push({
@@ -58,17 +42,7 @@ function _navigateToCollection(collectionName, replace) {
     });
 }
 
-girder.router.route('isic-studies', 'isic-studies', function () {
-    'use strict';
-    _navigateToCollection('Annotation Studies', true);
-});
-
 girder.router.route('isic-tasks', 'isic-tasks', function () {
     'use strict';
     window.location.replace('/uda/task');
-});
-
-girder.router.route('isic-forum', 'isic-forum', function () {
-    'use strict';
-    window.location.replace('http://forum.isic-archive.com');
 });
