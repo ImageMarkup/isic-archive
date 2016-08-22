@@ -231,12 +231,6 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
     },
 
     updateFeatureImageModel: function () {
-        if (!_.has(this, 'featureId') ||
-            !_.has(this.annotation, 'id') ||
-            _.isUndefined(this.annotation.id)) {
-            return;
-        }
-
         this.featureImageModel.set({
             featureId: this.featureId,
             annotationId: this.annotation.id
