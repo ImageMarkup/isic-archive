@@ -7,7 +7,7 @@ var INITIAL_IMAGES_TO_FETCH = 150; // eslint-disable-line no-unused-vars
 // We scaled the images based on how many
 // are currently selected; for now we'll hard
 // code this (and probably change it in the future)
-var temp_download_size = 10000;
+var tempDownloadSize = 10000;
 
 isic.views.ImagesSubViews = isic.views.ImagesSubViews || {};
 
@@ -219,10 +219,10 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
         // inverse relationship with the size of the download, so
         // more, smaller thumbnails show up when the download is large)
         var columnScale = d3.scale.linear()
-            .domain([0, temp_download_size])
+            .domain([0, tempDownloadSize])
             .range([256, 256 / 4]); // Shrink the thumbnails by as much as a quarter
 
-        var imageWidth = columnScale(temp_download_size);
+        var imageWidth = columnScale(tempDownloadSize);
 
         var imagePadding = 5;
 
