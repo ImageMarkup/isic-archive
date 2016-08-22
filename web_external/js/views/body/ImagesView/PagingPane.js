@@ -60,12 +60,10 @@ isic.views.ImagesSubViews.PagingPane = Backbone.View.extend({
         self.model.set(page);
     },
     seekLast: function () {
-        // TODO
-        /*
         var self = this;
-        var imageCount = self.get('histograms').__passedFilters__[0].count;
+        var imageCount = self.model.get('overviewHistogram')
+            .__passedFilters__[0].count;
         var limit = self.model.get('limit');
         self.model.set('offset', Math.floor(imageCount / limit) * limit);
-        */
     }
 });

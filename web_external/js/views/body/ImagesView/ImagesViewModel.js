@@ -8,6 +8,12 @@ isic.views.ImagesViewModel = Backbone.Model.extend({
         var self = this;
         self.updateCurrentPage();
 
+        // TODO: get more histograms than the overview
+        self.updateHistogram('overview');
+        // self.updateHistogram('study');
+        // self.updateHistogram('filteredSet');
+        // self.updateHistogram('page');
+
         self.listenTo(self, 'change:limit', self.updateCurrentPage);
         self.listenTo(self, 'change:offset', self.updateCurrentPage);
         self.listenTo(self, 'change:filters', self.updateCurrentPage);
@@ -26,12 +32,51 @@ isic.views.ImagesViewModel = Backbone.Model.extend({
         selectedImageId: null,
         filters: [],
         imageIds: [],
-        histograms: {
+        overviewHistogram: {
+            __passedFilters__: [{
+                count: 0,
+                label: 'count'
+            }]
+        },
+        studyHistogram: {
+            __passedFilters__: [{
+                count: 0,
+                label: 'count'
+            }]
+        },
+        filteredSetHistogram: {
+            __passedFilters__: [{
+                count: 0,
+                label: 'count'
+            }]
+        },
+        pageHistogram: {
             __passedFilters__: [{
                 count: 0,
                 label: 'count'
             }]
         }
+    },
+    updateHistogram: function (histogramName) {
+        var self = this;
+        var requestParams = {};
+
+        /*
+        TODO: send parameters, depending on which type of histogram that we want
+        if (histogramName === 'page') {
+            requestParams.limit = self.get('limit');
+            requestParams.offset = self.get('offset');
+        }
+        if (histogramName === 'page' || histogramName === 'filteredSet') {
+            requestParams.filters = self.getFilterString();
+        }
+        */
+        girder.restRequest({
+            path: 'image/histogram',
+            data: requestParams
+        }).done(function (resp) {
+            self.set(histogramName + 'Histogram', resp);
+        });
     },
     updateCurrentPage: function () {
         var self = this;
@@ -50,13 +95,12 @@ isic.views.ImagesViewModel = Backbone.Model.extend({
         requestParams.offset = Math.max(0, requestParams.offset);
         // TODO: validate the top range when we have that info from the
         // histogram calculations
-        /*
-        var imageCount = self.get('histograms').__passedFilters__[0].count;
+        var imageCount = self.get('overviewHistogram').__passedFilters__[0].count;
+        console.log('validating:', imageCount, requestParams.limit, requestParams.offset);
         if (requestParams.offset + requestParams.limit > imageCount) {
-            offset = Math.floor(imageCount / requestParams.limit) *
+            requestParams.offset = Math.floor(imageCount / requestParams.limit) *
                 requestParams.limit;
         }
-        */
 
         // In case we've overridden anything, update with the cleaned values
         self.set(requestParams, {silent: true});
