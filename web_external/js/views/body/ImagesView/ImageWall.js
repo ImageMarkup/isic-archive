@@ -1,9 +1,5 @@
 /*globals girder, jQuery, d3, Image, Backbone, _*/
 
-var LOG_IMAGE_FETCHES = false; // eslint-disable-line no-unused-vars
-
-var INITIAL_IMAGES_TO_FETCH = 150; // eslint-disable-line no-unused-vars
-
 // We scaled the images based on how many
 // are currently selected; for now we'll hard
 // code this (and probably change it in the future)
@@ -265,7 +261,6 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
         // until we know them)
         var placementLookup = {};
         var tallestHeight = 0;
-        var missingImages = 0; // eslint-disable-line no-unused-vars
         var availableImages = 0;
         self.imageColumns.forEach(function (column, index) {
             var y = imagePadding;
