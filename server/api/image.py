@@ -165,12 +165,9 @@ class ImageResource(Resource):
     )
     @access.public
     def histogram(self, params):
-        # TODO: ideally we should access images via the image route, but it
-        # doesn't give us the folderId - which we need in order to bin by study
-        # collection = self.model('image', 'isic_archive').collection
-        collection = self.model('item').collection
+        user = self.getCurrentUser()
 
-        return self.histogramUtility.getHistograms(collection, params)
+        return self.histogramUtility.getHistograms(user, params)
 
     @describeRoute(
         Description('Flag an image with a problem.')

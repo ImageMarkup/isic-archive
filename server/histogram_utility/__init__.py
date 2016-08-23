@@ -3,11 +3,13 @@ import json
 import execjs
 from querylang import astToMongo
 
+from girder.utility.model_importer import ModelImporter
+
 
 TRUE_VALUES = set([True, 'true', 1, 'True'])
 
 
-class HistogramUtility():
+class HistogramUtility(object):
     def __init__(self):
         # Load up the external foreign code snippets
         self.foreignCode = {}
@@ -44,6 +46,28 @@ class HistogramUtility():
             result[r['_id']] = r['value']
 
         return result
+
+    def addFolderFilters(self, filterSpec, validFolders):
+        folderFilter = {
+            'operator': 'in',
+            'operands': [
+                {
+                    'identifier': 'folderId',
+                    'type': 'string'
+                },
+                validFolders
+            ]
+        }
+        if filterSpec is None:
+            return folderFilter
+        else:
+            return {
+                'operator': 'and',
+                'operands': [
+                    folderFilter,
+                    filterSpec
+                ]
+            }
 
     def hardCodeBinSettings(self, params):
         '''
@@ -168,9 +192,18 @@ class HistogramUtility():
 
         return params, binSettings
 
-    def getHistograms(self, collection, params):
+    def getHistograms(self, user, params):
+        Image = ModelImporter.model('image', 'isic_archive')
+        Dataset = ModelImporter.model('dataset', 'isic_archive')
+
         params = self.hardCodeBinSettings(params)
         params, binSettings = self.fillInDefaultHistogramParams(params)
+
+        collection = Image.collection
+
+        # Limit to folders that user has access to
+        validFolders = [dataset['_id'] for dataset in Dataset.list(user=user)]
+        params['filter'] = self.addFolderFilters(params['filter'], validFolders)
 
         # Construct and run the histogram MapReduce code
         mapScript = 'function map () {\n' + \
