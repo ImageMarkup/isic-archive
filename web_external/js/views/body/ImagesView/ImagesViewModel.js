@@ -4,23 +4,6 @@
 // as the stuff in js/models)
 
 isic.views.ImagesViewModel = Backbone.Model.extend({
-    initialize: function () {
-        var self = this;
-
-        self.updateHistogram('overview');
-        self.updateHistogram('filteredSet').then(function () {
-            return self.updateCurrentPage();
-        }).then(function () {
-            return self.updateHistogram('page');
-        });
-
-        self.listenTo(self, 'change:limit', self.updateCurrentPage);
-        self.listenTo(self, 'change:offset', self.updateCurrentPage);
-        self.listenTo(self, 'change:filters', self.updateCurrentPage);
-        self.listenTo(self, 'change:imageIds', function () {
-            self.set('selectedImageId', null);
-        });
-    },
     defaults: {
         limit: 50,
         offset: 0,
@@ -51,6 +34,23 @@ isic.views.ImagesViewModel = Backbone.Model.extend({
                 label: 'count'
             }]
         }
+    },
+    initialize: function () {
+        var self = this;
+
+        self.updateHistogram('overview');
+        self.updateHistogram('filteredSet').then(function () {
+            return self.updateCurrentPage();
+        }).then(function () {
+            return self.updateHistogram('page');
+        });
+
+        self.listenTo(self, 'change:limit', self.updateCurrentPage);
+        self.listenTo(self, 'change:offset', self.updateCurrentPage);
+        self.listenTo(self, 'change:filters', self.updateCurrentPage);
+        self.listenTo(self, 'change:imageIds', function () {
+            self.set('selectedImageId', null);
+        });
     },
     updateHistogram: function (histogramName) {
         var self = this;
@@ -98,7 +98,7 @@ isic.views.ImagesViewModel = Backbone.Model.extend({
         }
 
         // In case we've overridden anything, update with the cleaned values
-        self.set(requestParams, {silent: true});
+        self.set(requestParams, {silent: true}); // eslint-disable-line no-silent
 
         // TODO: pass in filter settings
         // var filterString = self.getFilterString();

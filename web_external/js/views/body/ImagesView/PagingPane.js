@@ -22,16 +22,16 @@ isic.views.ImagesSubViews.PagingPane = Backbone.View.extend({
         // Now draw the bars indicating the size and location of
         // the page within the current filtered set
         var barData = [
-          {
-            segment: 'filteredSet',
-            offset: 0,
-            count: pageDetails.filteredSetCount
-          },
-          {
-            segment: 'page',
-            offset: pageDetails.offset,
-            count: pageDetails.limit
-          }
+            {
+                segment: 'filteredSet',
+                offset: 0,
+                count: pageDetails.filteredSetCount
+            },
+            {
+                segment: 'page',
+                offset: pageDetails.offset,
+                count: pageDetails.limit
+            }
         ];
         var bars = d3.select(this.el).select('#isic-images-pagingBars')
             .selectAll('div.bar').data(barData, function (d) {
@@ -74,13 +74,13 @@ isic.views.ImagesSubViews.PagingPane = Backbone.View.extend({
         this.$el.find('.detailLabel').hide();
         var labelElement;
         if (hasFilters && hasPaging) {
-          labelElement = this.$el.find('#isic-images-hasFiltersAndPaging');
+            labelElement = this.$el.find('#isic-images-hasFiltersAndPaging');
         } else if (hasFilters) {
-          labelElement = this.$el.find('#isic-images-hasFilters');
+            labelElement = this.$el.find('#isic-images-hasFilters');
         } else if (hasPaging) {
-          labelElement = this.$el.find('#isic-images-hasPaging');
+            labelElement = this.$el.find('#isic-images-hasPaging');
         } else {
-          labelElement = this.$el.find('#isic-images-noPagingOrFilters');
+            labelElement = this.$el.find('#isic-images-noPagingOrFilters');
         }
         labelElement.show();
 
@@ -90,13 +90,13 @@ isic.views.ImagesSubViews.PagingPane = Backbone.View.extend({
         labelElement.find('span.filteredSet')
           .text(pageDetails.filteredSetCount);
         if (hasPaging) {
-          // Use base 1 for the page text labels
-          labelElement.find('span.page')
-            .text((pageDetails.offset + 1) + ' - ' +
-                (pageDetails.offset + pageDetails.limit));
+            // Use base 1 for the page text labels
+            labelElement.find('span.page')
+                .text((pageDetails.offset + 1) + ' - ' +
+                    (pageDetails.offset + pageDetails.limit));
         } else {
-          labelElement.find('span.page')
-            .text(pageDetails.filteredSetCount);
+            labelElement.find('span.page')
+                .text(pageDetails.filteredSetCount);
         }
     },
     render: function () {
