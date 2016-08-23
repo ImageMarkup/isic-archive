@@ -1,12 +1,13 @@
+//- Use inside a navbar
 .isic-current-user-text
   if (user)
-    .isic-portrait-wrapper
-    .isic-user-link-wrapper
-      a.isic-user-link(data-toggle="dropdown", data-target="#g-user-action-menu")
-        | #{user.get('firstName')} #{user.get('lastName')}
-        i.icon-down-open
-      #g-user-action-menu.dropdown
-        ul.dropdown-menu(role="menu")
+    ul.nav.navbar-nav.navbar-right
+      li.navbar-brand.hidden-xs.isic-portrait-wrapper
+      li.dropdown
+        a.dropdown-toggle.isic-header-item(href="#", data-toggle="dropdown", role="button", aria-haspopup="true" aria-expanded="false")
+          | #{user.name()}&nbsp;
+          span.caret
+        ul.dropdown-menu
           li(role="presentation")
             a.g-my-settings
               i.icon-cog
@@ -17,8 +18,8 @@
               i.icon-logout
               | Log out
   else
-    .isic-login-link-wrapper
-      a.g-register Register
+    .navbar-text.navbar-right.isic-login-link-wrapper
+      a.g-register.isic-login-link Register
       |  or
-      a.g-login  Log In
+      a.g-login.isic-login-link  Log In
         i.icon-login

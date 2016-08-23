@@ -1,75 +1,52 @@
 @import 'nib'
 
 $headerHeight = 54px
-$portraitHeight = 38px
+$portraitHeight = 36px
+$textColor = #444
 
 .isic-header-wrapper
-  height $headerHeight
-  padding-right 20px
-  padding-left 20px
+  min-height $headerHeight
   background-color rgba(255, 255, 255, 0.88)
-  border-bottom 1px solid #e6e6e6
   transition background-color 0.4s ease-in-out
-  position fixed
-  top 0
-  width 100%
-  z-index 10
+  font-size 16px
 
   &:hover
     background-color white
 
-  .isic-icons-wrapper
-    display inline
-    line-height $headerHeight
+  .isic-header-title
+    font-size 24px
+    color $textColor
 
-    .isic-header-title
-      font-size 24px
-      margin-right 5px
-
-    &>a
-      color #444
-      font-size 16px
-      margin-right 4px
-      border 1px solid transparent
-      border-radius 3px
-      padding 3px
-
-      &:hover
-        color #449
-        border 1px solid #e2e2e2
-        background linear-gradient(top, white 60%, #f6f6f6 100%)
-
-      &:active
-        background linear-gradient(bottom, white 60%, #f6f6f6 100%)
+  .isic-header-item
+    color $textColor !important
 
   .isic-current-user-wrapper
-    float right
 
-    .isic-current-user-text > *
-      vertical-align middle
-      line-height $headerHeight
+    .isic-current-user-text
 
       .isic-portrait-wrapper
         border-radius 50%
         display inline-block
-        margin-right 10px
         background-color #d6d6d6
         height $portraitHeight
         width $portraitHeight
         background-size $portraitHeight $portraitHeight
+        margin-top (($headerHeight - $portraitHeight)/2)
 
       .isic-user-link-wrapper
         display inline-block
 
         .isic-user-link
-          color #444
-          font-size 16px
+          color $textColor !important
 
           &:hover
             color #66a
 
       .isic-login-link-wrapper
         font-size 16px
+
+        .isic-login-link
+          color $textColor !important
 
 #g-app-body-container
   margin 0

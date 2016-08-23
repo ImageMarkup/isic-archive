@@ -1,36 +1,76 @@
-.isic-header-wrapper
-  .isic-icons-wrapper
-    span.isic-header-title ISIC Archive
-    a.isic-link-home(title="Home", href="#")
-      i.icon-home
-      span Home
-    a(title="About", href="http://isdis.net/isic-project/", target="_blank")
-      i.icon-help
-      span About
-    a(title="Members", href="http://isdis.net/isic-project/working-group-members/", target="_blank")
-      i.icon-users
-      span Members
-    a.isic-link-forum(title="Forum", href="#forum")
-      i.icon-chat
-      span Forum
-    if datasetContributor
-      a.isic-link-dataset-upload(title="Upload Dataset", href="#uploadDataset")
-        i.icon-upload
-        span Upload Dataset
-    a.isic-link-images(title="Lesion Images", href="#images")
-      i.icon-picture
-      span Lesion Images
-    a.isic-link-studies(title="Annotation Studies", href="#studies")
-      i.icon-eye
-      span Annotation Studies
-    a.isic-link-study-results(title="Annotation Study Results", href="#studyResults")
-      i.icon-pencil
-      span Annotation Study Results
-    a.isic-link-featuresets(title="Featuresets", href="#featuresets")
-      i.icon-list
-      span Featuresets
-    a.isic-link-tasks(title="Your Tasks", href="#tasks")
-      i.icon-check
-      span Your Tasks
-  .isic-current-user-wrapper
-  .g-clear-both
+nav.navbar.navbar-default.navbar-fixed-top.isic-header-wrapper
+  .container-fluid
+
+    .navbar-header
+      button.navbar-toggle.collapsed(type="button", data-toggle="collapse", data-target="#isic-navbar-collapse", aria-expanded=false)
+        span.sr-only Toggle navigation
+        i.icon-bar
+        i.icon-bar
+        i.icon-bar
+      a.navbar-brand.isic-header-title(href="#") ISIC Archive
+
+    #isic-navbar-collapse.collapse.navbar-collapse
+      ul.nav.navbar-nav
+
+        li.dropdown
+          a.dropdown-toggle.isic-header-item(href="#", data-toggle="dropdown", role="button", aria-haspopup="true" aria-expanded="false")
+            | Community&nbsp;
+            span.caret
+          ul.dropdown-menu
+            li(role="presentation")
+              a(title="Home", href="#")
+                i.icon-home
+                | Home
+            li(role="presentation")
+              a(title="About", href="http://isdis.net/isic-project/", target="_blank")
+                i.icon-help
+                | About
+            li(role="presentation")
+              a(title="Working Group Members", href="http://isdis.net/isic-project/working-group-members/", target="_blank")
+                i.icon-users
+                | Working Group Members
+            li(role="presentation")
+              a(title="Forum", href="#forum")
+                i.icon-chat
+                | Forum
+
+        li.dropdown
+          a.dropdown-toggle.isic-header-item(href="#", data-toggle="dropdown", role="button", aria-haspopup="true" aria-expanded="false")
+            | Lesion Images&nbsp;
+            span.caret
+          ul.dropdown-menu
+            if datasetContributor
+              li(role="presentation")
+                a(title="Upload Dataset", href="#uploadDataset")
+                  i.icon-upload
+                  | Upload Dataset
+            li(role="presentation")
+              a(title="Lesion Images", href="#images")
+                i.icon-picture
+                | Lesion Images
+
+        li.dropdown
+          a.dropdown-toggle.isic-header-item(href="#", data-toggle="dropdown", role="button", aria-haspopup="true" aria-expanded="false")
+            | Annotation Study Results&nbsp;
+            span.caret
+          ul.dropdown-menu
+            li(role="presentation")
+              a(title="Featuresets", href="#featuresets")
+                i.icon-list
+                | Featuresets
+            li(role="presentation")
+              a(title="Manage Annotation Studies", href="#studies")
+                i.icon-pencil
+                | Manage Annotation Studies
+            li(role="presentation")
+              a(title="Annotation Study Results", href="#studyResults")
+                i.icon-eye
+                | Annotation Study Results
+
+        if currentUser
+          li(role="presentation")
+            a.isic-header-item(title="Your Tasks", href="#tasks")
+              i.icon-check
+              | Your Tasks
+
+      .isic-current-user-wrapper

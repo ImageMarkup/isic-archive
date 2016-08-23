@@ -1,34 +1,4 @@
 isic.views.LayoutHeaderView = isic.View.extend({
-    events: {
-        'click .isic-link-home': function () {
-            isic.router.navigate('index', {trigger: true});
-        },
-
-        'click .isic-link-forum': function () {
-            isic.router.navigate('forum', {trigger: true});
-        },
-
-        'click .isic-link-dataset-upload': function () {
-            isic.router.navigate('uploadDataset', {trigger: true});
-        },
-
-        'click .isic-link-images': function () {
-            isic.router.navigate('images', {trigger: true});
-        },
-
-        'click .isic-link-studies': function () {
-            isic.router.navigate('studies', {trigger: true});
-        },
-
-        'click .isic-link-featuresets': function () {
-            isic.router.navigate('featuresets', {trigger: true});
-        },
-
-        'click .isic-link-tasks': function () {
-            isic.router.navigate('tasks', {trigger: true});
-        }
-    },
-
     initialize: function () {
         this.datasetContributor = false;
 
@@ -41,6 +11,7 @@ isic.views.LayoutHeaderView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.layoutHeader({
+            currentUser: girder.currentUser,
             datasetContributor: this.datasetContributor
         }));
 
