@@ -4,9 +4,9 @@
 // depending on the page size
 var imageSize = 128;
 
-isic.views.ImagesSubViews = isic.views.ImagesSubViews || {};
+isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
-isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
+isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
     initialize: function () {
         var self = this;
         self.imageCache = {};

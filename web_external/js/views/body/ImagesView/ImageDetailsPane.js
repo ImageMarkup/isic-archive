@@ -1,8 +1,8 @@
 /*globals girder, jQuery, Image*/
 
-isic.views.ImagesSubViews = isic.views.ImagesSubViews || {};
+isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
-isic.views.ImagesSubViews.ImageDetailsPane = Backbone.View.extend({
+isic.views.ImagesViewSubViews.ImageDetailsPane = Backbone.View.extend({
     initialize: function () {
         var self = this;
         self.listenTo(self.model, 'change:selectedImageId', this.render);

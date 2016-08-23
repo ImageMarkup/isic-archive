@@ -3,7 +3,8 @@
 // This is a pure, backbone-only helper model (i.e. not the same thing
 // as the stuff in js/models)
 
-isic.views.ImagesViewModel = Backbone.Model.extend({
+isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
+isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
     defaults: {
         limit: 50,
         offset: 0,

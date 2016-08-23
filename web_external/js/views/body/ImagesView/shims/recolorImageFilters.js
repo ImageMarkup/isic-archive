@@ -1,6 +1,11 @@
-/*globals d3*/
+// Tool that generates SVG filters that can recolor images
+// to whatever color we need.
+// Usage: CSS styles should do something like this:
+// -webkit-filter: url(#recolorImageToFFFFFF)
+// filter: url(#recolorImageToFFFFFF)
 
-function recolorImageFilters(colorList) { // eslint-disable-line no-unused-vars
+window.shims = window.shims || {};
+window.shims.recolorImageFilters = function (colorList) {
     var svgDefs = d3.select('body').append('svg')
         .attr('id', 'recolorImageFilters')
         .append('defs');
@@ -15,9 +20,6 @@ function recolorImageFilters(colorList) { // eslint-disable-line no-unused-vars
         allColors[color].push(colorName);
     });
 
-    // Generate SVG filters that can recolor images to whatever
-    // color we need. CSS styles simply do something like
-    // filter: url(#recolorImageToFFFFFF)
     var recolorFilters = svgDefs.selectAll('filter.recolor')
         .data(Object.keys(allColors), function (d) {
             return d;
@@ -51,4 +53,4 @@ function recolorImageFilters(colorList) { // eslint-disable-line no-unused-vars
             var hexvalue = d.slice(5, 7);
             return Math.pow(parseInt(hexvalue, 16) / 255, 2);
         });
-}
+};
