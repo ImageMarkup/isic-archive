@@ -106,16 +106,16 @@ isic.views.ImagesSubViews.PagingPane = Backbone.View.extend({
             // attach the correct src attribute, as well as the appropriate
             // event listeners
             d3.select(self.el).selectAll('.button')
+                .on('click', function () {
+                    var funcName = this.getAttribute('id').slice(12);
+                    self[funcName].apply(self, arguments);
+                })
                 .append('img')
                 .attr('src', function () {
                     var imgName = this.parentNode.getAttribute('id').slice(12);
                     return girder.staticRoot +
                     '/built/plugins/isic_archive/extra/img/' +
                     imgName + '.svg';
-                })
-                .on('click', function () {
-                    var funcName = this.parentNode.getAttribute('id').slice(12);
-                    self[funcName].apply(self, arguments);
                 });
             // Listen for page size adjustments
             self.$el.find('#isic-images-pageSize').on('change', function () {
