@@ -1,9 +1,9 @@
 (function() {
-    function HistogramScale(emSize, model, attrName, idealWidth) {
+    // This is simply a helper class (not really a model or a view) that
+    // abstracts away some of the nuances of the histogram scales (both x and y)
+    function HistogramScale(attrName) {
         var self = this;
-        self.emSize = emSize;
-        self.leftAxisPadding = 3 * self.emSize;
-        self.height = 6 * self.emSize;
+        self.attrName = attrName;
 
         // The x scale is a funky one - we may (or may not) have an ordinal chunk
         // and a categorical chunk on the same scale. We want to try to use the
@@ -20,15 +20,17 @@
         // The y scale needs to be independently adjustable; we need to keep track
         // of a custom max y, as well as the actual max value of the data
         self.customYmax = null;
-
-        self.update(attrName, model, idealWidth);
     }
-    HistogramScale.prototype.update = function (attrName, model, idealWidth) {
+    HistogramScale.prototype.update = function (model, emSize, idealWidth) {
         var self = this;
-        self.coerceToType = model.getAttributeType(attrName);
-        self.overviewHistogram = model.get('overviewHistogram')[attrName] || [];
-        self.filteredSetHistogram = model.get('filteredSetHistogram')[attrName] || [];
-        self.pageHistogram = model.get('pageHistogram')[attrName] || [];
+        emSize = emSize;
+        self.leftAxisPadding = 3 * emSize;
+        self.height = 6 * emSize;
+
+        self.coerceToType = model.getAttributeType(self.attrName);
+        self.overviewHistogram = model.get('overviewHistogram')[self.attrName] || [];
+        self.filteredSetHistogram = model.get('filteredSetHistogram')[self.attrName] || [];
+        self.pageHistogram = model.get('pageHistogram')[self.attrName] || [];
 
         self.dividerIndex = undefined;
         self.dividerPosition = undefined;
@@ -83,9 +85,9 @@
 
         // Okay, now for the x scale...
         self.width = idealWidth - self.leftAxisPadding;
-        self.barSize = Math.max(self.emSize,
+        self.barSize = Math.max(emSize,
             self.width / (0.5 + self.ordinalBinCount + 1.5 * self.categoricalBinCount));
-        self.barSize = Math.min(3 * self.emSize, self.barSize);
+        self.barSize = Math.min(3 * emSize, self.barSize);
         self.width = self.leftAxisPadding +
         self.barSize * (0.5 + self.ordinalBinCount + 1.5 * self.categoricalBinCount);
 

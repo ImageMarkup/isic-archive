@@ -1,5 +1,3 @@
-/*globals Backbone*/
-
 // This is a pure, backbone-only helper model (i.e. not the same thing
 // as the stuff in js/models)
 
@@ -9,7 +7,10 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         limit: 50,
         offset: 0,
         selectedImageId: null,
-        filters: [],
+        filter: {
+            standard: {},
+            custom: []
+        },
         imageIds: [],
         overviewHistogram: {
             __passedFilters__: [{
@@ -48,7 +49,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
 
         self.listenTo(self, 'change:limit', self.updateCurrentPage);
         self.listenTo(self, 'change:offset', self.updateCurrentPage);
-        self.listenTo(self, 'change:filters', self.updateCurrentPage);
+        self.listenTo(self, 'change:filter', self.updateCurrentPage);
         self.listenTo(self, 'change:imageIds', function () {
             self.set('selectedImageId', null);
         });
@@ -64,14 +65,15 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             requestParams.offset = self.get('offset');
         }
         if (histogramName === 'page' || histogramName === 'filteredSet') {
-            requestParams.filters = self.getFilterString();
+            requestParams.filter = self.getFilterString();
         }
         */
         return girder.restRequest({
             path: 'image/histogram',
             data: requestParams
         }).then(function (resp) {
-            self.set(histogramName + 'Histogram', resp);
+            self.set(histogramName + 'Histogram',
+                self.postProcessHistogram(resp));
         });
     },
     updateCurrentPage: function () {
@@ -125,5 +127,292 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             result.limit = result.filteredSetCount - result.offset;
         }
         return result;
+    },
+    postProcessHistogram: function (histogram) {
+        var self = this;
+        var formatter = d3.format('0.3s');
+        // If the user is logged out, we'll sometimes get an
+        // empty histogram back
+        if (!('__passedFilters__' in histogram)) {
+            return null;
+        }
+        Object.keys(histogram).forEach(function (attrName) {
+            histogram[attrName].forEach(function (bin, index) {
+                if (typeof bin.lowBound === 'number' &&
+                        typeof bin.highBound === 'number') {
+                    // binUtils.js doesn't have access to D3's superior number
+                    // formatting abilities, so we patch on slightly better
+                    // human-readable labels
+                    bin.label = '[' + formatter(bin.lowBound) + ' - ' +
+                        formatter(bin.highBound);
+                    if (index === histogram[attrName].length - 1) {
+                        bin.label += ']';
+                    } else {
+                        bin.label += ')';
+                    }
+                }
+            });
+        });
+        return histogram;
+    },
+    autoDetectAttributeInterpretation: function (attrName) {
+        var self = this;
+        // Go with the default interpretation for the attribute type
+        return window.ENUMS.DEFAULT_INTERPRETATIONS[self.getAttributeType(attrName)];
+    },
+    getAttributeInterpretation: function (attrName) {
+        var self = this;
+        var attrSpec = window.ENUMS.SCHEMA[attrName];
+        if (attrSpec.interpretation) {
+            // The user has specified an interpretation
+            return attrSpec.interpretation;
+        } else {
+            // auto-detect the interpretation
+            return self.autoDetectAttributeInterpretation(attrName);
+        }
+    },
+    autoDetectAttributeType: function (attrName) {
+        var self = this;
+        var attrSpec = window.ENUMS.SCHEMA[attrName];
+        // Find the most specific type that can accomodate all the values
+        var attrType = 'object';
+        var count = 0;
+        var dataType;
+        window.ENUMS.ATTRIBUTE_GENERALITY.forEach(function (dataType) {
+          if (attrSpec.hasOwnProperty(dataType) &&
+                attrSpec[dataType].count >= count) {
+              attrType = dataType;
+              count = attrSpec[dataType].count;
+          }
+        });
+        return attrType;
+    },
+    getAttributeType: function (attrName) {
+        var self = this;
+        var attrSpec = window.ENUMS.SCHEMA[attrName];
+        if (attrSpec.coerceToType) {
+            // The user has specified a data type
+            return attrSpec.coerceToType;
+        } else {
+            // auto-detect the data type
+            return self.autoDetectAttributeType(attrName);
+        }
+    },
+    getBinStatus: function (attrName, bin) {
+        var self = this;
+        // Easy check (that also validates whether filter.standard[attrName]
+        // even exists)
+        var filterState = self.getFilteredState(attrName);
+        if (filterState === window.ENUMS.FILTER_STATES.NO_FILTERS) {
+            return window.ENUMS.BIN_STATES.INCLUDED;
+        }
+
+        var filterSpec = self.get('filter').standard[attrName];
+
+        // Next easiest check: is the label not in the include list (if there is
+        // one) / in the list that is specifically excluded?
+        if (filterSpec.includeValues &&
+                filterSpec.includeValues.indexOf(bin.label) === -1) {
+            return window.ENUMS.BIN_STATES.EXCLUDED;
+        } else if (filterSpec.excludeValues &&
+                filterSpec.excludeValues.indexOf(bin.label) !== -1) {
+            return window.ENUMS.BIN_STATES.EXCLUDED;
+        }
+
+        // Trickiest check: is the range excluded (or partially excluded)?
+        if (filterSpec.excludeRanges &&
+                bin.hasOwnProperty('lowBound') &&
+                bin.hasOwnProperty('highBound')) {
+            // Make sure to use proper string comparisons if this is a string bin
+            var comparator;
+            if (self.getAttributeType(attrName) === 'string') {
+                comparator = function (a, b) {
+                    return a.localeCompare(b);
+                }
+            }
+            // Intersect the bin with the excluded values
+            var includedRanges = window.shims.RangeSet.rangeSubtract([{
+                    lowBound: bin.lowBound,
+                    highBound: bin.highBound
+                }], filterSpec.excludeRanges, comparator);
+
+            if (includedRanges.length === 1 &&
+                    includedRanges[0].lowBound === bin.lowBound &&
+                    includedRanges[0].highBound === bin.highBound) {
+                // Wound up with the same range we started with;
+                // the whole bin is included
+                return window.ENUMS.BIN_STATES.INCLUDED;
+            } else if (includedRanges.length > 0) {
+                // Only a piece survived; this is a partial!
+                return window.ENUMS.BIN_STATES.PARTIAL;
+            } else {
+                // Nothing survived the subtraction; this bin
+                // is excluded
+                return window.ENUMS.BIN_STATES.EXCLUDED;
+            }
+        }
+
+        // No filter info left to check; the bin must be included
+        return window.ENUMS.BIN_STATES.INCLUDED;
+    },
+    applyFilter: function (filter) {
+        var self = this;
+        // Clean up the filter specification
+        var standardKeys = Object.keys(filter.standard);
+        standardKeys.forEach(function (k) {
+            var removeFilterSpec = !(filter.standard[k].hasOwnProperty('excludeAttribute'));
+            ['excludeRanges', 'includeValues', 'excludeValues'].forEach(function (d) {
+                if (filter.standard[k].hasOwnProperty(d)) {
+                    if (filter.standard[k][d].length === 0) {
+                        delete filter.standard[k][d];
+                    } else {
+                        removeFilterSpec = false;
+                    }
+                }
+            });
+            if (removeFilterSpec) {
+                delete filter.standard[k];
+            }
+        });
+
+        self.set('filter', filter);
+    },
+    clearFilters: function (attrName) {
+        var self = this;
+        var filter = self.get('filter');
+        if (filter.standard.hasOwnProperty(attrName)) {
+            delete filter.standard[attrName].excludeRanges;
+            delete filter.standard[attrName].excludeValues;
+            delete filter.standard[attrName].includeValues;
+            self.applyFilter(filter);
+        }
+    },
+    selectRange: function (attrName, lowBound, highBound) {
+        var self = this;
+        var filter = self.get('filter');
+        // Temporarily init a filter object for this attribute
+        // if it doesn't already exist
+        if (!filter.standard[attrName]) {
+            filter.standard[attrName] = {};
+        }
+
+        // Include ONLY the values in the indicated range, AKA
+        // exclude everything outside it
+        filter.standard[attrName].excludeRanges = [
+            { highBound: lowBound },
+            { lowBound: highBound }
+        ];
+
+        self.applyFilter(filter);
+    },
+    removeRange: function (attrName, lowBound, highBound, comparator) {
+        var self = this;
+        var filter = self.get('filter');
+        // Temporarily init a filter object for this attribute
+        // if it doesn't already exist
+        if (!filter.standard[attrName]) {
+            filter.standard[attrName] = {};
+        }
+
+        var excludeRanges = filter.standard[attrName].excludeRanges || [];
+        var range = {};
+        if (lowBound !== undefined) {
+            range.lowBound = lowBound;
+        }
+        if (highBound !== undefined) {
+            range.highBound = highBound;
+        }
+        excludeRanges = window.shims.RangeSet.rangeUnion(
+            excludeRanges, [range], comparator);
+        filter.standard[attrName].excludeRanges = excludeRanges;
+
+        self.applyFilter(filter);
+    },
+    includeRange: function (attrName, lowBound, highBound, comparator) {
+        var self = this;
+        var filter = self.get('filter');
+        // Temporarily init a filter object for this attribute
+        // if it doesn't already exist
+        if (!filter.standard[attrName]) {
+            filter.standard[attrName] = {};
+        }
+
+        var excludeRanges = filter.standard[attrName].excludeRanges || [];
+        var range = {};
+        if (lowBound !== undefined) {
+            range.lowBound = lowBound;
+        }
+        if (highBound !== undefined) {
+            range.highBound = highBound;
+        }
+        excludeRanges = window.shims.RangeSet.rangeSubtract(
+            excludeRanges, [range], comparator);
+        filter.standard[attrName].excludeRanges = excludeRanges;
+
+        self.applyFilter(filter);
+    },
+    selectValues: function (attrName, values) {
+        var self = this;
+        var filter = self.get('filter');
+        // Temporarily init a filter object for this attribute
+        // if it doesn't already exist
+        if (!filter.standard[attrName]) {
+            filter.standard[attrName] = {};
+        }
+
+        // Select ONLY the given values
+        filter.standard[attrName].includeValues = values;
+        delete filter.standard[attrName].excludeValues;
+
+        self.applyFilter(filter);
+    },
+    removeValue: function (attrName, value) {
+        var self = this;
+        var filter = self.get('filter');
+        // Temporarily init a filter object for this attribute
+        // if it doesn't already exist
+        if (!filter.standard[attrName]) {
+            filter.standard[attrName] = {};
+        }
+
+        var excludeValues = filter.standard[attrName].excludeValues || [];
+        var valueIndex = excludeValues.indexOf(value);
+        if (valueIndex === -1) {
+            excludeValues.push(value);
+        }
+        filter.standard[attrName].excludeValues = excludeValues;
+        delete filter.standard[attrName].includeValues;
+
+        self.applyFilter(filter);
+    },
+    includeValue: function (attrName, value) {
+        // Temporarily init a filter object for this attribute
+        // if it doesn't already exist
+        if (!filter.standard[attrName]) {
+            filter.standard[attrName] = {};
+        }
+
+        var excludeValues = filter.standard[attrName].excludeValues || [];
+        var valueIndex = excludeValues.indexOf(value);
+        if (valueIndex !== -1) {
+            excludeValues.splice(valueIndex, 1);
+        }
+        filter.standard[attrName].excludeValues = excludeValues;
+        delete filter.standard[attrName].includeValues;
+
+        self.applyFilter(filter);
+    },
+    getFilteredState: function (attrName) {
+        var self = this;
+        var filter = self.get('filter');
+        if (filter.standard[attrName]) {
+            if (filter.standard[attrName].excludeAttribute) {
+                return window.ENUMS.FILTER_STATES.EXCLUDED;
+            } else {
+                return window.ENUMS.FILTER_STATES.FILTERED;
+            }
+        } else {
+            return window.ENUMS.FILTER_STATES.NO_FILTERS;
+        }
     }
 });

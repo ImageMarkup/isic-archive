@@ -76,9 +76,11 @@ isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
                 // this refers to the DOM element
                 var histogramId = window.shims.makeValidId(d + '_histogramContent');
                 self.individualHistograms[histogramId] =
-                new isic.views.ImagesViewSubViews.IndividualHistogram({
-                    el: this
-                });
+                    new isic.views.ImagesViewSubViews.IndividualHistogram({
+                        el: this,
+                        model: self.model,
+                        attributeName: d
+                    });
             });
         attributeSections.select('.content').each(function (d) {
             var histogramId = window.shims.makeValidId(d + '_histogramContent');
