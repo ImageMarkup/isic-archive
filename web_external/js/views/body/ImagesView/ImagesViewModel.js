@@ -6,13 +6,13 @@
 isic.views.ImagesViewModel = Backbone.Model.extend({
     initialize: function () {
         var self = this;
-        self.updateCurrentPage();
 
-        // TODO: get more histograms than the overview
         self.updateHistogram('overview');
-        // self.updateHistogram('study');
-        // self.updateHistogram('filteredSet');
-        // self.updateHistogram('page');
+        self.updateHistogram('filteredSet').then(function () {
+            return self.updateCurrentPage();
+        }).then(function () {
+            return self.updateHistogram('page');
+        });
 
         self.listenTo(self, 'change:limit', self.updateCurrentPage);
         self.listenTo(self, 'change:offset', self.updateCurrentPage);
@@ -20,11 +20,6 @@ isic.views.ImagesViewModel = Backbone.Model.extend({
         self.listenTo(self, 'change:imageIds', function () {
             self.set('selectedImageId', null);
         });
-    },
-    events: function () {
-        // var _events = {};
-        // _events["click " + "#button-" + this.options.count] = "buttonClick";
-        // return _events;
     },
     defaults: {
         limit: 50,
@@ -71,10 +66,10 @@ isic.views.ImagesViewModel = Backbone.Model.extend({
             requestParams.filters = self.getFilterString();
         }
         */
-        girder.restRequest({
+        return girder.restRequest({
             path: 'image/histogram',
             data: requestParams
-        }).done(function (resp) {
+        }).then(function (resp) {
             self.set(histogramName + 'Histogram', resp);
         });
     },
@@ -82,23 +77,23 @@ isic.views.ImagesViewModel = Backbone.Model.extend({
         var self = this;
 
         // Construct the parameters to send to the server
-        var requestParams = {
-            limit: self.get('limit'),
-            offset: self.get('offset')
-        };
+        var requestParams = self.getPageDetails(true);
 
-        // Validate that the paging settings make sense
+        // First cap the page size by how many images are available
+        requestParams.limit = Math.min(requestParams.filteredSetCount,
+            requestParams.limit);
+        // The page must include at least one image
         requestParams.limit = Math.max(1, requestParams.limit);
         // Don't allow pages of more than 250 images
         requestParams.limit = Math.min(250, requestParams.limit);
 
+        // Can't have a negative offset
         requestParams.offset = Math.max(0, requestParams.offset);
-        // TODO: validate the top range when we have that info from the
-        // histogram calculations
-        var imageCount = self.get('overviewHistogram').__passedFilters__[0].count;
-        console.log('validating:', imageCount, requestParams.limit, requestParams.offset);
-        if (requestParams.offset + requestParams.limit > imageCount) {
-            requestParams.offset = Math.floor(imageCount / requestParams.limit) *
+        // Limit the last page by how many images are available
+        if (requestParams.offset + requestParams.limit >
+                requestParams.filteredSetCount) {
+            requestParams.offset = Math.floor(
+                requestParams.filteredSetCount / requestParams.limit) *
                 requestParams.limit;
         }
 
@@ -107,13 +102,27 @@ isic.views.ImagesViewModel = Backbone.Model.extend({
 
         // TODO: pass in filter settings
         // var filterString = self.getFilterString();
-        girder.restRequest({
+        return girder.restRequest({
             path: 'image',
             data: requestParams
-        }).done(function (resp) {
+        }).then(function (resp) {
             self.set('imageIds', resp.map(function (imageObj) {
                 return imageObj._id;
             }));
         });
+    },
+    getPageDetails: function (skipLimitCap) {
+        var self = this;
+        var result = {
+            overviewCount: self.get('overviewHistogram').__passedFilters__[0].count,
+            filteredSetCount: self.get('filteredSetHistogram').__passedFilters__[0].count,
+            offset: self.get('offset'),
+            limit: self.get('limit')
+        };
+        if (!skipLimitCap &&
+                result.offset + result.limit > result.filteredSetCount) {
+            result.limit = result.filteredSetCount - result.offset;
+        }
+        return result;
     }
 });

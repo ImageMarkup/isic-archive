@@ -11,14 +11,42 @@
         li Filter histograms, describing the current filtered set of images
         li Page histograms, describing the currently visible images
   .growing.flexColumn
-    #isic-images-pagingPane.pane
-      #isic-images-seekFirst.button
-      #isic-images-seekPrev.button
-      #isic-images-pageSizeControl
-        label(for='#isic-images-pageSize') Page Size:
-        input#isic-images-pageSize(type='number',value='50',max='250',min='1',step='25')
-      #isic-images-seekNext.button
-      #isic-images-seekLast.button
+    #isic-images-pagingPane.pane.flexRow
+      #isic-images-pieChart.flexColumn
+      .growing.flexColumn
+        #isic-images-pagingTools.flexRow
+          #isic-images-seekFirst.button
+          #isic-images-seekPrev.button
+          #isic-images-pageSizeControl
+            label(for='#isic-images-pageSize') Page Size:
+            input#isic-images-pageSize(type='number',value='50',max='250',min='1',step='25')
+          #isic-images-seekNext.button
+          #isic-images-seekLast.button
+          #isic-images-noPagingOrFilters.detailLabel
+            | Showing all 
+            span.page 10
+            |  images in the archive.
+          #isic-images-hasPaging.detailLabel
+            | Showing images 
+            span.page 0 - 10
+            |  of 
+            span.filteredSet 100
+            |  total images.
+          #isic-images-hasFilters.detailLabel
+            | Showing 
+            span.filteredSet 100
+            |  of the 
+            span.overview 1000
+            |  total number of images in the archive.
+          #isic-images-hasFiltersAndPaging.detailLabel
+            | Showing images 
+            span.page 0 - 10
+            |  of 
+            span.filteredSet 100
+            |  filtered images. There are 
+            span.overview 1000
+            |  total images in the archive (ignoring filters).
+        #isic-images-pagingBars.flexRow
     .growing.flexRow
       #isic-images-imageWall.pane.growing
       #isic-images-imageDetailsPane.fixedWidth.pane

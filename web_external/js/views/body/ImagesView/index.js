@@ -37,7 +37,7 @@ isic.views.ImagesView = isic.View.extend({
             self.$el.html(isic.templates.imagesPage({
                 staticRoot: girder.staticRoot
             }));
-            recolorImageFilters(['#00ABFF', '#444499']);
+            recolorImageFilters(['#00ABFF', '#444499', '#CCCCCC']);
             self.histogramPane.setElement(self.$el.find('#isic-images-histogramPane')[0]);
             self.imageWall.setElement(self.$el.find('#isic-images-imageWall')[0]);
             self.pagingPane.setElement(self.$el.find('#isic-images-pagingPane')[0]);

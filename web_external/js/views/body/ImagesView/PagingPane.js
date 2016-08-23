@@ -6,6 +6,98 @@ isic.views.ImagesSubViews.PagingPane = Backbone.View.extend({
     initialize: function () {
         var self = this;
         self.listenTo(self.model, 'change:imageIds', self.render);
+        self.listenTo(self.model, 'change:overviewHistogram', self.renderBars);
+        self.listenTo(self.model, 'change:offset', self.updateControls);
+        self.listenTo(self.model, 'change:limit', self.updateControls);
+    },
+    renderBars: function () {
+        var self = this;
+        var pageDetails = self.model.getPageDetails();
+
+        // Scale for the bars
+        var pageScale = d3.scale.linear()
+          .domain([0, pageDetails.filteredSetCount])
+          .range([0, self.$el.find('#isic-images-pagingBars').width()]);
+
+        // Now draw the bars indicating the size and location of
+        // the page within the current filtered set
+        var barData = [
+          {
+            segment: 'filteredSet',
+            offset: 0,
+            count: pageDetails.filteredSetCount
+          },
+          {
+            segment: 'page',
+            offset: pageDetails.offset,
+            count: pageDetails.limit
+          }
+        ];
+        var bars = d3.select(this.el).select('#isic-images-pagingBars')
+            .selectAll('div.bar').data(barData, function (d) {
+                return d.segment;
+            });
+        bars.enter().append('div');
+        bars.attr('class', function (d) {
+            return d.segment + ' bar';
+        }).style('left', function (d) {
+            return pageScale(d.offset) + 'px';
+        }).style('width', function (d) {
+            return Math.max(pageScale(d.count + d.offset) -
+                pageScale(d.offset), 0) + 'px';
+        });
+    },
+    updateControls: function () {
+        var self = this;
+        var pageDetails = self.model.getPageDetails();
+
+        var hasFilters = pageDetails.filteredSetCount < pageDetails.overviewCount;
+        var hasPaging = pageDetails.limit < pageDetails.filteredSetCount;
+
+        // Disable / enable the appropriate paging buttons
+        if (pageDetails.offset === 0) {
+            this.$el.find('#isic-images-seekPrev, #isic-images-seekFirst')
+                .addClass('disabled');
+        } else {
+            this.$el.find('#isic-images-seekPrev, #isic-images-seekFirst')
+                .removeClass('disabled');
+        }
+        if (pageDetails.offset + pageDetails.limit === pageDetails.filteredSetCount) {
+            this.$el.find('#isic-images-seekNext, #isic-images-seekLast')
+                .addClass('disabled');
+        } else {
+            this.$el.find('#isic-images-seekNext, #isic-images-seekLast')
+                .removeClass('disabled');
+        }
+
+        // Show the relevant explanatory label
+        this.$el.find('.detailLabel').hide();
+        var labelElement;
+        if (hasFilters && hasPaging) {
+          labelElement = this.$el.find('#isic-images-hasFiltersAndPaging');
+        } else if (hasFilters) {
+          labelElement = this.$el.find('#isic-images-hasFilters');
+        } else if (hasPaging) {
+          labelElement = this.$el.find('#isic-images-hasPaging');
+        } else {
+          labelElement = this.$el.find('#isic-images-noPagingOrFilters');
+        }
+        labelElement.show();
+
+        // Update the values in the label
+        labelElement.find('span.overview')
+          .text(pageDetails.overviewCount);
+        labelElement.find('span.filteredSet')
+          .text(pageDetails.filteredSetCount);
+        if (hasPaging) {
+          // Use base 1 for the page text labels
+          labelElement.find('span.page')
+            .text((pageDetails.offset + 1) + ' - ' +
+                (pageDetails.offset + pageDetails.limit));
+        } else {
+          labelElement.find('span.page')
+            .text(pageDetails.filteredSetCount);
+        }
     },
     render: function () {
         var self = this;
@@ -36,6 +128,10 @@ isic.views.ImagesSubViews.PagingPane = Backbone.View.extend({
             });
             self.addedImages = true;
         }
+
+        self.updateControls();
+        self.renderBars();
+
         return self;
     },
     seekFirst: function () {
@@ -44,27 +140,18 @@ isic.views.ImagesSubViews.PagingPane = Backbone.View.extend({
     },
     seekPrev: function () {
         var self = this;
-        var page = {
-            limit: self.model.get('limit'),
-            offset: self.model.get('offset')
-        };
-        page.offset -= page.limit;
-        self.model.set(page);
+        var offset = self.model.get('offset');
+        self.model.set('offset', offset - self.model.get('limit'));
     },
     seekNext: function () {
         var self = this;
-        var page = {
-            limit: self.model.get('limit'),
-            offset: self.model.get('offset')
-        };
-        page.offset += page.limit;
-        self.model.set(page);
+        var offset = self.model.get('offset');
+        self.model.set('offset', offset + self.model.get('limit'));
     },
     seekLast: function () {
         var self = this;
-        var imageCount = self.model.get('overviewHistogram')
-            .__passedFilters__[0].count;
-        var limit = self.model.get('limit');
-        self.model.set('offset', Math.floor(imageCount / limit) * limit);
+        var details = self.model.getPageDetails();
+        self.model.set('offset',
+            Math.floor(details.filteredSetCount / details.limit) * details.limit);
     }
 });
