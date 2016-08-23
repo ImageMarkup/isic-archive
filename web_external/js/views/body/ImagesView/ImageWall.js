@@ -1,9 +1,8 @@
 /*globals girder, jQuery, d3, Image, Backbone, _*/
 
-// We scaled the images based on how many
-// are currently selected; for now we'll hard
-// code this (and probably change it in the future)
-var tempDownloadSize = 10000;
+// For now we'll hard code this (and probably change it in the future),
+// depending on the page size
+var imageSize = 128;
 
 isic.views.ImagesSubViews = isic.views.ImagesSubViews || {};
 
@@ -15,25 +14,16 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
         self.imageColumnLookup = {};
         self.imageColumns = [];
 
-        self.imageIds = [];
-
-        self.selectedImageId = null;
-
-        // Re-render when the window
-        // changes size
-        window.onresize = function () {
-            self.render();
-        };
+        self.listenTo(self.model, 'change:selectedImageId', self.render);
+        self.listenTo(self.model, 'change:imageIds', self.setImages);
     },
-    setImages: function (imageIds) {
+    setImages: function () {
         var self = this;
-
-        self.imageIds = imageIds;
         self.loadedImages = {};
 
         // Start fetching the images now... don't wait
         // around for the call in render()
-        self.imageIds.forEach(function (i) {
+        self.model.get('imageIds').forEach(function (i) {
             if (!self.imageCache.hasOwnProperty(i)) {
                 self.imageCache[i] = new Image();
                 self.imageCache[i].addEventListener('load', function () {
@@ -48,24 +38,27 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
                     self.handleBadImage(i);
                 });
                 self.imageCache[i].src = girder.apiRoot + '/image/' + i +
-                    '/thumbnail';
+                    '/thumbnail?width=' + imageSize;
+            } else {
+                // If we already have the image cached, we can call render right
+                // away (it gets debounced, so we // don't have to worry about
+                // tons of render calls)
+                self.loadedImages[i] = true;
+                self.render();
             }
         });
 
-        // Clear out any old IDs after a while
-        // (don't do it immediately in case the
-        // user is flipping back and forth between
-        // pages)
-        window.setTimeout(function () {
+        // Clear out any old IDs after a while (don't do it immediately in case
+        // the user is flipping back and forth between pages)
+        window.clearTimeout(self.cleanupTimeout);
+        self.cleanupTimeout = window.setTimeout(function () {
             Object.keys(self.imageCache).forEach(function (i) {
-                if (self.imageIds.indexOf(i) === -1) {
+                if (self.model.get('imageIds').indexOf(i) === -1) {
                     delete self.imageCache[i];
                     delete self.loadedImages[i];
                 }
             });
-        }, 100000);
-
-        self.render();
+        }, 10000);
     },
     handleBadImage: function (imageId) {
         var self = this;
@@ -86,7 +79,7 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
 
         // Remove any images that aren't here any more
         Object.keys(self.imageColumnLookup).forEach(function (imageId) {
-            if (self.imageIds.indexOf(imageId) === -1) {
+            if (self.model.get('imageIds').indexOf(imageId) === -1) {
                 myColumn = self.imageColumnLookup[imageId];
                 myIndex = self.imageColumns[myColumn].indexOf(imageId);
 
@@ -182,8 +175,7 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
     },
     selectImage: function (imageId) {
         var self = this;
-        self.selectedImageId = imageId;
-        self.trigger('iv:selectImage', imageId);
+        self.model.set('selectedImageId', imageId);
     },
     render: _.debounce(function () {
         var self = this;
@@ -211,14 +203,7 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
         var width = this.el.clientWidth;
         this.$el.css('overflow', '');
 
-        // We want the width of each column of images to have an
-        // inverse relationship with the size of the download, so
-        // more, smaller thumbnails show up when the download is large)
-        var columnScale = d3.scale.linear()
-            .domain([0, tempDownloadSize])
-            .range([256, 256 / 4]); // Shrink the thumbnails by as much as a quarter
-
-        var imageWidth = columnScale(tempDownloadSize);
+        var imageWidth = imageSize; // TODO: something fancier...?
 
         var imagePadding = 5;
 
@@ -233,33 +218,7 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
         // figure out where all the images go:
         self.rearrangeColumns(numColumns);
 
-        // Okay, time to draw / move the pictures:
-        var images = svg.select('#previewContents').selectAll('image')
-            .data(Object.keys(self.loadedImages), function (d) {
-                return d;
-            });
-        images.enter().append('image')
-            .attr('preserveAspectRatio', 'xMinYMin')
-            .attr('x', width / 2) // Start new images at the middle of the
-            .attr('y', jQuery('#preview').height()); // bottom of the screen
-        images.attr('id', function (d) {
-            return 'image' + d;
-        }).attr('xlink:href', function (d) {
-            return self.imageCache[d].src;
-        }).attr('class', function (d) {
-            if (d === self.selectedImageId) {
-                return 'selected';
-            } else {
-                return null;
-            }
-        }).on('click', function (d) {
-            self.selectImage(d === self.selectedImageId ? null : d);
-        });
-
         // Construct a position/height lookup dict
-        // (we want to animate everything at the same
-        // time, so don't actually set these values
-        // until we know them)
         var placementLookup = {};
         var tallestHeight = 0;
         var availableImages = 0;
@@ -289,46 +248,58 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
             'height': tallestHeight
         });
 
-        // Animation time! Move / resize stuff:
-        images.filter(function (d) {
-            return placementLookup.hasOwnProperty(d);
-        }).transition().duration(500)
-            .attr({
-                width: imageWidth,
-                height: function (d) {
-                    return placementLookup[d].height;
-                },
-                x: function (d) {
-                    return placementLookup[d].x;
-                },
-                y: function (d) {
-                    return placementLookup[d].y;
-                }
+        // Okay, time to draw the pictures (in their initial positions)
+        var imageList = Object.keys(self.loadedImages)
+            .filter(function (d) {
+                return placementLookup.hasOwnProperty(d);
             });
+        var images = svg.select('#previewContents').selectAll('image')
+            .data(imageList, function (d) {
+                return d;
+            });
+        images.enter().append('image')
+            .attr('preserveAspectRatio', 'xMinYMin');
+        images.exit().remove();
+        images.attr('id', function (d) {
+            return 'image' + d;
+        }).attr('xlink:href', function (d) {
+            return self.imageCache[d].src;
+        }).attr('class', function (d) {
+            if (d === self.model.get('selectedImageId')) {
+                return 'selected';
+            } else {
+                return null;
+            }
+        }).attr({
+            width: imageWidth,
+            height: function (d) {
+                return placementLookup[d].height;
+            },
+            x: function (d) {
+                return placementLookup[d].x;
+            },
+            y: function (d) {
+                return placementLookup[d].y;
+            }
+        }).on('click', function (d) {
+            self.selectImage(d === self.model.get('selectedImageId') ? null : d);
+        });
 
-        // Draw + animate the highlight rect
-        if (self.selectedImageId) {
-            var parentOutline = svg.node().getBoundingClientRect();
-            var originalOutline = svg.select('#image' + self.selectedImageId)
-                .node().getBoundingClientRect();
+        // Draw the highlight rect
+        var selectedImageId = self.model.get('selectedImageId');
+        if (selectedImageId) {
             svg.select('#highlightOutline')
-                .attr({
-                    x: originalOutline.left - parentOutline.left,
-                    y: originalOutline.top - parentOutline.top,
-                    width: originalOutline.width,
-                    height: originalOutline.height
-                })
                 .style('display', null)
-                .transition().duration(500)
                 .attr({
-                    x: placementLookup[self.selectedImageId].x,
-                    y: placementLookup[self.selectedImageId].y,
+                    x: placementLookup[selectedImageId].x,
+                    y: placementLookup[selectedImageId].y,
                     width: imageWidth,
-                    height: placementLookup[self.selectedImageId].height
+                    height: placementLookup[selectedImageId].height
                 });
         } else {
             svg.select('#highlightOutline')
                 .style('display', 'none');
         }
-    }, 300)
+        return this;
+    }, 50)
 });

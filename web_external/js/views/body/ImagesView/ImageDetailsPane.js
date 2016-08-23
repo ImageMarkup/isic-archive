@@ -5,13 +5,19 @@ isic.views.ImagesSubViews = isic.views.ImagesSubViews || {};
 isic.views.ImagesSubViews.ImageDetailsPane = Backbone.View.extend({
     initialize: function () {
         var self = this;
-        self.details = {};
-    },
-    updateDetails: function (imageId) {
-        // TODO: display the image and its metadata
-        this.$el.html('<p>Selected image:</p><pre>' + imageId + '</pre>');
+        self.listenTo(self.model, 'change:selectedImageId', this.render);
     },
     render: function () {
+        var self = this;
+        if (!self.addedDomListeners) {
+            self.$el.find('.button').on('click',
+                function () {
+                    self.model.set('selectedImageId', null);
+                });
+            self.addedDomListeners = true;
+        }
+
+        self.$el.find('pre').html(self.model.get('selectedImageId'));
         return this;
     }
 });
