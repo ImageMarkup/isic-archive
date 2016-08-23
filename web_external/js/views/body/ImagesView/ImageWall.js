@@ -8,7 +8,7 @@ var tempDownloadSize = 10000;
 isic.views.ImagesSubViews = isic.views.ImagesSubViews || {};
 
 isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
-    initialize: function () {
+    initialize: function (params) {
         var self = this;
         self.imageCache = {};
         self.loadedImages = {};
@@ -17,7 +17,7 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
 
         self.imageIds = [];
 
-        self.selectedImageId = null;
+        self.parentView = params.parentView;
 
         // Re-render when the window
         // changes size
@@ -182,7 +182,6 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
     },
     selectImage: function (imageId) {
         var self = this;
-        self.selectedImageId = imageId;
         self.trigger('iv:selectImage', imageId);
     },
     render: _.debounce(function () {
@@ -247,13 +246,13 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
         }).attr('xlink:href', function (d) {
             return self.imageCache[d].src;
         }).attr('class', function (d) {
-            if (d === self.selectedImageId) {
+            if (d === self.parentView.selectedImageId) {
                 return 'selected';
             } else {
                 return null;
             }
         }).on('click', function (d) {
-            self.selectImage(d === self.selectedImageId ? null : d);
+            self.selectImage(d === self.parentView.selectedImageId ? null : d);
         });
 
         // Construct a position/height lookup dict
@@ -307,9 +306,9 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
             });
 
         // Draw + animate the highlight rect
-        if (self.selectedImageId) {
+        if (self.parentView.selectedImageId) {
             var parentOutline = svg.node().getBoundingClientRect();
-            var originalOutline = svg.select('#image' + self.selectedImageId)
+            var originalOutline = svg.select('#image' + self.parentView.selectedImageId)
                 .node().getBoundingClientRect();
             svg.select('#highlightOutline')
                 .attr({
@@ -321,14 +320,15 @@ isic.views.ImagesSubViews.ImageWall = Backbone.View.extend({
                 .style('display', null)
                 .transition().duration(500)
                 .attr({
-                    x: placementLookup[self.selectedImageId].x,
-                    y: placementLookup[self.selectedImageId].y,
+                    x: placementLookup[self.parentView.selectedImageId].x,
+                    y: placementLookup[self.parentView.selectedImageId].y,
                     width: imageWidth,
-                    height: placementLookup[self.selectedImageId].height
+                    height: placementLookup[self.parentView.selectedImageId].height
                 });
         } else {
             svg.select('#highlightOutline')
                 .style('display', 'none');
         }
+        return this;
     }, 300)
 });

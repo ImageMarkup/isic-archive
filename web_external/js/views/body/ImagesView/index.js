@@ -5,11 +5,16 @@ isic.views.ImagesSubViews = isic.views.ImagesSubViews || {};
 isic.views.ImagesView = isic.View.extend({
     initialize: function () {
         var self = this;
+        self.selectedImageId = null;
+
         // Initialize our subviews
-        self.histogramPane = new isic.views.ImagesSubViews.HistogramPane();
-        self.imageWall = new isic.views.ImagesSubViews.ImageWall();
-        self.pagingPane = new isic.views.ImagesSubViews.PagingPane();
-        self.imageDetailsPane = new isic.views.ImagesSubViews.ImageDetailsPane();
+        var params = {
+            parentView: self
+        };
+        self.histogramPane = new isic.views.ImagesSubViews.HistogramPane(params);
+        self.imageWall = new isic.views.ImagesSubViews.ImageWall(params);
+        self.pagingPane = new isic.views.ImagesSubViews.PagingPane(params);
+        self.imageDetailsPane = new isic.views.ImagesSubViews.ImageDetailsPane(params);
 
         window.onresize = function () {
             self.render();
@@ -26,17 +31,14 @@ isic.views.ImagesView = isic.View.extend({
 
         self.listenTo(self.imageWall, 'iv:selectImage',
             function (imageId) {
+                self.selectedImageId = imageId;
                 self.imageDetailsPane.updateDetails(imageId);
                 self.render();
             });
 
-        self.listenTo(self.pagingPane, 'iv:toggleHistogram',
+        self.listenTo(self.imageDetailsPane, 'iv:deselectImage',
             function () {
-                // Regardless of whether this goes on or off,
-                // we want to remove hide the selected item details
-                // (i.e. if we're turning it off, we want to close
-                // the sidebar. If we're turning it on, we want to
-                // show the histograms, not the individual selection)
+                self.selectedImageId = null;
                 self.imageWall.selectImage(null);
                 self.render();
             });
@@ -62,38 +64,27 @@ isic.views.ImagesView = isic.View.extend({
     render: function () {
         var self = this;
         if (!(self.addedTemplate)) {
-            self.$el.html(isic.templates.imagesPage());
+            self.$el.html(isic.templates.imagesPage({
+                staticRoot: girder.staticRoot
+            }));
             recolorImageFilters(['#00ABFF', '#444499']);
             self.histogramPane.setElement(self.$el.find('#isic-images-histogramPane')[0]);
-            self.histogramPane.addedDomListeners = false;
             self.imageWall.setElement(self.$el.find('#isic-images-imageWall')[0]);
-            self.imageWall.addedDomListeners = false;
             self.pagingPane.setElement(self.$el.find('#isic-images-pagingPane')[0]);
-            self.pagingPane.addedDomListeners = false;
             self.imageDetailsPane.setElement(self.$el.find('#isic-images-imageDetailsPane')[0]);
-            self.imageDetailsPane.addedDomListeners = false;
             self.addedTemplate = true;
         }
         self.imageWall.render();
         self.pagingPane.render();
+        self.histogramPane.render();
 
-        // Only show either the histogram or selected pane at a time
-        // (don't show both)
-        if (self.imageWall.selectedImageId) {
+        if (self.selectedImageId) {
             self.$el.find('#isic-images-imageDetailsPane').css('display', '');
             self.imageDetailsPane.render();
-
-            self.$el.find('#isic-images-histogramPane').css('display', 'none');
         } else {
             self.$el.find('#isic-images-imageDetailsPane').css('display', 'none');
-
-            if (self.pagingPane.showHistograms) {
-                self.$el.find('#isic-images-histogramPane').css('display', '');
-                self.histogramPane.render();
-            } else {
-                self.$el.find('#isic-images-histogramPane').css('display', 'none');
-            }
         }
+        return this;
     }
 });
 
