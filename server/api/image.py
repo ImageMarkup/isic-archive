@@ -19,6 +19,7 @@
 
 import cherrypy
 
+from ..histogram_utility import HistogramUtility
 from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel
 from girder.api.describe import Description, describeRoute
@@ -35,6 +36,9 @@ class ImageResource(Resource):
         self.route('GET', (':id',), self.getImage)
         self.route('GET', (':id', 'thumbnail'), self.thumbnail)
         self.route('GET', (':id', 'download'), self.download)
+
+        self.route('GET', ('histogram',), self.histogram)
+        self.histogramUtility = HistogramUtility()
 
         self.route('POST', (':id', 'flag'), self.flag)
         self.route('POST', (':id', 'segment'), self.doSegmentation)
@@ -145,6 +149,25 @@ class ImageResource(Resource):
             cherrypy.response.headers['Content-Disposition'] = \
                 'inline; filename="%s"' % original_file['name']
         return file_stream
+
+    @describeRoute(
+        Description('Return histograms of image metadata.')
+        .param('filter',
+               'Get the histogram after the results of this filter. ' +
+               'TODO: describe our filter grammar (an AST tree).',
+               required=False)
+        .param('limit', 'Result set size limit. Setting to 0 will create ' +
+               'a histogram using all the matching items (default=0).',
+               required=False, dataType='int')
+        .param('offset', 'Offset into result set (default=0).',
+               required=False, dataType='int')
+        .errorResponse()
+    )
+    @access.public
+    def histogram(self, params):
+        user = self.getCurrentUser()
+
+        return self.histogramUtility.getHistograms(user, params)
 
     @describeRoute(
         Description('Flag an image with a problem.')
