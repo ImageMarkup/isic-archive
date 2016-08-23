@@ -1,4 +1,16 @@
 isic.views.LayoutHeaderView = isic.View.extend({
+    events: {
+        'mouseenter .dropdown': function (event) {
+            $(event.currentTarget).addClass('open');
+        },
+        'mouseleave .dropdown': function (event) {
+            $(event.currentTarget).removeClass('open');
+        },
+        'click .dropdown': function (event) {
+            $(event.currentTarget).removeClass('open');
+        }
+    },
+
     initialize: function () {
         this.datasetContributor = false;
 
