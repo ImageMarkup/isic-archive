@@ -185,7 +185,9 @@ derm_app.controller('RegionFeatureAnnotationController', ['$scope', '$rootScope'
                 $scope.annotation_values[old_feature_id] =
                     $rootScope.imageviewer.grabCurrentTiles().slice(0);
             }
-            $scope.displayQuestionTiles(new_feature_id)
+            if (new_feature_id !== undefined) {
+                $scope.displayQuestionTiles(new_feature_id);
+            }
         });
 
         $scope.$watch('certaintyModel', function (certaintyModel) {
