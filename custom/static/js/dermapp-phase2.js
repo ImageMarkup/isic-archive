@@ -99,13 +99,32 @@ derm_app.controller('AnnotationController', [
          * for failure.
          */
         $scope.submitAnnotations = function (status) {
+            var normalized_annotation_values = angular.copy($scope.annotation_values);
+            delete normalized_annotation_values[null]; // This somehow is getting added
+            angular.forEach(normalized_annotation_values, function (feature_value, feature_id) {
+                if (Array.isArray(feature_value)) {
+                    normalized_annotation_values[feature_id] = feature_value.map(function (superpixel_value) {
+                        if (superpixel_value === 0) {
+                            return 0;
+                        }
+                        else if (superpixel_value === 2) {
+                            return 1.0;
+                        }
+                        else if (superpixel_value === 3) {
+                            return 0.5;
+                        }
+                        return null;
+                    });
+                }
+            });
+
             var submit_url = '/api/v1/annotation/' + $scope.annotation._id;
             var annotation_to_store = {
                 status: status === true ? 'ok' : status,
                 imageId: $scope.image._id,
                 startTime: start_time,
                 stopTime: Date.now(),
-                annotations: $scope.annotation_values
+                annotations: normalized_annotation_values
             };
             $http.put(submit_url, annotation_to_store).success(function () {
                 //window.location.replace('/#tasks');

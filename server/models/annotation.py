@@ -125,7 +125,10 @@ class Annotation(ItemModel):
                                 'Annotation feature "%s" has invalid '
                                 'value "%s".' % (featureId, featureValue))
                     elif featureId in featuresetRegionFeatures:
-                        if featureValue not in [0, 2, 3]:
+                        if not isinstance(featureValue, list) or not all(
+                            superpixelValue in [0.0, 0.5, 1.0]
+                            for superpixelValue in featureValue
+                        ):
                             raise ValidationException(
                                 'Annotation feature "%s" has invalid '
                                 'value "%s".' % (featureId, featureValue))
