@@ -45,6 +45,10 @@ isic.views.TasksGroupView = isic.View.extend({
 
 // View for the task dashboard
 isic.views.TasksView = isic.View.extend({
+    events: {
+        'click .isic-tasks-refresh-button': 'fetchTasks'
+    },
+
     initialize: function (settings) {
         this.qcTasks = new isic.collections.TaskCollection();
         this.qcTasks.altUrl = 'uda/task/qc';
@@ -87,9 +91,7 @@ isic.views.TasksView = isic.View.extend({
 
         this.render();
 
-        this.qcTasks.fetch();
-        this.segmentationTasks.fetch();
-        this.annotationTasks.fetch();
+        this.fetchTasks();
     },
 
     render: function () {
@@ -104,7 +106,17 @@ isic.views.TasksView = isic.View.extend({
         this.taskAnnotationView.setElement(
             this.$('#isic-tasks-annotation-container')).render();
 
+        this.$('.isic-tooltip').tooltip({
+            delay: 100
+        });
+
         return this;
+    },
+
+    fetchTasks: function () {
+        this.qcTasks.fetch();
+        this.segmentationTasks.fetch();
+        this.annotationTasks.fetch();
     }
 });
 
