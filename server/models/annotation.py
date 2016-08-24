@@ -49,6 +49,12 @@ class Annotation(ItemModel):
         )
         return annotationItem
 
+    def getState(self, annotation):
+        Study = self.model('study', 'isic_archive')
+        return (Study.State.COMPLETE
+                if annotation['meta'].get('stopTime') is not None
+                else Study.State.ACTIVE)
+
     def _findQueryFilter(self, query):
         Study = self.model('study', 'isic_archive')
         annotationQuery = {
