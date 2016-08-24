@@ -108,8 +108,9 @@ derm_app.controller('AnnotationController', [
                 annotations: $scope.annotation_values
             };
             $http.put(submit_url, annotation_to_store).success(function () {
-                //window.location.replace('/uda/task');
-                window.location.replace('/uda/task/p2/' + $scope.study._id);
+                //window.location.replace('/#tasks');
+                // TODO: this won't work if study has no more annotations
+                window.location.replace('/task/me/annotation/redirect?studyId=' + $scope.study._id);
             });
         };
     }
