@@ -210,7 +210,7 @@ class TaskResource(Resource):
         Study = self.model('study', 'isic_archive')
 
         user = self.getCurrentUser()
-        # TODO: this could be done more efficiently, without duplicate queries,
+        # TODO: this could be done more efficiently, without duplicate queries
         results = [
             {
                 'study': {
