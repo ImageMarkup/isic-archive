@@ -1,8 +1,27 @@
+/*globals d3*/
+
 // This is a pure, backbone-only helper model (i.e. not the same thing
 // as the stuff in js/models)
 
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
+    initialize: function () {
+        var self = this;
+
+        self.updateHistogram('overview');
+        self.updateHistogram('filteredSet').then(function () {
+            return self.updateCurrentPage();
+        }).then(function () {
+            return self.updateHistogram('page');
+        });
+
+        self.listenTo(self, 'change:limit', self.updateCurrentPage);
+        self.listenTo(self, 'change:offset', self.updateCurrentPage);
+        self.listenTo(self, 'change:filter', self.updateCurrentPage);
+        self.listenTo(self, 'change:imageIds', function () {
+            self.set('selectedImageId', null);
+        });
+    },
     defaults: {
         limit: 50,
         offset: 0,
@@ -36,23 +55,6 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                 label: 'count'
             }]
         }
-    },
-    initialize: function () {
-        var self = this;
-
-        self.updateHistogram('overview');
-        self.updateHistogram('filteredSet').then(function () {
-            return self.updateCurrentPage();
-        }).then(function () {
-            return self.updateHistogram('page');
-        });
-
-        self.listenTo(self, 'change:limit', self.updateCurrentPage);
-        self.listenTo(self, 'change:offset', self.updateCurrentPage);
-        self.listenTo(self, 'change:filter', self.updateCurrentPage);
-        self.listenTo(self, 'change:imageIds', function () {
-            self.set('selectedImageId', null);
-        });
     },
     updateHistogram: function (histogramName) {
         var self = this;
@@ -129,7 +131,6 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         return result;
     },
     postProcessHistogram: function (histogram) {
-        var self = this;
         var formatter = d3.format('0.3s');
         // If the user is logged out, we'll sometimes get an
         // empty histogram back
@@ -138,8 +139,8 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         }
         Object.keys(histogram).forEach(function (attrName) {
             histogram[attrName].forEach(function (bin, index) {
-                if (typeof bin.lowBound === 'number' &&
-                        typeof bin.highBound === 'number') {
+                if (_.isNumber(bin.lowBound) &&
+                        _.isNumber(bin.highBound)) {
                     // binUtils.js doesn't have access to D3's superior number
                     // formatting abilities, so we patch on slightly better
                     // human-readable labels
@@ -172,18 +173,16 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         }
     },
     autoDetectAttributeType: function (attrName) {
-        var self = this;
         var attrSpec = window.ENUMS.SCHEMA[attrName];
         // Find the most specific type that can accomodate all the values
         var attrType = 'object';
         var count = 0;
-        var dataType;
         window.ENUMS.ATTRIBUTE_GENERALITY.forEach(function (dataType) {
-          if (attrSpec.hasOwnProperty(dataType) &&
-                attrSpec[dataType].count >= count) {
-              attrType = dataType;
-              count = attrSpec[dataType].count;
-          }
+            if (attrSpec.hasOwnProperty(dataType) &&
+                  attrSpec[dataType].count >= count) {
+                attrType = dataType;
+                count = attrSpec[dataType].count;
+            }
         });
         return attrType;
     },
@@ -228,13 +227,13 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             if (self.getAttributeType(attrName) === 'string') {
                 comparator = function (a, b) {
                     return a.localeCompare(b);
-                }
+                };
             }
             // Intersect the bin with the excluded values
             var includedRanges = window.shims.RangeSet.rangeSubtract([{
-                    lowBound: bin.lowBound,
-                    highBound: bin.highBound
-                }], filterSpec.excludeRanges, comparator);
+                lowBound: bin.lowBound,
+                highBound: bin.highBound
+            }], filterSpec.excludeRanges, comparator);
 
             if (includedRanges.length === 1 &&
                     includedRanges[0].lowBound === bin.lowBound &&
@@ -386,6 +385,8 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         self.applyFilter(filter);
     },
     includeValue: function (attrName, value) {
+        var self = this;
+        var filter = self.get('filter');
         // Temporarily init a filter object for this attribute
         // if it doesn't already exist
         if (!filter.standard[attrName]) {

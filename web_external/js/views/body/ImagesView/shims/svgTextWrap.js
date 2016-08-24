@@ -8,14 +8,14 @@
     nested elements across lines).
     */
 
-    function newTspan (textElement) {
+    function newTspan(textElement) {
         var newTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
         newTspan.setAttribute('class', 'rewrappedTspan');
         textElement.appendChild(newTspan);
         return newTspan;
     }
 
-    function extractWords (element) {
+    function extractWords(element) {
         var words = [];
         // Pull out all the childNodes and split them into words
         Array.from(element.childNodes).forEach(function (chunk) {
@@ -38,7 +38,7 @@
         return words;
     }
 
-    function rewrap (textElement, pxWidth, emLeading) {
+    function rewrap(textElement, pxWidth, emLeading) {
         emLeading = emLeading || 1.1;
 
         var textAnchor = textElement.getAttribute('text-anchor') || 'start';
@@ -107,7 +107,7 @@
                     // the current line
                     dx = -(lineLengths[index - 1] +
                         lineLengths[index]) / 2;
-                    } else { // textAnchor === 'end'
+                } else { // textAnchor === 'end'
                     // scoot the line back the length
                     // of the current line
                     dx = -lineLengths[index];

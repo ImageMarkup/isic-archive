@@ -6,7 +6,7 @@
     // Note that lowBound and highBound do not need to be numbers;
     // an arbitrary comparator may be supplied.
 
-    function defaultComparator (a, b) {
+    function defaultComparator(a, b) {
         if (a < b) {
             return -1;
         } else if (a === b) {
@@ -16,7 +16,7 @@
         }
     }
 
-    function compareHighBounds (a, b, comparator) {
+    function compareHighBounds(a, b, comparator) {
         comparator = comparator || defaultComparator;
         if (!('highBound' in a)) {
             if (!('highBound' in b)) {
@@ -37,7 +37,7 @@
         }
     }
 
-    function compareLowBounds (a, b, comparator) {
+    function compareLowBounds(a, b, comparator) {
         comparator = comparator || defaultComparator;
         if (!('lowBound' in a)) {
             if (!('lowBound' in b)) {
@@ -58,7 +58,7 @@
         }
     }
 
-    function compareRanges (a, b, comparator) {
+    function compareRanges(a, b, comparator) {
         comparator = comparator || defaultComparator;
         // Compare lowBounds first, then highBounds.
         // Where a bound is missing, the range is open-ended
@@ -71,7 +71,7 @@
         return comp;
     }
 
-    function mostExtremeValue (values, direction, comparator, excludeUnbounded) {
+    function mostExtremeValue(values, direction, comparator, excludeUnbounded) {
         comparator = comparator || defaultComparator;
         excludeUnbounded = !!excludeUnbounded;
         var result = null;
@@ -103,7 +103,7 @@
         return result;
     }
 
-    function copyRangeList (list) {
+    function copyRangeList(list) {
         var result = [];
         list.forEach(function (range, index) {
             result.push({});
@@ -117,9 +117,9 @@
         return result;
     }
 
-    function cleanRangeList (list, comparator) {
+    function cleanRangeList(list, comparator) {
         comparator = comparator || defaultComparator;
-        list = copyRangeList(list).sort(function(a, b) {
+        list = copyRangeList(list).sort(function (a, b) {
             return compareRanges(a, b, comparator);
         });
 
@@ -161,12 +161,12 @@
         return list;
     }
 
-    function rangeUnion (list1, list2, comparator) {
+    function rangeUnion(list1, list2, comparator) {
         comparator = comparator || defaultComparator;
         return cleanRangeList(list1.concat(list2), comparator);
     }
 
-    function rangeIntersection (list1, list2, comparator) {
+    function rangeIntersection(list1, list2, comparator) {
         comparator = comparator || defaultComparator;
         var result = [];
         list1 = cleanRangeList(list1);
@@ -191,7 +191,7 @@
         return cleanRangeList(result);
     }
 
-    function rangeSubtract (list1, list2, comparator) {
+    function rangeSubtract(list1, list2, comparator) {
         comparator = comparator || defaultComparator;
         list1 = cleanRangeList(list1);
         list2 = cleanRangeList(list2);

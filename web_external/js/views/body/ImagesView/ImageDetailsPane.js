@@ -1,5 +1,3 @@
-/*globals girder, jQuery, Image*/
-
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
 isic.views.ImagesViewSubViews.ImageDetailsPane = Backbone.View.extend({

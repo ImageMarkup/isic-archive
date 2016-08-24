@@ -1,4 +1,4 @@
-/*globals girder, jQuery, Image*/
+/*globals d3*/
 
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
@@ -14,6 +14,22 @@ isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
     },
     render: function () {
         var self = this;
+
+        if (!self.addedCollapseImage) {
+            // little hack to inject the correct expander image path into the
+            // stylesheet (afaik, we can't access girder.staticRoot from the
+            // stylus files)
+            var isicStylesheet = Array.from(document.styleSheets)
+                .filter(function (sheet) {
+                    return sheet.href &&
+                        sheet.href.indexOf('isic_archive.min.css') !== -1;
+                })[0];
+            isicStylesheet.addRule('#isic-images-histogramPane ' +
+                '.attributeSection .header input.expander:before',
+                'background-image: url(' + girder.staticRoot +
+                    '/built/plugins/isic_archive/extra/img/collapse.svg);');
+            self.addedCollapseImage = true;
+        }
 
         var attributeOrder = Object.keys(self.model.get('overviewHistogram'))
             .filter(function (d) {
@@ -67,7 +83,7 @@ isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
             });
 
         // Now for the actual histogram content (that gets collapsed)
-        var contentsEnter = attributeSectionsEnter.append('svg')
+        attributeSectionsEnter.append('svg')
             .attr('class', 'collapsed content')
             .attr('id', function (d) {
                 return window.shims.makeValidId(d + '_histogramContent');

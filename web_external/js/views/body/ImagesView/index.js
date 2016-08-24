@@ -1,5 +1,3 @@
-/*globals girder, jQuery, Image, recolorImageFilters*/
-
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
 isic.views.ImagesView = isic.View.extend({

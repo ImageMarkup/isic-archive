@@ -1,3 +1,5 @@
+/*globals d3*/
+
 // Tool that generates SVG filters that can recolor images
 // to whatever color we need.
 // Usage: CSS styles should do something like this:

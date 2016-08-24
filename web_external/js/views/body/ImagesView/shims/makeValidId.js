@@ -17,5 +17,5 @@
             USED_IDS[temp] = true;
         }
         return ID_LOOKUP[str];
-    }
+    };
 })();

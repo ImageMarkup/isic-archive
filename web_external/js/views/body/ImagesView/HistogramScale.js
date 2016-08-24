@@ -1,4 +1,4 @@
-(function() {
+(function () {
     // This is simply a helper class (not really a model or a view) that
     // abstracts away some of the nuances of the histogram scales (both x and y)
     function HistogramScale(attrName) {
@@ -23,7 +23,6 @@
     }
     HistogramScale.prototype.update = function (model, emSize, idealWidth) {
         var self = this;
-        emSize = emSize;
         self.leftAxisPadding = 3 * emSize;
         self.height = 6 * emSize;
 
@@ -176,7 +175,7 @@
             var self = this;
             return self.customYmax === null ? self.realYmax : self.customYmax;
         },
-        set: function () {
+        set: function (value) {
             var self = this;
             self.customYmax = Math.max(1, Math.min(self.realYmax, value));
         }

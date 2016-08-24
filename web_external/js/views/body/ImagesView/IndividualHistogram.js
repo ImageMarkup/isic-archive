@@ -1,3 +1,4 @@
+/*globals d3*/
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
 var ICONS = {
@@ -5,8 +6,6 @@ var ICONS = {
     ex: girder.staticRoot + '/built/plugins/isic_archive/extra/img/ex.svg',
     dash: girder.staticRoot + '/built/plugins/isic_archive/extra/img/dash.svg'
 };
-
-var MODEL_ENUMS;
 
 isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
     initialize: function (parameters) {
@@ -83,7 +82,7 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
             .attr('class', 'page');
 
         // Update each bar
-        function drawBars () {
+        function drawBars() {
             bins.select('rect.overview')
                 .each(function (d) {
                     // this refers to the DOM element
@@ -110,7 +109,7 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
                 knobScale(self.scale.yMax) + ')');
         knob.call(d3.behavior.drag()
             .origin(function () {
-                return { x: 0, y: knobScale(scale.yMax) };
+                return { x: 0, y: knobScale(self.scale.yMax) };
             }).on('drag', function () {
                 // the yMax setter automagically prevents bad values...
                 self.scale.yMax = knobScale.invert(d3.event.y);
@@ -119,7 +118,7 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
                 // the knob
                 knob.attr('transform', 'translate(' +
                     self.scale.leftAxisPadding + ',' +
-                    knobScale(scale.yMax) + ')');
+                    knobScale(self.scale.yMax) + ')');
                 // the axis
                 yScale.domain([0, self.scale.yMax]);
                 yAxis.scale(yScale).ticks(Math.min(4, self.scale.yMax));
@@ -186,7 +185,7 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
                         }
                     }
                 });
-            });
+        });
         height += 2 * emSize;
 
         // Add each bin label, and compute the total needed height
