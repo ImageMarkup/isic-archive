@@ -36,6 +36,7 @@ class ImageResource(Resource):
         self.route('GET', (':id',), self.getImage)
         self.route('GET', (':id', 'thumbnail'), self.thumbnail)
         self.route('GET', (':id', 'download'), self.download)
+        self.route('GET', (':id', 'superpixels'), self.getSuperpixels)
 
         self.route('GET', ('histogram',), self.histogram)
         self.histogramUtility = HistogramUtility()
@@ -141,14 +142,28 @@ class ImageResource(Resource):
             raise RestException('Unallowed contentDisposition type "%s".' %
                                 contentDisp)
 
-        original_file = self.model('image', 'isic_archive').originalFile(image)
-        file_stream = self.model('file').download(original_file, headers=True)
+        originalFile = self.model('image', 'isic_archive').originalFile(image)
+        fileStream = self.model('file').download(originalFile, headers=True)
 
         # TODO: replace this after https://github.com/girder/girder/pull/1123
         if contentDisp == 'inline':
             cherrypy.response.headers['Content-Disposition'] = \
-                'inline; filename="%s"' % original_file['name']
-        return file_stream
+                'inline; filename="%s"' % originalFile['name']
+        return fileStream
+
+    @describeRoute(
+        Description('Get the superpixels for this image, as a PNG-encoded '
+                    'label map.')
+        .param('id', 'The ID of the image.', paramType='path')
+        .errorResponse('ID was invalid.')
+    )
+    @access.cookie
+    @access.public
+    @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
+    def getSuperpixels(self, image, params):
+        superpixelsFile = self.model('image', 'isic_archive').superpixelsFile(
+            image)
+        return self.model('file').download(superpixelsFile, headers=True)
 
     @describeRoute(
         Description('Return histograms of image metadata.')
@@ -198,6 +213,7 @@ class ImageResource(Resource):
     @access.user
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def doSegmentation(self, image, params):
+        Segmentation = self.model('segmentation', 'isic_archive')
         bodyJson = self.getBodyJson()
         self.requireParams(('seed', 'tolerance'), bodyJson)
 
@@ -215,7 +231,7 @@ class ImageResource(Resource):
             raise RestException('Submitted "tolerance" must be an integer.')
 
         try:
-            contourFeature = self.model('image', 'isic_archive').doSegmentation(
+            contourFeature = Segmentation.doSegmentation(
                 image, seedCoord, tolerance)
         except GirderException as e:
             raise RestException(e.message)

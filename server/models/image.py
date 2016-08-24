@@ -18,18 +18,19 @@
 ###############################################################################
 
 import datetime
+import mimetypes
+import os
 import six
 
-import geojson
-
 from girder.constants import AccessType
-from girder.models.model_base import AccessException, GirderException
+from girder.models.model_base import AccessException
 from girder.models.item import Item as ItemModel
+from girder.utility import assetstore_utilities
 
 from .. import constants
 from ..provision_utility import _ISICCollection
-from .segmentation_helpers import ScikitSegmentationHelper, \
-    OpenCVSegmentationHelper
+from .segmentation_helpers import ScikitSegmentationHelper
+from ..upload import TempDir
 
 
 class Image(ItemModel):
@@ -46,35 +47,148 @@ class Image(ItemModel):
         self.summaryFields = ['_id', 'name', 'updated']
         self.prefixSearchFields = ['lowerName', 'name']
 
-    def createImage(self, creator, parentFolder):
+    def createImage(self, imageDataStream, imageDataSize, originalName,
+                    dataset, creator):
         newIsicId = self.model('setting').get(
             constants.PluginSettings.MAX_ISIC_ID, default=-1) + 1
-
         image = self.createItem(
             name='ISIC_%07d' % newIsicId,
             creator=creator,
-            folder=parentFolder,
+            folder=dataset,
             description=''
         )
-        self.setMetadata(image, {
-            'clinical': {},
-            'acquisition': {}
-        })
-
         self.model('setting').set(
             constants.PluginSettings.MAX_ISIC_ID, newIsicId)
 
+        image = self.setMetadata(image, {
+            'clinical': {},
+            'acquisition': {},
+            'originalFilename': originalName
+        })
+
+        originalFile = self.model('upload').uploadFromFile(
+            obj=imageDataStream,
+            size=imageDataSize,
+            name='%s%s' % (
+                image['name'],
+                os.path.splitext(originalName)[1].lower()
+            ),
+            parentType='item',
+            parent=image,
+            user=creator,
+            mimeType=mimetypes.guess_type(originalName)[0],
+        )
+        # reload image, since its 'size' has changed in the database
+        image = self.load(image['_id'], force=True, exc=True)
+
+        # this adds image['largeImage']['originalId'] and allows the subsequent
+        # use of Image.originalFile and Image.imageData
+        image = self._generateLargeimage(image, originalFile)
+
+        image = self._generateSuperpixels(image)
+
+        # TODO: copy license from dataset to image
+
+        imageData = self.imageData(image)
+        image['meta']['acquisition']['pixelsY'] = imageData.shape[0]
+        image['meta']['acquisition']['pixelsX'] = imageData.shape[1]
+        image = self.save(image)
+
+        return image
+
+    def _generateLargeimage(self, image, originalFile):
+        # TODO: replace this with usage of large_image
+        assetstore = self.model('assetstore').getCurrent()
+        assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(
+            assetstore)
+
+        with TempDir() as tempDir:
+            largeimageFileName = '%s.tiff' % image['name']
+            largeimageFilePath = os.path.join(tempDir, largeimageFileName)
+
+            originalFilePath = assetstoreAdapter.fullPath(originalFile)
+
+            convert_command = (
+                '/usr/local/bin/vips',
+                'tiffsave',
+                '\'%s\'' % originalFilePath,
+                '\'%s\'' % largeimageFilePath,
+                '--compression', 'jpeg',
+                '--Q', '90',
+                '--tile',
+                '--tile-width', '256',
+                '--tile-height', '256',
+                '--pyramid',
+                '--bigtiff',
+            )
+            os.popen(' '.join(convert_command))
+
+            # upload converted image
+            with open(largeimageFilePath, 'rb') as largeimageFileStream:
+                largeImageFile = self.model('upload').uploadFromFile(
+                    obj=largeimageFileStream,
+                    size=os.path.getsize(largeimageFilePath),
+                    name=largeimageFileName,
+                    parentType='item',
+                    parent=image,
+                    user={'_id': image['creatorId']},
+                    mimeType='image/tiff',
+                )
+            os.remove(largeimageFilePath)
+            # reload image, since its 'size' has changed in the database
+            image = self.load(image['_id'], force=True, exc=True)
+
+            image['largeImage'] = {
+                'fileId': largeImageFile['_id'],
+                'sourceName': 'tiff',
+                'originalId': originalFile['_id']
+            }
+            image = self.save(image)
+
+            return image
+
+    def _generateSuperpixels(self, image):
+        # TODO: run this asynchronously (self.imageData can't be used)
+        SUPERPIXEL_VERSION = 3.0
+
+        imageData = self.imageData(image)
+
+        superpixelsData = ScikitSegmentationHelper.superpixels(imageData)
+        superpixelsEncodedStream = ScikitSegmentationHelper.writeImage(
+            superpixelsData, 'png')
+
+        superpixelsFile = self.model('upload').uploadFromFile(
+            obj=superpixelsEncodedStream,
+            size=len(superpixelsEncodedStream.getvalue()),
+            name='%s_superpixels_v%s.png' % (image['name'], SUPERPIXEL_VERSION),
+            parentType='item',
+            parent=image,
+            user={'_id': image['creatorId']},
+            mimeType='image/png'
+        )
+        superpixelsFile['superpixelVersion'] = SUPERPIXEL_VERSION
+        superpixelsFile = self.model('file').save(superpixelsFile)
+
+        image['superpixelsId'] = superpixelsFile['_id']
+        image = self.save(image)
         return image
 
     def originalFile(self, image):
-        return self.model('file').findOne({
-            'itemId': image['_id'],
-            # TODO: make this more robust (original image may not be a JPEG)
-            'name': {'$in': [
-                '%s.jpg' % image['name'],
-                '%s.png' % image['name']
-            ]}
-        })
+        return self.model('file').load(
+            image['largeImage']['originalId'], force=True, exc=True)
+
+    def superpixelsFile(self, image):
+        return self.model('file').load(
+            image['superpixelsId'], force=True, exc=True)
+
+    def _decodeDataFromFile(self, fileObj):
+        fileStream = six.BytesIO()
+        fileStream.writelines(
+            self.model('file').download(fileObj, headers=False)()
+        )
+        # Scikit-Image is ~70ms faster at decoding image data
+        data = ScikitSegmentationHelper.loadImage(fileStream)
+        return data
 
     def imageData(self, image):
         """
@@ -83,15 +197,20 @@ class Image(ItemModel):
         :rtype: numpy.ndarray
         """
         imageFile = self.originalFile(image)
-
-        imageFileStream = six.BytesIO()
-        imageFileStream.writelines(
-            self.model('file').download(imageFile, headers=False)()
-        )
-
-        # Scikit-Image is ~70ms faster at loading images
-        imageData = ScikitSegmentationHelper.loadImage(imageFileStream)
+        imageData = self._decodeDataFromFile(imageFile)
         return imageData
+
+    def superpixelsData(self, image):
+        """
+        Return the superpixel label data associated with this image.
+
+        :rtype: numpy.ndarray
+        """
+        superpixelsFile = self.superpixelsFile(image)
+        superpixelsRGBData = self._decodeDataFromFile(superpixelsFile)
+        superpixelsLabelData = ScikitSegmentationHelper._RGBTounit64(
+            superpixelsRGBData)
+        return superpixelsLabelData
 
     def _findQueryFilter(self, query):
         # assumes collection has been created by provision_utility
@@ -174,43 +293,6 @@ class Image(ItemModel):
             # TODO: deal with any existing studies with this image
             self.model('item').move(image,
                                     datasetFlaggedFolders[image['folderId']])
-
-    def doSegmentation(self, image, seedCoord, tolerance):
-        """
-        Run a lesion segmentation.
-
-        :param image: A Girder Image item.
-        :param seedCoord: X, Y coordinates of the segmentation seed point.
-        :type seedCoord: tuple[int]
-        :param tolerance: The intensity tolerance value for the segmentation.
-        :type tolerance: int
-        :return: The lesion segmentation, as a GeoJSON Polygon Feature.
-        :rtype: geojson.Feature
-        """
-        imageData = self.imageData(image)
-
-        if not(
-            # The imageData has a shape of (rows, cols), the seed is (x, y)
-            0.0 <= seedCoord[0] <= imageData.shape[1] and
-            0.0 <= seedCoord[1] <= imageData.shape[0]
-        ):
-            raise GirderException('seedCoord is out of bounds')
-
-        # OpenCV is significantly faster at segmentation right now
-        contourCoords = OpenCVSegmentationHelper.segment(
-            imageData, seedCoord, tolerance)
-
-        contourFeature = geojson.Feature(
-            geometry=geojson.Polygon(
-                coordinates=(contourCoords.tolist(),)
-            ),
-            properties={
-                'source': 'autofill',
-                'seedPoint': seedCoord,
-                'tolerance': tolerance
-            }
-        )
-        return contourFeature
 
     def validate(self, doc):
         # TODO: implement

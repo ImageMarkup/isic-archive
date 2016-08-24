@@ -109,8 +109,8 @@ derm_app.controller('SubmitProgressController', [
     '$scope', '$interval',
     function ($scope, $interval) {
         $scope.value = 0.0;
-        var interval = 0.5;
-        $scope.max = 10.0;
+        var interval = 0.2;
+        $scope.max = 2.0;
 
         function increment () {
             $scope.value += interval;
