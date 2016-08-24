@@ -14,16 +14,13 @@ class HistogramUtility(object):
         # Load up the external foreign code snippets
         self.foreignCode = {}
 
-        codePath = 'plugins/isic_archive/server/histogram_utility'
-        codePath = os.path.join(os.getcwd(), codePath)
+        codePath = os.path.dirname(__file__)
 
         for filename in os.listdir(codePath):
             extension = os.path.splitext(filename)[1]
-            if extension != '.js' and extension != '.json':
-                continue
-            infile = open(os.path.join(codePath, filename), 'rb')
-            self.foreignCode[filename] = infile.read()
-            infile.close()
+            if extension in ['.js', '.json']:
+                with open(os.path.join(codePath, filename), 'rb') as infile:
+                    self.foreignCode[filename] = infile.read()
 
     def mapReduce(self, collection, mapScript, reduceScript, params={}):
         # Convert our AST filter expression to a mongo filter
