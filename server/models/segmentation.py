@@ -21,6 +21,7 @@ import datetime
 import six
 
 from bson import ObjectId
+import geojson
 import numpy
 from PIL import Image as PIL_Image, ImageDraw as PIL_ImageDraw
 
@@ -28,7 +29,8 @@ from girder import events
 from girder.constants import AccessType
 from girder.models.model_base import Model, GirderException, ValidationException
 
-from .segmentation_helpers import ScikitSegmentationHelper
+from .segmentation_helpers import ScikitSegmentationHelper, \
+    OpenCVSegmentationHelper
 
 
 class Segmentation(Model):
@@ -64,9 +66,45 @@ class Segmentation(Model):
             return self.Skill.NOVICE
         return None
 
+    def doSegmentation(self, image, seedCoord, tolerance):
+        """
+        Run a lesion segmentation.
+
+        :param image: A Girder Image item.
+        :param seedCoord: X, Y coordinates of the segmentation seed point.
+        :type seedCoord: tuple[int]
+        :param tolerance: The intensity tolerance value for the segmentation.
+        :type tolerance: int
+        :return: The lesion segmentation, as a GeoJSON Polygon Feature.
+        :rtype: geojson.Feature
+        """
+        imageData = self.model('image', 'isic_archive').imageData(image)
+
+        if not(
+            # The imageData has a shape of (rows, cols), the seed is (x, y)
+            0.0 <= seedCoord[0] <= imageData.shape[1] and
+            0.0 <= seedCoord[1] <= imageData.shape[0]
+        ):
+            raise GirderException('seedCoord is out of bounds')
+
+        # OpenCV is significantly faster at segmentation right now
+        contourCoords = OpenCVSegmentationHelper.segment(
+            imageData, seedCoord, tolerance)
+
+        contourFeature = geojson.Feature(
+            geometry=geojson.Polygon(
+                coordinates=(contourCoords.tolist(),)
+            ),
+            properties={
+                'source': 'autofill',
+                'seedPoint': seedCoord,
+                'tolerance': tolerance
+            }
+        )
+        return contourFeature
+
     def createSegmentation(self, image, skill, creator, lesionBoundary):
         now = datetime.datetime.utcnow()
-
         segmentation = self.save({
             'imageId': image['_id'],
             'skill': skill,
@@ -74,11 +112,6 @@ class Segmentation(Model):
             'lesionBoundary': lesionBoundary,
             'created': now
         })
-
-        # TODO: run this asynchronously
-        superpixels = self.generateSuperpixels(segmentation, image)
-        self.saveSuperpixels(segmentation, superpixels, 2.0)
-
         return segmentation
 
     def boundaryThumbnail(self, segmentation, image=None, width=256):
@@ -99,87 +132,6 @@ class Segmentation(Model):
         return ScikitSegmentationHelper.writeImage(
             numpy.asarray(pilImageData), 'jpeg', width)
 
-    def generateSuperpixels(self, segmentation, image=None):
-        Image = self.model('image', 'isic_archive')
-        if not image:
-            image = Image.load(segmentation['imageId'], force=True, exc=True)
-
-        imageData = Image.imageData(image)
-        # coords = segmentation['lesionBoundary']['geometry']['coordinates'][0]
-
-        superpixels = ScikitSegmentationHelper.superpixels(imageData)
-        return superpixels
-
-    def saveSuperpixels(self, segmentation, superpixels, version):
-        """
-        :type segmentation: dict
-        :type superpixels: file-like object or numpy.ndarray
-        :type version: float
-        :return: The Girder File containing the PNG-encoded superpixel labels.
-        :rtype: dict
-        """
-        if isinstance(superpixels, numpy.ndarray):
-            superpixels = ScikitSegmentationHelper.writeImage(
-                superpixels, 'png')
-
-        self.removeSuperpixels(segmentation)
-
-        superpixelsFile = self.model('upload').uploadFromFile(
-            obj=superpixels,
-            size=len(superpixels.getvalue()),
-            name='%s_superpixels.png' % segmentation['_id'],
-            user={'_id': segmentation['creatorId']},
-            mimeType='image/png'
-        )
-        # Uploads re-lookup the passed "parent" item, so it can't be set in
-        #  uploadFromFile
-        superpixelsFile['itemId'] = segmentation['_id']
-        superpixelsFile['superpixelVersion'] = version
-        superpixelsFile = self.model('file').save(superpixelsFile)
-        return superpixelsFile
-
-    def removeSuperpixels(self, segmentation, **kwargs):
-        superpixelsFile = self.superpixelsFile(segmentation)
-        if superpixelsFile:
-            fileKwargs = kwargs.copy()
-            fileKwargs.pop('updateItemSize', None)
-            # If the file has an itemId, Girder will attempt to update folder
-            #   sizes (which don't exist)
-            superpixelsFile['itemId'] = None
-            self.model('file').remove(superpixelsFile, updateItemSize=False,
-                                      **fileKwargs)
-
-    def superpixelsFile(self, segmentation, version=None):
-        """
-        :type segmentation: dict
-        :type version: float or None
-        :rtype: dict or None
-        """
-        query = {'itemId': segmentation['_id']}
-        if version is not None:
-            query['superpixelVersion'] = version
-        return self.model('file').findOne(query)
-
-    def superpixelsData(self, segmentation, version=None):
-        """
-        :type segmentation: dict
-        :type version: float or None
-        :rtype: numpy.ndarray
-        """
-        superpixelsFile = self.superpixelsFile(segmentation, version)
-        if not superpixelsFile:
-            raise GirderException('No superpixels file in segmentation.')
-
-        # TODO: reduce duplication with Image.imageData
-        superpixelsFileStream = six.BytesIO()
-        superpixelsFileStream.writelines(
-            self.model('file').download(superpixelsFile, headers=False)()
-        )
-
-        # Scikit-Image is ~70ms faster at loading images
-        superpixels = ScikitSegmentationHelper.loadImage(superpixelsFileStream)
-        return superpixels
-
     def _onDeleteItem(self, event):
         item = event.info['document']
         # TODO: can we tell if this item is an image?
@@ -187,10 +139,6 @@ class Segmentation(Model):
             'imageId': item['_id']
         }):
             self.remove(segmentation, **event.info['kwargs'])
-
-    def remove(self, segmentation, **kwargs):
-        self.removeSuperpixels(segmentation, **kwargs)
-        super(Segmentation, self).remove(segmentation)
 
     def validate(self, doc):
         try:

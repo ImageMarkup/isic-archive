@@ -171,7 +171,7 @@ def initialSetup(info):
         collection_description='Images to QC',
         public=False,
         group_name='Phase 0',
-        group_description='Users responsible for uploading raw images & metadata, and doing initial QC'
+        group_description='Users responsible for doing initial QC'
     )
 
     # Create empty "dataset contributors" group
@@ -221,19 +221,6 @@ def initialSetup(info):
         public=True,
         group_name='Study Administrators',
         group_description='Annotation study creators and administrators'
-    )
-
-    dropzip_folder = _ISICCollection.createFolder(
-        name='dropzip',
-        description='Upload zipped folders of images here',
-        parent=ISIC.Phase0.collection,
-        parent_type='collection'
-    )
-    ModelImporter.model('folder').setGroupAccess(
-        doc=dropzip_folder,
-        group=ISIC.Phase0.group,
-        level=AccessType.WRITE,
-        save=True
     )
 
     for featureset_file_name in [

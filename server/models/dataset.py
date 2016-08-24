@@ -24,7 +24,7 @@ from girder.constants import AccessType
 from girder.models.folder import Folder as FolderModel
 from girder.models.model_base import ValidationException
 
-from ..upload import handleCsv, handleImage, handleZip
+from ..upload import handleCsv, handleZip
 
 ZIP_FORMATS = [
     'multipart/x-zip',
@@ -172,7 +172,8 @@ class Dataset(FolderModel):
         datasetFolder = self.setMetadata(datasetFolder, {
             'signature': signature,
             'anonymous': anonymous,
-            'attribution': attribution
+            'attribution': attribution,
+            'license': license
         })
 
         # Process zip files
@@ -181,10 +182,6 @@ class Dataset(FolderModel):
             for zipFile in zipFiles:
                 # TODO: gracefully clean up after exceptions in handleZip
                 handleZip(datasetFolder, user, zipFile)
-
-        # Process extracted images
-        for item in self.model('folder').childItems(datasetFolder):
-            handleImage(item, user, license)
 
         # Process metadata in CSV files
         for item in csvFileItems:

@@ -10,7 +10,7 @@ window.UDASegment = function (imageId, segmentationId, options) {
 
     function onSourceSuccessLoad(_image, options) {
 
-        tile_image.src = '/api/v1/segmentation/' + segmentationId + '/superpixels';
+        tile_image.src = '/api/v1/image/' + imageId + '/superpixels';
         tile_image.crossOrigin = null;
         tile_image.onerror = function () { onErrorImageLoad(_image); };
         tile_image.onload = function (){ onSuccessImageLoad(_image, tile_image, options); };

@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import csv
-import mimetypes
 import os
 import shutil
 import sys
@@ -132,102 +131,14 @@ def handleZip(images_folder, user, zip_file):
                     increment=1,
                     message='Extracting "%s"' % original_file_name)
 
-                image_item = Image.createImage(
-                    creator=user,
-                    parentFolder=images_folder
-                )
-                Image.setMetadata(image_item, {
-                    'originalFilename': os.path.splitext(original_file_name)[0]
-                })
-
-                # upload original image
-                image_mimetype = mimetypes.guess_type(original_file_name)[0]
                 with open(original_file_path, 'rb') as original_file_obj:
-                    ModelImporter.model('upload').uploadFromFile(
-                        obj=original_file_obj,
-                        size=os.path.getsize(original_file_path),
-                        name='%s%s' % (
-                            image_item['name'],
-                            os.path.splitext(original_file_name)[1].lower()
-                        ),
-                        parentType='item',
-                        parent=image_item,
-                        user=user,
-                        mimeType=image_mimetype,
+                    Image.createImage(
+                        imageDataStream=original_file_obj,
+                        imageDataSize=os.path.getsize(original_file_path),
+                        originalName=original_file_name,
+                        dataset=images_folder,
+                        creator=user
                     )
-                # reload image_item, since its 'size' has changed in the database
-                image_item = Image.load(image_item['_id'], force=True, exc=True)
-
-                image_data = Image.imageData(image_item)
-                image_item['meta']['acquisition']['pixelsY'] = image_data.shape[0]
-                image_item['meta']['acquisition']['pixelsX'] = image_data.shape[1]
-                Image.save(image_item)
-
-
-def handleImage(image_item, user, license):
-    Image = ModelImporter.model('image', 'isic_archive')
-    Item = ModelImporter.model('item')
-
-    assetstore = ModelImporter.model('assetstore').getCurrent()
-    assetstore_adapter = assetstore_utilities.getAssetstoreAdapter(assetstore)
-
-    with TempDir() as temp_dir:
-        converted_file_name = '%s.tif' % image_item['name']
-        converted_file_path = os.path.join(temp_dir, converted_file_name)
-
-        image_item_files = Item.childFiles(image_item)
-        full_path = assetstore_adapter.fullPath(image_item_files[0])
-
-        convert_command = (
-            '/usr/local/bin/vips',
-            'tiffsave',
-            '\'%s\'' % full_path,
-            '\'%s\'' % converted_file_path,
-            '--compression', 'jpeg',
-            '--Q', '90',
-            '--tile',
-            '--tile-width', '256',
-            '--tile-height', '256',
-            '--pyramid',
-            '--bigtiff',
-        )
-        # TODO: subprocess.check_call is causing the whole application to crash
-        os.popen(' '.join(convert_command))
-        # try:
-        #     with open(os.devnull, 'rb') as null_in,\
-        #             open(os.devnull, 'wb') as null_out:
-        #         subprocess.check_call(convert_command,
-        #             stdin=null_in, stdout=null_out, stderr=subprocess.STDOUT)
-        # except subprocess.CalledProcessError:
-        #     try:
-        #         os.remove(converted_file_path)
-        #     except OSError:
-        #         pass
-        #     continue
-
-        # upload converted image
-        with open(converted_file_path, 'rb') as converted_file_obj:
-            converted_file = ModelImporter.model('upload').uploadFromFile(
-                obj=converted_file_obj,
-                size=os.path.getsize(converted_file_path),
-                name=converted_file_name,
-                parentType='item',
-                parent=image_item,
-                user=user,
-                mimeType='image/tiff',
-            )
-        os.remove(converted_file_path)
-        # reload image_item, since its 'size' has changed in the database
-        image_item = Image.load(image_item['_id'], force=True)
-
-        image_item['largeImage'] = {
-            'fileId': converted_file['_id'],
-            'sourceName': 'tiff'
-        }
-        if license:
-            image_item['license'] = license
-
-        Image.save(image_item)
 
 
 def handleCsv(dataset_folder, user, csv_file):
@@ -269,7 +180,7 @@ def handleCsv(dataset_folder, user, csv_file):
 
             # TODO: require 'user' to match image creator?
             # TODO: index on meta.originalFilename?
-            image_items = ModelImporter.model('image', 'isic_archive').find({
+            image_items = ModelImporter.model('item').find({
                 'meta.originalFilename': filename,
                 'folderId': {'$in': dataset_folder_ids}
             })
@@ -286,7 +197,7 @@ def handleCsv(dataset_folder, user, csv_file):
 
             clinical_metadata = image_item['meta']['clinical']
             clinical_metadata.update(csv_row)
-            ModelImporter.model('image', 'isic_archive').setMetadata(image_item, {
+            ModelImporter.model('item').setMetadata(image_item, {
                 'clinical': clinical_metadata
             })
 
