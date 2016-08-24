@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import datetime
-import os
 
 import cherrypy
 
@@ -24,10 +23,9 @@ def getItemsInFolder(folder):
 
 
 class UDAResource(Resource):
-    def __init__(self, plugin_root_dir):
+    def __init__(self):
         super(UDAResource, self).__init__()
         self.resourceName = 'uda'
-        self.plugin_root_dir = plugin_root_dir
 
         self.route('GET', ('task', 'qc'), self.p0TaskList)
         self.route('POST', ('task', 'qc', ':folder_id', 'complete'), self.p0TaskComplete)
@@ -203,19 +201,11 @@ class UDAResource(Resource):
 
 
 class TaskHandler(Resource):
-    def __init__(self, plugin_root_dir):
+    def __init__(self):
         super(TaskHandler, self).__init__()
         self.resourceName = 'task'
-        self.plugin_root_dir = plugin_root_dir
 
-        self.route('GET', (), self.taskDashboard)
         self.route('GET', ('p0', ':folder_id'), self.p0TaskRedirect)
-
-
-    @access.cookie
-    @access.public
-    def taskDashboard(self, params):
-        return cherrypy.lib.static.serve_file(os.path.join(self.plugin_root_dir, 'custom', 'task.html'))
 
 
     @access.cookie
