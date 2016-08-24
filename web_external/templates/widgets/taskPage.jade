@@ -1,0 +1,16 @@
+.isic-task-container
+  if total
+    .panel-group
+      .panel.panel-default
+        .panel-heading
+          .panel-title
+            span.isic-task-title= title
+            span.badge.pull-right.isic-task-total= total
+          span.isic-task-subtitle= subtitle
+        ul.list-group
+          each task in tasks
+            - var count = task.get('count')
+            - var resource = task.get(resourceName)
+            a.list-group-item(href=linkPrefix + resource._id)
+              span.btn-link.isic-task-name= resource.name
+              span.badge.isic-task-count= count
