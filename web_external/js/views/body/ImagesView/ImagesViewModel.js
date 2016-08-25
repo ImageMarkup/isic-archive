@@ -8,18 +8,16 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
     initialize: function () {
         var self = this;
 
-        // Getting the overview histogram has no dependencies
-        self.updateHistogram('overview');
-
         // Load the pegjs grammar and get the study names
-        // before attempting to get thefilteredSet histogram
-        // or a page of images
+        // before attempting to get histograms or image IDs
         jQuery.when(self.getStudyNames(), self.loadFilterGrammar())
             .then(function () {
+                // We need the study names before getting any histograms
+                self.updateHistogram('overview');
                 // Once we have the grammar, we can safely
                 // ask for the filtered set and the current page
                 // (updateCurrentPage gets both the current list of
-                // image IDs as well as the histogram)
+                // image IDs as well as the page histogram)
                 self.updateHistogram('filteredSet');
                 self.updateCurrentPage();
             });
@@ -101,7 +99,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
     },
     updateHistogram: function (histogramName) {
         var self = this;
-        var pageDetails = self.getPageDetails(true);
+        var pageDetails = self.getPageDetails();
         var requestParams = {};
 
         if (histogramName === 'page') {
@@ -123,7 +121,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         var self = this;
 
         // Construct the parameters to send to the server
-        var pageDetails = self.getPageDetails(true);
+        var pageDetails = self.getPageDetails();
 
         // The page must include at least one image
         pageDetails.limit = Math.max(1, pageDetails.limit);
@@ -163,7 +161,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         var histogramRequest = self.updateHistogram('page');
         return jQuery.when(imageListRequest, histogramRequest);
     },
-    getPageDetails: function (skipLimitCap) {
+    getPageDetails: function (capLimit) {
         var self = this;
         var result = {
             overviewCount: self.get('overviewHistogram').__passedFilters__[0].count,
@@ -171,8 +169,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             offset: self.get('offset'),
             limit: self.get('limit')
         };
-        if (!skipLimitCap &&
-                result.offset + result.limit > result.filteredSetCount) {
+        if (capLimit && result.offset + result.limit > result.filteredSetCount) {
             result.limit = result.filteredSetCount - result.offset;
         }
         return result;
