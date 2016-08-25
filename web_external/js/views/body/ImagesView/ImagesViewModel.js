@@ -105,7 +105,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             requestParams.offset = pageDetails.offset;
         }
         if (histogramName === 'page' || histogramName === 'filteredSet') {
-            requestParams.filter = self.getFilterAstTree();
+            requestParams.filter = JSON.stringify(self.getFilterAstTree());
         }
         return girder.restRequest({
             path: 'image/histogram',
