@@ -36,17 +36,21 @@ window.ENUMS.BIN_STATES = {
 // autodetect this (requires an additional server endpoint)
 window.ENUMS.SCHEMA = {
     'folderId': {
-        'coerceToType': 'string'
+        'coerceToType': 'string',
+        'humanName': 'Study'
     },
     'meta.clinical.benign_malignant': {
-        'coerceToType': 'string'
+        'coerceToType': 'string',
+        'humanName': 'Benign / Malignant'
     },
     'meta.clinical.sex': {
-        'coerceToType': 'string'
+        'coerceToType': 'string',
+        'humanName': 'Sex'
     },
     'meta.clinical.age': {
         'coerceToType': 'number',
         'interpretation': 'ordinal',
+        'humanName': 'Age',
         'lowBound': 0,
         'highBound': 100
     }

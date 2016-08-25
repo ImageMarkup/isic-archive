@@ -153,11 +153,6 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
     },
     postProcessHistogram: function (histogram) {
         var formatter = d3.format('0.3s');
-        // If the user is logged out, we'll sometimes get an
-        // empty histogram back
-        if (!('__passedFilters__' in histogram)) {
-            return null;
-        }
         Object.keys(histogram).forEach(function (attrName) {
             histogram[attrName].forEach(function (bin, index) {
                 if (_.isNumber(bin.lowBound) &&

@@ -79,7 +79,12 @@ isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
         sectionTitlesEnter.append('span');
         sectionTitles.select('span')
             .text(function (d) {
-                return d;
+                if (window.ENUMS.SCHEMA[d] &&
+                        window.ENUMS.SCHEMA[d].humanName) {
+                    return window.ENUMS.SCHEMA[d].humanName;
+                } else {
+                    return d;
+                }
             });
 
         // Now for the actual histogram content (that gets collapsed)
