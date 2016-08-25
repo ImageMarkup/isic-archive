@@ -75,11 +75,12 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
     },
     updateHistogram: function (histogramName) {
         var self = this;
+        var pageDetails = self.getPageDetails(true);
         var requestParams = {};
 
         if (histogramName === 'page') {
-            requestParams.limit = self.get('limit');
-            requestParams.offset = self.get('offset');
+            requestParams.limit = pageDetails.limit;
+            requestParams.offset = pageDetails.offset;
         }
         if (histogramName === 'page' || histogramName === 'filteredSet') {
             requestParams.filter = self.getFilterAstTree();
@@ -98,9 +99,6 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         // Construct the parameters to send to the server
         var pageDetails = self.getPageDetails(true);
 
-        // First cap the page size by how many images are available
-        pageDetails.limit = Math.min(pageDetails.filteredSetCount,
-            pageDetails.limit);
         // The page must include at least one image
         pageDetails.limit = Math.max(1, pageDetails.limit);
         // Don't allow pages of more than 250 images
