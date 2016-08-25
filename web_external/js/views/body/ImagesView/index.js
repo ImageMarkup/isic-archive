@@ -9,6 +9,7 @@ isic.views.ImagesView = isic.View.extend({
         var params = {
             model: self.model
         };
+        self.studyPane = new isic.views.ImagesViewSubViews.StudyPane(params);
         self.histogramPane = new isic.views.ImagesViewSubViews.HistogramPane(params);
         self.imageWall = new isic.views.ImagesViewSubViews.ImageWall(params);
         self.pagingPane = new isic.views.ImagesViewSubViews.PagingPane(params);
@@ -36,6 +37,7 @@ isic.views.ImagesView = isic.View.extend({
                 staticRoot: girder.staticRoot
             }));
             window.shims.recolorImageFilters(['#00ABFF', '#444499', '#CCCCCC']);
+            self.studyPane.setElement(self.$el.find('#isic-images-studyPane')[0]);
             self.histogramPane.setElement(self.$el.find('#isic-images-histogramPane')[0]);
             self.imageWall.setElement(self.$el.find('#isic-images-imageWall')[0]);
             self.pagingPane.setElement(self.$el.find('#isic-images-pagingPane')[0]);
@@ -44,6 +46,7 @@ isic.views.ImagesView = isic.View.extend({
         }
         self.imageWall.render();
         self.pagingPane.render();
+        self.studyPane.render();
         self.histogramPane.render();
         self.imageDetailsPane.render();
 

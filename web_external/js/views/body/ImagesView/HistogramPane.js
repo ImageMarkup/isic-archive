@@ -33,7 +33,7 @@ isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
 
         var attributeOrder = Object.keys(self.model.get('overviewHistogram'))
             .filter(function (d) {
-                return d !== '__passedFilters__';
+                return d !== '__passedFilters__' && d !== 'folderId';
             });
 
         var attributeSections = d3.select(this.el).selectAll('.attributeSection')
