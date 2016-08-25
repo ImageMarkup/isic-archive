@@ -93,7 +93,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             url: girder.staticRoot + '/built/plugins/isic_archive/extra/query.pegjs',
             dataType: 'text',
             success: function (data) {
-                self.parseToAst = peg.generate(data);
+                self.astParser = peg.generate(data);
             }
         });
     },
@@ -565,6 +565,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         return result;
     },
     dehexify: function (obj) {
+        var self = this;
         if (!obj) {
             return obj;
         }
@@ -584,6 +585,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         return obj;
     },
     specifyAttrTypes: function (schema, obj) {
+        var self = this;
         if (!_.isObject(obj)) {
             return obj;
         } else if ('identifier' in obj && 'type' in obj && obj.type === null) {
@@ -610,7 +612,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
 
         if (exprList.length > 0) {
             var fullExpression = '(' + exprList.join(') and (') + ')';
-            var ast = self.parseToAst(fullExpression);
+            var ast = self.astParser.parse(fullExpression);
             ast = self.dehexify(ast);
             return self.specifyAttrTypes(ast);
         } else {
