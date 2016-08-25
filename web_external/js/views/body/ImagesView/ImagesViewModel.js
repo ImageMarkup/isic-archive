@@ -14,17 +14,15 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             .then(function () {
                 // We need the study names before getting any histograms
                 self.updateHistogram('overview');
-                // Once we have the grammar, we can safely
-                // ask for the filtered set and the current page
-                // (updateCurrentPage gets both the current list of
-                // image IDs as well as the page histogram)
-                self.updateHistogram('filteredSet');
-                self.updateCurrentPage();
+                // We need the study names and the filter grammar before getting
+                // the filtered set or the current page (both the page of images
+                // and the page histogram)
+                self.updateFilters();
             });
 
         self.listenTo(self, 'change:limit', self.updateCurrentPage);
         self.listenTo(self, 'change:offset', self.updateCurrentPage);
-        self.listenTo(self, 'change:filter', self.updateCurrentPage);
+        self.listenTo(self, 'change:filter', self.updateFilters);
         self.listenTo(self, 'change:imageIds', function () {
             self.set('selectedImageId', null);
         });
@@ -116,6 +114,11 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             self.set(histogramName + 'Histogram',
                 self.postProcessHistogram(resp));
         });
+    },
+    updateFilters: function () {
+        var self = this;
+        return jQuery.when(self.updateHistogram('filteredSet'),
+                           self.updateCurrentPage());
     },
     updateCurrentPage: function () {
         var self = this;
@@ -316,7 +319,13 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             }
         });
 
-        self.set('filter', filter);
+        // Even though the object internals change,
+        // Backbone sometimes won't fire the change:filter
+        // event (because the object reference matches).
+        // Instead, we silently set the filter (so there
+        // aren't two events), and trigger the event manually
+        self.set('filter', filter, {silent: true});
+        self.trigger('change:filter');
     },
     clearFilters: function (attrName) {
         var self = this;
@@ -584,7 +593,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         }
         return obj;
     },
-    specifyAttrTypes: function (schema, obj) {
+    specifyAttrTypes: function (obj) {
         var self = this;
         if (!_.isObject(obj)) {
             return obj;

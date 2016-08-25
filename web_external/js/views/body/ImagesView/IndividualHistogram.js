@@ -191,7 +191,6 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
         height += 2 * emSize;
 
         // Add each bin label, and compute the total needed height
-        window.test = svg;
         var maxLabelHeight = svg.select('.selectAllBins').select('text')
             .node().getComputedTextLength();
         binsEnter.append('text');
