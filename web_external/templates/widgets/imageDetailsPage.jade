@@ -1,0 +1,10 @@
+.isic-image-details-container
+  .button
+    img(src='#{imgRoot}/ex.svg')
+  if image.id
+    .isic-image-details-name= image.name()
+    .isic-image-details-clinical-metadata
+      if clinicalMetadata
+        each value, key in clinicalMetadata
+          dt= key
+          dd= value
