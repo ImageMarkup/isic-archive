@@ -52,6 +52,7 @@ window.ENUMS.SCHEMA = {
         'interpretation': 'ordinal',
         'humanName': 'Age',
         'lowBound': 0,
-        'highBound': 100
+        'highBound': 100,
+        'numBins': 10
     }
 };

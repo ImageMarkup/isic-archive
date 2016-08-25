@@ -90,7 +90,8 @@ class HistogramUtility(object):
                 'coerceToType': 'number',
                 'interpretation': 'ordinal',
                 'lowBound': 0,
-                'highBound': 100
+                'highBound': 100,
+                'numBins': 10
             }
         })
 

@@ -78,6 +78,7 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
             .attr('class', 'overview');
         binsEnter.append('rect')
             .attr('class', 'filteredSet');
+        // Comment out this line to hide the page histogram (1/2):
         binsEnter.append('rect')
             .attr('class', 'page');
 
@@ -93,6 +94,7 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
                     // this refers to the DOM element
                     d3.select(this).attr(self.scale.getBinRect(d, 'filteredSet'));
                 });
+            // Comment out these lines to hide the page histogram (2/2):
             bins.select('rect.page')
                 .each(function (d) {
                     // this refers to the DOM element
