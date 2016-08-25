@@ -66,7 +66,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
     loadFilterGrammar: function () {
         var self = this;
         return jQuery.ajax({
-            url: girder.staticRoot + '/built/plugins/isic_archive/extra/query.peg.js',
+            url: girder.staticRoot + '/built/plugins/isic_archive/extra/query.pegjs',
             dataType: 'text',
             success: function (data) {
                 self.parseToAst = peg.generate(data);
@@ -96,37 +96,41 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         var self = this;
 
         // Construct the parameters to send to the server
-        var requestParams = self.getPageDetails(true);
+        var pageDetails = self.getPageDetails(true);
 
         // First cap the page size by how many images are available
-        requestParams.limit = Math.min(requestParams.filteredSetCount,
-            requestParams.limit);
+        pageDetails.limit = Math.min(pageDetails.filteredSetCount,
+            pageDetails.limit);
         // The page must include at least one image
-        requestParams.limit = Math.max(1, requestParams.limit);
+        pageDetails.limit = Math.max(1, pageDetails.limit);
         // Don't allow pages of more than 250 images
-        requestParams.limit = Math.min(250, requestParams.limit);
+        pageDetails.limit = Math.min(250, pageDetails.limit);
 
         // Can't have a negative offset
-        requestParams.offset = Math.max(0, requestParams.offset);
+        pageDetails.offset = Math.max(0, pageDetails.offset);
         // Limit the last page by how many images are available
-        if (requestParams.offset + requestParams.limit >
-                requestParams.filteredSetCount) {
-            requestParams.offset = Math.floor(
-                requestParams.filteredSetCount / requestParams.limit) *
-                requestParams.limit;
+        if (pageDetails.offset + pageDetails.limit >
+                pageDetails.filteredSetCount) {
+            pageDetails.offset = Math.floor(
+                pageDetails.filteredSetCount / pageDetails.limit) *
+                pageDetails.limit;
         }
 
         // In case we've overridden anything, update with the cleaned values
         self.set({
-            limit: requestParams.limit,
-            offset: requestParams.offset
+            limit: pageDetails.limit,
+            offset: pageDetails.offset
         }, {silent: true});
 
         // Pass in filter settings
-        requestParams.filter = self.getFilterAstTree();
+        pageDetails.filter = self.getFilterAstTree();
         var imageListRequest = girder.restRequest({
             path: 'image',
-            data: requestParams
+            data: {
+                limit: pageDetails.limit,
+                offset: pageDetails.offset,
+                filter: self.getFilterAstTree()
+            }
         }).then(function (resp) {
             self.set('imageIds', resp.map(function (imageObj) {
                 return imageObj._id;
@@ -453,7 +457,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             attrName = self.stringToHex(attrName);
             var temp = values;
             values = [];
-            temp.forEach(value => {
+            temp.forEach(function (value) {
                 var dataType = typeof value;
                 if (dataType === 'string' || dataType === 'object') {
                     value = self.stringToHex(value);
@@ -473,7 +477,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             if (hexify) {
                 attrName = self.stringToHex(attrName);
             }
-            filterSpec.excludeRanges.forEach(range => {
+            filterSpec.excludeRanges.forEach(function (range) {
                 if (!firstRange) {
                     temp += ' and ';
                 }
@@ -519,7 +523,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         var self = this;
         var filter = self.get('filter');
         var results = [];
-        Object.keys(filter.standard).forEach(attrName => {
+        Object.keys(filter.standard).forEach(function (attrName) {
             var filterSpec = filter.standard[attrName];
             results = results.concat(self.listCategoricalFilterExpressions(attrName, filterSpec, hexify));
             results = results.concat(self.listRangeFilterExpressions(attrName, filterSpec, hexify));
@@ -547,11 +551,11 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         }
         if (_.isObject(obj)) {
             if (_.isArray(obj)) {
-                obj.forEach((d, i) => {
+                obj.forEach(function (d, i) {
                     obj[i] = self.dehexify(d);
                 });
             } else {
-                Object.keys(obj).forEach(k => {
+                Object.keys(obj).forEach(function (k) {
                     obj[k] = self.dehexify(obj[k]);
                 });
             }
@@ -571,11 +575,11 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                 obj.type = attrType;
             }
         } else if (_.isArray(obj)) {
-            obj.forEach((d, i) => {
+            obj.forEach(function (d, i) {
                 obj[i] = self.specifyAttrTypes(d);
             });
         } else {
-            Object.keys(obj).forEach(k => {
+            Object.keys(obj).forEach(function (k) {
                 obj[k] = self.specifyAttrTypes(obj[k]);
             });
         }
