@@ -5,6 +5,7 @@
     .isic-image-details-name= image.name()
     .isic-image-details-clinical-metadata
       if clinicalMetadata
-        each value, key in clinicalMetadata
-          dt= key
-          dd= value
+        dl
+          each value, key in clinicalMetadata
+            dt= key
+            dd= value
