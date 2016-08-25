@@ -49,6 +49,12 @@ class Annotation(ItemModel):
         )
         return annotationItem
 
+    def getState(self, annotation):
+        Study = self.model('study', 'isic_archive')
+        return (Study.State.COMPLETE
+                if annotation['meta'].get('stopTime') is not None
+                else Study.State.ACTIVE)
+
     def _findQueryFilter(self, query):
         Study = self.model('study', 'isic_archive')
         annotationQuery = {
@@ -119,7 +125,10 @@ class Annotation(ItemModel):
                                 'Annotation feature "%s" has invalid '
                                 'value "%s".' % (featureId, featureValue))
                     elif featureId in featuresetRegionFeatures:
-                        if featureValue not in [0, 2, 3]:
+                        if not isinstance(featureValue, list) or not all(
+                            superpixelValue in [0.0, 0.5, 1.0]
+                            for superpixelValue in featureValue
+                        ):
                             raise ValidationException(
                                 'Annotation feature "%s" has invalid '
                                 'value "%s".' % (featureId, featureValue))

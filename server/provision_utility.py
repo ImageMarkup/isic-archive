@@ -211,7 +211,7 @@ def initialSetup(info):
 
     ISIC.LesionImages = _ISICCollection(
         collection_name='Lesion Images',
-        collection_description='Lesion images available for annotation studies',
+        collection_description='All public lesion image datasets',
         public=True
     )
 

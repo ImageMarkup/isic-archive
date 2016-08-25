@@ -47,6 +47,7 @@ class AnnotationResource(Resource):
     @access.public
     def find(self, params):
         Study = self.model('study', 'isic_archive')
+        Annotation = self.model('annotation', 'isic_archive')
 
         self.requireParams(('studyId',), params)
 
@@ -81,9 +82,7 @@ class AnnotationResource(Resource):
                 'studyId': annotation['meta']['studyId'],
                 'userId': annotation['meta']['userId'],
                 'imageId': annotation['meta']['imageId'],
-                'state': (Study.State.COMPLETE
-                          if annotation['meta']['stopTime'] is not None
-                          else Study.State.ACTIVE)
+                'state': Annotation.getState(annotation)
             }
             for annotation in annotations
         ]
@@ -99,6 +98,7 @@ class AnnotationResource(Resource):
     def getAnnotation(self, annotation, params):
         User = self.model('user')
         Image = self.model('image', 'isic_archive')
+        Annotation = self.model('annotation', 'isic_archive')
 
         output = {
             '_id': annotation['_id'],
@@ -106,6 +106,8 @@ class AnnotationResource(Resource):
             'name': annotation['name']
         }
         output.update(annotation['meta'])
+
+        output['state'] = Annotation.getState(annotation)
 
         userSummaryFields = ['_id', 'login', 'firstName', 'lastName']
         output['user'] = User.load(
