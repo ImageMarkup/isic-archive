@@ -11,16 +11,18 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         // Getting the overview histogram has no dependencies
         self.updateHistogram('overview');
 
-        // Load the pegjs grammar before attempting to get the
-        // filteredSet histogram
-        self.loadFilterGrammar().then(function () {
-            // Once we have the grammar, we can safely
-            // ask for the filtered set and the current page
-            // (updateCurrentPage gets both the current list of
-            // image IDs as well as the histogram)
-            self.updateHistogram('filteredSet');
-            self.updateCurrentPage();
-        });
+        // Load the pegjs grammar and get the study names
+        // before attempting to get thefilteredSet histogram
+        // or a page of images
+        jQuery.when(self.getStudyNames(), self.loadFilterGrammar())
+            .then(function () {
+                // Once we have the grammar, we can safely
+                // ask for the filtered set and the current page
+                // (updateCurrentPage gets both the current list of
+                // image IDs as well as the histogram)
+                self.updateHistogram('filteredSet');
+                self.updateCurrentPage();
+            });
 
         self.listenTo(self, 'change:limit', self.updateCurrentPage);
         self.listenTo(self, 'change:offset', self.updateCurrentPage);
@@ -62,6 +64,28 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                 label: 'count'
             }]
         }
+    },
+    getStudyNames: function () {
+        var self = this;
+        return girder.restRequest({
+            path: 'collection'
+        }).then(function (collectionResp) {
+            var collectionId = collectionResp.filter(function (collection) {
+                return collection.name === 'Lesion Images';
+            })[0]['_id'];
+            return girder.restRequest({
+                path: 'folder',
+                data: {
+                    parentType: 'collection',
+                    parentId: collectionId
+                }
+            }).then(function (folderResp) {
+                self.folderIdLookup = {};
+                folderResp.forEach(function (folder) {
+                    self.folderIdLookup[folder['_id']] = folder['name'];
+                });
+            });
+        });
     },
     loadFilterGrammar: function () {
         var self = this;
@@ -152,10 +176,13 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         return result;
     },
     postProcessHistogram: function (histogram) {
+        var self = this;
         var formatter = d3.format('0.3s');
         Object.keys(histogram).forEach(function (attrName) {
             histogram[attrName].forEach(function (bin, index) {
-                if (_.isNumber(bin.lowBound) &&
+                if (attrName === 'folderId') {
+                    bin.label = self.folderIdLookup[bin.label];
+                } else if (_.isNumber(bin.lowBound) &&
                         _.isNumber(bin.highBound)) {
                     // binUtils.js doesn't have access to D3's superior number
                     // formatting abilities, so we patch on slightly better
