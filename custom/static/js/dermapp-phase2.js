@@ -189,6 +189,8 @@ derm_app.controller('RegionFeatureAnnotationController', ['$scope', '$rootScope'
             });
         });
 
+        // Manually initialize variables as a hack to deal with event race conditions
+        $scope.certaintyModel = 'definite';
         $scope.$on('reset', function () {
             // will also be called to initialize
             $scope.selected_feature_id = null;
@@ -211,7 +213,9 @@ derm_app.controller('RegionFeatureAnnotationController', ['$scope', '$rootScope'
 
         $scope.$watch('certaintyModel', function (certaintyModel) {
             if (certaintyModel !== undefined) {
-                if ($rootScope.imageviewer) {
+                if ($rootScope.imageviewer &&
+                    $rootScope.imageviewer.segmentannotator &&
+                    $rootScope.imageviewer.segmentannotator.labels) {
                     // label 2 -> 100%
                     // label 3 -> 50%
                     $rootScope.imageviewer.selectAnnotationLabel(certaintyModel);
