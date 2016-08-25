@@ -3,6 +3,6 @@
 dependencies:
   - role: mongodb
   - role: nodesource.node
-    nodejs_version: "4.4"
+    nodejs_version: "4.5"
     become: yes
   - role: python

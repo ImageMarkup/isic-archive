@@ -130,7 +130,7 @@ def load(info):
     info['serverRoot'].uda.gallery = staticFile(os.path.join(info['pluginRootDir'], 'custom', 'gallery.html'))
 
     # "/uda/task" -> redirects to appropriate task view for the user
-    info['serverRoot'].uda.task = TaskHandler(info['pluginRootDir'])
+    info['serverRoot'].uda.task = TaskHandler()
 
     # "/uda/annotator/:id" -> the reconfigurable image annotator
     info['serverRoot'].uda.annotate = staticFile(os.path.join(info['pluginRootDir'], 'custom', 'phase1.html'))
@@ -143,7 +143,7 @@ def load(info):
     # remove docs for default Girder API, to simplify page
     clearRouteDocs()
 
-    info['apiRoot'].uda = UDAResource(info['pluginRootDir'])
+    info['apiRoot'].uda = UDAResource()
 
     # TODO: nest these under a "/isic" path
     info['apiRoot'].annotation = api.AnnotationResource()

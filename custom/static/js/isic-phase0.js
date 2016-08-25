@@ -22,7 +22,7 @@ isic_app.controller('ApplicationController',
         var complete_redirect_url;
         if ($scope.gallery_type === 'qc') {
             complete_submit_url = '/api/v1/uda/task/qc/' + $scope.gallery_id + '/complete';
-            complete_redirect_url = '/uda/task';
+            complete_redirect_url = '/#tasks';
         }
         else if ($scope.gallery_type === 'select') {
             complete_submit_url = '/api/v1/uda/task/select/' + $scope.gallery_id;
