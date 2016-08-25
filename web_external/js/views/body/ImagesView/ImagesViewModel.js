@@ -1,4 +1,4 @@
-/*globals d3*/
+/*globals d3, peg*/
 
 // This is a pure, backbone-only helper model (i.e. not the same thing
 // as the stuff in js/models)
@@ -8,11 +8,18 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
     initialize: function () {
         var self = this;
 
+        // Getting the overview histogram has no dependencies
         self.updateHistogram('overview');
-        self.updateHistogram('filteredSet').then(function () {
-            return self.updateCurrentPage();
-        }).then(function () {
-            return self.updateHistogram('page');
+
+        // Load the pegjs grammar before attempting to get the
+        // filteredSet histogram
+        self.loadFilterGrammar().then(function () {
+            // Once we have the grammar, we can safely
+            // ask for the filtered set and the current page
+            // (updateCurrentPage gets both the current list of
+            // image IDs as well as the histogram)
+            self.updateHistogram('filteredSet');
+            self.updateCurrentPage();
         });
 
         self.listenTo(self, 'change:limit', self.updateCurrentPage);
@@ -56,20 +63,27 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             }]
         }
     },
+    loadFilterGrammar: function () {
+        var self = this;
+        return jQuery.ajax({
+            url: girder.staticRoot + '/built/plugins/isic_archive/extra/query.peg.js',
+            dataType: 'text',
+            success: function (data) {
+                self.parseToAst = peg.generate(data);
+            }
+        });
+    },
     updateHistogram: function (histogramName) {
         var self = this;
         var requestParams = {};
 
-        /*
-        TODO: send parameters, depending on which type of histogram that we want
         if (histogramName === 'page') {
             requestParams.limit = self.get('limit');
             requestParams.offset = self.get('offset');
         }
         if (histogramName === 'page' || histogramName === 'filteredSet') {
-            requestParams.filter = self.getFilterString();
+            requestParams.filter = self.getFilterAstTree();
         }
-        */
         return girder.restRequest({
             path: 'image/histogram',
             data: requestParams
@@ -103,11 +117,14 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         }
 
         // In case we've overridden anything, update with the cleaned values
-        self.set(requestParams, {silent: true}); // eslint-disable-line no-silent
+        self.set({
+            limit: requestParams.limit,
+            offset: requestParams.offset
+        }, {silent: true});
 
-        // TODO: pass in filter settings
-        // var filterString = self.getFilterString();
-        return girder.restRequest({
+        // Pass in filter settings
+        requestParams.filter = self.getFilterAstTree();
+        var imageListRequest = girder.restRequest({
             path: 'image',
             data: requestParams
         }).then(function (resp) {
@@ -115,6 +132,8 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                 return imageObj._id;
             }));
         });
+        var histogramRequest = self.updateHistogram('page');
+        return jQuery.when(imageListRequest, histogramRequest);
     },
     getPageDetails: function (skipLimitCap) {
         var self = this;
@@ -414,6 +433,165 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             }
         } else {
             return window.ENUMS.FILTER_STATES.NO_FILTERS;
+        }
+    },
+    listCategoricalFilterExpressions: function (attrName, filterSpec, hexify) {
+        hexify = !!hexify;
+        var self = this;
+        var values;
+        var operation;
+        if (filterSpec.hasOwnProperty('includeValues')) {
+            values = filterSpec.includeValues;
+            operation = ' in ';
+        } else if (filterSpec.hasOwnProperty('excludeValues')) {
+            values = filterSpec.excludeValues;
+            operation = ' not in ';
+        } else {
+            return [];
+        }
+        if (hexify) {
+            attrName = self.stringToHex(attrName);
+            var temp = values;
+            values = [];
+            temp.forEach(value => {
+                var dataType = typeof value;
+                if (dataType === 'string' || dataType === 'object') {
+                    value = self.stringToHex(value);
+                }
+                values.push(value);
+            });
+        }
+        return [attrName + operation + JSON.stringify(values)];
+    },
+    listRangeFilterExpressions: function (attrName, filterSpec, hexify) {
+        hexify = !!hexify;
+        var self = this;
+        var results = [];
+        if (filterSpec.excludeRanges) {
+            var temp = '(';
+            var firstRange = true;
+            if (hexify) {
+                attrName = self.stringToHex(attrName);
+            }
+            filterSpec.excludeRanges.forEach(range => {
+                if (!firstRange) {
+                    temp += ' and ';
+                }
+                firstRange = false;
+                temp += '(';
+                var includeLow = false;
+                var dataType;
+                if (range.hasOwnProperty('lowBound')) {
+                    var lowBound = range.lowBound;
+                    dataType = typeof lowBound;
+                    if (dataType === 'string' || dataType === 'object') {
+                        if (hexify) {
+                            lowBound = self.stringToHex(String(lowBound));
+                        }
+                        lowBound = '"' + lowBound + '"';
+                    }
+                    temp += attrName + ' < ' + lowBound;
+                    includeLow = true;
+                }
+                if (range.hasOwnProperty('highBound')) {
+                    if (includeLow) {
+                        temp += ' or ';
+                    }
+                    var highBound = range.highBound;
+                    dataType = typeof highBound;
+                    if (dataType === 'string' || dataType === 'object') {
+                        if (hexify) {
+                            highBound = self.stringToHex(String(highBound));
+                        }
+                        highBound = '"' + highBound + '"';
+                    }
+                    temp += attrName + ' >= ' + highBound;
+                }
+                temp += ')';
+            });
+            temp += ')';
+            results.push(temp);
+        }
+        return results;
+    },
+    listStandardFilterExpressions: function (hexify) {
+        hexify = !!hexify;
+        var self = this;
+        var filter = self.get('filter');
+        var results = [];
+        Object.keys(filter.standard).forEach(attrName => {
+            var filterSpec = filter.standard[attrName];
+            results = results.concat(self.listCategoricalFilterExpressions(attrName, filterSpec, hexify));
+            results = results.concat(self.listRangeFilterExpressions(attrName, filterSpec, hexify));
+        });
+        return results;
+    },
+    listAllFilterExpressions: function (hexify) {
+        hexify = !!hexify;
+        var self = this;
+        var filter = self.get('filter');
+        var exprList = self.listStandardFilterExpressions(hexify);
+        exprList = exprList.concat(filter.custom);
+        return exprList;
+    },
+    stringToHex: function (value) {
+        var result = '';
+        for (var i = 0; i < value.length; i += 1) {
+            result += '%' + value.charCodeAt(i).toString(16);
+        }
+        return result;
+    },
+    dehexify: function (obj) {
+        if (!obj) {
+            return obj;
+        }
+        if (_.isObject(obj)) {
+            if (_.isArray(obj)) {
+                obj.forEach((d, i) => {
+                    obj[i] = self.dehexify(d);
+                });
+            } else {
+                Object.keys(obj).forEach(k => {
+                    obj[k] = self.dehexify(obj[k]);
+                });
+            }
+        } else if (_.isString(obj)) {
+            obj = decodeURIComponent(obj);
+        }
+        return obj;
+    },
+    specifyAttrTypes: function (schema, obj) {
+        if (!_.isObject(obj)) {
+            return obj;
+        } else if ('identifier' in obj && 'type' in obj && obj.type === null) {
+            var attrType = self.getAttributeType(obj.identifier);
+            if (attrType !== 'object') {
+                // 'object' is really a passthrough; don't attempt
+                // any coercion while performing the filter
+                obj.type = attrType;
+            }
+        } else if (_.isArray(obj)) {
+            obj.forEach((d, i) => {
+                obj[i] = self.specifyAttrTypes(d);
+            });
+        } else {
+            Object.keys(obj).forEach(k => {
+                obj[k] = self.specifyAttrTypes(obj[k]);
+            });
+        }
+        return obj;
+    },
+    getFilterAstTree: function () {
+        var self = this;
+        var exprList = self.listAllFilterExpressions(true);
+
+        if (exprList.length > 0) {
+            var fullExpression = '(' + exprList.join(') and (') + ')';
+            var ast = self.parseToAst(fullExpression);
+            ast = self.dehexify(ast);
+            return self.specifyAttrTypes(ast);
+        } else {
+            return undefined;
         }
     }
 });
