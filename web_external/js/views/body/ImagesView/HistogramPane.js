@@ -58,6 +58,12 @@ isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
             .select('.title');
 
         // Add an arrow to collapse the section
+        /*
+        This code adds a little triangle to collapse each
+        histogram section; this doesn't quite function
+        correctly yet... (it's likely something as simple
+        as a bad CSS selector)
+
         sectionTitlesEnter.append('input')
             .attr('type', 'checkbox')
             .attr('class', 'expander');
@@ -74,6 +80,7 @@ isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
                     contentElement.addClass('collapsed');
                 }
             });
+        */
 
         // Label for the header
         sectionTitlesEnter.append('span');
