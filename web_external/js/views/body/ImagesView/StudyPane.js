@@ -15,7 +15,7 @@ isic.views.ImagesViewSubViews.StudyPane = Backbone.View.extend({
         var svg;
 
         if (!self.addedSvgElement) {
-            var svg = d3.select(self.el).append('svg')
+            svg = d3.select(self.el).append('svg')
                 .attr('class', 'content');
             self.histogram = new isic.views.ImagesViewSubViews.IndividualHistogram({
                 el: svg.node(),
@@ -24,9 +24,16 @@ isic.views.ImagesViewSubViews.StudyPane = Backbone.View.extend({
             });
             self.addedSvgElement = true;
         } else {
-            self.histogram.render();
-            // TODO: add special icons / listeners to each label
+            svg = d3.select(self.el).select('svg.content');
         }
+        self.histogram.render();
+
+        // Add special listeners to open a modal about each study
+        svg.select('.bins').selectAll('.bin')
+            .on('click', function (d) {
+                console.log('TODO: show a modal, describing the ' +
+                    d + ' study (folder id: ' + self.model.studyIdLookup[d] + ')');
+            });
         return this;
     }
 });

@@ -80,9 +80,11 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                     parentId: collectionId
                 }
             }).then(function (folderResp) {
-                self.folderIdLookup = {};
+                self.studyNameLookup = {};
+                self.studyIdLookup = {};
                 folderResp.forEach(function (folder) {
-                    self.folderIdLookup[folder['_id']] = folder['name'];
+                    self.studyNameLookup[folder['_id']] = folder['name'];
+                    self.studyIdLookup[folder['name']] = folder['_id'];
                 });
             });
         });
@@ -181,7 +183,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         Object.keys(histogram).forEach(function (attrName) {
             histogram[attrName].forEach(function (bin, index) {
                 if (attrName === 'folderId') {
-                    bin.label = self.folderIdLookup[bin.label];
+                    bin.label = self.studyNameLookup[bin.label];
                 } else if (_.isNumber(bin.lowBound) &&
                         _.isNumber(bin.highBound)) {
                     // binUtils.js doesn't have access to D3's superior number
