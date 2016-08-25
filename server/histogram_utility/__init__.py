@@ -80,12 +80,6 @@ class HistogramUtility(object):
             'folderId': {
                 'coerceToType': 'string'
             },
-            'meta.acquisition.pixelsX': {
-                'coerceToType': 'integer'
-            },
-            'meta.acquisition.pixelsY': {
-                'coerceToType': 'integer'
-            },
             'meta.clinical.benign_malignant': {
                 'coerceToType': 'string'
             },
@@ -94,6 +88,7 @@ class HistogramUtility(object):
             },
             'meta.clinical.age': {
                 'coerceToType': 'number',
+                'interpretation': 'ordinal',
                 'lowBound': 0,
                 'highBound': 100
             }
@@ -218,10 +213,6 @@ class HistogramUtility(object):
         # lowBound / highBound details to each ordinal bin
         for attrName, wrappedHistogram in histogram.iteritems():
             histogram[attrName] = wrappedHistogram['histogram']
-            if attrName in binSettings and 'ordinalBins' in binSettings[attrName]:
-                for binIndex, binObj in enumerate(binSettings[attrName]['ordinalBins']):
-                    histogram[attrName][binIndex]['lowBound'] = binObj['lowBound']
-                    histogram[attrName][binIndex]['highBound'] = binObj['highBound']
 
         if '__passedFilters__' not in histogram:
             # This will only happen if there's a count of zero;

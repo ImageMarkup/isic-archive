@@ -38,12 +38,6 @@ window.ENUMS.SCHEMA = {
     'folderId': {
         'coerceToType': 'string'
     },
-    'meta.acquisition.pixelsX': {
-        'coerceToType': 'integer'
-    },
-    'meta.acquisition.pixelsY': {
-        'coerceToType': 'integer'
-    },
     'meta.clinical.benign_malignant': {
         'coerceToType': 'string'
     },
@@ -52,6 +46,7 @@ window.ENUMS.SCHEMA = {
     },
     'meta.clinical.age': {
         'coerceToType': 'number',
+        'interpretation': 'ordinal',
         'lowBound': 0,
         'highBound': 100
     }
