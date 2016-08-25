@@ -13,10 +13,14 @@ isic.views.ImagesSubViews.ImageDetailsPane = Backbone.View.extend({
     },
 
     render: function () {
-        // Get clinical metadata from image
+        // Get metadata from image
+        var acquisitionMetadata = null;
         var clinicalMetadata = null;
         if (this.image.has('meta')) {
             var meta = this.image.get('meta');
+            if (_.has(meta, 'acquisition')) {
+                acquisitionMetadata = meta['acquisition'];
+            }
             if (_.has(meta, 'clinical')) {
                 clinicalMetadata = meta['clinical'];
             }
@@ -25,6 +29,7 @@ isic.views.ImagesSubViews.ImageDetailsPane = Backbone.View.extend({
         this.$el.html(isic.templates.imageDetailsPage({
             imgRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/img',
             image: this.image,
+            acquisitionMetadata: acquisitionMetadata,
             clinicalMetadata: clinicalMetadata
         }));
 
