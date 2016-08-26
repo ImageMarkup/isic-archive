@@ -1,21 +1,51 @@
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
+// View for image details
 isic.views.ImagesViewSubViews.ImageDetailsPane = Backbone.View.extend({
-    initialize: function () {
-        var self = this;
-        self.listenTo(self.model, 'change:selectedImageId', this.render);
+    events: {
+        'click .button': 'clearSelectedImage'
     },
+    initialize: function () {
+        this.image = new isic.models.ImageModel();
+        this.listenTo(this.image, 'change', this.render);
+        this.listenTo(this.model, 'change:selectedImageId', this.fetchImage);
+    },
+
     render: function () {
-        var self = this;
-        if (!self.addedDomListeners) {
-            self.$el.find('.button').on('click',
-                function () {
-                    self.model.set('selectedImageId', null);
-                });
-            self.addedDomListeners = true;
+        // Get metadata from image
+        var acquisitionMetadata = null;
+        var clinicalMetadata = null;
+        if (this.image.has('meta')) {
+            var meta = this.image.get('meta');
+            if (_.has(meta, 'acquisition')) {
+                acquisitionMetadata = meta['acquisition'];
+            }
+            if (_.has(meta, 'clinical')) {
+                clinicalMetadata = meta['clinical'];
+            }
         }
 
-        self.$el.find('pre').html(self.model.get('selectedImageId'));
+        this.$el.html(isic.templates.imageDetailsPage({
+            imgRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/img',
+            image: this.image,
+            acquisitionMetadata: acquisitionMetadata,
+            clinicalMetadata: clinicalMetadata
+        }));
+
         return this;
+    },
+
+    clearSelectedImage: function () {
+        this.model.set('selectedImageId', null);
+    },
+
+    fetchImage: function () {
+        var imageId = this.model.get('selectedImageId');
+        if (imageId) {
+            this.image.set('_id', imageId);
+            this.image.fetch();
+        } else {
+            this.image.clear();
+        }
     }
 });

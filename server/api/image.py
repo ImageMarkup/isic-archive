@@ -86,11 +86,21 @@ class ImageResource(Resource):
     @access.public
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def getImage(self, image, params):
+        Dataset = self.model('dataset', 'isic_archive')
         Image = self.model('image', 'isic_archive')
         User = self.model('user')
 
         output = Image.filter(image, self.getCurrentUser())
         output['_modelType'] = 'image'
+
+        output['dataset'] = Dataset.load(
+            output.pop('folderId'),
+            force=True, exc=True,
+            # Work around a bug in upstream Girder
+            fields=Dataset.summaryFields + ['baseParentType', 'lowerName']
+        )
+        del output['dataset']['baseParentType']
+        del output['dataset']['lowerName']
 
         userSummaryFields = ['_id', 'login', 'firstName', 'lastName']
         output['creator'] = User.load(

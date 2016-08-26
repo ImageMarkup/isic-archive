@@ -1,0 +1,22 @@
+.isic-image-details-container
+  .button
+    img(src='#{imgRoot}/ex.svg')
+
+  if image.id
+    h3.isic-image-details-name= image.name()
+
+    if clinicalMetadata
+      h4.isic-image-details-clinical-metadata-header Clinical Metadata:
+      .isic-image-details-clinical-metadata-content
+          dl
+            each value, key in clinicalMetadata
+              dt= key
+              dd= value
+
+    if acquisitionMetadata
+      h4.isic-image-details-acquisition-metadata-header Acquisition Metadata:
+      .isic-image-details-acquisition-metadata-content
+        dl
+          each value, key in acquisitionMetadata
+            dt= key
+            dd= value
