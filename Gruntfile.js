@@ -136,6 +136,15 @@ module.exports = function (grunt) {
             });
             defaultTasks.push('copy:' + pluginName);
         }
+
+        grunt.config.set('copy.' + pluginName + '_libs', {
+            expand: true,
+            cwd: pluginDir + '/bower_components',
+            src: ['pegjs/peg-0.10.0.min.js'],
+            dest: staticDir
+        });
+        defaultTasks.push('copy:' + pluginName + '_libs');
+
     };
 
     configureIsicArchive();
