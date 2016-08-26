@@ -40,7 +40,7 @@ class Image(ItemModel):
         self._filterKeys[AccessType.READ].clear()
         self.exposeFields(level=AccessType.READ, fields=[
             '_id', 'name', 'description', 'meta', 'created', 'creatorId',
-            'updated',
+            'updated', 'folderId'
             # TODO: re-add once converted file no longer contributes to size
             # 'size',
         ])
