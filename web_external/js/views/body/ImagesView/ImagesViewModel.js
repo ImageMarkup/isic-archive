@@ -112,13 +112,14 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             data: requestParams
         }).then(function (resp) {
             self.set(histogramName + 'Histogram',
-                self.postProcessHistogram(resp));
+                self.postProcessHistogram(resp), {silent: true});
+            self.trigger('change:' + histogramName + 'Histogram');
         });
     },
     updateFilters: function () {
         var self = this;
-        return jQuery.when(self.updateHistogram('filteredSet'),
-                           self.updateCurrentPage());
+        self.updateHistogram('filteredSet');
+        self.updateCurrentPage();
     },
     updateCurrentPage: function () {
         var self = this;
@@ -159,7 +160,8 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         }).then(function (resp) {
             self.set('imageIds', resp.map(function (imageObj) {
                 return imageObj._id;
-            }));
+            }), {silent: true});
+            self.trigger('change:imageIds');
         });
         var histogramRequest = self.updateHistogram('page');
         return jQuery.when(imageListRequest, histogramRequest);
