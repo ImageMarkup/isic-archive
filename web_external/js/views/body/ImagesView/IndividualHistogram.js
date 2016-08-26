@@ -42,7 +42,7 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
             .scale(yScale)
             .orient('left')
             .ticks(Math.min(4, self.scale.yMax))
-            .tickFormat(d3.format('0.3s'));
+            .tickFormat(d3.format('s'));
         var yAxisObj = svg.select('.yAxis')
             .attr('transform', 'translate(' + self.scale.leftAxisPadding + ',0)')
             .call(yAxis);
