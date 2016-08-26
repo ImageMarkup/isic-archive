@@ -1,20 +1,19 @@
-/*globals girder, jQuery, Image, recolorImageFilters*/
-
-isic.views.ImagesSubViews = isic.views.ImagesSubViews || {};
+isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
 isic.views.ImagesView = isic.View.extend({
     initialize: function () {
         var self = this;
-        self.model = new isic.views.ImagesViewModel();
+        self.model = new isic.views.ImagesViewSubViews.ImagesViewModel();
 
         // Initialize our subviews
         var params = {
             model: self.model
         };
-        self.histogramPane = new isic.views.ImagesSubViews.HistogramPane(params);
-        self.imageWall = new isic.views.ImagesSubViews.ImageWall(params);
-        self.pagingPane = new isic.views.ImagesSubViews.PagingPane(params);
-        self.imageDetailsPane = new isic.views.ImagesSubViews.ImageDetailsPane(params);
+        self.studyPane = new isic.views.ImagesViewSubViews.StudyPane(params);
+        self.histogramPane = new isic.views.ImagesViewSubViews.HistogramPane(params);
+        self.imageWall = new isic.views.ImagesViewSubViews.ImageWall(params);
+        self.pagingPane = new isic.views.ImagesViewSubViews.PagingPane(params);
+        self.imageDetailsPane = new isic.views.ImagesViewSubViews.ImageDetailsPane(params);
 
         window.onresize = function () {
             self.render();
@@ -37,7 +36,8 @@ isic.views.ImagesView = isic.View.extend({
             self.$el.html(isic.templates.imagesPage({
                 staticRoot: girder.staticRoot
             }));
-            recolorImageFilters(['#00ABFF', '#444499', '#CCCCCC']);
+            window.shims.recolorImageFilters(['#00ABFF', '#444499', '#CCCCCC']);
+            self.studyPane.setElement(self.$el.find('#isic-images-studyPane')[0]);
             self.histogramPane.setElement(self.$el.find('#isic-images-histogramPane')[0]);
             self.imageWall.setElement(self.$el.find('#isic-images-imageWall')[0]);
             self.pagingPane.setElement(self.$el.find('#isic-images-pagingPane')[0]);
@@ -46,6 +46,7 @@ isic.views.ImagesView = isic.View.extend({
         }
         self.imageWall.render();
         self.pagingPane.render();
+        self.studyPane.render();
         self.histogramPane.render();
         self.imageDetailsPane.render();
 

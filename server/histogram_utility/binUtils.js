@@ -19,7 +19,11 @@ function coerceValue(value, coerceToType) {
     } else if (coerceToType === 'number') {
         value = parseFloat(value);
     } else if (coerceToType === 'string') {
-        value = String(value);
+        if (value && value.str) {
+            value = value.str;
+        } else {
+            value = String(value);
+        }
     } else if (coerceToType === 'date') {
         value = new Date(value);
         // TODO: apply smarter date coercion in the vein of the stuff below
