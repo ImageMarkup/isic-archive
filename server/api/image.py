@@ -128,7 +128,7 @@ class ImageResource(Resource):
         Description('Download an image\'s high-quality original binary data.')
         .param('id', 'The ID of the image.', paramType='path')
         .param('contentDisposition', 'Specify the Content-Disposition response '
-               'header disposition-type value', required=False,
+               'header disposition-type value.', required=False,
                enum=['inline', 'attachment'])
         .errorResponse('ID was invalid.')
     )

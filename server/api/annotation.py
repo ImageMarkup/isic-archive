@@ -19,10 +19,14 @@
 
 import datetime
 
+import cherrypy
+
 from girder.api import access
-from girder.api.rest import Resource, RestException, loadmodel
+from girder.api.rest import Resource, RestException, loadmodel, rawResponse
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
+
+from ..models.segmentation_helpers import ScikitSegmentationHelper
 
 
 class AnnotationResource(Resource):
@@ -32,6 +36,7 @@ class AnnotationResource(Resource):
 
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getAnnotation)
+        self.route('GET', (':id', 'render'), self.renderAnnotation)
         self.route('PUT', (':id',), self.submitAnnotation)
 
     @describeRoute(
@@ -128,6 +133,65 @@ class AnnotationResource(Resource):
             fields=Image.summaryFields)
 
         return output
+
+    @describeRoute(
+        Description('Render an annotation feature, overlaid on its image.')
+        .param('id', 'The ID of the annotation to be rendered.',
+               paramType='path')
+        .param('featureId', 'The feature ID to be rendered.',
+               paramType='query', required=True)
+        .param('contentDisposition',
+               'Specify the Content-Disposition response '
+               'header disposition-type value.', required=False,
+               enum=['inline', 'attachment'])
+        .errorResponse()
+    )
+    @access.cookie
+    @access.public
+    @rawResponse
+    @loadmodel(model='annotation', plugin='isic_archive', level=AccessType.READ)
+    def renderAnnotation(self, annotation, params):
+        Study = self.model('study', 'isic_archive')
+        Annotation = self.model('annotation', 'isic_archive')
+        contentDisp = params.get('contentDisposition', None)
+        if contentDisp is not None and \
+                contentDisp not in {'inline', 'attachment'}:
+            raise RestException('Unallowed contentDisposition type "%s".' %
+                                contentDisp)
+
+        self.requireParams(('featureId',), params)
+        featureId = params['featureId']
+
+        study = Study.load(annotation['meta']['studyId'], force=True)
+        featureset = Study.getFeatureset(study)
+
+        if not any(featureId == feature['id']
+                   for feature in
+                   featureset['region_features']):
+            raise RestException('Invalid featureId.')
+        if Annotation.getState(annotation) != Study.State.COMPLETE:
+            raise RestException('Only complete annotations can be rendered.')
+
+        renderData = Annotation.renderAnnotation(annotation, featureId)
+
+        renderEncodedStream = ScikitSegmentationHelper.writeImage(
+            renderData, 'jpeg')
+        renderEncodedData = renderEncodedStream.getvalue()
+
+        cherrypy.response.headers['Content-Type'] = 'image/jpeg'
+        contentName = '%s_%s_annotation.jpg' % (
+            annotation['_id'],
+            featureId.replace('/', ',')  # TODO: replace with a better character
+        )
+        if contentDisp == 'inline':
+            cherrypy.response.headers['Content-Disposition'] = \
+                'inline; filename="%s"' % contentName
+        else:
+            cherrypy.response.headers['Content-Disposition'] = \
+                'attachment; filename="%s"' % contentName
+        cherrypy.response.headers['Content-Length'] = len(renderEncodedData)
+
+        return renderEncodedData
 
     @describeRoute(
         Description('Submit a completed annotation.')
