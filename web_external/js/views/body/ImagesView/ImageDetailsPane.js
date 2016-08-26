@@ -1,14 +1,20 @@
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
 // View for image details
-isic.views.ImagesViewSubViews.ImageDetailsPane = Backbone.View.extend({
+isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
     events: {
         'click .button': 'clearSelectedImage'
     },
+
     initialize: function () {
         this.image = new isic.models.ImageModel();
         this.listenTo(this.image, 'g:fetched', this.render);
-        this.listenTo(this.model, 'change:selectedImageId', this.fetchImage);
+        this.listenTo(this.model, 'change:selectedImageId', this.selectedImageChanged);
+
+        this.segmentationsDisplayView = new isic.views.SegmentationsDisplayView({
+            image: this.image,
+            parentView: this
+        });
     },
 
     render: function () {
@@ -41,6 +47,9 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = Backbone.View.extend({
             clinicalMetadata: clinicalMetadata
         }));
 
+        this.segmentationsDisplayView.setElement(
+            this.$('#isic-image-details-segmentations-display-view-container')).render();
+
         return this;
     },
 
@@ -48,8 +57,10 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = Backbone.View.extend({
         this.model.set('selectedImageId', null);
     },
 
-    fetchImage: function () {
+    selectedImageChanged: function () {
         var imageId = this.model.get('selectedImageId');
+
+        // Fetch or clear image details
         if (imageId) {
             this.image.set('_id', imageId);
             this.image.fetch();
