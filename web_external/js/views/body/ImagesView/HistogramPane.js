@@ -24,10 +24,11 @@ isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
                     return sheet.href &&
                         sheet.href.indexOf('isic_archive.min.css') !== -1;
                 })[0];
-            isicStylesheet.addRule('#isic-images-histogramPane ' +
-                '.attributeSection .header input.expander:before',
-                'background-image: url(' + girder.staticRoot +
-                    '/built/plugins/isic_archive/extra/img/collapse.svg);');
+            isicStylesheet.insertRule('#isic-images-histogramPane ' +
+                '.attributeSection .header input.expander:before ' +
+                '{background-image: url(' + girder.staticRoot +
+                    '/built/plugins/isic_archive/extra/img/collapse.svg);}',
+                0);
             self.addedCollapseImage = true;
         }
 
