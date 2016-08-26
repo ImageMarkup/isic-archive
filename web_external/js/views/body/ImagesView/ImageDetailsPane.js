@@ -1,11 +1,10 @@
-isic.views.ImagesSubViews = isic.views.ImagesSubViews || {};
+isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
 // View for image details
-isic.views.ImagesSubViews.ImageDetailsPane = Backbone.View.extend({
+isic.views.ImagesViewSubViews.ImageDetailsPane = Backbone.View.extend({
     events: {
         'click .button': 'clearSelectedImage'
     },
-
     initialize: function () {
         this.image = new isic.models.ImageModel();
         this.listenTo(this.image, 'change', this.render);

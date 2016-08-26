@@ -1,18 +1,17 @@
-/*globals girder, jQuery, d3, Image*/
+/*globals d3*/
+isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
-isic.views.ImagesSubViews = isic.views.ImagesSubViews || {};
-
-isic.views.ImagesSubViews.PagingPane = Backbone.View.extend({
+isic.views.ImagesViewSubViews.PagingPane = Backbone.View.extend({
     initialize: function () {
         var self = this;
         self.listenTo(self.model, 'change:imageIds', self.render);
-        self.listenTo(self.model, 'change:overviewHistogram', self.renderBars);
+        self.listenTo(self.model, 'change:filteredSetHistogram', self.render);
         self.listenTo(self.model, 'change:offset', self.updateControls);
         self.listenTo(self.model, 'change:limit', self.updateControls);
     },
     renderBars: function () {
         var self = this;
-        var pageDetails = self.model.getPageDetails();
+        var pageDetails = self.model.getPageDetails(true);
 
         // Scale for the bars
         var pageScale = d3.scale.linear()
@@ -49,7 +48,7 @@ isic.views.ImagesSubViews.PagingPane = Backbone.View.extend({
     },
     updateControls: function () {
         var self = this;
-        var pageDetails = self.model.getPageDetails();
+        var pageDetails = self.model.getPageDetails(true);
 
         var hasFilters = pageDetails.filteredSetCount < pageDetails.overviewCount;
         var hasPaging = pageDetails.limit < pageDetails.filteredSetCount;
@@ -150,7 +149,7 @@ isic.views.ImagesSubViews.PagingPane = Backbone.View.extend({
     },
     seekLast: function () {
         var self = this;
-        var details = self.model.getPageDetails();
+        var details = self.model.getPageDetails(true);
         self.model.set('offset',
             Math.floor(details.filteredSetCount / details.limit) * details.limit);
     }

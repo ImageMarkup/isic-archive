@@ -1,6 +1,12 @@
-$overviewColor = #a8ddb5;
-$filteredSetColor = #4eb3d3;
-$pageColor = #08589e;
+$overviewColor = #a8ddb5
+$filteredSetColor = #4eb3d3
+$pageColor = #08589e
+
+$rolloverImageFilter = url(#recolorImageTo00ABFF)
+$selectedImageFilter = url(#recolorImageTo444499)
+$disabledImageFilter = url(#recolorImageToCCCCCC)
+
+$dataAxisColor = #333333
 
 #galleryContent
     position relative
@@ -54,16 +60,16 @@ $pageColor = #08589e;
 
         &.selected
             img
-                -webkit-filter url(#recolorImageTo00ABFF)
-                filter url(#recolorImageTo00ABFF)
+                -webkit-filter $selectedImageFilter
+                filter $selectedImageFilter
 
         &:hover
             border 1px solid #E2E2E2
             background linear-gradient(to bottom, #fff 60%, #f6f6f6 100%)
 
             img
-                -webkit-filter url(#recolorImageTo444499)
-                filter url(#recolorImageTo444499)
+                -webkit-filter $rolloverImageFilter
+                filter $rolloverImageFilter
 
         &.disabled
         &.disabled:hover
@@ -72,16 +78,8 @@ $pageColor = #08589e;
             cursor default
 
             img
-                -webkit-filter url(#recolorImageToCCCCCC)
-                filter url(#recolorImageToCCCCCC)
-
-    /* Study pane */
-    #isic-images-studyPane
-        /*! NoOp */
-
-    /* Study text pane */
-    #isic-images-studyTextPane
-        /*! NoOp */
+                -webkit-filter $disabledImageFilter
+                filter $disabledImageFilter
 
     /* Image wall */
     #isic-images-imageWall
@@ -92,10 +90,10 @@ $pageColor = #08589e;
         image
             cursor pointer
 
-    rect#highlightOutline
-        fill none
-        stroke #00ABFF
-        stroke-width 4px
+        rect#highlightOutline
+            fill none
+            stroke #00ABFF
+            stroke-width 4px
 
     /* Paging pane */
     #isic-images-pagingPane
@@ -149,9 +147,91 @@ $pageColor = #08589e;
             .page.bar
                 background-color $pageColor
 
-    /* Histogram pane */
+    /* Study and Histogram panes */
+    #isic-images-studyPane
     #isic-images-histogramPane
-        /*! NoOp */
+        img.button:hover
+        image.button:hover
+            -webkit-filter $rolloverImageFilter
+            filter $rolloverImageFilter
+
+        img.button.disabled
+        image.button.disabled
+            -webkit-filter $disabledImageFilter
+            filter $disabledImageFilter
+
+        .overview
+            fill $overviewColor
+
+        .filteredSet
+            fill $filteredSetColor
+
+        .page
+            fill $pageColor
+
+        .attributeSection
+            position relative
+            width 100%
+
+            .header
+                width 100%
+                display flex
+                justify-content space-between
+                align-items center
+                line-height 1.5em
+
+                input.expander
+                    position relative
+                    left -999em
+                    width 1em
+                input.expander:before
+                    display inline-block
+                    position relative
+                    content ''
+                    cursor pointer
+                    width 1em
+                    height 1em
+                    left 999em
+                    top -0.25em
+                input.expander:checked:before
+                    -webkit-transform rotate(90deg)
+                    transform rotate(90deg)
+
+                img
+                    width 1em
+                    height 1em
+                img.button
+                    margin-left 0.5em
+
+                input.expander:hover:before
+                img.button:hover
+                    cursor pointer
+                    -webkit-filter $rolloverImageFilter
+                    filter $rolloverImageFilter
+
+                span
+                    position relative
+                    left 0.25em
+
+        .content
+            position relative
+            width 100%
+            margin-bottom 1em
+            overflow-x auto
+
+            .collapsed
+                display none
+
+            .yAxis line
+            .yAxis path
+                fill none
+                stroke $dataAxisColor
+                stroke-width 1px
+
+            .yAxisKnob
+                cursor ns-resize
+                fill $dataAxisColor
+                stroke none
 
     /* Image details pane */
     #isic-images-imageDetailsPane

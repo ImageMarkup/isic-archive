@@ -18,12 +18,13 @@
 ###############################################################################
 
 import datetime
+import numpy
 import six
 
 from bson import ObjectId
 
 from girder.models.item import Item as ItemModel
-from girder.models.model_base import ValidationException
+from girder.models.model_base import ValidationException, GirderException
 
 
 class Annotation(ItemModel):
@@ -54,6 +55,65 @@ class Annotation(ItemModel):
         return (Study.State.COMPLETE
                 if annotation['meta'].get('stopTime') is not None
                 else Study.State.ACTIVE)
+
+    def _getImageMasks(self, annotation, featureId, image=None):
+        Image = self.model('image', 'isic_archive')
+        Study = self.model('study', 'isic_archive')
+
+        if self.getState(annotation) != Study.State.COMPLETE:
+            raise GirderException('Annotation is incomplete.')
+
+        featureValues = annotation['meta']['annotations'].get(featureId, [])
+        if not isinstance(featureValues, list):
+            raise GirderException(
+                'Feature %s is not a superpixel annotation.' % featureId)
+
+        possibleSuperpixelNums = numpy.array([
+            superpixelNum
+            for superpixelNum, featureValue
+            in enumerate(featureValues)
+            if featureValue == 0.5
+        ])
+        definiteSuperpixelNums = numpy.array([
+            superpixelNum
+            for superpixelNum, featureValue
+            in enumerate(featureValues)
+            if featureValue == 1.0
+        ])
+
+        if not image:
+            image = Image.load(annotation['meta']['imageId'], force=True)
+        superpixelsData = Image.superpixelsData(image)
+
+        possibleMask = numpy.in1d(
+            superpixelsData.flat,
+            possibleSuperpixelNums
+        ).reshape(superpixelsData.shape)
+        possibleMask = possibleMask.astype(numpy.bool_)
+        definiteMask = numpy.in1d(
+            superpixelsData.flat,
+            definiteSuperpixelNums
+        ).reshape(superpixelsData.shape)
+        definiteMask = definiteMask.astype(numpy.bool_)
+
+        return possibleMask, definiteMask
+
+    def renderAnnotation(self, annotation, featureId):
+        Image = self.model('image', 'isic_archive')
+
+        image = Image.load(annotation['meta']['imageId'], force=True)
+        renderData = Image.imageData(image)
+
+        possibleMask, definiteMask = self._getImageMasks(
+            annotation, featureId, image)
+
+        POSSIBLE_OVERLAY_COLOR = numpy.array([250, 250, 0])
+        DEFINITE_OVERLAY_COLOR = numpy.array([0, 0, 255])
+
+        renderData[possibleMask] = POSSIBLE_OVERLAY_COLOR
+        renderData[definiteMask] = DEFINITE_OVERLAY_COLOR
+
+        return renderData
 
     def _findQueryFilter(self, query):
         Study = self.model('study', 'isic_archive')
