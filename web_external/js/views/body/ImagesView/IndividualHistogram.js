@@ -48,6 +48,8 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
             .call(yAxis);
 
         // Move the special buttons into place and attach their events
+        this.$el.find('.selectAllBins').hide();
+        /*
         svg.select('.selectAllBins')
             .attr('transform', 'translate(' +
                 (self.scale.leftAxisPadding - 0.5 * emSize) + ',' +
@@ -56,6 +58,7 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
             .on('click', function () {
                 self.model.clearFilters(self.attrName);
             });
+        */
 
         // Draw the bin groups
         var labels = self.scale.overviewHistogram.map(function (d) {
