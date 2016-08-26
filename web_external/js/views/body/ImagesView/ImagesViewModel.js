@@ -5,28 +5,6 @@
 
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
-    initialize: function () {
-        var self = this;
-
-        // Load the pegjs grammar and get the study names
-        // before attempting to get histograms or image IDs
-        jQuery.when(self.getStudyNames(), self.loadFilterGrammar())
-            .then(function () {
-                // We need the study names before getting any histograms
-                self.updateHistogram('overview');
-                // We need the study names and the filter grammar before getting
-                // the filtered set or the current page (both the page of images
-                // and the page histogram)
-                self.updateFilters();
-            });
-
-        self.listenTo(self, 'change:limit', self.updateCurrentPage);
-        self.listenTo(self, 'change:offset', self.updateCurrentPage);
-        self.listenTo(self, 'change:filter', self.updateFilters);
-        self.listenTo(self, 'change:imageIds', function () {
-            self.set('selectedImageId', null);
-        });
-    },
     defaults: {
         limit: 50,
         offset: 0,
@@ -60,6 +38,28 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                 label: 'count'
             }]
         }
+    },
+    initialize: function () {
+        var self = this;
+
+        // Load the pegjs grammar and get the study names
+        // before attempting to get histograms or image IDs
+        jQuery.when(self.getStudyNames(), self.loadFilterGrammar())
+            .then(function () {
+                // We need the study names before getting any histograms
+                self.updateHistogram('overview');
+                // We need the study names and the filter grammar before getting
+                // the filtered set or the current page (both the page of images
+                // and the page histogram)
+                self.updateFilters();
+            });
+
+        self.listenTo(self, 'change:limit', self.updateCurrentPage);
+        self.listenTo(self, 'change:offset', self.updateCurrentPage);
+        self.listenTo(self, 'change:filter', self.updateFilters);
+        self.listenTo(self, 'change:imageIds', function () {
+            self.set('selectedImageId', null);
+        });
     },
     getStudyNames: function () {
         var self = this;
@@ -145,7 +145,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         self.set({
             limit: pageDetails.limit,
             offset: pageDetails.offset
-        }, {silent: true});
+        }, {silent: true}); // eslint-disable-line no-silent
 
         // Pass in filter settings
         pageDetails.filter = self.getFilterAstTree();
@@ -324,7 +324,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         // event (because the object reference matches).
         // Instead, we silently set the filter (so there
         // aren't two events), and trigger the event manually
-        self.set('filter', filter, {silent: true});
+        self.set('filter', filter, {silent: true}); // eslint-disable-line no-silent
         self.trigger('change:filter');
     },
     clearFilters: function (attrName) {
