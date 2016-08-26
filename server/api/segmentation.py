@@ -121,7 +121,7 @@ class SegmentationResource(Resource):
         .param('width', 'The desired width for the thumbnail.',
                paramType='query', required=False, default=256)
         .param('contentDisposition', 'Specify the Content-Disposition response '
-               'header disposition-type value', required=False,
+               'header disposition-type value.', required=False,
                enum=['inline', 'attachment'])
         .errorResponse('ID was invalid.')
     )

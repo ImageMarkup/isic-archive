@@ -182,7 +182,11 @@ isic.views.StudyResultsFeatureImageView = isic.View.extend({
         var annotationId = this.model.get('annotationId');
         var imageUrl = null;
         if (featureId && annotationId) {
-            imageUrl = [girder.apiRoot, 'annotation', annotationId, 'image', featureId].join('/');
+            imageUrl = [
+                girder.apiRoot,
+                'annotation', annotationId,
+                'render?contentDisposition=inline&featureId='
+            ].join('/') + encodeURIComponent(featureId);
         }
 
         this.$el.html(isic.templates.studyResultsFeatureImagePage({
