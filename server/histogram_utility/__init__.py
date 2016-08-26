@@ -214,6 +214,10 @@ class HistogramUtility(object):
         # lowBound / highBound details to each ordinal bin
         for attrName, wrappedHistogram in histogram.iteritems():
             histogram[attrName] = wrappedHistogram['histogram']
+            if attrName in binSettings and 'ordinalBins' in binSettings[attrName]:
+                for binIndex, binObj in enumerate(binSettings[attrName]['ordinalBins']):
+                    histogram[attrName][binIndex]['lowBound'] = binObj['lowBound']
+                    histogram[attrName][binIndex]['highBound'] = binObj['highBound']
 
         if '__passedFilters__' not in histogram:
             # This will only happen if there's a count of zero;
