@@ -154,7 +154,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             data: {
                 limit: pageDetails.limit,
                 offset: pageDetails.offset,
-                filter: self.getFilterAstTree()
+                filter: JSON.stringify(self.getFilterAstTree())
             }
         }).then(function (resp) {
             self.set('imageIds', resp.map(function (imageObj) {
