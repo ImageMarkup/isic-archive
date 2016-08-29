@@ -103,7 +103,7 @@ isic.collections.GlobalFeatureResultCollection = Backbone.Collection.extend({
                 id: featureId,
                 name: featureNames.join(', ')
             });
-            if (annotations) {
+            if (annotations && _.has(annotations, featureId)) {
                 var featureOptions = _.indexBy(feature['options'], 'id');
                 var resultId = annotations[featureId];
                 var resultName = featureOptions[resultId]['name'];
