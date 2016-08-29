@@ -5,8 +5,7 @@
 // View for displaying an image segmentation's properties
 isic.views.SegmentationDisplayView = isic.View.extend({
     initialize: function (settings) {
-        this.listenTo(this.model, 'change', this.render);
-        this.listenTo(this.model, 'g:fetched', this.render);
+        this.listenTo(this.model, 'change:_id g:fetched g:error', this.render);
 
         this.render();
     },
@@ -58,8 +57,7 @@ isic.views.SegmentationsDisplayView = isic.View.extend({
             parentView: this
         });
 
-        this.listenTo(this.image, 'change', this.fetchSegmentations);
-        this.listenTo(this.image, 'g:fetched', this.fetchSegmentations);
+        this.listenTo(this.image, 'change:_id', this.fetchSegmentations);
 
         this.render();
     },
@@ -77,11 +75,12 @@ isic.views.SegmentationsDisplayView = isic.View.extend({
 
     fetchSegmentations: function () {
         this.segmentation.clear();
+        this.segmentations.reset();
 
         this.render();
 
         if (this.image.id) {
-            this.segmentations.once('g:fetched', _.bind(function () {
+            this.segmentations.once('g:changed', _.bind(function () {
                 this.render();
             }, this)).fetch({
                 imageId: this.image.id

@@ -8,7 +8,7 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
 
     initialize: function () {
         this.image = new isic.models.ImageModel();
-        this.listenTo(this.image, 'g:fetched', this.render);
+        this.listenTo(this.image, 'g:fetched g:error', this.render);
         this.listenTo(this.model, 'change:selectedImageId', this.selectedImageChanged);
 
         this.segmentationsDisplayView = new isic.views.SegmentationsDisplayView({
