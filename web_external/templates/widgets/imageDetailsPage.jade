@@ -15,6 +15,13 @@
         tr
           td Created
           td= created
+        tr
+          td License
+          td
+            if license.url
+              a(target="_blank", href=license.url)= license.name
+            else
+              = license.name
 
         tr
           td.isic-image-details-table-section-header(colspan=2) Clinical Metadata
