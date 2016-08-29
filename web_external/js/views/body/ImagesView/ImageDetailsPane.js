@@ -30,13 +30,10 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
             clinicalMetadata = meta['clinical'];
 
             // Reformat some acquisition metadata
-            if (_.has(acquisitionMetadata, 'pixelsX') &&
-                _.has(acquisitionMetadata, 'pixelsY')) {
-                acquisitionMetadata['Dimensions (pixels)'] =
-                    acquisitionMetadata['pixelsX'] + ' &times; ' + acquisitionMetadata['pixelsY'];
-                delete acquisitionMetadata['pixelsX'];
-                delete acquisitionMetadata['pixelsY'];
-            }
+            acquisitionMetadata['Dimensions (pixels)'] =
+                acquisitionMetadata['pixelsX'] + ' &times; ' + acquisitionMetadata['pixelsY'];
+            delete acquisitionMetadata['pixelsX'];
+            delete acquisitionMetadata['pixelsY'];
         }
 
         this.$el.html(isic.templates.imageDetailsPage({
