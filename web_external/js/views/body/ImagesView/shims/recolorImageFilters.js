@@ -10,7 +10,10 @@ window.shims = window.shims || {};
 window.shims.recolorImageFilters = function (colorList) {
     var svgDefs = d3.select('body').append('svg')
         .attr('id', 'recolorImageFilters')
+        .attr('width', '0')
+        .attr('height', '0')
         .append('defs');
+    // TODO: can svg element be hidden properly, not just made 0x0?
 
     // Collect all colors in use
     var allColors = {};

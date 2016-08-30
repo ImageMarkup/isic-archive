@@ -15,7 +15,11 @@ isic.views.ImagesViewSubViews.StudyPane = Backbone.View.extend({
         var svg;
 
         if (!self.addedSvgElement) {
-            svg = d3.select(self.el).append('svg')
+            this.$el.html(isic.templates.imageStudyPage({
+                title: 'Dataset'
+            }));
+            var histogramContainer = this.$('.isic-image-study-histogram-container');
+            svg = d3.select(histogramContainer.get(0)).append('svg')
                 .attr('class', 'content');
             self.histogram = new isic.views.ImagesViewSubViews.IndividualHistogram({
                 el: svg.node(),

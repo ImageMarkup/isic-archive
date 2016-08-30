@@ -1,3 +1,5 @@
+@import 'nib'
+
 $overviewColor = #a8ddb5
 $filteredSetColor = #4eb3d3
 $pageColor = #08589e
@@ -15,9 +17,6 @@ $dataAxisColor = #333333
     display flex
     width 100%
     flex-wrap nowrap
-    -ms-user-select none
-    -moz-user-select none
-    -webkit-user-select none
 
     .flexRow
         display flex
@@ -81,6 +80,9 @@ $dataAxisColor = #333333
                 -webkit-filter $disabledImageFilter
                 filter $disabledImageFilter
 
+    .isic-images-image-container
+      overflow auto
+
     /* Image wall */
     #isic-images-imageWall
         overflow-y auto
@@ -104,6 +106,7 @@ $dataAxisColor = #333333
         display flex
         flex-wrap nowrap
         align-items center
+        user-select none
 
         #isic-images-pagingTools
             align-items: center;
@@ -178,7 +181,7 @@ $dataAxisColor = #333333
                 display flex
                 justify-content space-between
                 align-items center
-                line-height 1.5em
+                line-height 2.0
 
                 input.expander
                     position relative
@@ -213,11 +216,14 @@ $dataAxisColor = #333333
                     position relative
                     left 0.25em
 
+                .title
+                    font-size 20px
+
         .content
             position relative
             width 100%
-            margin-bottom 1em
             overflow-x auto
+            user-select none
 
             .collapsed
                 display none
