@@ -3,20 +3,38 @@
     img(src='#{imgRoot}/ex.svg')
 
   if image.id
-    h3.isic-image-details-name= image.name()
+    .isic-image-details-name= image.name()
 
-    if clinicalMetadata
-      h4.isic-image-details-clinical-metadata-header Clinical Metadata:
-      .isic-image-details-clinical-metadata-content
-          dl
-            each value, key in clinicalMetadata
-              dt= key
-              dd= value
+    table.table.table-condensed.isic-image-details-table
+      tbody
+        tr
+          td.isic-image-details-table-section-header(colspan=2) Info
+        tr
+          td Dataset
+          td= image.get('dataset')['name']
+        tr
+          td Created
+          td= created
+        tr
+          td License
+          td
+            if license.url
+              a(target="_blank", href=license.url)= license.name
+            else
+              = license.name
 
-    if acquisitionMetadata
-      h4.isic-image-details-acquisition-metadata-header Acquisition Metadata:
-      .isic-image-details-acquisition-metadata-content
-        dl
-          each value, key in acquisitionMetadata
-            dt= key
-            dd= value
+        tr
+          td.isic-image-details-table-section-header(colspan=2) Clinical Metadata
+        each value, key in clinicalMetadata
+          tr
+            td= key
+            td= value
+
+        tr
+          td.isic-image-details-table-section-header(colspan=2) Acquisition Metadata
+        each value, key in acquisitionMetadata
+          tr
+            td= key
+            td !{value}
+
+    #isic-image-details-segmentations-display-view-container

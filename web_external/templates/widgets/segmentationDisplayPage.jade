@@ -1,0 +1,17 @@
+if segmentation.id
+  - var creator = segmentation.get('creator')
+  table.table.table-condensed.isic-segmentation-display-table
+    tbody
+      tr
+        td Created
+        td= created
+      tr
+        td Skill
+        td= segmentation.get('skill')
+      tr
+        td Creator
+        td #{creator['firstName']} #{creator['lastName']} (#{creator['login']})
+      tr
+        td Source
+        td= segmentation.get('lesionBoundary')['properties']['source']
+  img(src=thumbnailUrl)
