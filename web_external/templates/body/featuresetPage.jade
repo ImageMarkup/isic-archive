@@ -9,10 +9,10 @@
    - var user = featureset.get('creator')
    | #{user.firstName} #{user.lastName} (#{user.login})
 
-.isic-featureset-image-features-container
-  h4 Image features
-  .isic-listing-content.isic-featureset-image-features-content
-    pre.pre-scrollable= stringify(featureset.get('image_features'))
+.isic-featureset-global-features-container
+  h4 Global Features
+  .isic-listing-content.isic-featureset-global-features-content
+    pre.pre-scrollable= stringify(featureset.get('globalFeatures'))
 
 .isic-featureset-region-features-container
   h4 Region features

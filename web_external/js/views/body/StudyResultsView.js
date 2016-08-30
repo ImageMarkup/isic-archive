@@ -158,7 +158,7 @@ isic.views.StudyResultsGlobalFeaturesView = isic.View.extend({
         this.$el.html(isic.templates.studyResultsGlobalFeaturesPage({
             title: 'Global Features',
             hasFeatureset: !_.isUndefined(this.featureset.id),
-            hasGlobalFeatures: !_.isEmpty(this.featureset.get('image_features')),
+            hasGlobalFeatures: !_.isEmpty(this.featureset.get('globalFeatures')),
             featureset: this.featureset
         }));
 
@@ -171,7 +171,7 @@ isic.views.StudyResultsGlobalFeaturesView = isic.View.extend({
     updateResults: function () {
         this.results.update(
             this.annotation.get('annotations'),
-            this.featureset.get('image_features')
+            this.featureset.get('globalFeatures')
         );
     }
 });

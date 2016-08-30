@@ -146,7 +146,7 @@ derm_app.controller('FlagAnnotationController', ['$scope', '$log',
 ]);
 
 
-derm_app.controller('ImageFeatureAnnotationController', ['$scope', '$log',
+derm_app.controller('GlobalFeatureAnnotationController', ['$scope', '$log',
     function ($scope, $log) {
         $scope.$watch('featureset && featureset._id', function () {
             if (!$scope.featureset || !$scope.featureset.$resolved) {

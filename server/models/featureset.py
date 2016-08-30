@@ -32,7 +32,7 @@ class Featureset(Model):
             'creatorId',
             'created',
             'version',
-            'image_features',
+            'globalFeatures',
             'region_features'
         ])
         self.summaryFields = ['_id', 'name', 'version']
@@ -45,7 +45,7 @@ class Featureset(Model):
             'creatorId': creator['_id'],
             'created': now,
             'version': version,
-            'image_features': [],
+            'globalFeatures': [],
             'region_features': [],
         })
 
