@@ -21,12 +21,8 @@
 
     "angular-xml": "1.0.2",
 
-    "angular-ui-select": "0.12.1",
-
     "bootstrap-switch": "3.3.2",
-    "angular-bootstrap-switch": "0.4.1",
-
-    "amitava82-angular-multiselect": "1.0.0"
+    "angular-bootstrap-switch": "0.4.1"
   },
   "private": true
 }

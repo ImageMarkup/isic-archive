@@ -38,17 +38,10 @@
     <!-- Angular XML -->
     <script src="/static/built/plugins/isic_archive/extra/bower_components/angular-xml/angular-xml.min.js"></script>
 
-    <!-- AngularUI Select -->
-    <script src="/static/built/plugins/isic_archive/extra/bower_components/angular-ui-select/dist/select.min.js"></script>
-    <link href="/static/built/plugins/isic_archive/extra/bower_components/angular-ui-select/dist/select.min.css" rel="stylesheet" type="text/css">
-
     <!-- angular-bootstrap-switch -->
     <script src="/static/built/plugins/isic_archive/extra/bower_components/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
     <link href="/static/built/plugins/isic_archive/extra/bower_components/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.min.css" rel="stylesheet" type="text/css">
     <script src="/static/built/plugins/isic_archive/extra/bower_components/angular-bootstrap-switch/dist/angular-bootstrap-switch.min.js"></script>
-
-    <!-- angular-multiselect -->
-    <script src="/static/built/plugins/isic_archive/extra/bower_components/amitava82-angular-multiselect/src/multiselect-tpls.js"></script>
 
     <!-- OpenLayers3 -->
     <script src="/uda/static/js/ol-debug.js"></script>
@@ -126,38 +119,17 @@
                                         ng-repeat="feature in featureset.globalFeatures track by feature.id"
                                         heading="{{ feature.name.join(': ') }}"
                                         is-open="true">
-                                <div ng-switch="feature.type" ng-show="!showReview">
-                                    <div ng-switch-when="select">
-                                        <ui-select
-                                                ng-model="annotation_values[feature.id]"
-                                                search-enabled="false"
-                                                on-select="selected($item, $model)"
-                                                on-remove="selected($item, $model)"
-                                                theme="bootstrap">
-                                            <ui-select-match placeholder="{{ feature.name.join(': ') }}">
-                                                {{ $select.selected.name }}
-                                            </ui-select-match>
-                                            <ui-select-choices repeat="option.id as option in feature.options">
-                                                <div ng-bind-html="option.name"></div>
-                                            </ui-select-choices>
-                                        </ui-select>
-                                        <!-- TODO: put this on the same line -->
-                                        <div class="btn btn-sm pull-right" ng-show="annotation_values[feature.id]">
-                                            <span>√</span>
-                                        </div>
-                                    </div>
-                                    <div ng-switch-when="radio">
-                                        <div ng-repeat="feature_option in feature.options track by feature_option.id">
-                                            <label class="isic-annotation-feature-option"
-                                                   ng-class="{selected: feature_option.id === annotation_values[feature.id]}">
-                                                <input
-                                                        type="radio"
-                                                        ng-model="annotation_values[feature.id]"
-                                                        name="{{ feature.id }}"
-                                                        value="{{ feature_option.id }}">
-                                                {{ feature_option.name }}
-                                            </label>
-                                        </div>
+                                <div ng-show="!showReview">
+                                    <div ng-repeat="feature_option in feature.options track by feature_option.id">
+                                        <label class="isic-annotation-feature-option"
+                                               ng-class="{selected: feature_option.id === annotation_values[feature.id]}">
+                                            <input
+                                                    type="radio"
+                                                    ng-model="annotation_values[feature.id]"
+                                                    name="{{ feature.id }}"
+                                                    value="{{ feature_option.id }}">
+                                            {{ feature_option.name }}
+                                        </label>
                                     </div>
                                 </div>
                                 <div ng-show="showReview">
