@@ -160,6 +160,65 @@ def setupUdaTestUser(phase, username, password, label):
     )
 
 
+def _provisionDefaultFeatureset():
+    Featureset = ModelImporter.model('featureset', 'isic_archive')
+
+    if not Featureset.findOne({'name': 'Basic'}):
+        Featureset.createFeatureset(
+            name='Basic',
+            version=1.0,
+            creator=getAdminUser(),
+            globalFeatures=[
+                {
+                    'id': '',
+                    'name': ['Quality'],
+                    'options': [
+                        {
+                            'id': 'acceptable',
+                            'name': 'Acceptable'
+                        },
+                        {
+                            'id': 'unacceptable',
+                            'name': 'Unacceptable'
+                        }
+                    ],
+                    'type': 'radio'
+                },
+                {
+                    'id': '',
+                    'name': ['Diagnosis'],
+                    'options': [
+                        {
+                            'id': 'benign',
+                            'name': 'Benign'
+                        },
+                        {
+                            'id': 'indeterminate',
+                            'name': 'Indeterminate'
+                        },
+                        {
+                            'id': 'malignant',
+                            'name': 'Malignant'
+                        }
+                    ],
+                    'type': 'radio'
+                }
+            ],
+            localFeatures=[
+                {
+                    'id': 'lesion',
+                    'name': ['Lesion'],
+                    'type': 'check'
+                },
+                {
+                    'id': 'skin',
+                    'name': ['Normal Skin'],
+                    'type': 'check'
+                },
+            ]
+        )
+
+
 def initialSetup(info):
     Group = ModelImporter.model('group')
 
@@ -223,21 +282,7 @@ def initialSetup(info):
         group_description='Annotation study creators and administrators'
     )
 
-    for featureset_file_name in [
-        'uda2study.json',
-        'isic_analytical.json',
-        'isic_conventional.json'
-    ]:
-        featureset_file_path = os.path.join(info['pluginRootDir'], 'custom', 'config', featureset_file_name)
-        with open(featureset_file_path, 'r') as featureset_file:
-            featureset_data = json.load(featureset_file)
-            featureset = ModelImporter.model('featureset', 'isic_archive').findOne(
-                {'name': featureset_data['name']})
-            if not featureset:
-                # these values may be updated to be more accurate
-                featureset_data['creatorId'] = getAdminUser()['_id']
-                featureset_data['created'] = datetime.datetime.utcnow()
-                ModelImporter.model('featureset', 'isic_archive').save(featureset_data)
+    _provisionDefaultFeatureset()
 
     MAKE_TEST_USERS = False
     if MAKE_TEST_USERS:
