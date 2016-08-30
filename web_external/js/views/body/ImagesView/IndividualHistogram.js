@@ -198,20 +198,25 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
         */
 
         // Add each bin label, and compute the total needed height
-        var maxLabelHeight = svg.select('.selectAllBins').select('text')
+        var offsetY = 0.25 * emSize;
+        var transformHeight = height + offsetY;
+        var transformAngle = -45;
+        var transformAngleRadians = transformAngle * (Math.PI / 180);
+        var maxBoxHeight = svg.select('.selectAllBins').select('text')
             .node().getComputedTextLength();
         binsEnter.append('text');
         bins.select('text')
             .text(function (d) {
                 return d;
             })
-            .attr('transform', 'rotate(90) translate(' + height + ',' +
-                (0.35 * emSize) + ')')
+            .attr('text-anchor', 'end')
+            .attr('transform', 'translate(0 ' + transformHeight + ') rotate(' + transformAngle + ')')
             .each(function () {
                 // this refers to the DOM element
-                maxLabelHeight = Math.max(this.getComputedTextLength(), maxLabelHeight);
+                var boxHeight = Math.abs(this.getComputedTextLength() * Math.sin(transformAngleRadians));
+                maxBoxHeight = Math.max(boxHeight, maxBoxHeight);
             });
-        height += maxLabelHeight + topPadding;
+        height += maxBoxHeight + topPadding + offsetY;
 
         svg.attr({
             width: width + 'px',

@@ -1,11 +1,18 @@
+title-font-size = 20px
+title-border-bottom = 1px solid #ddd
+title-margin-bottom = 5px
+table-header-background-color = #ddd
+table-header-font-weight = bold
+table-header-padding = 0px 8px
+
 .isic-image-details-container
-  .isic-image-details-acquisition-metadata-content
-  .isic-image-details-clinical-metadata-content
-    margin-top 1em
-    margin-left 1ex
+  .isic-image-details-name
+    font-size title-font-size
+    border-bottom title-border-bottom
+    margin-bottom title-margin-bottom
 
-  dt:after
-    content ": "
-  dd
-    margin-left 2ex
-
+  .isic-image-details-table
+    .isic-image-details-table-section-header
+      background-color table-header-background-color
+      font-weight table-header-font-weight
+      padding table-header-padding

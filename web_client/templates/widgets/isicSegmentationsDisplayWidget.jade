@@ -1,9 +1,0 @@
-.isic-segmentations-display-header
-  i.icon-puzzle
-  span  Segmentations
-.isic-segmentations-display-container
-  select.form-control.input-sm
-    option(value=null)
-    each segmentation in segmentations
-      option(value=segmentation._id) #{segmentation.created} #{segmentation.skill}
-  .isic-segmentation-display

@@ -7,7 +7,8 @@ isic.views.ImagesView = isic.View.extend({
 
         // Initialize our subviews
         var params = {
-            model: self.model
+            model: self.model,
+            parentView: this
         };
         self.studyPane = new isic.views.ImagesViewSubViews.StudyPane(params);
         self.histogramPane = new isic.views.ImagesViewSubViews.HistogramPane(params);
