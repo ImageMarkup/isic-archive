@@ -1,0 +1,4 @@
+extends ./studyResultsSelectView.jade
+
+block modelOption
+  option(value=model.id, disabled=!featureAnnotated(model.id))= getName(model)

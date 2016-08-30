@@ -45,6 +45,8 @@ isic.views.StudyResultsSelectView = isic.View.extend({
 
     initialize: function (options) {
         this.title = options.title;
+        this.template = _.has(options, 'template') ? options.template : isic.templates.studyResultsSelectView;
+        this.extraTemplateParams = _.has(options, 'extraTemplateParams') ? options.extraTemplateParams : {};
         this.selectId = _.uniqueId('isic-study-results-select-view-select-');
         this.getName = options.getName || this._defaultGetName;
         this.listenTo(this.collection, 'reset', this.render);
@@ -71,12 +73,15 @@ isic.views.StudyResultsSelectView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.studyResultsSelectView({
+        var params = {
             title: this.title,
             selectId: this.selectId,
             getName: this.getName,
             models: this.collection.models
-        }));
+        };
+        _.extend(params, this.extraTemplateParams);
+
+        this.$el.html(this.template(params));
 
         return this;
     },
@@ -205,13 +210,16 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
 
         this.featureImageModel = new isic.models.FeatureImageModel();
 
-        this.listenTo(this.featureset, 'change', this.render);
-        this.listenTo(this.featureset, 'change', this.updateFeatureCollection);
-        this.listenTo(this.annotation, 'change', this.updateFeatureImageModel);
+        this.listenTo(this.featureset, 'change', this.featuresetChanged);
+        this.listenTo(this.annotation, 'change', this.annotationChanged);
 
         this.selectFeatureView = new isic.views.StudyResultsSelectView({
             title: 'Feature',
+            template: isic.templates.studyResultsLocalFeaturesSelectPage,
             collection: this.features,
+            extraTemplateParams: {
+                featureAnnotated: _.bind(this.featureAnnotated, this)
+            },
             parentView: this
         });
 
@@ -231,7 +239,7 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
     updateFeatureImageModel: function () {
         this.featureImageModel.set({
             featureId: this.featureId,
-            annotationId: this.annotation.id
+            annotationId: this.featureAnnotated(this.featureId) ? this.annotation.id : null
         });
     },
 
@@ -255,6 +263,25 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
         delete this.featureId;
 
         this.features.update(this.featureset.get('region_features'));
+    },
+
+    featuresetChanged: function () {
+        this.updateFeatureCollection();
+        this.render();
+    },
+
+    annotationChanged: function () {
+        this.featureId = null;
+        this.updateFeatureImageModel();
+        this.render();
+    },
+
+    featureAnnotated: function (featureId) {
+        if (!featureId || !this.annotation.has('annotations')) {
+            return false;
+        }
+        var annotations = this.annotation.get('annotations');
+        return _.has(annotations, featureId);
     }
 });
 
