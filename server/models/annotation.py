@@ -168,10 +168,10 @@ class Annotation(ItemModel):
                     for feature in
                     featureset['globalFeatures']
                 }
-                featuresetRegionFeatures = {
+                featuresetLocalFeatures = {
                     feature['id']: feature
                     for feature in
-                    featureset['region_features']
+                    featureset['localFeatures']
                 }
                 for featureId, featureValue in six.viewitems(
                         doc['meta']['annotations']):
@@ -184,7 +184,7 @@ class Annotation(ItemModel):
                             raise ValidationException(
                                 'Annotation feature "%s" has invalid '
                                 'value "%s".' % (featureId, featureValue))
-                    elif featureId in featuresetRegionFeatures:
+                    elif featureId in featuresetLocalFeatures:
                         if not isinstance(featureValue, list) or not all(
                             superpixelValue in [0.0, 0.5, 1.0]
                             for superpixelValue in featureValue

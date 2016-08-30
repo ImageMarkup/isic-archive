@@ -247,7 +247,7 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
         this.$el.html(isic.templates.studyResultsLocalFeaturesPage({
             title: 'Local Features',
             hasFeatureset: !_.isUndefined(this.featureset.id),
-            hasLocalFeatures: !_.isEmpty(this.featureset.get('region_features')),
+            hasLocalFeatures: !_.isEmpty(this.featureset.get('localFeatures')),
             featureset: this.featureset
         }));
 
@@ -262,7 +262,7 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
     updateFeatureCollection: function () {
         delete this.featureId;
 
-        this.features.update(this.featureset.get('region_features'));
+        this.features.update(this.featureset.get('localFeatures'));
     },
 
     featuresetChanged: function () {

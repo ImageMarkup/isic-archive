@@ -33,7 +33,7 @@ class Featureset(Model):
             'created',
             'version',
             'globalFeatures',
-            'region_features'
+            'localFeatures'
         ])
         self.summaryFields = ['_id', 'name', 'version']
         self.prefixSearchFields = [('name', 'i')]
@@ -46,7 +46,7 @@ class Featureset(Model):
             'created': now,
             'version': version,
             'globalFeatures': [],
-            'region_features': [],
+            'localFeatures': [],
         })
 
     def validate(self, doc):

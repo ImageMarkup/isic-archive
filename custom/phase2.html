@@ -168,9 +168,9 @@
                     </div>
                 </div>
 
-                <div ng-controller="RegionFeatureAnnotationController" ng-if="featureset.region_features.length" class="isic-annotation">
+                <div ng-controller="LocalFeatureAnnotationController" ng-if="featureset.localFeatures.length" class="isic-annotation">
                     <div class="isic-annotation-header">
-                        <h3 style="display: inline;">Regional</h3>
+                        <h3 style="display: inline;">Local Features</h3>
                         <div class="btn-group pull-right" ng-hide="showReview">
                             <label class="btn">Confidence</label>
                             <label class="btn" ng-model="certaintyModel" btn-radio="'definite'">100%</label>
@@ -191,7 +191,7 @@
                                     ng-repeat="(feature_group_name, feature_group) in feature_groups track by feature_group_name"
                                     heading="{{ feature_group_name }}"
                                     is-open="true">
-                                <div class="isic-annotation-feature-region"
+                                <div class="isic-annotation-feature-local"
                                      ng-repeat="feature in feature_group track by feature.id"
                                      ng-show="!showReview || featureHasPositiveTile(feature.id)"
                                      ng-class="{selected: selected_feature_id === feature.id}">

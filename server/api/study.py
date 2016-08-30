@@ -158,7 +158,7 @@ class StudyResource(Resource):
              'flag_status', 'elapsed_seconds'),
             (feature['id'] for feature in featureset['globalFeatures']),
             ('superpixel_id',),
-            (feature['id'] for feature in featureset['region_features'])
+            (feature['id'] for feature in featureset['localFeatures'])
         ))
 
         responseBody = StringIO()
@@ -209,15 +209,15 @@ class StudyResource(Resource):
                 responseBody.truncate()
 
                 # TODO: move this into the query
-                if 'region_features' in annotation['meta']['annotations']:
+                if 'localFeatures' in annotation['meta']['annotations']:
                     superpixelCount = len(
-                        annotation['meta']['annotations']['region_features'].itervalues().next())  # noqa: E501
+                        annotation['meta']['annotations']['localFeatures'].itervalues().next())  # noqa: E501
                     for superpixelMum in xrange(superpixelCount):
 
                         outDict = outDictBase.copy()
                         outDict['superpixel_id'] = superpixelMum
                         for featureName, featureValue in \
-                                annotation['meta']['annotations']['region_features'].iteritems():  # noqa: E501
+                                annotation['meta']['annotations']['localFeatures'].iteritems():  # noqa: E501
                             outDict[featureName] = featureValue[superpixelMum]
 
                         csvWriter.writerow(outDict)

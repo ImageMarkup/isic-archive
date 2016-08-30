@@ -174,14 +174,14 @@ derm_app.controller('GlobalFeatureAnnotationController', ['$scope', '$log',
     }
 ]);
 
-derm_app.controller('RegionFeatureAnnotationController', ['$scope', '$rootScope', '$log',
+derm_app.controller('LocalFeatureAnnotationController', ['$scope', '$rootScope', '$log',
     function ($scope, $rootScope, $log) {
         $scope.$watch('featureset && featureset._id', function () {
             if (!$scope.featureset || !$scope.featureset.$resolved) {
                 return;
             }
             $scope.feature_groups = {};
-            $scope.featureset.region_features.forEach(function (feature) {
+            $scope.featureset.localFeatures.forEach(function (feature) {
                 if (!$scope.feature_groups.hasOwnProperty(feature.name[0])) {
                     $scope.feature_groups[feature.name[0]] = [];
                 }
