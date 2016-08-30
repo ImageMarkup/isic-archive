@@ -42,7 +42,7 @@ isic.views.StudiesView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.studiesPage({
-            title: 'Annotation Studies',
+            title: 'Manage Annotation Studies',
             models: this.studies.models,
             loaded: this.loaded,
             studyAdmin: this.studyAdmin
