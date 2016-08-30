@@ -170,7 +170,7 @@ def _provisionDefaultFeatureset():
             creator=getAdminUser(),
             globalFeatures=[
                 {
-                    'id': '',
+                    'id': 'quality',
                     'name': ['Quality'],
                     'options': [
                         {
@@ -185,7 +185,7 @@ def _provisionDefaultFeatureset():
                     'type': 'radio'
                 },
                 {
-                    'id': '',
+                    'id': 'diagnosis',
                     'name': ['Diagnosis'],
                     'options': [
                         {
