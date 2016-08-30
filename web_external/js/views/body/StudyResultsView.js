@@ -158,7 +158,7 @@ isic.views.StudyResultsGlobalFeaturesView = isic.View.extend({
         this.$el.html(isic.templates.studyResultsGlobalFeaturesPage({
             title: 'Global Features',
             hasFeatureset: !_.isUndefined(this.featureset.id),
-            hasGlobalFeatures: !_.isEmpty(this.featureset.get('image_features')),
+            hasGlobalFeatures: !_.isEmpty(this.featureset.get('globalFeatures')),
             featureset: this.featureset
         }));
 
@@ -171,7 +171,7 @@ isic.views.StudyResultsGlobalFeaturesView = isic.View.extend({
     updateResults: function () {
         this.results.update(
             this.annotation.get('annotations'),
-            this.featureset.get('image_features')
+            this.featureset.get('globalFeatures')
         );
     }
 });
@@ -247,7 +247,7 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
         this.$el.html(isic.templates.studyResultsLocalFeaturesPage({
             title: 'Local Features',
             hasFeatureset: !_.isUndefined(this.featureset.id),
-            hasLocalFeatures: !_.isEmpty(this.featureset.get('region_features')),
+            hasLocalFeatures: !_.isEmpty(this.featureset.get('localFeatures')),
             featureset: this.featureset
         }));
 
@@ -262,7 +262,7 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
     updateFeatureCollection: function () {
         delete this.featureId;
 
-        this.features.update(this.featureset.get('region_features'));
+        this.features.update(this.featureset.get('localFeatures'));
     },
 
     featuresetChanged: function () {

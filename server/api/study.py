@@ -156,9 +156,9 @@ class StudyResource(Resource):
              'user_login_name', 'user_id',
              'image_name', 'image_id',
              'flag_status', 'elapsed_seconds'),
-            (feature['id'] for feature in featureset['image_features']),
+            (feature['id'] for feature in featureset['globalFeatures']),
             ('superpixel_id',),
-            (feature['id'] for feature in featureset['region_features'])
+            (feature['id'] for feature in featureset['localFeatures'])
         ))
 
         responseBody = StringIO()
@@ -199,25 +199,25 @@ class StudyResource(Resource):
                 }
 
                 outDict = outDictBase.copy()
-                for imageFeature in featureset['image_features']:
-                    if imageFeature['id'] in annotation['meta']['annotations']:
-                        outDict[imageFeature['id']] = \
-                            annotation['meta']['annotations'][imageFeature['id']]  # noqa: E501
+                for globalFeature in featureset['globalFeatures']:
+                    if globalFeature['id'] in annotation['meta']['annotations']:
+                        outDict[globalFeature['id']] = \
+                            annotation['meta']['annotations'][globalFeature['id']]  # noqa: E501
                 csvWriter.writerow(outDict)
                 yield responseBody.getvalue()
                 responseBody.seek(0)
                 responseBody.truncate()
 
                 # TODO: move this into the query
-                if 'region_features' in annotation['meta']['annotations']:
+                if 'localFeatures' in annotation['meta']['annotations']:
                     superpixelCount = len(
-                        annotation['meta']['annotations']['region_features'].itervalues().next())  # noqa: E501
+                        annotation['meta']['annotations']['localFeatures'].itervalues().next())  # noqa: E501
                     for superpixelMum in xrange(superpixelCount):
 
                         outDict = outDictBase.copy()
                         outDict['superpixel_id'] = superpixelMum
                         for featureName, featureValue in \
-                                annotation['meta']['annotations']['region_features'].iteritems():  # noqa: E501
+                                annotation['meta']['annotations']['localFeatures'].iteritems():  # noqa: E501
                             outDict[featureName] = featureValue[superpixelMum]
 
                         csvWriter.writerow(outDict)

@@ -1,5 +1,5 @@
 .isic-annotation {
-    /* "image" or "region" feature */
+    /* "global" or "local" feature */
 }
 
 .isic-annotation-header {
@@ -30,20 +30,20 @@
     color: #ffcc00;
 }
 
-.isic-annotation-feature-region {
+.isic-annotation-feature-local {
     /* this ancestor must have a non-static position,
        so children can have absolute position with respect to this */
     position: relative;
 }
-.isic-annotation-feature-region:hover {
+.isic-annotation-feature-local:hover {
     color: #ffcc00;
 }
-.isic-annotation-feature-region.selected {
+.isic-annotation-feature-local.selected {
     font-weight: 700;
     width: 100%;
     color: #ffcc00;
 }
-.isic-annotation-feature-region > .overlay {
+.isic-annotation-feature-local > .overlay {
     position: absolute;
     width: 100%;
     height: 100%;

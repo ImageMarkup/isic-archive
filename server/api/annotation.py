@@ -167,7 +167,7 @@ class AnnotationResource(Resource):
 
         if not any(featureId == feature['id']
                    for feature in
-                   featureset['region_features']):
+                   featureset['localFeatures']):
             raise RestException('Invalid featureId.')
         if Annotation.getState(annotation) != Study.State.COMPLETE:
             raise RestException('Only complete annotations can be rendered.')

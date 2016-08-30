@@ -163,28 +163,28 @@ class Annotation(ItemModel):
                         'Annotation field "annotations" must be a mapping '
                         '(dict).')
                 featureset = Study.getFeatureset(study)
-                featuresetImageFeatures = {
+                featuresetGlobalFeatures = {
                     feature['id']: feature
                     for feature in
-                    featureset['image_features']
+                    featureset['globalFeatures']
                 }
-                featuresetRegionFeatures = {
+                featuresetLocalFeatures = {
                     feature['id']: feature
                     for feature in
-                    featureset['region_features']
+                    featureset['localFeatures']
                 }
                 for featureId, featureValue in six.viewitems(
                         doc['meta']['annotations']):
-                    if featureId in featuresetImageFeatures:
+                    if featureId in featuresetGlobalFeatures:
                         featureOptions = set(
                             option['id']
                             for option in
-                            featuresetImageFeatures[featureId]['options'])
+                            featuresetGlobalFeatures[featureId]['options'])
                         if featureValue not in featureOptions:
                             raise ValidationException(
                                 'Annotation feature "%s" has invalid '
                                 'value "%s".' % (featureId, featureValue))
-                    elif featureId in featuresetRegionFeatures:
+                    elif featureId in featuresetLocalFeatures:
                         if not isinstance(featureValue, list) or not all(
                             superpixelValue in [0.0, 0.5, 1.0]
                             for superpixelValue in featureValue

@@ -32,21 +32,22 @@ class Featureset(Model):
             'creatorId',
             'created',
             'version',
-            'image_features',
-            'region_features'
+            'globalFeatures',
+            'localFeatures'
         ])
         self.summaryFields = ['_id', 'name', 'version']
         self.prefixSearchFields = [('name', 'i')]
 
-    def createFeatureset(self, name, version, creator):
+    def createFeatureset(self, name, version, creator,
+                         globalFeatures, localFeatures):
         now = datetime.datetime.utcnow()
         return self.save({
             'name': name,
             'creatorId': creator['_id'],
             'created': now,
             'version': version,
-            'image_features': [],
-            'region_features': [],
+            'globalFeatures': globalFeatures,
+            'localFeatures': localFeatures,
         })
 
     def validate(self, doc):
