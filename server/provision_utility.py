@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import datetime
-import json
-import os
-
 from girder.constants import AccessType
 from girder.utility.model_importer import ModelImporter
 
@@ -27,137 +23,22 @@ def onUserCreated(event):
         )
     User.save(user)
 
-    if ModelImporter.model('setting').get(constants.PluginSettings.DEMO_MODE):
-        addUserToAllUDAGroups(user)
-
-
-def addUserToAllUDAGroups(user):
-    # group should already exist
-    for collection in [
-        ISIC.Phase0,
-        ISIC.LesionImages,
-        ISIC.AnnotationStudies,
-    ]:
-        if collection.group:
-            ModelImporter.model('group').addUser(
-                group=collection.group,
-                user=user,
-                # TODO: change
-                level=AccessType.READ
-            )
-
-
-def getOrCreateUDAUser(username, password,
-                       first_name, last_name, email,
-                       admin, public):
-    user = ModelImporter.model('user').findOne({'login': username})
-    if not user:
-        user = ModelImporter.model('user').createUser(
-            login=username,
-            password=password,
-            firstName=first_name,
-            lastName=last_name,
-            email=email,
-            admin=admin,
-            public=public
-        )
-        # delete default folders
-        for folder in ModelImporter.model('folder').find(
-                {'parentId': user['_id']}):
-            ModelImporter.model('folder').remove(folder)
-    return user
-
 
 def getAdminUser():
+    User = ModelImporter.model('user')
     # TODO: cache this?
-    return getOrCreateUDAUser(
-        username='udastudy',
-        password='udastudy',
-        first_name='UDA Study',
-        last_name='Admin',
-        email='admin@uda2study.org',
-        admin=True,
-        public=False
-    )
-
-
-class _ISICCollection(ModelImporter):
-    # TODO: add a refresh mechanism, or just store the ids, rather than the whole model
-    def __init__(self,
-            collection_name, collection_description,
-            public,
-            group_name=None, group_description=None):
-
-        self.collection = self.model('collection').findOne(
-            {'name': collection_name})
-        if not self.collection:
-            self.collection = self.model('collection').createCollection(
-                name=collection_name,
-                creator=getAdminUser(),
-                description=collection_description,
-                public=public
-            )
-
-        if group_name:
-            self.group = self.model('group').findOne(
-                {'name': group_name})
-            if not self.group:
-                self.group = self.model('group').createGroup(
-                    name=group_name,
-                    creator=getAdminUser(),
-                    description=group_description,
-                    public=True
-                )
-                self.model('group').removeUser(self.group, getAdminUser())
-                # remove udaadmin from group
-
-                self.model('collection').setGroupAccess(
-                    doc=self.collection,
-                    group=self.group,
-                    # TODO: make this a special access level
-                    level=AccessType.READ,
-                    save=True
-                )
-        else:
-            self.group = None
-
-    @classmethod
-    def createFolder(cls, name, description, parent, parent_type):
-        return cls.model('folder').createFolder(
-            parent=parent,
-            name=name,
-            description=description,
-            parentType=parent_type,
-            public=None,
-            creator=getAdminUser(),
-            allowRename=False,
-            reuseExisting=True
+    adminUser = User.findOne({'login': 'udastudy'})
+    if not adminUser:
+        adminUser = ModelImporter.model('user').createUser(
+            login='udastudy',
+            password='isicarchive',
+            firstName='ISIC Archive',
+            lastName='Admin',
+            email='admin@isic-archive.com',
+            admin=True,
+            public=False
         )
-
-
-# this will be populated in 'initialSetup'
-class ISIC(object):
-    Phase0 = None
-    LesionImages = None
-    AnnotationStudies = None
-
-
-def setupUdaTestUser(phase, username, password, label):
-    assert(' ' not in label)
-    test_user = getOrCreateUDAUser(
-        username=username,
-        password=password,
-        first_name='UDA Study',
-        last_name=label,
-        email='%s@uda2study.org' % label.lower(),
-        admin=False,
-        public=False
-    )
-    ModelImporter.model('group').addUser(
-        group=phase.group,
-        user=test_user,
-        level=AccessType.READ
-    )
+    return adminUser
 
 
 def _provisionDefaultFeatureset():
@@ -219,23 +100,37 @@ def _provisionDefaultFeatureset():
         )
 
 
-def initialSetup(info):
+def _provisionImages():
+    Collection = ModelImporter.model('collection')
     Group = ModelImporter.model('group')
 
-    if ModelImporter.model('setting').get(constants.PluginSettings.DEMO_MODE, None) is None:
-        ModelImporter.model('setting').set(constants.PluginSettings.DEMO_MODE, False)
-
-    ISIC.Phase0 = _ISICCollection(
-        collection_name='Phase 0',
-        collection_description='Images to QC',
+    phase0Collection = Collection.createCollection(
+        name='Phase 0',
+        creator=getAdminUser(),
+        description='Images to QC',
         public=False,
-        group_name='Phase 0',
-        group_description='Users responsible for doing initial QC'
+        reuseExisting=True
     )
 
-    # Create empty "dataset contributors" group
-    if not Group.findOne(
-        {'name': 'Dataset Contributors'}):
+    phase0Group = Group.findOne({'name': 'Phase 0'})
+    if not phase0Group:
+        phase0Group = Group.createGroup(
+            name='Phase 0',
+            creator=getAdminUser(),
+            description='Users responsible for doing initial QC',
+            public=True
+        )
+        Group.removeUser(phase0Group, getAdminUser())
+
+    Collection.setGroupAccess(
+        doc=phase0Collection,
+        group=phase0Group,
+        # TODO: make this a special access level
+        level=AccessType.READ,
+        save=True
+    )
+
+    if not Group.findOne({'name': 'Dataset Contributors'}):
         contributorsGroup = Group.createGroup(
             name='Dataset Contributors',
             creator=getAdminUser(),
@@ -244,11 +139,25 @@ def initialSetup(info):
         )
         Group.removeUser(contributorsGroup, getAdminUser())
 
-    ISIC.Flagged = _ISICCollection(
-        collection_name='Flagged Images',
-        collection_description='Images that have been flagged for any reason',
-        public=False
+    Collection.createCollection(
+        name='Flagged Images',
+        creator=getAdminUser(),
+        description='Images that have been flagged for any reason',
+        public=False,
+        reuseExisting=True
     )
+
+    Collection.createCollection(
+        name='Lesion Images',
+        creator=getAdminUser(),
+        description='All public lesion image datasets',
+        public=True,
+        reuseExisting=True
+    )
+
+
+def _provisionSegmentationGroups():
+    Group = ModelImporter.model('group')
 
     if not Group.findOne({'name': 'Segmentation Novices'}):
         segmentationNovicesGroup = Group.createGroup(
@@ -268,33 +177,44 @@ def initialSetup(info):
         )
         Group.removeUser(segmentationExpertsGroup, getAdminUser())
 
-    ISIC.LesionImages = _ISICCollection(
-        collection_name='Lesion Images',
-        collection_description='All public lesion image datasets',
-        public=True
-    )
 
-    ISIC.AnnotationStudies = _ISICCollection(
-        collection_name='Annotation Studies',
-        collection_description='Clinical feature annotation studies',
+def _provisionStudies():
+    Collection = ModelImporter.model('collection')
+    Group = ModelImporter.model('group')
+
+    studiesCollection = Collection.createCollection(
+        name='Annotation Studies',
+        creator=getAdminUser(),
+        description='Clinical feature annotation studies',
         public=True,
-        group_name='Study Administrators',
-        group_description='Annotation study creators and administrators'
+        reuseExisting=True
     )
 
-    _provisionDefaultFeatureset()
+    studyAdminGroup = Group.findOne({'name': 'Study Administrators'})
+    if not studyAdminGroup:
+        studyAdminGroup = Group.createGroup(
+            name='Study Administrators',
+            creator=getAdminUser(),
+            description='Annotation study creators and administrators',
+            public=True
+        )
+        Group.removeUser(studyAdminGroup, getAdminUser())
 
-    MAKE_TEST_USERS = False
-    if MAKE_TEST_USERS:
-        setupUdaTestUser(
-            phase=ISIC.Phase0,
-            username='udauploader',
-            password='udauploader',
-            label='Uploader',
-        )
-        setupUdaTestUser(
-            phase=ISIC.AnnotationStudies,
-            username='udaannotator',
-            password='udaannotator',
-            label='Annotator',
-        )
+    Collection.setGroupAccess(
+        doc=studiesCollection,
+        group=studyAdminGroup,
+        # TODO: make this a special access level
+        level=AccessType.READ,
+        save=True
+    )
+
+
+def initialSetup():
+    Setting = ModelImporter.model('setting')
+    if Setting.get(constants.PluginSettings.DEMO_MODE, None) is None:
+        Setting.set(constants.PluginSettings.DEMO_MODE, False)
+
+    _provisionImages()
+    _provisionSegmentationGroups()
+    _provisionStudies()
+    _provisionDefaultFeatureset()

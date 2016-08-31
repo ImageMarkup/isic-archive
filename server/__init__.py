@@ -104,7 +104,7 @@ def load(info):
     })
 
     # create all necessary users, groups, collections, etc
-    initialSetup(info)
+    initialSetup()
 
 
     # add static file serving

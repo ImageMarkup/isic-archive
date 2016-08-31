@@ -28,7 +28,7 @@ from girder.models.item import Item as ItemModel
 from girder.utility import assetstore_utilities
 
 from .. import constants
-from ..provision_utility import _ISICCollection
+from ..provision_utility import getAdminUser
 from .segmentation_helpers import ScikitSegmentationHelper
 from ..upload import TempDir
 
@@ -274,11 +274,15 @@ class Image(ItemModel):
             {'name': 'Flagged Images'})
 
         datasetFlaggedFolders = {
-            phase0Folder['_id']: _ISICCollection.createFolder(
+            phase0Folder['_id']: self.model('folder').createFolder(
+                parent=flaggedCollection,
                 name=phase0Folder['name'],
                 description='',
-                parent=flaggedCollection,
-                parent_type='collection'
+                parentType='collection',
+                public=None,
+                creator=getAdminUser(),
+                allowRename=False,
+                reuseExisting=True
             )
             for phase0Folder in phase0Folders
         }
