@@ -8,7 +8,6 @@ var isicApp = angular.module('DermApp',
         'mousetrap',
         'ui.bootstrap',
         'ngSanitize',
-        'xml',
         'frapontillo.bootstrap-switch'
     ],
     // Config

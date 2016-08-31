@@ -19,8 +19,6 @@
 
     "angular-sanitize": "1.4.5",
 
-    "angular-xml": "1.0.2",
-
     "bootstrap-switch": "3.3.2",
     "angular-bootstrap-switch": "0.4.1"
   },
