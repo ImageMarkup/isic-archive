@@ -1,54 +1,49 @@
-.isic-featureset-version-container
-  h4 Version
-  .isic-listing-content.isic-featureset-version-content
-   = featureset.get('version')
+- var user = featureset.get('creator')
 
-.isic-featureset-creator-container
-  h4 Creator
-  .isic-listing-content.isic-featureset-creator-content
-   - var user = featureset.get('creator')
-   | #{user.firstName} #{user.lastName} (#{user.login})
+.isic-featureset-container
+  table.table.table-condensed.isic-featureset-table
+    tr
+      td.isic-featureset-table-section-header(colspan=2) Info
+    tr
+      td.isic-featureset-table-label Version
+      td= featureset.get('version')
+    tr
+      td.isic-featureset-table-label Creator
+      td
+        | #{user.firstName} #{user.lastName} (#{user.login})
 
-.isic-featureset-global-features-container
-  h4 Global Features
-  .isic-listing-content.isic-featureset-global-features-content
-    if featureset.get('globalFeatures').length
-      table.table.table-condensed
-        tr
-          th ID
-          th Name
-          th Type
-          th Values
-        each feature in featureset.get('globalFeatures')
-          tr
-            td= feature.id
-            td= feature.name.join(', ')
-            td= feature.type
-            td
-              table.table.table-condensed
+  each featureType in [{id: 'globalFeatures', name: 'Global Features'}, {id: 'localFeatures', name: 'Local Features'}]
+    table.table.table-condensed.isic-featureset-table
+      tr
+        td.isic-featureset-table-section-header(colspan=2)= featureType.name
+      tr
+        td(colspan=2)
+          if featureset.get(featureType.id).length
+            table.table.table-condensed.isic-featureset-table-features-table
+              each feature in featureset.get(featureType.id)
+                - var hasOptions = (feature.type === 'radio');
                 tr
-                  th ID
-                  th Name
-                each valueOption in feature.options
+                  td.isic-featureset-table-feature-header(colspan=3)= feature.name.join(', ')
+                tr
+                  td.isic-featureset-table-label.isic-featureset-table-feature-id-key ID
+                  td.isic-featureset-table-feature-id-value
+                    code= feature.id
+                tr
+                  td.isic-featureset-table-label(class={'isic-featureset-table-features-table-footer': !hasOptions}) Type
+                  td(class={'isic-featureset-table-features-table-footer': !hasOptions})= feature.type
+                if hasOptions
                   tr
-                    td=valueOption.id
-                    td=valueOption.name
-    else
-      span None
-
-.isic-featureset-local-features-container
-  h4 Local Features
-  .isic-listing-content.isic-featureset-local-features-content
-    if featureset.get('localFeatures').length
-      table.table.table-condensed
-        tr
-          th ID
-          th Name
-          th Type
-        each feature in featureset.get('localFeatures')
-          tr
-            td= feature.id
-            td= feature.name.join(', ')
-            td= feature.type
-    else
-      span None
+                    td.isic-featureset-table-label.isic-featureset-table-features-table-footer Values
+                    td.isic-featureset-table-features-table-footer
+                      table.table.table-condensed.isic-featureset-table-value-table
+                        tr
+                          th.isic-featureset-table-feature-value-label-id ID
+                          th.isic-featureset-table-feature-value-label-name Name
+                        tr
+                          each valueOption in feature.options
+                            tr
+                              td
+                                code= valueOption.id
+                              td=valueOption.name
+          else
+            | None

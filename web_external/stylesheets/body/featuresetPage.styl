@@ -1,4 +1,40 @@
-.isic-featureset-global-features-content
-.isic-featureset-local-features-content
-  display inline-block
-  width 800px
+.isic-featureset-container
+
+  .isic-featureset-table
+    width 100%
+
+    .isic-featureset-table-label
+      font-weight bold
+      width 100px
+
+    .isic-featureset-table-section-header
+      background-color #eee
+      padding 0px 8px
+      font-size 20px
+
+    .isic-featureset-table-feature-header
+      border 0px
+      padding-top 10px
+      font-size 16px
+
+    .isic-featureset-table-feature-id-key
+    .isic-featureset-table-feature-id-value
+    .isic-featureset-table-feature-value-label-id
+    .isic-featureset-table-feature-value-label-name
+      border 0px
+
+    .isic-featureset-table-feature-value-label-name
+      width 100%
+
+    // Nested tables
+    .isic-featureset-table-features-table
+    .isic-featureset-table-value-table
+      margin-bottom 0px
+
+    // Add border between features, excluding the last feature
+    .isic-featureset-table-features-table
+      .isic-featureset-table-features-table-footer
+        border-bottom 1px solid #aaa
+      tr:last-child
+        .isic-featureset-table-features-table-footer
+          border-bottom 0px
