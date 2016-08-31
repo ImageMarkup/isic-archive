@@ -21,16 +21,17 @@
           if featureset.get(featureType.id).length
             table.table.table-condensed.isic-featureset-table-features-table
               each feature in featureset.get(featureType.id)
+                - var hasOptions = (feature.type === 'radio');
                 tr
                   td.isic-featureset-table-feature-header(colspan=3)= feature.name.join(', ')
-                    | :
                 tr
                   td.isic-featureset-table-label.isic-featureset-table-feature-id-key ID
-                  td.isic-featureset-table-feature-id-value= feature.id
+                  td.isic-featureset-table-feature-id-value
+                    code= feature.id
                 tr
-                  td.isic-featureset-table-label(class={'isic-featureset-table-features-table-footer': !feature.options}) Type
-                  td(class={'isic-featureset-table-features-table-footer': !feature.options})= feature.type
-                if feature.options
+                  td.isic-featureset-table-label(class={'isic-featureset-table-features-table-footer': !hasOptions}) Type
+                  td(class={'isic-featureset-table-features-table-footer': !hasOptions})= feature.type
+                if hasOptions
                   tr
                     td.isic-featureset-table-label.isic-featureset-table-features-table-footer Values
                     td.isic-featureset-table-features-table-footer
@@ -41,7 +42,8 @@
                         tr
                           each valueOption in feature.options
                             tr
-                              td=valueOption.id
+                              td
+                                code= valueOption.id
                               td=valueOption.name
           else
             | None
