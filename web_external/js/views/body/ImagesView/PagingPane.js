@@ -116,15 +116,11 @@ isic.views.ImagesViewSubViews.PagingPane = Backbone.View.extend({
                     '/built/plugins/isic_archive/extra/img/' +
                     imgName + '.svg';
                 });
-            // Listen for page size adjustments
-            self.$el.find('#isic-images-pageSize').on('change', function () {
-                self.model.set('limit', this.value);
-                // Invalid values will be capped; update the field if that happens
-                var newLimit = self.model.get('limit');
-                if (newLimit !== this.value) {
-                    this.value = newLimit;
-                }
-            });
+            // Set the page size to 50.
+            //
+            // TODO: offer a pulldown menu with several page size options.
+            self.model.set('limit', 50);
+
             self.addedImages = true;
         }
 
