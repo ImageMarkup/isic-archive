@@ -31,8 +31,6 @@ from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 from girder.models.model_base import AccessException, ValidationException
 
-from ..provision_utility import ISIC
-
 
 class StudyResource(Resource):
     def __init__(self,):
@@ -41,7 +39,6 @@ class StudyResource(Resource):
 
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getStudy)
-        self.route('GET', (':id', 'task'), self.redirectTask)
         self.route('POST', (), self.createStudy)
         self.route('POST', (':id', 'user'), self.addAnnotator)
 
@@ -221,34 +218,6 @@ class StudyResource(Resource):
                         yield responseBody.getvalue()
                         responseBody.seek(0)
                         responseBody.truncate()
-
-    @describeRoute(
-        Description('Redirect to an active annotation study task.')
-        .param('id', 'The study to search for annotation tasks in.',
-               paramType='path')
-        .errorResponse()
-    )
-    @access.cookie
-    @access.user
-    @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
-    def redirectTask(self, study, params):
-        Annotation = self.model('annotation', 'isic_archive')
-        # TODO: it's not strictly necessary to load the study
-
-        # TODO: move this to model
-        activeAnnotationStudy = Annotation.findOne({
-            'baseParentId': ISIC.AnnotationStudies.collection['_id'],
-            'meta.studyId': study['_id'],
-            'meta.userId': self.getCurrentUser()['_id'],
-            'meta.stopTime': None
-        })
-
-        if activeAnnotationStudy:
-            annotationTaskUrl = '/uda/map/%s' % activeAnnotationStudy['_id']
-            raise cherrypy.HTTPRedirect(annotationTaskUrl, status=307)
-        else:
-            raise RestException(
-                'No active annotations for this user in this study.')
 
     def _requireStudyAdmin(self, user):
         """Require that user is a designated study admin or site admin."""
