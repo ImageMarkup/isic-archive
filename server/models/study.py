@@ -52,7 +52,8 @@ class Study(FolderModel):
             description='',
             parentType='collection',
             public=None,
-            creator=creatorUser
+            creator=creatorUser,
+            allowRename=False
         )
         studyFolder = self.copyAccessPolicies(
             src=self.loadStudyCollection(),
