@@ -286,8 +286,7 @@ class StudyResource(Resource):
         study = Study.createStudy(
             studyName, creatorUser, featureset, annotatorUsers, images)
 
-        # TODO return nothing? return full study? return 201 + Location header?
-        return self.getStudy(study, {})
+        return self.getStudy(id=study['_id'], params={})
 
     @describeRoute(
         Description('Add a user as an annotator of a study.')
