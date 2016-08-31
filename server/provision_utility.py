@@ -106,12 +106,12 @@ def _provisionDefaultFeatureset():
                 {
                     'id': 'lesion',
                     'name': ['Lesion'],
-                    'type': 'check'
+                    'type': 'superpixel'
                 },
                 {
                     'id': 'skin',
                     'name': ['Normal Skin'],
-                    'type': 'check'
+                    'type': 'superpixel'
                 },
             ]
         )
