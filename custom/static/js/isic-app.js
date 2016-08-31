@@ -5,12 +5,8 @@ var isicApp = angular.module('DermApp',
     // Dependencies
     [
         'ngResource',
-        'mousetrap',
         'ui.bootstrap',
-        'ngSanitize',
-        'xml',
-        'ui.select',
-        'frapontillo.bootstrap-switch'
+        'frapontillo.bootstrap-switch' // used in Phase 2
     ],
     // Config
     function ($httpProvider, $logProvider) {

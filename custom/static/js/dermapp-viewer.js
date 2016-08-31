@@ -5,7 +5,7 @@
 var derm_app = angular.module('DermApp');
 
 var olViewer = derm_app.factory('olViewer',
-    function (ol, $http, $log, xmlParser) {
+    function (ol, $http, $log) {
 
         var olViewer = function (mapContainer) {
 
