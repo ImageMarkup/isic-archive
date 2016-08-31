@@ -23,7 +23,7 @@ from girder.api import access
 from girder.api.rest import Resource, loadmodel
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
-from girder.models.model_base import AccessException, ValidationException
+from girder.models.model_base import ValidationException
 
 
 class DatasetResource(Resource):

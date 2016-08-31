@@ -1,7 +1,25 @@
-"""Utilities for handling query language expressions on the serverside."""
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+###############################################################################
+#  Copyright Kitware Inc.
+#
+#  Licensed under the Apache License, Version 2.0 ( the "License" );
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+###############################################################################
 
 import datetime
 import dateutil.parser
+
 
 _opfunc = {
     '<=': lambda x, y: x <= y,
@@ -14,7 +32,10 @@ _opfunc = {
 
 
 def cast(value, typename):
-    """Cast a value to a type, including special-purpose semantic processing for some values."""
+    """
+    Cast a value to a type, including special-purpose semantic processing
+    for some values.
+    """
     if typename is None:
         return value
     elif typename == 'integer':
@@ -35,9 +56,10 @@ def cast(value, typename):
         if type(value) == int:
             return datetime.datetime.fromtimestamp(float(value) / 1000)
         else:
-            return dateutil.parser.parse(value, default=datetime.datetime.fromtimestamp(0))
+            return dateutil.parser.parse(
+                value, default=datetime.datetime.fromtimestamp(0))
     else:
-        raise ValueError('Illegal value for argument "typename": %s' % (typename))
+        raise ValueError('Illegal value for argument "typename": %s' % typename)
 
 
 def astToFunction(ast):
@@ -112,7 +134,8 @@ def _astToMongo_helper(ast):
 
         return {_mongo_operators[operator]: [left, right]}
     elif operator == 'not':
-        raise TypeError('_astToMongo_helper() cannot operate on an AST with not-nodes.')
+        raise TypeError(
+            '_astToMongo_helper() cannot operate on an AST with not-nodes.')
     elif operator in ['in', 'not in', '<=', '<', '>=', '>', '=', '!=']:
         field = operands[0]['identifier']
         value = operands[1]
@@ -131,7 +154,8 @@ def _invert(ast):
     elif operator in ['and', 'or']:
         # For and/or expressions, apply DeMorgan's laws.
         new_operator = 'and' if operator == 'or' else 'or'
-        new_operands = map(lambda x: {'operator': 'not', 'operands': x}, operands)
+        new_operands = map(lambda x: {'operator': 'not', 'operands': x},
+                           operands)
 
         return {'operator': new_operator,
                 'operands': map(_eliminate_not, new_operands)}
@@ -172,5 +196,8 @@ def _eliminate_not(ast):
 
 
 def astToMongo(ast):
-    """Run the AST-to-mongo helper function above after converting it to a not-free equivalent AST."""
+    """
+    Run the AST-to-mongo helper function above after converting it to a
+    not-free equivalent AST.
+    """
     return _astToMongo_helper(_eliminate_not(ast))

@@ -1,6 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+###############################################################################
+#  Copyright Kitware Inc.
+#
+#  Licensed under the Apache License, Version 2.0 ( the "License" );
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+###############################################################################
+
 import os
 
 from girder import events
@@ -24,8 +40,9 @@ class Webroot(WebrootBase):
     """
     def __init__(self, templatePath=None):
         if not templatePath:
-            templatePath = os.path.join(PACKAGE_DIR, os.pardir, 'plugins',
-                                        'isic_archive', 'server', 'webroot.mako')
+            templatePath = os.path.join(
+                PACKAGE_DIR, os.pardir, 'plugins', 'isic_archive', 'server',
+                'webroot.mako')
         super(Webroot, self).__init__(templatePath)
 
         self.vars = {
@@ -106,10 +123,10 @@ def load(info):
     # create all necessary users, groups, collections, etc
     initialSetup()
 
-
     # add static file serving
     app_base = os.path.join(os.curdir, os.pardir)
-    app_path = os.path.join(app_base, 'girder', 'plugins', 'isic_archive', 'custom')
+    app_path = os.path.join(
+        app_base, 'girder', 'plugins', 'isic_archive', 'custom')
 
     info['config']['/uda'] = {
         'tools.staticdir.on': 'True',
@@ -117,7 +134,8 @@ def load(info):
     }
 
     # Move girder app to /girder, serve isic_archive app from /
-    info['serverRoot'], info['serverRoot'].girder = (Webroot(), info['serverRoot'])
+    info['serverRoot'], info['serverRoot'].girder = (
+        Webroot(), info['serverRoot'])
     info['serverRoot'].api = info['serverRoot'].girder.api
 
     # add dynamic root routes
@@ -127,17 +145,19 @@ def load(info):
     info['serverRoot'].uda = Root()
 
     # "/uda/gallery" -> returns a single page gallery
-    info['serverRoot'].uda.gallery = staticFile(os.path.join(info['pluginRootDir'], 'custom', 'gallery.html'))
+    info['serverRoot'].uda.gallery = staticFile(
+        os.path.join(info['pluginRootDir'], 'custom', 'gallery.html'))
 
     # "/uda/task" -> redirects to appropriate task view for the user
     info['serverRoot'].uda.task = TaskHandler()
 
     # "/uda/annotator/:id" -> the reconfigurable image annotator
-    info['serverRoot'].uda.annotate = staticFile(os.path.join(info['pluginRootDir'], 'custom', 'phase1.html'))
+    info['serverRoot'].uda.annotate = staticFile(
+        os.path.join(info['pluginRootDir'], 'custom', 'phase1.html'))
 
     # "/uda/map/:id"
-    info['serverRoot'].uda.map = staticFile(os.path.join(info['pluginRootDir'], 'custom', 'phase2.html'))
-
+    info['serverRoot'].uda.map = staticFile(
+        os.path.join(info['pluginRootDir'], 'custom', 'phase2.html'))
 
     # add api routes
     # remove docs for default Girder API, to simplify page

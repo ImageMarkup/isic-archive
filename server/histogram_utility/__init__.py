@@ -1,8 +1,30 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+###############################################################################
+#  Copyright Kitware Inc.
+#
+#  Licensed under the Apache License, Version 2.0 ( the "License" );
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+###############################################################################
+
 import os
 import json
+
+import cherrypy
 import execjs
 from querylang import astToMongo
 
+from girder.api.rest import RestException
 from girder.utility.model_importer import ModelImporter
 
 
@@ -67,7 +89,7 @@ class HistogramUtility(object):
             }
 
     def hardCodeBinSettings(self, params):
-        '''
+        """
         Here we hard-code settings about which attributes we want, and how to
         retrieve them. For details on the meaning of these settings, see the
         description text for getHistograms() in
@@ -75,7 +97,7 @@ class HistogramUtility(object):
 
         In the future, it should be easy to adapt inferSchema() in the same file
         to auto-detect this information instead of hard-coding it.
-        '''
+        """
         params['binSettings'] = json.dumps({
             'folderId': {
                 'coerceToType': 'string'
@@ -118,14 +140,17 @@ class HistogramUtility(object):
 
             # Get user-defined or default interpretation setting
             if binSettings[attrName]['coerceToType'] is 'object':
-                interpretation = binSettings[attrName]['interpretation'] = 'categorical'
+                interpretation = binSettings[attrName]['interpretation'] = \
+                    'categorical'
             else:
-                interpretation = binSettings[attrName].get('interpretation', 'categorical')
+                interpretation = binSettings[attrName].get(
+                    'interpretation', 'categorical')
                 binSettings[attrName]['interpretation'] = interpretation
 
             # Get any user-defined special bins (the defaults are
             # listed in histogram_reduce.js)
-            specialBins = json.loads(binSettings[attrName].get('specialBins', '[]'))
+            specialBins = json.loads(binSettings[attrName].get(
+                'specialBins', '[]'))
             binSettings[attrName]['specialBins'] = specialBins
 
             # Get user-defined or default number of bins
@@ -144,7 +169,8 @@ class HistogramUtility(object):
                         # from the Accept-Language header, with 'en' as
                         # a backup (TODO: do smarter things with alternative
                         # locales)
-                        locale = cherrypy.request.headers.get('Accept-Language', 'en')
+                        locale = cherrypy.request.headers.get(
+                            'Accept-Language', 'en')
                         if ',' in locale:
                             locale = locale.split(',')[0].strip()
                         if ';' in locale:
@@ -156,11 +182,11 @@ class HistogramUtility(object):
                     lowBound = binSettings[attrName].get('lowBound', None)
                     highBound = binSettings[attrName].get('highBound', None)
                     if lowBound is None or highBound is None:
-                        raise RestException('There are no observed values of ' +
-                                            'type ' + coerceToType + ', so it is ' +
-                                            'impossible to automatically determine ' +
-                                            'low/high bounds for an ordinal interpretation.' +
-                                            ' Please supply bounds or change to "categorical".')
+                        raise RestException(
+                            'There are no observed values of type %s, so it is '
+                            'impossible to automatically determine low/high '
+                            'bounds for an ordinal interpretation. Please supply'
+                            ' bounds or change to "categorical".' % coerceToType)
                     binSettings[attrName]['lowBound'] = lowBound
                     binSettings[attrName]['highBound'] = highBound
 

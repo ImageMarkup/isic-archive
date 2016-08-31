@@ -29,7 +29,7 @@ from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
-from girder.models.model_base import AccessException, ValidationException
+from girder.models.model_base import ValidationException
 
 
 class StudyResource(Resource):

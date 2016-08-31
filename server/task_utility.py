@@ -1,6 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+###############################################################################
+#  Copyright Kitware Inc.
+#
+#  Licensed under the Apache License, Version 2.0 ( the "License" );
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+###############################################################################
+
+
 import datetime
 
 import cherrypy
@@ -28,12 +45,15 @@ class UDAResource(Resource):
         self.resourceName = 'uda'
 
         self.route('GET', ('task', 'qc'), self.p0TaskList)
-        self.route('POST', ('task', 'qc', ':folder_id', 'complete'), self.p0TaskComplete)
+        self.route('POST', ('task', 'qc', ':folder_id', 'complete'),
+                   self.p0TaskComplete)
 
-        self.route('POST', ('task', 'select', ':folder_id'), self.selectTaskComplete)
+        self.route('POST', ('task', 'select', ':folder_id'),
+                   self.selectTaskComplete)
 
     @access.user
-    @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
+    @loadmodel(map={'folder_id': 'folder'}, model='folder',
+               level=AccessType.READ)
     def selectTaskComplete(self, folder, params):
         contents = self.getBodyJson()
 
@@ -43,17 +63,22 @@ class UDAResource(Resource):
         ]
         for image_item in flagged_image_items:
             if image_item['folderId'] != folder['_id']:
-                raise RestException('Flagged image %s is not inside folder %s' % (image_item['_id'], folder['_id']))
+                raise RestException(
+                    'Flagged image %s is not inside folder %s' %
+                    (image_item['_id'], folder['_id']))
         good_image_items = [
             self.model('item').load(image_item_id, force=True)
             for image_item_id in contents['good']
         ]
         for image_item in good_image_items:
             if image_item['folderId'] != folder['_id']:
-                raise RestException('Good image %s is not inside folder %s' % (image_item['_id'], folder['_id']))
+                raise RestException(
+                    'Good image %s is not inside folder %s' %
+                    (image_item['_id'], folder['_id']))
 
         parent_type = folder['parentCollection']
-        parent_entity = self.model(parent_type).load(folder['parentId'], force=True)
+        parent_entity = self.model(parent_type).load(
+            folder['parentId'], force=True)
 
         flagged_folder = self.model('folder').createFolder(
             reuseExisting=True,
@@ -77,7 +102,6 @@ class UDAResource(Resource):
 
         return {'status': 'success'}
 
-
     def _requireCollectionAccess(self, collection_name):
         assert(collection_name in ('Phase 0',))
 
@@ -85,12 +109,14 @@ class UDAResource(Resource):
         group = self.model('group').findOne({'name': collection_name})
         user = self.getCurrentUser()
 
-        self.model('collection').requireAccess(collection, user, AccessType.READ)
+        self.model('collection').requireAccess(
+            collection, user, AccessType.READ)
         if group['_id'] not in user.get('groups', []):
-            raise AccessException('access denied for user %s to group %s' % (user['_id'], collection_name))
+            raise AccessException(
+                'access denied for user %s to group %s' %
+                (user['_id'], collection_name))
 
         return collection
-
 
     @access.user
     def p0TaskList(self, params):
@@ -119,18 +145,21 @@ class UDAResource(Resource):
         .responseClass('UDA')
         .errorResponse())
 
-
     @access.user
-    @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
+    @loadmodel(map={'folder_id': 'folder'}, model='folder',
+               level=AccessType.READ)
     def p0TaskComplete(self, folder, params):
+        Collection = self.model('collection')
         Folder = self.model('folder')
         Item = self.model('item')
 
         # verify user's access to folder and phase
-        phase0_collection = self.model('collection').findOne({'name': 'Phase 0'})
-        self.model('collection').requireAccess(phase0_collection, self.getCurrentUser(), AccessType.READ)
+        phase0_collection = Collection.findOne({'name': 'Phase 0'})
+        Collection.requireAccess(
+            phase0_collection, self.getCurrentUser(), AccessType.READ)
         if folder['baseParentId'] != phase0_collection['_id']:
-            raise RestException('Folder %s is not inside Phase 0' % folder['_id'])
+            raise RestException(
+                'Folder %s is not inside Phase 0' % folder['_id'])
 
         contents = self.getBodyJson()
 
@@ -141,14 +170,18 @@ class UDAResource(Resource):
         ]
         for image_item in flagged_image_items:
             if image_item['folderId'] != folder['_id']:
-                raise RestException('Flagged image %s is not inside folder %s' % (image_item['_id'], folder['_id']))
+                raise RestException(
+                    'Flagged image %s is not inside folder %s' %
+                    (image_item['_id'], folder['_id']))
         good_image_items = [
             Item.load(image_item_id, force=True)
             for image_item_id in contents['good']
         ]
         for image_item in good_image_items:
             if image_item['folderId'] != folder['_id']:
-                raise RestException('Good image %s is not inside folder %s' % (image_item['_id'], folder['_id']))
+                raise RestException(
+                    'Good image %s is not inside folder %s' %
+                    (image_item['_id'], folder['_id']))
 
         # move flagged images into flagged folder
         self.model('image', 'isic_archive').flagMultiple(
@@ -162,7 +195,7 @@ class UDAResource(Resource):
         #  create 'flaggedTime'
 
         # move good images into Lesion Images folder
-        images_collection = self.model('collection').findOne({'name': 'Lesion Images'})
+        images_collection = Collection.findOne({'name': 'Lesion Images'})
 
         images_dataset_folder = Folder.createFolder(
             parent=images_collection,
@@ -196,7 +229,8 @@ class UDAResource(Resource):
     p0TaskComplete.description = (
         Description('Complete a Phase 0 (qc) task.')
         .responseClass('UDA')
-        .param('details', 'JSON details of images to be QC\'d.', paramType='body')
+        .param('details', 'JSON details of images to be QC\'d.',
+               paramType='body')
         .errorResponse())
 
 
@@ -207,18 +241,20 @@ class TaskHandler(Resource):
 
         self.route('GET', ('p0', ':folder_id'), self.p0TaskRedirect)
 
-
     @access.cookie
     @access.user
-    @loadmodel(map={'folder_id': 'folder'}, model='folder', level=AccessType.READ)
+    @loadmodel(map={'folder_id': 'folder'}, model='folder',
+               level=AccessType.READ)
     def p0TaskRedirect(self, folder, params):
         collection = self.model('collection').findOne({'name': 'Phase 0'})
         if folder['baseParentId'] != collection['_id']:
-            raise RestException('Folder "%s" is not in collection "Phase 0"' % folder['_id'])
+            raise RestException(
+                'Folder "%s" is not in collection "Phase 0"' % folder['_id'])
 
         items = getItemsInFolder(folder)
         if not items:
-            raise RestException('Folder "%s" in collection "Phase 0" is empty' % folder['_id'])
+            raise RestException(
+                'Folder "%s" in collection "Phase 0" is empty' % folder['_id'])
 
         redirect_url = '/uda/gallery#/qc/%s' % folder['_id']
         raise cherrypy.HTTPRedirect(redirect_url, status=307)
