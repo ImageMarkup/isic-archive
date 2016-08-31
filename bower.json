@@ -12,9 +12,6 @@
     "angular": "1.4.5",
     "angular-resource": "1.4.5",
 
-    "mousetrap": "1.4.6",
-    "angular-mousetrap": "~1.0.0",
-
     "angular-ui-bootstrap-bower": "0.14.3",
 
     "bootstrap-switch": "3.3.2",

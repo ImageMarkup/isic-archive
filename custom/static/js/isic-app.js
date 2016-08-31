@@ -5,7 +5,6 @@ var isicApp = angular.module('DermApp',
     // Dependencies
     [
         'ngResource',
-        'mousetrap',
         'ui.bootstrap',
         'frapontillo.bootstrap-switch'
     ],
