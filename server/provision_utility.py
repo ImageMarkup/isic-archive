@@ -31,7 +31,7 @@ def onUserCreated(event):
 
     # make all users private
     user['public'] = False
-    if user['login'] != 'udastudy':
+    if user['login'] != 'isic-admin':
         User.setGroupAccess(
             doc=user,
             group=Group.findOne({'name': 'Study Administrators'}),
@@ -44,11 +44,11 @@ def onUserCreated(event):
 def getAdminUser():
     User = ModelImporter.model('user')
     # TODO: cache this?
-    adminUser = User.findOne({'login': 'udastudy'})
+    adminUser = User.findOne({'login': 'isic-admin'})
     if not adminUser:
         adminUser = ModelImporter.model('user').createUser(
-            login='udastudy',
-            password='isicarchive',
+            login='isic-admin',
+            password='isic-admin',
             firstName='ISIC Archive',
             lastName='Admin',
             email='admin@isic-archive.com',
