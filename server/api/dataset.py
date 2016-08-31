@@ -23,7 +23,7 @@ from girder.api import access
 from girder.api.rest import Resource, loadmodel
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
-from girder.models.model_base import AccessException, ValidationException
+from girder.models.model_base import ValidationException
 
 
 class DatasetResource(Resource):
@@ -67,7 +67,7 @@ class DatasetResource(Resource):
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
     def getDataset(self, dataset, params):
         Dataset = self.model('dataset', 'isic_archive')
-        User = self.model('user')
+        User = self.model('user', 'isic_archive')
 
         output = Dataset.filter(
             dataset, self.getCurrentUser())
@@ -75,11 +75,11 @@ class DatasetResource(Resource):
         output['_modelType'] = 'dataset'
         output.update(dataset.get('meta', {}))
 
-        userSummaryFields = ['_id', 'login', 'firstName', 'lastName']
-        output['creator'] = User.load(
-            output.pop('creatorId'),
-            force=True, exc=True,
-            fields=userSummaryFields)
+        output['creator'] = User.filteredSummary(
+            User.load(
+                output.pop('creatorId'),
+                force=True, exc=True),
+            self.getCurrentUser())
 
         return output
 
@@ -101,27 +101,23 @@ class DatasetResource(Resource):
     )
     @access.user
     def ingestDataset(self, params):
+        Dataset = self.model('dataset', 'isic_archive')
+        Folder = self.model('folder')
+        User = self.model('user', 'isic_archive')
+
         if cherrypy.request.headers['Content-Type'] == 'application/json':
             params = self.getBodyJson()
         self.requireParams(('uploadFolderId', 'name'), params)
 
-        # Require that user be a member of the Dataset Contributors group or
-        # site admin
         user = self.getCurrentUser()
-        contributorsGroup = self.model('group').findOne({
-            'name': 'Dataset Contributors'})
-        if not contributorsGroup or \
-                contributorsGroup['_id'] not in user['groups']:
-            if not user.get('admin', False):
-                raise AccessException(
-                    'Only dataset contributors can create datasets.')
+        User.requireCreateDataset(user)
 
         uploadFolderId = params.get('uploadFolderId', None)
         if not uploadFolderId:
             raise ValidationException(
                 'No files were uploaded.', 'uploadFolderId')
-        uploadFolder = self.model('folder').load(
-            uploadFolderId, user=user, level=AccessType.WRITE)
+        uploadFolder = Folder.load(
+            uploadFolderId, user=user, level=AccessType.WRITE, exc=False)
         if not uploadFolder:
             raise ValidationException(
                 'Invalid upload folder ID.', 'uploadFolderId')
@@ -143,7 +139,7 @@ class DatasetResource(Resource):
                 'anonymously.', 'attribution')
 
         # TODO: make this return only the dataset fields
-        return self.model('dataset', 'isic_archive').ingestDataset(
+        return Dataset.ingestDataset(
             uploadFolder=uploadFolder, user=user, name=name,
             description=description, license=licenseValue, signature=signature,
             anonymous=anonymous, attribution=attribution)

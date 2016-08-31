@@ -133,9 +133,10 @@ class TaskResource(Resource):
     def getSegmentationTasks(self, params):
         Image = self.model('image', 'isic_archive')
         Segmentation = self.model('segmentation', 'isic_archive')
+        User = self.model('user', 'isic_archive')
 
         user = self.getCurrentUser()
-        userSkill = Segmentation.getUserSkill(user)
+        userSkill = User.getSegmentationSkill(user)
         if userSkill == Segmentation.Skill.EXPERT:
             pipeline = \
                 self._pipeline1AllImages(user) + \
@@ -167,6 +168,7 @@ class TaskResource(Resource):
         Dataset = self.model('dataset', 'isic_archive')
         Image = self.model('image', 'isic_archive')
         Segmentation = self.model('segmentation', 'isic_archive')
+        User = self.model('user', 'isic_archive')
 
         self.requireParams(['datasetId'], params)
         user = self.getCurrentUser()
@@ -174,7 +176,7 @@ class TaskResource(Resource):
         dataset = Dataset.load(
             id=params['datasetId'], user=user, level=AccessType.READ, exc=True)
 
-        userSkill = Segmentation.getUserSkill(user)
+        userSkill = User.getSegmentationSkill(user)
         if userSkill == Segmentation.Skill.EXPERT:
             # TODO: prefer an image with a novice segmentation to one with
             # no segmentations

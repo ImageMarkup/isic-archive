@@ -63,8 +63,8 @@ isic.views.TasksView = isic.View.extend({
         this.annotationTasks.pageLimit = Number.MAX_SAFE_INTEGER;
 
         this.taskQCView = new isic.views.TasksGroupView({
-            title: 'Phase 0',
-            subtitle: 'Images to QC',
+            title: 'Dataset Review',
+            subtitle: 'QC review newly uploaded datasets',
             linkPrefix: '/uda/task/p0/',
             resourceName: 'dataset',
             collection: this.qcTasks,

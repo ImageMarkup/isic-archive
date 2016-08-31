@@ -1,6 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+###############################################################################
+#  Copyright Kitware Inc.
+#
+#  Licensed under the Apache License, Version 2.0 ( the "License" );
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+###############################################################################
+
+
 import csv
 import os
 import shutil
@@ -24,7 +41,8 @@ class TempDir(object):
 
     def __enter__(self):
         assetstore = ModelImporter.model('assetstore').getCurrent()
-        assetstore_adapter = assetstore_utilities.getAssetstoreAdapter(assetstore)
+        assetstore_adapter = assetstore_utilities.getAssetstoreAdapter(
+            assetstore)
         try:
             self.temp_dir = tempfile.mkdtemp(dir=assetstore_adapter.tempDir)
         except (AttributeError, OSError):
@@ -64,7 +82,6 @@ class ZipFileOpener(object):
             file_list.append((original_file, original_file_relpath))
         return self._defaultUnzipIter(zip_file, file_list), len(file_list)
 
-
     def _defaultUnzipIter(self, zip_file, file_list):
         with TempDir() as temp_dir:
             for original_file, original_file_relpath in file_list:
@@ -79,7 +96,6 @@ class ZipFileOpener(object):
                 os.remove(temp_file_path)
             zip_file.close()
 
-
     def _fallbackUnzip(self):
         with TempDir() as temp_dir:
             unzip_command = (
@@ -92,8 +108,9 @@ class ZipFileOpener(object):
             try:
                 with open(os.devnull, 'rb') as null_in,\
                         open(os.devnull, 'wb') as null_out:
-                    subprocess.check_call(unzip_command,
-                        stdin=null_in, stdout=null_out, stderr=subprocess.STDOUT)
+                    subprocess.check_call(
+                        unzip_command, stdin=null_in, stdout=null_out,
+                        stderr=subprocess.STDOUT)
             except subprocess.CalledProcessError:
                 self.__exit__(*sys.exc_info())
                 raise
@@ -102,7 +119,8 @@ class ZipFileOpener(object):
             for temp_dir_path, _, temp_file_names in os.walk(temp_dir):
                 for temp_file_name in temp_file_names:
                     temp_file_path = os.path.join(temp_dir_path, temp_file_name)
-                    original_file_relpath = os.path.relpath(temp_file_path, temp_dir)
+                    original_file_relpath = os.path.relpath(
+                        temp_file_path, temp_dir)
                     file_list.append((temp_file_path, original_file_relpath))
             return iter(file_list), len(file_list)
 
@@ -161,7 +179,7 @@ def handleCsv(dataset_folder, user, csv_file):
             user=user,
             title='Processing "%s"' % csv_file['name'],
             state=ProgressState.ACTIVE,
-            message='Parsing CSV') as progress:
+            message='Parsing CSV') as progress:  # NOQA
 
         # csv.reader(csvfile, delimiter=',', quotechar='"')
         csv_reader = csv.DictReader(upload_file_obj)
@@ -175,7 +193,8 @@ def handleCsv(dataset_folder, user, csv_file):
         for csv_row in csv_reader:
             filename = csv_row.pop(filenameField, None)
             if not filename:
-                parse_errors.append('No "filename" field in row %d' % csv_reader.line_num)
+                parse_errors.append(
+                    'No "filename" field in row %d' % csv_reader.line_num)
                 continue
 
             # TODO: require 'user' to match image creator?
@@ -190,7 +209,8 @@ def handleCsv(dataset_folder, user, csv_file):
                 continue
             elif image_items.count() > 1:
                 parse_errors.append(
-                    'Multiple images found with original filename "%s"' % filename)
+                    'Multiple images found with original filename "%s"' %
+                    filename)
                 continue
             else:
                 image_item = image_items.next()
@@ -205,7 +225,8 @@ def handleCsv(dataset_folder, user, csv_file):
         # TODO: eventually don't store whole string in memory
         parse_errors_str = '\n'.join(parse_errors)
 
-        parent_item = ModelImporter.model('item').load(csv_file['itemId'], force=True)
+        parent_item = ModelImporter.model('item').load(
+            csv_file['itemId'], force=True)
 
         upload = ModelImporter.model('upload').createUpload(
             user=getAdminUser(),

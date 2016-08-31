@@ -26,5 +26,6 @@ from .featureset import Featureset
 from .image import Image
 from .segmentation import Segmentation
 from .study import Study
+from .user import User
 
-__all__ = [Annotation, Dataset, Featureset, Image, Segmentation, Study]
+__all__ = [Annotation, Dataset, Featureset, Image, Segmentation, Study, User]

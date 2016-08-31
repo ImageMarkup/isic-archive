@@ -15,12 +15,8 @@
 ###############################################################################
 
 add_python_style_test(
-  python_static_analysis_isic_archive_models
-  "${CMAKE_CURRENT_LIST_DIR}/server/models"
-)
-add_python_style_test(
-  python_static_analysis_isic_archive_api
-  "${CMAKE_CURRENT_LIST_DIR}/server/api"
+  python_static_analysis_isic_archive
+  "${CMAKE_CURRENT_LIST_DIR}/server"
 )
 
 add_eslint_test(

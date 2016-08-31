@@ -133,13 +133,13 @@ class Study(FolderModel):
         return self.model('featureset', 'isic_archive').load(
             study['meta']['featuresetId'], exc=True)
 
-    def getAnnotators(self, study, fields=None):
+    def getAnnotators(self, study):
         Folder = self.model('folder')
-        User = self.model('user')
+        User = self.model('user', 'isic_archive')
         annotatorFolders = Folder.find({'parentId': study['_id']})
         return User.find({
             '_id': {'$in': annotatorFolders.distinct('meta.userId')}
-        }, fields=fields)
+        })
 
     def getImages(self, study, fields=None):
         Annotation = self.model('annotation', 'isic_archive')

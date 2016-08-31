@@ -82,7 +82,8 @@ class Annotation(ItemModel):
         ])
 
         if not image:
-            image = Image.load(annotation['meta']['imageId'], force=True)
+            image = Image.load(annotation['meta']['imageId'], force=True,
+                               exc=True)
         superpixelsData = Image.superpixelsData(image)
 
         possibleMask = numpy.in1d(
@@ -101,7 +102,7 @@ class Annotation(ItemModel):
     def renderAnnotation(self, annotation, featureId):
         Image = self.model('image', 'isic_archive')
 
-        image = Image.load(annotation['meta']['imageId'], force=True)
+        image = Image.load(annotation['meta']['imageId'], force=True, exc=True)
         renderData = Image.imageData(image)
 
         possibleMask, definiteMask = self._getImageMasks(
@@ -141,7 +142,7 @@ class Annotation(ItemModel):
                     raise ValidationException(
                         'Annotation field "%s" must be an ObjectId' % field)
 
-            study = Study.load(doc['meta']['studyId'], force=True)
+            study = Study.load(doc['meta']['studyId'], force=True, exc=False)
             if not study:
                 raise ValidationException(
                     'Annotation field "studyId" must reference an existing '
