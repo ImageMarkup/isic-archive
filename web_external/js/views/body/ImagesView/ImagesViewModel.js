@@ -44,7 +44,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
 
         // Load the pegjs grammar and get the study names
         // before attempting to get histograms or image IDs
-        jQuery.when(self.getStudyNames(), self.loadFilterGrammar())
+        jQuery.when(self.getDatasetNames(), self.loadFilterGrammar())
             .then(function () {
                 // We need the study names before getting any histograms
                 self.updateHistogram('overview');
@@ -61,29 +61,17 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             self.set('selectedImageId', null);
         });
     },
-    getStudyNames: function () {
-        var self = this;
+    getDatasetNames: function () {
         return girder.restRequest({
-            path: 'collection'
-        }).then(function (collectionResp) {
-            var collectionId = collectionResp.filter(function (collection) {
-                return collection.name === 'Lesion Images';
-            })[0]['_id'];
-            return girder.restRequest({
-                path: 'folder',
-                data: {
-                    parentType: 'collection',
-                    parentId: collectionId
-                }
-            }).then(function (folderResp) {
-                self.studyNameLookup = {};
-                self.studyIdLookup = {};
-                folderResp.forEach(function (folder) {
-                    self.studyNameLookup[folder['_id']] = folder['name'];
-                    self.studyIdLookup[folder['name']] = folder['_id'];
-                });
-            });
-        });
+            path: 'dataset'
+        }).then(_.bind(function (datasetResp) {
+            this.datasetNameLookup = {};
+            this.datasetIdLookup = {};
+            datasetResp.forEach(_.bind(function (dataset) {
+                this.datasetNameLookup[dataset['_id']] = dataset['name'];
+                this.datasetIdLookup[dataset['name']] = dataset['_id'];
+            }, this));
+        }, this));
     },
     loadFilterGrammar: function () {
         var self = this;
@@ -183,7 +171,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         Object.keys(histogram).forEach(function (attrName) {
             histogram[attrName].forEach(function (bin, index) {
                 if (attrName === 'folderId') {
-                    bin.label = self.studyNameLookup[bin.label];
+                    bin.label = self.datasetNameLookup[bin.label];
                 } else if (_.isNumber(bin.lowBound) &&
                         _.isNumber(bin.highBound)) {
                     // binUtils.js doesn't have access to D3's superior number
