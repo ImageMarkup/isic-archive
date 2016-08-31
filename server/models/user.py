@@ -28,27 +28,33 @@ class User(UserModel):
         # self.summaryFields = ['_id', 'login', 'firstName', 'lastName']
 
     def filteredSummary(self, user, accessorUser, anonymousIndex=None):
-        if accessorUser.get('admin', False):
-            return {
-                field: user[field]
-                for field in
-                ['_id', 'login', 'firstName', 'lastName']
-            }
-        elif anonymousIndex is not None:
-            if not isinstance(anonymousIndex, int) or \
-                    anonymousIndex > 25:
-                raise ValueError('anonymousIndex must be an int < 26')
-            anonymousLabel = chr(ord('A') + anonymousIndex)
-            return {
-                '_id': user['_id'],
-                'login': 'Rater %s' % anonymousLabel
-            }
-        else:
-            return {
-                field: user[field]
-                for field in
-                ['_id', 'login']
-            }
+        return {
+            field: user[field]
+            for field in
+            ['_id', 'login', 'firstName', 'lastName']
+        }
+        # TODO: re-enable this
+        # if accessorUser.get('admin', False):
+        #     return {
+        #         field: user[field]
+        #         for field in
+        #         ['_id', 'login', 'firstName', 'lastName']
+        #     }
+        # elif anonymousIndex is not None:
+        #     if not isinstance(anonymousIndex, int) or \
+        #             anonymousIndex > 25:
+        #         raise ValueError('anonymousIndex must be an int < 26')
+        #     anonymousLabel = chr(ord('A') + anonymousIndex)
+        #     return {
+        #         '_id': user['_id'],
+        #         'login': 'Rater %s' % anonymousLabel
+        #     }
+        # else:
+        #     return {
+        #         field: user[field]
+        #         for field in
+        #         ['_id', 'login']
+        #     }
 
     def _isAdminOrMember(self, user, groupName):
         Group = self.model('group')
