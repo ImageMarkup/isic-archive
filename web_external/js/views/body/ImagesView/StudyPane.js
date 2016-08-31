@@ -36,7 +36,7 @@ isic.views.ImagesViewSubViews.StudyPane = Backbone.View.extend({
         svg.select('.bins').selectAll('.bin')
             .on('click', function (d) {
                 console.log('TODO: show a modal, describing the ' +
-                    d + ' study (folder id: ' + self.model.studyIdLookup[d] + ')');
+                    d + ' study (folder id: ' + self.model.datasetIdLookup[d] + ')');
             });
         return this;
     }
