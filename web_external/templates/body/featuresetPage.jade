@@ -9,8 +9,7 @@
       td= featureset.get('version')
     tr
       td.isic-featureset-table-label Creator
-      td
-        | #{user.firstName} #{user.lastName} (#{user.login})
+      td= formatUser(user)
 
   each featureType in [{id: 'globalFeatures', name: 'Global Features'}, {id: 'localFeatures', name: 'Local Features'}]
     table.table.table-condensed.isic-featureset-table

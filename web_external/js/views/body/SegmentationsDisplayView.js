@@ -27,7 +27,8 @@ isic.views.SegmentationDisplayView = isic.View.extend({
         this.$el.html(isic.templates.segmentationDisplayPage({
             segmentation: this.model,
             created: created,
-            thumbnailUrl: thumbnailUrl
+            thumbnailUrl: thumbnailUrl,
+            formatUser: this.formatUser
         }));
 
         return this;

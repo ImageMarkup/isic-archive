@@ -10,7 +10,7 @@ if segmentation.id
         td= segmentation.get('skill')
       tr
         td Creator
-        td #{creator['firstName']} #{creator['lastName']} (#{creator['login']})
+        td= formatUser(creator)
       tr
         td Source
         td= segmentation.get('lesionBoundary')['properties']['source']

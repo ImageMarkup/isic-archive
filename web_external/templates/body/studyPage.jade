@@ -8,7 +8,7 @@
     if study.get('users').length
       ul
         each user in study.get('users')
-          li #{user.firstName} #{user.lastName} (#{user.login})
+          li= formatUser(user)
     else
       | (no users)
 
