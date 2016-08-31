@@ -130,7 +130,7 @@ def _provisionImages():
         )
         Group.removeUser(contributorsGroup, getAdminUser())
 
-    reviewerGroup = Group.findOne({'name': 'Dataset Reviewers'})
+    reviewerGroup = Group.findOne({'name': 'Dataset QC Reviewers'})
     if not reviewerGroup:
         reviewerGroup = Group.createGroup(
             name='Dataset QC Reviewers',
