@@ -58,6 +58,7 @@ class StudyResource(Resource):
     @access.public
     def find(self, params):
         Study = self.model('study', 'isic_archive')
+        User = self.model('user', 'isic_archive')
 
         limit, offset, sort = self.getPagingParameters(params, 'lowerName')
 
@@ -66,11 +67,9 @@ class StudyResource(Resource):
             if params['userId'] == 'me':
                 annotatorUser = self.getCurrentUser()
             else:
-                annotatorUser = self.model('user').load(
+                annotatorUser = User.load(
                     id=params['userId'],
-                    level=AccessType.READ,
-                    user=self.getCurrentUser()
-                )
+                    force=True, exc=True)
 
         state = None
         if params.get('state'):
@@ -108,7 +107,7 @@ class StudyResource(Resource):
         Study = self.model('study', 'isic_archive')
         Featureset = self.model('featureset', 'isic_archive')
         Image = self.model('image', 'isic_archive')
-        User = self.model('user')
+        User = self.model('user', 'isic_archive')
 
         if params.get('format') == 'csv':
             cherrypy.response.stream = True
@@ -118,31 +117,29 @@ class StudyResource(Resource):
             return functools.partial(self._getStudyCSVStream, study)
 
         else:
-            output = Study.filter(study, self.getCurrentUser())
+            currentUser = self.getCurrentUser()
+            output = Study.filter(study, currentUser)
             del output['_accessLevel']
-            output['_modelType'] = 'study'
-
-            output['featureset'] = Featureset.load(
-                id=study['meta']['featuresetId'],
-                fields=Featureset.summaryFields
-            )
-
-            userSummaryFields = ['_id', 'login', 'firstName', 'lastName']
-
-            output['creator'] = User.load(
-                output.pop('creatorId'),
-                force=True, exc=True,
-                fields=userSummaryFields)
-
-            output['users'] = list(
-                Study.getAnnotators(
-                    study, userSummaryFields
-                ).sort('login', SortDir.ASCENDING))
-
-            output['images'] = list(
-                Study.getImages(
-                    study, Image.summaryFields
-                ).sort('lowerName', SortDir.ASCENDING))
+            output.update({
+                '_modelType': 'study',
+                'featureset': Featureset.load(
+                    id=study['meta']['featuresetId'],
+                    fields=Featureset.summaryFields, exc=True),
+                'creator': User.filteredSummary(
+                    User.load(
+                        output.pop('creatorId'),
+                        force=True, exc=True),
+                    currentUser),
+                'users': [
+                    User.filteredSummary(annotatorUser, currentUser)
+                    for annotatorUser in
+                    Study.getAnnotators(study).sort('login', SortDir.ASCENDING)
+                ],
+                'images': list(
+                    Study.getImages(
+                        study, Image.summaryFields
+                    ).sort('lowerName', SortDir.ASCENDING))
+            })
 
             return output
 
@@ -150,7 +147,7 @@ class StudyResource(Resource):
         Study = self.model('study', 'isic_archive')
         Featureset = self.model('featureset', 'isic_archive')
 
-        featureset = Featureset.load(study['meta']['featuresetId'])
+        featureset = Featureset.load(study['meta']['featuresetId'], exc=True)
         csvFields = tuple(itertools.chain(
             ('study_name', 'study_id',
              'user_login_name', 'user_id',
@@ -255,7 +252,8 @@ class StudyResource(Resource):
 
     def _requireStudyAdmin(self, user):
         """Require that user is a designated study admin or site admin."""
-        studyAdminsGroup = self.model('group').findOne({
+        Group = self.model('group')
+        studyAdminsGroup = Group.findOne({
             'name': 'Study Administrators'})
         if not studyAdminsGroup or \
                 studyAdminsGroup['_id'] not in user['groups']:
@@ -278,6 +276,11 @@ class StudyResource(Resource):
     )
     @access.user
     def createStudy(self, params):
+        Study = self.model('study', 'isic_archive')
+        Featureset = self.model('featureset', 'isic_archive')
+        Image = self.model('image', 'isic_archive')
+        User = self.model('user', 'isic_archive')
+
         isJson = cherrypy.request.headers['Content-Type'] == 'application/json'
         if isJson:
             params = self.getBodyJson()
@@ -307,27 +310,26 @@ class StudyResource(Resource):
         featuresetId = params['featuresetId']
         if not featuresetId:
             raise ValidationException('Invalid featureset ID.', 'featuresetId')
-        featureset = self.model('featureset', 'isic_archive').load(featuresetId)
-        if not featureset:
-            raise ValidationException('Invalid featureset ID.', 'featuresetId')
+        featureset = Featureset.load(featuresetId, exc=True)
 
         annotatorUsers = [
-            self.model('user').load(
-                annotatorUserId, user=creatorUser, level=AccessType.READ)
+            User.load(
+                annotatorUserId, user=creatorUser, level=AccessType.READ,
+                exc=True)
             for annotatorUserId in params['userIds']
         ]
 
         images = [
-            self.model('image', 'isic_archive').load(
-                imageId, user=creatorUser, level=AccessType.READ)
+            Image.load(
+                imageId, user=creatorUser, level=AccessType.READ, exc=True)
             for imageId in params['imageIds']
         ]
 
-        study = self.model('study', 'isic_archive').createStudy(
+        study = Study.createStudy(
             studyName, creatorUser, featureset, annotatorUsers, images)
 
         # TODO return nothing? return full study? return 201 + Location header?
-        return study
+        return self.getStudy(study, {})
 
     @describeRoute(
         Description('Add a user as an annotator of a study.')
@@ -340,6 +342,9 @@ class StudyResource(Resource):
     @access.user
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
     def addAnnotator(self, study, params):
+        Study = self.model('study', 'isic_archive')
+        User = self.model('user', 'isic_archive')
+
         # TODO: make the loadmodel decorator use AccessType.WRITE,
         # once permissions work
         if cherrypy.request.headers['Content-Type'] == 'application/json':
@@ -349,9 +354,8 @@ class StudyResource(Resource):
         creatorUser = self.getCurrentUser()
         self._requireStudyAdmin(creatorUser)
 
-        annotatorUser = self.model('user').load(
-            id=params['userId'], force=True)
+        annotatorUser = User.load(
+            params['userId'], user=creatorUser, level=AccessType.READ, exc=True)
 
-        self.model('study', 'isic_archive').addAnnotator(
-            study, annotatorUser, creatorUser)
+        Study.addAnnotator(study, annotatorUser, creatorUser)
         # TODO: return?

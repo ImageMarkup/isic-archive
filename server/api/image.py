@@ -88,7 +88,7 @@ class ImageResource(Resource):
     def getImage(self, image, params):
         Dataset = self.model('dataset', 'isic_archive')
         Image = self.model('image', 'isic_archive')
-        User = self.model('user')
+        User = self.model('user', 'isic_archive')
 
         output = Image.filter(image, self.getCurrentUser())
         output['_modelType'] = 'image'
@@ -102,11 +102,11 @@ class ImageResource(Resource):
         del output['dataset']['baseParentType']
         del output['dataset']['lowerName']
 
-        userSummaryFields = ['_id', 'login', 'firstName', 'lastName']
-        output['creator'] = User.load(
-            output.pop('creatorId'),
-            force=True, exc=True,
-            fields=userSummaryFields)
+        output['creator'] = User.filteredSummary(
+            User.load(
+                output.pop('creatorId'),
+                force=True, exc=True),
+            self.getCurrentUser())
 
         if 'originalFilename' in output['meta']:
             currentUser = self.getCurrentUser()

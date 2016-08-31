@@ -66,14 +66,14 @@ class FeaturesetResource(Resource):
     @loadmodel(model='featureset', plugin='isic_archive')
     def getFeatureset(self, featureset, params):
         Featureset = self.model('featureset', 'isic_archive')
-        User = self.model('user')
+        User = self.model('user', 'isic_archive')
 
         output = Featureset.filter(featureset)
 
-        userSummaryFields = ['_id', 'login', 'firstName', 'lastName']
-        output['creator'] = User.load(
-            output.pop('creatorId'),
-            force=True, exc=True,
-            fields=userSummaryFields)
+        output['creator'] = User.filteredSummary(
+            User.load(
+                output.pop('creatorId'),
+                force=True, exc=True),
+            self.getCurrentUser())
 
         return output

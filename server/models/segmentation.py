@@ -152,7 +152,7 @@ class Segmentation(Model):
             assert doc['skill'] in {self.Skill.NOVICE, self.Skill.EXPERT}
 
             assert isinstance(doc['creatorId'], ObjectId)
-            assert self.model('user').find(
+            assert self.model('user', 'isic_archive').find(
                 {'_id': doc['creatorId']}).count()
 
             assert isinstance(doc['lesionBoundary'], dict)

@@ -71,7 +71,7 @@ class SegmentationResource(Resource):
         user = self.getCurrentUser()
 
         image = self.model('image', 'isic_archive').load(
-            bodyJson['imageId'], level=AccessType.READ, user=user)
+            bodyJson['imageId'], level=AccessType.READ, user=user, exc=True)
 
         lesionBoundary = bodyJson['lesionBoundary']
         lesionBoundary['properties']['startTime'] = \
@@ -102,16 +102,19 @@ class SegmentationResource(Resource):
     @access.public
     @loadmodel(model='segmentation', plugin='isic_archive')
     def getSegmentation(self, segmentation, params):
+        Image = self.model('image', 'isic_archive')
+        User = self.model('user', 'isic_archive')
+
         # TODO: convert this to make Segmentation use an AccessControlMixin
-        self.model('image', 'isic_archive').load(
+        Image.load(
             segmentation['imageId'], level=AccessType.READ,
             user=self.getCurrentUser(), exc=True)
 
-        userSummaryFields = ['_id', 'login', 'firstName', 'lastName']
-        segmentation['creator'] = self.model('user').load(
-            segmentation.pop('creatorId'),
-            force=True, exc=True,
-            fields=userSummaryFields)
+        segmentation['creator'] = User.filteredSummary(
+            User.load(
+                segmentation.pop('creatorId'),
+                force=True, exc=True),
+            self.getCurrentUser())
 
         return segmentation
 

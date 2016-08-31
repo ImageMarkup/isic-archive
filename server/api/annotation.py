@@ -51,8 +51,10 @@ class AnnotationResource(Resource):
     )
     @access.public
     def find(self, params):
-        Study = self.model('study', 'isic_archive')
         Annotation = self.model('annotation', 'isic_archive')
+        Image = self.model('image', 'isic_archive')
+        Study = self.model('study', 'isic_archive')
+        User = self.model('user', 'isic_archive')
 
         self.requireParams(('studyId',), params)
 
@@ -61,11 +63,11 @@ class AnnotationResource(Resource):
             params['studyId'], user=self.getCurrentUser(),
             level=AccessType.READ, exc=True)
 
-        annotatorUser = self.model('user').load(
+        annotatorUser = User.load(
             params['userId'], force=True, exc=True) \
             if 'userId' in params else None
 
-        image = self.model('image', 'isic_archive').load(
+        image = Image.load(
             params['imageId'], force=True, exc=True) \
             if 'imageId' in params else None
 
@@ -101,36 +103,41 @@ class AnnotationResource(Resource):
     @access.public
     @loadmodel(model='annotation', plugin='isic_archive', level=AccessType.READ)
     def getAnnotation(self, annotation, params):
-        User = self.model('user')
-        Image = self.model('image', 'isic_archive')
         Annotation = self.model('annotation', 'isic_archive')
+        Image = self.model('image', 'isic_archive')
+        Study = self.model('study', 'isic_archive')
+        User = self.model('user', 'isic_archive')
 
-        output = {
-            '_id': annotation['_id'],
-            '_modelType': 'annotation',
-            'name': annotation['name']
-        }
-        output.update(annotation['meta'])
-
-        output['state'] = Annotation.getState(annotation)
-
-        userSummaryFields = ['_id', 'login', 'firstName', 'lastName']
-        output['user'] = User.load(
-            output.pop('userId'),
-            force=True, exc=True,
-            fields=userSummaryFields)
-
+        # TODO: change this once AccessControlMixin.load is fixed upstream
+        from girder.models.model_base import Model
         # output['image'] = Image.load(
         #     output.pop('imageId'),
         #     force=True, exc=True,
         #     fields=Image.summaryFields)
-        # TODO: remove once AccessControlMixin.load is fixed upstream
-        from girder.models.model_base import Model
-        output['image'] = Model.load(
-            Image,
-            output.pop('imageId'),
-            exc=True,
-            fields=Image.summaryFields)
+
+        output = {
+            '_id': annotation['_id'],
+            '_modelType': 'annotation',
+            'studyId': annotation['meta']['studyId'],
+            'image': Model.load(
+                Image,
+                annotation['meta']['imageId'],
+                exc=True,
+                fields=Image.summaryFields),
+            'user': User.filteredSummary(
+                user=User.load(
+                    annotation['meta']['userId'],
+                    force=True, exc=True),
+                accessorUser=self.getCurrentUser()),
+            'state': Annotation.getState(annotation)
+        }
+        if Annotation.getState(annotation) == Study.State.COMPLETE:
+            output.update({
+                'annotations': annotation['meta']['annotations'],
+                'status': annotation['meta']['status'],
+                'startTime': annotation['meta']['startTime'],
+                'stopTime': annotation['meta']['startTime'],
+            })
 
         return output
 
@@ -162,7 +169,7 @@ class AnnotationResource(Resource):
         self.requireParams(('featureId',), params)
         featureId = params['featureId']
 
-        study = Study.load(annotation['meta']['studyId'], force=True)
+        study = Study.load(annotation['meta']['studyId'], force=True, exc=True)
         featureset = Study.getFeatureset(study)
 
         if not any(featureId == feature['id']

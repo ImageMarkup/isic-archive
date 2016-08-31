@@ -67,7 +67,7 @@ class DatasetResource(Resource):
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
     def getDataset(self, dataset, params):
         Dataset = self.model('dataset', 'isic_archive')
-        User = self.model('user')
+        User = self.model('user', 'isic_archive')
 
         output = Dataset.filter(
             dataset, self.getCurrentUser())
@@ -75,11 +75,11 @@ class DatasetResource(Resource):
         output['_modelType'] = 'dataset'
         output.update(dataset.get('meta', {}))
 
-        userSummaryFields = ['_id', 'login', 'firstName', 'lastName']
-        output['creator'] = User.load(
-            output.pop('creatorId'),
-            force=True, exc=True,
-            fields=userSummaryFields)
+        output['creator'] = User.filteredSummary(
+            User.load(
+                output.pop('creatorId'),
+                force=True, exc=True),
+            self.getCurrentUser())
 
         return output
 
@@ -121,7 +121,7 @@ class DatasetResource(Resource):
             raise ValidationException(
                 'No files were uploaded.', 'uploadFolderId')
         uploadFolder = self.model('folder').load(
-            uploadFolderId, user=user, level=AccessType.WRITE)
+            uploadFolderId, user=user, level=AccessType.WRITE, exc=False)
         if not uploadFolder:
             raise ValidationException(
                 'Invalid upload folder ID.', 'uploadFolderId')
