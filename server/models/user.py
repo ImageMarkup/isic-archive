@@ -68,6 +68,15 @@ class User(UserModel):
                 'Only members of the Dataset Contributors group can create '
                 'datasets.')
 
+    def canReviewDataset(self, user):
+        return self._isAdminOrMember(user, 'Dataset QC Reviewers')
+
+    def requireReviewDataset(self, user):
+        if not self.canCreateDataset(user):
+            raise AccessException(
+                'Only members of the Dataset QC Reviewers group can review '
+                'datasets.')
+
     def getSegmentationSkill(self, user):
         Group = self.model('group')
         Segmentation = self.model('segmentation', 'isic_archive')

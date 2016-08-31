@@ -24,19 +24,10 @@ import cherrypy
 
 from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel
-from girder.api.describe import Description
+from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
-from girder.models.model_base import AccessException
-from girder.utility.model_importer import ModelImporter
 
 from .provision_utility import getAdminUser
-
-
-def getItemsInFolder(folder):
-    return list(ModelImporter.model('folder').childItems(
-        folder,
-        filters={'meta.originalFilename': {'$exists': True}}
-    ))
 
 
 class UDAResource(Resource):
@@ -51,6 +42,9 @@ class UDAResource(Resource):
         self.route('POST', ('task', 'select', ':folder_id'),
                    self.selectTaskComplete)
 
+    @describeRoute(
+        Description('DEPRECATED: Complete a select task')
+    )
     @access.user
     @loadmodel(map={'folder_id': 'folder'}, model='folder',
                level=AccessType.READ)
@@ -102,49 +96,43 @@ class UDAResource(Resource):
 
         return {'status': 'success'}
 
-    def _requireCollectionAccess(self, collection_name):
-        assert(collection_name in ('Phase 0',))
-
-        collection = self.model('collection').findOne({'name': collection_name})
-        group = self.model('group').findOne({'name': collection_name})
-        user = self.getCurrentUser()
-
-        self.model('collection').requireAccess(
-            collection, user, AccessType.READ)
-        if group['_id'] not in user.get('groups', []):
-            raise AccessException(
-                'access denied for user %s to group %s' %
-                (user['_id'], collection_name))
-
-        return collection
-
+    @describeRoute(
+        Description('List available tasks.')
+        .errorResponse()
+    )
     @access.user
     def p0TaskList(self, params):
-        try:
-            collection = self._requireCollectionAccess('Phase 0')
-        except AccessException:
-            return []
+        Collection = self.model('collection')
+        Folder = self.model('folder')
+        User = self.model('user', 'isic_archive')
+
+        User.requireReviewDataset(self.getCurrentUser())
+
+        prereviewCollection = Collection.findOne({'name': 'Pre-review Images'})
         results = [
             {
                 'dataset': {
                     '_id': folder['_id'],
                     'name': folder['name']
                 },
-                'count': len(getItemsInFolder(folder)),
+                'count': Folder.childItems(
+                    folder,
+                    filters={'meta.originalFilename': {'$exists': True}}
+                    ).count(),
             }
-            for folder in self.model('folder').find({
-                'parentId': collection['_id'],
-                'name': {'$ne': 'dropzip'}
-            }, sort=[('lowerName', SortDir.ASCENDING)])
+            for folder in self.model('folder').find(
+                {'parentId': prereviewCollection['_id']},
+                sort=[('lowerName', SortDir.ASCENDING)])
         ]
         results = [result for result in results if result['count']]
         return results
 
-    p0TaskList.description = (
-        Description('List available tasks.')
-        .responseClass('UDA')
-        .errorResponse())
-
+    @describeRoute(
+        Description('Complete a QC review task.')
+        .param('details', 'JSON details of images to be QC\'d.',
+               paramType='body')
+        .errorResponse()
+    )
     @access.user
     @loadmodel(map={'folder_id': 'folder'}, model='folder',
                level=AccessType.READ)
@@ -154,12 +142,12 @@ class UDAResource(Resource):
         Item = self.model('item')
 
         # verify user's access to folder and phase
-        phase0_collection = Collection.findOne({'name': 'Phase 0'})
+        prereviewCollection = Collection.findOne({'name': 'Pre-review Images'})
         Collection.requireAccess(
-            phase0_collection, self.getCurrentUser(), AccessType.READ)
-        if folder['baseParentId'] != phase0_collection['_id']:
+            prereviewCollection, self.getCurrentUser(), AccessType.READ)
+        if folder['baseParentId'] != prereviewCollection['_id']:
             raise RestException(
-                'Folder %s is not inside Phase 0' % folder['_id'])
+                'Folder %s is not inside Pre-review Images' % folder['_id'])
 
         contents = self.getBodyJson()
 
@@ -226,13 +214,6 @@ class UDAResource(Resource):
 
         return {'status': 'success'}
 
-    p0TaskComplete.description = (
-        Description('Complete a Phase 0 (qc) task.')
-        .responseClass('UDA')
-        .param('details', 'JSON details of images to be QC\'d.',
-               paramType='body')
-        .errorResponse())
-
 
 class TaskHandler(Resource):
     def __init__(self):
@@ -241,20 +222,31 @@ class TaskHandler(Resource):
 
         self.route('GET', ('p0', ':folder_id'), self.p0TaskRedirect)
 
+    @describeRoute(
+        Description('Redirect to a QC review task')
+    )
     @access.cookie
     @access.user
     @loadmodel(map={'folder_id': 'folder'}, model='folder',
                level=AccessType.READ)
     def p0TaskRedirect(self, folder, params):
-        collection = self.model('collection').findOne({'name': 'Phase 0'})
-        if folder['baseParentId'] != collection['_id']:
-            raise RestException(
-                'Folder "%s" is not in collection "Phase 0"' % folder['_id'])
+        Collection = self.model('collection')
+        Folder = self.model('folder')
 
-        items = getItemsInFolder(folder)
-        if not items:
+        prereviewCollection = Collection.findOne({
+            'name': 'Pre-review Images'})
+        if folder['baseParentId'] != prereviewCollection['_id']:
             raise RestException(
-                'Folder "%s" in collection "Phase 0" is empty' % folder['_id'])
+                'Folder "%s" is not in collection "Pre-review Images"' %
+                folder['_id'])
+
+        if not Folder.childItems(
+                folder,
+                filters={'meta.originalFilename': {'$exists': True}}
+                ).count():
+            raise RestException(
+                'Folder "%s" in collection "Pre-review Images" is empty' %
+                folder['_id'])
 
         redirect_url = '/uda/gallery#/qc/%s' % folder['_id']
         raise cherrypy.HTTPRedirect(redirect_url, status=307)

@@ -251,7 +251,8 @@ class Image(ItemModel):
                 {'name': groupName}
             )['_id'] in user.get('groups', [])
             for groupName in
-            ['Phase 0', 'Segmentation Novices', 'Segmentation Experts']
+            ['Dataset QC Reviewers', 'Segmentation Novices',
+             'Segmentation Experts']
         ):
             # Check if all images are part of annotation studies that this user
             #   is part of
@@ -264,9 +265,9 @@ class Image(ItemModel):
                 raise AccessException(
                     'User does not have permission to flag these images.')
 
-        phase0Folders = [
-            self.model('folder').load(phase0Folder, force=True, exc=True)
-            for phase0Folder in
+        prereviewFolders = [
+            self.model('folder').load(prereviewFolder, force=True, exc=True)
+            for prereviewFolder in
             set(image['folderId'] for image in images)
         ]
 
@@ -274,9 +275,9 @@ class Image(ItemModel):
             {'name': 'Flagged Images'})
 
         datasetFlaggedFolders = {
-            phase0Folder['_id']: self.model('folder').createFolder(
+            prereviewFolder['_id']: self.model('folder').createFolder(
                 parent=flaggedCollection,
-                name=phase0Folder['name'],
+                name=prereviewFolder['name'],
                 description='',
                 parentType='collection',
                 public=None,
@@ -284,7 +285,7 @@ class Image(ItemModel):
                 allowRename=False,
                 reuseExisting=True
             )
-            for phase0Folder in phase0Folders
+            for prereviewFolder in prereviewFolders
         }
 
         flagMetadata = {

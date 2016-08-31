@@ -56,7 +56,7 @@ class Dataset(FolderModel):
         # Look for duplicate names in any of the dataset-containing collections
         datasetCollectionIds = self.model('collection').find({
             'name': {'$in': [
-                'Phase 0',
+                'Pre-review Images',
                 'Flagged Images',
                 'Lesion Images'
             ]}
@@ -69,14 +69,15 @@ class Dataset(FolderModel):
                 'A dataset with this name already exists.')
 
         datasetFolder = self.createFolder(
-            parent=self.model('collection').findOne({'name': 'Phase 0'}),
+            parent=self.model('collection').findOne({
+                'name': 'Pre-review Images'}),
             name=name,
             description=description,
             parentType='collection',
             creator=creatorUser
         )
         # The uploader may already have greater access via inheritance from
-        # Phase 0, which should not be overwritten
+        # Reviewers group, which should not be overwritten
         if not self.hasAccess(datasetFolder, creatorUser, AccessType.READ):
             datasetFolder = self.setUserAccess(
                 doc=datasetFolder,
@@ -144,8 +145,8 @@ class Dataset(FolderModel):
         """
         Ingest an uploaded dataset. This upload folder is expected to contain a
         .zip file of images and a .csv file that contains metadata about the
-        images. The images are extracted to a new folder in the "Phase 0"
-        collection and then processed.
+        images. The images are extracted to a new folder in the "Pre-review
+        Images" collection and then processed.
         """
         if not uploadFolder:
             raise ValidationException(

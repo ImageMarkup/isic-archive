@@ -121,32 +121,6 @@ def _provisionImages():
     Collection = ModelImporter.model('collection')
     Group = ModelImporter.model('group')
 
-    phase0Collection = Collection.createCollection(
-        name='Phase 0',
-        creator=getAdminUser(),
-        description='Images to QC',
-        public=False,
-        reuseExisting=True
-    )
-
-    phase0Group = Group.findOne({'name': 'Phase 0'})
-    if not phase0Group:
-        phase0Group = Group.createGroup(
-            name='Phase 0',
-            creator=getAdminUser(),
-            description='Users responsible for doing initial QC',
-            public=True
-        )
-        Group.removeUser(phase0Group, getAdminUser())
-
-    Collection.setGroupAccess(
-        doc=phase0Collection,
-        group=phase0Group,
-        # TODO: make this a special access level
-        level=AccessType.READ,
-        save=True
-    )
-
     if not Group.findOne({'name': 'Dataset Contributors'}):
         contributorsGroup = Group.createGroup(
             name='Dataset Contributors',
@@ -155,6 +129,31 @@ def _provisionImages():
             public=True
         )
         Group.removeUser(contributorsGroup, getAdminUser())
+
+    reviewerGroup = Group.findOne({'name': 'Dataset Reviewers'})
+    if not reviewerGroup:
+        reviewerGroup = Group.createGroup(
+            name='Dataset QC Reviewers',
+            creator=getAdminUser(),
+            description='Users responsible for doing initial QC',
+            public=True
+        )
+        Group.removeUser(reviewerGroup, getAdminUser())
+
+    unreviewedCollection = Collection.createCollection(
+        name='Pre-review Images',
+        creator=getAdminUser(),
+        description='Newly uploaded datasets, awaiting QC review',
+        public=False,
+        reuseExisting=True
+    )
+    Collection.setGroupAccess(
+        doc=unreviewedCollection,
+        group=reviewerGroup,
+        # TODO: make this a special access level
+        level=AccessType.WRITE,
+        save=True
+    )
 
     Collection.createCollection(
         name='Flagged Images',
