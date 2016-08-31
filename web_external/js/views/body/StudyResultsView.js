@@ -331,9 +331,7 @@ isic.views.StudyResultsView = isic.View.extend({
 
         this.selectUserView = new isic.views.StudyResultsSelectView({
             title: 'User',
-            getName: function (model) {
-                return model.get('login');
-            },
+            getName: this.formatUser,
             collection: this.users,
             parentView: this
         });
