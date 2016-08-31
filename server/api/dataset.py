@@ -101,26 +101,22 @@ class DatasetResource(Resource):
     )
     @access.user
     def ingestDataset(self, params):
+        Dataset = self.model('dataset', 'isic_archive')
+        Folder = self.model('folder')
+        User = self.model('user', 'isic_archive')
+
         if cherrypy.request.headers['Content-Type'] == 'application/json':
             params = self.getBodyJson()
         self.requireParams(('uploadFolderId', 'name'), params)
 
-        # Require that user be a member of the Dataset Contributors group or
-        # site admin
         user = self.getCurrentUser()
-        contributorsGroup = self.model('group').findOne({
-            'name': 'Dataset Contributors'})
-        if not contributorsGroup or \
-                contributorsGroup['_id'] not in user['groups']:
-            if not user.get('admin', False):
-                raise AccessException(
-                    'Only dataset contributors can create datasets.')
+        User.requireCreateDataset(user)
 
         uploadFolderId = params.get('uploadFolderId', None)
         if not uploadFolderId:
             raise ValidationException(
                 'No files were uploaded.', 'uploadFolderId')
-        uploadFolder = self.model('folder').load(
+        uploadFolder = Folder.load(
             uploadFolderId, user=user, level=AccessType.WRITE, exc=False)
         if not uploadFolder:
             raise ValidationException(
@@ -143,7 +139,7 @@ class DatasetResource(Resource):
                 'anonymously.', 'attribution')
 
         # TODO: make this return only the dataset fields
-        return self.model('dataset', 'isic_archive').ingestDataset(
+        return Dataset.ingestDataset(
             uploadFolder=uploadFolder, user=user, name=name,
             description=description, license=licenseValue, signature=signature,
             anonymous=anonymous, attribution=attribution)

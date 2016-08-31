@@ -55,17 +55,6 @@ class Segmentation(Model):
                     'isic_archive.gc_segmentation',
                     self._onDeleteItem)
 
-    def getUserSkill(self, user):
-        expertGroup = self.model('group').findOne({
-            'name': 'Segmentation Experts'})
-        if expertGroup['_id'] in user['groups']:
-            return self.Skill.EXPERT
-        noviceGroup = self.model('group').findOne({
-            'name': 'Segmentation Novices'})
-        if noviceGroup['_id'] in user['groups']:
-            return self.Skill.NOVICE
-        return None
-
     def doSegmentation(self, image, seedCoord, tolerance):
         """
         Run a lesion segmentation.

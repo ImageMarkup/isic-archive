@@ -219,17 +219,6 @@ class StudyResource(Resource):
                         responseBody.seek(0)
                         responseBody.truncate()
 
-    def _requireStudyAdmin(self, user):
-        """Require that user is a designated study admin or site admin."""
-        Group = self.model('group')
-        studyAdminsGroup = Group.findOne({
-            'name': 'Study Administrators'})
-        if not studyAdminsGroup or \
-                studyAdminsGroup['_id'] not in user['groups']:
-            if not user.get('admin', False):
-                raise AccessException('Only members of the Study Administrators'
-                                      ' group can create or modify studies.')
-
     @describeRoute(
         Description('Create an annotation study.')
         .param('name', 'The name of the study.', paramType='form')
@@ -274,7 +263,7 @@ class StudyResource(Resource):
             raise ValidationException('Name must not be empty.', 'name')
 
         creatorUser = self.getCurrentUser()
-        self._requireStudyAdmin(creatorUser)
+        User.requireAdminStudy(creatorUser)
 
         featuresetId = params['featuresetId']
         if not featuresetId:
@@ -321,7 +310,7 @@ class StudyResource(Resource):
         self.requireParams('userId', params)
 
         creatorUser = self.getCurrentUser()
-        self._requireStudyAdmin(creatorUser)
+        User.requireStudyAdmin(creatorUser)
 
         annotatorUser = User.load(
             params['userId'], user=creatorUser, level=AccessType.READ, exc=True)

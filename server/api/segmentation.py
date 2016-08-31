@@ -64,6 +64,7 @@ class SegmentationResource(Resource):
     @access.user
     def createSegmentation(self, params):
         Segmentation = self.model('segmentation', 'isic_archive')
+        User = self.model('user', 'isic_archive')
 
         bodyJson = self.getBodyJson()
         self.requireParams(('imageId', 'lesionBoundary'), bodyJson)
@@ -81,10 +82,7 @@ class SegmentationResource(Resource):
             datetime.datetime.utcfromtimestamp(
                 lesionBoundary['properties']['stopTime'] / 1000.0)
 
-        skill = Segmentation.getUserSkill(user)
-        if skill is None:
-            raise RestException(
-                'Current user is not authorized to create segmentations.')
+        skill = User.requireSegmentationSkill(user)
 
         segmentation = Segmentation.createSegmentation(
             image=image,
