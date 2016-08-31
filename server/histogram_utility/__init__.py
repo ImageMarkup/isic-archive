@@ -185,25 +185,25 @@ class HistogramUtility(object):
                         raise RestException(
                             'There are no observed values of type %s, so it is '
                             'impossible to automatically determine low/high '
-                            'bounds for an ordinal interpretation. Please supply'
-                            ' bounds or change to "categorical".' % coerceToType)
+                            'bounds for an ordinal interpretation. Please '
+                            'supply bounds or change to "categorical".' %
+                            coerceToType)
                     binSettings[attrName]['lowBound'] = lowBound
                     binSettings[attrName]['highBound'] = highBound
 
                 # Pre-populate the bins with human-readable names
-                binUtilsCode = execjs.compile('var LOCALE_INDEXES = ' +
-                                              self.foreignCode['localeIndexes.json'] + ';\n' +
-                                              self.foreignCode['binUtils.js'])
-                binSettings[attrName]['ordinalBins'] = binUtilsCode.call('createBins',
-                                                                         coerceToType,
-                                                                         numBins,
-                                                                         lowBound,
-                                                                         highBound,
-                                                                         locale)['bins']
+                binUtilsCode = execjs.compile(
+                    'var LOCALE_INDEXES = %s;\n%s' % (
+                        self.foreignCode['localeIndexes.json'],
+                        self.foreignCode['binUtils.js']))
+                binSettings[attrName]['ordinalBins'] = binUtilsCode.call(
+                    'createBins', coerceToType, numBins, lowBound, highBound,
+                    locale)['bins']
             else:
                 pass
                 # We can ignore the ordinalBins parameter if we're being
-                # categorical. TODO: the fancier 2-pass idea in histogram_reduce.js
+                # categorical.
+                # TODO: the fancier 2-pass idea in histogram_reduce.js
                 # would necessitate that we do something different here
 
         params['binSettings'] = binSettings
