@@ -17,8 +17,6 @@
 
     "angular-ui-bootstrap-bower": "0.14.3",
 
-    "angular-sanitize": "1.4.5",
-
     "bootstrap-switch": "3.3.2",
     "angular-bootstrap-switch": "0.4.1"
   },
