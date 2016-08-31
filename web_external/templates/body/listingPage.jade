@@ -16,10 +16,14 @@
 
 .isic-listing-container
   each model, index in models
-    .isic-listing-panel-group.panel-group
+    .isic-listing-panel-group.panel-group(id="#{'panel-group-' + model.cid}")
       .isic-listing-panel.panel.panel-default
-        .isic-listing-panel-heading.panel-heading
-          a(data-toggle="collapse" data-target="#{'#panel-' + model.cid}").collapsed
+        .isic-listing-panel-heading.panel-heading(
+          data-toggle="collapse",
+          data-parent="#{'#panel-group-' + model.cid}",
+          data-target="#{'#panel-' + model.cid}"
+          )
+          a.collapsed
             | #{model.get('name')}
             span.isic-listing-panel-heading-indicator.pull-right
               i.icon-right-open

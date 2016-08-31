@@ -12,9 +12,43 @@
 .isic-featureset-global-features-container
   h4 Global Features
   .isic-listing-content.isic-featureset-global-features-content
-    pre.pre-scrollable= stringify(featureset.get('globalFeatures'))
+    if featureset.get('globalFeatures').length
+      table.table.table-condensed
+        tr
+          th ID
+          th Name
+          th Type
+          th Values
+        each feature in featureset.get('globalFeatures')
+          tr
+            td= feature.id
+            td= feature.name.join(', ')
+            td= feature.type
+            td
+              table.table.table-condensed
+                tr
+                  th ID
+                  th Name
+                each valueOption in feature.options
+                  tr
+                    td=valueOption.id
+                    td=valueOption.name
+    else
+      span None
 
 .isic-featureset-local-features-container
   h4 Local Features
   .isic-listing-content.isic-featureset-local-features-content
-    pre.pre-scrollable= stringify(featureset.get('localFeatures'))
+    if featureset.get('localFeatures').length
+      table.table.table-condensed
+        tr
+          th ID
+          th Name
+          th Type
+        each feature in featureset.get('localFeatures')
+          tr
+            td= feature.id
+            td= feature.name.join(', ')
+            td= feature.type
+    else
+      span None
