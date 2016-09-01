@@ -125,10 +125,10 @@ class HistogramUtility(object):
         params['filter'] = params.get('filter', None)
         if params['filter'] is not None:
             params['filter'] = json.loads(params['filter'])
-        params['limit'] = params.get('limit', None)
+        params['limit'] = int(params.get('limit', 0))
         if params['limit'] == 0:
             params['limit'] = None
-        params['offset'] = params.get('offset', 0)
+        params['offset'] = int(params.get('offset', 0))
 
         binSettings = json.loads(params.get('binSettings', '{}'))
         for attrName in binSettings.iterkeys():
@@ -240,6 +240,10 @@ class HistogramUtility(object):
         # lowBound / highBound details to each ordinal bin
         for attrName, wrappedHistogram in histogram.iteritems():
             histogram[attrName] = wrappedHistogram['histogram']
+            if attrName in binSettings and 'ordinalBins' in binSettings[attrName]:
+                for binIndex, binObj in enumerate(binSettings[attrName]['ordinalBins']):
+                    histogram[attrName][binIndex]['lowBound'] = binObj['lowBound']
+                    histogram[attrName][binIndex]['highBound'] = binObj['highBound']
 
         if '__passedFilters__' not in histogram:
             # This will only happen if there's a count of zero;
