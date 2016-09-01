@@ -7,7 +7,7 @@ _.extend(isic, {
     collections: {},
     views: {},
     router: new Backbone.Router(),
-    events: _.clone(Backbone.Events)
+    events: girder.events
 });
 
 girder.router.enabled(false);
