@@ -62,16 +62,18 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         });
     },
     getDatasetNames: function () {
-        return girder.restRequest({
-            path: 'dataset'
-        }).then(_.bind(function (datasetResp) {
+        var deferred = $.Deferred();
+        var datasetCollection = new isic.collections.DatasetCollection();
+        datasetCollection.once('g:changed', function () {
             this.datasetNameLookup = {};
             this.datasetIdLookup = {};
-            datasetResp.forEach(_.bind(function (dataset) {
-                this.datasetNameLookup[dataset['_id']] = dataset['name'];
-                this.datasetIdLookup[dataset['name']] = dataset['_id'];
-            }, this));
-        }, this));
+            datasetCollection.each(function (dataset) {
+                this.datasetNameLookup[dataset.id] = dataset.name();
+                this.datasetIdLookup[dataset.name()] = dataset.id;
+            }, this);
+            deferred.resolve();
+        }, this).fetch();
+        return deferred.promise();
     },
     loadFilterGrammar: function () {
         var self = this;
