@@ -3,20 +3,18 @@ isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
 isic.views.ImagesViewSubViews.PagingPane = Backbone.View.extend({
     initialize: function () {
-        var self = this;
-        self.listenTo(self.model, 'change:imageIds', self.render);
-        self.listenTo(self.model, 'change:filteredSetHistogram', self.render);
-        self.listenTo(self.model, 'change:offset', self.updateControls);
-        self.listenTo(self.model, 'change:limit', self.updateControls);
+        this.listenTo(this.model, 'change:imageIds', this.render);
+        this.listenTo(this.model, 'change:filteredSetHistogram', this.render);
+        this.listenTo(this.model, 'change:offset', this.updateControls);
+        this.listenTo(this.model, 'change:limit', this.updateControls);
     },
     renderBars: function () {
-        var self = this;
-        var pageDetails = self.model.getPageDetails(true);
+        var pageDetails = this.model.getPageDetails(true);
 
         // Scale for the bars
         var pageScale = d3.scale.linear()
           .domain([0, pageDetails.filteredSetCount])
-          .range([0, self.$('#isic-images-pagingBars').width()]);
+          .range([0, this.$('#isic-images-pagingBars').width()]);
 
         // Now draw the bars indicating the size and location of
         // the page within the current filtered set
@@ -47,8 +45,7 @@ isic.views.ImagesViewSubViews.PagingPane = Backbone.View.extend({
         });
     },
     updateControls: function () {
-        var self = this;
-        var pageDetails = self.model.getPageDetails(true);
+        var pageDetails = this.model.getPageDetails(true);
 
         var hasFilters = pageDetails.filteredSetCount < pageDetails.overviewCount;
         var hasPaging = pageDetails.limit < pageDetails.filteredSetCount;
@@ -100,11 +97,11 @@ isic.views.ImagesViewSubViews.PagingPane = Backbone.View.extend({
     },
     render: function () {
         var self = this;
-        if (!self.addedImages) {
+        if (!this.addedImages) {
             // Sneaky hack: the image file name is part of the id; use the id to
             // attach the correct src attribute, as well as the appropriate
             // event listeners
-            d3.select(self.el).selectAll('.button')
+            d3.select(this.el).selectAll('.button')
                 .on('click', function () {
                     var funcName = this.getAttribute('id').slice(12);
                     self[funcName].apply(self, arguments);
@@ -119,34 +116,30 @@ isic.views.ImagesViewSubViews.PagingPane = Backbone.View.extend({
             // Set the page size to 50.
             //
             // TODO: offer a pulldown menu with several page size options.
-            self.model.set('limit', 50);
+            this.model.set('limit', 50);
 
-            self.addedImages = true;
+            this.addedImages = true;
         }
 
-        self.updateControls();
-        self.renderBars();
+        this.updateControls();
+        this.renderBars();
 
         return this;
     },
     seekFirst: function () {
-        var self = this;
-        self.model.set('offset', 0);
+        this.model.set('offset', 0);
     },
     seekPrev: function () {
-        var self = this;
-        var offset = self.model.get('offset');
-        self.model.set('offset', offset - self.model.get('limit'));
+        var offset = this.model.get('offset');
+        this.model.set('offset', offset - this.model.get('limit'));
     },
     seekNext: function () {
-        var self = this;
-        var offset = self.model.get('offset');
-        self.model.set('offset', offset + self.model.get('limit'));
+        var offset = this.model.get('offset');
+        this.model.set('offset', offset + this.model.get('limit'));
     },
     seekLast: function () {
-        var self = this;
-        var details = self.model.getPageDetails(true);
-        self.model.set('offset',
+        var details = this.model.getPageDetails(true);
+        this.model.set('offset',
             Math.floor(details.filteredSetCount / details.limit) * details.limit);
     }
 });
