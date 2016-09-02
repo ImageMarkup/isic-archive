@@ -46,7 +46,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
 
         // Load the pegjs grammar and fetch the datasets
         // before attempting to get histograms or image IDs
-        jQuery.when(self.fetchDatasets(), self.loadFilterGrammar())
+        $.when(self.fetchDatasets(), self.loadFilterGrammar())
             .then(function () {
                 // We need the study names before getting any histograms
                 self.updateHistogram('overview');
@@ -72,7 +72,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
     },
     loadFilterGrammar: function () {
         var self = this;
-        return jQuery.ajax({
+        return $.ajax({
             url: girder.staticRoot + '/built/plugins/isic_archive/extra/query.pegjs',
             dataType: 'text',
             success: function (data) {
@@ -102,7 +102,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
     },
     updateFilters: function () {
         var self = this;
-        return jQuery.when(self.updateHistogram('filteredSet'),
+        return $.when(self.updateHistogram('filteredSet'),
                            self.updateCurrentPage());
     },
     updateCurrentPage: function () {
@@ -147,7 +147,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             }));
         });
         var histogramRequest = self.updateHistogram('page');
-        return jQuery.when(imageListRequest, histogramRequest);
+        return $.when(imageListRequest, histogramRequest);
     },
     getPageDetails: function (capLimit) {
         var self = this;
