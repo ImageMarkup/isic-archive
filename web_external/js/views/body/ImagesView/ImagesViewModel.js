@@ -42,9 +42,11 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
     initialize: function () {
         var self = this;
 
-        // Load the pegjs grammar and get the study names
+        this.datasetCollection = new isic.collections.DatasetCollection();
+
+        // Load the pegjs grammar and fetch the datasets
         // before attempting to get histograms or image IDs
-        jQuery.when(self.getDatasetNames(), self.loadFilterGrammar())
+        jQuery.when(self.fetchDatasets(), self.loadFilterGrammar())
             .then(function () {
                 // We need the study names before getting any histograms
                 self.updateHistogram('overview');
@@ -61,18 +63,11 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             self.set('selectedImageId', null);
         });
     },
-    getDatasetNames: function () {
+    fetchDatasets: function () {
         var deferred = $.Deferred();
-        var datasetCollection = new isic.collections.DatasetCollection();
-        datasetCollection.once('g:changed', function () {
-            this.datasetNameLookup = {};
-            this.datasetIdLookup = {};
-            datasetCollection.each(function (dataset) {
-                this.datasetNameLookup[dataset.id] = dataset.name();
-                this.datasetIdLookup[dataset.name()] = dataset.id;
-            }, this);
+        this.datasetCollection.once('g:changed', function () {
             deferred.resolve();
-        }, this).fetch();
+        }).fetch();
         return deferred.promise();
     },
     loadFilterGrammar: function () {
@@ -173,7 +168,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         Object.keys(histogram).forEach(function (attrName) {
             histogram[attrName].forEach(function (bin, index) {
                 if (attrName === 'folderId') {
-                    bin.label = self.datasetNameLookup[bin.label];
+                    bin.label = self.datasetCollection.get(bin.label).name();
                 } else if (_.isNumber(bin.lowBound) &&
                         _.isNumber(bin.highBound)) {
                     // binUtils.js doesn't have access to D3's superior number
