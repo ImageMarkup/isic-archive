@@ -39,25 +39,23 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         }
     },
     initialize: function () {
-        var self = this;
-
         this.datasetCollection = new isic.collections.DatasetCollection();
 
         // Load the pegjs grammar and fetch the datasets
         // before attempting to get histograms or image IDs
-        $.when(self.fetchDatasets(), self.loadFilterGrammar())
-            .then(function () {
+        $.when(this.fetchDatasets(), this.loadFilterGrammar())
+            .then(_.bind(function () {
                 // We need the study names before getting any histograms
-                self.updateHistogram('overview');
+                this.updateHistogram('overview');
                 // We need the study names and the filter grammar before getting
                 // the filtered set or the current page (both the page of images
                 // and the page histogram)
-                self.updateFilters();
-            });
+                this.updateFilters();
+            }, this));
 
-        self.listenTo(self, 'change:limit', self.updateCurrentPage);
-        self.listenTo(self, 'change:offset', self.updateCurrentPage);
-        self.listenTo(self, 'change:filter', self.updateFilters);
+        this.listenTo(this, 'change:limit', this.updateCurrentPage);
+        this.listenTo(this, 'change:offset', this.updateCurrentPage);
+        this.listenTo(this, 'change:filter', this.updateFilters);
     },
     fetchDatasets: function () {
         var deferred = $.Deferred();
@@ -67,18 +65,16 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         return deferred.promise();
     },
     loadFilterGrammar: function () {
-        var self = this;
         return $.ajax({
             url: girder.staticRoot + '/built/plugins/isic_archive/extra/query.pegjs',
             dataType: 'text',
-            success: function (data) {
-                self.astParser = peg.generate(data);
-            }
+            success: _.bind(function (data) {
+                this.astParser = peg.generate(data);
+            }, this)
         });
     },
     updateHistogram: function (histogramName) {
-        var self = this;
-        var pageDetails = self.getPageDetails();
+        var pageDetails = this.getPageDetails();
         var requestParams = {};
 
         if (histogramName === 'page') {
@@ -86,26 +82,23 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             requestParams.offset = pageDetails.offset;
         }
         if (histogramName === 'page' || histogramName === 'filteredSet') {
-            requestParams.filter = JSON.stringify(self.getFilterAstTree());
+            requestParams.filter = JSON.stringify(this.getFilterAstTree());
         }
         return girder.restRequest({
             path: 'image/histogram',
             data: requestParams
-        }).then(function (resp) {
-            self.set(histogramName + 'Histogram',
-                self.postProcessHistogram(resp));
-        });
+        }).then(_.bind(function (resp) {
+            this.set(histogramName + 'Histogram',
+                this.postProcessHistogram(resp));
+        }, this));
     },
     updateFilters: function () {
-        var self = this;
-        return $.when(self.updateHistogram('filteredSet'),
-                           self.updateCurrentPage());
+        return $.when(this.updateHistogram('filteredSet'),
+                           this.updateCurrentPage());
     },
     updateCurrentPage: function () {
-        var self = this;
-
         // Construct the parameters to send to the server
-        var pageDetails = self.getPageDetails();
+        var pageDetails = this.getPageDetails();
 
         // The page must include at least one image
         pageDetails.limit = Math.max(1, pageDetails.limit);
@@ -123,13 +116,13 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         }
 
         // In case we've overridden anything, update with the cleaned values
-        self.set({
+        this.set({
             limit: pageDetails.limit,
             offset: pageDetails.offset
         }, {silent: true}); // eslint-disable-line no-silent
 
         // Pass in filter settings
-        pageDetails.filter = self.getFilterAstTree();
+        pageDetails.filter = this.getFilterAstTree();
         var imagesDeferred = $.Deferred();
         var images = new isic.collections.ImageCollection();
         images.once('g:changed', _.bind(function () {
@@ -138,19 +131,18 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         }, this)).fetch({
             limit: pageDetails.limit,
             offset: pageDetails.offset,
-            filter: self.getFilterAstTree()
+            filter: this.getFilterAstTree()
         });
 
-        var histogramRequest = self.updateHistogram('page');
+        var histogramRequest = this.updateHistogram('page');
         return $.when(imagesDeferred.promise(), histogramRequest);
     },
     getPageDetails: function (capLimit) {
-        var self = this;
         var result = {
-            overviewCount: self.get('overviewHistogram').__passedFilters__[0].count,
-            filteredSetCount: self.get('filteredSetHistogram').__passedFilters__[0].count,
-            offset: self.get('offset'),
-            limit: self.get('limit')
+            overviewCount: this.get('overviewHistogram').__passedFilters__[0].count,
+            filteredSetCount: this.get('filteredSetHistogram').__passedFilters__[0].count,
+            offset: this.get('offset'),
+            limit: this.get('limit')
         };
         if (capLimit && result.offset + result.limit > result.filteredSetCount) {
             result.limit = result.filteredSetCount - result.offset;
@@ -158,12 +150,11 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         return result;
     },
     postProcessHistogram: function (histogram) {
-        var self = this;
         var formatter = d3.format('0.3s');
-        _.each(histogram, function (value, key) {
-            _.each(value, function (bin, index) {
+        _.each(histogram, _.bind(function (value, key) {
+            _.each(value, _.bind(function (bin, index) {
                 if (key === 'folderId') {
-                    bin.label = self.datasetCollection.get(bin.label).name();
+                    bin.label = this.datasetCollection.get(bin.label).name();
                 } else if (_.isNumber(bin.lowBound) &&
                         _.isNumber(bin.highBound)) {
                     // binUtils.js doesn't have access to D3's superior number
@@ -177,24 +168,22 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                         bin.label += ')';
                     }
                 }
-            });
-        });
+            }, this));
+        }, this));
         return histogram;
     },
     autoDetectAttributeInterpretation: function (attrName) {
-        var self = this;
         // Go with the default interpretation for the attribute type
-        return window.ENUMS.DEFAULT_INTERPRETATIONS[self.getAttributeType(attrName)];
+        return window.ENUMS.DEFAULT_INTERPRETATIONS[this.getAttributeType(attrName)];
     },
     getAttributeInterpretation: function (attrName) {
-        var self = this;
         var attrSpec = window.ENUMS.SCHEMA[attrName];
         if (attrSpec.interpretation) {
             // The user has specified an interpretation
             return attrSpec.interpretation;
         } else {
             // auto-detect the interpretation
-            return self.autoDetectAttributeInterpretation(attrName);
+            return this.autoDetectAttributeInterpretation(attrName);
         }
     },
     autoDetectAttributeType: function (attrName) {
@@ -212,26 +201,24 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         return attrType;
     },
     getAttributeType: function (attrName) {
-        var self = this;
         var attrSpec = window.ENUMS.SCHEMA[attrName];
         if (attrSpec.coerceToType) {
             // The user has specified a data type
             return attrSpec.coerceToType;
         } else {
             // auto-detect the data type
-            return self.autoDetectAttributeType(attrName);
+            return this.autoDetectAttributeType(attrName);
         }
     },
     getBinStatus: function (attrName, bin) {
-        var self = this;
         // Easy check (that also validates whether filter.standard[attrName]
         // even exists)
-        var filterState = self.getFilteredState(attrName);
+        var filterState = this.getFilteredState(attrName);
         if (filterState === window.ENUMS.FILTER_STATES.NO_FILTERS) {
             return window.ENUMS.BIN_STATES.INCLUDED;
         }
 
-        var filterSpec = self.get('filter').standard[attrName];
+        var filterSpec = this.get('filter').standard[attrName];
 
         // Next easiest check: is the label not in the include list (if there is
         // one) / in the list that is specifically excluded?
@@ -249,7 +236,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                 bin.hasOwnProperty('highBound')) {
             // Make sure to use proper string comparisons if this is a string bin
             var comparator;
-            if (self.getAttributeType(attrName) === 'string') {
+            if (this.getAttributeType(attrName) === 'string') {
                 comparator = function (a, b) {
                     return a.localeCompare(b);
                 };
@@ -280,7 +267,6 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         return window.ENUMS.BIN_STATES.INCLUDED;
     },
     applyFilter: function (filter) {
-        var self = this;
         // Clean up the filter specification
         var standardKeys = Object.keys(filter.standard);
         standardKeys.forEach(function (k) {
@@ -304,22 +290,20 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         // event (because the object reference matches).
         // Instead, we silently set the filter (so there
         // aren't two events), and trigger the event manually
-        self.set('filter', filter, {silent: true}); // eslint-disable-line no-silent
-        self.trigger('change:filter');
+        this.set('filter', filter, {silent: true}); // eslint-disable-line no-silent
+        this.trigger('change:filter');
     },
     clearFilters: function (attrName) {
-        var self = this;
-        var filter = self.get('filter');
+        var filter = this.get('filter');
         if (filter.standard.hasOwnProperty(attrName)) {
             delete filter.standard[attrName].excludeRanges;
             delete filter.standard[attrName].excludeValues;
             delete filter.standard[attrName].includeValues;
-            self.applyFilter(filter);
+            this.applyFilter(filter);
         }
     },
     selectRange: function (attrName, lowBound, highBound) {
-        var self = this;
-        var filter = self.get('filter');
+        var filter = this.get('filter');
         // Temporarily init a filter object for this attribute
         // if it doesn't already exist
         if (!filter.standard[attrName]) {
@@ -333,11 +317,10 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             { lowBound: highBound }
         ];
 
-        self.applyFilter(filter);
+        this.applyFilter(filter);
     },
     removeRange: function (attrName, lowBound, highBound, comparator) {
-        var self = this;
-        var filter = self.get('filter');
+        var filter = this.get('filter');
         // Temporarily init a filter object for this attribute
         // if it doesn't already exist
         if (!filter.standard[attrName]) {
@@ -356,11 +339,10 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             excludeRanges, [range], comparator);
         filter.standard[attrName].excludeRanges = excludeRanges;
 
-        self.applyFilter(filter);
+        this.applyFilter(filter);
     },
     includeRange: function (attrName, lowBound, highBound, comparator) {
-        var self = this;
-        var filter = self.get('filter');
+        var filter = this.get('filter');
         // Temporarily init a filter object for this attribute
         // if it doesn't already exist
         if (!filter.standard[attrName]) {
@@ -379,11 +361,10 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             excludeRanges, [range], comparator);
         filter.standard[attrName].excludeRanges = excludeRanges;
 
-        self.applyFilter(filter);
+        this.applyFilter(filter);
     },
     selectValues: function (attrName, values) {
-        var self = this;
-        var filter = self.get('filter');
+        var filter = this.get('filter');
         // Temporarily init a filter object for this attribute
         // if it doesn't already exist
         if (!filter.standard[attrName]) {
@@ -394,11 +375,10 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         filter.standard[attrName].includeValues = values;
         delete filter.standard[attrName].excludeValues;
 
-        self.applyFilter(filter);
+        this.applyFilter(filter);
     },
     removeValue: function (attrName, value) {
-        var self = this;
-        var filter = self.get('filter');
+        var filter = this.get('filter');
         // Temporarily init a filter object for this attribute
         // if it doesn't already exist
         if (!filter.standard[attrName]) {
@@ -413,11 +393,10 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         filter.standard[attrName].excludeValues = excludeValues;
         delete filter.standard[attrName].includeValues;
 
-        self.applyFilter(filter);
+        this.applyFilter(filter);
     },
     includeValue: function (attrName, value) {
-        var self = this;
-        var filter = self.get('filter');
+        var filter = this.get('filter');
         // Temporarily init a filter object for this attribute
         // if it doesn't already exist
         if (!filter.standard[attrName]) {
@@ -432,11 +411,10 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         filter.standard[attrName].excludeValues = excludeValues;
         delete filter.standard[attrName].includeValues;
 
-        self.applyFilter(filter);
+        this.applyFilter(filter);
     },
     getFilteredState: function (attrName) {
-        var self = this;
-        var filter = self.get('filter');
+        var filter = this.get('filter');
         if (filter.standard[attrName]) {
             if (filter.standard[attrName].excludeAttribute) {
                 return window.ENUMS.FILTER_STATES.EXCLUDED;
@@ -449,7 +427,6 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
     },
     listCategoricalFilterExpressions: function (attrName, filterSpec, hexify) {
         hexify = !!hexify;
-        var self = this;
         var values;
         var operation;
         if (filterSpec.hasOwnProperty('includeValues')) {
@@ -462,30 +439,29 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             return [];
         }
         if (hexify) {
-            attrName = self.stringToHex(attrName);
+            attrName = this.stringToHex(attrName);
             var temp = values;
             values = [];
-            temp.forEach(function (value) {
+            temp.forEach(_.bind(function (value) {
                 var dataType = typeof value;
                 if (dataType === 'string' || dataType === 'object') {
-                    value = self.stringToHex(value);
+                    value = this.stringToHex(value);
                 }
                 values.push(value);
-            });
+            }, this));
         }
         return [attrName + operation + JSON.stringify(values)];
     },
     listRangeFilterExpressions: function (attrName, filterSpec, hexify) {
         hexify = !!hexify;
-        var self = this;
         var results = [];
         if (filterSpec.excludeRanges) {
             var temp = '(';
             var firstRange = true;
             if (hexify) {
-                attrName = self.stringToHex(attrName);
+                attrName = this.stringToHex(attrName);
             }
-            filterSpec.excludeRanges.forEach(function (range) {
+            filterSpec.excludeRanges.forEach(_.bind(function (range) {
                 if (!firstRange) {
                     temp += ' and ';
                 }
@@ -498,7 +474,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                     dataType = typeof lowBound;
                     if (dataType === 'string' || dataType === 'object') {
                         if (hexify) {
-                            lowBound = self.stringToHex(String(lowBound));
+                            lowBound = this.stringToHex(String(lowBound));
                         }
                         lowBound = '"' + lowBound + '"';
                     }
@@ -513,14 +489,14 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                     dataType = typeof highBound;
                     if (dataType === 'string' || dataType === 'object') {
                         if (hexify) {
-                            highBound = self.stringToHex(String(highBound));
+                            highBound = this.stringToHex(String(highBound));
                         }
                         highBound = '"' + highBound + '"';
                     }
                     temp += attrName + ' >= ' + highBound;
                 }
                 temp += ')';
-            });
+            }, this));
             temp += ')';
             results.push(temp);
         }
@@ -528,21 +504,19 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
     },
     listStandardFilterExpressions: function (hexify) {
         hexify = !!hexify;
-        var self = this;
-        var filter = self.get('filter');
+        var filter = this.get('filter');
         var results = [];
-        Object.keys(filter.standard).forEach(function (attrName) {
+        Object.keys(filter.standard).forEach(_.bind(function (attrName) {
             var filterSpec = filter.standard[attrName];
-            results = results.concat(self.listCategoricalFilterExpressions(attrName, filterSpec, hexify));
-            results = results.concat(self.listRangeFilterExpressions(attrName, filterSpec, hexify));
-        });
+            results = results.concat(this.listCategoricalFilterExpressions(attrName, filterSpec, hexify));
+            results = results.concat(this.listRangeFilterExpressions(attrName, filterSpec, hexify));
+        }, this));
         return results;
     },
     listAllFilterExpressions: function (hexify) {
         hexify = !!hexify;
-        var self = this;
-        var filter = self.get('filter');
-        var exprList = self.listStandardFilterExpressions(hexify);
+        var filter = this.get('filter');
+        var exprList = this.listStandardFilterExpressions(hexify);
         exprList = exprList.concat(filter.custom);
         return exprList;
     },
@@ -554,19 +528,18 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         return result;
     },
     dehexify: function (obj) {
-        var self = this;
         if (!obj) {
             return obj;
         }
         if (_.isObject(obj)) {
             if (_.isArray(obj)) {
-                obj.forEach(function (d, i) {
-                    obj[i] = self.dehexify(d);
-                });
+                obj.forEach(_.bind(function (d, i) {
+                    obj[i] = this.dehexify(d);
+                }, this));
             } else {
-                Object.keys(obj).forEach(function (k) {
-                    obj[k] = self.dehexify(obj[k]);
-                });
+                Object.keys(obj).forEach(_.bind(function (k) {
+                    obj[k] = this.dehexify(obj[k]);
+                }, this));
             }
         } else if (_.isString(obj)) {
             obj = decodeURIComponent(obj);
@@ -574,36 +547,34 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         return obj;
     },
     specifyAttrTypes: function (obj) {
-        var self = this;
         if (!_.isObject(obj)) {
             return obj;
         } else if ('identifier' in obj && 'type' in obj && obj.type === null) {
-            var attrType = self.getAttributeType(obj.identifier);
+            var attrType = this.getAttributeType(obj.identifier);
             if (attrType !== 'object') {
                 // 'object' is really a passthrough; don't attempt
                 // any coercion while performing the filter
                 obj.type = attrType;
             }
         } else if (_.isArray(obj)) {
-            obj.forEach(function (d, i) {
-                obj[i] = self.specifyAttrTypes(d);
-            });
+            obj.forEach(_.bind(function (d, i) {
+                obj[i] = this.specifyAttrTypes(d);
+            }, this));
         } else {
-            Object.keys(obj).forEach(function (k) {
-                obj[k] = self.specifyAttrTypes(obj[k]);
-            });
+            Object.keys(obj).forEach(_.bind(function (k) {
+                obj[k] = this.specifyAttrTypes(obj[k]);
+            }, this));
         }
         return obj;
     },
     getFilterAstTree: function () {
-        var self = this;
-        var exprList = self.listAllFilterExpressions(true);
+        var exprList = this.listAllFilterExpressions(true);
 
         if (exprList.length > 0) {
             var fullExpression = '(' + exprList.join(') and (') + ')';
-            var ast = self.astParser.parse(fullExpression);
-            ast = self.dehexify(ast);
-            return self.specifyAttrTypes(ast);
+            var ast = this.astParser.parse(fullExpression);
+            ast = this.dehexify(ast);
+            return this.specifyAttrTypes(ast);
         } else {
             return undefined;
         }
