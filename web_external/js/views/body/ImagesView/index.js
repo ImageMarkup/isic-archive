@@ -24,9 +24,9 @@ isic.views.ImagesView = isic.View.extend({
     },
     toggleDetailsPane: function () {
         if (this.model.get('selectedImageId') !== null) {
-            this.$el.find('#isic-images-imageDetailsPane').css('display', '');
+            this.$('#isic-images-imageDetailsPane').css('display', '');
         } else {
-            this.$el.find('#isic-images-imageDetailsPane').css('display', 'none');
+            this.$('#isic-images-imageDetailsPane').css('display', 'none');
         }
     },
     render: function () {
@@ -35,11 +35,11 @@ isic.views.ImagesView = isic.View.extend({
                 staticRoot: girder.staticRoot
             }));
             window.shims.recolorImageFilters(['#00ABFF', '#444499', '#CCCCCC']);
-            this.studyPane.setElement(this.$el.find('#isic-images-studyPane')[0]);
-            this.histogramPane.setElement(this.$el.find('#isic-images-histogramPane')[0]);
-            this.imageWall.setElement(this.$el.find('#isic-images-imageWall')[0]);
-            this.pagingPane.setElement(this.$el.find('#isic-images-pagingPane')[0]);
-            this.imageDetailsPane.setElement(this.$el.find('#isic-images-imageDetailsPane')[0]);
+            this.studyPane.setElement(this.$('#isic-images-studyPane'));
+            this.histogramPane.setElement(this.$('#isic-images-histogramPane'));
+            this.imageWall.setElement(this.$('#isic-images-imageWall'));
+            this.pagingPane.setElement(this.$('#isic-images-pagingPane'));
+            this.imageDetailsPane.setElement(this.$('#isic-images-imageDetailsPane'));
             this.addedTemplate = true;
         }
         this.imageWall.render();

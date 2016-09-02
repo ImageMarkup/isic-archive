@@ -72,7 +72,7 @@ isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
             .on('change', function (d) {
                 // this refers to the DOM element
                 var histogramId = window.shims.makeValidId(d + '_histogramContent');
-                var contentElement = self.$el.find('#' + histogramId);
+                var contentElement = self.$('#' + histogramId);
                 if (self.checked) {
                     contentElement.removeClass('collapsed');
                     // Update that particular histogram

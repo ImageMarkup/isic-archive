@@ -16,7 +16,7 @@ isic.views.ImagesViewSubViews.PagingPane = Backbone.View.extend({
         // Scale for the bars
         var pageScale = d3.scale.linear()
           .domain([0, pageDetails.filteredSetCount])
-          .range([0, self.$el.find('#isic-images-pagingBars').width()]);
+          .range([0, self.$('#isic-images-pagingBars').width()]);
 
         // Now draw the bars indicating the size and location of
         // the page within the current filtered set
@@ -55,31 +55,31 @@ isic.views.ImagesViewSubViews.PagingPane = Backbone.View.extend({
 
         // Disable / enable the appropriate paging buttons
         if (pageDetails.offset === 0) {
-            this.$el.find('#isic-images-seekPrev, #isic-images-seekFirst')
+            this.$('#isic-images-seekPrev, #isic-images-seekFirst')
                 .addClass('disabled');
         } else {
-            this.$el.find('#isic-images-seekPrev, #isic-images-seekFirst')
+            this.$('#isic-images-seekPrev, #isic-images-seekFirst')
                 .removeClass('disabled');
         }
         if (pageDetails.offset + pageDetails.limit === pageDetails.filteredSetCount) {
-            this.$el.find('#isic-images-seekNext, #isic-images-seekLast')
+            this.$('#isic-images-seekNext, #isic-images-seekLast')
                 .addClass('disabled');
         } else {
-            this.$el.find('#isic-images-seekNext, #isic-images-seekLast')
+            this.$('#isic-images-seekNext, #isic-images-seekLast')
                 .removeClass('disabled');
         }
 
         // Show the relevant explanatory label
-        this.$el.find('.detailLabel').hide();
+        this.$('.detailLabel').hide();
         var labelElement;
         if (hasFilters && hasPaging) {
-            labelElement = this.$el.find('#isic-images-hasFiltersAndPaging');
+            labelElement = this.$('#isic-images-hasFiltersAndPaging');
         } else if (hasFilters) {
-            labelElement = this.$el.find('#isic-images-hasFilters');
+            labelElement = this.$('#isic-images-hasFilters');
         } else if (hasPaging) {
-            labelElement = this.$el.find('#isic-images-hasPaging');
+            labelElement = this.$('#isic-images-hasPaging');
         } else {
-            labelElement = this.$el.find('#isic-images-noPagingOrFilters');
+            labelElement = this.$('#isic-images-noPagingOrFilters');
         }
         labelElement.show();
 
