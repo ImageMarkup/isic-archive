@@ -15,12 +15,16 @@ isic.views.ImagesView = isic.View.extend({
         this.pagingPane = new isic.views.ImagesViewSubViews.PagingPane(params);
         this.imageDetailsPane = new isic.views.ImagesViewSubViews.ImageDetailsPane(params);
 
-        window.onresize = _.bind(function () {
-            this.render();
-        }, this);
+        $(window).on('resize.ImagesView', _.bind(this.render, this));
+
         this.listenTo(this.model, 'change:selectedImageId', this.toggleDetailsPane);
 
         this.render();
+    },
+    destroy: function () {
+        $(window).off('resize.ImagesView');
+
+        isic.View.prototype.destroy.call(this);
     },
     toggleDetailsPane: function () {
         if (this.model.get('selectedImageId') !== null) {
