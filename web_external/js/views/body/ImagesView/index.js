@@ -3,6 +3,7 @@ isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 isic.views.ImagesView = isic.View.extend({
     initialize: function () {
         this.model = new isic.views.ImagesViewSubViews.ImagesViewModel();
+        this.image = new isic.models.ImageModel();
 
         // Initialize our subviews
         var params = {
@@ -11,13 +12,22 @@ isic.views.ImagesView = isic.View.extend({
         };
         this.studyPane = new isic.views.ImagesViewSubViews.StudyPane(params);
         this.histogramPane = new isic.views.ImagesViewSubViews.HistogramPane(params);
-        this.imageWall = new isic.views.ImagesViewSubViews.ImageWall(params);
+        this.imageWall = new isic.views.ImagesViewSubViews.ImageWall(
+            _.extend(_.clone(params), {
+                image: this.image
+            }));
         this.pagingPane = new isic.views.ImagesViewSubViews.PagingPane(params);
-        this.imageDetailsPane = new isic.views.ImagesViewSubViews.ImageDetailsPane(params);
+        this.imageDetailsPane = new isic.views.ImagesViewSubViews.ImageDetailsPane({
+            image: this.image,
+            parentView: this
+        });
 
         $(window).on('resize.ImagesView', _.bind(this.render, this));
 
-        this.listenTo(this.model, 'change:selectedImageId', this.toggleDetailsPane);
+        this.listenTo(this.model, 'change:imageIds', function () {
+            this.image.clear();
+        });
+        this.listenTo(this.image, 'change:_id', this.selectedImageChanged);
 
         this.render();
     },
@@ -26,8 +36,14 @@ isic.views.ImagesView = isic.View.extend({
 
         isic.View.prototype.destroy.call(this);
     },
+    selectedImageChanged: function () {
+        if (this.image.id) {
+            this.image.fetch();
+        }
+        this.toggleDetailsPane();
+    },
     toggleDetailsPane: function () {
-        if (this.model.get('selectedImageId') !== null) {
+        if (this.image.id) {
             this.$('#isic-images-imageDetailsPane').css('display', '');
         } else {
             this.$('#isic-images-imageDetailsPane').css('display', 'none');

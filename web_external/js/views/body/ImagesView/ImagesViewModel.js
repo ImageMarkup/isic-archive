@@ -8,7 +8,6 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
     defaults: {
         limit: 50,
         offset: 0,
-        selectedImageId: null,
         filter: {
             standard: {},
             custom: []
@@ -59,9 +58,6 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         self.listenTo(self, 'change:limit', self.updateCurrentPage);
         self.listenTo(self, 'change:offset', self.updateCurrentPage);
         self.listenTo(self, 'change:filter', self.updateFilters);
-        self.listenTo(self, 'change:imageIds', function () {
-            self.set('selectedImageId', null);
-        });
     },
     fetchDatasets: function () {
         var deferred = $.Deferred();
