@@ -165,9 +165,9 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
     postProcessHistogram: function (histogram) {
         var self = this;
         var formatter = d3.format('0.3s');
-        Object.keys(histogram).forEach(function (attrName) {
-            histogram[attrName].forEach(function (bin, index) {
-                if (attrName === 'folderId') {
+        _.each(histogram, function (value, key) {
+            _.each(value, function (bin, index) {
+                if (key === 'folderId') {
                     bin.label = self.datasetCollection.get(bin.label).name();
                 } else if (_.isNumber(bin.lowBound) &&
                         _.isNumber(bin.highBound)) {
@@ -176,7 +176,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                     // human-readable labels
                     bin.label = '[' + formatter(bin.lowBound) + ' - ' +
                         formatter(bin.highBound);
-                    if (index === histogram[attrName].length - 1) {
+                    if (index === value.length - 1) {
                         bin.label += ']';
                     } else {
                         bin.label += ')';
