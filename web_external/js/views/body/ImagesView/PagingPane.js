@@ -2,6 +2,12 @@
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
 isic.views.ImagesViewSubViews.PagingPane = Backbone.View.extend({
+    events: {
+        'click #isic-images-seekFirst': 'seekFirst',
+        'click #isic-images-seekPrev': 'seekPrev',
+        'click #isic-images-seekNext': 'seekNext',
+        'click #isic-images-seekLast': 'seekLast'
+    },
     initialize: function () {
         this.listenTo(this.model, 'change:imageIds', this.render);
         this.listenTo(this.model, 'change:filteredSetHistogram', this.render);
@@ -96,23 +102,12 @@ isic.views.ImagesViewSubViews.PagingPane = Backbone.View.extend({
         }
     },
     render: function () {
-        var self = this;
         if (!this.addedImages) {
-            // Sneaky hack: the image file name is part of the id; use the id to
-            // attach the correct src attribute, as well as the appropriate
-            // event listeners
-            d3.select(this.el).selectAll('.button')
-                .on('click', function () {
-                    var funcName = this.getAttribute('id').slice(12);
-                    self[funcName].apply(self, arguments);
-                })
-                .append('img')
-                .attr('src', function () {
-                    var imgName = this.parentNode.getAttribute('id').slice(12);
-                    return girder.staticRoot +
-                    '/built/plugins/isic_archive/extra/img/' +
-                    imgName + '.svg';
-                });
+            var imgRoot = girder.staticRoot + '/built/plugins/isic_archive/extra/img/';
+            this.$('.button').find('img').each(function (index) {
+                var name = $(this).data('name');
+                $(this).attr('src', imgRoot + name + '.svg');
+            });
             // Set the page size to 50.
             //
             // TODO: offer a pulldown menu with several page size options.
