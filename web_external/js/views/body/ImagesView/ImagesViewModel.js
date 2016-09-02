@@ -130,20 +130,19 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
 
         // Pass in filter settings
         pageDetails.filter = self.getFilterAstTree();
-        var imageListRequest = girder.restRequest({
-            path: 'image',
-            data: {
-                limit: pageDetails.limit,
-                offset: pageDetails.offset,
-                filter: self.getFilterAstTree()
-            }
-        }).then(function (resp) {
-            self.set('imageIds', resp.map(function (imageObj) {
-                return imageObj._id;
-            }));
+        var imagesDeferred = $.Deferred();
+        var images = new isic.collections.ImageCollection();
+        images.once('g:changed', _.bind(function () {
+            this.set('imageIds', images.pluck('_id'));
+            imagesDeferred.resolve();
+        }, this)).fetch({
+            limit: pageDetails.limit,
+            offset: pageDetails.offset,
+            filter: self.getFilterAstTree()
         });
+
         var histogramRequest = self.updateHistogram('page');
-        return $.when(imageListRequest, histogramRequest);
+        return $.when(imagesDeferred.promise(), histogramRequest);
     },
     getPageDetails: function (capLimit) {
         var self = this;
