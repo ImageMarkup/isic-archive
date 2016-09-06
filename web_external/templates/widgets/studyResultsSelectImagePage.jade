@@ -1,0 +1,5 @@
+.isic-study-results-select-image-container
+  if models.length
+    each model in models
+      .isic-study-results-select-image-image-container(data-image-id=model.id)
+        = model.get('name')

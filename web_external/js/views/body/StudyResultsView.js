@@ -95,6 +95,38 @@ isic.views.StudyResultsSelectView = isic.View.extend({
     }
 });
 
+// View for a collection of images
+isic.views.StudyResultsSelectImageView = isic.View.extend({
+    events: {
+        'click .isic-study-results-select-image-image-container': 'imageSelected'
+    },
+
+    initialize: function (options) {
+        this.listenTo(this.collection, 'reset', this.render);
+
+        this.render();
+    },
+
+    imageSelected: function (event) {
+        event.preventDefault();
+
+        var target = $(event.target);
+
+        this.$('.isic-study-results-select-image-image-container').removeClass('active');
+        target.addClass('active');
+
+        this.trigger('changed', target.data('imageId'));
+    },
+
+    render: function () {
+        this.$el.html(isic.templates.studyResultsSelectImagePage({
+            models: this.collection.models
+        }));
+
+        return this;
+    }
+});
+
 // Collection of global feature result models
 isic.collections.GlobalFeatureResultCollection = Backbone.Collection.extend({
     model: isic.models.GlobalFeatureResultModel,
@@ -206,9 +238,8 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
     initialize: function (settings) {
         this.annotation = settings.annotation;
         this.featureset = settings.featureset;
+        this.featureImageModel = settings.featureImageModel;
         this.features = new isic.collections.FeatureCollection();
-
-        this.featureImageModel = new isic.models.FeatureImageModel();
 
         this.listenTo(this.featureset, 'change', this.featuresetChanged);
         this.listenTo(this.annotation, 'change', this.annotationChanged);
@@ -220,11 +251,6 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
             extraTemplateParams: {
                 featureAnnotated: _.bind(this.featureAnnotated, this)
             },
-            parentView: this
-        });
-
-        this.imageView = new isic.views.StudyResultsFeatureImageView({
-            model: this.featureImageModel,
             parentView: this
         });
 
@@ -253,8 +279,6 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
 
         this.selectFeatureView.setElement(
             this.$('#isic-study-results-select-local-feature-container')).render();
-        this.imageView.setElement(
-            this.$('#isic-study-results-local-features-image-container')).render();
 
         return this;
     },
@@ -302,6 +326,20 @@ isic.views.StudyResultsImageView = isic.View.extend({
 
 // View for the results of an annotation study
 isic.views.StudyResultsView = isic.View.extend({
+    events: {
+        // Update image visibility when global features tab is activated
+        'shown.bs.tab #isic-study-results-global-features-tab': function (event) {
+            this.imageView.$el.removeClass('hidden');
+            this.localFeaturesImageView.$el.addClass('hidden');
+        },
+
+        // Update image visibility when local features tab is activated
+        'shown.bs.tab #isic-study-results-local-features-tab': function (event) {
+            this.imageView.$el.addClass('hidden');
+            this.localFeaturesImageView.$el.removeClass('hidden');
+        }
+    },
+
     initialize: function (settings) {
         this.studies = new isic.collections.StudyCollection();
         this.studies.pageLimit = Number.MAX_SAFE_INTEGER;
@@ -316,6 +354,7 @@ isic.views.StudyResultsView = isic.View.extend({
         this.user = new girder.models.UserModel();
         this.featureset = new isic.models.FeaturesetModel();
         this.annotation = new isic.models.AnnotationModel();
+        this.featureImageModel = new isic.models.FeatureImageModel();
 
         this.selectStudyView = new isic.views.StudyResultsSelectView({
             title: 'Study',
@@ -323,8 +362,7 @@ isic.views.StudyResultsView = isic.View.extend({
             parentView: this
         });
 
-        this.selectImageView = new isic.views.StudyResultsSelectView({
-            title: 'Image',
+        this.selectImageView = new isic.views.StudyResultsSelectImageView({
             collection: this.images,
             parentView: this
         });
@@ -345,11 +383,17 @@ isic.views.StudyResultsView = isic.View.extend({
         this.localFeaturesView = new isic.views.StudyResultsLocalFeaturesView({
             annotation: this.annotation,
             featureset: this.featureset,
+            featureImageModel: this.featureImageModel,
             parentView: this
         });
 
         this.imageView = new isic.views.StudyResultsImageView({
             model: this.image,
+            parentView: this
+        });
+
+        this.localFeaturesImageView = new isic.views.StudyResultsFeatureImageView({
+            model: this.featureImageModel,
             parentView: this
         });
 
@@ -369,7 +413,6 @@ isic.views.StudyResultsView = isic.View.extend({
         this.image.clear();
         this.user.clear();
 
-        this.selectImageView.setEnabled(false);
         this.selectUserView.setEnabled(false);
 
         this.annotation.clear();
@@ -447,6 +490,8 @@ isic.views.StudyResultsView = isic.View.extend({
             this.$('#isic-study-results-local-features-container')).render();
         this.imageView.setElement(
             this.$('#isic-study-results-image-container')).render();
+        this.localFeaturesImageView.setElement(
+            this.$('#isic-study-results-local-features-image-container')).render();
 
         return this;
     }
