@@ -1,6 +1,6 @@
 #galleryContent.flexRow
   .fixedWidth.flexColumn
-    #isic-images-studyPane.pane
+    #isic-images-datasetPane.pane
     #isic-images-histogramPane.pane
   .growing.flexColumn
     #isic-images-pagingPane.pane.flexRow
@@ -8,31 +8,35 @@
       .growing.flexColumn
         #isic-images-pagingTools.flexRow
           #isic-images-seekFirst.button
+            img(data-name='seekFirst')
           #isic-images-seekPrev.button
+            img(data-name='seekPrev')
           #isic-images-seekNext.button
+            img(data-name='seekNext')
           #isic-images-seekLast.button
+            img(data-name='seekLast')
           #isic-images-noPagingOrFilters.detailLabel
-            | Showing all 
+            | Showing all
             span.page 10
             |  images in the archive.
           #isic-images-hasPaging.detailLabel
-            | Showing images 
+            | Showing images
             span.page 0 - 10
-            |  of 
+            |  of
             span.filteredSet 100
             |  total images.
           #isic-images-hasFilters.detailLabel
-            | Showing 
+            | Showing
             span.filteredSet 100
-            |  of the 
+            |  of the
             span.overview 1000
             |  total number of images in the archive.
           #isic-images-hasFiltersAndPaging.detailLabel
-            | Showing images 
+            | Showing images
             span.page 0 - 10
-            |  of 
+            |  of
             span.filteredSet 100
-            |  filtered images. There are 
+            |  filtered images. There are
             span.overview 1000
             |  total images in the archive (ignoring filters).
         #isic-images-pagingBars.flexRow

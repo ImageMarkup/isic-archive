@@ -48,7 +48,7 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
             .call(yAxis);
 
         // Move the special buttons into place and attach their events
-        this.$el.find('.selectAllBins').hide();
+        this.$('.selectAllBins').hide();
         /*
         svg.select('.selectAllBins')
             .attr('transform', 'translate(' +

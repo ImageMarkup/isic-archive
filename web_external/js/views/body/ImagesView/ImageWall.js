@@ -7,14 +7,15 @@ var imageSize = 128;
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
 isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
-    initialize: function () {
+    initialize: function (settings) {
         var self = this;
+        self.image = settings.image;
         self.imageCache = {};
         self.loadedImages = {};
         self.imageColumnLookup = {};
         self.imageColumns = [];
 
-        self.listenTo(self.model, 'change:selectedImageId', self.render);
+        self.listenTo(self.image, 'change:_id', self.render);
         self.listenTo(self.model, 'change:imageIds', self.setImages);
     },
     setImages: function () {
@@ -175,7 +176,11 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
     },
     selectImage: function (imageId) {
         var self = this;
-        self.model.set('selectedImageId', imageId);
+        if (imageId !== null) {
+            self.image.set('_id', imageId);
+        } else {
+            self.image.clear();
+        }
     },
     render: _.debounce(function () {
         var self = this;
@@ -289,7 +294,7 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
                 if (doubleclick) {
                     window.open('/api/v1/image/' + d + '/download?contentDisposition=inline');
                 } else {
-                    self.selectImage(d === self.model.get('selectedImageId') ? null : d);
+                    self.selectImage(d === self.image.id ? null : d);
                 }
             }, 300);
         };
@@ -302,7 +307,7 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
         }).attr('xlink:href', function (d) {
             return self.imageCache[d].src;
         }).attr('class', function (d) {
-            if (d === self.model.get('selectedImageId')) {
+            if (d === self.image.id) {
                 return 'selected';
             } else {
                 return null;
@@ -321,7 +326,7 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
         }).on('click', click);
 
         // Draw the highlight rect
-        var selectedImageId = self.model.get('selectedImageId');
+        var selectedImageId = self.image.id;
         if (selectedImageId) {
             svg.select('#highlightOutline')
                 .style('display', null)

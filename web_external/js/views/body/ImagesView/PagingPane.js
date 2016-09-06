@@ -2,21 +2,25 @@
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
 isic.views.ImagesViewSubViews.PagingPane = Backbone.View.extend({
+    events: {
+        'click #isic-images-seekFirst': 'seekFirst',
+        'click #isic-images-seekPrev': 'seekPrev',
+        'click #isic-images-seekNext': 'seekNext',
+        'click #isic-images-seekLast': 'seekLast'
+    },
     initialize: function () {
-        var self = this;
-        self.listenTo(self.model, 'change:imageIds', self.render);
-        self.listenTo(self.model, 'change:filteredSetHistogram', self.render);
-        self.listenTo(self.model, 'change:offset', self.updateControls);
-        self.listenTo(self.model, 'change:limit', self.updateControls);
+        this.listenTo(this.model, 'change:imageIds', this.render);
+        this.listenTo(this.model, 'change:filteredSetHistogram', this.render);
+        this.listenTo(this.model, 'change:offset', this.updateControls);
+        this.listenTo(this.model, 'change:limit', this.updateControls);
     },
     renderBars: function () {
-        var self = this;
-        var pageDetails = self.model.getPageDetails(true);
+        var pageDetails = this.model.getPageDetails(true);
 
         // Scale for the bars
         var pageScale = d3.scale.linear()
           .domain([0, pageDetails.filteredSetCount])
-          .range([0, self.$el.find('#isic-images-pagingBars').width()]);
+          .range([0, this.$('#isic-images-pagingBars').width()]);
 
         // Now draw the bars indicating the size and location of
         // the page within the current filtered set
@@ -47,39 +51,38 @@ isic.views.ImagesViewSubViews.PagingPane = Backbone.View.extend({
         });
     },
     updateControls: function () {
-        var self = this;
-        var pageDetails = self.model.getPageDetails(true);
+        var pageDetails = this.model.getPageDetails(true);
 
         var hasFilters = pageDetails.filteredSetCount < pageDetails.overviewCount;
         var hasPaging = pageDetails.limit < pageDetails.filteredSetCount;
 
         // Disable / enable the appropriate paging buttons
         if (pageDetails.offset === 0) {
-            this.$el.find('#isic-images-seekPrev, #isic-images-seekFirst')
+            this.$('#isic-images-seekPrev, #isic-images-seekFirst')
                 .addClass('disabled');
         } else {
-            this.$el.find('#isic-images-seekPrev, #isic-images-seekFirst')
+            this.$('#isic-images-seekPrev, #isic-images-seekFirst')
                 .removeClass('disabled');
         }
         if (pageDetails.offset + pageDetails.limit === pageDetails.filteredSetCount) {
-            this.$el.find('#isic-images-seekNext, #isic-images-seekLast')
+            this.$('#isic-images-seekNext, #isic-images-seekLast')
                 .addClass('disabled');
         } else {
-            this.$el.find('#isic-images-seekNext, #isic-images-seekLast')
+            this.$('#isic-images-seekNext, #isic-images-seekLast')
                 .removeClass('disabled');
         }
 
         // Show the relevant explanatory label
-        this.$el.find('.detailLabel').hide();
+        this.$('.detailLabel').hide();
         var labelElement;
         if (hasFilters && hasPaging) {
-            labelElement = this.$el.find('#isic-images-hasFiltersAndPaging');
+            labelElement = this.$('#isic-images-hasFiltersAndPaging');
         } else if (hasFilters) {
-            labelElement = this.$el.find('#isic-images-hasFilters');
+            labelElement = this.$('#isic-images-hasFilters');
         } else if (hasPaging) {
-            labelElement = this.$el.find('#isic-images-hasPaging');
+            labelElement = this.$('#isic-images-hasPaging');
         } else {
-            labelElement = this.$el.find('#isic-images-noPagingOrFilters');
+            labelElement = this.$('#isic-images-noPagingOrFilters');
         }
         labelElement.show();
 
@@ -99,54 +102,39 @@ isic.views.ImagesViewSubViews.PagingPane = Backbone.View.extend({
         }
     },
     render: function () {
-        var self = this;
-        if (!self.addedImages) {
-            // Sneaky hack: the image file name is part of the id; use the id to
-            // attach the correct src attribute, as well as the appropriate
-            // event listeners
-            d3.select(self.el).selectAll('.button')
-                .on('click', function () {
-                    var funcName = this.getAttribute('id').slice(12);
-                    self[funcName].apply(self, arguments);
-                })
-                .append('img')
-                .attr('src', function () {
-                    var imgName = this.parentNode.getAttribute('id').slice(12);
-                    return girder.staticRoot +
-                    '/built/plugins/isic_archive/extra/img/' +
-                    imgName + '.svg';
-                });
+        if (!this.addedImages) {
+            var imgRoot = girder.staticRoot + '/built/plugins/isic_archive/extra/img/';
+            this.$('.button').find('img').each(function (index) {
+                var name = $(this).data('name');
+                $(this).attr('src', imgRoot + name + '.svg');
+            });
             // Set the page size to 50.
             //
             // TODO: offer a pulldown menu with several page size options.
-            self.model.set('limit', 50);
+            this.model.set('limit', 50);
 
-            self.addedImages = true;
+            this.addedImages = true;
         }
 
-        self.updateControls();
-        self.renderBars();
+        this.updateControls();
+        this.renderBars();
 
         return this;
     },
     seekFirst: function () {
-        var self = this;
-        self.model.set('offset', 0);
+        this.model.set('offset', 0);
     },
     seekPrev: function () {
-        var self = this;
-        var offset = self.model.get('offset');
-        self.model.set('offset', offset - self.model.get('limit'));
+        var offset = this.model.get('offset');
+        this.model.set('offset', offset - this.model.get('limit'));
     },
     seekNext: function () {
-        var self = this;
-        var offset = self.model.get('offset');
-        self.model.set('offset', offset + self.model.get('limit'));
+        var offset = this.model.get('offset');
+        this.model.set('offset', offset + this.model.get('limit'));
     },
     seekLast: function () {
-        var self = this;
-        var details = self.model.getPageDetails(true);
-        self.model.set('offset',
+        var details = this.model.getPageDetails(true);
+        this.model.set('offset',
             Math.floor(details.filteredSetCount / details.limit) * details.limit);
     }
 });

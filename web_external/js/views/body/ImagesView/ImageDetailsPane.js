@@ -6,10 +6,10 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
         'click .button': 'clearSelectedImage'
     },
 
-    initialize: function () {
-        this.image = new isic.models.ImageModel();
-        this.listenTo(this.image, 'g:fetched g:error', this.render);
-        this.listenTo(this.model, 'change:selectedImageId', this.selectedImageChanged);
+    initialize: function (settings) {
+        this.image = settings.image;
+
+        this.listenTo(this.image, 'changed:_id g:fetched g:error', this.render);
 
         this.segmentationsDisplayView = new isic.views.SegmentationsDisplayView({
             image: this.image,
@@ -65,18 +65,6 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
     },
 
     clearSelectedImage: function () {
-        this.model.set('selectedImageId', null);
-    },
-
-    selectedImageChanged: function () {
-        var imageId = this.model.get('selectedImageId');
-
-        // Fetch or clear image details
-        if (imageId) {
-            this.image.set('_id', imageId);
-            this.image.fetch();
-        } else {
-            this.image.clear();
-        }
+        this.image.clear();
     }
 });

@@ -2,56 +2,73 @@ isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
 isic.views.ImagesView = isic.View.extend({
     initialize: function () {
-        var self = this;
-        self.model = new isic.views.ImagesViewSubViews.ImagesViewModel();
+        this.model = new isic.views.ImagesViewSubViews.ImagesViewModel();
+        this.image = new isic.models.ImageModel();
 
         // Initialize our subviews
         var params = {
-            model: self.model,
+            model: this.model,
             parentView: this
         };
-        self.studyPane = new isic.views.ImagesViewSubViews.StudyPane(params);
-        self.histogramPane = new isic.views.ImagesViewSubViews.HistogramPane(params);
-        self.imageWall = new isic.views.ImagesViewSubViews.ImageWall(params);
-        self.pagingPane = new isic.views.ImagesViewSubViews.PagingPane(params);
-        self.imageDetailsPane = new isic.views.ImagesViewSubViews.ImageDetailsPane(params);
+        this.datasetPane = new isic.views.ImagesViewSubViews.DatasetPane(params);
+        this.histogramPane = new isic.views.ImagesViewSubViews.HistogramPane(params);
+        this.imageWall = new isic.views.ImagesViewSubViews.ImageWall(
+            _.extend(_.clone(params), {
+                image: this.image
+            }));
+        this.pagingPane = new isic.views.ImagesViewSubViews.PagingPane(params);
+        this.imageDetailsPane = new isic.views.ImagesViewSubViews.ImageDetailsPane({
+            image: this.image,
+            parentView: this
+        });
 
-        window.onresize = function () {
-            self.render();
-        };
-        self.listenTo(self.model, 'change:selectedImageId', self.toggleDetailsPane);
+        $(window).on('resize.ImagesView', _.bind(this.render, this));
 
-        self.render();
+        this.listenTo(this.model, 'change:imageIds', function () {
+            this.image.clear();
+        });
+        this.listenTo(this.image, 'change:_id', this.selectedImageChanged);
+
+        this.render();
+    },
+    destroy: function () {
+        $(window).off('resize.ImagesView');
+
+        isic.View.prototype.destroy.call(this);
+    },
+    selectedImageChanged: function () {
+        if (this.image.id) {
+            this.image.fetch();
+        }
+        this.toggleDetailsPane();
     },
     toggleDetailsPane: function () {
-        var self = this;
-        if (self.model.get('selectedImageId') !== null) {
-            self.$el.find('#isic-images-imageDetailsPane').css('display', '');
+        if (this.image.id) {
+            this.$('#isic-images-imageDetailsPane').css('display', '');
         } else {
-            self.$el.find('#isic-images-imageDetailsPane').css('display', 'none');
+            this.$('#isic-images-imageDetailsPane').css('display', 'none');
         }
     },
     render: function () {
-        var self = this;
-        if (!(self.addedTemplate)) {
-            self.$el.html(isic.templates.imagesPage({
+        if (!(this.addedTemplate)) {
+            this.$el.html(isic.templates.imagesPage({
                 staticRoot: girder.staticRoot
             }));
             window.shims.recolorImageFilters(['#00ABFF', '#444499', '#CCCCCC']);
-            self.studyPane.setElement(self.$el.find('#isic-images-studyPane')[0]);
-            self.histogramPane.setElement(self.$el.find('#isic-images-histogramPane')[0]);
-            self.imageWall.setElement(self.$el.find('#isic-images-imageWall')[0]);
-            self.pagingPane.setElement(self.$el.find('#isic-images-pagingPane')[0]);
-            self.imageDetailsPane.setElement(self.$el.find('#isic-images-imageDetailsPane')[0]);
-            self.addedTemplate = true;
+            this.datasetPane.setElement(this.$('#isic-images-datasetPane'));
+            this.histogramPane.setElement(this.$('#isic-images-histogramPane'));
+            this.imageWall.setElement(this.$('#isic-images-imageWall'));
+            this.pagingPane.setElement(this.$('#isic-images-pagingPane'));
+            this.imageDetailsPane.setElement(this.$('#isic-images-imageDetailsPane'));
+            this.addedTemplate = true;
         }
-        self.imageWall.render();
-        self.pagingPane.render();
-        self.studyPane.render();
-        self.histogramPane.render();
-        self.imageDetailsPane.render();
+        this.imageWall.render();
+        this.pagingPane.render();
+        this.datasetPane.render();
+        this.histogramPane.render();
+        this.imageDetailsPane.render();
 
-        self.toggleDetailsPane();
+        this.toggleDetailsPane();
 
         return this;
     }
