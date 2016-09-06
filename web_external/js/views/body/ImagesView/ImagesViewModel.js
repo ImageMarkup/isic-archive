@@ -19,7 +19,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                 label: 'count'
             }]
         },
-        studyHistogram: {
+        datasetHistogram: {
             __passedFilters__: [{
                 count: 0,
                 label: 'count'
@@ -45,9 +45,9 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         // before attempting to get histograms or image IDs
         $.when(this.fetchDatasets(), this.loadFilterGrammar())
             .then(_.bind(function () {
-                // We need the study names before getting any histograms
+                // We need the dataset names before getting any histograms
                 this.updateHistogram('overview');
-                // We need the study names and the filter grammar before getting
+                // We need the dataset names and the filter grammar before getting
                 // the filtered set or the current page (both the page of images
                 // and the page histogram)
                 this.updateFilters();

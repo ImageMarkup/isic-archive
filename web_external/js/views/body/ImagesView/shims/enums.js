@@ -37,7 +37,7 @@ window.ENUMS.BIN_STATES = {
 window.ENUMS.SCHEMA = {
     'folderId': {
         'coerceToType': 'string',
-        'humanName': 'Study'
+        'humanName': 'Dataset'
     },
     'meta.clinical.benign_malignant': {
         'coerceToType': 'string',
