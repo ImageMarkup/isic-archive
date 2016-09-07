@@ -31,7 +31,7 @@
       </script>
     % endfor
     <script src="${staticRoot}/built/plugins/isic_archive/isic_archive.min.js"></script>
-    <script src="${staticRoot}/built/plugins/isic_archive/pegjs/peg-0.10.0.min.js"></script>
+    <script src="${staticRoot}/built/plugins/isic_archive/libs/pegjs/peg-0.10.0.min.js"></script>
     <script src="${staticRoot}/built/plugins/isic_archive/main.min.js"></script>
   </body>
 </html>

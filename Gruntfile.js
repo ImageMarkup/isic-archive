@@ -23,26 +23,6 @@ module.exports = function (grunt) {
         grunt.fail.fatal('To build isic_archive, run grunt from Girder\'s root directory');
     }
 
-    grunt.config.merge({
-        // This step will fail if '<%= pluginDir %>/isic_archive' is a symlink
-        /*
-        symlink: {
-            'plugin-isic_archive-bower': {
-                files: [{
-                    src: ['<%= pluginDir %>/isic_archive/bower_components'],
-                    dest: '<%= pluginDir %>/isic_archive/web_client/extra/bower_components'
-                }]
-            }
-        },
-
-        init: {
-            'symlink:plugin-isic_archive-bower': {
-                dependencies: ['shell:plugin-isic_archive']
-            }
-        }
-        */
-    });
-
     var fs = require('fs');
     var defaultTasks = [];
 
@@ -137,13 +117,28 @@ module.exports = function (grunt) {
             defaultTasks.push('copy:' + pluginName);
         }
 
-        grunt.config.set('copy.' + pluginName + '_libs', {
+        grunt.config.set('copy.' + pluginName + '_bower_libs', {
             expand: true,
             cwd: pluginDir + '/bower_components',
-            src: ['pegjs/peg-0.10.0.min.js'],
-            dest: staticDir
+            src: [
+                'pegjs/peg-0.10.0.min.js',
+
+                'jquery/dist/jquery.min.js',
+                'flatstrap/dist/js/bootstrap.min.js',
+                'flatstrap/dist/css/bootstrap.min.css',
+                'flatstrap/dist/fonts/glyphicons-halflings-regular.woff',
+                'flatstrap/dist/fonts/glyphicons-halflings-regular.ttf',
+                'font-awesome/css/font-awesome.min.css',
+                'angular/angular.min.js',
+                'angular-resource/angular-resource.min.js',
+                'angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js',
+                'bootstrap-switch/dist/js/bootstrap-switch.min.js',
+                'bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.min.css',
+                'angular-bootstrap-switch/dist/angular-bootstrap-switch.min.js'
+            ],
+            dest: staticDir + '/libs'
         });
-        defaultTasks.push('copy:' + pluginName + '_libs');
+        defaultTasks.push('copy:' + pluginName + '_bower_libs');
 
     };
 
