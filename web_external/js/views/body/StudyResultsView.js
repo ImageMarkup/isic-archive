@@ -221,7 +221,6 @@ isic.views.StudyResultsGlobalFeaturesView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.studyResultsGlobalFeaturesPage({
-            title: 'Global Features',
             hasFeatureset: !_.isUndefined(this.featureset.id),
             hasGlobalFeatures: !_.isEmpty(this.featureset.get('globalFeatures')),
             featureset: this.featureset
@@ -304,7 +303,6 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.studyResultsLocalFeaturesPage({
-            title: 'Local Features',
             hasFeatureset: !_.isUndefined(this.featureset.id),
             hasLocalFeatures: !_.isEmpty(this.featureset.get('localFeatures')),
             featureset: this.featureset

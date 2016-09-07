@@ -1,7 +1,5 @@
 if hasFeatureset
-  h4 #{title} (#{featureset.name()}, version #{featureset.get('version')})
-else
-  h4 #{title}
+  h4 Featureset: #{featureset.name()}, version #{featureset.get('version')}
 
 .isic-study-results-global-features-content
   if hasGlobalFeatures
