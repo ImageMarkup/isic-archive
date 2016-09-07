@@ -81,7 +81,7 @@ Usage
   # from within the "isic-archive" sub-directory
   vagrant ssh
   cd ~/girder
-  ./node_modules/grunt-cli/bin/grunt watch
+  ./node_modules/.bin/grunt watch
 
 * To restart the Girder server after changed server files are saved:
 ::
