@@ -59,10 +59,6 @@ isic.views.StudyResultsSelectStudyView = isic.View.extend({
         }));
 
         return this;
-    },
-
-    _element: function () {
-        return this.$('select');
     }
 });
 
