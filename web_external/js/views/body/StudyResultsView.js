@@ -78,6 +78,8 @@ isic.views.StudyResultsSelectStudyView = isic.View.extend({
             models: this.collection.models
         }));
 
+        this.$('#isic-study-results-select-study-select').focus();
+
         return this;
     }
 });
