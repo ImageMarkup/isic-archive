@@ -1,4 +1,3 @@
-// TODO: Spacing between sections
 // TODO: Make header appearance consistent; don't abuse 'label' for Image header
 // TODO: Dropdowns shouldn't fill width
 // TODO: Global feature table shouldn't expand to fill width
@@ -14,18 +13,18 @@
   h2.isic-page-title= title
 
   // Study container
-  #isic-study-results-select-study-container
+  .isic-study-results-pad#isic-study-results-select-study-container
 
   .isic-study-results-flex-row.isic-study-results-main-container
 
     // Image column
-    .isic-study-results-flex-column
+    .isic-study-results-flex-column.isic-study-results-pad
       label Image
 
       // Image container
       #isic-study-results-select-image-container
 
-    .isic-study-results-flex-column.isic-study-results-flex-grow
+    .isic-study-results-flex-column.isic-study-results-flex-grow.isic-study-results-pad
 
       // User container
       label Users
@@ -39,7 +38,7 @@
           a(data-toggle="tab" href='#isic-study-results-local-features-tab-content')#isic-study-results-local-features-tab Local Features
 
       // Content of global/local features tabs
-      .tab-content
+      .tab-content.isic-study-results-pad
 
         .tab-pane.active#isic-study-results-global-features-tab-content
           #isic-study-results-global-features-container
