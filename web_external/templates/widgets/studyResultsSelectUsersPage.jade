@@ -1,0 +1,5 @@
+.isic-study-results-select-users-container
+  if models.length
+    each model in models
+      span.isic-study-results-select-users-user-container(data-user-id=model.id)
+        = getName(model)

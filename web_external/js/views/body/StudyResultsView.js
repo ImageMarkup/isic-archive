@@ -127,6 +127,39 @@ isic.views.StudyResultsSelectImageView = isic.View.extend({
     }
 });
 
+// View for a collection of users
+isic.views.StudyResultsSelectUsersView = isic.View.extend({
+    events: {
+        'click .isic-study-results-select-users-user-container': 'userSelected'
+    },
+
+    initialize: function (options) {
+        this.listenTo(this.collection, 'reset', this.render);
+
+        this.render();
+    },
+
+    userSelected: function (event) {
+        event.preventDefault();
+
+        var target = $(event.target);
+
+        this.$('.isic-study-results-select-users-user-container').removeClass('active');
+        target.addClass('active');
+
+        this.trigger('changed', target.data('userId'));
+    },
+
+    render: function () {
+        this.$el.html(isic.templates.studyResultsSelectUsersPage({
+            models: this.collection.models,
+            getName: this.formatUser
+        }));
+
+        return this;
+    }
+});
+
 // Collection of global feature result models
 isic.collections.GlobalFeatureResultCollection = Backbone.Collection.extend({
     model: isic.models.GlobalFeatureResultModel,
@@ -367,9 +400,7 @@ isic.views.StudyResultsView = isic.View.extend({
             parentView: this
         });
 
-        this.selectUserView = new isic.views.StudyResultsSelectView({
-            title: 'User',
-            getName: this.formatUser,
+        this.selectUserView = new isic.views.StudyResultsSelectUsersView({
             collection: this.users,
             parentView: this
         });
@@ -412,8 +443,6 @@ isic.views.StudyResultsView = isic.View.extend({
 
         this.image.clear();
         this.user.clear();
-
-        this.selectUserView.setEnabled(false);
 
         this.annotation.clear();
         this.featureset.clear();
