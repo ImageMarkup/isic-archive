@@ -84,6 +84,27 @@ isic.views.StudyResultsSelectStudyView = isic.View.extend({
     }
 });
 
+// View for study details
+isic.views.StudyResultsStudyDetailsView = isic.View.extend({
+    initialize: function (options) {
+        this.listenTo(this.model, 'change', this.render);
+
+        this.render();
+    },
+
+    render: function () {
+        var hasStudy = this.model.has('name');
+
+        this.$el.html(isic.templates.studyResultsStudyDetailPage({
+            model: this.model,
+            hasStudy: hasStudy,
+            formatUser: this.formatUser
+        }));
+
+        return this;
+    }
+});
+
 // View for a collection of images
 isic.views.StudyResultsSelectImageView = isic.View.extend({
     events: {
@@ -413,6 +434,11 @@ isic.views.StudyResultsView = isic.View.extend({
             parentView: this
         });
 
+        this.studyDetailsView = new isic.views.StudyResultsStudyDetailsView({
+            model: this.study,
+            parentView: this
+        });
+
         this.imageHeaderView = new isic.views.StudyResultsImageHeaderView({
             collection: this.images,
             study: this.study,
@@ -533,6 +559,8 @@ isic.views.StudyResultsView = isic.View.extend({
 
         this.selectStudyView.setElement(
             this.$('#isic-study-results-select-study-container')).render();
+        this.studyDetailsView.setElement(
+            this.$('#isic-study-results-study-details-container')).render();
         this.imageHeaderView.setElement(
             this.$('#isic-study-results-select-image-header')).render();
         this.selectImageView.setElement(

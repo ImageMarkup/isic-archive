@@ -1,0 +1,11 @@
+.isic-study-results-study-details-container
+  .isic-study-results-header Study Details
+  if hasStudy
+    - var featureset = model.get('featureset')
+    table.table.table-condensed.isic-study-results-study-details-table
+      tr
+        td.isic-study-results-study-details-table-label Featureset
+        td #{featureset['name']} (version #{featureset['version']})
+      tr
+        td.isic-study-results-study-details-table-label Creator
+        td= formatUser(model.get('creator'))
