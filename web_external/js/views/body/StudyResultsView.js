@@ -160,6 +160,41 @@ isic.views.StudyResultsSelectUsersView = isic.View.extend({
     }
 });
 
+// View for a collection of local features
+isic.views.StudyResultsSelectLocalFeaturesView = isic.View.extend({
+    events: {
+        'click .isic-study-results-select-local-features-feature-container': 'featureSelected'
+    },
+
+    initialize: function (options) {
+        this.featureAnnotated = options.featureAnnotated;
+
+        this.listenTo(this.collection, 'reset', this.render);
+
+        this.render();
+    },
+
+    featureSelected: function (event) {
+        event.preventDefault();
+
+        var target = $(event.target);
+
+        this.$('.isic-study-results-select-local-features-feature-container').removeClass('active');
+        target.addClass('active');
+
+        this.trigger('changed', target.data('featureId'));
+    },
+
+    render: function () {
+        this.$el.html(isic.templates.studyResultsSelectLocalFeaturesPage({
+            models: this.collection.models,
+            featureAnnotated: this.featureAnnotated
+        }));
+
+        return this;
+    }
+});
+
 // Collection of global feature result models
 isic.collections.GlobalFeatureResultCollection = Backbone.Collection.extend({
     model: isic.models.GlobalFeatureResultModel,
@@ -276,13 +311,9 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
         this.listenTo(this.featureset, 'change', this.featuresetChanged);
         this.listenTo(this.annotation, 'change', this.annotationChanged);
 
-        this.selectFeatureView = new isic.views.StudyResultsSelectView({
-            title: 'Feature',
-            template: isic.templates.studyResultsLocalFeaturesSelectPage,
+        this.selectFeatureView = new isic.views.StudyResultsSelectLocalFeaturesView({
             collection: this.features,
-            extraTemplateParams: {
-                featureAnnotated: _.bind(this.featureAnnotated, this)
-            },
+            featureAnnotated: _.bind(this.featureAnnotated, this),
             parentView: this
         });
 
