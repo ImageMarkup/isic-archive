@@ -37,6 +37,26 @@ isic.collections.FeatureCollection = Backbone.Collection.extend({
     }
 });
 
+// Header view for collection of images
+isic.views.StudyResultsImageHeaderView = isic.View.extend({
+    initialize: function (options) {
+        this.study = options.study;
+
+        this.listenTo(this.collection, 'reset', this.render);
+
+        this.render();
+    },
+
+    render: function () {
+        this.$el.html(isic.templates.studyResultsImageHeaderPage({
+            hasStudy: !_.isUndefined(this.study.id),
+            numImages: this.collection.models.length
+        }));
+
+        return this;
+    }
+});
+
 // View for a collection of studies in a select tag
 isic.views.StudyResultsSelectStudyView = isic.View.extend({
     events: {
@@ -379,6 +399,7 @@ isic.views.StudyResultsView = isic.View.extend({
         this.users = new girder.collections.UserCollection();
         this.users.pageLimit = Number.MAX_SAFE_INTEGER;
 
+        this.study = new isic.models.StudyModel();
         this.image = new isic.models.ImageModel();
         this.user = new girder.models.UserModel();
         this.featureset = new isic.models.FeaturesetModel();
@@ -387,6 +408,12 @@ isic.views.StudyResultsView = isic.View.extend({
 
         this.selectStudyView = new isic.views.StudyResultsSelectStudyView({
             collection: this.studies,
+            parentView: this
+        });
+
+        this.imageHeaderView = new isic.views.StudyResultsImageHeaderView({
+            collection: this.images,
+            study: this.study,
             parentView: this
         });
 
@@ -433,6 +460,8 @@ isic.views.StudyResultsView = isic.View.extend({
     },
 
     studyChanged: function (studyId) {
+        this.study.clear();
+
         this.images.reset();
         this.users.reset();
 
@@ -443,9 +472,7 @@ isic.views.StudyResultsView = isic.View.extend({
         this.featureset.clear();
 
         // Fetch selected study
-        this.study = new isic.models.StudyModel({
-            _id: studyId
-        }).once('g:fetched', function () {
+        this.study.set({'_id': studyId}).once('g:fetched', function () {
             // Populate images collection
             var imageModels = _.map(this.study.get('images'), function (image) {
                 return new isic.models.ImageModel(image);
@@ -504,6 +531,8 @@ isic.views.StudyResultsView = isic.View.extend({
 
         this.selectStudyView.setElement(
             this.$('#isic-study-results-select-study-container')).render();
+        this.imageHeaderView.setElement(
+            this.$('#isic-study-results-select-image-header')).render();
         this.selectImageView.setElement(
             this.$('#isic-study-results-select-image-container')).render();
         this.selectUserView.setElement(
