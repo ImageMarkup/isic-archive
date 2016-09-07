@@ -1,0 +1,7 @@
+.isic-study-results-select-study-container
+  label.control-label(for='isic-study-results-select-study-select') Study
+  select#isic-study-results-select-study-select.form-control.input.input-lg
+    option(selected disabled value='')
+      | Select...
+    each model in models
+      option(value=model.id)= model.get('name')

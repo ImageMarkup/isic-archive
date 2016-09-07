@@ -37,61 +37,32 @@ isic.collections.FeatureCollection = Backbone.Collection.extend({
     }
 });
 
-// Base view for a collection of models in a select tag
-isic.views.StudyResultsSelectView = isic.View.extend({
+// View for a collection of studies in a select tag
+isic.views.StudyResultsSelectStudyView = isic.View.extend({
     events: {
-        'change': 'modelChanged'
+        'change': 'studyChanged'
     },
 
     initialize: function (options) {
-        this.title = options.title;
-        this.template = _.has(options, 'template') ? options.template : isic.templates.studyResultsSelectView;
-        this.extraTemplateParams = _.has(options, 'extraTemplateParams') ? options.extraTemplateParams : {};
-        this.selectId = _.uniqueId('isic-study-results-select-view-select-');
-        this.getName = options.getName || this._defaultGetName;
         this.listenTo(this.collection, 'reset', this.render);
 
         this.render();
     },
 
-    modelChanged: function () {
-        this.trigger('changed', this._element().val());
-    },
-
-    setEnabled: function (val) {
-        if (val) {
-            this._element().removeAttr('disabled');
-        } else {
-            this._element().attr('disabled', 'disabled');
-        }
-    },
-
-    update: function () {
-        this.render();
-        this._element().selectedIndex = 0;
-        this.setEnabled(true);
+    studyChanged: function () {
+        this.trigger('changed', this.$('select').val());
     },
 
     render: function () {
-        var params = {
-            title: this.title,
-            selectId: this.selectId,
-            getName: this.getName,
+        this.$el.html(isic.templates.studyResultsSelectStudyPage({
             models: this.collection.models
-        };
-        _.extend(params, this.extraTemplateParams);
-
-        this.$el.html(this.template(params));
+        }));
 
         return this;
     },
 
     _element: function () {
         return this.$('select');
-    },
-
-    _defaultGetName: function (model) {
-        return model.name();
     }
 });
 
@@ -418,8 +389,7 @@ isic.views.StudyResultsView = isic.View.extend({
         this.annotation = new isic.models.AnnotationModel();
         this.featureImageModel = new isic.models.FeatureImageModel();
 
-        this.selectStudyView = new isic.views.StudyResultsSelectView({
-            title: 'Study',
+        this.selectStudyView = new isic.views.StudyResultsSelectStudyView({
             collection: this.studies,
             parentView: this
         });
