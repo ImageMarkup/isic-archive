@@ -309,7 +309,7 @@ class StudyResource(Resource):
         self.requireParams('userId', params)
 
         creatorUser = self.getCurrentUser()
-        User.requireStudyAdmin(creatorUser)
+        User.requireAdminStudy(creatorUser)
 
         annotatorUser = User.load(
             params['userId'], user=creatorUser, level=AccessType.READ, exc=True)
