@@ -551,9 +551,7 @@ isic.views.StudyResultsView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.studyResultsPage({
-            title: 'Annotation Study Results'
-        }));
+        this.$el.html(isic.templates.studyResultsPage());
 
         this.selectStudyView.setElement(
             this.$('#isic-study-results-select-study-container')).render();
