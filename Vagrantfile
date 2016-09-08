@@ -4,7 +4,7 @@ Vagrant.require_version ">=1.8.0"
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/trusty64"
 
-  config.vm.hostname = "isic-archive.dev"
+  config.vm.hostname = "isic-archive.devel"
 
   # config.vm.network "forwarded_port", guest: 80, host: 8080
   PRIVATE_IP = "172.28.128.100"
@@ -36,7 +36,7 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.provider "virtualbox" do |virtualbox|
-    virtualbox.name = "isic-archive.dev"
+    virtualbox.name = "isic-archive.devel"
     virtualbox.memory = 1536
   end
 

@@ -43,13 +43,13 @@ Installation
 * Add the following lines to your host systems's ``/etc/hosts`` file:
 ::
 
-  172.28.128.100 isic-archive.dev
+  172.28.128.100 isic-archive.devel
   172.28.128.100 isic-archive.upstream
 
 
 Setup
 ~~~~~
-* Use a web browser to visit ``http://isic-archive.dev/`` from your host
+* Use a web browser to visit ``http://isic-archive.devel/`` from your host
   development machine
 
 * Register a new user (this will be an admin user)
