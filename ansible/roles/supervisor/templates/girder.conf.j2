@@ -1,6 +1,6 @@
-[program:girderapp]
+[program:girder]
 directory={{ girder_path }}
 user={{ ansible_user_id }}
 command={{ python_dist_path }}/bin/python -m girder
-stderr_logfile = /tmp/girderapp-stderr.log
-stdout_logfile = /tmp/girderapp-stdout.log
+stderr_logfile = /tmp/girder.stderr.log
+stdout_logfile = /tmp/girder.stdout.log

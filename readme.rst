@@ -93,13 +93,13 @@ Usage
 
   # from within the "isic-archive" sub-directory
   vagrant ssh
-  sudo supervisorctl restart girderapp
+  sudo supervisorctl restart girder
 
 * To inspect various logs:
 ::
 
   # Girder's console output
-  tail -F /tmp/girderapp-std*
+  tail -F /tmp/girder.std*
 
   # Mongodb's console output
   tail -F /var/log/mongodb/mongod.log
