@@ -2,8 +2,8 @@
 
 - name: Add PPA key
   apt_key:
+    keyserver: "keyserver.ubuntu.com"
     id: "68576280"
-    url: "https://deb.nodesource.com/gpgkey/nodesource.gpg.key"
   sudo: yes
 
 - name: Add PPA
