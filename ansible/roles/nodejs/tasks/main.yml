@@ -1,0 +1,17 @@
+---
+
+- name: Add PPA key
+  apt_key:
+    id: "68576280"
+    url: "https://deb.nodesource.com/gpgkey/nodesource.gpg.key"
+  sudo: yes
+
+- name: Add PPA
+  apt_repository:
+    repo: "deb https://deb.nodesource.com/node_4.x {{ ansible_distribution_release }} main"
+  sudo: yes
+
+- name: Install package
+  apt:
+    name: nodejs
+  sudo: yes
