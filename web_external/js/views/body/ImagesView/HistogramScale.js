@@ -93,7 +93,7 @@
         }
         this.dividerPosition = this.leftAxisPadding + this.barSize * (0.5 + this.ordinalBinCount);
     };
-    HistogramScale.prototype.binToPosition = _.bind(function (binNo) {
+    HistogramScale.prototype.binToPosition = function (binNo) {
         // Given a bin number, calculate the center of its bar
         if (binNo < this.dividerIndex) {
             // Ordinal bin
@@ -102,8 +102,8 @@
             // Categorical bin
             return this.dividerPosition + this.barSize * (1.5 * (binNo - this.dividerIndex) + 0.75);
         }
-    }, this);
-    HistogramScale.prototype.positionToBin = _.bind(function (position) {
+    };
+    HistogramScale.prototype.positionToBin = function (position) {
         // Given a screen position, calculate the closest bin number
         if (position < this.dividerPosition) {
             // Ordinal bin
@@ -114,8 +114,8 @@
             position -= this.dividerPosition + 0.75 * this.barSize;
             return Math.round(position / (1.5 * this.categoricalBinCount));
         }
-    }, this);
-    HistogramScale.prototype.labelToBin = _.bind(function (value, histogram) {
+    };
+    HistogramScale.prototype.labelToBin = function (value, histogram) {
         // Given a bin label and histogram name, get the bin number
         var lookup;
         if (histogram === 'page') {
@@ -130,8 +130,8 @@
         } else {
             return lookup[value];
         }
-    }, this);
-    HistogramScale.prototype.labelToCount = _.bind(function (value, histogram) {
+    };
+    HistogramScale.prototype.labelToCount = function (value, histogram) {
         // Given a bin label and histogram name, get the bin number
         var lookup;
         if (histogram === 'page') {
@@ -149,8 +149,8 @@
         } else {
             return histogram[lookup[value]].count;
         }
-    }, this);
-    HistogramScale.prototype.getBinRect = _.bind(function (binLabel, histogram) {
+    };
+    HistogramScale.prototype.getBinRect = function (binLabel, histogram) {
         var barHeight = this.y(this.labelToCount(binLabel, histogram));
         return {
             x: -this.barSize / 2,
@@ -158,10 +158,10 @@
             width: this.barSize,
             height: barHeight
         };
-    }, this);
-    HistogramScale.prototype.y = _.bind(function (value) {
+    };
+    HistogramScale.prototype.y = function (value) {
         return this.height * value / this.yMax;
-    }, this);
+    };
     Object.defineProperty(HistogramScale.prototype, 'yMax', {
         get: function () {
             return this.customYmax === null ? this.realYmax : this.customYmax;

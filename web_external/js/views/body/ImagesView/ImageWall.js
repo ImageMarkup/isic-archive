@@ -223,7 +223,7 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
         var availableImages = 0;
         this.imageColumns.forEach(_.bind(function (column, index) {
             var y = imagePadding;
-            column.forEach(function (imageId) {
+            column.forEach(_.bind(function (imageId) {
                 // Calculate the natural height of the image
                 var height;
                 availableImages += 1;
@@ -235,7 +235,7 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
                     height: height
                 };
                 y += height + imagePadding;
-            });
+            }, this));
             if (y > tallestHeight) {
                 tallestHeight = y;
             }
