@@ -11,40 +11,38 @@ var ICONS = {
 
 isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
     initialize: function (parameters) {
-        var self = this;
-        self.attrName = parameters.attributeName;
-        self.scale = new isic.views.ImagesViewSubViews
-            .HistogramScale(self.attrName);
+        this.attrName = parameters.attributeName;
+        this.scale = new isic.views.ImagesViewSubViews
+            .HistogramScale(this.attrName);
     },
     render: function () {
-        var self = this;
         var parentWidth = this.el.parentNode.getBoundingClientRect().width;
-        var emSize = parseFloat(self.$el.css('font-size'));
-        self.scale.update(self.model, emSize, parentWidth);
+        var emSize = parseFloat(this.$el.css('font-size'));
+        this.scale.update(this.model, emSize, parentWidth);
 
-        var svg = d3.select(self.el);
-        var width = self.scale.width;
+        var svg = d3.select(this.el);
+        var width = this.scale.width;
         var topPadding = 0.5 * emSize;
-        var height = self.scale.height + topPadding;
+        var height = this.scale.height + topPadding;
 
-        if (!self.addedTemplate) {
+        if (!this.addedTemplate) {
             svg.html(isic.templates.imagesPageHistogram({
                 staticRoot: girder.staticRoot
             }));
-            self.addedTemplate = true;
+            this.addedTemplate = true;
         }
 
         // Draw the y axis
         var yScale = d3.scale.linear()
-            .domain([0, self.scale.yMax])
+            .domain([0, this.scale.yMax])
             .range([height, topPadding]);
         var yAxis = d3.svg.axis()
             .scale(yScale)
             .orient('left')
-            .ticks(Math.min(4, self.scale.yMax))
+            .ticks(Math.min(4, this.scale.yMax))
             .tickFormat(d3.format('s'));
         var yAxisObj = svg.select('.yAxis')
-            .attr('transform', 'translate(' + self.scale.leftAxisPadding + ',0)')
+            .attr('transform', 'translate(' + this.scale.leftAxisPadding + ',0)')
             .call(yAxis);
 
         // Move the special buttons into place and attach their events
@@ -61,7 +59,7 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
         */
 
         // Draw the bin groups
-        var labels = self.scale.overviewHistogram.map(function (d) {
+        var labels = this.scale.overviewHistogram.map(function (d) {
             return d.label;
         });
         var bins = svg.select('.bins').selectAll('.bin')
@@ -73,10 +71,10 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
         bins.exit().remove();
 
         // Move the bins horizontally
-        bins.attr('transform', function (d) {
-            var binNo = self.scale.labelToBin(d, 'overview');
-            return 'translate(' + self.scale.binToPosition(binNo) + ',' + topPadding + ')';
-        });
+        bins.attr('transform', _.bind(function (d) {
+            var binNo = this.scale.labelToBin(d, 'overview');
+            return 'translate(' + this.scale.binToPosition(binNo) + ',' + topPadding + ')';
+        }, this));
 
         // Draw one bar for each bin
         binsEnter.append('rect')
@@ -88,7 +86,8 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
         //     .attr('class', 'page');
 
         // Update each bar
-        function drawBars() {
+        var drawBars = _.bind(function () {
+            var self = this;
             bins.select('rect.overview')
                 .each(function (d) {
                     // this refers to the DOM element
@@ -105,30 +104,30 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
             //         // this refers to the DOM element
             //         d3.select(this).attr(self.scale.getBinRect(d, 'page'));
             //     });
-        }
+        }, this);
         drawBars();
 
         // Add the scale adjustment knob (needs a distinct scale instance)
         var knobScale = yScale.copy();
         var knob = svg.select('.yAxisKnob')
             .attr('transform', 'translate(' +
-                self.scale.leftAxisPadding + ',' +
-                knobScale(self.scale.yMax) + ')');
+                this.scale.leftAxisPadding + ',' +
+                knobScale(this.scale.yMax) + ')');
         knob.call(d3.behavior.drag()
             .origin(function () {
-                return { x: 0, y: knobScale(self.scale.yMax) };
+                return { x: 0, y: knobScale(this.scale.yMax) };
             }).on('drag', function () {
                 // the yMax setter automagically prevents bad values...
-                self.scale.yMax = knobScale.invert(d3.event.y);
+                this.scale.yMax = knobScale.invert(d3.event.y);
 
-                // update everything that cares about the y self.scale:
+                // update everything that cares about the y this.scale:
                 // the knob
                 knob.attr('transform', 'translate(' +
-                    self.scale.leftAxisPadding + ',' +
-                    knobScale(self.scale.yMax) + ')');
+                    this.scale.leftAxisPadding + ',' +
+                    knobScale(this.scale.yMax) + ')');
                 // the axis
-                yScale.domain([0, self.scale.yMax]);
-                yAxis.scale(yScale).ticks(Math.min(4, self.scale.yMax));
+                yScale.domain([0, this.scale.yMax]);
+                yAxis.scale(yScale).ticks(Math.min(4, this.scale.yMax));
                 yAxisObj.call(yAxis);
                 // and the bars
                 drawBars();
