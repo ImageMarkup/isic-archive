@@ -8,68 +8,64 @@ isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
 isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
     initialize: function (settings) {
-        var self = this;
-        self.image = settings.image;
-        self.imageCache = {};
-        self.loadedImages = {};
-        self.imageColumnLookup = {};
-        self.imageColumns = [];
+        this.image = settings.image;
+        this.imageCache = {};
+        this.loadedImages = {};
+        this.imageColumnLookup = {};
+        this.imageColumns = [];
 
-        self.listenTo(self.image, 'change:_id', self.render);
-        self.listenTo(self.model, 'change:imageIds', self.setImages);
+        this.listenTo(this.image, 'change:_id', this.render);
+        this.listenTo(this.model, 'change:imageIds', this.setImages);
     },
     setImages: function () {
-        var self = this;
-        self.loadedImages = {};
+        this.loadedImages = {};
 
         // Start fetching the images now... don't wait
         // around for the call in render()
-        self.model.get('imageIds').forEach(function (i) {
-            if (!self.imageCache.hasOwnProperty(i)) {
-                self.imageCache[i] = new Image();
-                self.imageCache[i].addEventListener('load', function () {
-                    if (!self.imageCache[i].width || !self.imageCache[i].height) {
-                        self.handleBadImage(i);
+        this.model.get('imageIds').forEach(_.bind(function (i) {
+            if (!this.imageCache.hasOwnProperty(i)) {
+                this.imageCache[i] = new Image();
+                this.imageCache[i].addEventListener('load', _.bind(function () {
+                    if (!this.imageCache[i].width || !this.imageCache[i].height) {
+                        this.handleBadImage(i);
                     } else {
-                        self.loadedImages[i] = true;
+                        this.loadedImages[i] = true;
                     }
-                    self.render();
-                });
-                self.imageCache[i].addEventListener('error', function () {
-                    self.handleBadImage(i);
-                });
-                self.imageCache[i].src = girder.apiRoot + '/image/' + i +
+                    this.render();
+                }, this));
+                this.imageCache[i].addEventListener('error', _.bind(function () {
+                    this.handleBadImage(i);
+                }, this));
+                this.imageCache[i].src = girder.apiRoot + '/image/' + i +
                     '/thumbnail?width=' + imageSize;
             } else {
                 // If we already have the image cached, we can call render right
                 // away (it gets debounced, so we // don't have to worry about
                 // tons of render calls)
-                self.loadedImages[i] = true;
-                self.render();
+                this.loadedImages[i] = true;
+                this.render();
             }
-        });
+        }, this));
 
         // Clear out any old IDs after a while (don't do it immediately in case
         // the user is flipping back and forth between pages)
-        window.clearTimeout(self.cleanupTimeout);
-        self.cleanupTimeout = window.setTimeout(function () {
-            Object.keys(self.imageCache).forEach(function (i) {
-                if (self.model.get('imageIds').indexOf(i) === -1) {
-                    delete self.imageCache[i];
-                    delete self.loadedImages[i];
+        window.clearTimeout(this.cleanupTimeout);
+        this.cleanupTimeout = window.setTimeout(_.bind(function () {
+            Object.keys(this.imageCache).forEach(_.bind(function (i) {
+                if (this.model.get('imageIds').indexOf(i) === -1) {
+                    delete this.imageCache[i];
+                    delete this.loadedImages[i];
                 }
-            });
-        }, 10000);
+            }, this));
+        }, this), 10000);
     },
     handleBadImage: function (imageId) {
-        var self = this;
         // The image didn't load correctly; replace it with the "no thumbnail
         // available" image
-        self.imageCache[imageId].src = girder.staticRoot +
+        this.imageCache[imageId].src = girder.staticRoot +
             '/built/plugins/isic_archive/extra/img/noThumbnail.svg';
     },
     rearrangeColumns: function (numColumns) {
-        var self = this;
         var imageId, myColumn, myIndex;
         /*
          Here we lay out which images go where; we want an image
@@ -79,21 +75,21 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
          */
 
         // Remove any images that aren't here any more
-        Object.keys(self.imageColumnLookup).forEach(function (imageId) {
-            if (self.model.get('imageIds').indexOf(imageId) === -1) {
-                myColumn = self.imageColumnLookup[imageId];
-                myIndex = self.imageColumns[myColumn].indexOf(imageId);
+        Object.keys(this.imageColumnLookup).forEach(_.bind(function (imageId) {
+            if (this.model.get('imageIds').indexOf(imageId) === -1) {
+                myColumn = this.imageColumnLookup[imageId];
+                myIndex = this.imageColumns[myColumn].indexOf(imageId);
 
-                self.imageColumns[myColumn].splice(myIndex, 1);
-                delete self.imageColumnLookup[imageId];
+                this.imageColumns[myColumn].splice(myIndex, 1);
+                delete this.imageColumnLookup[imageId];
             }
-        });
+        }, this));
 
         // Figure out which new images need placing
         var imagesToPlace = [];
 
-        Object.keys(self.loadedImages).forEach(function (imageId) {
-            if (!self.imageColumnLookup.hasOwnProperty(imageId)) {
+        Object.keys(this.loadedImages).forEach(_.bind(function (imageId) {
+            if (!this.imageColumnLookup.hasOwnProperty(imageId)) {
                 // For some reason, browsers seem to be
                 // loading the images backwards. For a
                 // better top-down effect (especially
@@ -101,26 +97,26 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
                 // inserting them at the beginning
                 imagesToPlace.splice(0, 0, imageId);
             }
-        });
+        }, this));
 
         // Add or remove columns as necessary (images in
         // a dying column need to be placed again)
-        while (self.imageColumns.length < numColumns) {
-            self.imageColumns.push([]);
+        while (this.imageColumns.length < numColumns) {
+            this.imageColumns.push([]);
         }
-        while (self.imageColumns.length > numColumns) {
-            var dyingColumn = self.imageColumns.pop();
+        while (this.imageColumns.length > numColumns) {
+            var dyingColumn = this.imageColumns.pop();
             if (dyingColumn) {
-                dyingColumn.forEach(function (imageId) {
-                    delete self.imageColumnLookup[imageId];
+                dyingColumn.forEach(_.bind(function (imageId) {
+                    delete this.imageColumnLookup[imageId];
                     imagesToPlace.push(imageId);
-                });
+                }, this));
             }
         }
 
         // Helper function for placing/balancing
         // columns of images:
-        function minAndMaxIndices() {
+        var minAndMaxIndices = _.bind(function () {
             var result = {
                 minIndices: [],
                 maxIndices: [],
@@ -130,7 +126,7 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
                 maxLength: 0
             };
 
-            self.imageColumns.forEach(function (column, index) {
+            this.imageColumns.forEach(function (column, index) {
                 if (column.length > result.maxLength) {
                     result.maxLength = column.length;
                     result.maxIndices = [index];
@@ -152,7 +148,7 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
             result.max = result.maxIndices[result.max];
 
             return result;
-        }
+        }, this);
 
         // Consume imagesToPlace by putting images
         // in one of the least-full columns
@@ -160,30 +156,28 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
             imageId = imagesToPlace.pop();
             myColumn = minAndMaxIndices().min;
 
-            self.imageColumns[myColumn].push(imageId);
-            self.imageColumnLookup[imageId] = myColumn;
+            this.imageColumns[myColumn].push(imageId);
+            this.imageColumnLookup[imageId] = myColumn;
         }
 
         // Balance the columns
         var minAndMax = minAndMaxIndices();
         while (minAndMax.maxLength - minAndMax.minLength > 3) {
             // Allow a ragged bottom edge... the gap can be as much as 3
-            imageId = self.imageColumns[minAndMax.max].pop();
-            self.imageColumns[minAndMax.min].push(imageId);
-            self.imageColumnLookup[imageId] = minAndMax.min;
+            imageId = this.imageColumns[minAndMax.max].pop();
+            this.imageColumns[minAndMax.min].push(imageId);
+            this.imageColumnLookup[imageId] = minAndMax.min;
             minAndMax = minAndMaxIndices();
         }
     },
     selectImage: function (imageId) {
-        var self = this;
         if (imageId !== null) {
-            self.image.set('_id', imageId);
+            this.image.set('_id', imageId);
         } else {
-            self.image.clear();
+            this.image.clear();
         }
     },
     render: _.debounce(function () {
-        var self = this;
         var svg;
 
         if (!this.addedSvgElement) {
@@ -221,20 +215,20 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
 
         // Okay, we know how many columns we can fit...
         // figure out where all the images go:
-        self.rearrangeColumns(numColumns);
+        this.rearrangeColumns(numColumns);
 
         // Construct a position/height lookup dict
         var placementLookup = {};
         var tallestHeight = 0;
         var availableImages = 0;
-        self.imageColumns.forEach(function (column, index) {
+        this.imageColumns.forEach(_.bind(function (column, index) {
             var y = imagePadding;
             column.forEach(function (imageId) {
                 // Calculate the natural height of the image
                 var height;
                 availableImages += 1;
-                height = self.imageCache[imageId].height * imageWidth /
-                    self.imageCache[imageId].width;
+                height = this.imageCache[imageId].height * imageWidth /
+                    this.imageCache[imageId].width;
                 placementLookup[imageId] = {
                     x: imagePadding + index * (imageWidth + imagePadding),
                     y: y,
@@ -245,7 +239,7 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
             if (y > tallestHeight) {
                 tallestHeight = y;
             }
-        });
+        }, this));
 
         // After all that, we finally know how much space we need
         svg.attr({
@@ -254,7 +248,7 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
         });
 
         // Okay, time to draw the pictures (in their initial positions)
-        var imageList = Object.keys(self.loadedImages)
+        var imageList = Object.keys(this.loadedImages)
             .filter(function (d) {
                 return placementLookup.hasOwnProperty(d);
             });
@@ -265,6 +259,7 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
 
         // This click callback has to be defined here with a name because it
         // must refer to itself.
+        var self = this;
         var click = function (d) {
             // Capture the target element for reference in the nested callback.
             var that = this;
@@ -304,15 +299,15 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
         images.exit().remove();
         images.attr('id', function (d) {
             return 'image' + d;
-        }).attr('xlink:href', function (d) {
-            return self.imageCache[d].src;
-        }).attr('class', function (d) {
-            if (d === self.image.id) {
+        }).attr('xlink:href', _.bind(function (d) {
+            return this.imageCache[d].src;
+        }, this)).attr('class', _.bind(function (d) {
+            if (d === this.image.id) {
                 return 'selected';
             } else {
                 return null;
             }
-        }).attr({
+        }, this)).attr({
             width: imageWidth,
             height: function (d) {
                 return placementLookup[d].height;
@@ -326,7 +321,7 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
         }).on('click', click);
 
         // Draw the highlight rect
-        var selectedImageId = self.image.id;
+        var selectedImageId = this.image.id;
         if (selectedImageId) {
             svg.select('#highlightOutline')
                 .style('display', null)
