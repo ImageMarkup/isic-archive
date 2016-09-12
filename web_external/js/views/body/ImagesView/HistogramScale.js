@@ -2,8 +2,7 @@
     // This is simply a helper class (not really a model or a view) that
     // abstracts away some of the nuances of the histogram scales (both x and y)
     function HistogramScale(attrName) {
-        var self = this;
-        self.attrName = attrName;
+        this.attrName = attrName;
 
         // The x scale is a funky one - we may (or may not) have an ordinal chunk
         // and a categorical chunk on the same scale. We want to try to use the
@@ -19,165 +18,156 @@
 
         // The y scale needs to be independently adjustable; we need to keep track
         // of a custom max y, as well as the actual max value of the data
-        self.customYmax = null;
+        this.customYmax = null;
     }
     HistogramScale.prototype.update = function (model, emSize, idealWidth) {
-        var self = this;
-        self.leftAxisPadding = 3 * emSize;
-        self.height = 6 * emSize;
+        this.leftAxisPadding = 3 * emSize;
+        this.height = 6 * emSize;
 
-        self.coerceToType = model.getAttributeType(self.attrName);
-        self.overviewHistogram = model.get('overviewHistogram')[self.attrName] || [];
-        self.filteredSetHistogram = model.get('filteredSetHistogram')[self.attrName] || [];
-        self.pageHistogram = model.get('pageHistogram')[self.attrName] || [];
+        this.coerceToType = model.getAttributeType(this.attrName);
+        this.overviewHistogram = model.get('overviewHistogram')[this.attrName] || [];
+        this.filteredSetHistogram = model.get('filteredSetHistogram')[this.attrName] || [];
+        this.pageHistogram = model.get('pageHistogram')[this.attrName] || [];
 
-        self.dividerIndex = undefined;
-        self.dividerPosition = undefined;
-        self.realYmax = 0;
+        this.dividerIndex = undefined;
+        this.dividerPosition = undefined;
+        this.realYmax = 0;
 
-        self.ordinalBinCount = 0;
-        self.categoricalBinCount = 0;
-        self.lowBound;
-        self.highBound;
-        self.categoricalLookup = {};
-        self.overviewLabelLookup = {};
-        self.filteredLabelLookup = {};
-        self.pageLabelLookup = {};
+        this.ordinalBinCount = 0;
+        this.categoricalBinCount = 0;
+        this.lowBound;
+        this.highBound;
+        this.categoricalLookup = {};
+        this.overviewLabelLookup = {};
+        this.filteredLabelLookup = {};
+        this.pageLabelLookup = {};
 
         // First, how many bins are ordinal vs categorical, and what's the
         // overall ordinal range (if there is one)? Where do we encounter
         // the first categorical value? While we're at it, determine the
         // real max vertical count, and construct bin lookup tables for
         // each histogram.
-        self.overviewHistogram.forEach(function (bin, index) {
+        this.overviewHistogram.forEach(_.bind(function (bin, index) {
             if (bin.hasOwnProperty('lowBound') && bin.hasOwnProperty('highBound')) {
-                self.ordinalBinCount += 1;
-                if (self.lowBound === undefined || bin.lowBound < self.lowBound) {
-                    self.lowBound = bin.lowBound;
+                this.ordinalBinCount += 1;
+                if (this.lowBound === undefined || bin.lowBound < this.lowBound) {
+                    this.lowBound = bin.lowBound;
                 }
-                if (self.highBound === undefined || bin.highBound > self.highBound) {
-                    self.highBound = bin.highBound;
+                if (this.highBound === undefined || bin.highBound > this.highBound) {
+                    this.highBound = bin.highBound;
                 }
             } else {
-                if (self.dividerIndex === undefined) {
+                if (this.dividerIndex === undefined) {
                     // The server will return all ordinal bins first
-                    self.dividerIndex = self.ordinalBinCount;
+                    this.dividerIndex = this.ordinalBinCount;
                 }
-                self.categoricalBinCount += 1;
-                self.categoricalLookup[bin.label] = index;
+                this.categoricalBinCount += 1;
+                this.categoricalLookup[bin.label] = index;
             }
-            self.overviewLabelLookup[bin.label] = index;
-            self.realYmax = Math.max(self.realYmax, bin.count);
-        });
-        self.filteredSetHistogram.forEach(function (bin, index) {
-            self.filteredLabelLookup[bin.label] = index;
-        });
-        self.pageHistogram.forEach(function (bin, index) {
-            self.pageLabelLookup[bin.label] = index;
-        });
+            this.overviewLabelLookup[bin.label] = index;
+            this.realYmax = Math.max(this.realYmax, bin.count);
+        }, this));
+        this.filteredSetHistogram.forEach(_.bind(function (bin, index) {
+            this.filteredLabelLookup[bin.label] = index;
+        }, this));
+        this.pageHistogram.forEach(_.bind(function (bin, index) {
+            this.pageLabelLookup[bin.label] = index;
+        }, this));
 
         // If the new data is shorter than the previous custom
         // customYmax, just clear the custom customYmax
-        if (self.customYmax !== null && self.customYmax > self.realYmax) {
-            self.customYmax = null;
+        if (this.customYmax !== null && this.customYmax > this.realYmax) {
+            this.customYmax = null;
         }
 
         // Okay, now for the x scale...
-        self.width = idealWidth - self.leftAxisPadding;
-        self.barSize = Math.max(emSize,
-            self.width / (0.5 + self.ordinalBinCount + 1.5 * self.categoricalBinCount));
-        self.barSize = Math.min(3 * emSize, self.barSize);
-        self.width = self.leftAxisPadding +
-        self.barSize * (0.5 + self.ordinalBinCount + 1.5 * self.categoricalBinCount);
+        this.width = idealWidth - this.leftAxisPadding;
+        this.barSize = Math.max(emSize,
+            this.width / (0.5 + this.ordinalBinCount + 1.5 * this.categoricalBinCount));
+        this.barSize = Math.min(3 * emSize, this.barSize);
+        this.width = this.leftAxisPadding +
+        this.barSize * (0.5 + this.ordinalBinCount + 1.5 * this.categoricalBinCount);
 
-        if (self.categoricalBinCount === 0) {
-            self.dividerIndex = self.ordinalBinCount;
+        if (this.categoricalBinCount === 0) {
+            this.dividerIndex = this.ordinalBinCount;
         }
-        self.dividerPosition = self.leftAxisPadding + self.barSize * (0.5 + self.ordinalBinCount);
+        this.dividerPosition = this.leftAxisPadding + this.barSize * (0.5 + this.ordinalBinCount);
     };
-    HistogramScale.prototype.binToPosition = function (binNo) {
-        var self = this;
+    HistogramScale.prototype.binToPosition = _.bind(function (binNo) {
         // Given a bin number, calculate the center of its bar
-        if (binNo < self.dividerIndex) {
+        if (binNo < this.dividerIndex) {
             // Ordinal bin
-            return self.leftAxisPadding + self.barSize * (0.75 + binNo);
+            return this.leftAxisPadding + this.barSize * (0.75 + binNo);
         } else {
             // Categorical bin
-            return self.dividerPosition + self.barSize * (1.5 * (binNo - self.dividerIndex) + 0.75);
+            return this.dividerPosition + this.barSize * (1.5 * (binNo - this.dividerIndex) + 0.75);
         }
-    };
-    HistogramScale.prototype.positionToBin = function (position) {
-        var self = this;
+    }, this);
+    HistogramScale.prototype.positionToBin = _.bind(function (position) {
         // Given a screen position, calculate the closest bin number
-        if (position < self.dividerPosition) {
+        if (position < this.dividerPosition) {
             // Ordinal bin
-            position -= self.leftAxisPadding + 0.75 * self.barSize;
-            return Math.round(position / self.ordinalBinCount);
+            position -= this.leftAxisPadding + 0.75 * this.barSize;
+            return Math.round(position / this.ordinalBinCount);
         } else {
             // Categorical bin
-            position -= self.dividerPosition + 0.75 * self.barSize;
-            return Math.round(position / (1.5 * self.categoricalBinCount));
+            position -= this.dividerPosition + 0.75 * this.barSize;
+            return Math.round(position / (1.5 * this.categoricalBinCount));
         }
-    };
-    HistogramScale.prototype.labelToBin = function (value, histogram) {
-        var self = this;
+    }, this);
+    HistogramScale.prototype.labelToBin = _.bind(function (value, histogram) {
         // Given a bin label and histogram name, get the bin number
         var lookup;
         if (histogram === 'page') {
-            lookup = self.pageLabelLookup;
+            lookup = this.pageLabelLookup;
         } else if (histogram === 'filtered') {
-            lookup = self.filteredLabelLookup;
+            lookup = this.filteredLabelLookup;
         } else {  // default: return the overview label index
-            lookup = self.overviewLabelLookup;
+            lookup = this.overviewLabelLookup;
         }
         if (!(value in lookup)) {
             return undefined;
         } else {
             return lookup[value];
         }
-    };
-    HistogramScale.prototype.labelToCount = function (value, histogram) {
-        var self = this;
+    }, this);
+    HistogramScale.prototype.labelToCount = _.bind(function (value, histogram) {
         // Given a bin label and histogram name, get the bin number
         var lookup;
         if (histogram === 'page') {
-            lookup = self.pageLabelLookup;
-            histogram = self.pageHistogram;
+            lookup = this.pageLabelLookup;
+            histogram = this.pageHistogram;
         } else if (histogram === 'filtered') {
-            lookup = self.filteredLabelLookup;
-            histogram = self.filteredSetHistogram;
+            lookup = this.filteredLabelLookup;
+            histogram = this.filteredSetHistogram;
         } else {  // default: return the overview count
-            lookup = self.overviewLabelLookup;
-            histogram = self.overviewHistogram;
+            lookup = this.overviewLabelLookup;
+            histogram = this.overviewHistogram;
         }
         if (!(value in lookup)) {
             return 0;
         } else {
             return histogram[lookup[value]].count;
         }
-    };
-    HistogramScale.prototype.getBinRect = function (binLabel, histogram) {
-        var self = this;
-        var barHeight = self.y(self.labelToCount(binLabel, histogram));
+    }, this);
+    HistogramScale.prototype.getBinRect = _.bind(function (binLabel, histogram) {
+        var barHeight = this.y(this.labelToCount(binLabel, histogram));
         return {
-            x: -self.barSize / 2,
-            y: self.height - barHeight,
-            width: self.barSize,
+            x: -this.barSize / 2,
+            y: this.height - barHeight,
+            width: this.barSize,
             height: barHeight
         };
-    };
-    HistogramScale.prototype.y = function (value) {
-        var self = this;
-        return self.height * value / self.yMax;
-    };
+    }, this);
+    HistogramScale.prototype.y = _.bind(function (value) {
+        return this.height * value / this.yMax;
+    }, this);
     Object.defineProperty(HistogramScale.prototype, 'yMax', {
         get: function () {
-            var self = this;
-            return self.customYmax === null ? self.realYmax : self.customYmax;
+            return this.customYmax === null ? this.realYmax : this.customYmax;
         },
         set: function (value) {
-            var self = this;
-            self.customYmax = Math.max(1, Math.min(self.realYmax, value));
+            this.customYmax = Math.max(1, Math.min(this.realYmax, value));
         }
     });
 
