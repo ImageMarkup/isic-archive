@@ -47,7 +47,7 @@
         // the first categorical value? While we're at it, determine the
         // real max vertical count, and construct bin lookup tables for
         // each histogram.
-        this.overviewHistogram.forEach(_.bind(function (bin, index) {
+        _.each(this.overviewHistogram, function (bin, index) {
             if (bin.hasOwnProperty('lowBound') && bin.hasOwnProperty('highBound')) {
                 this.ordinalBinCount += 1;
                 if (this.lowBound === undefined || bin.lowBound < this.lowBound) {
@@ -66,13 +66,13 @@
             }
             this.overviewLabelLookup[bin.label] = index;
             this.realYmax = Math.max(this.realYmax, bin.count);
-        }, this));
-        this.filteredSetHistogram.forEach(_.bind(function (bin, index) {
+        }, this);
+        _.each(this.filteredSetHistogram, function (bin, index) {
             this.filteredLabelLookup[bin.label] = index;
-        }, this));
-        this.pageHistogram.forEach(_.bind(function (bin, index) {
+        }, this);
+        _.each(this.pageHistogram, function (bin, index) {
             this.pageLabelLookup[bin.label] = index;
-        }, this));
+        }, this);
 
         // If the new data is shorter than the previous custom
         // customYmax, just clear the custom customYmax

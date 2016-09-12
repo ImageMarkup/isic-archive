@@ -191,7 +191,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         // Find the most specific type that can accomodate all the values
         var attrType = 'object';
         var count = 0;
-        window.ENUMS.ATTRIBUTE_GENERALITY.forEach(function (dataType) {
+        _.each(window.ENUMS.ATTRIBUTE_GENERALITY, function (dataType) {
             if (attrSpec.hasOwnProperty(dataType) &&
                   attrSpec[dataType].count >= count) {
                 attrType = dataType;
@@ -269,9 +269,9 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
     applyFilter: function (filter) {
         // Clean up the filter specification
         var standardKeys = Object.keys(filter.standard);
-        standardKeys.forEach(function (k) {
+        _.each(standardKeys, function (k) {
             var removeFilterSpec = !(filter.standard[k].hasOwnProperty('excludeAttribute'));
-            ['excludeRanges', 'includeValues', 'excludeValues'].forEach(function (d) {
+            _.each(['excludeRanges', 'includeValues', 'excludeValues'], function (d) {
                 if (filter.standard[k].hasOwnProperty(d)) {
                     if (filter.standard[k][d].length === 0) {
                         delete filter.standard[k][d];
@@ -442,13 +442,13 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             attrName = this.stringToHex(attrName);
             var temp = values;
             values = [];
-            temp.forEach(_.bind(function (value) {
+            _.each(temp, function (value) {
                 var dataType = typeof value;
                 if (dataType === 'string' || dataType === 'object') {
                     value = this.stringToHex(value);
                 }
                 values.push(value);
-            }, this));
+            }, this);
         }
         return [attrName + operation + JSON.stringify(values)];
     },
@@ -461,7 +461,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             if (hexify) {
                 attrName = this.stringToHex(attrName);
             }
-            filterSpec.excludeRanges.forEach(_.bind(function (range) {
+            _.each(filterSpec.excludeRanges, function (range) {
                 if (!firstRange) {
                     temp += ' and ';
                 }
@@ -496,7 +496,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                     temp += attrName + ' >= ' + highBound;
                 }
                 temp += ')';
-            }, this));
+            }, this);
             temp += ')';
             results.push(temp);
         }
@@ -506,11 +506,11 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         hexify = !!hexify;
         var filter = this.get('filter');
         var results = [];
-        Object.keys(filter.standard).forEach(_.bind(function (attrName) {
+        _.each(Object.keys(filter.standard), function (attrName) {
             var filterSpec = filter.standard[attrName];
             results = results.concat(this.listCategoricalFilterExpressions(attrName, filterSpec, hexify));
             results = results.concat(this.listRangeFilterExpressions(attrName, filterSpec, hexify));
-        }, this));
+        }, this);
         return results;
     },
     listAllFilterExpressions: function (hexify) {
@@ -533,13 +533,13 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         }
         if (_.isObject(obj)) {
             if (_.isArray(obj)) {
-                obj.forEach(_.bind(function (d, i) {
+                _.each(obj, function (d, i) {
                     obj[i] = this.dehexify(d);
-                }, this));
+                }, this);
             } else {
-                Object.keys(obj).forEach(_.bind(function (k) {
+                _.each(Object.keys(obj), function (k) {
                     obj[k] = this.dehexify(obj[k]);
-                }, this));
+                }, this);
             }
         } else if (_.isString(obj)) {
             obj = decodeURIComponent(obj);
@@ -557,13 +557,13 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                 obj.type = attrType;
             }
         } else if (_.isArray(obj)) {
-            obj.forEach(_.bind(function (d, i) {
+            _.each(obj, function (d, i) {
                 obj[i] = this.specifyAttrTypes(d);
-            }, this));
+            }, this);
         } else {
-            Object.keys(obj).forEach(_.bind(function (k) {
+            _.each(Object.keys(obj), function (k) {
                 obj[k] = this.specifyAttrTypes(obj[k]);
-            }, this));
+            }, this);
         }
         return obj;
     },

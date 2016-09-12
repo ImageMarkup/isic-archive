@@ -18,10 +18,10 @@
     function extractWords(element) {
         var words = [];
         // Pull out all the childNodes and split them into words
-        Array.from(element.childNodes).forEach(function (chunk) {
+        _.each(Array.from(element.childNodes), function (chunk) {
             if (chunk.nodeType === window.Node.TEXT_NODE) {
                 // This is an actual text node; split into real words
-                chunk.textContent.split(/\s+/).forEach(function (word) {
+                _.each(chunk.textContent.split(/\s+/), function (word) {
                     if (word.length > 0) {
                         words.push(new window.Text(word));
                     }
@@ -56,7 +56,7 @@
         var currentTspan = newTspan(textElement);
         currentTspan.appendChild(words[0]);
 
-        words.forEach(function (word, index) {
+        _.each(words, function (word, index) {
             // Make a temporary copy of the line
             var tempCopy = currentTspan.cloneNode(true);
 
@@ -88,7 +88,7 @@
         });
 
         // Second pass: line up each row appropriately
-        Array.from(textElement.childNodes).forEach(function (tspan, index) {
+        _.each(Array.from(textElement.childNodes), function (tspan, index) {
             if (index === 0) {
                 // Don't move the first line anywhere
                 tspan.setAttribute('dx', '0px');
