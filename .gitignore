@@ -28,7 +28,7 @@ var/
 .idea/*
 
 # Vagrant
-.vagrant/*
+.vagrant
 
 # Vim
 *.swp
