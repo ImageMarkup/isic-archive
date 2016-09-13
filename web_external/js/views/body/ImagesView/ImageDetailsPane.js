@@ -4,6 +4,7 @@ isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
     events: {
         'click .button': 'clearSelectedImage',
+        'click .openwindow': 'openwindow',
         'click .fullscreen': 'fullscreen'
     },
 
@@ -65,7 +66,7 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
         return this;
     },
 
-    fullscreen: function () {
+    openwindow: function () {
       window.open('/api/v1/image/' + this.image.id + '/download?contentDisposition=inline');
     },
 
