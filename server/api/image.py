@@ -17,11 +17,10 @@
 #  limitations under the License.
 ###############################################################################
 
-import cherrypy
-
 from ..histogram_utility import HistogramUtility
 from girder.api import access
-from girder.api.rest import Resource, RestException, loadmodel
+from girder.api.rest import Resource, RestException, loadmodel, \
+    setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
 from girder.models.model_base import GirderException
@@ -131,7 +130,7 @@ class ImageResource(Resource):
         thumbData, thumbMime = self.model('image_item', 'large_image')\
             .getThumbnail(image, width=width)
 
-        cherrypy.response.headers['Content-Type'] = thumbMime
+        setResponseHeader('Content-Type', thumbMime)
         return lambda: thumbData
 
     @describeRoute(
@@ -157,8 +156,9 @@ class ImageResource(Resource):
 
         # TODO: replace this after https://github.com/girder/girder/pull/1123
         if contentDisp == 'inline':
-            cherrypy.response.headers['Content-Disposition'] = \
-                'inline; filename="%s"' % originalFile['name']
+            setResponseHeader(
+                'Content-Disposition',
+                'inline; filename="%s"' % originalFile['name'])
         return fileStream
 
     @describeRoute(

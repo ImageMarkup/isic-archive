@@ -26,7 +26,8 @@ import json
 import cherrypy
 
 from girder.api import access
-from girder.api.rest import Resource, RestException, loadmodel
+from girder.api.rest import Resource, RestException, loadmodel, \
+    setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 from girder.models.model_base import ValidationException
@@ -107,10 +108,10 @@ class StudyResource(Resource):
         User = self.model('user', 'isic_archive')
 
         if params.get('format') == 'csv':
-            cherrypy.response.stream = True
-            cherrypy.response.headers['Content-Type'] = 'text/csv'
-            cherrypy.response.headers['Content-Disposition'] = \
-                'attachment; filename="%s.csv"' % study['name']
+            setResponseHeader('Content-Type', 'text/csv')
+            setResponseHeader(
+                'Content-Disposition',
+                'attachment; filename="%s.csv"' % study['name'])
             return functools.partial(self._getStudyCSVStream, study)
 
         else:
