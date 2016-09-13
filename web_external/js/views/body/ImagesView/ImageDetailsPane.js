@@ -66,7 +66,7 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
     },
 
     fullscreen: function () {
-      console.log('fullscreen');
+      window.open('/api/v1/image/' + this.image.id + '/download?contentDisposition=inline');
     },
 
     clearSelectedImage: function () {
