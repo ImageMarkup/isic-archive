@@ -1,8 +1,8 @@
 // TODO: there's probably a better way to import these...
 
-window.ENUMS = {};
+isic.ENUMS = {};
 
-window.ENUMS.DEFAULT_INTERPRETATIONS = {
+isic.ENUMS.DEFAULT_INTERPRETATIONS = {
     'undefined': 'categorical',
     'null': 'categorical',
     boolean: 'categorical',
@@ -13,20 +13,20 @@ window.ENUMS.DEFAULT_INTERPRETATIONS = {
     object: 'categorical'
 };
 
-window.ENUMS.ATTRIBUTE_GENERALITY = [
+isic.ENUMS.ATTRIBUTE_GENERALITY = [
     'object',
     'string',
     'number',
     'integer'
 ];
 
-window.ENUMS.FILTER_STATES = {
+isic.ENUMS.FILTER_STATES = {
     NO_FILTERS: 0,
     FILTERED: 1,
     EXCLUDED: 2
 };
 
-window.ENUMS.BIN_STATES = {
+isic.ENUMS.BIN_STATES = {
     INCLUDED: 0,
     EXCLUDED: 1,
     PARTIAL: 2
@@ -34,7 +34,7 @@ window.ENUMS.BIN_STATES = {
 
 // TODO: It should be trivial to borrow code from Resonant Laboratory to
 // autodetect this (requires an additional server endpoint)
-window.ENUMS.SCHEMA = {
+isic.ENUMS.SCHEMA = {
     'folderId': {
         'coerceToType': 'string',
         'humanName': 'Dataset'

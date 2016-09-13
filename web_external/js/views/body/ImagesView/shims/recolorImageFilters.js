@@ -6,8 +6,8 @@
 // -webkit-filter: url(#recolorImageToFFFFFF)
 // filter: url(#recolorImageToFFFFFF)
 
-window.shims = window.shims || {};
-window.shims.recolorImageFilters = function (colorList) {
+isic.shims = isic.shims || {};
+isic.shims.recolorImageFilters = function (colorList) {
     var svgDefs = d3.select('body').append('svg')
         .attr('id', 'recolorImageFilters')
         .attr('width', '0')

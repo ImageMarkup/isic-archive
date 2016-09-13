@@ -174,10 +174,10 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
     },
     autoDetectAttributeInterpretation: function (attrName) {
         // Go with the default interpretation for the attribute type
-        return window.ENUMS.DEFAULT_INTERPRETATIONS[this.getAttributeType(attrName)];
+        return isic.ENUMS.DEFAULT_INTERPRETATIONS[this.getAttributeType(attrName)];
     },
     getAttributeInterpretation: function (attrName) {
-        var attrSpec = window.ENUMS.SCHEMA[attrName];
+        var attrSpec = isic.ENUMS.SCHEMA[attrName];
         if (attrSpec.interpretation) {
             // The user has specified an interpretation
             return attrSpec.interpretation;
@@ -187,11 +187,11 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         }
     },
     autoDetectAttributeType: function (attrName) {
-        var attrSpec = window.ENUMS.SCHEMA[attrName];
+        var attrSpec = isic.ENUMS.SCHEMA[attrName];
         // Find the most specific type that can accomodate all the values
         var attrType = 'object';
         var count = 0;
-        _.each(window.ENUMS.ATTRIBUTE_GENERALITY, function (dataType) {
+        _.each(isic.ENUMS.ATTRIBUTE_GENERALITY, function (dataType) {
             if (_.has(attrSpec, dataType) &&
                   attrSpec[dataType].count >= count) {
                 attrType = dataType;
@@ -201,7 +201,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         return attrType;
     },
     getAttributeType: function (attrName) {
-        var attrSpec = window.ENUMS.SCHEMA[attrName];
+        var attrSpec = isic.ENUMS.SCHEMA[attrName];
         if (attrSpec.coerceToType) {
             // The user has specified a data type
             return attrSpec.coerceToType;
@@ -214,8 +214,8 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         // Easy check (that also validates whether filter.standard[attrName]
         // even exists)
         var filterState = this.getFilteredState(attrName);
-        if (filterState === window.ENUMS.FILTER_STATES.NO_FILTERS) {
-            return window.ENUMS.BIN_STATES.INCLUDED;
+        if (filterState === isic.ENUMS.FILTER_STATES.NO_FILTERS) {
+            return isic.ENUMS.BIN_STATES.INCLUDED;
         }
 
         var filterSpec = this.get('filter').standard[attrName];
@@ -224,10 +224,10 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         // one) / in the list that is specifically excluded?
         if (filterSpec.includeValues &&
                 filterSpec.includeValues.indexOf(bin.label) === -1) {
-            return window.ENUMS.BIN_STATES.EXCLUDED;
+            return isic.ENUMS.BIN_STATES.EXCLUDED;
         } else if (filterSpec.excludeValues &&
                 filterSpec.excludeValues.indexOf(bin.label) !== -1) {
-            return window.ENUMS.BIN_STATES.EXCLUDED;
+            return isic.ENUMS.BIN_STATES.EXCLUDED;
         }
 
         // Trickiest check: is the range excluded (or partially excluded)?
@@ -242,7 +242,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                 };
             }
             // Intersect the bin with the excluded values
-            var includedRanges = window.shims.RangeSet.rangeSubtract([{
+            var includedRanges = isic.shims.RangeSet.rangeSubtract([{
                 lowBound: bin.lowBound,
                 highBound: bin.highBound
             }], filterSpec.excludeRanges, comparator);
@@ -252,19 +252,19 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                     includedRanges[0].highBound === bin.highBound) {
                 // Wound up with the same range we started with;
                 // the whole bin is included
-                return window.ENUMS.BIN_STATES.INCLUDED;
+                return isic.ENUMS.BIN_STATES.INCLUDED;
             } else if (includedRanges.length > 0) {
                 // Only a piece survived; this is a partial!
-                return window.ENUMS.BIN_STATES.PARTIAL;
+                return isic.ENUMS.BIN_STATES.PARTIAL;
             } else {
                 // Nothing survived the subtraction; this bin
                 // is excluded
-                return window.ENUMS.BIN_STATES.EXCLUDED;
+                return isic.ENUMS.BIN_STATES.EXCLUDED;
             }
         }
 
         // No filter info left to check; the bin must be included
-        return window.ENUMS.BIN_STATES.INCLUDED;
+        return isic.ENUMS.BIN_STATES.INCLUDED;
     },
     applyFilter: function (filter) {
         // Clean up the filter specification
@@ -335,7 +335,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         if (highBound !== undefined) {
             range.highBound = highBound;
         }
-        excludeRanges = window.shims.RangeSet.rangeUnion(
+        excludeRanges = isic.shims.RangeSet.rangeUnion(
             excludeRanges, [range], comparator);
         filter.standard[attrName].excludeRanges = excludeRanges;
 
@@ -357,7 +357,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         if (highBound !== undefined) {
             range.highBound = highBound;
         }
-        excludeRanges = window.shims.RangeSet.rangeSubtract(
+        excludeRanges = isic.shims.RangeSet.rangeSubtract(
             excludeRanges, [range], comparator);
         filter.standard[attrName].excludeRanges = excludeRanges;
 
@@ -417,12 +417,12 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         var filter = this.get('filter');
         if (filter.standard[attrName]) {
             if (filter.standard[attrName].excludeAttribute) {
-                return window.ENUMS.FILTER_STATES.EXCLUDED;
+                return isic.ENUMS.FILTER_STATES.EXCLUDED;
             } else {
-                return window.ENUMS.FILTER_STATES.FILTERED;
+                return isic.ENUMS.FILTER_STATES.FILTERED;
             }
         } else {
-            return window.ENUMS.FILTER_STATES.NO_FILTERS;
+            return isic.ENUMS.FILTER_STATES.NO_FILTERS;
         }
     },
     listCategoricalFilterExpressions: function (attrName, filterSpec, hexify) {
