@@ -19,10 +19,9 @@
 
 import datetime
 
-import cherrypy
-
 from girder.api import access
-from girder.api.rest import Resource, RestException, loadmodel, rawResponse
+from girder.api.rest import Resource, RestException, loadmodel, rawResponse, \
+    setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 
@@ -149,14 +148,16 @@ class SegmentationResource(Resource):
             segmentation, image, width)
         thumbnailImageData = thumbnailImageStream.getvalue()
 
-        cherrypy.response.headers['Content-Type'] = 'image/jpeg'
+        setResponseHeader('Content-Type', 'image/jpeg')
         contentName = '%s_segmentation_thumbnail.jpg' % image['_id']
         if contentDisp == 'inline':
-            cherrypy.response.headers['Content-Disposition'] = \
-                'inline; filename="%s"' % contentName
+            setResponseHeader(
+                'Content-Disposition',
+                'inline; filename="%s"' % contentName)
         else:
-            cherrypy.response.headers['Content-Disposition'] = \
-                'attachment; filename="%s"' % contentName
-        cherrypy.response.headers['Content-Length'] = len(thumbnailImageData)
+            setResponseHeader(
+                'Content-Disposition',
+                'attachment; filename="%s"' % contentName)
+        setResponseHeader('Content-Length', len(thumbnailImageData))
 
         return thumbnailImageData

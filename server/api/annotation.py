@@ -19,10 +19,9 @@
 
 import datetime
 
-import cherrypy
-
 from girder.api import access
-from girder.api.rest import Resource, RestException, loadmodel, rawResponse
+from girder.api.rest import Resource, RestException, loadmodel, rawResponse, \
+    setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
 
@@ -185,18 +184,20 @@ class AnnotationResource(Resource):
             renderData, 'jpeg')
         renderEncodedData = renderEncodedStream.getvalue()
 
-        cherrypy.response.headers['Content-Type'] = 'image/jpeg'
+        setResponseHeader('Content-Type', 'image/jpeg')
         contentName = '%s_%s_annotation.jpg' % (
             annotation['_id'],
             featureId.replace('/', ',')  # TODO: replace with a better character
         )
         if contentDisp == 'inline':
-            cherrypy.response.headers['Content-Disposition'] = \
-                'inline; filename="%s"' % contentName
+            setResponseHeader(
+                'Content-Disposition',
+                'inline; filename="%s"' % contentName)
         else:
-            cherrypy.response.headers['Content-Disposition'] = \
-                'attachment; filename="%s"' % contentName
-        cherrypy.response.headers['Content-Length'] = len(renderEncodedData)
+            setResponseHeader(
+                'Content-Disposition',
+                'attachment; filename="%s"' % contentName)
+        setResponseHeader('Content-Length', len(renderEncodedData))
 
         return renderEncodedData
 

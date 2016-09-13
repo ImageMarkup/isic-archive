@@ -17,11 +17,10 @@
 #  limitations under the License.
 ###############################################################################
 
-import cherrypy
-
 from ..histogram_utility import HistogramUtility
 from girder.api import access
-from girder.api.rest import Resource, RestException, loadmodel
+from girder.api.rest import Resource, RestException, loadmodel, rawResponse, \
+    setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
 from girder.models.model_base import GirderException
@@ -124,6 +123,7 @@ class ImageResource(Resource):
     )
     @access.cookie
     @access.public
+    @rawResponse
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def thumbnail(self, image, params):
         width = int(params.get('width', 256))
@@ -131,8 +131,8 @@ class ImageResource(Resource):
         thumbData, thumbMime = self.model('image_item', 'large_image')\
             .getThumbnail(image, width=width)
 
-        cherrypy.response.headers['Content-Type'] = thumbMime
-        return lambda: thumbData
+        setResponseHeader('Content-Type', thumbMime)
+        return thumbData
 
     @describeRoute(
         Description('Download an image\'s high-quality original binary data.')
@@ -153,12 +153,8 @@ class ImageResource(Resource):
                                 contentDisp)
 
         originalFile = self.model('image', 'isic_archive').originalFile(image)
-        fileStream = self.model('file').download(originalFile, headers=True)
-
-        # TODO: replace this after https://github.com/girder/girder/pull/1123
-        if contentDisp == 'inline':
-            cherrypy.response.headers['Content-Disposition'] = \
-                'inline; filename="%s"' % originalFile['name']
+        fileStream = self.model('file').download(
+            originalFile, headers=True, contentDisposition=contentDisp)
         return fileStream
 
     @describeRoute(
