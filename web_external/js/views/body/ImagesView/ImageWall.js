@@ -257,43 +257,6 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
                 return d;
             });
 
-        // This click callback has to be defined here with a name because it
-        // must refer to itself.
-        var self = this;
-        var click = function (d) {
-            // Capture the target element for reference in the nested callback.
-            var that = this;
-
-            // This flag and nested callback will detect whether a second click
-            // arrives.
-            var doubleclick;
-            d3.select(that).on('click.second', function () {
-                doubleclick = true;
-            });
-
-            // This temporarily removes the outer callback from firing (since we
-            // don't want to wreck the careful state we're cultivating waiting
-            // for a possible second click).
-            d3.select(that).on('click', null);
-
-            // Allow 300 ms for a second click to be detected.
-            setTimeout(function () {
-                // When the 300 ms is up, remove the detector callback and
-                // reinstate the main click handler.
-                d3.select(that).on('click.second', null);
-                d3.select(that).on('click', click);
-
-                // If a double click was detected, then open the full size image
-                // in a new window; otherwise, toggle the selection state of the
-                // image.
-                if (doubleclick) {
-                    window.open('/api/v1/image/' + d + '/download?contentDisposition=inline');
-                } else {
-                    self.selectImage(d === self.image.id ? null : d);
-                }
-            }, 300);
-        };
-
         images.enter().append('image')
             .attr('preserveAspectRatio', 'xMinYMin');
         images.exit().remove();
@@ -318,7 +281,9 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
             y: function (d) {
                 return placementLookup[d].y;
             }
-        }).on('click', click);
+        }).on('click', _.bind(function (d) {
+            this.selectImage(d === this.image.id ? null : d)
+        }, this));
 
         // Draw the highlight rect
         var selectedImageId = this.image.id;
