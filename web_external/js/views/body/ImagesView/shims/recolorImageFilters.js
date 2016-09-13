@@ -19,7 +19,7 @@ window.shims.recolorImageFilters = function (colorList) {
     var allColors = {};
     _.each(Object.keys(colorList), function (colorName) {
         var color = colorList[colorName];
-        if (!allColors.hasOwnProperty(color)) {
+        if (!_.has(allColors, color)) {
             allColors[color] = [];
         }
         allColors[color].push(colorName);

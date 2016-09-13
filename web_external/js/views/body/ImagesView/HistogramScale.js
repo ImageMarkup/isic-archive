@@ -48,7 +48,7 @@
         // real max vertical count, and construct bin lookup tables for
         // each histogram.
         _.each(this.overviewHistogram, function (bin, index) {
-            if (bin.hasOwnProperty('lowBound') && bin.hasOwnProperty('highBound')) {
+            if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
                 this.ordinalBinCount += 1;
                 if (this.lowBound === undefined || bin.lowBound < this.lowBound) {
                     this.lowBound = bin.lowBound;

@@ -23,7 +23,7 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
         // Start fetching the images now... don't wait
         // around for the call in render()
         _.each(this.model.get('imageIds'), function (i) {
-            if (!this.imageCache.hasOwnProperty(i)) {
+            if (!_.has(this.imageCache, i)) {
                 this.imageCache[i] = new Image();
                 this.imageCache[i].addEventListener('load', _.bind(function () {
                     if (!this.imageCache[i].width || !this.imageCache[i].height) {
@@ -89,7 +89,7 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
         var imagesToPlace = [];
 
         _.each(Object.keys(this.loadedImages), function (imageId) {
-            if (!this.imageColumnLookup.hasOwnProperty(imageId)) {
+            if (!_.has(this.imageColumnLookup, imageId)) {
                 // For some reason, browsers seem to be
                 // loading the images backwards. For a
                 // better top-down effect (especially
@@ -250,7 +250,7 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
         // Okay, time to draw the pictures (in their initial positions)
         var imageList = Object.keys(this.loadedImages)
             .filter(function (d) {
-                return placementLookup.hasOwnProperty(d);
+                return _.has(placementLookup, d);
             });
         var images = svg.select('#previewContents').selectAll('image')
             .data(imageList, function (d) {

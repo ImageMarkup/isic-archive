@@ -9,7 +9,7 @@
             var newID = str.replace(/^[^a-z]+|[^\w:.-]+/gi, '');
             var temp = newID;
             var i = 0;
-            while (USED_IDS.hasOwnProperty(temp)) {
+            while (_.has(USED_IDS, temp)) {
                 i += 1;
                 temp = newID + i;
             }

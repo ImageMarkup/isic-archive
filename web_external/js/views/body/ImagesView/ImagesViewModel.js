@@ -192,7 +192,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         var attrType = 'object';
         var count = 0;
         _.each(window.ENUMS.ATTRIBUTE_GENERALITY, function (dataType) {
-            if (attrSpec.hasOwnProperty(dataType) &&
+            if (_.has(attrSpec, dataType) &&
                   attrSpec[dataType].count >= count) {
                 attrType = dataType;
                 count = attrSpec[dataType].count;
@@ -232,8 +232,8 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
 
         // Trickiest check: is the range excluded (or partially excluded)?
         if (filterSpec.excludeRanges &&
-                bin.hasOwnProperty('lowBound') &&
-                bin.hasOwnProperty('highBound')) {
+                _.has(bin, 'lowBound') &&
+                _.has(bin, 'highBound')) {
             // Make sure to use proper string comparisons if this is a string bin
             var comparator;
             if (this.getAttributeType(attrName) === 'string') {
@@ -270,9 +270,9 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         // Clean up the filter specification
         var standardKeys = Object.keys(filter.standard);
         _.each(standardKeys, function (k) {
-            var removeFilterSpec = !(filter.standard[k].hasOwnProperty('excludeAttribute'));
+            var removeFilterSpec = !_.has(filter.standard[k], 'excludeAttribute');
             _.each(['excludeRanges', 'includeValues', 'excludeValues'], function (d) {
-                if (filter.standard[k].hasOwnProperty(d)) {
+                if (_.has(filter.standard[k], d)) {
                     if (filter.standard[k][d].length === 0) {
                         delete filter.standard[k][d];
                     } else {
@@ -295,7 +295,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
     },
     clearFilters: function (attrName) {
         var filter = this.get('filter');
-        if (filter.standard.hasOwnProperty(attrName)) {
+        if (_.has(filter.standard, attrName)) {
             delete filter.standard[attrName].excludeRanges;
             delete filter.standard[attrName].excludeValues;
             delete filter.standard[attrName].includeValues;
@@ -429,10 +429,10 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         hexify = !!hexify;
         var values;
         var operation;
-        if (filterSpec.hasOwnProperty('includeValues')) {
+        if (_.has(filterSpec, 'includeValues')) {
             values = filterSpec.includeValues;
             operation = ' in ';
-        } else if (filterSpec.hasOwnProperty('excludeValues')) {
+        } else if (_.has(filterSpec, 'excludeValues')) {
             values = filterSpec.excludeValues;
             operation = ' not in ';
         } else {
@@ -469,7 +469,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                 temp += '(';
                 var includeLow = false;
                 var dataType;
-                if (range.hasOwnProperty('lowBound')) {
+                if (_.has(range, 'lowBound')) {
                     var lowBound = range.lowBound;
                     dataType = typeof lowBound;
                     if (dataType === 'string' || dataType === 'object') {
@@ -481,7 +481,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                     temp += attrName + ' < ' + lowBound;
                     includeLow = true;
                 }
-                if (range.hasOwnProperty('highBound')) {
+                if (_.has(range, 'highBound')) {
                     if (includeLow) {
                         temp += ' or ';
                     }
