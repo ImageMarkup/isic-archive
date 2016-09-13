@@ -4,18 +4,14 @@ isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
 isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
     initialize: function () {
-        var self = this;
+        this.individualHistograms = {};
 
-        self.individualHistograms = {};
-
-        self.listenTo(self.model, 'change:overviewHistogram', self.render);
-        self.listenTo(self.model, 'change:filteredSetHistogram', self.render);
-        self.listenTo(self.model, 'change:pageHistogram', self.render);
+        this.listenTo(this.model, 'change:overviewHistogram', this.render);
+        this.listenTo(this.model, 'change:filteredSetHistogram', this.render);
+        this.listenTo(this.model, 'change:pageHistogram', this.render);
     },
     render: function () {
-        var self = this;
-
-        if (!self.addedCollapseImage) {
+        if (!this.addedCollapseImage) {
             // little hack to inject the correct expander image path into the
             // stylesheet (afaik, we can't access girder.staticRoot from the
             // stylus files)
@@ -29,10 +25,10 @@ isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
                 '{background-image: url(' + girder.staticRoot +
                     '/built/plugins/isic_archive/extra/img/collapse.svg);}',
                 0);
-            self.addedCollapseImage = true;
+            this.addedCollapseImage = true;
         }
 
-        var attributeOrder = Object.keys(self.model.get('overviewHistogram'))
+        var attributeOrder = Object.keys(this.model.get('overviewHistogram'))
             .filter(function (d) {
                 return d !== '__passedFilters__' && d !== 'folderId';
             });
@@ -43,10 +39,10 @@ isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
             });
         var attributeSectionsEnter = attributeSections.enter().append('div');
         attributeSections.exit()
-            .each(function (d) {
+            .each(_.bind(function (d) {
                 var histogramId = window.shims.makeValidId(d + '_histogramContent');
-                delete self.individualHistograms[histogramId];
-            }).remove();
+                delete this.individualHistograms[histogramId];
+            }, this)).remove();
         attributeSections.attr('class', 'attributeSection');
 
         // Add a container for the stuff in the header (the stuff
@@ -96,6 +92,7 @@ isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
             });
 
         // Now for the actual histogram content (that gets collapsed)
+        var self = this;
         attributeSectionsEnter.append('svg')
             .attr('class', 'collapsed content')
             .attr('id', function (d) {
@@ -111,10 +108,10 @@ isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
                         attributeName: d
                     });
             });
-        attributeSections.select('.content').each(function (d) {
+        attributeSections.select('.content').each(_.bind(function (d) {
             var histogramId = window.shims.makeValidId(d + '_histogramContent');
-            self.individualHistograms[histogramId].render();
-        });
+            this.individualHistograms[histogramId].render();
+        }, this));
         return this;
     }
 });
