@@ -3,7 +3,8 @@ isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 // View for image details
 isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
     events: {
-        'click .button': 'clearSelectedImage'
+        'click .button': 'clearSelectedImage',
+        'click .fullscreen': 'fullscreen'
     },
 
     initialize: function (settings) {
@@ -62,6 +63,10 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
             this.$('#isic-image-details-segmentations-display-view-container')).render();
 
         return this;
+    },
+
+    fullscreen: function () {
+      console.log('fullscreen');
     },
 
     clearSelectedImage: function () {
