@@ -105,7 +105,7 @@
 
     function copyRangeList(list) {
         var result = [];
-        list.forEach(function (range, index) {
+        _.each(list, function (range, index) {
             result.push({});
             if ('lowBound' in range) {
                 result[index].lowBound = range.lowBound;
@@ -172,8 +172,8 @@
         list1 = cleanRangeList(list1);
         list2 = cleanRangeList(list2);
         // TODO: there's probably a more efficient way to do this...
-        list1.forEach(function (l1) {
-            list2.forEach(function (l2) {
+        _.each(list1, function (l1) {
+            _.each(list2, function (l2) {
                 var newRange = {
                     lowBound: mostExtremeValue([l1.lowBound, l2.lowBound], '>', comparator, true),
                     highBound: mostExtremeValue([l1.highBound, l2.highBound], '<', comparator, true)
@@ -223,9 +223,9 @@
 
             // Now go through the second list that will hack
             // up the stuff in newRanges
-            list2.forEach(function (l2) {
+            _.each(list2, function (l2) {
                 var indicesToTrash = [];
-                newRanges.forEach(function (newRange, index) {
+                _.each(newRanges, function (newRange, index) {
                     // First, a corner case: if the range to subtract is
                     // entirely inside the original range, we need to
                     // split the original range
@@ -272,7 +272,7 @@
                         }
                     }
                 });
-                indicesToTrash.reverse().forEach(function (i) {
+                _.each(indicesToTrash.reverse(), function (i) {
                     newRanges.splice(i, 1);
                 });
             });
