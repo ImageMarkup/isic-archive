@@ -120,7 +120,8 @@ isic.views.StudyResultsSelectImageView = isic.View.extend({
     imageSelected: function (event) {
         event.preventDefault();
 
-        var target = $(event.target);
+        // currentTarget is the element that the event has bubbled up to
+        var target = $(event.currentTarget);
 
         this.$('.isic-study-results-select-image-image-container').removeClass('active');
         target.addClass('active');
@@ -130,7 +131,8 @@ isic.views.StudyResultsSelectImageView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.studyResultsSelectImagePage({
-            models: this.collection.models
+            models: this.collection.models,
+            apiRoot: girder.apiRoot
         }));
 
         return this;
