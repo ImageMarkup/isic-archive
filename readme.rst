@@ -58,6 +58,11 @@ Setup
   (and optionally the ``OAuth2 login`` plugin), then use the button at the top
   of the page to restart the server.
 
+* Go to ``Admin console`` -> ``Plugins`` and open the configuration page (gear
+  icon) for ``Remote worker``. Set the value
+  ``mongodb://localhost:27017/girder_worker`` for both ``Celery broker URL``
+  and ``Celery backend URL``, and ``Save``.
+
 Usage
 ~~~~~
   **Note**:

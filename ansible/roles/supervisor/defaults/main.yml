@@ -4,6 +4,7 @@ girder_port: 8080
 supervisor_port: 9999
 
 girder_path: "{{ ansible_user_dir }}/girder"
+worker_path: "{{ ansible_user_dir }}/girder_worker"
 
 python_dist_path: "{{ ansible_user_dir }}/env"
 

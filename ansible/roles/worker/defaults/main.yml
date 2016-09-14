@@ -1,0 +1,4 @@
+---
+
+worker_version: "master"
+worker_path: "{{ ansible_user_dir }}/girder_worker"

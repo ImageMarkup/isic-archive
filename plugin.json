@@ -2,7 +2,7 @@
     "name": "ISIC Archive",
     "description": "The ISIC dermoscopy image archive.",
     "version": "1.0.0",
-    "dependencies": ["gravatar", "large_image"],
+    "dependencies": ["gravatar", "large_image", "worker"],
     "grunt": {
         "file": "Gruntfile.js",
         "defaultTargets": ["isic_archive-web"]
