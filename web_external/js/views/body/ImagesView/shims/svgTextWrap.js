@@ -19,11 +19,11 @@
         var words = [];
         // Pull out all the childNodes and split them into words
         _.each(Array.from(element.childNodes), function (chunk) {
-            if (chunk.nodeType === window.Node.TEXT_NODE) {
+            if (chunk.nodeType === Node.TEXT_NODE) {
                 // This is an actual text node; split into real words
                 _.each(chunk.textContent.split(/\s+/), function (word) {
                     if (word.length > 0) {
-                        words.push(new window.Text(word));
+                        words.push(new Text(word));
                     }
                 });
             } else if (chunk.getAttribute('class') === 'rewrappedTspan') {
@@ -62,7 +62,7 @@
 
             // Add a space if it's not the first word
             if (index > 0) {
-                currentTspan.appendChild(new window.Text(' '));
+                currentTspan.appendChild(new Text(' '));
             }
             // Add the word to the tspan
             currentTspan.appendChild(word);
@@ -117,6 +117,6 @@
         });
     }
 
-    window.shims = window.shims || {};
-    window.shims.rewrapSvgText = rewrap;
+    isic.shims = isic.shims || {};
+    isic.shims.rewrapSvgText = rewrap;
 })();

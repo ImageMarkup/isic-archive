@@ -49,8 +49,8 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
 
         // Clear out any old IDs after a while (don't do it immediately in case
         // the user is flipping back and forth between pages)
-        window.clearTimeout(this.cleanupTimeout);
-        this.cleanupTimeout = window.setTimeout(_.bind(function () {
+        clearTimeout(this.cleanupTimeout);
+        this.cleanupTimeout = setTimeout(_.bind(function () {
             _.each(Object.keys(this.imageCache), function (i) {
                 if (this.model.get('imageIds').indexOf(i) === -1) {
                     delete this.imageCache[i];

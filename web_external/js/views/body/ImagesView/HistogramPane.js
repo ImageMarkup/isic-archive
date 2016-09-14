@@ -40,7 +40,7 @@ isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
         var attributeSectionsEnter = attributeSections.enter().append('div');
         attributeSections.exit()
             .each(_.bind(function (d) {
-                var histogramId = window.shims.makeValidId(d + '_histogramContent');
+                var histogramId = isic.shims.makeValidId(d + '_histogramContent');
                 delete this.individualHistograms[histogramId];
             }, this)).remove();
         attributeSections.attr('class', 'attributeSection');
@@ -83,9 +83,9 @@ isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
         sectionTitlesEnter.append('span');
         sectionTitles.select('span')
             .text(function (d) {
-                if (window.ENUMS.SCHEMA[d] &&
-                        window.ENUMS.SCHEMA[d].humanName) {
-                    return window.ENUMS.SCHEMA[d].humanName;
+                if (isic.ENUMS.SCHEMA[d] &&
+                        isic.ENUMS.SCHEMA[d].humanName) {
+                    return isic.ENUMS.SCHEMA[d].humanName;
                 } else {
                     return d;
                 }
@@ -96,11 +96,11 @@ isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
         attributeSectionsEnter.append('svg')
             .attr('class', 'collapsed content')
             .attr('id', function (d) {
-                return window.shims.makeValidId(d + '_histogramContent');
+                return isic.shims.makeValidId(d + '_histogramContent');
             })
             .each(function (d) {
                 // this refers to the DOM element
-                var histogramId = window.shims.makeValidId(d + '_histogramContent');
+                var histogramId = isic.shims.makeValidId(d + '_histogramContent');
                 self.individualHistograms[histogramId] =
                     new isic.views.ImagesViewSubViews.IndividualHistogram({
                         el: this,
@@ -109,7 +109,7 @@ isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
                     });
             });
         attributeSections.select('.content').each(_.bind(function (d) {
-            var histogramId = window.shims.makeValidId(d + '_histogramContent');
+            var histogramId = isic.shims.makeValidId(d + '_histogramContent');
             this.individualHistograms[histogramId].render();
         }, this));
         return this;

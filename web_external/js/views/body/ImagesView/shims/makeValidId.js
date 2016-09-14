@@ -3,8 +3,8 @@
     var ID_LOOKUP = {};
     var USED_IDS = {};
 
-    window.shims = window.shims || {};
-    window.shims.makeValidId = function (str) {
+    isic.shims = isic.shims || {};
+    isic.shims.makeValidId = function (str) {
         if (!ID_LOOKUP[str]) {
             var newID = str.replace(/^[^a-z]+|[^\w:.-]+/gi, '');
             var temp = newID;

@@ -284,8 +284,8 @@
         return result;
     }
 
-    window.shims = window.shims || {};
-    window.shims.RangeSet = {
+    isic.shims = isic.shims || {};
+    isic.shims.RangeSet = {
         rangeUnion: rangeUnion,
         rangeIntersection: rangeIntersection,
         rangeSubtract: rangeSubtract

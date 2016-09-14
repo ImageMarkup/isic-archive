@@ -5,7 +5,7 @@ isic.views.StudiesView = isic.View.extend({
             var target = $(event.target);
             target.parent().find('.icon-right-open').removeClass('icon-right-open').addClass('icon-down-open');
 
-            var viewIndex = window.parseInt(target.attr('data-model-index'), 10);
+            var viewIndex = parseInt(target.attr('data-model-index'), 10);
             var viewContainer = target.find('.isic-listing-panel-body');
             this.renderStudy(viewIndex, viewContainer);
         },

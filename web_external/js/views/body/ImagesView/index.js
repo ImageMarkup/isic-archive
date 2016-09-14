@@ -54,7 +54,7 @@ isic.views.ImagesView = isic.View.extend({
             this.$el.html(isic.templates.imagesPage({
                 staticRoot: girder.staticRoot
             }));
-            window.shims.recolorImageFilters(['#00ABFF', '#444499', '#CCCCCC']);
+            isic.shims.recolorImageFilters(['#00ABFF', '#444499', '#CCCCCC']);
             this.datasetPane.setElement(this.$('#isic-images-datasetPane'));
             this.histogramPane.setElement(this.$('#isic-images-histogramPane'));
             this.imageWall.setElement(this.$('#isic-images-imageWall'));
