@@ -65,16 +65,21 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
             this.$('#isic-image-details-segmentations-display-view-container')).render();
 
         // Initialize Bootstrap tooltips.
-        this.$('[data-toggle="tooltip"]').tooltip();
+        this.$('[data-toggle="tooltip"]').tooltip({
+            trigger: 'hover'
+        });
 
         return this;
     },
 
     openwindow: function () {
+      $('[data-toggle="tooltip"]').tooltip('hide');
       window.open('/api/v1/image/' + this.image.id + '/download?contentDisposition=inline');
     },
 
     fullscreen: function () {
+      $('[data-toggle="tooltip"]').tooltip('hide');
+
       var img = $('.focusimage');
       var modal = $('#focusmodal');
 
