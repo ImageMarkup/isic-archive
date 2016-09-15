@@ -31,6 +31,11 @@
     virtualenv: "{{ python_dist_path }}"
   sudo: yes if python_dist == "system" else no
 
+- name: Deploy config file
+  template:
+    src: "girder.local.cfg.j2"
+    dest: "{{ girder_path }}/girder/conf/girder.local.cfg"
+
 #- name: Install NodeJS dependencies
 #  npm:
 #    name: "{{ item }}"

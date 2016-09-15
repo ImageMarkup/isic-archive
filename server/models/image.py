@@ -20,17 +20,19 @@
 import datetime
 import mimetypes
 import os
+import re
 import six
 
-from girder.constants import AccessType
+from girder import events
+from girder.constants import AccessType, TokenScope
 from girder.models.model_base import AccessException
 from girder.models.item import Item as ItemModel
-from girder.utility import assetstore_utilities
+from girder.plugins.worker import utils as workerUtils
 
+from . import segmentation_helpers
 from .. import constants
 from ..provision_utility import getAdminUser
 from .segmentation_helpers import ScikitSegmentationHelper
-from ..upload import TempDir
 
 
 class Image(ItemModel):
@@ -46,6 +48,9 @@ class Image(ItemModel):
         ])
         self.summaryFields = ['_id', 'name', 'updated']
         self.prefixSearchFields = ['lowerName', 'name']
+
+        events.bind('data.process',
+                    'onSuperpixelsUpload', self.onSuperpixelsUpload)
 
     def createImage(self, imageDataStream, imageDataSize, originalName,
                     dataset, creator):
@@ -81,11 +86,11 @@ class Image(ItemModel):
         # reload image, since its 'size' has changed in the database
         image = self.load(image['_id'], force=True, exc=True)
 
-        # this adds image['largeImage']['originalId'] and allows the subsequent
-        # use of Image.originalFile and Image.imageData
-        image = self._generateLargeimage(image, originalFile)
+        # this synchronously adds image['largeImage']['originalId'] and allows
+        # the subsequent use of Image.originalFile and Image.imageData
+        self._generateLargeimage(image, originalFile)
 
-        image = self._generateSuperpixels(image)
+        self._generateSuperpixels(image)
 
         # TODO: copy license from dataset to image
 
@@ -97,81 +102,133 @@ class Image(ItemModel):
         return image
 
     def _generateLargeimage(self, image, originalFile):
-        # TODO: replace this with usage of large_image
-        assetstore = self.model('assetstore').getCurrent()
-        assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(
-            assetstore)
+        ImageItem = self.model('image_item', 'large_image')
+        Token = self.model('token')
+        User = self.model('user', 'isic_archive')
 
-        with TempDir() as tempDir:
-            largeimageFileName = '%s.tiff' % image['name']
-            largeimageFilePath = os.path.join(tempDir, largeimageFileName)
+        user = User.load(image['creatorId'], force=True, exc=True)
+        token = Token.createToken(
+            user=user,
+            days=0.25,  # 6 hours
+            scope=[TokenScope.DATA_READ, TokenScope.DATA_WRITE])
 
-            originalFilePath = assetstoreAdapter.fullPath(originalFile)
-
-            convert_command = (
-                '/usr/local/bin/vips',
-                'tiffsave',
-                '\'%s\'' % originalFilePath,
-                '\'%s\'' % largeimageFilePath,
-                '--compression', 'jpeg',
-                '--Q', '90',
-                '--tile',
-                '--tile-width', '256',
-                '--tile-height', '256',
-                '--pyramid',
-                '--bigtiff',
-            )
-            os.popen(' '.join(convert_command))
-
-            # upload converted image
-            with open(largeimageFilePath, 'rb') as largeimageFileStream:
-                largeImageFile = self.model('upload').uploadFromFile(
-                    obj=largeimageFileStream,
-                    size=os.path.getsize(largeimageFilePath),
-                    name=largeimageFileName,
-                    parentType='item',
-                    parent=image,
-                    user={'_id': image['creatorId']},
-                    mimeType='image/tiff',
-                )
-            os.remove(largeimageFilePath)
-            # reload image, since its 'size' has changed in the database
-            image = self.load(image['_id'], force=True, exc=True)
-
-            image['largeImage'] = {
-                'fileId': largeImageFile['_id'],
-                'sourceName': 'tiff',
-                'originalId': originalFile['_id']
-            }
-            image = self.save(image)
-
-            return image
+        job = ImageItem.createImageItem(image, originalFile, user, token)
+        return job
 
     def _generateSuperpixels(self, image):
-        # TODO: run this asynchronously (self.imageData can't be used)
+        Job = self.model('job', 'jobs')
+        Token = self.model('token')
+        User = self.model('user', 'isic_archive')
+
         SUPERPIXEL_VERSION = 3.0
 
-        imageData = self.imageData(image)
+        user = User.load(image['creatorId'], force=True, exc=True)
+        token = Token.createToken(
+            user=user,
+            days=0.25,  # 6 hours
+            scope=[TokenScope.DATA_READ, TokenScope.DATA_WRITE])
 
-        superpixelsData = ScikitSegmentationHelper.superpixels(imageData)
-        superpixelsEncodedStream = ScikitSegmentationHelper.writeImage(
-            superpixelsData, 'png')
+        with open(os.path.join(
+                os.path.dirname(__file__),
+                '_generate_superpixels.py'), 'r') as scriptStream:
+            script = scriptStream.read()
 
-        superpixelsFile = self.model('upload').uploadFromFile(
-            obj=superpixelsEncodedStream,
-            size=len(superpixelsEncodedStream.getvalue()),
-            name='%s_superpixels_v%s.png' % (image['name'], SUPERPIXEL_VERSION),
-            parentType='item',
-            parent=image,
-            user={'_id': image['creatorId']},
-            mimeType='image/png'
+        title = 'superpixels v%s generation: %s' % (
+            SUPERPIXEL_VERSION, image['name'])
+        job = Job.createJob(
+            title=title,
+            type='isic_archive_superpixels',
+            handler='worker_handler',
+            kwargs={
+                'jobInfo': None,  # will be filled after job is created
+                'task': {
+                    'mode': 'python',
+                    'script': script,
+                    'name': title,
+                    'inputs': [{
+                        'id': 'originalFile',
+                        'type': 'string',
+                        'format': 'text',
+                        'target': 'filepath'
+                    }, {
+                        'id': 'segmentation_helpersPath',
+                        'type': 'string',
+                        'format': 'text',
+                    }],
+                    'outputs': [{
+                        'id': 'superpixelsEncodedBytes',
+                        'type': 'string',
+                        'format': 'text',
+                        'target': 'memory'
+                    }]
+                },
+                'inputs': {
+                    'originalFile': workerUtils.girderInputSpec(
+                        resource=self.originalFile(image),
+                        resourceType='file',
+                        token=token),
+                    'segmentation_helpersPath': {
+                        'mode': 'inline',
+                        'format': 'text',
+                        'data': segmentation_helpers.__path__[0]
+                    }
+                },
+                'outputs': {
+                    'superpixelsEncodedBytes': workerUtils.girderOutputSpec(
+                        parent=image,
+                        token=token,
+                        parentType='item',
+                        name='%s_superpixels_v%s.png' %
+                             (image['name'], SUPERPIXEL_VERSION),
+                        reference=''
+                    )
+                },
+                'auto_convert': False,
+                'validate': False
+            },
+            user=user,
+            public=False,
+            save=True  # must save to create an _id for workerUtils.jobInfoSpec
         )
-        superpixelsFile['superpixelVersion'] = SUPERPIXEL_VERSION
+        job['kwargs']['jobInfo'] = workerUtils.jobInfoSpec(
+            job,
+            Job.createJobToken(job),
+            logPrint=True
+        )
+        job['meta'] = {
+            'creator': 'isic_archive',
+            'task': 'generateSuperpixels',
+            'imageId': image['_id'],
+            'imageName': image['name'],
+            'superpixelsVersion': SUPERPIXEL_VERSION
+        }
+        job = Job.save(job)
+
+        Job.scheduleJob(job)
+        return job
+
+    def onSuperpixelsUpload(self, event):
+        superpixelsFile = event.info['file']
+
+        imageId = superpixelsFile.get('itemId')
+        if not imageId:
+            return
+        image = self.load(superpixelsFile, force=True, exc=False)
+        if not image:
+            return
+
+        superpixelsFileNameMatch = re.match(
+            '^%s_superpixels_v([0-9.]+)\.png' % image['name'],
+            superpixelsFile['name'])
+        if not superpixelsFileNameMatch:
+            return
+
+        superpixelsVersion = float(superpixelsFileNameMatch.group(1))
+        superpixelsFile['superpixelVersion'] = superpixelsVersion
         superpixelsFile = self.model('file').save(superpixelsFile)
 
         image['superpixelsId'] = superpixelsFile['_id']
-        image = self.save(image)
-        return image
+        self.save(image)
 
     def originalFile(self, image):
         return self.model('file').load(

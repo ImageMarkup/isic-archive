@@ -1,0 +1,6 @@
+[program:worker]
+directory={{ worker_path }}
+user={{ ansible_user_id }}
+command={{ python_dist_path }}/bin/python -m girder_worker
+stderr_logfile = /tmp/worker.stderr.log
+stdout_logfile = /tmp/worker.stdout.log

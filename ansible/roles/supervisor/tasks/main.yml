@@ -14,3 +14,13 @@
     mode: 0644
   sudo: yes
   notify: Restart Supervisor
+
+- name: Deploy Worker Supervisor config file
+  template:
+    src: "worker.conf.j2"
+    dest: "/etc/supervisor/conf.d/worker.conf"
+    owner: root
+    group: root
+    mode: 0644
+  sudo: yes
+  notify: Restart Supervisor

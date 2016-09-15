@@ -17,7 +17,6 @@
 #  limitations under the License.
 ###############################################################################
 
-
 import csv
 import os
 import shutil
@@ -41,21 +40,21 @@ class TempDir(object):
 
     def __enter__(self):
         assetstore = ModelImporter.model('assetstore').getCurrent()
-        assetstore_adapter = assetstore_utilities.getAssetstoreAdapter(
+        assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(
             assetstore)
         try:
-            self.temp_dir = tempfile.mkdtemp(dir=assetstore_adapter.tempDir)
+            self.tempDir = tempfile.mkdtemp(dir=assetstoreAdapter.tempDir)
         except (AttributeError, OSError):
-            self.temp_dir = tempfile.mkdtemp()
-        return self.temp_dir
+            self.tempDir = tempfile.mkdtemp()
+        return self.tempDir
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        shutil.rmtree(self.temp_dir)
+        shutil.rmtree(self.tempDir)
 
 
 class ZipFileOpener(object):
     def __init__(self, zip_file_path):
-        self.zip_file_path = zip_file_path
+        self.zipFilePath = zip_file_path
         # TODO: check for "7z" command
 
     def __enter__(self):
@@ -68,173 +67,173 @@ class ZipFileOpener(object):
         pass
 
     def _defaultUnzip(self):
-        zip_file = zipfile.ZipFile(self.zip_file_path)
+        zipFile = zipfile.ZipFile(self.zipFilePath)
 
         # filter out directories and count real files
-        file_list = list()
-        for original_file in zip_file.infolist():
-            original_file_relpath = original_file.filename
-            original_file_relpath.replace('\\', '/')
-            original_file_name = os.path.basename(original_file_relpath)
-            if not original_file_name or not original_file.file_size:
+        fileList = list()
+        for originalFile in zipFile.infolist():
+            originalFileRelpath = originalFile.filename
+            originalFileRelpath.replace('\\', '/')
+            originalFileName = os.path.basename(originalFileRelpath)
+            if not originalFileName or not originalFile.file_size:
                 # file is probably a directory, skip
                 continue
-            file_list.append((original_file, original_file_relpath))
-        return self._defaultUnzipIter(zip_file, file_list), len(file_list)
+            fileList.append((originalFile, originalFileRelpath))
+        return self._defaultUnzipIter(zipFile, fileList), len(fileList)
 
-    def _defaultUnzipIter(self, zip_file, file_list):
+    def _defaultUnzipIter(self, zipFile, fileList):
         with TempDir() as temp_dir:
-            for original_file, original_file_relpath in file_list:
-                original_file_name = os.path.basename(original_file_relpath)
-                temp_file_path = os.path.join(temp_dir, original_file_name)
-                with open(temp_file_path, 'wb') as temp_file_obj:
+            for originalFile, originalFileRelpath in fileList:
+                originalFileName = os.path.basename(originalFileRelpath)
+                tempFilePath = os.path.join(temp_dir, originalFileName)
+                with open(tempFilePath, 'wb') as tempFileStream:
                     shutil.copyfileobj(
-                        zip_file.open(original_file),
-                        temp_file_obj
+                        zipFile.open(originalFile),
+                        tempFileStream
                     )
-                yield temp_file_path, original_file_relpath
-                os.remove(temp_file_path)
-            zip_file.close()
+                yield tempFilePath, originalFileRelpath
+                os.remove(tempFilePath)
+            zipFile.close()
 
     def _fallbackUnzip(self):
-        with TempDir() as temp_dir:
-            unzip_command = (
+        with TempDir() as tempDir:
+            unzipCommand = (
                 '7z',
                 'x',
                 '-y',
-                '-o%s' % temp_dir,
-                self.zip_file_path
+                '-o%s' % tempDir,
+                self.zipFilePath
             )
             try:
-                with open(os.devnull, 'rb') as null_in,\
-                        open(os.devnull, 'wb') as null_out:
+                with open(os.devnull, 'rb') as nullIn,\
+                        open(os.devnull, 'wb') as nullOut:
                     subprocess.check_call(
-                        unzip_command, stdin=null_in, stdout=null_out,
+                        unzipCommand, stdin=nullIn, stdout=nullOut,
                         stderr=subprocess.STDOUT)
             except subprocess.CalledProcessError:
                 self.__exit__(*sys.exc_info())
                 raise
 
-            file_list = list()
-            for temp_dir_path, _, temp_file_names in os.walk(temp_dir):
-                for temp_file_name in temp_file_names:
-                    temp_file_path = os.path.join(temp_dir_path, temp_file_name)
-                    original_file_relpath = os.path.relpath(
-                        temp_file_path, temp_dir)
-                    file_list.append((temp_file_path, original_file_relpath))
-            return iter(file_list), len(file_list)
+            fileList = list()
+            for tempDirPath, _, tempFileNames in os.walk(tempDir):
+                for tempFileName in tempFileNames:
+                    tempFilePath = os.path.join(tempDirPath, tempFileName)
+                    originalFileRelpath = os.path.relpath(
+                        tempFilePath, tempDir)
+                    fileList.append((tempFilePath, originalFileRelpath))
+            return iter(fileList), len(fileList)
 
 
-def handleZip(images_folder, user, zip_file):
+def handleZip(imagesFolder, user, zipFile):
     Image = ModelImporter.model('image', 'isic_archive')
 
     # Get full path of zip file in assetstore
     assetstore = ModelImporter.model('assetstore').getCurrent()
     assetstore_adapter = assetstore_utilities.getAssetstoreAdapter(assetstore)
-    full_path = assetstore_adapter.fullPath(zip_file)
+    fullPath = assetstore_adapter.fullPath(zipFile)
 
-    with ZipFileOpener(full_path) as (file_list, file_count):
+    with ZipFileOpener(fullPath) as (fileList, fileCount):
         with ProgressContext(
                 on=True,
                 user=user,
-                title='Processing "%s"' % zip_file['name'],
-                total=file_count,
+                title='Processing "%s"' % zipFile['name'],
+                total=fileCount,
                 state=ProgressState.ACTIVE,
                 current=0) as progress:
 
-            for original_file_path, original_file_relpath in file_list:
-                original_file_name = os.path.basename(original_file_relpath)
+            for originalFilePath, originalFileRelpath in fileList:
+                originalFileName = os.path.basename(originalFileRelpath)
 
                 progress.update(
                     increment=1,
-                    message='Extracting "%s"' % original_file_name)
+                    message='Extracting "%s"' % originalFileName)
 
-                with open(original_file_path, 'rb') as original_file_obj:
+                with open(originalFilePath, 'rb') as originalFileStream:
                     Image.createImage(
-                        imageDataStream=original_file_obj,
-                        imageDataSize=os.path.getsize(original_file_path),
-                        originalName=original_file_name,
-                        dataset=images_folder,
+                        imageDataStream=originalFileStream,
+                        imageDataSize=os.path.getsize(originalFilePath),
+                        originalName=originalFileName,
+                        dataset=imagesFolder,
                         creator=user
                     )
 
 
-def handleCsv(dataset_folder, user, csv_file):
-    dataset_folder_ids = [
+def handleCsv(datasetFolder, user, csvFile):
+    datasetFolderIds = [
         folder['_id']
         for folder in ModelImporter.model('folder').find({
-            'name': dataset_folder['name']
+            'name': datasetFolder['name']
         })
     ]
-    # TODO: ensure that dataset_folder_ids are UDA folders / in UDA phases
+    # TODO: ensure that datasetFolderIds are UDA folders / in UDA phases
 
     assetstore = ModelImporter.model('assetstore').getCurrent()
-    assetstore_adapter = assetstore_utilities.getAssetstoreAdapter(assetstore)
-    full_path = assetstore_adapter.fullPath(csv_file)
+    assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(assetstore)
+    fullPath = assetstoreAdapter.fullPath(csvFile)
 
-    parse_errors = list()
-    with open(full_path, 'rUb') as upload_file_obj,\
+    parseErrors = list()
+    with open(fullPath, 'rUb') as uploadFileStream,\
         ProgressContext(
             on=True,
             user=user,
-            title='Processing "%s"' % csv_file['name'],
+            title='Processing "%s"' % csvFile['name'],
             state=ProgressState.ACTIVE,
             message='Parsing CSV') as progress:  # NOQA
 
         # csv.reader(csvfile, delimiter=',', quotechar='"')
-        csv_reader = csv.DictReader(upload_file_obj)
+        csvReader = csv.DictReader(uploadFileStream)
 
-        for filenameField in csv_reader.fieldnames:
+        for filenameField in csvReader.fieldnames:
             if filenameField.lower() == 'filename':
                 break
         else:
             raise ValidationException('No "filename" field found in CSV.')
 
-        for csv_row in csv_reader:
-            filename = csv_row.pop(filenameField, None)
+        for csvRow in csvReader:
+            filename = csvRow.pop(filenameField, None)
             if not filename:
-                parse_errors.append(
-                    'No "filename" field in row %d' % csv_reader.line_num)
+                parseErrors.append(
+                    'No "filename" field in row %d' % csvReader.line_num)
                 continue
 
             # TODO: require 'user' to match image creator?
             # TODO: index on meta.originalFilename?
-            image_items = ModelImporter.model('item').find({
+            imageItems = ModelImporter.model('item').find({
                 'meta.originalFilename': filename,
-                'folderId': {'$in': dataset_folder_ids}
+                'folderId': {'$in': datasetFolderIds}
             })
-            if not image_items.count():
-                parse_errors.append(
+            if not imageItems.count():
+                parseErrors.append(
                     'No image found with original filename "%s"' % filename)
                 continue
-            elif image_items.count() > 1:
-                parse_errors.append(
+            elif imageItems.count() > 1:
+                parseErrors.append(
                     'Multiple images found with original filename "%s"' %
                     filename)
                 continue
             else:
-                image_item = image_items.next()
+                imageItem = imageItems.next()
 
-            clinical_metadata = image_item['meta']['clinical']
-            clinical_metadata.update(csv_row)
-            ModelImporter.model('item').setMetadata(image_item, {
-                'clinical': clinical_metadata
+            clinicalMetadata = imageItem['meta']['clinical']
+            clinicalMetadata.update(csvRow)
+            ModelImporter.model('item').setMetadata(imageItem, {
+                'clinical': clinicalMetadata
             })
 
-    if parse_errors:
+    if parseErrors:
         # TODO: eventually don't store whole string in memory
-        parse_errors_str = '\n'.join(parse_errors)
+        parseErrorsStr = '\n'.join(parseErrors)
 
-        parent_item = ModelImporter.model('item').load(
-            csv_file['itemId'], force=True)
+        parentItem = ModelImporter.model('item').load(
+            csvFile['itemId'], force=True)
 
         upload = ModelImporter.model('upload').createUpload(
             user=getAdminUser(),
             name='parse_errors.txt',
             parentType='item',
-            parent=parent_item,
-            size=len(parse_errors_str),
+            parent=parentItem,
+            size=len(parseErrorsStr),
             mimeType='text/plain',
         )
         ModelImporter.model('upload').handleChunk(
-            upload, parse_errors_str)
+            upload, parseErrorsStr)
