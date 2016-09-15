@@ -17,6 +17,7 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
             image: this.image,
             parentView: this
         });
+
     },
 
     render: function () {
@@ -62,6 +63,9 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
 
         this.segmentationsDisplayView.setElement(
             this.$('#isic-image-details-segmentations-display-view-container')).render();
+
+        // Initialize Bootstrap tooltips.
+        this.$('[data-toggle="tooltip"]').tooltip();
 
         return this;
     },
