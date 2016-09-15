@@ -64,21 +64,18 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
         this.segmentationsDisplayView.setElement(
             this.$('#isic-image-details-segmentations-display-view-container')).render();
 
-        // Initialize Bootstrap tooltips.
-        this.$('[data-toggle="tooltip"]').tooltip({
-            trigger: 'hover'
-        });
+        this.initializeTooltips();
 
         return this;
     },
 
     openwindow: function () {
-      $('[data-toggle="tooltip"]').tooltip('hide');
+      this.clearTooltips();
       window.open('/api/v1/image/' + this.image.id + '/download?contentDisposition=inline');
     },
 
     fullscreen: function () {
-      $('[data-toggle="tooltip"]').tooltip('hide');
+      this.clearTooltips();
 
       var img = $('.focusimage');
       var modal = $('#focusmodal');
@@ -122,5 +119,15 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
 
     clearSelectedImage: function () {
         this.image.clear();
+    },
+
+    initializeTooltips: function () {
+        this.$('[data-toggle="tooltip"]').tooltip({
+            trigger: 'hover'
+        });
+    },
+
+    clearTooltips: function () {
+      $('[data-toggle="tooltip"]').tooltip('hide');
     }
 });
