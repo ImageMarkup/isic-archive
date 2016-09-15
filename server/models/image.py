@@ -28,13 +28,11 @@ from girder.constants import AccessType, TokenScope
 from girder.models.model_base import AccessException
 from girder.models.item import Item as ItemModel
 from girder.plugins.worker import utils as workerUtils
-from girder.utility import assetstore_utilities
 
 from . import segmentation_helpers
 from .. import constants
 from ..provision_utility import getAdminUser
 from .segmentation_helpers import ScikitSegmentationHelper
-from ..upload import TempDir
 
 
 class Image(ItemModel):
@@ -88,11 +86,11 @@ class Image(ItemModel):
         # reload image, since its 'size' has changed in the database
         image = self.load(image['_id'], force=True, exc=True)
 
-        # this adds image['largeImage']['originalId'] and allows the subsequent
-        # use of Image.originalFile and Image.imageData
-        image = self._generateLargeimage(image, originalFile)
+        # this synchronously adds image['largeImage']['originalId'] and allows
+        # the subsequent use of Image.originalFile and Image.imageData
+        self._generateLargeimage(image, originalFile)
 
-        self._generateSuperpixels(image, originalFile)
+        self._generateSuperpixels(image)
 
         # TODO: copy license from dataset to image
 
@@ -104,57 +102,20 @@ class Image(ItemModel):
         return image
 
     def _generateLargeimage(self, image, originalFile):
-        # TODO: replace this with usage of large_image
-        assetstore = self.model('assetstore').getCurrent()
-        assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(
-            assetstore)
+        ImageItem = self.model('image_item', 'large_image')
+        Token = self.model('token')
+        User = self.model('user', 'isic_archive')
 
-        with TempDir() as tempDir:
-            largeimageFileName = '%s.tiff' % image['name']
-            largeimageFilePath = os.path.join(tempDir, largeimageFileName)
+        user = User.load(image['creatorId'], force=True, exc=True)
+        token = Token.createToken(
+            user=user,
+            days=0.25,  # 6 hours
+            scope=[TokenScope.DATA_READ, TokenScope.DATA_WRITE])
 
-            originalFilePath = assetstoreAdapter.fullPath(originalFile)
+        job = ImageItem.createImageItem(image, originalFile, user, token)
+        return job
 
-            convert_command = (
-                '/usr/local/bin/vips',
-                'tiffsave',
-                '\'%s\'' % originalFilePath,
-                '\'%s\'' % largeimageFilePath,
-                '--compression', 'jpeg',
-                '--Q', '90',
-                '--tile',
-                '--tile-width', '256',
-                '--tile-height', '256',
-                '--pyramid',
-                '--bigtiff',
-            )
-            os.popen(' '.join(convert_command))
-
-            # upload converted image
-            with open(largeimageFilePath, 'rb') as largeimageFileStream:
-                largeImageFile = self.model('upload').uploadFromFile(
-                    obj=largeimageFileStream,
-                    size=os.path.getsize(largeimageFilePath),
-                    name=largeimageFileName,
-                    parentType='item',
-                    parent=image,
-                    user={'_id': image['creatorId']},
-                    mimeType='image/tiff',
-                )
-            os.remove(largeimageFilePath)
-            # reload image, since its 'size' has changed in the database
-            image = self.load(image['_id'], force=True, exc=True)
-
-            image['largeImage'] = {
-                'fileId': largeImageFile['_id'],
-                'sourceName': 'tiff',
-                'originalId': originalFile['_id']
-            }
-            image = self.save(image)
-
-            return image
-
-    def _generateSuperpixels(self, image, originalFile):
+    def _generateSuperpixels(self, image):
         Job = self.model('job', 'jobs')
         Token = self.model('token')
         User = self.model('user', 'isic_archive')
@@ -203,9 +164,7 @@ class Image(ItemModel):
                 },
                 'inputs': {
                     'originalFile': workerUtils.girderInputSpec(
-                        # self.originalFile(image) can't be used, since the
-                        # large_image may not have been created
-                        resource=originalFile,
+                        resource=self.originalFile(image),
                         resourceType='file',
                         token=token),
                     'segmentation_helpersPath': {
