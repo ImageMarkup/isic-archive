@@ -4,8 +4,10 @@
 
   if image.id
     .isic-image-details-name= image.name()
-      button.btn.btn-xs.btn-default.fullscreen Fullscreen
-      button.btn.btn-xs.btn-default.openwindow Open in new window
+      button.btn.btn-xs.btn-default.fullscreen
+        span.glyphicon.glyphicon-zoom-in
+      button.btn.btn-xs.btn-default.openwindow
+        span.glyphicon.glyphicon-new-window
 
     table.table.table-condensed.isic-image-details-table
       tbody
