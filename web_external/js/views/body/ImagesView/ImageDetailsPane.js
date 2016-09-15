@@ -103,6 +103,11 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
         modal.modal('show');
       };
 
+      // Allow clicking on the image itself to dismiss the modal.
+      img.on('click.dismiss', function () {
+        $('#focusmodal').modal('hide');
+      });
+
       image.src = src;
     },
 
