@@ -1,9 +1,0 @@
-{
-  "undef": true,
-  "unused": true,
-  "browser": true,
-  "globals": {
-    "_": false,
-    "girder": false
-  }
-}
