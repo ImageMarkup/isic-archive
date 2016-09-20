@@ -1,5 +1,3 @@
-/*global _, girder*/
-
 girder.views.isic_ConfigView = girder.View.extend({
     events: {
         'submit #isic-config-form': function (event) {
