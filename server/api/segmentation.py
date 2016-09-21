@@ -34,6 +34,7 @@ class SegmentationResource(Resource):
         self.route('GET', (), self.find)
         self.route('POST', (), self.createSegmentation)
         self.route('GET', (':id',), self.getSegmentation)
+        self.route('GET', (':id', 'mask'), self.mask)
         self.route('GET', (':id', 'thumbnail'), self.thumbnail)
 
     @describeRoute(
@@ -116,7 +117,51 @@ class SegmentationResource(Resource):
         return segmentation
 
     @describeRoute(
-        Description('Get a thumbnail, showing a segmentation.')
+        Description('Get a segmentation, rendered as a binary mask.')
+        .param('id', 'The ID of the segmentation.', paramType='path')
+        .param('contentDisposition', 'Specify the Content-Disposition response '
+               'header disposition-type value.', required=False,
+               enum=['inline', 'attachment'])
+        .errorResponse('ID was invalid.')
+    )
+    @access.cookie
+    @access.public
+    @rawResponse
+    @loadmodel(model='segmentation', plugin='isic_archive')
+    def mask(self, segmentation, params):
+        Image = self.model('image', 'isic_archive')
+        Segmentation = self.model('segmentation', 'isic_archive')
+        contentDisp = params.get('contentDisposition', None)
+        if contentDisp is not None and \
+                contentDisp not in {'inline', 'attachment'}:
+            raise RestException('Unallowed contentDisposition type "%s".' %
+                                contentDisp)
+
+        # TODO: convert this to make Segmentation use an AccessControlMixin
+        image = Image.load(
+            segmentation['imageId'], level=AccessType.READ,
+            user=self.getCurrentUser(), exc=True)
+
+        renderedMaskStream = Segmentation.renderedMask(segmentation, image)
+        renderedMaskData = renderedMaskStream.getvalue()
+
+        setResponseHeader('Content-Type', 'image/png')
+        contentName = '%s_segmentation_mask.png' % image['_id']
+        if contentDisp == 'inline':
+            setResponseHeader(
+                'Content-Disposition',
+                'inline; filename="%s"' % contentName)
+        else:
+            setResponseHeader(
+                'Content-Disposition',
+                'attachment; filename="%s"' % contentName)
+        setResponseHeader('Content-Length', len(renderedMaskData))
+
+        return renderedMaskData
+
+    @describeRoute(
+        Description('Get a segmentation, rendered as a thumbnail with a '
+                    'boundary overlay.')
         .param('id', 'The ID of the segmentation.', paramType='path')
         .param('width', 'The desired width for the thumbnail.',
                paramType='query', required=False, default=256)
@@ -130,6 +175,7 @@ class SegmentationResource(Resource):
     @rawResponse
     @loadmodel(model='segmentation', plugin='isic_archive')
     def thumbnail(self, segmentation, params):
+        Image = self.model('image', 'isic_archive')
         Segmentation = self.model('segmentation', 'isic_archive')
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and \
@@ -138,7 +184,7 @@ class SegmentationResource(Resource):
                                 contentDisp)
 
         # TODO: convert this to make Segmentation use an AccessControlMixin
-        image = self.model('image', 'isic_archive').load(
+        image = Image.load(
             segmentation['imageId'], level=AccessType.READ,
             user=self.getCurrentUser(), exc=True)
 
