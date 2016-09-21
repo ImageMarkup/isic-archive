@@ -103,6 +103,23 @@ class Segmentation(Model):
         })
         return segmentation
 
+    def mask(self, segmentation, image=None):
+        Image = self.model('image', 'isic_archive')
+        if not image:
+            image = Image.load(segmentation['imageId'], force=True, exc=True)
+
+        segmentationMask = ScikitSegmentationHelper._contourToMask(
+            numpy.zeros(Image.imageData(image).shape),
+            segmentation['lesionBoundary']['geometry']['coordinates'][0]
+        ).astype(numpy.uint8)
+        segmentationMask *= 255
+
+        return segmentationMask
+
+    def renderedMask(self, segmentation, image=None):
+        segmentationMask = self.mask(segmentation, image)
+        return ScikitSegmentationHelper.writeImage(segmentationMask, 'png')
+
     def boundaryThumbnail(self, segmentation, image=None, width=256):
         Image = self.model('image', 'isic_archive')
         if not image:
