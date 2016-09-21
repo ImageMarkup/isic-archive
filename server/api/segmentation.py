@@ -39,6 +39,7 @@ class SegmentationResource(Resource):
 
     @describeRoute(
         Description('List the segmentations for an image.')
+        .pagingParams(defaultSort='created', defaultSortDir=-1)
         .param('imageId', 'The ID of the image.')
         .param('creatorId', 'The ID of the creator user.', required=False)
         .errorResponse('ID was invalid.')
@@ -49,6 +50,9 @@ class SegmentationResource(Resource):
         User = self.model('user', 'isic_archive')
 
         self.requireParams(('imageId',), params)
+        limit, offset, sort = self.getPagingParameters(
+            params,
+            defaultSortField='created', defaultSortDir=SortDir.DESCENDING)
 
         image = self.model('image', 'isic_archive').load(
             params['imageId'], level=AccessType.READ,
@@ -64,8 +68,10 @@ class SegmentationResource(Resource):
 
         return list(Segmentation.find(
             query=filters,
-            sort=[('created', SortDir.DESCENDING)],
-            fields=['_id', 'skill', 'created']
+            sort=sort,
+            fields=['_id', 'skill', 'created'],
+            limit=limit,
+            offset=offset,
         ))
 
     @describeRoute(
