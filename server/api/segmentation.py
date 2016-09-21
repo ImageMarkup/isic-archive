@@ -39,19 +39,31 @@ class SegmentationResource(Resource):
 
     @describeRoute(
         Description('List the segmentations for an image.')
-        .param('imageId', 'The ID of the image.', paramType='query')
+        .param('imageId', 'The ID of the image.')
+        .param('creatorId', 'The ID of the creator user.', required=False)
         .errorResponse('ID was invalid.')
     )
     @access.public
     def find(self, params):
+        Segmentation = self.model('segmentation', 'isic_archive')
+        User = self.model('user', 'isic_archive')
+
         self.requireParams(('imageId',), params)
 
         image = self.model('image', 'isic_archive').load(
             params['imageId'], level=AccessType.READ,
             user=self.getCurrentUser(), exc=True)
 
-        return list(self.model('segmentation', 'isic_archive').find(
-            query={'imageId': image['_id']},
+        filters = {
+            'imageId': image['_id']
+        }
+        if 'creatorId' in params:
+            # Ensure that the user exists
+            creatorUser = User.load(params['creatorId'], force=True, exc=True)
+            filters['creatorId'] = creatorUser['_id']
+
+        return list(Segmentation.find(
+            query=filters,
             sort=[('created', SortDir.DESCENDING)],
             fields=['_id', 'skill', 'created']
         ))
