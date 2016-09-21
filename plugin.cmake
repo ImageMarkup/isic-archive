@@ -18,6 +18,10 @@ add_python_style_test(
   python_static_analysis_isic_archive
   "${CMAKE_CURRENT_LIST_DIR}/server"
 )
+add_python_style_test(
+  python_static_analysis_isic_archive_scripts
+  "${CMAKE_CURRENT_LIST_DIR}/scripts"
+)
 
 add_eslint_test(
   isic_archive_external
