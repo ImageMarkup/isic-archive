@@ -187,6 +187,8 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
                             self.model.includeValue(self.attrName, bin.label);
                         }
                     }
+
+                    self.render();
                 });
         });
         height += 2 * emSize;
