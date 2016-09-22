@@ -303,14 +303,14 @@ class Image(ItemModel):
 
     def flagMultiple(self, images, reason, user):
         # TODO: change to use direct permissions on the images
-        if not any(
+        if (not user['admin']) or (not any(
             self.model('group').findOne(
                 {'name': groupName}
             )['_id'] in user.get('groups', [])
             for groupName in
             ['Dataset QC Reviewers', 'Segmentation Novices',
              'Segmentation Experts']
-        ):
+        )):
             # Check if all images are part of annotation studies that this user
             #   is part of
             imageIds = list(set(image['_id'] for image in images))
