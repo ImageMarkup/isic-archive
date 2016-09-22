@@ -150,8 +150,10 @@ class TaskResource(Resource):
                 self._pipeline3MissingSegmentations() + \
                 self._pipeline4CountImage()
         else:  # userSkill is None
-            raise AccessException(
-                'You are not authorized to perform segmentations.')
+            return []
+            # TODO: raise this once the client doesn't always call this endpoint
+            # raise AccessException(
+            #     'You are not authorized to perform segmentations.')
 
         results = list(Image.collection.aggregate(pipeline))
         return results
