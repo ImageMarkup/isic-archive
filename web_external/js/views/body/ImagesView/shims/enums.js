@@ -52,8 +52,8 @@ isic.ENUMS.SCHEMA = {
         'interpretation': 'ordinal',
         'humanName': 'Age',
         'lowBound': 0,
-        'highBound': 100,
-        'numBins': 10
+        'highBound': 90,
+        'numBins': 9
     },
     'meta.clinical.clin_size_long_diam_mm': {
         'coerceToType': 'number',
