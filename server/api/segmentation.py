@@ -88,6 +88,7 @@ class SegmentationResource(Resource):
         self.requireParams(('imageId', 'lesionBoundary'), bodyJson)
 
         user = self.getCurrentUser()
+        User.requireSegmentationSkill(user)
 
         image = self.model('image', 'isic_archive').load(
             bodyJson['imageId'], level=AccessType.READ, user=user, exc=True)
@@ -100,7 +101,7 @@ class SegmentationResource(Resource):
             datetime.datetime.utcfromtimestamp(
                 lesionBoundary['properties']['stopTime'] / 1000.0)
 
-        skill = User.requireSegmentationSkill(user)
+        skill = User.getSegmentationSkill(user)
 
         segmentation = Segmentation.createSegmentation(
             image=image,
