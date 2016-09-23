@@ -66,5 +66,9 @@ isic.ENUMS.SCHEMA = {
     'meta.clinical.personal_hx_mm': {
         'coerceToType': 'string',
         'humanName': 'Personal History of Melanoma'
+    },
+    'meta.clinical.family_hx_mm': {
+        'coerceToType': 'string',
+        'humanName': 'Family History of Melanoma'
     }
 };

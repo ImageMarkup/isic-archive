@@ -125,6 +125,9 @@ class HistogramUtility(object):
             'meta.clinical.personal_hx_mm': {
                 'coerceToType': 'string'
             },
+            'meta.clinical.family_hx_mm': {
+                'coerceToType': 'string'
+            }
         })
 
         return params
