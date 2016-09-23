@@ -27,6 +27,7 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
         };
         var acquisitionMetadata = null;
         var clinicalMetadata = null;
+        var unstructuredMetadata = null;
 
         // Get image data
         if (this.image.id) {
@@ -43,6 +44,7 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
             var meta = this.image.get('meta');
             acquisitionMetadata = meta['acquisition'];
             clinicalMetadata = meta['clinical'];
+            unstructuredMetadata = meta['unstructured'];
 
             // Reformat some acquisition metadata
             acquisitionMetadata['Dimensions (pixels)'] =
@@ -57,7 +59,8 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
             created: created,
             license: license,
             acquisitionMetadata: acquisitionMetadata,
-            clinicalMetadata: clinicalMetadata
+            clinicalMetadata: clinicalMetadata,
+            unstructuredMetadata: unstructuredMetadata
         }));
 
         this.segmentationsDisplayView.setElement(

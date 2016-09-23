@@ -52,7 +52,7 @@ isic_app.controller('ApplicationController',
                         'diagnosis data',
                         'pathology'
                     ].forEach(function (key) {
-                        var value = image.meta.clinical[key];
+                        var value = image.meta.clinical[key] || image.meta.unstructured[key] ;
                         if (value) {
                             image.diagnosis_strings.push(key + ': ' + value);
                         }

@@ -41,4 +41,11 @@
             td= key
             td !{value}
 
+        tr
+          td.isic-image-details-table-section-header(colspan=2) Unstructured Metadata
+        each value, key in unstructuredMetadata
+          tr
+            td= key
+            td !{value}
+
     #isic-image-details-segmentations-display-view-container
