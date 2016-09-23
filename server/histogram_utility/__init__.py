@@ -114,6 +114,13 @@ class HistogramUtility(object):
                 'lowBound': 0,
                 'highBound': 100,
                 'numBins': 10
+            },
+            'meta.clinical.clin_size_long_diam_mm': {
+                'coerceToType': 'number',
+                'interpretation': 'ordinal',
+                'lowBound': 0,
+                'highBound': 100,
+                'numBins': 10
             }
         })
 
