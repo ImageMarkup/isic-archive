@@ -126,7 +126,11 @@ module.exports = function (grunt) {
                 'jquery/dist/jquery.min.js',
                 'flatstrap/dist/js/bootstrap.min.js',
                 'flatstrap/dist/css/bootstrap.min.css',
+                'flatstrap/dist/fonts/glyphicons-halflings-regular.woff',
+                'flatstrap/dist/fonts/glyphicons-halflings-regular.ttf',
                 'font-awesome/css/font-awesome.min.css',
+                'font-awesome/fonts/fontawesome-webfont.ttf',
+                'font-awesome/fonts/fontawesome-webfont.woff',
                 'angular/angular.min.js',
                 'angular-resource/angular-resource.min.js',
                 'angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js',
@@ -138,16 +142,6 @@ module.exports = function (grunt) {
         });
         defaultTasks.push('copy:' + pluginName + '_bower_libs');
 
-        grunt.config.set('copy.' + pluginName + '_font_files', {
-            expand: true,
-            cwd: pluginDir + '/bower_components/flatstrap/dist/fonts',
-            src: [
-                'glyphicons-halflings-regular.woff',
-                'glyphicons-halflings-regular.ttf'
-            ],
-            dest: 'clients/web/static/fonts'
-        });
-        defaultTasks.push('copy:' + pluginName + '_font_files');
     };
 
     configureIsicArchive();
