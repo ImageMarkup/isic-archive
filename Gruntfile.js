@@ -129,6 +129,8 @@ module.exports = function (grunt) {
                 'flatstrap/dist/fonts/glyphicons-halflings-regular.woff',
                 'flatstrap/dist/fonts/glyphicons-halflings-regular.ttf',
                 'font-awesome/css/font-awesome.min.css',
+                'font-awesome/fonts/fontawesome-webfont.ttf',
+                'font-awesome/fonts/fontawesome-webfont.woff',
                 'angular/angular.min.js',
                 'angular-resource/angular-resource.min.js',
                 'angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js',
