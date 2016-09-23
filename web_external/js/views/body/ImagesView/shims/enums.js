@@ -52,7 +52,23 @@ isic.ENUMS.SCHEMA = {
         'interpretation': 'ordinal',
         'humanName': 'Age',
         'lowBound': 0,
+        'highBound': 90,
+        'numBins': 9
+    },
+    'meta.clinical.clin_size_long_diam_mm': {
+        'coerceToType': 'number',
+        'interpretation': 'ordinal',
+        'humanName': 'Clinical Size - Longest Diameter (mm)',
+        'lowBound': 0,
         'highBound': 100,
         'numBins': 10
+    },
+    'meta.clinical.personal_hx_mm': {
+        'coerceToType': 'string',
+        'humanName': 'Personal History of Melanoma'
+    },
+    'meta.clinical.family_hx_mm': {
+        'coerceToType': 'string',
+        'humanName': 'Family History of Melanoma'
     }
 };

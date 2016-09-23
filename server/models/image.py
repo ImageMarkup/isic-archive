@@ -66,8 +66,9 @@ class Image(ItemModel):
             constants.PluginSettings.MAX_ISIC_ID, newIsicId)
 
         image = self.setMetadata(image, {
-            'clinical': {},
             'acquisition': {},
+            'clinical': {},
+            'unstructured': {},
             'originalFilename': originalName
         })
 

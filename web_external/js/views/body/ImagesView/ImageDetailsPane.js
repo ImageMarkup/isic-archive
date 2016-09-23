@@ -17,7 +17,6 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
             image: this.image,
             parentView: this
         });
-
     },
 
     render: function () {
@@ -28,6 +27,7 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
         };
         var acquisitionMetadata = null;
         var clinicalMetadata = null;
+        var unstructuredMetadata = null;
 
         // Get image data
         if (this.image.id) {
@@ -44,6 +44,7 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
             var meta = this.image.get('meta');
             acquisitionMetadata = meta['acquisition'];
             clinicalMetadata = meta['clinical'];
+            unstructuredMetadata = meta['unstructured'];
 
             // Reformat some acquisition metadata
             acquisitionMetadata['Dimensions (pixels)'] =
@@ -58,7 +59,8 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
             created: created,
             license: license,
             acquisitionMetadata: acquisitionMetadata,
-            clinicalMetadata: clinicalMetadata
+            clinicalMetadata: clinicalMetadata,
+            unstructuredMetadata: unstructuredMetadata
         }));
 
         this.segmentationsDisplayView.setElement(
@@ -70,51 +72,51 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
     },
 
     openwindow: function () {
-      this.clearTooltips();
-      window.open('/api/v1/image/' + this.image.id + '/download?contentDisposition=inline');
+        this.clearTooltips();
+        window.open('/api/v1/image/' + this.image.id + '/download?contentDisposition=inline');
     },
 
     fullscreen: function () {
-      this.clearTooltips();
+        this.clearTooltips();
 
-      var img = $('.focusimage');
-      var modal = $('#focusmodal');
+        var img = $('.focusimage');
+        var modal = $('#focusmodal');
 
-      // Supply the image element with a new src attribute to display the image.
-      var src = '/api/v1/image/' + this.image.id + '/download?contentDisposition=inline';
-      img.attr('src', src);
+        // Supply the image element with a new src attribute to display the image.
+        var src = '/api/v1/image/' + this.image.id + '/download?contentDisposition=inline';
+        img.attr('src', src);
 
-      // Create a dummy image element so we can learn the size of the new image.
-      // When the image is loaded, we can use its size to properly resize and
-      // situate the modal.
-      var image = new Image();
-      image.onload = function () {
-        // Add thirty to represent the 15px padding that comes stock with a
-        // Bootstrap modal.
-        var modalWidth = image.width + 30;
-        var modalHeight = image.height + 30;
+        // Create a dummy image element so we can learn the size of the new image.
+        // When the image is loaded, we can use its size to properly resize and
+        // situate the modal.
+        var image = new Image();
+        image.onload = function () {
+            // Add thirty to represent the 15px padding that comes stock with a
+            // Bootstrap modal.
+            var modalWidth = image.width + 30;
+            var modalHeight = image.height + 30;
 
-        // Set the CSS of the dialog so it appears vertically and horizontally
-        // centered in the webpage (even with browser resizing).
-        modal.find('.modal-dialog').css({
-          width: modalWidth + 'px',
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          'margin-top': (-modalHeight / 2) + 'px',
-          'margin-left': (-modalWidth / 2) + 'px'
+            // Set the CSS of the dialog so it appears vertically and horizontally
+            // centered in the webpage (even with browser resizing).
+            modal.find('.modal-dialog').css({
+                width: modalWidth + 'px',
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                'margin-top': (-modalHeight / 2) + 'px',
+                'margin-left': (-modalWidth / 2) + 'px'
+            });
+
+            // Now that the image and CSS are ready, show the modal.
+            modal.modal('show');
+        };
+
+        // Allow clicking on the image itself to dismiss the modal.
+        img.on('click.dismiss', function () {
+            $('#focusmodal').modal('hide');
         });
 
-        // Now that the image and CSS are ready, show the modal.
-        modal.modal('show');
-      };
-
-      // Allow clicking on the image itself to dismiss the modal.
-      img.on('click.dismiss', function () {
-        $('#focusmodal').modal('hide');
-      });
-
-      image.src = src;
+        image.src = src;
     },
 
     clearSelectedImage: function () {
@@ -128,6 +130,6 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
     },
 
     clearTooltips: function () {
-      $('[data-toggle="tooltip"]').tooltip('hide');
+        $('[data-toggle="tooltip"]').tooltip('hide');
     }
 });

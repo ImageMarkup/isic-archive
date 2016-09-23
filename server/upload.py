@@ -214,10 +214,10 @@ def handleCsv(datasetFolder, user, csvFile):
             else:
                 imageItem = imageItems.next()
 
-            clinicalMetadata = imageItem['meta']['clinical']
-            clinicalMetadata.update(csvRow)
+            unstructuredMetadata = imageItem['meta']['unstructured']
+            unstructuredMetadata.update(csvRow)
             ModelImporter.model('item').setMetadata(imageItem, {
-                'clinical': clinicalMetadata
+                'unstructured': unstructuredMetadata
             })
 
     if parseErrors:

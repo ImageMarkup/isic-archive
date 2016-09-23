@@ -112,8 +112,21 @@ class HistogramUtility(object):
                 'coerceToType': 'number',
                 'interpretation': 'ordinal',
                 'lowBound': 0,
+                'highBound': 90,
+                'numBins': 9
+            },
+            'meta.clinical.clin_size_long_diam_mm': {
+                'coerceToType': 'number',
+                'interpretation': 'ordinal',
+                'lowBound': 0,
                 'highBound': 100,
                 'numBins': 10
+            },
+            'meta.clinical.personal_hx_mm': {
+                'coerceToType': 'string'
+            },
+            'meta.clinical.family_hx_mm': {
+                'coerceToType': 'string'
             }
         })
 
