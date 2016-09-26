@@ -42,7 +42,11 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
                 return d === this.image.id;
             }, this))
             .on('click', _.bind(function (d) {
-                this.selectImage(d === this.image.id ? null : d)
+                if (d3.event.shiftKey) {
+                    isic.util.fullscreen(d);
+                } else {
+                    this.selectImage(d === this.image.id ? null : d)
+                }
             }, this));
     }, 50)
 });
