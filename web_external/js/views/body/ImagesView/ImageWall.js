@@ -69,5 +69,8 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
                 });
               });
             });
-    }, 50)
+    }, 50),
+    clearTooltips: function () {
+        $('[data-toggle="tooltip"]').tooltip('hide');
+    }
 });
