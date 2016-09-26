@@ -44,7 +44,7 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
             var meta = this.image.get('meta');
             acquisitionMetadata = meta['acquisition'];
             clinicalMetadata = meta['clinical'];
-            unstructuredMetadata = meta['unstructured'];
+            unstructuredMetadata = meta['unstructured'] || {};
 
             // Reformat some acquisition metadata
             acquisitionMetadata['Dimensions (pixels)'] =
