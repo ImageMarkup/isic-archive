@@ -1,6 +1,8 @@
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
 isic.util.fullscreen = function (id) {
+    $('#focusmodal').html(isic.templates.fullscreen());
+
     var img = $('.focusimage');
     var modal = $('#focusmodal');
 
