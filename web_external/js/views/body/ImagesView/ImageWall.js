@@ -24,7 +24,8 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
             this.image.clear();
         }
     },
-    render: _.debounce(function () {
+    render: function () {
+        var self = this;
         var sel = d3.select(this.el)
             .selectAll('img')
             .data(this.model.get('imageIds'));
@@ -59,17 +60,14 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
                 }
             }, this))
             .each(function (d) {
-              var el = this;
-              girder.restRequest({
-                  path: 'image/' + d,
-                  method: 'GET'
-              }).then(function (image) {
-                $(el).tooltip({
-                  title: image.name
+                var imageCollection = self.model.images;
+                var imageModel = imageCollection.find(function (x) { return x.id === d; });
+
+                $(this).tooltip({
+                    title: imageModel.get('name')
                 });
-              });
             });
-    }, 50),
+    },
     clearTooltips: function () {
         $('[data-toggle="tooltip"]').tooltip('hide');
     }
