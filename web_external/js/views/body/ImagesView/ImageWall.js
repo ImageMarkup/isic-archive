@@ -25,6 +25,12 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
         }
     },
     render: _.debounce(function () {
+        var self = this;
+
+        d3.select(this.el)
+          .selectAll('img')
+          .remove();
+
         var sel = d3.select(this.el)
             .selectAll('img')
             .data(this.model.get('imageIds'));
@@ -38,10 +44,14 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
         })
             .attr('height', 96)
             .attr('width', 128)
+            .attr('data-toggle', 'tooltip')
+            .attr('data-placement', 'auto')
+            .attr('data-viewport', '#isic-images-imageWall')
             .classed('selected', _.bind(function (d) {
                 return d === this.image.id;
             }, this))
             .on('click', _.bind(function (d) {
+                this.clearTooltips();
                 if (d3.event.shiftKey) {
                     var image = new isic.models.ImageModel({
                         _id: d
@@ -54,6 +64,17 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
                 } else {
                     this.selectImage(d === this.image.id ? null : d)
                 }
-            }, this));
-    }, 50)
+            }, this))
+            .each(function (d) {
+                var imageCollection = self.model.images;
+                var imageModel = imageCollection.find(function (x) { return x.id === d; });
+
+                $(this).tooltip({
+                    title: imageModel.get('name')
+                });
+            });
+    }, 50),
+    clearTooltips: function () {
+        $('[data-toggle="tooltip"]').tooltip('hide');
+    }
 });

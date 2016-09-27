@@ -124,9 +124,9 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         // Pass in filter settings
         pageDetails.filter = this.getFilterAstTree();
         var imagesDeferred = $.Deferred();
-        var images = new isic.collections.ImageCollection();
-        images.once('g:changed', _.bind(function () {
-            this.set('imageIds', images.pluck('_id'));
+        this.images = new isic.collections.ImageCollection();
+        this.images.once('g:changed', _.bind(function () {
+            this.set('imageIds', this.images.pluck('_id'));
             imagesDeferred.resolve();
         }, this)).fetch({
             limit: pageDetails.limit,
