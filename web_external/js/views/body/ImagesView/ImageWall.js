@@ -43,7 +43,7 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
             }, this))
             .on('click', _.bind(function (d) {
                 if (d3.event.shiftKey) {
-                    isic.util.fullscreen(d);
+                    isic.util.imagesModal(d);
                 } else {
                     this.selectImage(d === this.image.id ? null : d)
                 }

@@ -5,7 +5,7 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
     events: {
         'click .button': 'clearSelectedImage',
         'click .openwindow': 'openwindow',
-        'click .fullscreen': 'fullscreen'
+        'click .zoom': 'zoom'
     },
 
     initialize: function (settings) {
@@ -76,9 +76,9 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
         window.open('/api/v1/image/' + this.image.id + '/download?contentDisposition=inline');
     },
 
-    fullscreen: function () {
+    zoom: function () {
       this.clearTooltips();
-      isic.util.fullscreen(this.image.id);
+      isic.util.imagesModal(this.image.id);
     },
 
     clearSelectedImage: function () {

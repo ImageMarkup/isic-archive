@@ -1,5 +1,5 @@
-isic.util.fullscreen = function (id) {
-    $('#focusmodal').html(isic.templates.fullscreen());
+isic.util.imagesModal = function (id) {
+    $('#focusmodal').html(isic.templates.imagesModal());
 
     var img = $('.focusimage');
     var modal = $('#focusmodal');
