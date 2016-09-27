@@ -14,12 +14,12 @@
         tr
           td.isic-image-details-table-section-header(colspan=2) Info
         tr
-          td Dataset
-          td= image.get('dataset')['name']
-        tr
           td Unique ID
           td
             code= image.id
+        tr
+          td Dataset
+          td= image.get('dataset')['name']
         tr
           td Created
           td= created
