@@ -4,6 +4,10 @@
     - var featureset = model.get('featureset')
     table.table.table-condensed.isic-study-results-study-details-table
       tr
+        td Unique ID
+        td
+          code= model.id
+      tr
         td.isic-study-results-study-details-table-label Featureset
         td #{featureset['name']} (version #{featureset['version']})
       tr
