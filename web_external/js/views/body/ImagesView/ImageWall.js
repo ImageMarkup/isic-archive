@@ -26,6 +26,11 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
     },
     render: function () {
         var self = this;
+
+        d3.select(this.el)
+          .selectAll('img')
+          .remove();
+
         var sel = d3.select(this.el)
             .selectAll('img')
             .data(this.model.get('imageIds'));
