@@ -24,7 +24,7 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
             this.image.clear();
         }
     },
-    render: function () {
+    render: _.debounce(function () {
         var self = this;
 
         d3.select(this.el)
@@ -73,7 +73,7 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
                     title: imageModel.get('name')
                 });
             });
-    },
+    }, 50),
     clearTooltips: function () {
         $('[data-toggle="tooltip"]').tooltip('hide');
     }
