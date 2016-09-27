@@ -6,7 +6,7 @@ var imageSize = 128;
 
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
-isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
+isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
     initialize: function (settings) {
         this.image = settings.image;
         this.imageCache = {};
@@ -43,7 +43,14 @@ isic.views.ImagesViewSubViews.ImageWall = Backbone.View.extend({
             }, this))
             .on('click', _.bind(function (d) {
                 if (d3.event.shiftKey) {
-                    isic.util.imagesModal(d);
+                    var image = new isic.models.ImageModel({
+                        _id: d
+                    });
+                    new isic.views.ImageFullscreenWidget({ // eslint-disable-line no-new
+                        el: $('#g-dialog-container'),
+                        model: image,
+                        parentView: this
+                    });
                 } else {
                     this.selectImage(d === this.image.id ? null : d)
                 }

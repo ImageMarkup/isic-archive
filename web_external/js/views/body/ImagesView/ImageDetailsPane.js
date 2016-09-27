@@ -77,8 +77,12 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
     },
 
     zoom: function () {
-      this.clearTooltips();
-      isic.util.imagesModal(this.image.id);
+        this.clearTooltips();
+        new isic.views.ImageFullscreenWidget({ // eslint-disable-line no-new
+            el: $('#g-dialog-container'),
+            model: this.image,
+            parentView: this
+        });
     },
 
     clearSelectedImage: function () {
