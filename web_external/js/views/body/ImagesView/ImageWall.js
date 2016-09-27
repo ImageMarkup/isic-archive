@@ -51,6 +51,7 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
                 return d === this.image.id;
             }, this))
             .on('click', _.bind(function (d) {
+                this.clearTooltips();
                 if (d3.event.shiftKey) {
                     var image = new isic.models.ImageModel({
                         _id: d
