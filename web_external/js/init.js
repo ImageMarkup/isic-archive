@@ -6,7 +6,6 @@ _.extend(isic, {
     models: {},
     collections: {},
     views: {},
-    util: {},
     router: new Backbone.Router(),
     events: girder.events
 });
