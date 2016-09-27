@@ -10,7 +10,7 @@ isic.views.ImageFullscreenWidget = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.imagesModal());
+        this.$el.html(isic.templates.imageFullscreenWidget());
 
         var img = this.$('.focusimage');
 
