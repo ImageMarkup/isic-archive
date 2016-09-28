@@ -119,7 +119,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         this.set({
             limit: pageDetails.limit,
             offset: pageDetails.offset
-        }, {silent: true}); // eslint-disable-line no-silent
+        }, {silent: true}); // eslint-disable-line backbone/no-silent
 
         // Pass in filter settings
         pageDetails.filter = this.getFilterAstTree();
@@ -290,7 +290,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         // event (because the object reference matches).
         // Instead, we silently set the filter (so there
         // aren't two events), and trigger the event manually
-        this.set('filter', filter, {silent: true}); // eslint-disable-line no-silent
+        this.set('filter', filter, {silent: true}); // eslint-disable-line backbone/no-silent
         this.trigger('change:filter');
     },
     clearFilters: function (attrName) {

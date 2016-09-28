@@ -40,10 +40,10 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
             .classed('thumb', true);
 
         sel.attr('src', function (d) {
-            return girder.apiRoot + '/image/' + d + '/thumbnail?width=128';
+            return girder.apiRoot + '/image/' + d + '/thumbnail?width=' + imageSize;
         })
-            .attr('height', 96)
-            .attr('width', 128)
+            .attr('height', imageSize * 0.75)
+            .attr('width', imageSize)
             .attr('data-toggle', 'tooltip')
             .attr('data-placement', 'auto')
             .attr('data-viewport', '#isic-images-imageWall')
@@ -62,7 +62,7 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
                         parentView: this
                     });
                 } else {
-                    this.selectImage(d === this.image.id ? null : d)
+                    this.selectImage(d === this.image.id ? null : d);
                 }
             }, this))
             .each(function (d) {
