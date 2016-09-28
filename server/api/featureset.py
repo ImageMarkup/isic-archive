@@ -17,9 +17,13 @@
 #  limitations under the License.
 ###############################################################################
 
+import cherrypy
+import json
+
 from girder.api import access
-from girder.api.rest import Resource, loadmodel
+from girder.api.rest import Resource, loadmodel, RestException
 from girder.api.describe import Description, describeRoute
+from girder.models.model_base import ValidationException
 
 
 class FeaturesetResource(Resource):
@@ -29,6 +33,7 @@ class FeaturesetResource(Resource):
 
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getFeatureset)
+        self.route('POST', (), self.createFeatureset)
 
     @describeRoute(
         Description('List featuresets.')
@@ -77,3 +82,66 @@ class FeaturesetResource(Resource):
             self.getCurrentUser())
 
         return output
+
+    @describeRoute(
+        Description('Create a featureset.')
+        .param('name', 'The name of the featureset.', paramType='form')
+        .param('version', 'The numeric version of the featureset.',
+               paramType='form')
+        .param('globalFeatures',
+               'The global features of the featureset, as a JSON array.',
+               paramType='form')
+        .param('localFeatures',
+               'The local features of the featureset, as a JSON array.',
+               paramType='form')
+        .errorResponse('Write access was denied on the parent folder.', 403)
+    )
+    @access.user
+    def createFeatureset(self, params):
+        Featureset = self.model('featureset', 'isic_archive')
+        User = self.model('user', 'isic_archive')
+
+        creatorUser = self.getCurrentUser()
+        # For now, study admins will be the ones that can create featuresets
+        User.requireAdminStudy(creatorUser)
+
+        isJson = cherrypy.request.headers['Content-Type'] == 'application/json'
+        if isJson:
+            params = self.getBodyJson()
+        self.requireParams(
+            ['name', 'version', 'globalFeatures', 'localFeatures'],
+            params)
+
+        if not isJson:
+            try:
+                params['globalFeatures'] = json.loads(params['globalFeatures'])
+            except ValueError:
+                raise RestException(
+                    'Invalid JSON passed in globalFeatures parameter.')
+            try:
+                params['localFeatures'] = json.loads(params['localFeatures'])
+            except ValueError:
+                raise RestException(
+                    'Invalid JSON passed in localFeatures parameter.')
+
+        featuresetName = params['name'].strip()
+        if not featuresetName:
+            raise ValidationException('Name must not be empty.', 'name')
+
+        try:
+            featuresetVersion = float(params['version'])
+        except ValueError:
+            raise ValidationException('Version must be a number.', 'name')
+
+        # These will be validated once the new featureset is created
+        globalFeatures = params['globalFeatures']
+        localFeatures = params['localFeatures']
+
+        featureset = Featureset.createFeatureset(
+            name=featuresetName,
+            version=featuresetVersion,
+            creator=creatorUser,
+            globalFeatures=globalFeatures,
+            localFeatures=localFeatures)
+
+        return self.getFeatureset(id=featureset['_id'], params={})
