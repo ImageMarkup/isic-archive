@@ -240,11 +240,14 @@ class StudyResource(Resource):
         Image = self.model('image', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
+        creatorUser = self.getCurrentUser()
+        User.requireAdminStudy(creatorUser)
+
         isJson = cherrypy.request.headers['Content-Type'] == 'application/json'
         if isJson:
             params = self.getBodyJson()
         self.requireParams(
-            ('name', 'featuresetId', 'userIds', 'imageIds'),
+            ['name', 'featuresetId', 'userIds', 'imageIds'],
             params)
 
         if not isJson:
@@ -262,9 +265,6 @@ class StudyResource(Resource):
         studyName = params['name'].strip()
         if not studyName:
             raise ValidationException('Name must not be empty.', 'name')
-
-        creatorUser = self.getCurrentUser()
-        User.requireAdminStudy(creatorUser)
 
         featuresetId = params['featuresetId']
         if not featuresetId:
@@ -285,7 +285,11 @@ class StudyResource(Resource):
         ]
 
         study = Study.createStudy(
-            studyName, creatorUser, featureset, annotatorUsers, images)
+            name=studyName,
+            creatorUser=creatorUser,
+            featureset=featureset,
+            annotatorUsers=annotatorUsers,
+            images=images)
 
         return self.getStudy(id=study['_id'], params={})
 
