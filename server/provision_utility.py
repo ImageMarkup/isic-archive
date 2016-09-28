@@ -112,7 +112,7 @@ def _provisionDefaultFeatureset():
                     'id': 'skin',
                     'name': ['Normal Skin'],
                     'type': 'superpixel'
-                },
+                }
             ]
         )
 
