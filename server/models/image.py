@@ -304,7 +304,7 @@ class Image(ItemModel):
 
     def flagMultiple(self, images, reason, user):
         # TODO: change to use direct permissions on the images
-        if (not user['admin']) or (not any(
+        if (not user['admin']) and (not any(
             self.model('group').findOne(
                 {'name': groupName}
             )['_id'] in user.get('groups', [])
@@ -319,7 +319,7 @@ class Image(ItemModel):
                 'imageId': {'$in': imageIds},
                 'userId': user['_id']
             })
-            if len(imageIds) != len(annotations):
+            if len(imageIds) != annotations.count():
                 raise AccessException(
                     'User does not have permission to flag these images.')
 

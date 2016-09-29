@@ -63,7 +63,7 @@ class User(UserModel):
         return self._isAdminOrMember(user, 'Dataset QC Reviewers')
 
     def requireReviewDataset(self, user):
-        if not self.canCreateDataset(user):
+        if not self.canReviewDataset(user):
             raise AccessException(
                 'Only members of the Dataset QC Reviewers group can review '
                 'datasets.')
