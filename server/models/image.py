@@ -214,7 +214,7 @@ class Image(ItemModel):
         imageId = superpixelsFile.get('itemId')
         if not imageId:
             return
-        image = self.load(superpixelsFile, force=True, exc=False)
+        image = self.load(imageId, force=True, exc=False)
         if not image:
             return
 
