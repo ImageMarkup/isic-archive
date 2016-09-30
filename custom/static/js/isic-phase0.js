@@ -1,14 +1,12 @@
 'use strict';
-/*jslint browser: true*/
 
 var isic_app = angular.module('DermApp');
 
 isic_app.controller('ApplicationController',
     ['$scope', '$location', '$http',
     function ($scope, $location, $http) {
-
-        $("#angular_id").height(window.innerHeight - 80 - 100);
-        $("#gridcontainer").height(window.innerHeight - 100 - 100);
+        $('#angular_id').height(window.innerHeight - 80 - 100);
+        $('#gridcontainer').height(window.innerHeight - 100 - 100);
 
         var url_path_components = $location.path().substring(1).split('/');
         // TODO: check these params exist
@@ -53,7 +51,7 @@ isic_app.controller('ApplicationController',
                         'diagnosis data',
                         'pathology'
                     ].forEach(function (key) {
-                        var value = image.meta.clinical[key] || image.meta.unstructured[key] ;
+                        var value = image.meta.clinical[key] || image.meta.unstructured[key];
                         if (value) {
                             image.diagnosis_strings.push(key + ': ' + value);
                         }
@@ -62,7 +60,6 @@ isic_app.controller('ApplicationController',
                     $scope.image_list.push(image);
                 });
             });
-
         };
         $scope.sync();
 
@@ -101,7 +98,7 @@ isic_app.controller('ApplicationController',
                 flagged: flagged_images,
                 good : images_to_accept
             };
-            $http.post(complete_submit_url, payload).success(function() {
+            $http.post(complete_submit_url, payload).success(function () {
                 if (include_accepted) {
                     if (complete_redirect_url === null) {
                         $scope.sync();
@@ -115,18 +112,13 @@ isic_app.controller('ApplicationController',
                 }
             });
         }
-        $scope.submitAll = function() {
+        $scope.submitAll = function () {
             submit(true);
         };
-        $scope.submitFlagged = function() {
+        $scope.submitFlagged = function () {
             submit(false);
         };
 
         $scope.hover_image = undefined;
-
-        $scope.mouse = {
-            '.' : $scope.nextSet,
-            ',' : $scope.previousSet
-        };
     }
 ]);
