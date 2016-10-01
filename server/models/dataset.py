@@ -52,15 +52,17 @@ class Dataset(FolderModel):
         self.summaryFields = ['_id', 'name', 'updated']
 
     def createDataset(self, name, description, creatorUser):
+        Collection = self.model('collection')
+        Folder = self.model('folder')
         # Look for duplicate names in any of the dataset-containing collections
-        datasetCollectionIds = self.model('collection').find({
+        datasetCollectionIds = Collection.find({
             'name': {'$in': [
                 'Pre-review Images',
                 'Flagged Images',
                 'Lesion Images'
             ]}
         }).distinct('_id')
-        if self.model('folder').find({
+        if Folder.find({
             'name': name,
             'parentId': {'$in': datasetCollectionIds}
         }).count():
@@ -89,6 +91,7 @@ class Dataset(FolderModel):
 
     def childImages(self, dataset, limit=0, offset=0, sort=None, filters=None,
                     **kwargs):
+        Image = self.model('image', 'isic_archive')
         if not filters:
             filters = {}
 
@@ -97,13 +100,14 @@ class Dataset(FolderModel):
         }
         q.update(filters)
 
-        return self.model('image', 'isic_archive').find(
+        return Image.find(
             q, limit=limit, offset=offset, sort=sort, **kwargs)
 
     def _findQueryFilter(self, query):
+        Collection = self.model('collection')
         # assumes collection has been created by provision_utility
         # TODO: cache this value
-        datasetCollection = self.model('collection').findOne({
+        datasetCollection = Collection.findOne({
             'name': 'Lesion Images'}, fields={'_id': 1})
 
         datasetQuery = {
@@ -147,18 +151,20 @@ class Dataset(FolderModel):
         images. The images are extracted to a new folder in the "Pre-review
         Images" collection and then processed.
         """
+        Folder = self.model('folder')
+        Item = self.model('item')
         if not uploadFolder:
             raise ValidationException(
                 'No files were uploaded.', 'uploadFolder')
 
-        zipFileItems = [f for f in self.model('folder').childItems(uploadFolder)
+        zipFileItems = [f for f in Folder.childItems(uploadFolder)
                         if mimetypes.guess_type(f['name'], strict=False)[0] in
                         ZIP_FORMATS]
         if not zipFileItems:
             raise ValidationException(
                 'No .zip files were uploaded.', 'uploadFolder')
 
-        csvFileItems = [f for f in self.model('folder').childItems(uploadFolder)
+        csvFileItems = [f for f in Folder.childItems(uploadFolder)
                         if mimetypes.guess_type(f['name'], strict=False)[0] in
                         CSV_FORMATS]
         if not csvFileItems:
@@ -178,14 +184,14 @@ class Dataset(FolderModel):
 
         # Process zip files
         for item in zipFileItems:
-            zipFiles = self.model('item').childFiles(item)
+            zipFiles = Item.childFiles(item)
             for zipFile in zipFiles:
                 # TODO: gracefully clean up after exceptions in handleZip
                 handleZip(datasetFolder, user, zipFile)
 
         # Process metadata in CSV files
         for item in csvFileItems:
-            csvFiles = self.model('item').childFiles(item)
+            csvFiles = Item.childFiles(item)
             for csvFile in csvFiles:
                 handleCsv(datasetFolder, user, csvFile)
 

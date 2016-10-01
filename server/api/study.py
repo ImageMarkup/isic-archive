@@ -251,16 +251,12 @@ class StudyResource(Resource):
             params)
 
         if not isJson:
-            try:
-                params['userIds'] = json.loads(params['userIds'])
-            except ValueError:
-                raise RestException('Invalid JSON passed in userIds parameter.')
-            try:
-                params['imageIds'] = json.loads(
-                    params['imageIds'])
-            except ValueError:
-                raise RestException(
-                    'Invalid JSON passed in imageIds parameter.')
+            for field in ['userIds', 'imageIds']:
+                try:
+                    params[field] = json.loads(params[field])
+                except ValueError:
+                    raise RestException(
+                        'Invalid JSON passed in %s parameter.' % field)
 
         studyName = params['name'].strip()
         if not studyName:
