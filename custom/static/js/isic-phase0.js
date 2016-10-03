@@ -8,41 +8,21 @@ isic_app.controller('ApplicationController',
         $('#angular_id').height(window.innerHeight - 80 - 100);
         $('#gridcontainer').height(window.innerHeight - 100 - 100);
 
-        var url_path_components = $location.path().substring(1).split('/');
-        // TODO: check these params exist
-        $scope.gallery_type = url_path_components[0];
-        $scope.gallery_id = url_path_components[1];
-
-        var folder_url = '/api/v1/folder/' + $scope.gallery_id;
-        var images_url = '/api/v1/item?limit=50&offset=0&folderId=' + $scope.gallery_id;
-
-        var complete_submit_url;
-        var complete_redirect_url;
-        if ($scope.gallery_type === 'qc') {
-            complete_submit_url = '/api/v1/uda/task/qc/' + $scope.gallery_id + '/complete';
-            // complete_redirect_url = '/#tasks';
-            complete_redirect_url = '/uda/task/p0/' + $scope.gallery_id;
-        }
-        else if ($scope.gallery_type === 'select') {
-            complete_submit_url = '/api/v1/uda/task/select/' + $scope.gallery_id;
-            complete_redirect_url = null;
-        }
-
         $scope.sync = function () {
+            var url_path_components = $location.path().substring(1).split('/');
+            // TODO: check these params exist
+            var dataset_id = url_path_components[1];
+
             // get folder details for name and times
-            $http.get(folder_url).success(function (data) {
-                $scope.folder_details = data;
+            var dataset_url = '/api/v1/folder/' + dataset_id;
+            $http.get(dataset_url).success(function (data) {
+                $scope.dataset = data;
             });
 
-            // images in folder
-            $scope.flagged_list = {};
+            $scope.images = [];
+            var images_url = '/api/v1/dataset/' + dataset_id + '/review?limit=50';
             $http.get(images_url).success(function (data) {
-                $scope.image_list = [];
-                data.forEach(function (image) {
-                    if (image.name.endsWith('.csv')) {
-                        return;
-                    }
-
+                $scope.images = data.map(function (image) {
                     image.thumbnail = '/api/v1/image/' + image._id + '/download?contentDisposition=inline';
 
                     image.diagnosis_strings = [];
@@ -57,56 +37,40 @@ isic_app.controller('ApplicationController',
                         }
                     });
 
-                    $scope.image_list.push(image);
+                    image.flagged = false;
+
+                    return image;
                 });
             });
         };
         $scope.sync();
 
-        $scope.isFlagged = function (index) {
-            return $scope.flagged_list.hasOwnProperty(index);
-        };
-
-        $scope.toggleFlagged = function (index) {
-            var t = $scope.flagged_list[index];
-
-            if (t === undefined) {
-                $scope.flagged_list[index] = $scope.image_list[index];
-            } else {
-                delete $scope.flagged_list[index];
-            }
+        $scope.toggleFlagged = function (image) {
+            image.flagged = !image.flagged;
         };
 
         function submit(include_accepted) {
-            var flagged_images = [];
-            for (var image_index in $scope.flagged_list) {
-                if ($scope.flagged_list.hasOwnProperty(image_index)) {
-                    flagged_images.push($scope.flagged_list[image_index]._id);
+            var accepted_image_ids = [];
+            var flagged_image_ids = [];
+            $scope.images.forEach(function (image) {
+                if (image.flagged) {
+                    flagged_image_ids.push(image._id);
+                } else {
+                    accepted_image_ids.push(image._id);
                 }
-            }
+            });
 
-            var images_to_accept = [];
-            if (include_accepted) {
-                $scope.image_list.forEach(function (image, image_index) {
-                    if (!$scope.flagged_list.hasOwnProperty(image_index)) {
-                        images_to_accept.push($scope.image_list[image_index]._id);
-                    }
-                });
-            }
-
+            var complete_submit_url = '/api/v1/dataset/' + $scope.dataset._id + '/review';
             var payload = {
-                flagged: flagged_images,
-                good : images_to_accept
+                accepted: include_accepted ? accepted_image_ids : [],
+                flagged: flagged_image_ids
             };
             $http.post(complete_submit_url, payload).success(function () {
                 if (include_accepted) {
-                    if (complete_redirect_url === null) {
-                        $scope.sync();
-                    } else {
-                        window.location.replace(complete_redirect_url);
-                    }
-                }
-                else {
+                    // var complete_redirect_url = '/#tasks';
+                    var complete_redirect_url = '/api/v1/task/me/review/redirect?datasetId=' + $scope.dataset._id;
+                    window.location.replace(complete_redirect_url);
+                } else {
                     // TODO: disable buttons while request is pending
                     $scope.sync();
                 }

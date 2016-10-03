@@ -40,7 +40,6 @@ class ImageResource(Resource):
         self.route('GET', ('histogram',), self.histogram)
         self.histogramUtility = HistogramUtility()
 
-        self.route('POST', (':id', 'flag'), self.flag)
         self.route('POST', (':id', 'segment'), self.doSegmentation)
 
     @describeRoute(
@@ -189,22 +188,6 @@ class ImageResource(Resource):
         user = self.getCurrentUser()
 
         return self.histogramUtility.getHistograms(user, params)
-
-    @describeRoute(
-        Description('Flag an image with a problem.')
-        .param('id', 'The ID of the image.', paramType='path')
-        .errorResponse('ID was invalid.')
-    )
-    @access.user
-    @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
-    def flag(self, image, params):
-        bodyJson = self.getBodyJson()
-        self.requireParams(('reason',), bodyJson)
-
-        self.model('image', 'isic_archive').flag(
-            image, bodyJson['reason'], self.getCurrentUser())
-
-        return {'status': 'success'}
 
     @describeRoute(
         Description('Run and return a new semi-automated segmentation.')

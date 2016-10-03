@@ -17,13 +17,15 @@
 #  limitations under the License.
 ###############################################################################
 
+import json
+
 import cherrypy
 
 from girder.api import access
-from girder.api.rest import Resource, loadmodel
+from girder.api.rest import Resource, loadmodel, RestException
 from girder.api.describe import Description, describeRoute
-from girder.constants import AccessType
-from girder.models.model_base import ValidationException
+from girder.constants import AccessType, SortDir
+from girder.models.model_base import AccessException, ValidationException
 
 
 class DatasetResource(Resource):
@@ -34,6 +36,8 @@ class DatasetResource(Resource):
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getDataset)
         self.route('POST', (), self.ingestDataset)
+        self.route('GET', (':id', 'review'), self.getReviewImages)
+        self.route('POST', (':id', 'review'), self.submitReviewImages)
 
     @describeRoute(
         Description('Return a list of lesion image datasets.')
@@ -143,3 +147,93 @@ class DatasetResource(Resource):
             uploadFolder=uploadFolder, user=user, name=name,
             description=description, license=licenseValue, signature=signature,
             anonymous=anonymous, attribution=attribution)
+
+    @describeRoute(
+        Description('Get a list of images in this dataset to QC Review.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('limit', 'Result set size limit.',
+               default=50, required=False, dataType='int')
+        .errorResponse('ID was invalid.')
+    )
+    @access.user
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
+    def getReviewImages(self, dataset, params):
+        Dataset = self.model('dataset', 'isic_archive')
+        Folder = self.model('folder')
+        Image = self.model('image', 'isic_archive')
+        User = self.model('user', 'isic_archive')
+
+        user = self.getCurrentUser()
+        User.requireReviewDataset(user)
+
+        prereviewFolder = Dataset.prereviewFolder(dataset)
+        if not (prereviewFolder and Folder.hasAccess(
+                prereviewFolder, user=user, level=AccessType.READ)):
+            raise AccessException(
+                'User does not have access to any Pre-review images for this '
+                'dataset.')
+
+        limit = int(params.get('limit', 50))
+
+        output = [
+            {
+                field: image[field]
+                for field in
+                Image.summaryFields + ['description', 'meta']
+            }
+            for image in
+            Image.find(
+                {'folderId': prereviewFolder['_id']},
+                limit=limit, sort=[('lowerName', SortDir.ASCENDING)]
+            )
+        ]
+        for image in output:
+            del image['meta']['originalFilename']
+
+        return output
+
+    @describeRoute(
+        Description('Do a QC Review of images within a dataset.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('accepted', 'The IDs of accepted images, as a JSON array.',
+               paramType='form')
+        .param('flagged', 'The IDs of flagged images, as a JSON array.',
+               paramType='form')
+        .errorResponse('ID was invalid.')
+    )
+    @access.user
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
+    def submitReviewImages(self, dataset, params):
+        Dataset = self.model('dataset', 'isic_archive')
+        Image = self.model('image', 'isic_archive')
+        User = self.model('user', 'isic_archive')
+
+        user = self.getCurrentUser()
+        User.requireReviewDataset(user)
+
+        isJson = cherrypy.request.headers['Content-Type'] == 'application/json'
+        if isJson:
+            params = self.getBodyJson()
+        self.requireParams(['accepted', 'flagged'], params)
+
+        if not isJson:
+            for field in ['accepted', 'flagged']:
+                try:
+                    params[field] = json.loads(params[field])
+                except ValueError:
+                    raise RestException(
+                        'Invalid JSON passed in %s parameter.' % field)
+
+        acceptedImages = [
+            Image.load(imageId, user=user, level=AccessType.READ, exc=True)
+            for imageId in params['accepted']
+        ]
+        flaggedImages = [
+            Image.load(imageId, user=user, level=AccessType.READ, exc=True)
+            for imageId in params['flagged']
+        ]
+
+        Dataset.reviewImages(dataset, acceptedImages, flaggedImages, user)
+
+        # TODO: return value?
+        return {'status': 'success'}

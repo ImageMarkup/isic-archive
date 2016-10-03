@@ -140,35 +140,38 @@ def _provisionImages():
         )
         Group.removeUser(reviewerGroup, getAdminUser())
 
-    unreviewedCollection = Collection.createCollection(
-        name='Pre-review Images',
-        creator=getAdminUser(),
-        description='Newly uploaded datasets, awaiting QC review',
-        public=False,
-        reuseExisting=True
-    )
-    Collection.setGroupAccess(
-        doc=unreviewedCollection,
-        group=reviewerGroup,
-        # TODO: make this a special access level
-        level=AccessType.WRITE,
-        save=True
-    )
+    if not Collection.findOne({'name': 'Flagged Images'}):
+        flaggedCollection = Collection.createCollection(
+            name='Flagged Images',
+            creator=getAdminUser(),
+            description='Images that have been flagged for any reason',
+            public=False,
+            reuseExisting=False
+        )
+        flaggedCollection = Collection.setAccessList(
+            doc=flaggedCollection,
+            access={},
+            save=False
+        )
+        Collection.setGroupAccess(
+            doc=flaggedCollection,
+            group=reviewerGroup,
+            # TODO: make this a special access level
+            level=AccessType.READ,
+            save=True
+        )
 
-    Collection.createCollection(
-        name='Flagged Images',
-        creator=getAdminUser(),
-        description='Images that have been flagged for any reason',
-        public=False,
-        reuseExisting=True
-    )
-
-    Collection.createCollection(
+    imageCollection = Collection.createCollection(
         name='Lesion Images',
         creator=getAdminUser(),
         description='All public lesion image datasets',
         public=True,
         reuseExisting=True
+    )
+    Collection.setAccessList(
+        doc=imageCollection,
+        access={},
+        save=True
     )
 
 
@@ -198,14 +201,6 @@ def _provisionStudies():
     Collection = ModelImporter.model('collection')
     Group = ModelImporter.model('group')
 
-    studiesCollection = Collection.createCollection(
-        name='Annotation Studies',
-        creator=getAdminUser(),
-        description='Clinical feature annotation studies',
-        public=True,
-        reuseExisting=True
-    )
-
     studyAdminGroup = Group.findOne({'name': 'Study Administrators'})
     if not studyAdminGroup:
         studyAdminGroup = Group.createGroup(
@@ -216,6 +211,18 @@ def _provisionStudies():
         )
         Group.removeUser(studyAdminGroup, getAdminUser())
 
+    studiesCollection = Collection.createCollection(
+        name='Annotation Studies',
+        creator=getAdminUser(),
+        description='Clinical feature annotation studies',
+        public=True,
+        reuseExisting=True
+    )
+    studiesCollection = Collection.setAccessList(
+        doc=studiesCollection,
+        access={},
+        save=False
+    )
     Collection.setGroupAccess(
         doc=studiesCollection,
         group=studyAdminGroup,

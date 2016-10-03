@@ -17,7 +17,6 @@
 #  limitations under the License.
 ###############################################################################
 
-import datetime
 import mimetypes
 import os
 import re
@@ -25,7 +24,6 @@ import six
 
 from girder import events
 from girder.constants import AccessType, TokenScope
-from girder.models.model_base import AccessException
 from girder.models.item import Item as ItemModel
 from girder.plugins.worker import utils as workerUtils
 
@@ -53,13 +51,13 @@ class Image(ItemModel):
                     'onSuperpixelsUpload', self.onSuperpixelsUpload)
 
     def createImage(self, imageDataStream, imageDataSize, originalName,
-                    dataset, creator):
+                    parentFolder, creator):
         newIsicId = self.model('setting').get(
             constants.PluginSettings.MAX_ISIC_ID, default=-1) + 1
         image = self.createItem(
             name='ISIC_%07d' % newIsicId,
             creator=creator,
-            folder=dataset,
+            folder=parentFolder,
             description=''
         )
         self.model('setting').set(
@@ -108,8 +106,9 @@ class Image(ItemModel):
         User = self.model('user', 'isic_archive')
 
         user = User.load(image['creatorId'], force=True, exc=True)
+        # Use admin user, to ensure that worker always has access
         token = Token.createToken(
-            user=user,
+            user=getAdminUser(),
             days=0.25,  # 6 hours
             scope=[TokenScope.DATA_READ, TokenScope.DATA_WRITE])
 
@@ -124,8 +123,9 @@ class Image(ItemModel):
         SUPERPIXEL_VERSION = 3.0
 
         user = User.load(image['creatorId'], force=True, exc=True)
+        # Use admin user, to ensure that worker always has access
         token = Token.createToken(
-            user=user,
+            user=getAdminUser(),
             days=0.25,  # 6 hours
             scope=[TokenScope.DATA_READ, TokenScope.DATA_WRITE])
 
@@ -271,11 +271,15 @@ class Image(ItemModel):
         return superpixelsLabelData
 
     def _findQueryFilter(self, query):
+        Collection = self.model('collection')
         # assumes collection has been created by provision_utility
         # TODO: cache this value
-        imageCollection = self.model('collection').findOne({
-            'name': 'Lesion Images'})
+        imageCollection = Collection.findOne(
+            {'name': 'Lesion Images'},
+            fields={'_id': 1}
+        )
 
+        # TODO: this will also include Pre-review images; should it?
         datasetQuery = {
             'baseParentId': imageCollection['_id']
         }
@@ -288,74 +292,8 @@ class Image(ItemModel):
         return super(Image, self).find(imageQuery, **kwargs)
 
     def findOne(self, query=None, **kwargs):
-        if query and '_id' in query:
-            # Allow loading images directly by id from other collections
-            # TODO: this actually allows any item to be loaded as an image,
-            # which is not intended
-            # TODO: remove this, once all images are in the "Lesion Images"
-            # collection
-            imageQuery = query
-        else:
-            imageQuery = self._findQueryFilter(query)
+        imageQuery = self._findQueryFilter(query)
         return super(Image, self).findOne(imageQuery, **kwargs)
-
-    def flag(self, image, reason, user):
-        self.flagMultiple([image], reason, user)
-
-    def flagMultiple(self, images, reason, user):
-        # TODO: change to use direct permissions on the images
-        if (not user['admin']) and (not any(
-            self.model('group').findOne(
-                {'name': groupName}
-            )['_id'] in user.get('groups', [])
-            for groupName in
-            ['Dataset QC Reviewers', 'Segmentation Novices',
-             'Segmentation Experts']
-        )):
-            # Check if all images are part of annotation studies that this user
-            #   is part of
-            imageIds = list(set(image['_id'] for image in images))
-            annotations = self.model('annotation', 'isic_archive').find({
-                'imageId': {'$in': imageIds},
-                'userId': user['_id']
-            })
-            if len(imageIds) != annotations.count():
-                raise AccessException(
-                    'User does not have permission to flag these images.')
-
-        prereviewFolders = [
-            self.model('folder').load(prereviewFolder, force=True, exc=True)
-            for prereviewFolder in
-            set(image['folderId'] for image in images)
-        ]
-
-        flaggedCollection = self.model('collection').findOne(
-            {'name': 'Flagged Images'})
-
-        datasetFlaggedFolders = {
-            prereviewFolder['_id']: self.model('folder').createFolder(
-                parent=flaggedCollection,
-                name=prereviewFolder['name'],
-                description='',
-                parentType='collection',
-                public=None,
-                creator=getAdminUser(),
-                allowRename=False,
-                reuseExisting=True
-            )
-            for prereviewFolder in prereviewFolders
-        }
-
-        flagMetadata = {
-            'flaggedUserId': user['_id'],
-            'flaggedTime': datetime.datetime.utcnow(),
-            'flaggedReason': reason,
-        }
-        for image in images:
-            self.model('item').setMetadata(image, flagMetadata)
-            # TODO: deal with any existing studies with this image
-            self.model('item').move(image,
-                                    datasetFlaggedFolders[image['folderId']])
 
     def validate(self, doc):
         # TODO: implement

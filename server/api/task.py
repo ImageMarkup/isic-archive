@@ -31,12 +31,101 @@ class TaskResource(Resource):
         super(TaskResource, self).__init__()
         self.resourceName = 'task'
 
+        self.route('GET', ('me', 'review'), self.getReviewTasks)
+        self.route('GET', ('me', 'review', 'redirect'),
+                   self.redirectReviewTask)
         self.route('GET', ('me', 'segmentation'), self.getSegmentationTasks)
         self.route('GET', ('me', 'segmentation', 'redirect'),
                    self.redirectSegmentationTask)
         self.route('GET', ('me', 'annotation'), self.getAnnotationTasks)
         self.route('GET', ('me', 'annotation', 'redirect'),
                    self.redirectAnnotationTask)
+
+    @describeRoute(
+        Description('Get the current user\'s QC review tasks.')
+        .responseClass('Task')
+    )
+    @access.user
+    def getReviewTasks(self, params):
+        Collection = self.model('collection')
+        Dataset = self.model('dataset', 'isic_archive')
+        Folder = self.model('folder')
+        Image = self.model('image', 'isic_archive')
+        User = self.model('user', 'isic_archive')
+
+        user = self.getCurrentUser()
+        # TODO: remove "try" once the client doesn't always call this endpoint
+        try:
+            User.requireReviewDataset(user)
+        except AccessException:
+            return []
+
+        results = []
+        for prereviewFolder in Folder.find({
+            'name': 'Pre-review',
+            'baseParentId': Collection.findOne({'name': 'Lesion Images'})['_id']
+        }):
+            if not Folder.hasAccess(
+                    prereviewFolder, user=user, level=AccessType.READ):
+                continue
+
+            count = Image.find({'folderId': prereviewFolder['_id']}).count()
+            if not count:
+                continue
+
+            dataset = Dataset.load(
+                prereviewFolder['parentId'],
+                user=user, level=AccessType.READ, exc=False)
+            if not dataset:
+                # This should not typically occur
+                continue
+
+            results.append({
+                'dataset': {
+                    '_id': dataset['_id'],
+                    'name': dataset['name'],
+                },
+                'count': count
+            })
+
+        results.sort(key=lambda task: task['dataset']['name'])
+        return results
+
+    @describeRoute(
+        Description('Redirect to a QC review task.')
+        .param('datasetId',
+               'An ID for the dataset to get a QC review task for.',
+               required=True)
+    )
+    @access.cookie
+    @access.user
+    def redirectReviewTask(self, params):
+        Dataset = self.model('dataset', 'isic_archive')
+        Folder = self.model('folder')
+        Image = self.model('image', 'isic_archive')
+        User = self.model('user', 'isic_archive')
+
+        self.requireParams(['datasetId'], params)
+
+        user = self.getCurrentUser()
+        User.requireReviewDataset(user)
+
+        dataset = Dataset.load(
+            params['datasetId'], user=user, level=AccessType.READ, exc=True)
+
+        prereviewFolder = Dataset.prereviewFolder(dataset)
+        if not (prereviewFolder and Folder.hasAccess(
+                prereviewFolder, user=user, level=AccessType.READ)):
+            raise AccessException(
+                'User does not have access to any Pre-review images for this '
+                'dataset.')
+
+        if not Image.find({'folderId': prereviewFolder['_id']}).count():
+            raise RestException(
+                'No Pre-review images are available for this dataset.')
+
+        reviewUrl = '/uda/gallery#/qc/%s' % dataset['_id']
+        raise cherrypy.HTTPRedirect(reviewUrl, status=307)
 
     def _pipeline1AllImages(self, user):
         Dataset = self.model('dataset', 'isic_archive')
@@ -176,7 +265,7 @@ class TaskResource(Resource):
         user = self.getCurrentUser()
 
         dataset = Dataset.load(
-            id=params['datasetId'], user=user, level=AccessType.READ, exc=True)
+            params['datasetId'], user=user, level=AccessType.READ, exc=True)
 
         userSkill = User.getSegmentationSkill(user)
         if userSkill == Segmentation.Skill.EXPERT:
@@ -251,7 +340,7 @@ class TaskResource(Resource):
         user = self.getCurrentUser()
 
         study = Study.load(
-            id=params['studyId'], user=user, level=AccessType.READ, exc=True)
+            params['studyId'], user=user, level=AccessType.READ, exc=True)
         try:
             activeAnnotations = Study.childAnnotations(
                 study=study,
