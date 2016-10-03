@@ -243,7 +243,8 @@ class StudyResource(Resource):
         creatorUser = self.getCurrentUser()
         User.requireAdminStudy(creatorUser)
 
-        isJson = cherrypy.request.headers['Content-Type'] == 'application/json'
+        isJson = cherrypy.request.headers['Content-Type'].split(';')[0] == \
+            'application/json'
         if isJson:
             params = self.getBodyJson()
         self.requireParams(
@@ -251,16 +252,12 @@ class StudyResource(Resource):
             params)
 
         if not isJson:
-            try:
-                params['userIds'] = json.loads(params['userIds'])
-            except ValueError:
-                raise RestException('Invalid JSON passed in userIds parameter.')
-            try:
-                params['imageIds'] = json.loads(
-                    params['imageIds'])
-            except ValueError:
-                raise RestException(
-                    'Invalid JSON passed in imageIds parameter.')
+            for field in ['userIds', 'imageIds']:
+                try:
+                    params[field] = json.loads(params[field])
+                except ValueError:
+                    raise RestException(
+                        'Invalid JSON passed in %s parameter.' % field)
 
         studyName = params['name'].strip()
         if not studyName:
@@ -309,7 +306,8 @@ class StudyResource(Resource):
 
         # TODO: make the loadmodel decorator use AccessType.WRITE,
         # once permissions work
-        if cherrypy.request.headers['Content-Type'] == 'application/json':
+        if cherrypy.request.headers['Content-Type'].split(';')[0] == \
+                'application/json':
             params = self.getBodyJson()
         self.requireParams('userId', params)
 

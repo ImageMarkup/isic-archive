@@ -31,7 +31,6 @@ from girder.utility.webroot import WebrootBase
 from . import constants
 from . import api
 from .provision_utility import initialSetup, onUserCreated
-from .task_utility import UDAResource, TaskHandler
 
 
 class Webroot(WebrootBase):
@@ -144,28 +143,20 @@ def load(info):
         pass
     info['serverRoot'].uda = Root()
 
-    # "/uda/gallery" -> returns a single page gallery
     info['serverRoot'].uda.gallery = staticFile(
         os.path.join(info['pluginRootDir'], 'custom', 'gallery.html'))
 
-    # "/uda/task" -> redirects to appropriate task view for the user
-    info['serverRoot'].uda.task = TaskHandler()
-
-    # "/uda/annotator/:id" -> the reconfigurable image annotator
-    info['serverRoot'].uda.annotate = staticFile(
+    info['serverRoot'].uda.segment = staticFile(
         os.path.join(info['pluginRootDir'], 'custom', 'phase1.html'))
 
-    # "/uda/map/:id"
-    info['serverRoot'].uda.map = staticFile(
+    info['serverRoot'].uda.annotate = staticFile(
         os.path.join(info['pluginRootDir'], 'custom', 'phase2.html'))
 
     # add api routes
     # remove docs for default Girder API, to simplify page
     clearRouteDocs()
 
-    info['apiRoot'].uda = UDAResource()
-
-    # TODO: nest these under a "/isic" path
+    # TODO: nest these under a "/isic" path?
     info['apiRoot'].annotation = api.AnnotationResource()
     info['apiRoot'].dataset = api.DatasetResource()
     info['apiRoot'].featureset = api.FeaturesetResource()

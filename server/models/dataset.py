@@ -17,13 +17,19 @@
 #  limitations under the License.
 ###############################################################################
 
+import datetime
+import itertools
 import mimetypes
+import os
 
 from girder.constants import AccessType
 from girder.models.folder import Folder as FolderModel
-from girder.models.model_base import ValidationException
+from girder.models.model_base import GirderException, ValidationException
+from girder.models.notification import ProgressState
+from girder.utility import assetstore_utilities
+from girder.utility.progress import ProgressContext
 
-from ..upload import handleCsv, handleZip
+from ..upload import handleCsv, ZipFileOpener
 
 ZIP_FORMATS = [
     'multipart/x-zip',
@@ -52,43 +58,42 @@ class Dataset(FolderModel):
         self.summaryFields = ['_id', 'name', 'updated']
 
     def createDataset(self, name, description, creatorUser):
-        # Look for duplicate names in any of the dataset-containing collections
-        datasetCollectionIds = self.model('collection').find({
-            'name': {'$in': [
-                'Pre-review Images',
-                'Flagged Images',
-                'Lesion Images'
-            ]}
-        }).distinct('_id')
-        if self.model('folder').find({
-            'name': name,
-            'parentId': {'$in': datasetCollectionIds}
-        }).count():
-            raise ValidationException(
-                'A dataset with this name already exists.')
+        Collection = self.model('collection')
+        Group = self.model('group')
 
+        # This will raise an exception if a duplicate name exists
         datasetFolder = self.createFolder(
-            parent=self.model('collection').findOne({
-                'name': 'Pre-review Images'}),
+            parent=Collection.findOne({'name': 'Lesion Images'}),
             name=name,
             description=description,
             parentType='collection',
-            creator=creatorUser
-        )
-        # The uploader may already have greater access via inheritance from
-        # Reviewers group, which should not be overwritten
-        if not self.hasAccess(datasetFolder, creatorUser, AccessType.READ):
-            datasetFolder = self.setUserAccess(
-                doc=datasetFolder,
-                user=creatorUser,
-                # TODO: make admin
-                level=AccessType.READ,
-                save=False
-            )
+            creator=creatorUser,
+            public=False,
+            allowRename=False,
+            reuseExisting=False)
+        # Clear all inherited accesses
+        datasetFolder = self.setAccessList(
+            doc=datasetFolder,
+            access={},
+            save=False)
+        # Allow the creator to read
+        datasetFolder = self.setUserAccess(
+            doc=datasetFolder,
+            user=creatorUser,
+            level=AccessType.READ,
+            save=False)
+        # Allow reviewers to admin (so they can delete the dataset)
+        datasetFolder = self.setGroupAccess(
+            doc=datasetFolder,
+            group=Group.findOne({'name': 'Dataset QC Reviewers'}),
+            level=AccessType.ADMIN,
+            save=False)
+
         return self.save(datasetFolder)
 
     def childImages(self, dataset, limit=0, offset=0, sort=None, filters=None,
                     **kwargs):
+        Image = self.model('image', 'isic_archive')
         if not filters:
             filters = {}
 
@@ -97,14 +102,17 @@ class Dataset(FolderModel):
         }
         q.update(filters)
 
-        return self.model('image', 'isic_archive').find(
+        return Image.find(
             q, limit=limit, offset=offset, sort=sort, **kwargs)
 
     def _findQueryFilter(self, query):
+        Collection = self.model('collection')
         # assumes collection has been created by provision_utility
         # TODO: cache this value
-        datasetCollection = self.model('collection').findOne({
-            'name': 'Lesion Images'}, fields={'_id': 1})
+        datasetCollection = Collection.findOne(
+            {'name': 'Lesion Images'},
+            fields={'_id': 1}
+        )
 
         datasetQuery = {
             'parentId': datasetCollection['_id']
@@ -144,21 +152,24 @@ class Dataset(FolderModel):
         """
         Ingest an uploaded dataset. This upload folder is expected to contain a
         .zip file of images and a .csv file that contains metadata about the
-        images. The images are extracted to a new folder in the "Pre-review
-        Images" collection and then processed.
+        images. The images are extracted to a new "Pre-review" folder within a
+        new dataset folder.
         """
+        Folder = self.model('folder')
+        Item = self.model('item')
+
         if not uploadFolder:
             raise ValidationException(
                 'No files were uploaded.', 'uploadFolder')
 
-        zipFileItems = [f for f in self.model('folder').childItems(uploadFolder)
+        zipFileItems = [f for f in Folder.childItems(uploadFolder)
                         if mimetypes.guess_type(f['name'], strict=False)[0] in
                         ZIP_FORMATS]
         if not zipFileItems:
             raise ValidationException(
                 'No .zip files were uploaded.', 'uploadFolder')
 
-        csvFileItems = [f for f in self.model('folder').childItems(uploadFolder)
+        csvFileItems = [f for f in Folder.childItems(uploadFolder)
                         if mimetypes.guess_type(f['name'], strict=False)[0] in
                         CSV_FORMATS]
         if not csvFileItems:
@@ -166,35 +177,143 @@ class Dataset(FolderModel):
                 'No .csv files were uploaded.', 'uploadFolder')
 
         # Create dataset folder
-        datasetFolder = self.createDataset(name, description, user)
+        dataset = self.createDataset(name, description, user)
 
         # Set dataset license agreement metadata
-        datasetFolder = self.setMetadata(datasetFolder, {
+        dataset = self.setMetadata(dataset, {
             'signature': signature,
             'anonymous': anonymous,
             'attribution': attribution,
             'license': license
         })
 
+        prereviewFolder = Folder.createFolder(
+            parent=dataset,
+            name='Pre-review',
+            parentType='folder',
+            creator=user,
+            public=False)
+        prereviewFolder = Folder.copyAccessPolicies(
+            dataset, prereviewFolder, save=True)
+
         # Process zip files
         for item in zipFileItems:
-            zipFiles = self.model('item').childFiles(item)
+            zipFiles = Item.childFiles(item)
             for zipFile in zipFiles:
                 # TODO: gracefully clean up after exceptions in handleZip
-                handleZip(datasetFolder, user, zipFile)
+                self._handleZip(prereviewFolder, user, zipFile)
 
         # Process metadata in CSV files
         for item in csvFileItems:
-            csvFiles = self.model('item').childFiles(item)
+            csvFiles = Item.childFiles(item)
             for csvFile in csvFiles:
-                handleCsv(datasetFolder, user, csvFile)
+                handleCsv(dataset, prereviewFolder, user, csvFile)
 
+        # TODO: remove this entirely, and report CSV errors another way
         # Move metadata item to dataset folder. This preserves any parsing
         # errors that were added to the item for review.
-        for item in csvFileItems:
-            self.model('item').move(item, datasetFolder)
+        # for item in csvFileItems:
+        #     Item.move(item, dataset)
 
         # Delete uploaded files
-        # self.model('folder').clean(uploadFolder)
+        # Folder.clean(uploadFolder)
 
-        return datasetFolder
+        return dataset
+
+    def _handleZip(self, prereviewFolder, user, zipFile):
+        Assetstore = self.model('assetstore')
+        Image = self.model('image', 'isic_archive')
+
+        # Get full path of zip file in assetstore
+        assetstore = Assetstore.getCurrent()
+        assetstore_adapter = assetstore_utilities.getAssetstoreAdapter(
+            assetstore)
+        fullPath = assetstore_adapter.fullPath(zipFile)
+
+        with ZipFileOpener(fullPath) as (fileList, fileCount):
+            with ProgressContext(
+                    on=True,
+                    user=user,
+                    title='Processing "%s"' % zipFile['name'],
+                    total=fileCount,
+                    state=ProgressState.ACTIVE,
+                    current=0) as progress:
+                for originalFilePath, originalFileRelpath in fileList:
+                    originalFileName = os.path.basename(originalFileRelpath)
+
+                    progress.update(
+                        increment=1,
+                        message='Extracting "%s"' % originalFileName)
+
+                    with open(originalFilePath, 'rb') as originalFileStream:
+                        Image.createImage(
+                            imageDataStream=originalFileStream,
+                            imageDataSize=os.path.getsize(originalFilePath),
+                            originalName=originalFileName,
+                            parentFolder=prereviewFolder,
+                            creator=user
+                        )
+
+    def prereviewFolder(self, dataset):
+        Folder = self.model('folder')
+        return Folder.findOne({
+            'name': 'Pre-review',
+            'parentId': dataset['_id']
+        })
+
+    def reviewImages(self, dataset, acceptedImages, flaggedImages, user):
+        Collection = self.model('collection')
+        Folder = self.model('folder')
+        Image = self.model('image', 'isic_archive')
+
+        # Verify that all images are pending review
+        prereviewFolder = self.prereviewFolder(dataset)
+        if not prereviewFolder:
+            raise GirderException('No Pre-review folder for this dataset.')
+        for image in itertools.chain(acceptedImages, flaggedImages):
+            if image['folderId'] != prereviewFolder['_id']:
+                raise ValidationException(
+                    'Image %s is not in Pre-review.' % image['_id'])
+
+        now = datetime.datetime.utcnow()
+
+        for image in acceptedImages:
+            image = Image.setMetadata(image, {
+                'reviewed': {
+                    'userId': user['_id'],
+                    'time': now,
+                    'accepted': True
+                }
+            })
+            Image.move(image, dataset)
+
+        if flaggedImages:
+            flaggedCollection = Collection.findOne({'name': 'Flagged Images'})
+            flaggedFolder = Folder.findOne({
+                'name': dataset['name'],
+                'parentId': flaggedCollection})
+            if not flaggedFolder:
+                flaggedFolder = Folder.createFolder(
+                    parent=flaggedCollection,
+                    name=dataset['name'],
+                    parentType='collection',
+                    public=None,
+                    creator=user,
+                    allowRename=False,
+                    reuseExisting=False)
+                flaggedFolder = Folder.copyAccessPolicies(
+                    prereviewFolder, flaggedFolder, save=True)
+            for image in flaggedImages:
+                image = Image.setMetadata(image, {
+                    'reviewed': {
+                        'userId': user['_id'],
+                        'time': now,
+                        'accepted': False
+                    }
+                })
+                Image.move(image, flaggedFolder)
+
+        # Remove an empty Pre-review folder
+        if (Folder.countItems(prereviewFolder) +
+                Folder.countFolders(prereviewFolder)) == 0:
+            Folder.remove(prereviewFolder)

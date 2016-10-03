@@ -51,7 +51,7 @@ isic.views.TasksView = isic.View.extend({
 
     initialize: function (settings) {
         this.qcTasks = new isic.collections.TaskCollection();
-        this.qcTasks.altUrl = 'uda/task/qc';
+        this.qcTasks.altUrl = 'task/me/review';
         this.qcTasks.pageLimit = Number.MAX_SAFE_INTEGER;
 
         this.segmentationTasks = new isic.collections.TaskCollection();
@@ -65,7 +65,7 @@ isic.views.TasksView = isic.View.extend({
         this.taskQCView = new isic.views.TasksGroupView({
             title: 'Dataset Review',
             subtitle: 'QC review newly uploaded datasets',
-            linkPrefix: '/uda/task/p0/',
+            linkPrefix: girder.apiRoot + '/task/me/review/redirect?datasetId=',
             resourceName: 'dataset',
             collection: this.qcTasks,
             parentView: this

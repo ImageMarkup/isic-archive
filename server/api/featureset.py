@@ -105,7 +105,8 @@ class FeaturesetResource(Resource):
         # For now, study admins will be the ones that can create featuresets
         User.requireAdminStudy(creatorUser)
 
-        isJson = cherrypy.request.headers['Content-Type'] == 'application/json'
+        isJson = cherrypy.request.headers['Content-Type'].split(';')[0] == \
+            'application/json'
         if isJson:
             params = self.getBodyJson()
         self.requireParams(
@@ -113,16 +114,12 @@ class FeaturesetResource(Resource):
             params)
 
         if not isJson:
-            try:
-                params['globalFeatures'] = json.loads(params['globalFeatures'])
-            except ValueError:
-                raise RestException(
-                    'Invalid JSON passed in globalFeatures parameter.')
-            try:
-                params['localFeatures'] = json.loads(params['localFeatures'])
-            except ValueError:
-                raise RestException(
-                    'Invalid JSON passed in localFeatures parameter.')
+            for field in ['globalFeatures', 'localFeatures']:
+                try:
+                    params[field] = json.loads(params[field])
+                except ValueError:
+                    raise RestException(
+                        'Invalid JSON passed in %s parameter.' % field)
 
         featuresetName = params['name'].strip()
         if not featuresetName:

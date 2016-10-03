@@ -5,7 +5,7 @@ girder.views.isic_ConfigView = girder.View.extend({
             event.preventDefault();
             this.$('#isic-config-error-message').empty();
             this._saveSettings([{
-                key: 'uda.demo_mode',
+                key: 'isic.demo_mode',
                 value: this.$('#isic-config-demo-mode').prop('checked')
             }]);
         }
@@ -17,14 +17,14 @@ girder.views.isic_ConfigView = girder.View.extend({
             path: 'system/setting',
             data: {
                 list: JSON.stringify([
-                    'uda.demo_mode'
+                    'isic.demo_mode'
                 ])
             }
         }).done(_.bind(function (resp) {
             this.render();
             this.$('#isic-config-demo-mode').prop(
                 'checked',
-                resp['uda.demo_mode']
+                resp['isic.demo_mode']
             );
         }, this));
     },

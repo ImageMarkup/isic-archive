@@ -124,50 +124,18 @@ class ZipFileOpener(object):
             return iter(fileList), len(fileList)
 
 
-def handleZip(imagesFolder, user, zipFile):
-    Image = ModelImporter.model('image', 'isic_archive')
+def handleCsv(dataset, prereviewFolder, user, csvFile):
+    Assetstore = ModelImporter.model('assetstore')
+    Item = ModelImporter.model('item')
+    Upload = ModelImporter.model('upload')
 
-    # Get full path of zip file in assetstore
-    assetstore = ModelImporter.model('assetstore').getCurrent()
-    assetstore_adapter = assetstore_utilities.getAssetstoreAdapter(assetstore)
-    fullPath = assetstore_adapter.fullPath(zipFile)
-
-    with ZipFileOpener(fullPath) as (fileList, fileCount):
-        with ProgressContext(
-                on=True,
-                user=user,
-                title='Processing "%s"' % zipFile['name'],
-                total=fileCount,
-                state=ProgressState.ACTIVE,
-                current=0) as progress:
-
-            for originalFilePath, originalFileRelpath in fileList:
-                originalFileName = os.path.basename(originalFileRelpath)
-
-                progress.update(
-                    increment=1,
-                    message='Extracting "%s"' % originalFileName)
-
-                with open(originalFilePath, 'rb') as originalFileStream:
-                    Image.createImage(
-                        imageDataStream=originalFileStream,
-                        imageDataSize=os.path.getsize(originalFilePath),
-                        originalName=originalFileName,
-                        dataset=imagesFolder,
-                        creator=user
-                    )
-
-
-def handleCsv(datasetFolder, user, csvFile):
+    # Folders where images from this dataset may be
     datasetFolderIds = [
-        folder['_id']
-        for folder in ModelImporter.model('folder').find({
-            'name': datasetFolder['name']
-        })
+        dataset['_id'],
+        prereviewFolder['_id']
     ]
-    # TODO: ensure that datasetFolderIds are UDA folders / in UDA phases
 
-    assetstore = ModelImporter.model('assetstore').getCurrent()
+    assetstore = Assetstore.getCurrent()
     assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(assetstore)
     fullPath = assetstoreAdapter.fullPath(csvFile)
 
@@ -198,7 +166,7 @@ def handleCsv(datasetFolder, user, csvFile):
 
             # TODO: require 'user' to match image creator?
             # TODO: index on meta.originalFilename?
-            imageItems = ModelImporter.model('item').find({
+            imageItems = Item.find({
                 'meta.originalFilename': filename,
                 'folderId': {'$in': datasetFolderIds}
             })
@@ -216,7 +184,7 @@ def handleCsv(datasetFolder, user, csvFile):
 
             unstructuredMetadata = imageItem['meta']['unstructured']
             unstructuredMetadata.update(csvRow)
-            ModelImporter.model('item').setMetadata(imageItem, {
+            Item.setMetadata(imageItem, {
                 'unstructured': unstructuredMetadata
             })
 
@@ -224,10 +192,9 @@ def handleCsv(datasetFolder, user, csvFile):
         # TODO: eventually don't store whole string in memory
         parseErrorsStr = '\n'.join(parseErrors)
 
-        parentItem = ModelImporter.model('item').load(
-            csvFile['itemId'], force=True)
+        parentItem = Item.load(csvFile['itemId'], force=True, exc=True)
 
-        upload = ModelImporter.model('upload').createUpload(
+        upload = Upload.createUpload(
             user=getAdminUser(),
             name='parse_errors.txt',
             parentType='item',
@@ -235,5 +202,5 @@ def handleCsv(datasetFolder, user, csvFile):
             size=len(parseErrorsStr),
             mimeType='text/plain',
         )
-        ModelImporter.model('upload').handleChunk(
+        Upload.handleChunk(
             upload, parseErrorsStr)
