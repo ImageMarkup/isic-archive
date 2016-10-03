@@ -291,7 +291,7 @@ class TaskResource(Resource):
             raise RestException('No segmentations are needed for this dataset.')
         imageId = results[0]['_id']
 
-        segmentUrl = '/uda/annotate#/%s' % imageId
+        segmentUrl = '/uda/segment#/%s' % imageId
         raise cherrypy.HTTPRedirect(segmentUrl, status=307)
 
     @describeRoute(

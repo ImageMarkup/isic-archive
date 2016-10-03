@@ -143,12 +143,10 @@ def load(info):
         pass
     info['serverRoot'].uda = Root()
 
-    # "/uda/gallery" -> returns a single page gallery
     info['serverRoot'].uda.gallery = staticFile(
         os.path.join(info['pluginRootDir'], 'custom', 'gallery.html'))
 
-    # "/uda/annotator/:id" -> the reconfigurable image annotator
-    info['serverRoot'].uda.annotate = staticFile(
+    info['serverRoot'].uda.segment = staticFile(
         os.path.join(info['pluginRootDir'], 'custom', 'phase1.html'))
 
     # "/uda/map/:id"
