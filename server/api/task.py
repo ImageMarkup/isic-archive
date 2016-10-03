@@ -353,5 +353,5 @@ class TaskResource(Resource):
         except StopIteration:
             raise RestException('No annotations are needed for this study.')
 
-        annotationUrl = '/uda/map#/%s' % nextAnnotation['_id']
+        annotationUrl = '/uda/annotate#/%s' % nextAnnotation['_id']
         raise cherrypy.HTTPRedirect(annotationUrl, status=307)

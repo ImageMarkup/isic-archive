@@ -149,8 +149,7 @@ def load(info):
     info['serverRoot'].uda.segment = staticFile(
         os.path.join(info['pluginRootDir'], 'custom', 'phase1.html'))
 
-    # "/uda/map/:id"
-    info['serverRoot'].uda.map = staticFile(
+    info['serverRoot'].uda.annotate = staticFile(
         os.path.join(info['pluginRootDir'], 'custom', 'phase2.html'))
 
     # add api routes
