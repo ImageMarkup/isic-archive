@@ -243,7 +243,8 @@ class StudyResource(Resource):
         creatorUser = self.getCurrentUser()
         User.requireAdminStudy(creatorUser)
 
-        isJson = cherrypy.request.headers['Content-Type'] == 'application/json'
+        isJson = cherrypy.request.headers['Content-Type'].split(';')[0] == \
+            'application/json'
         if isJson:
             params = self.getBodyJson()
         self.requireParams(
@@ -305,7 +306,8 @@ class StudyResource(Resource):
 
         # TODO: make the loadmodel decorator use AccessType.WRITE,
         # once permissions work
-        if cherrypy.request.headers['Content-Type'] == 'application/json':
+        if cherrypy.request.headers['Content-Type'].split(';')[0] == \
+                'application/json':
             params = self.getBodyJson()
         self.requireParams('userId', params)
 

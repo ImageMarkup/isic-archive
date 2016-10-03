@@ -105,7 +105,8 @@ class FeaturesetResource(Resource):
         # For now, study admins will be the ones that can create featuresets
         User.requireAdminStudy(creatorUser)
 
-        isJson = cherrypy.request.headers['Content-Type'] == 'application/json'
+        isJson = cherrypy.request.headers['Content-Type'].split(';')[0] == \
+            'application/json'
         if isJson:
             params = self.getBodyJson()
         self.requireParams(

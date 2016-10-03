@@ -109,7 +109,8 @@ class DatasetResource(Resource):
         Folder = self.model('folder')
         User = self.model('user', 'isic_archive')
 
-        if cherrypy.request.headers['Content-Type'] == 'application/json':
+        if cherrypy.request.headers['Content-Type'].split(';')[0] == \
+                'application/json':
             params = self.getBodyJson()
         self.requireParams(('uploadFolderId', 'name'), params)
 
@@ -211,7 +212,8 @@ class DatasetResource(Resource):
         user = self.getCurrentUser()
         User.requireReviewDataset(user)
 
-        isJson = cherrypy.request.headers['Content-Type'] == 'application/json'
+        isJson = cherrypy.request.headers['Content-Type'].split(';')[0] == \
+            'application/json'
         if isJson:
             params = self.getBodyJson()
         self.requireParams(['accepted', 'flagged'], params)
