@@ -12,7 +12,6 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             standard: {},
             custom: []
         },
-        imageIds: [],
         overviewHistogram: {
             __passedFilters__: [{
                 count: 0,
@@ -40,6 +39,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
     },
     initialize: function () {
         this.datasetCollection = new isic.collections.DatasetCollection();
+        this.images = new isic.collections.ImageCollection();
 
         // Load the pegjs grammar and fetch the datasets
         // before attempting to get histograms or image IDs
@@ -126,9 +126,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         // Pass in filter settings
         pageDetails.filter = this.getFilterAstTree();
         var imagesDeferred = $.Deferred();
-        this.images = new isic.collections.ImageCollection();
         this.images.once('g:changed', _.bind(function () {
-            this.set('imageIds', this.images.pluck('_id'));
             imagesDeferred.resolve();
         }, this)).fetch({
             limit: pageDetails.limit,
