@@ -19,6 +19,9 @@
 
 import json
 
+from bson import ObjectId
+from bson.errors import InvalidId
+
 from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel, rawResponse, \
     setResponseHeader
@@ -67,8 +70,8 @@ class ImageResource(Resource):
         elif 'datasetId' in params:
             # ensure the user has access to the dataset
             try:
-                query = {'folderId': params['datasetId']}
-            except:
+                query = {'folderId': ObjectId(params['datasetId'])}
+            except InvalidId:
                 raise RestException(
                     'Invalid "folderId" ObjectId: %s' % params['datasetId'])
         else:
