@@ -1,13 +1,11 @@
 /*globals d3*/
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
-/*
 var ICONS = {
     check: girder.staticRoot + '/built/plugins/isic_archive/extra/img/check.svg',
     ex: girder.staticRoot + '/built/plugins/isic_archive/extra/img/ex.svg',
     dash: girder.staticRoot + '/built/plugins/isic_archive/extra/img/dash.svg'
 };
-*/
 
 isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
     initialize: function (parameters) {
@@ -47,16 +45,14 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
 
         // Move the special buttons into place and attach their events
         this.$('.selectAllBins').hide();
-        /*
         svg.select('.selectAllBins')
             .attr('transform', 'translate(' +
-                (self.scale.leftAxisPadding - 0.5 * emSize) + ',' +
+                (this.scale.leftAxisPadding - 0.5 * emSize) + ',' +
                 (height + emSize) + ')');
         svg.select('.selectAll')
             .on('click', function () {
-                self.model.clearFilters(self.attrName);
+                this.model.clearFilters(this.attrName);
             });
-        */
 
         // Draw the bin groups
         var labels = this.scale.overviewHistogram.map(function (d) {
@@ -138,7 +134,6 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
             }));
 
         // Add an include / exclude button for each bin
-        /*
         binsEnter.append('image')
             .attr('class', 'button')
             .attr({
@@ -147,6 +142,7 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
                 width: emSize,
                 height: emSize
             });
+        var self = this;
         bins.select('image.button').each(function (d) {
             // this refers to the DOM element
             var bin = self.scale.labelToBin(d, 'overview');
@@ -164,15 +160,15 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
 
             d3.select(this)
                 .attr('xlink:href', function () {
-                    if (status === window.ENUMS.BIN_STATES.INCLUDED) {
+                    if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
                         return ICONS.check;
-                    } else if (status === window.ENUMS.BIN_STATES.EXCLUDED) {
+                    } else if (status === isic.ENUMS.BIN_STATES.EXCLUDED) {
                         return ICONS.ex;
                     } else {
                         return ICONS.dash;
                     }
                 }).on('click', function (d) {
-                    if (status === window.ENUMS.BIN_STATES.INCLUDED) {
+                    if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
                         // Remove this bin
                         if (bin.hasOwnProperty('lowBound') &&
                                 bin.hasOwnProperty('highBound')) {
@@ -191,10 +187,11 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
                             self.model.includeValue(self.attrName, bin.label);
                         }
                     }
+
+                    self.render();
                 });
         });
         height += 2 * emSize;
-        */
 
         // Add each bin label, and compute the total needed height
         var offsetY = 0.25 * emSize;

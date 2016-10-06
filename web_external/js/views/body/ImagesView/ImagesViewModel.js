@@ -131,7 +131,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         }, this)).fetch({
             limit: pageDetails.limit,
             offset: pageDetails.offset,
-            filter: this.getFilterAstTree()
+            filter: JSON.stringify(this.getFilterAstTree())
         });
 
         var histogramRequest = this.updateHistogram('page');

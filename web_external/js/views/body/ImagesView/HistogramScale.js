@@ -120,7 +120,7 @@
         var lookup;
         if (histogram === 'page') {
             lookup = this.pageLabelLookup;
-        } else if (histogram === 'filtered') {
+        } else if (histogram === 'filteredSet') {
             lookup = this.filteredLabelLookup;
         } else {  // default: return the overview label index
             lookup = this.overviewLabelLookup;
@@ -137,7 +137,7 @@
         if (histogram === 'page') {
             lookup = this.pageLabelLookup;
             histogram = this.pageHistogram;
-        } else if (histogram === 'filtered') {
+        } else if (histogram === 'filteredSet') {
             lookup = this.filteredLabelLookup;
             histogram = this.filteredSetHistogram;
         } else {  // default: return the overview count
