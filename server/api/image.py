@@ -17,7 +17,6 @@
 #  limitations under the License.
 ###############################################################################
 
-from ..histogram_utility import HistogramUtility
 from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel, rawResponse, \
     setResponseHeader
@@ -25,6 +24,8 @@ from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
 from girder.models.model_base import GirderException
 
+from ..histogram_utility import HistogramUtility
+from ..histogram_utility import querylang
 
 class ImageResource(Resource):
     def __init__(self,):
@@ -46,23 +47,29 @@ class ImageResource(Resource):
         Description('Return a list of lesion images.')
         .pagingParams(defaultSort='lowerName')
         .param('datasetId', 'The ID of the dataset to use.', required=False)
+        .param('filter', 'Filter the images by a PegJS-specified grammar '
+                         '(causing "datasetId" to be ignored).',
+               required=False)
         .errorResponse()
     )
     @access.public
     def find(self, params):
-        Dataset = self.model('dataset', 'isic_archive')
         Image = self.model('image', 'isic_archive')
 
         user = self.getCurrentUser()
         limit, offset, sort = self.getPagingParameters(params, 'lowerName')
 
-        filters = {}
-        if 'datasetId' in params:
+        if 'filter' in params:
+            query = querylang.astToMongo(params['filter'])
+        elif 'datasetId' in params:
             # ensure the user has access to the dataset
-            dataset = Dataset.load(
-                id=params['datasetId'], user=user, level=AccessType.READ,
-                exc=True)
-            filters['folderId'] = dataset['_id']
+            try:
+                query = {'folderId': params['datasetId']}
+            except:
+                raise RestException(
+                    'Invalid "folderId" ObjectId: %s' % params['datasetId'])
+        else:
+            query = {}
 
         return [
             {
@@ -72,7 +79,8 @@ class ImageResource(Resource):
             }
             for image in
             Image.filterResultsByPermission(
-                Image.find(filters, sort=sort),
+                # TODO: exclude additional fields from the cursor
+                Image.find(query, sort=sort, fields={'meta': 0}),
                 user=user, level=AccessType.READ, limit=limit, offset=offset)
         ]
 
