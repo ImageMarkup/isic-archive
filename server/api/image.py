@@ -17,6 +17,8 @@
 #  limitations under the License.
 ###############################################################################
 
+import json
+
 from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel, rawResponse, \
     setResponseHeader
@@ -26,6 +28,7 @@ from girder.models.model_base import GirderException
 
 from ..histogram_utility import HistogramUtility
 from ..histogram_utility import querylang
+
 
 class ImageResource(Resource):
     def __init__(self,):
@@ -60,7 +63,7 @@ class ImageResource(Resource):
         limit, offset, sort = self.getPagingParameters(params, 'lowerName')
 
         if 'filter' in params:
-            query = querylang.astToMongo(params['filter'])
+            query = querylang.astToMongo(json.loads(params['filter']))
         elif 'datasetId' in params:
             # ensure the user has access to the dataset
             try:
