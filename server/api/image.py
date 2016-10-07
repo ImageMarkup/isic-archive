@@ -51,7 +51,7 @@ class ImageResource(Resource):
 
     @describeRoute(
         Description('Return a list of lesion images.')
-        .pagingParams(defaultSort='lowerName')
+        .pagingParams(defaultSort='name')
         .param('datasetId', 'The ID of the dataset to use.', required=False)
         .param('filter', 'Filter the images by a PegJS-specified grammar '
                          '(causing "datasetId" to be ignored).',
@@ -63,7 +63,7 @@ class ImageResource(Resource):
         Image = self.model('image', 'isic_archive')
 
         user = self.getCurrentUser()
-        limit, offset, sort = self.getPagingParameters(params, 'lowerName')
+        limit, offset, sort = self.getPagingParameters(params, 'name')
 
         if 'filter' in params:
             query = querylang.astToMongo(json.loads(params['filter']))

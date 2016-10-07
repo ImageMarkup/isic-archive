@@ -41,14 +41,14 @@ class DatasetResource(Resource):
 
     @describeRoute(
         Description('Return a list of lesion image datasets.')
-        .pagingParams(defaultSort='lowerName')
+        .pagingParams(defaultSort='name')
         .errorResponse()
     )
     @access.public
     def find(self, params):
         Dataset = self.model('dataset', 'isic_archive')
 
-        limit, offset, sort = self.getPagingParameters(params, 'lowerName')
+        limit, offset, sort = self.getPagingParameters(params, 'name')
 
         return [
             {
@@ -185,7 +185,7 @@ class DatasetResource(Resource):
             for image in
             Image.find(
                 {'folderId': prereviewFolder['_id']},
-                limit=limit, sort=[('lowerName', SortDir.ASCENDING)]
+                limit=limit, sort=[('name', SortDir.ASCENDING)]
             )
         ]
         for image in output:
