@@ -15,7 +15,7 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
         this.imageColumns = [];
 
         this.listenTo(this.image, 'change:_id', this.render);
-        this.listenTo(this.model, 'change:imageIds', this.render);
+        this.listenTo(this.model.images, 'g:changed', this.render);
     },
     selectImage: function (imageId) {
         if (imageId !== null) {
@@ -33,7 +33,7 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
 
         var sel = d3.select(this.el)
             .selectAll('img')
-            .data(this.model.get('imageIds'));
+            .data(this.model.images.pluck('_id'));
 
         sel.enter()
             .append('img')

@@ -24,7 +24,7 @@ isic.views.ImagesView = isic.View.extend({
 
         $(window).on('resize.ImagesView', _.bind(this.render, this));
 
-        this.listenTo(this.model, 'change:imageIds', function () {
+        this.listenTo(this.model.images, 'g:changed', function () {
             this.image.clear();
         });
         this.listenTo(this.image, 'change:_id', this.selectedImageChanged);

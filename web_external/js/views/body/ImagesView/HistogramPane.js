@@ -8,7 +8,6 @@ isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
 
         this.listenTo(this.model, 'change:overviewHistogram', this.render);
         this.listenTo(this.model, 'change:filteredSetHistogram', this.render);
-        this.listenTo(this.model, 'change:pageHistogram', this.render);
     },
     render: function () {
         if (!this.addedCollapseImage) {

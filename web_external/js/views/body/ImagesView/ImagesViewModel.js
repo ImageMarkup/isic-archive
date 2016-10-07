@@ -12,14 +12,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             standard: {},
             custom: []
         },
-        imageIds: [],
         overviewHistogram: {
-            __passedFilters__: [{
-                count: 0,
-                label: 'count'
-            }]
-        },
-        datasetHistogram: {
             __passedFilters__: [{
                 count: 0,
                 label: 'count'
@@ -30,23 +23,18 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                 count: 0,
                 label: 'count'
             }]
-        },
-        pageHistogram: {
-            __passedFilters__: [{
-                count: 0,
-                label: 'count'
-            }]
         }
     },
     initialize: function () {
         this.datasetCollection = new isic.collections.DatasetCollection();
+        this.images = new isic.collections.ImageCollection();
 
         // Load the pegjs grammar and fetch the datasets
         // before attempting to get histograms or image IDs
         $.when(this.fetchDatasets(), this.loadFilterGrammar())
             .then(_.bind(function () {
                 // We need the dataset names before getting any histograms
-                this.updateHistogram('overview');
+                this.updateOverviewHistogram();
                 // We need the dataset names and the filter grammar before getting
                 // the filtered set or the current page (both the page of images
                 // and the page histogram)
@@ -75,28 +63,30 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             }, this)
         });
     },
-    updateHistogram: function (histogramName) {
-        var pageDetails = this.getPageDetails();
-        var requestParams = {};
-
-        if (histogramName === 'page') {
-            requestParams.limit = pageDetails.limit;
-            requestParams.offset = pageDetails.offset;
-        }
-        if (histogramName === 'page' || histogramName === 'filteredSet') {
-            requestParams.filter = JSON.stringify(this.getFilterAstTree());
-        }
+    updateOverviewHistogram: function () {
+        return girder.restRequest({
+            path: 'image/histogram'
+        }).then(_.bind(function (resp) {
+            var histogram = this.postProcessHistogram(resp);
+            this.set('overviewHistogram', histogram);
+        }, this));
+    },
+    updateFilteredSetHistogram: function () {
         return girder.restRequest({
             path: 'image/histogram',
-            data: requestParams
+            data: {
+                filter: JSON.stringify(this.getFilterAstTree())
+            }
         }).then(_.bind(function (resp) {
-            this.set(histogramName + 'Histogram',
-                this.postProcessHistogram(resp));
+            var histogram = this.postProcessHistogram(resp);
+            this.set('filteredSetHistogram', histogram);
         }, this));
     },
     updateFilters: function () {
-        return $.when(this.updateHistogram('filteredSet'),
-                           this.updateCurrentPage());
+        return $.when(
+            this.updateFilteredSetHistogram(),
+            this.updateCurrentPage()
+        );
     },
     updateCurrentPage: function () {
         // Construct the parameters to send to the server
@@ -126,9 +116,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         // Pass in filter settings
         pageDetails.filter = this.getFilterAstTree();
         var imagesDeferred = $.Deferred();
-        this.images = new isic.collections.ImageCollection();
         this.images.once('g:changed', _.bind(function () {
-            this.set('imageIds', this.images.pluck('_id'));
             imagesDeferred.resolve();
         }, this)).fetch({
             limit: pageDetails.limit,
@@ -136,8 +124,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             filter: JSON.stringify(this.getFilterAstTree())
         });
 
-        var histogramRequest = this.updateHistogram('page');
-        return $.when(imagesDeferred.promise(), histogramRequest);
+        return imagesDeferred.promise();
     },
     getPageDetails: function (capLimit) {
         var result = {

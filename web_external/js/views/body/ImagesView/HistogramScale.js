@@ -27,7 +27,6 @@
         this.coerceToType = model.getAttributeType(this.attrName);
         this.overviewHistogram = model.get('overviewHistogram')[this.attrName] || [];
         this.filteredSetHistogram = model.get('filteredSetHistogram')[this.attrName] || [];
-        this.pageHistogram = model.get('pageHistogram')[this.attrName] || [];
 
         this.dividerIndex = undefined;
         this.dividerPosition = undefined;
@@ -40,7 +39,6 @@
         this.categoricalLookup = {};
         this.overviewLabelLookup = {};
         this.filteredLabelLookup = {};
-        this.pageLabelLookup = {};
 
         // First, how many bins are ordinal vs categorical, and what's the
         // overall ordinal range (if there is one)? Where do we encounter
@@ -69,9 +67,6 @@
         }, this);
         _.each(this.filteredSetHistogram, function (bin, index) {
             this.filteredLabelLookup[bin.label] = index;
-        }, this);
-        _.each(this.pageHistogram, function (bin, index) {
-            this.pageLabelLookup[bin.label] = index;
         }, this);
 
         // If the new data is shorter than the previous custom
@@ -118,9 +113,7 @@
     HistogramScale.prototype.labelToBin = function (value, histogram) {
         // Given a bin label and histogram name, get the bin number
         var lookup;
-        if (histogram === 'page') {
-            lookup = this.pageLabelLookup;
-        } else if (histogram === 'filteredSet') {
+        if (histogram === 'filteredSet') {
             lookup = this.filteredLabelLookup;
         } else {  // default: return the overview label index
             lookup = this.overviewLabelLookup;
@@ -134,10 +127,7 @@
     HistogramScale.prototype.labelToCount = function (value, histogram) {
         // Given a bin label and histogram name, get the bin number
         var lookup;
-        if (histogram === 'page') {
-            lookup = this.pageLabelLookup;
-            histogram = this.pageHistogram;
-        } else if (histogram === 'filteredSet') {
+        if (histogram === 'filteredSet') {
             lookup = this.filteredLabelLookup;
             histogram = this.filteredSetHistogram;
         } else {  // default: return the overview count

@@ -53,7 +53,6 @@ class HistogramUtility(object):
                                                  reduceScript,
                                                  query=query,
                                                  scope={
-                                                     'counter': -1,
                                                      'params': params
                                                  })
         # rearrange into a neater dict before sending it back
@@ -138,10 +137,6 @@ class HistogramUtility(object):
         params['filter'] = params.get('filter', None)
         if params['filter'] is not None:
             params['filter'] = json.loads(params['filter'])
-        params['limit'] = params.get('limit', None)
-        if params['limit'] == 0:
-            params['limit'] = None
-        params['offset'] = params.get('offset', 0)
 
         binSettings = json.loads(params.get('binSettings', '{}'))
         for attrName in binSettings.iterkeys():
