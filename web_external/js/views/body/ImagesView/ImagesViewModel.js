@@ -34,7 +34,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         $.when(this.fetchDatasets(), this.loadFilterGrammar())
             .then(_.bind(function () {
                 // We need the dataset names before getting any histograms
-                this.updateHistogram('overview');
+                this.updateOverviewHistogram();
                 // We need the dataset names and the filter grammar before getting
                 // the filtered set or the current page (both the page of images
                 // and the page histogram)
@@ -63,23 +63,30 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             }, this)
         });
     },
-    updateHistogram: function (histogramName) {
-        var requestParams = {};
-
-        if (histogramName === 'filteredSet') {
-            requestParams.filter = JSON.stringify(this.getFilterAstTree());
-        }
+    updateOverviewHistogram: function () {
+        return girder.restRequest({
+            path: 'image/histogram'
+        }).then(_.bind(function (resp) {
+            var histogram = this.postProcessHistogram(resp);
+            this.set('overviewHistogram', histogram);
+        }, this));
+    },
+    updateFilteredSetHistogram: function () {
         return girder.restRequest({
             path: 'image/histogram',
-            data: requestParams
+            data: {
+                filter: JSON.stringify(this.getFilterAstTree())
+            }
         }).then(_.bind(function (resp) {
-            this.set(histogramName + 'Histogram',
-                this.postProcessHistogram(resp));
+            var histogram = this.postProcessHistogram(resp);
+            this.set('filteredSetHistogram', histogram);
         }, this));
     },
     updateFilters: function () {
-        return $.when(this.updateHistogram('filteredSet'),
-                           this.updateCurrentPage());
+        return $.when(
+            this.updateFilteredSetHistogram(),
+            this.updateCurrentPage()
+        );
     },
     updateCurrentPage: function () {
         // Construct the parameters to send to the server
