@@ -6,7 +6,6 @@ isic.views.ImagesViewSubViews.DatasetPane = Backbone.View.extend({
     initialize: function () {
         this.listenTo(this.model, 'change:overviewHistogram', this.render);
         this.listenTo(this.model, 'change:filteredSetHistogram', this.render);
-        this.listenTo(this.model, 'change:pageHistogram', this.render);
     },
     render: function () {
         var svg;

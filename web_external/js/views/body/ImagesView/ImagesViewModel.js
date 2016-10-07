@@ -29,12 +29,6 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                 count: 0,
                 label: 'count'
             }]
-        },
-        pageHistogram: {
-            __passedFilters__: [{
-                count: 0,
-                label: 'count'
-            }]
         }
     },
     initialize: function () {
@@ -76,14 +70,9 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         });
     },
     updateHistogram: function (histogramName) {
-        var pageDetails = this.getPageDetails();
         var requestParams = {};
 
-        if (histogramName === 'page') {
-            requestParams.limit = pageDetails.limit;
-            requestParams.offset = pageDetails.offset;
-        }
-        if (histogramName === 'page' || histogramName === 'filteredSet') {
+        if (histogramName === 'filteredSet') {
             requestParams.filter = JSON.stringify(this.getFilterAstTree());
         }
         return girder.restRequest({
@@ -134,8 +123,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             filter: JSON.stringify(this.getFilterAstTree())
         });
 
-        var histogramRequest = this.updateHistogram('page');
-        return $.when(imagesDeferred.promise(), histogramRequest);
+        return imagesDeferred.promise();
     },
     getPageDetails: function (capLimit) {
         var result = {

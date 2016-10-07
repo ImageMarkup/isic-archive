@@ -190,11 +190,6 @@ class ImageResource(Resource):
                'Get the histogram after the results of this filter. ' +
                'TODO: describe our filter grammar (an AST tree).',
                required=False)
-        .param('limit', 'Result set size limit. Setting to 0 will create ' +
-               'a histogram using all the matching items (default=0).',
-               required=False, dataType='int')
-        .param('offset', 'Offset into result set (default=0).',
-               required=False, dataType='int')
         .errorResponse()
     )
     @access.public
