@@ -49,7 +49,6 @@ isic.views.SegmentationsDisplayView = isic.View.extend({
         this.image = settings.image;
 
         this.segmentations = new isic.collections.SegmentationCollection();
-        this.segmentations.pageLimit = Number.MAX_SAFE_INTEGER;
 
         this.segmentation = new isic.models.SegmentationModel();
 
@@ -81,10 +80,14 @@ isic.views.SegmentationsDisplayView = isic.View.extend({
         this.render();
 
         if (this.image.id) {
+            // upstream Girder contains a bug where parameters are not honored
+            // on a reset fetch, so reset "offset" outside of fetch
+            this.segmentations.offset = 0;
             this.segmentations.once('g:changed', _.bind(function () {
                 this.render();
             }, this)).fetch({
-                imageId: this.image.id
+                imageId: this.image.id,
+                limit: 0
             });
         }
     }
