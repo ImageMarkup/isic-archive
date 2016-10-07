@@ -61,7 +61,9 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         var deferred = $.Deferred();
         this.datasetCollection.once('g:changed', function () {
             deferred.resolve();
-        }).fetch();
+        }).fetch({
+            limit: 0
+        });
         return deferred.promise();
     },
     loadFilterGrammar: function () {
