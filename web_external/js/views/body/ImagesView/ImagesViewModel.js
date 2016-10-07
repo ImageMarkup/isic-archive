@@ -18,12 +18,6 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                 label: 'count'
             }]
         },
-        datasetHistogram: {
-            __passedFilters__: [{
-                count: 0,
-                label: 'count'
-            }]
-        },
         filteredSetHistogram: {
             __passedFilters__: [{
                 count: 0,
