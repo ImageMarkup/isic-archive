@@ -4,15 +4,12 @@
 
 var derm_app = angular.module('DermApp');
 
-// Register 'ol' service
-derm_app.value('ol', ol);
-
 // Initialization of angular app controller with necessary scope variables. Inline declaration of external variables
 // needed within the controller's scope. State variables (available between controllers using $rootScope). Necessary to
 // put these in rootScope to handle pushed data via websocket service.
 derm_app.controller('ApplicationController',
-    ['$scope', '$rootScope', '$location', '$document', '$log', 'olViewer',
-    function ($scope, $rootScope, $location, $document, $log, olViewer) {
+    ['$scope', '$rootScope', '$location', '$document', '$log',
+    function ($scope, $rootScope, $location, $document, $log) {
 
         // global ready state variable
         $rootScope.applicationReady = false; // a hack to know when the rest has loaded (since ol3 won't init until dom does)
@@ -24,7 +21,7 @@ derm_app.controller('ApplicationController',
 
         // main application, gives a bit of a delay before loading everything
         $document.ready(function () {
-            $rootScope.imageviewer = new olViewer($('#map')[0]);
+            $rootScope.imageviewer = new PixelMap($('#map')[0]);
             $rootScope.applicationReady = true;
 
             updateLayout();
@@ -37,8 +34,6 @@ derm_app.controller('AnnotationController', [
     'Annotation', 'Study', 'Featureset', 'Image',
     function ($scope, $rootScope, $location, $http, $log,
               Annotation, Study, Featureset, Image) {
-        $rootScope.showingSegmentation = true;
-
         $scope.overview_image_url = null;
         $scope.display_overview = true;
 
@@ -72,9 +67,8 @@ derm_app.controller('AnnotationController', [
             $scope.study = Study.get({'id': $scope.annotation.studyId});
             $scope.image = Image.get({'id': $scope.annotation.image._id});
 
-            $rootScope.imageviewer.loadPainting(
+            $rootScope.imageviewer.loadImage(
                 $scope.annotation.image._id,
-                $scope.annotation.segmentationId,
                 function () {
                     // this callback is being executed from non-Angular code, so we must
                     //   wrap all work that it does in an $apply
@@ -213,13 +207,9 @@ derm_app.controller('LocalFeatureAnnotationController', ['$scope', '$rootScope',
 
         $scope.$watch('certaintyModel', function (certaintyModel) {
             if (certaintyModel !== undefined) {
-                if ($rootScope.imageviewer &&
-                    $rootScope.imageviewer.segmentannotator &&
-                    $rootScope.imageviewer.segmentannotator.labels) {
-                    // label 2 -> 100%
-                    // label 3 -> 50%
-                    $rootScope.imageviewer.selectAnnotationLabel(certaintyModel);
-                }
+                // label 2 -> 100%
+                // label 3 -> 50%
+                $rootScope.imageviewer.setActiveState(certaintyModel);
             }
         });
 
@@ -232,8 +222,6 @@ derm_app.controller('LocalFeatureAnnotationController', ['$scope', '$rootScope',
 
         $scope.selectFeature = function (feature_id) {
             $scope.selected_feature_id = feature_id;
-            // TODO: selectAnnotationLabel may not be necessary
-            $rootScope.imageviewer.selectAnnotationLabel($scope.certaintyModel);
         };
 
         $scope.featureHasPositiveTile = function (feature_id) {
@@ -251,19 +239,22 @@ derm_app.controller('LocalFeatureAnnotationController', ['$scope', '$rootScope',
         };
 
         $scope.displayQuestionTiles = function (feature_id) {
-            if (!$rootScope.imageviewer) {
-                return;
-            }
-            $rootScope.imageviewer.clearTiles();
             if (feature_id) {
-                $rootScope.imageviewer.enableTiles();
-                if (feature_id in $scope.annotation_values) {
-                    $rootScope.imageviewer.loadTiles($scope.annotation_values[feature_id]);
-                    //$rootScope.imageviewer.selectAnnotationLabel($scope.certaintyModel);
-                }
+                $rootScope.imageviewer.displayFeature(feature_id);
             } else {
-                $rootScope.imageviewer.disableTiles();
+                $rootScope.imageviewer.clear();
             }
         };
     }
 ]);
+
+// handle window resize events
+function updateLayout() {
+    $("#angular_id").height(window.innerHeight);
+    $("#annotationView").height(window.innerHeight);
+    $("#toolContainer").height(window.innerHeight);
+
+    externalApply();
+}
+
+window.onresize = updateLayout;

@@ -59,7 +59,6 @@ derm_app.controller('SegmentationController', [
 
             $rootScope.imageviewer.clearCurrentImage();
             $rootScope.imageviewer.loadImageWithURL($scope.image._id);
-            $rootScope.imageviewer.clearPaintByNumber();
 
             start_time = Date.now();
         });

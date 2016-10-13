@@ -33,23 +33,11 @@
     <link href="/static/built/plugins/isic_archive/libs/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.min.css" rel="stylesheet" type="text/css">
     <script src="/static/built/plugins/isic_archive/libs/angular-bootstrap-switch/dist/angular-bootstrap-switch.min.js"></script>
 
-    <!-- OpenLayers3 -->
-    <script src="/uda/static/js/ol-debug.js"></script>
-    <link href="/uda/static/css/ol.css" rel="stylesheet" type="text/css">
-
-    <!-- js-segment-annotator -->
-    <script src="/uda/static/js/js-segment-annotator/pf-segmentation.js"></script>
-    <script src="/uda/static/js/slic-segmentation.js"></script>
-    <script src="/uda/static/js/segment-annotator-phase2.js"></script>
-    <script src="/uda/static/js/UDASegment.js"></script>
-
     <!-- ISIC App -->
+    <script src="/uda/static/js/dermapp-utils.js"></script>
     <script src="/uda/static/js/isic-app.js"></script>
     <script src="/uda/static/js/isic-user-controller.js"></script>
-    <script src="/uda/static/js/dermapp-phase2.js"></script>
-    <script src="/uda/static/js/dermapp-utils.js"></script>
-    <script src="/uda/static/js/dermapp-labels.js"></script>
-    <script src="/uda/static/js/dermapp-viewer.js"></script>
+    <script src="/uda/static/js/isic-phase2.js"></script>
     <link href="/uda/static/css/derm.css" rel="stylesheet" type="text/css">
     <link href="/uda/static/css/isic-phase2.css" rel="stylesheet" type="text/css">
 </head>
@@ -190,8 +178,7 @@
                 </div>
             </div>
             <div class="col-sm-9 nopad">
-                <div id="map" class="map" ng-hide="showingSegmentation"></div>
-                <div id="annotatorcontainer" ng-show="showingSegmentation"></div>
+                <div id="map" class="map"></div>
                 <img ng-show="display_overview && overview_image_url" ng-src="{{ overview_image_url }}"
                         class="isic-overview-frame">
             </div>

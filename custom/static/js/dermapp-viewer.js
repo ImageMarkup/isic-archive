@@ -229,43 +229,6 @@ var olViewer = derm_app.factory('olViewer',
                 return features_list;
             },
 
-            grabCurrentTiles: function () {
-                if (this.segmentannotator) {
-                    var index_values = this.segmentannotator.getIndicies();
-                    return index_values;
-                }
-                return [];
-            },
-
-            clearTiles: function () {
-                if (this.segmentannotator) {
-                    this.segmentannotator.clearTiles();
-                }
-            },
-
-            loadTiles: function (tiles) {
-                if (this.segmentannotator) {
-                    this.segmentannotator.loadTiles(tiles);
-                }
-            },
-
-            disableTiles: function () {
-                if (this.segmentannotator) {
-                    //this.segmentannotator.disable();
-                    // The implementation of "disable" is broken
-                    this.segmentannotator.layers.highlight.canvas.style.display = 'none';
-
-                }
-            },
-
-            enableTiles: function () {
-                if (this.segmentannotator) {
-                    //this.segmentannotator.enable();
-                    // The implementation of "enable" is broken
-                    this.segmentannotator.layers.highlight.canvas.style.display = 'block';
-                }
-            },
-
             getFeatures: function () {
                 return this.vector_source.getFeatures();
             },
@@ -280,147 +243,10 @@ var olViewer = derm_app.factory('olViewer',
                 this.vector_source.clear();
             },
 
-            acceptPainting: function () {
-                var annotation = this.segmentannotator.getAnnotation();
-                var extent = this.map.getView().calculateExtent(this.map.getSize());
-                var tr = ol.extent.getTopRight(extent);
-                var bl = ol.extent.getBottomLeft(extent);
-                var segmenturl = 'segment';
-
-                var msg = {
-                    image: annotation,
-                    extent: [tr, bl]
-                };
-
-                var self = this;
-                // interesting hack to get the UI to update without external scopy applys
-                $http.post(segmenturl, msg).success(function (response) {
-
-                    $log.debug(response);
-
-                    self.vector_source.clear();
-
-                    var f = new ol.format.GeoJSON();
-
-                    for (var i=0; i<response.features.length; i++) {
-
-                        var jsObject = JSON.parse(response.features[i]);
-
-                        var label = _labels[parseInt(jsObject.properties.labelindex)];
-                        jsObject.properties.label = label;
-
-                        var hexcolor = rgbToHex(label.color[0], label.color[1], label.color[2]);
-                        var rgbcolor = 'rgba(' + label.color[0] + ',' + label.color[1] + ',' + label.color[2] + ',0.0)';
-
-                        jsObject.properties.rgbcolor = rgbcolor;
-                        jsObject.properties.icon = label.icon;
-                        jsObject.properties.hexcolor = hexcolor;
-                        jsObject.properties.title = label.title;
-
-                        var featobj = f.readFeature(jsObject);
-
-                        self.vector_source.addFeature(featobj);
-                    }
-
-                    // manually request an updated frame async
-                    self.map.render();
-                });
-            },
-
-            selectAnnotationLabel: function (detailvalue) {
-                this.segmentannotator.setCurrentLabel(detailvalue.toString());
-            },
-
-            hidePaintLayerIfVisible: function () {
-                if (this.segmentannotator) {
-//                    $("#annotatorcontainer").hide();
-                }
-            },
-
-            showPaintLayerIfVisible: function () {
-                if (this.segmentannotator) {
-//                    $("#annotatorcontainer").show();
-
-//                    $("#map").hide();
-//                    this.map.render();
-                    return true;
-                }
-                return false;
-            },
-
             removeDrawInteraction: function () {
                 if (this.draw_interaction) {
                     this.map.removeInteraction(this.draw_interaction);
                 }
-            },
-
-            clearPaintByNumber: function () {
-                if (this.segmentannotator) {
-                    delete this.segmentannotator;
-                    $('#annotatorcontainer').empty();
-                }
-            },
-
-            loadPainting: function (imageId, segmentationId, onLoadCallback) {
-                var self = this;
-
-                self.segmentannotator = new UDASegmentAnnotator(
-                    imageId,
-                    segmentationId,
-                    {
-                        regionSize: self.paint_size,
-                        backgroundColor: [0,0,0],
-                        container: document.getElementById('annotatorcontainer'),
-                        fillAlpha: 0,
-                        highlightAlpha: 0,
-                        boundaryAlpha: 190,
-                        labels: _labels,
-                        onload: onLoadCallback || function () {
-    //                        $("#annotatorcontainer").show();
-                        }
-                    }
-                );
-            },
-
-            startPainting: function () {
-                var self = this;
-
-                this.map.once('postcompose', function (event) {
-                    var canvas = event.context.canvas;
-
-                    if (self.segmentannotator) {
-//                        self.showPaintLayerIfVisible()
-                    } else {
-//                        $log.debug("input", canvas.width, canvas.height);
-
-                        self.segmentannotator = new SLICSegmentAnnotator(canvas, {
-                            regionSize: self.paint_size,
-                            container: document.getElementById('annotatorcontainer'),
-                            backgroundColor: [0,0,0],
-                            fillAlpha: 0,
-                            highlightAlpha: 0,
-                            boundaryAlpha: 190,
-                            labels: _labels,
-                            onload: function (self) {}
-                        });
-                    }
-
-                    var feature = new ol.Feature({
-                        title: 'superpixel placeholder',
-                        longtitle: 'superpixel region',
-                        icon: ''
-                    });
-
-                    // set the geometry of this feature to be the screen extents
-                    feature.setGeometry(new ol.geom.Point([0, 0]));
-
-                    self.vector_source.clear();
-                    self.vector_source.addFeature(feature);
-
-                    self.segmentannotator.setCurrentLabel(0);
-
-                    externalApply();
-                });
             },
 
             setFillParameter: function (new_fill_tolerance) {
@@ -429,10 +255,6 @@ var olViewer = derm_app.factory('olViewer',
 
             setPaintParameter: function (new_paint_size) {
                 this.paint_size = new_paint_size;
-            },
-
-            hasSegmentation: function () {
-              return this.segmentannotator !== undefined;
             },
 
             regenerateFill: function () {
@@ -504,38 +326,12 @@ var olViewer = derm_app.factory('olViewer',
                 }
             },
 
-            getSegmentationPackage: function () {
-                var extent = this.map.getView().calculateExtent(this.map.getSize());
-                var tr = ol.extent.getTopRight(extent);
-//                var tl = ol.extent.getTopLeft(extent)
-                var bl = ol.extent.getBottomLeft(extent);
-
-                var content = {
-                    viewercoordinates: {
-                        topright: ol.extent.getTopRight(extent),
-                        topleft: ol.extent.getTopLeft(extent),
-                        bottomright: ol.extent.getBottomRight(extent),
-                        bottomleft: ol.extent.getBottomLeft(extent),
-                    },
-                    canvasdimensions: {
-                        width: this.segmentannotator.width,
-                        height: this.segmentannotator.height
-                    },
-                    rgb: this.segmentannotator.getCanvasAsPNG(),
-                    tiles: this.segmentannotator.getTilesAsPNG(),
-                    regionsize: this.paint_size
-                };
-                return content;
-//                return this.segmentannotator.getAllData();
-            },
-
             flipYCoord: function (coord) {
                 return [
                     coord[0],
                     this.image_metadata.maxBaseY - coord[1]
                 ];
             },
-
 
             loadImageWithURL: function (image_id) {
                 var self = this;
