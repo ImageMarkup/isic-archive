@@ -144,7 +144,11 @@ Pixelmap.prototype.loadImage = function (imageId) {
 
         this.clear();
 
-        loaded.resolve();
+        // TODO: This has to come after .clear, since that calls .geoOff, calling
+        // .clear before this resolves will still break things
+        this.pixelmap.geoOn(window.geo.event.pixelmap.prepared, function (evt) {
+            loaded.resolve();
+        });
     }, this));
 
     return loaded.promise();
@@ -159,8 +163,9 @@ Pixelmap.prototype.clear = function () {
     this.pixelmap.geoOff();
 
     var interactor = this.map.interactor();
-    interactor.hasAction(undefined, 'click_pan').input = 'left';
-    interactor.hasAction(undefined, 'click_zoom').input = 'right';
+    // TODO: change this to add and remove actions
+    interactor.hasAction(undefined, 'click_pan').input = {left: true};
+    interactor.hasAction(undefined, 'click_zoom').input = {right: true};
 };
 
 Pixelmap.prototype._throttledPixelmapDraw = _.throttle(function () {
@@ -184,8 +189,9 @@ Pixelmap.prototype.activate = function (featureValues) {
     this.clear();
 
     var interactor = this.map.interactor();
-    interactor.hasAction(undefined, 'click_zoom').input = 'middle';
-    interactor.hasAction(undefined, 'click_pan').input = 'right';
+    // TODO: change this to add and remove actions
+    interactor.hasAction(undefined, 'click_zoom').input = {middle: true};
+    interactor.hasAction(undefined, 'click_pan').input = {right: true};
 
     this.pixelmap.geoOn(window.geo.event.feature.mousemove, _.bind(function (evt) {
         if (evt.mouse.buttons.left) {
