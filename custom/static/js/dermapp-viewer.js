@@ -4,6 +4,13 @@
 
 var derm_app = angular.module('DermApp');
 
+function externalApply() {
+    var scope = angular.element($("#angular_id")).scope();
+    if (!scope.$root.$$phase) {
+        scope.$apply();
+    }
+}
+
 var olViewer = derm_app.factory('olViewer',
     function (ol, $http, $log) {
 

@@ -75,6 +75,9 @@ Pixelmap.prototype.loadImage = function (imageId) {
                 y: h / 2
             },
             // Navigation
+            // TODO: this is a hack, and breaks after resize
+            width: mapW - 5,
+            height: mapH - 5,
             min: minLevel,
             max: maxLevel + 2,
             // TODO: allow rotation? (add actions to interactor and set allowRotation)

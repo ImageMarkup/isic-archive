@@ -13,16 +13,10 @@ derm_app.controller('ApplicationController',
         $rootScope.applicationReady = false; // a hack to know when the rest has loaded (since ol3 won't init until dom does)
         $rootScope.pixelmap = undefined;
 
-        // initial layout
-        $('#angular_id').height(window.innerHeight);
-        $('#map').height(window.innerHeight);
-
         // main application, gives a bit of a delay before loading everything
         $document.ready(function () {
-            $rootScope.pixelmap = new Pixelmap($('#map'));
+            $rootScope.pixelmap = new Pixelmap($('#map-container'));
             $rootScope.applicationReady = true;
-
-            updateLayout();
         });
     }
 ]);
@@ -228,14 +222,3 @@ derm_app.controller('LocalFeatureAnnotationController', ['$scope', '$rootScope',
         };
     }
 ]);
-
-// handle window resize events
-function updateLayout() {
-    $('#angular_id').height(window.innerHeight);
-    $('#annotationView').height(window.innerHeight);
-    $('#toolContainer').height(window.innerHeight);
-
-    externalApply();
-}
-
-window.onresize = updateLayout;

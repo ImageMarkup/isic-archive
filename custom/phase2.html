@@ -36,7 +36,6 @@
     <script src="/static/built/plugins/isic_archive/libs/underscore/underscore-min.js"></script>
 
     <!-- ISIC App -->
-    <script src="/uda/static/js/dermapp-utils.js"></script>
     <script src="/uda/static/js/pixelmap.js"></script>
     <script src="/uda/static/js/isic-app.js"></script>
     <script src="/uda/static/js/isic-user-controller.js"></script>
@@ -45,12 +44,9 @@
     <link href="/uda/static/css/isic-phase2.css" rel="stylesheet" type="text/css">
 </head>
 <body>
-    <div id="angular_id" ng-controller="ApplicationController">
-        <div ng-controller="AnnotationController">
-            <div id="hoverBar">
-                <img id="objectinfo" style="display:none;" class="optionimage" src="/uda/static/na.jpg" />
-            </div>
-            <div class="col-sm-3" id="toolContainer">
+    <div id="angular_id" class="container-fluid" ng-controller="ApplicationController">
+        <div class="row isic-page" ng-controller="AnnotationController">
+            <div class="col-sm-3 isic-pane">
                 <div class="isichead">
                     <div class="isictitle">
                         <span>ISIC Annotation Tool : Exhaustive Annotation</span>
@@ -175,8 +171,8 @@
                     </div>
                 </div>
             </div>
-            <div class="col-sm-9 nopad">
-                <div id="map" class="map"></div>
+            <div class="col-sm-9 isic-map">
+                <div id="map-container" class="isic-map"></div>
             </div>
         </div>
     </div>
