@@ -26,9 +26,24 @@ Pixelmap.prototype.loadImage = function (imageId) {
     /* Load an image for display or annotation use. */
     var loaded = $.Deferred();
 
-    // TODO: authenticate this Ajax call
+    // TODO: do Ajax via Backbone or Angular
+    function getCookie(cname) {
+        var name = cname + '=';
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) === ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) === 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return '';
+    }
     $.ajax({
-        url: '/api/v1/item/' + imageId + '/tiles'
+        url: '/api/v1/item/' + imageId + '/tiles',
+        headers: {'Girder-Token': getCookie('girderToken')},
     }).done(_.bind(function (resp) {
         var w = resp.sizeX,
             h = resp.sizeY,
@@ -43,25 +58,32 @@ Pixelmap.prototype.loadImage = function (imageId) {
             h / resp.tileHeight)) / Math.log(2));
         this.map = window.geo.map({
             node: this.container,
-            ingcs: '+proj=longlat +axis=esu',
+            // Projection
             gcs: '+proj=longlat +axis=enu',
+            ingcs: '+proj=longlat +axis=esu',
+            unitsPerPixel: Math.pow(2, maxLevel),
             maxBounds: {
                 left: 0,
                 top: 0,
                 right: w,
                 bottom: h
             },
+            // Initial view
+            zoom: 0,
             center: {
                 x: w / 2,
                 y: h / 2
             },
+            // Navigation
             min: minLevel,
-            max: maxLevel,
+            max: maxLevel + 2,
+            // TODO: allow rotation? (add actions to interactor and set allowRotation)
             allowRotation: false,
+            // TODO: clampBoundsX seems to cause jarring camera behavior after
+            //   zoom or move momentum settles, even if it's false
             clampBoundsX: true,
             clampBoundsY: true,
-            zoom: 0,
-            unitsPerPixel: Math.pow(2, maxLevel),
+            clampZoom: true,
             interactor: window.geo.mapInteractor({
                 actions: [{
                     action: window.geo.geo_action.pan,
@@ -81,7 +103,6 @@ Pixelmap.prototype.loadImage = function (imageId) {
                 }]
             })
         });
-        // TODO: allow rotation? (add actions to interactor and set allowRotation)
 
         this.imageLayer = this.map.createLayer('osm', {
             useCredentials: true,
@@ -181,6 +202,7 @@ Pixelmap.prototype._setSuperpixel = function (index, value) {
         data[index] = value;
         this.pixelmap.data(data);
         this.pixelmap.draw();
+        // TODO: do we ever want to throttle?
         // this._throttledPixelmapDraw();
     }
 };
