@@ -24,22 +24,23 @@ Pixelmap.prototype.reset = function () {
 
 Pixelmap.prototype.loadImage = function (imageId) {
     /* Load an image for display or annotation use. */
-    var imageUrl = '/api/v1/image/' + imageId + '/download';
-    var imageTilesUrl = '/api/v1/item/' + imageId + '/tiles';
-    var superpixelUrl = '/api/v1/image/' + imageId + '/superpixels';
-
     var loaded = $.Deferred();
 
     // TODO: authenticate this Ajax call
     $.ajax({
-        url: imageTilesUrl
+        url: '/api/v1/item/' + imageId + '/tiles'
     }).done(_.bind(function (resp) {
         var w = resp.sizeX,
             h = resp.sizeY,
             mapW = this.container.innerWidth(),
             mapH = this.container.innerHeight();
 
-        var mapMax = 2;
+        var minLevel = Math.min(0, Math.floor(Math.log(Math.min(
+            (mapW || resp.tileWidth) / resp.tileWidth,
+            (mapH || resp.tileHeight) / resp.tileHeight)) / Math.log(2)));
+        var maxLevel = Math.ceil(Math.log(Math.max(
+            w / resp.tileWidth,
+            h / resp.tileHeight)) / Math.log(2));
         this.map = window.geo.map({
             node: this.container,
             ingcs: '+proj=longlat +axis=esu',
@@ -54,23 +55,13 @@ Pixelmap.prototype.loadImage = function (imageId) {
                 x: w / 2,
                 y: h / 2
             },
-            min: Math.min(
-                0,
-                Math.floor(
-                    Math.log(
-                        Math.min(
-                            (mapW || w) / w,
-                            (mapH || h) / h
-                        )
-                    ) / Math.log(2)
-                )
-            ),
-            max: mapMax,
+            min: minLevel,
+            max: maxLevel,
             allowRotation: false,
             clampBoundsX: true,
             clampBoundsY: true,
             zoom: 0,
-            unitsPerPixel: Math.pow(2, mapMax),
+            unitsPerPixel: Math.pow(2, maxLevel),
             interactor: window.geo.mapInteractor({
                 actions: [{
                     action: window.geo.geo_action.pan,
@@ -94,23 +85,30 @@ Pixelmap.prototype.loadImage = function (imageId) {
 
         this.imageLayer = this.map.createLayer('osm', {
             useCredentials: true,
-            url: imageUrl,
-            maxLevel: mapMax,
+            url: '/api/v1/item/' + imageId + '/tiles/zxy/{z}/{x}/{y}',
+            maxLevel: maxLevel,
             wrapX: false,
             wrapY: false,
             tileOffset: function () {
                 return {x: 0, y: 0};
             },
             attribution: '',
-            tileWidth: w,
-            tileHeight: h,
+            tileWidth: resp.tileWidth,
+            tileHeight: resp.tileHeight,
             tileRounding: Math.ceil,
-            tilesAtZoom: function () {
-                return {x: 1, y: 1};
+            tilesAtZoom: function (level) {
+                var scale = Math.pow(2, maxLevel - level);
+                return {
+                    x: Math.ceil(resp.sizeX / resp.tileWidth / scale),
+                    y: Math.ceil(resp.sizeY / resp.tileHeight / scale)
+                };
             },
             tilesMaxBounds: function (level) {
-                var scale = Math.pow(2, -level);
-                return {x: Math.floor(w / scale), y: Math.floor(h / scale)};
+                var scale = Math.pow(2, maxLevel - level);
+                return {
+                    x: Math.floor(resp.sizeX / scale),
+                    y: Math.floor(resp.sizeY / scale)
+                };
             }
         });
 
@@ -119,7 +117,7 @@ Pixelmap.prototype.loadImage = function (imageId) {
         });
         this.pixelmap = this.annotationLayer.createFeature('pixelmap', {
             selectionAPI: true,
-            url: superpixelUrl,
+            url: '/api/v1/image/' + imageId + '/superpixels',
             position: {
                 ul: {x: 0, y: 0},
                 lr: {x: w, y: h}
