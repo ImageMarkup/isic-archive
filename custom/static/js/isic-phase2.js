@@ -88,8 +88,6 @@ derm_app.controller('AnnotationController', [
                 stopTime: Date.now(),
                 annotations: $scope.annotation_values
             };
-            console.log('submit', annotation_to_store);
-            return;
             $http.put(submit_url, annotation_to_store).success(function () {
                 // window.location.replace('/#tasks');
                 // TODO: this won't work if study has no more annotations
@@ -163,7 +161,7 @@ derm_app.controller('LocalFeatureAnnotationController', ['$scope', '$rootScope',
 
         $scope.$watch('selected_feature_id', function (newFeatureId, oldFeatureId) {
             // store the previously selected feature
-            if (oldFeatureId !== undefined) {
+            if (oldFeatureId !== undefined && oldFeatureId !== null) {
                 // TODO: don't store when in review mode
                 $scope.annotation_values[oldFeatureId] =
                     $rootScope.pixelmap.getActiveValues();
