@@ -122,11 +122,15 @@
                         </div>
                     </div>
                     <div class="isic-annotation-body">
-                        <div ng-show="!showReview" ng-cloak>
+                        <div class="alert alert-info" ng-show="!showReview && !selected_feature_id" ng-cloak>
                             <i class="glyphicon glyphicon-info-sign"></i>
                             <span> Click a feature sub-heading to select for markup.</span>
                         </div>
-                        <div ng-show="showReview" ng-cloak>
+                        <div class="alert alert-info" ng-show="!showReview && selected_feature_id" ng-cloak>
+                            <i class="glyphicon glyphicon-info-sign"></i>
+                            <span> Shift-click to erase tiles.</span>
+                        </div>
+                        <div class="alert alert-info" ng-show="showReview" ng-cloak>
                             <i class="glyphicon glyphicon-info-sign"></i>
                             <span> Mouse over a feature name to display markup.</span>
                         </div>
