@@ -399,9 +399,15 @@ isic.views.StudyResultsImageView = isic.View.extend({
 // View for the results of an annotation study
 isic.views.StudyResultsView = isic.View.extend({
     events: {
+        // Update image visibility when image preview tab is activated
+        'shown.bs.tab #isic-study-results-image-preview-tab': function (event) {
+            this.imageView.$el.removeClass('hidden');
+            this.localFeaturesImageView.$el.addClass('hidden');
+        },
+
         // Update image visibility when global features tab is activated
         'shown.bs.tab #isic-study-results-global-features-tab': function (event) {
-            this.imageView.$el.removeClass('hidden');
+            this.imageView.$el.addClass('hidden');
             this.localFeaturesImageView.$el.addClass('hidden');
         },
 
