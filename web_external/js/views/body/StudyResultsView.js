@@ -505,8 +505,9 @@ isic.views.StudyResultsView = isic.View.extend({
         this.annotation.clear();
         this.featureset.clear();
 
-        // Hide main container
-        this.$('#isic-study-results-main-container').addClass('hidden');
+        // Hide main and content containers
+        this.setMainContainerVisible(false);
+        this.setContentContainerVisible(false);
 
         // Fetch selected study
         this.study.set({'_id': studyId}).once('g:fetched', function () {
@@ -529,7 +530,7 @@ isic.views.StudyResultsView = isic.View.extend({
             }, this).fetch();
 
             // Show main container
-            this.$('#isic-study-results-main-container').removeClass('hidden');
+            this.setMainContainerVisible(true);
 
         }, this).fetch();
     },
@@ -538,6 +539,9 @@ isic.views.StudyResultsView = isic.View.extend({
         this.image.set('_id', imageId);
         this.annotation.clear();
         this.fetchAnnotation();
+
+        // Show content container
+        this.setContentContainerVisible(true);
     },
 
     userChanged: function (userId) {
@@ -588,7 +592,27 @@ isic.views.StudyResultsView = isic.View.extend({
             this.$('#isic-study-results-local-features-image-container')).render();
 
         return this;
+    },
+
+    setElementVisible: function (element, visible)
+    {
+        if (visible) {
+            element.removeClass('hidden');
+        } else {
+            element.addClass('hidden');
+        }
+    },
+
+    setMainContainerVisible: function(visible) {
+        var element = this.$('#isic-study-results-main-container');
+        this.setElementVisible(element, visible);
+    },
+
+    setContentContainerVisible: function(visible) {
+        var element = this.$('#isic-study-results-main-content');
+        this.setElementVisible(element, visible);
     }
+
 });
 
 isic.router.route('studyResults', 'studyResults', function (id) {
