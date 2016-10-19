@@ -505,6 +505,9 @@ isic.views.StudyResultsView = isic.View.extend({
         this.annotation.clear();
         this.featureset.clear();
 
+        // Hide main container
+        this.$('#isic-study-results-main-container').addClass('hidden');
+
         // Fetch selected study
         this.study.set({'_id': studyId}).once('g:fetched', function () {
             // Populate images collection
@@ -524,6 +527,10 @@ isic.views.StudyResultsView = isic.View.extend({
             featureset.once('g:fetched', function () {
                 this.featureset.set(featureset.attributes);
             }, this).fetch();
+
+            // Show main container
+            this.$('#isic-study-results-main-container').removeClass('hidden');
+
         }, this).fetch();
     },
 
