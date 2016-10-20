@@ -1,4 +1,5 @@
 .isic-study-results-select-users-container
-  each model in models
-    span.isic-study-results-select-users-user-container(data-user-id=model.id)
-      = getName(model)
+  select#isic-study-results-select-users-select.form-control.input
+    option(selected disabled value='')
+    each model in models
+      option(value=model.id)= getName(model)

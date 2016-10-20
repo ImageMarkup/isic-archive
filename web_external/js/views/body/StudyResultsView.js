@@ -164,10 +164,10 @@ isic.views.StudyResultsSelectImageView = isic.View.extend({
     }
 });
 
-// View for a collection of users
+// View for a collection of users in a select tag
 isic.views.StudyResultsSelectUsersView = isic.View.extend({
     events: {
-        'click .isic-study-results-select-users-user-container': 'userSelected'
+        'change': 'userChanged'
     },
 
     initialize: function (options) {
@@ -176,15 +176,8 @@ isic.views.StudyResultsSelectUsersView = isic.View.extend({
         this.render();
     },
 
-    userSelected: function (event) {
-        event.preventDefault();
-
-        var target = $(event.target);
-
-        this.$('.isic-study-results-select-users-user-container').removeClass('active');
-        target.addClass('active');
-
-        this.trigger('changed', target.data('userId'));
+    userChanged: function () {
+        this.trigger('changed', this.$('select').val());
     },
 
     render: function () {
@@ -192,6 +185,11 @@ isic.views.StudyResultsSelectUsersView = isic.View.extend({
             models: this.collection.models,
             getName: this.formatUser
         }));
+
+        var select = this.$('#isic-study-results-select-users-select');
+        select.select2({
+            placeholder: 'Select a user...'
+        });
 
         return this;
     }
@@ -643,8 +641,8 @@ isic.views.StudyResultsView = isic.View.extend({
     },
 
     setContentContainerVisible: function(visible) {
-        var element = this.$('#isic-study-results-main-content');
-        this.setElementVisible(element, visible);
+        this.setElementVisible(this.$('#isic-study-results-main-content'), visible);
+        this.setElementVisible(this.$('#isic-study-results-select-user-container'), visible);
     }
 
 });
