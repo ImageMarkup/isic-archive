@@ -60,7 +60,8 @@ isic.views.StudyResultsImageHeaderView = isic.View.extend({
 // View for a collection of studies in a select tag
 isic.views.StudyResultsSelectStudyView = isic.View.extend({
     events: {
-        'change': 'studyChanged'
+        'change': 'studyChanged',
+        'click .isic-study-results-select-study-details-button': 'showDetails'
     },
 
     initialize: function (options) {
@@ -71,6 +72,18 @@ isic.views.StudyResultsSelectStudyView = isic.View.extend({
 
     studyChanged: function () {
         this.trigger('changed', this.$('select').val());
+
+        // Enable study details button
+        this.$('.isic-study-results-select-study-details-button').removeAttr('disabled');
+    },
+
+    showDetails: function () {
+        var studyId = this.$('select').val();
+        if (!studyId) {
+            return;
+        }
+
+        this.trigger('showStudyDetails', studyId);
     },
 
     render: function () {
@@ -80,26 +93,34 @@ isic.views.StudyResultsSelectStudyView = isic.View.extend({
 
         this.$('#isic-study-results-select-study-select').focus();
 
+        this.$('.isic-tooltip').tooltip({
+            delay: 100
+        });
+
         return this;
     }
 });
 
-// View for study details
+// Modal view for study details
 isic.views.StudyResultsStudyDetailsView = isic.View.extend({
-    initialize: function (options) {
-        this.listenTo(this.model, 'change', this.render);
-
-        this.render();
-    },
-
     render: function () {
         var hasStudy = this.model.has('name');
 
-        this.$el.html(isic.templates.studyResultsStudyDetailPage({
+        var modal = this.$el.html(isic.templates.studyResultsStudyDetailPage({
             model: this.model,
             hasStudy: hasStudy,
             formatUser: this.formatUser
+        })).girderModal(this).on('shown.bs.modal', function () {
+        }).on('hidden.bs.modal', function () {
+            girder.dialogs.handleClose('studyDetails');
+        }).on('ready.girder.modal', function () {
+        });
+
+        modal.trigger($.Event('ready.girder.modal', {
+            relatedTarget: modal
         }));
+
+        girder.dialogs.handleOpen('studyDetails');
 
         return this;
     }
@@ -490,6 +511,8 @@ isic.views.StudyResultsView = isic.View.extend({
         this.listenTo(this.selectImageView, 'changed', this.imageChanged);
         this.listenTo(this.selectUserView, 'changed', this.userChanged);
 
+        this.listenTo(this.selectStudyView, 'showStudyDetails', this.showStudyDetails);
+
         this.render();
     },
 
@@ -550,6 +573,10 @@ isic.views.StudyResultsView = isic.View.extend({
         this.fetchAnnotation();
     },
 
+    showStudyDetails: function (studyId) {
+        this.studyDetailsView.render();
+    },
+
     fetchAnnotation: function () {
         if (!this.image.id ||
             !this.user.id) {
@@ -575,7 +602,7 @@ isic.views.StudyResultsView = isic.View.extend({
         this.selectStudyView.setElement(
             this.$('#isic-study-results-select-study-container')).render();
         this.studyDetailsView.setElement(
-            this.$('#isic-study-results-study-details-container')).render();
+            $('#g-dialog-container'));
         this.imageHeaderView.setElement(
             this.$('#isic-study-results-select-image-header')).render();
         this.selectImageView.setElement(
