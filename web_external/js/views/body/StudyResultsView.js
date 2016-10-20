@@ -195,10 +195,10 @@ isic.views.StudyResultsSelectUsersView = isic.View.extend({
     }
 });
 
-// View for a collection of local features
+// View for a collection of local features in a select tag
 isic.views.StudyResultsSelectLocalFeaturesView = isic.View.extend({
     events: {
-        'click .isic-study-results-select-local-features-feature-container': 'featureSelected'
+        'change': 'featureChanged'
     },
 
     initialize: function (options) {
@@ -209,15 +209,8 @@ isic.views.StudyResultsSelectLocalFeaturesView = isic.View.extend({
         this.render();
     },
 
-    featureSelected: function (event) {
-        event.preventDefault();
-
-        var target = $(event.target);
-
-        this.$('.isic-study-results-select-local-features-feature-container').removeClass('active');
-        target.addClass('active');
-
-        this.trigger('changed', target.data('featureId'));
+    featureChanged: function () {
+        this.trigger('changed', this.$('select').val());
     },
 
     render: function () {
@@ -225,6 +218,11 @@ isic.views.StudyResultsSelectLocalFeaturesView = isic.View.extend({
             models: this.collection.models,
             featureAnnotated: this.featureAnnotated
         }));
+
+        var select = this.$('#isic-study-results-select-local-features-select');
+        select.select2({
+            placeholder: 'Select a feature...'
+        });
 
         return this;
     }

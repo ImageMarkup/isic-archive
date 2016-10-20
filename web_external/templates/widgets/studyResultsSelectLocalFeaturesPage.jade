@@ -1,5 +1,7 @@
 .isic-study-results-select-local-features-container
-  each model in models
-    if featureAnnotated(model.id)
-      span.isic-study-results-select-local-features-feature-container(data-feature-id=model.id)
-        = model.get('name')
+  // For select2, add width in style attribute, see https://select2.github.io/examples.html#responsive
+  select#isic-study-results-select-local-features-select.form-control.input(style='width:100%')
+    option(selected disabled value='')
+    each model in models
+      if featureAnnotated(model.id)
+        option(value=model.id)= model.get('name')
