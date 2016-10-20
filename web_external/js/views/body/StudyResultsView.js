@@ -91,7 +91,11 @@ isic.views.StudyResultsSelectStudyView = isic.View.extend({
             models: this.collection.models
         }));
 
-        this.$('#isic-study-results-select-study-select').focus();
+        var select = this.$('#isic-study-results-select-study-select');
+        select.select2({
+            placeholder: 'Select a study...'
+        });
+        select.focus();
 
         this.$('.isic-tooltip').tooltip({
             delay: 100
@@ -598,6 +602,9 @@ isic.views.StudyResultsView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.studyResultsPage());
+
+        // Set select2 default options
+        $.fn.select2.defaults.set('theme', 'bootstrap');
 
         this.selectStudyView.setElement(
             this.$('#isic-study-results-select-study-container')).render();
