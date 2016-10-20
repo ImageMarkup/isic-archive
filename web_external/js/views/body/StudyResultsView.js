@@ -633,12 +633,12 @@ isic.views.StudyResultsView = isic.View.extend({
         }
     },
 
-    setMainContainerVisible: function(visible) {
+    setMainContainerVisible: function (visible) {
         var element = this.$('#isic-study-results-main-container');
         this.setElementVisible(element, visible);
     },
 
-    setContentContainerVisible: function(visible) {
+    setContentContainerVisible: function (visible) {
         this.setElementVisible(this.$('#isic-study-results-main-content'), visible);
         this.setElementVisible(this.$('#isic-study-results-select-user-container'), visible);
     }
