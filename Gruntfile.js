@@ -140,7 +140,18 @@ module.exports = function (grunt) {
             ],
             dest: staticDir + '/libs'
         });
-        defaultTasks.push('copy:' + pluginName + '_bower_libs');
+
+        grunt.config.set('copy.' + pluginName + '_node_modules', {
+            expand: true,
+            cwd: pluginDir + '/node_modules',
+            src: [
+                'select2/dist/css/select2.min.css',
+                'select2/dist/js/select2.min.js',
+                'select2-bootstrap-theme/dist/select2-bootstrap.min.css'
+            ],
+            dest: staticDir + '/libs'
+        });
+        defaultTasks.push('copy:' + pluginName + '_node_modules');
 
     };
 
