@@ -4,6 +4,7 @@
     "pegjs": "0.10.0",
 
     "jquery": "2.1.0",
+    "underscore": "~1.5",
 
     "flatstrap": "3.1.1",
 

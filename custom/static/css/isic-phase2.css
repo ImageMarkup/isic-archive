@@ -50,11 +50,3 @@
     top: 0;
     left: 0;
 }
-
-.isic-overview-frame {
-    position: absolute;
-    z-index: 5000;
-    top: 5px;
-    right: 5px;
-    border: 5px solid #282727;
-}

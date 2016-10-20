@@ -120,6 +120,7 @@ module.exports = function (grunt) {
             cwd: pluginDir + '/bower_components',
             src: [
                 'jquery/dist/jquery.min.js',
+                'underscore/underscore-min.js',
                 'flatstrap/dist/js/bootstrap.min.js',
                 'flatstrap/dist/css/bootstrap.min.css',
                 'flatstrap/dist/fonts/glyphicons-halflings-regular.woff',

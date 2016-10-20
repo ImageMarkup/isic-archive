@@ -28,8 +28,16 @@
     <!-- AngularUI Bootstrap -->
     <script src="/static/built/plugins/isic_archive/libs/angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js"></script>
 
+    <!-- GeoJS -->
+    <script src="/uda/static/geojs/dist/built/geo.min.js"></script>
+    <script src="/uda/static/geojs/dist/built/geo.ext.min.js"></script>
+
+    <!-- Underscore -->
+    <script src="/static/built/plugins/isic_archive/libs/underscore/underscore-min.js"></script>
+
     <!-- ISIC App -->
     <script src="/uda/static/js/dermapp-utils.js"></script>
+    <script src="/uda/static/js/pixelmap.js"></script>
     <script src="/uda/static/js/isic-app.js"></script>
     <script src="/uda/static/js/isic-user-controller.js"></script>
     <script src="/uda/static/js/isic-phase2.js"></script>
@@ -113,8 +121,8 @@
                         <h3 style="display: inline;">Local Features</h3>
                         <div class="btn-group pull-right" ng-hide="showReview">
                             <label class="btn">Confidence</label>
-                            <label class="btn" ng-model="certaintyModel" btn-radio="'definite'">100%</label>
-                            <label class="btn" ng-model="certaintyModel" btn-radio="'possible'">50%?</label>
+                            <label class="btn" ng-model="certaintyModel" uib-btn-radio="1.0">100%</label>
+                            <label class="btn" ng-model="certaintyModel" uib-btn-radio="0.5">50%?</label>
                         </div>
                     </div>
                     <div class="isic-annotation-body">
@@ -142,7 +150,7 @@
                                          class="overlay"
                                          ng-mouseenter="displayQuestionTiles(feature.id)"
                                          ng-mouseleave="displayQuestionTiles(null)"></div>
-                                    <span ng-show="featureHasPositiveTile(feature.id)"
+                                    <span ng-show="featureIsSet(feature.id)"
                                           class="pull-right" >√</span>
                                     <span>{{ feature.name.slice(1).join(': ') || feature.name[0] }}</span>
                                 </div>
