@@ -28,11 +28,6 @@
     <!-- AngularUI Bootstrap -->
     <script src="/static/built/plugins/isic_archive/libs/angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js"></script>
 
-    <!-- angular-bootstrap-switch -->
-    <script src="/static/built/plugins/isic_archive/libs/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
-    <link href="/static/built/plugins/isic_archive/libs/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.min.css" rel="stylesheet" type="text/css">
-    <script src="/static/built/plugins/isic_archive/libs/angular-bootstrap-switch/dist/angular-bootstrap-switch.min.js"></script>
-
     <!-- ISIC App -->
     <script src="/uda/static/js/dermapp-utils.js"></script>
     <script src="/uda/static/js/isic-app.js"></script>
@@ -59,11 +54,6 @@
                         <div class="btn" ng-controller="UserController">
                             <span ng-cloak ng-show="user"><b>User:</b> {{ user.firstName }} {{ user.lastName }} ({{ user.login }})</span>
                         </div>
-                    </div>
-                    <div class="btn">
-                        <label for="isic-overview-toggle">Overview Image: </label>
-                        <input bs-switch type="checkbox" id="isic-overview-toggle"
-                               ng-model="display_overview" switch-size="mini">
                     </div>
                     <div uib-dropdown ng-controller="FlagAnnotationController" class="btn-group">
                         <button uib-dropdown-toggle
@@ -179,8 +169,6 @@
             </div>
             <div class="col-sm-9 nopad">
                 <div id="map" class="map"></div>
-                <img ng-show="display_overview && overview_image_url" ng-src="{{ overview_image_url }}"
-                        class="isic-overview-frame">
             </div>
         </div>
     </div>

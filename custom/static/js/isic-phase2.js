@@ -34,9 +34,6 @@ derm_app.controller('AnnotationController', [
     'Annotation', 'Study', 'Featureset', 'Image',
     function ($scope, $rootScope, $location, $http, $log,
               Annotation, Study, Featureset, Image) {
-        $scope.overview_image_url = null;
-        $scope.display_overview = true;
-
         $scope.annotation_values = {};
         $scope.clearAnnotations = function () {
             // annotation_values should be set before initialization,
@@ -77,7 +74,6 @@ derm_app.controller('AnnotationController', [
                     });
                 }
             );
-            $scope.overview_image_url = '/api/v1/image/' + $scope.annotation.image._id + '/thumbnail?width=256';
             start_time = Date.now();
         });
         $scope.$watch('study && study._id', function () {

@@ -129,10 +129,7 @@ module.exports = function (grunt) {
                 'font-awesome/fonts/fontawesome-webfont.woff',
                 'angular/angular.min.js',
                 'angular-resource/angular-resource.min.js',
-                'angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js',
-                'bootstrap-switch/dist/js/bootstrap-switch.min.js',
-                'bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.min.css',
-                'angular-bootstrap-switch/dist/angular-bootstrap-switch.min.js'
+                'angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js'
             ],
             dest: staticDir + '/libs'
         });
