@@ -105,6 +105,7 @@ class Featureset(Model):
             if not isinstance(doc.get(featureType), list):
                 raise ValidationException(
                     'Featureset field "%s" must be a list.' % featureType)
+            featuresIds = set()
             for feature in doc[featureType]:
                 if not isinstance(feature, dict):
                     raise ValidationException(
@@ -117,6 +118,11 @@ class Featureset(Model):
                     raise ValidationException(
                         'Featureset sub-fields "%s.id" is invalid: %s.' %
                         (featureType, str(e)))
+
+                if feature['id'] in featuresIds:
+                    raise ValidationException(
+                        'Featureset "%s.id" must be unique.' % featureType)
+                featuresIds.add(feature['id'])
 
                 if not isinstance(feature.get('name'), list):
                     raise ValidationException(
@@ -141,6 +147,7 @@ class Featureset(Model):
                         raise ValidationException(
                             'Featureset sub-fields "globalFeatures.options" '
                             'must be lists.')
+                    featureOptions = set()
                     for option in feature['options']:
                         if not isinstance(option, dict):
                             raise ValidationException(
@@ -158,6 +165,12 @@ class Featureset(Model):
                                 'Featureset sub-field '
                                 '"globalFeatures.options.id" is invalid: %s.' %
                                 str(e))
+
+                        if option['id'] in featureOptions:
+                            raise ValidationException(
+                                'Featureset sub-field '
+                                '"globalFeatures.options.id" must be unique.')
+                        featureOptions.add(option['id'])
 
                         if not (option['name'] and
                                 isinstance(option['name'], six.string_types)):
