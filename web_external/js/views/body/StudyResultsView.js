@@ -37,61 +37,226 @@ isic.collections.FeatureCollection = Backbone.Collection.extend({
     }
 });
 
-// Base view for a collection of models in a select tag
-isic.views.StudyResultsSelectView = isic.View.extend({
-    events: {
-        'change': 'modelChanged'
-    },
-
+// Header view for collection of images
+isic.views.StudyResultsImageHeaderView = isic.View.extend({
     initialize: function (options) {
-        this.title = options.title;
-        this.template = _.has(options, 'template') ? options.template : isic.templates.studyResultsSelectView;
-        this.extraTemplateParams = _.has(options, 'extraTemplateParams') ? options.extraTemplateParams : {};
-        this.selectId = _.uniqueId('isic-study-results-select-view-select-');
-        this.getName = options.getName || this._defaultGetName;
+        this.study = options.study;
+
         this.listenTo(this.collection, 'reset', this.render);
 
         this.render();
     },
 
-    modelChanged: function () {
-        this.trigger('changed', this._element().val());
+    render: function () {
+        this.$el.html(isic.templates.studyResultsImageHeaderPage({
+            hasStudy: !_.isUndefined(this.study.id),
+            numImages: this.collection.models.length
+        }));
+
+        return this;
+    }
+});
+
+// View for a collection of studies in a select tag
+isic.views.StudyResultsSelectStudyView = isic.View.extend({
+    events: {
+        'change': 'studyChanged',
+        'click .isic-study-results-select-study-details-button': 'showDetails'
     },
 
-    setEnabled: function (val) {
-        if (val) {
-            this._element().removeAttr('disabled');
-        } else {
-            this._element().attr('disabled', 'disabled');
-        }
-    },
+    initialize: function (options) {
+        this.listenTo(this.collection, 'reset', this.render);
 
-    update: function () {
         this.render();
-        this._element().selectedIndex = 0;
-        this.setEnabled(true);
+    },
+
+    studyChanged: function () {
+        this.trigger('changed', this.$('select').val());
+
+        // Enable study details button
+        this.$('.isic-study-results-select-study-details-button').removeAttr('disabled');
+    },
+
+    showDetails: function () {
+        var studyId = this.$('select').val();
+        if (!studyId) {
+            return;
+        }
+
+        this.trigger('showStudyDetails', studyId);
     },
 
     render: function () {
-        var params = {
-            title: this.title,
-            selectId: this.selectId,
-            getName: this.getName,
-            models: this.collection.models
-        };
-        _.extend(params, this.extraTemplateParams);
+        // Destroy previous select2
+        var select = this.$('#isic-study-results-select-study-select');
+        select.select2('destroy');
 
-        this.$el.html(this.template(params));
+        this.$el.html(isic.templates.studyResultsSelectStudyPage({
+            models: this.collection.models
+        }));
+
+        // Set up select box
+        var placeholder = 'Select a study...';
+        if (!this.collection.isEmpty()) {
+            placeholder += ' (' + this.collection.length + ' available)';
+        }
+        select = this.$('#isic-study-results-select-study-select');
+        select.select2({
+            placeholder: placeholder
+        });
+        select.focus();
+
+        this.$('.isic-tooltip').tooltip({
+            delay: 100
+        });
 
         return this;
+    }
+});
+
+// Modal view for study details
+isic.views.StudyResultsStudyDetailsView = isic.View.extend({
+    render: function () {
+        var hasStudy = this.model.has('name');
+
+        var modal = this.$el.html(isic.templates.studyResultsStudyDetailPage({
+            model: this.model,
+            hasStudy: hasStudy,
+            formatUser: this.formatUser
+        })).girderModal(this).on('shown.bs.modal', function () {
+        }).on('hidden.bs.modal', function () {
+            girder.dialogs.handleClose('studyDetails');
+        }).on('ready.girder.modal', function () {
+        });
+
+        modal.trigger($.Event('ready.girder.modal', {
+            relatedTarget: modal
+        }));
+
+        girder.dialogs.handleOpen('studyDetails');
+
+        return this;
+    }
+});
+
+// View for a collection of images
+isic.views.StudyResultsSelectImageView = isic.View.extend({
+    events: {
+        'click .isic-study-results-select-image-image-container': 'imageSelected'
     },
 
-    _element: function () {
-        return this.$('select');
+    initialize: function (options) {
+        this.listenTo(this.collection, 'reset', this.render);
+
+        this.render();
     },
 
-    _defaultGetName: function (model) {
-        return model.name();
+    imageSelected: function (event) {
+        event.preventDefault();
+
+        // currentTarget is the element that the event has bubbled up to
+        var target = $(event.currentTarget);
+
+        this.$('.isic-study-results-select-image-image-container').removeClass('active');
+        target.addClass('active');
+
+        this.trigger('changed', target.data('imageId'));
+    },
+
+    render: function () {
+        this.$el.html(isic.templates.studyResultsSelectImagePage({
+            models: this.collection.models,
+            apiRoot: girder.apiRoot
+        }));
+
+        return this;
+    }
+});
+
+// View for a collection of users in a select tag
+isic.views.StudyResultsSelectUsersView = isic.View.extend({
+    events: {
+        'change': 'userChanged'
+    },
+
+    initialize: function (options) {
+        this.listenTo(this.collection, 'reset', this.render);
+
+        this.render();
+    },
+
+    userChanged: function () {
+        this.trigger('changed', this.$('select').val());
+    },
+
+    render: function () {
+        // Destroy previous select2
+        var select = this.$('#isic-study-results-select-users-select');
+        select.select2('destroy');
+
+        this.$el.html(isic.templates.studyResultsSelectUsersPage({
+            models: this.collection.models,
+            getName: this.formatUser
+        }));
+
+        // Set up select box
+        var placeholder = 'No users available';
+        if (!this.collection.isEmpty()) {
+            placeholder = 'Select a user... (' + this.collection.length + ' available)';
+        }
+        select = this.$('#isic-study-results-select-users-select');
+        select.select2({
+            placeholder: placeholder
+        });
+
+        return this;
+    }
+});
+
+// View for a collection of local features in a select tag
+isic.views.StudyResultsSelectLocalFeaturesView = isic.View.extend({
+    events: {
+        'change': 'featureChanged'
+    },
+
+    initialize: function (options) {
+        this.featureAnnotated = options.featureAnnotated;
+
+        this.listenTo(this.collection, 'reset', this.render);
+
+        this.render();
+    },
+
+    featureChanged: function () {
+        this.trigger('changed', this.$('select').val());
+    },
+
+    render: function () {
+        // Destroy previous select2
+        var select = this.$('#isic-study-results-select-local-features-select');
+        select.select2('destroy');
+
+        // Create local collection of those features that are annotated
+        var collection = this.collection.clone();
+        collection.reset(collection.filter(_.bind(function (model) {
+            return this.featureAnnotated(model.id);
+        }, this)));
+
+        this.$el.html(isic.templates.studyResultsSelectLocalFeaturesPage({
+            models: collection.models
+        }));
+
+        // Set up select box
+        var placeholder = 'No features available';
+        if (!collection.isEmpty()) {
+            placeholder = 'Select a feature... (' + collection.length + ' available)';
+        }
+        select = this.$('#isic-study-results-select-local-features-select');
+        select.select2({
+            placeholder: placeholder
+        });
+
+        return this;
     }
 });
 
@@ -156,8 +321,6 @@ isic.views.StudyResultsGlobalFeaturesView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.studyResultsGlobalFeaturesPage({
-            title: 'Global Features',
-            hasFeatureset: !_.isUndefined(this.featureset.id),
             hasGlobalFeatures: !_.isEmpty(this.featureset.get('globalFeatures')),
             featureset: this.featureset
         }));
@@ -206,25 +369,15 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
     initialize: function (settings) {
         this.annotation = settings.annotation;
         this.featureset = settings.featureset;
+        this.featureImageModel = settings.featureImageModel;
         this.features = new isic.collections.FeatureCollection();
-
-        this.featureImageModel = new isic.models.FeatureImageModel();
 
         this.listenTo(this.featureset, 'change', this.featuresetChanged);
         this.listenTo(this.annotation, 'change', this.annotationChanged);
 
-        this.selectFeatureView = new isic.views.StudyResultsSelectView({
-            title: 'Feature',
-            template: isic.templates.studyResultsLocalFeaturesSelectPage,
+        this.selectFeatureView = new isic.views.StudyResultsSelectLocalFeaturesView({
             collection: this.features,
-            extraTemplateParams: {
-                featureAnnotated: _.bind(this.featureAnnotated, this)
-            },
-            parentView: this
-        });
-
-        this.imageView = new isic.views.StudyResultsFeatureImageView({
-            model: this.featureImageModel,
+            featureAnnotated: _.bind(this.featureAnnotated, this),
             parentView: this
         });
 
@@ -245,16 +398,12 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.studyResultsLocalFeaturesPage({
-            title: 'Local Features',
-            hasFeatureset: !_.isUndefined(this.featureset.id),
             hasLocalFeatures: !_.isEmpty(this.featureset.get('localFeatures')),
             featureset: this.featureset
         }));
 
         this.selectFeatureView.setElement(
             this.$('#isic-study-results-select-local-feature-container')).render();
-        this.imageView.setElement(
-            this.$('#isic-study-results-local-features-image-container')).render();
 
         return this;
     },
@@ -302,6 +451,26 @@ isic.views.StudyResultsImageView = isic.View.extend({
 
 // View for the results of an annotation study
 isic.views.StudyResultsView = isic.View.extend({
+    events: {
+        // Update image visibility when image preview tab is activated
+        'shown.bs.tab #isic-study-results-image-preview-tab': function (event) {
+            this.imageView.$el.removeClass('hidden');
+            this.localFeaturesImageView.$el.addClass('hidden');
+        },
+
+        // Update image visibility when global features tab is activated
+        'shown.bs.tab #isic-study-results-global-features-tab': function (event) {
+            this.imageView.$el.addClass('hidden');
+            this.localFeaturesImageView.$el.addClass('hidden');
+        },
+
+        // Update image visibility when local features tab is activated
+        'shown.bs.tab #isic-study-results-local-features-tab': function (event) {
+            this.imageView.$el.addClass('hidden');
+            this.localFeaturesImageView.$el.removeClass('hidden');
+        }
+    },
+
     initialize: function (settings) {
         this.studies = new isic.collections.StudyCollection();
         this.studies.pageLimit = Number.MAX_SAFE_INTEGER;
@@ -312,26 +481,35 @@ isic.views.StudyResultsView = isic.View.extend({
         this.users = new girder.collections.UserCollection();
         this.users.pageLimit = Number.MAX_SAFE_INTEGER;
 
+        this.study = new isic.models.StudyModel();
         this.image = new isic.models.ImageModel();
         this.user = new girder.models.UserModel();
         this.featureset = new isic.models.FeaturesetModel();
         this.annotation = new isic.models.AnnotationModel();
+        this.featureImageModel = new isic.models.FeatureImageModel();
 
-        this.selectStudyView = new isic.views.StudyResultsSelectView({
-            title: 'Study',
+        this.selectStudyView = new isic.views.StudyResultsSelectStudyView({
             collection: this.studies,
             parentView: this
         });
 
-        this.selectImageView = new isic.views.StudyResultsSelectView({
-            title: 'Image',
+        this.studyDetailsView = new isic.views.StudyResultsStudyDetailsView({
+            model: this.study,
+            parentView: this
+        });
+
+        this.imageHeaderView = new isic.views.StudyResultsImageHeaderView({
+            collection: this.images,
+            study: this.study,
+            parentView: this
+        });
+
+        this.selectImageView = new isic.views.StudyResultsSelectImageView({
             collection: this.images,
             parentView: this
         });
 
-        this.selectUserView = new isic.views.StudyResultsSelectView({
-            title: 'User',
-            getName: this.formatUser,
+        this.selectUserView = new isic.views.StudyResultsSelectUsersView({
             collection: this.users,
             parentView: this
         });
@@ -345,11 +523,17 @@ isic.views.StudyResultsView = isic.View.extend({
         this.localFeaturesView = new isic.views.StudyResultsLocalFeaturesView({
             annotation: this.annotation,
             featureset: this.featureset,
+            featureImageModel: this.featureImageModel,
             parentView: this
         });
 
         this.imageView = new isic.views.StudyResultsImageView({
             model: this.image,
+            parentView: this
+        });
+
+        this.localFeaturesImageView = new isic.views.StudyResultsFeatureImageView({
+            model: this.featureImageModel,
             parentView: this
         });
 
@@ -359,26 +543,29 @@ isic.views.StudyResultsView = isic.View.extend({
         this.listenTo(this.selectImageView, 'changed', this.imageChanged);
         this.listenTo(this.selectUserView, 'changed', this.userChanged);
 
+        this.listenTo(this.selectStudyView, 'showStudyDetails', this.showStudyDetails);
+
         this.render();
     },
 
     studyChanged: function (studyId) {
+        this.study.clear();
+
         this.images.reset();
         this.users.reset();
 
         this.image.clear();
         this.user.clear();
 
-        this.selectImageView.setEnabled(false);
-        this.selectUserView.setEnabled(false);
-
         this.annotation.clear();
         this.featureset.clear();
 
+        // Hide main and content containers
+        this.setMainContainerVisible(false);
+        this.setContentContainerVisible(false);
+
         // Fetch selected study
-        this.study = new isic.models.StudyModel({
-            _id: studyId
-        }).once('g:fetched', function () {
+        this.study.set({'_id': studyId}).once('g:fetched', function () {
             // Populate images collection
             var imageModels = _.map(this.study.get('images'), function (image) {
                 return new isic.models.ImageModel(image);
@@ -396,6 +583,9 @@ isic.views.StudyResultsView = isic.View.extend({
             featureset.once('g:fetched', function () {
                 this.featureset.set(featureset.attributes);
             }, this).fetch();
+
+            // Show main container
+            this.setMainContainerVisible(true);
         }, this).fetch();
     },
 
@@ -403,12 +593,19 @@ isic.views.StudyResultsView = isic.View.extend({
         this.image.set('_id', imageId);
         this.annotation.clear();
         this.fetchAnnotation();
+
+        // Show content container
+        this.setContentContainerVisible(true);
     },
 
     userChanged: function (userId) {
         this.user.set('_id', userId);
         this.annotation.clear();
         this.fetchAnnotation();
+    },
+
+    showStudyDetails: function (studyId) {
+        this.studyDetailsView.render();
     },
 
     fetchAnnotation: function () {
@@ -431,12 +628,17 @@ isic.views.StudyResultsView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.studyResultsPage({
-            title: 'Annotation Study Results'
-        }));
+        this.$el.html(isic.templates.studyResultsPage());
+
+        // Set select2 default options
+        $.fn.select2.defaults.set('theme', 'bootstrap');
 
         this.selectStudyView.setElement(
             this.$('#isic-study-results-select-study-container')).render();
+        this.studyDetailsView.setElement(
+            $('#g-dialog-container'));
+        this.imageHeaderView.setElement(
+            this.$('#isic-study-results-select-image-header')).render();
         this.selectImageView.setElement(
             this.$('#isic-study-results-select-image-container')).render();
         this.selectUserView.setElement(
@@ -447,9 +649,30 @@ isic.views.StudyResultsView = isic.View.extend({
             this.$('#isic-study-results-local-features-container')).render();
         this.imageView.setElement(
             this.$('#isic-study-results-image-container')).render();
+        this.localFeaturesImageView.setElement(
+            this.$('#isic-study-results-local-features-image-container')).render();
 
         return this;
+    },
+
+    setElementVisible: function (element, visible) {
+        if (visible) {
+            element.removeClass('hidden');
+        } else {
+            element.addClass('hidden');
+        }
+    },
+
+    setMainContainerVisible: function (visible) {
+        var element = this.$('#isic-study-results-main-container');
+        this.setElementVisible(element, visible);
+    },
+
+    setContentContainerVisible: function (visible) {
+        this.setElementVisible(this.$('#isic-study-results-main-content'), visible);
+        this.setElementVisible(this.$('#isic-study-results-select-user-container'), visible);
     }
+
 });
 
 isic.router.route('studyResults', 'studyResults', function (id) {

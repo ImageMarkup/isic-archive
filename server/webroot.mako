@@ -17,6 +17,10 @@
         <link rel="stylesheet"
               href="${staticRoot}/built/plugins/${plugin}/plugin.min.css">
     % endfor
+    <link rel="stylesheet"
+          href="${staticRoot}/built/plugins/isic_archive/libs/select2/dist/css/select2.min.css">
+    <link rel="stylesheet"
+          href="${staticRoot}/built/plugins/isic_archive/libs/select2-bootstrap-theme/dist/select2-bootstrap.min.css">
     <link rel="icon"
           type="image/png"
           href="${staticRoot}/img/Girder_Favicon.png">
@@ -32,6 +36,7 @@
     % endfor
     <script src="${staticRoot}/built/plugins/isic_archive/isic_archive.min.js"></script>
     <script src="${staticRoot}/built/plugins/isic_archive/libs/pegjs/peg-0.10.0.min.js"></script>
+    <script src="${staticRoot}/built/plugins/isic_archive/libs/select2/dist/js/select2.min.js"></script>
     <script src="${staticRoot}/built/plugins/isic_archive/main.min.js"></script>
   </body>
 </html>

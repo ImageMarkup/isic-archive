@@ -1,18 +1,52 @@
-.isic-form-page.isic-study-results-container
-  h2.isic-page-title= title
+.isic-study-results-container
 
-  .isic-form-container
-    .isic-form-group.isic-study-results-form-group
+  // Study row
+  .isic-study-results-flex-row
 
-      #isic-study-results-select-study-container
+    // Study container
+    #isic-study-results-select-study-container
+
+    // User container
+    #isic-study-results-select-user-container.hidden
+
+  #isic-study-results-main-container.isic-study-results-flex-row.isic-study-results-flex-grow.hidden
+
+    // Image column
+    .isic-study-results-flex-column
+
+      // Image header
+      #isic-study-results-select-image-header
+
+      // Image container
       #isic-study-results-select-image-container
-      #isic-study-results-select-user-container
 
-    .isic-form-group.isic-study-results-form-group
-      #isic-study-results-global-features-container
+    #isic-study-results-main-content.isic-study-results-flex-column.isic-study-results-flex-grow.hidden
 
-    .isic-form-group.isic-study-results-form-group
-      #isic-study-results-local-features-container
+      // Tabs
+      ul.nav.nav-tabs
+        li.active
+          a(data-toggle="tab" href='#isic-study-results-image-preview-tab-content')#isic-study-results-image-preview-tab Image Preview
+        li
+          a(data-toggle="tab" href='#isic-study-results-global-features-tab-content')#isic-study-results-global-features-tab Global Features
+        li
+          a(data-toggle="tab" href='#isic-study-results-local-features-tab-content')#isic-study-results-local-features-tab Local Features
 
-    .isic-form-group.isic-study-results-form-group
-      #isic-study-results-image-container
+      // Tab content
+      .tab-content
+
+        .tab-pane.active#isic-study-results-image-preview-tab-content
+
+        .tab-pane#isic-study-results-global-features-tab-content
+          #isic-study-results-global-features-container
+
+        .tab-pane#isic-study-results-local-features-tab-content
+          #isic-study-results-local-features-container
+
+      // Image container
+      .isic-study-results-flex-grow.isic-study-results-image-container
+
+        // Local features image container
+        .isic-study-results-flex-grow.hidden#isic-study-results-local-features-image-container
+
+        // Image container
+        .isic-study-results-flex-grow#isic-study-results-image-container

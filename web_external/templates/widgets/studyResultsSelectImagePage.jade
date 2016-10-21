@@ -1,0 +1,10 @@
+- var thumbnailSize = 30;
+.isic-study-results-select-image-container
+  each model in models
+    .isic-study-results-select-image-image-container(data-image-id=model.id)
+      span= model.get('name')
+      img(
+        src=apiRoot + '/image/' + model.id + '/thumbnail?width=' + thumbnailSize,
+        width=thumbnailSize,
+        height=thumbnailSize
+      )

@@ -1,6 +1,63 @@
-.isic-study-results-form-group
-  label
-    font-size 20px
+.isic-study-results-container
+  display flex
+  flex-flow column
+  min-height 12em
+  // TODO Better way to calculate height
+  height calc(100vh - 8.15em)
+  overflow hidden
+
+  .isic-study-results-header
+    font-size 16px
+    font-weight bold
+
+  .isic-study-results-flex-row
+    display flex
+    flex-flow row
+
+  .isic-study-results-flex-column
+    display flex
+    flex-flow column
+
+  .isic-study-results-flex-grow
+    flex 1
+
+  .isic-study-results-pad
+    padding 10px
+
+  #isic-study-results-main-container
+    overflow hidden
+
+  .isic-study-results-image-container
+    overflow auto
+    display flex
+    flex-flow column
+
+  #isic-study-results-select-image-container
+    min-width 155px
+    overflow auto
+
+  #isic-study-results-main-content
+    padding-left 10px
+
+  #isic-study-results-select-user-container
+    margin-bottom 10px
+
+  #isic-study-results-image-container
+  #isic-study-results-local-features-image-container
+    display flex
 
   .isic-study-results-image
+    flex 1
+    min-width 640px
+    min-height 480px
+    object-fit contain
     width 100%
+    height 100%
+
+  .nav
+    li
+      a
+        padding 5px 10px
+
+  .tab-content
+    padding-top 3px
