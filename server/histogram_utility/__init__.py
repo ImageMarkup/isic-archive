@@ -118,8 +118,8 @@ class HistogramUtility(object):
                 'coerceToType': 'number',
                 'interpretation': 'ordinal',
                 'lowBound': 0,
-                'highBound': 100,
-                'numBins': 10
+                'highBound': 110,
+                'numBins': 11
             },
             'meta.clinical.personal_hx_mm': {
                 'coerceToType': 'string'
