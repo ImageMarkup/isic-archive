@@ -149,7 +149,8 @@ def _astToMongo_helper(ast):
         value = operands[1]
 
         if operator in ['in', 'not in']:
-            value = map(lambda x: None if x == 'NaN' else x, value)
+            value = map(lambda x: None if x in ['NaN', 'undefined'] else x,
+                        value)
 
         return {field: {_mongo_operators[operator]: value}}
 
