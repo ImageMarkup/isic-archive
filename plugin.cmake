@@ -34,3 +34,8 @@ add_eslint_test(
     isic_archive
     "${CMAKE_CURRENT_LIST_DIR}/web_client/js"
 )
+
+add_eslint_test(
+    isic_archive_grunt
+    "${CMAKE_CURRENT_LIST_DIR}/Gruntfile.js"
+)
