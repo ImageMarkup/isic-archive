@@ -586,7 +586,6 @@ isic.views.StudyResultsView = isic.View.extend({
 
             // Show main container
             this.setMainContainerVisible(true);
-
         }, this).fetch();
     },
 
@@ -656,8 +655,7 @@ isic.views.StudyResultsView = isic.View.extend({
         return this;
     },
 
-    setElementVisible: function (element, visible)
-    {
+    setElementVisible: function (element, visible) {
         if (visible) {
             element.removeClass('hidden');
         } else {
