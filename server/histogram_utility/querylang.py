@@ -134,11 +134,23 @@ def _astToMongo_helper(ast):
 
         return {_mongo_operators[operator]: [left, right]}
     elif operator == 'not':
+        # Mongo knows how to invert certain operators, including the comparison
+        # operators.
+        if operands['operator'] in ['<=', '<', '>=', '>']:
+            operator = operands['operator']
+            field = operands['operands'][0]['identifier']
+            value = operands['operands'][1]
+            return {field: {'$not': {_mongo_operators[operator]: value}}}
+
         raise TypeError(
             '_astToMongo_helper() cannot operate on an AST with not-nodes.')
     elif operator in ['in', 'not in', '<=', '<', '>=', '>', '=', '!=']:
         field = operands[0]['identifier']
         value = operands[1]
+
+        if operator in ['in', 'not in']:
+            value = map(lambda x: None if x in ['NaN', 'undefined'] else x,
+                        value)
 
         return {field: {_mongo_operators[operator]: value}}
 
@@ -192,6 +204,8 @@ def _eliminate_not(ast):
         return ast
     else:
         # Not expressions lose the not itself and invert the operand.
+        if operands['operator'] in ['<=', '<', '>=', '>']:
+            return ast
         return _eliminate_not(_invert(operands))
 
 
