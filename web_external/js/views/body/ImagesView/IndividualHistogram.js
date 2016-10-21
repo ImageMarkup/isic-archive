@@ -111,9 +111,9 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
                 this.scale.leftAxisPadding + ',' +
                 knobScale(this.scale.yMax) + ')');
         knob.call(d3.behavior.drag()
-            .origin(function () {
+            .origin(_.bind(function () {
                 return { x: 0, y: knobScale(this.scale.yMax) };
-            }).on('drag', function () {
+            }, this)).on('drag', _.bind(function () {
                 // the yMax setter automagically prevents bad values...
                 this.scale.yMax = knobScale.invert(d3.event.y);
 
@@ -128,7 +128,7 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
                 yAxisObj.call(yAxis);
                 // and the bars
                 drawBars();
-            }).on('dragstart', function () {
+            }, this)).on('dragstart', function () {
                 svg.style('cursor', 'ns-resize');
             }).on('dragend', function () {
                 svg.style('cursor', null);
