@@ -95,9 +95,14 @@ isic.views.StudyResultsSelectStudyView = isic.View.extend({
             models: this.collection.models
         }));
 
+        // Set up select box
+        var placeholder = 'Select a study...';
+        if (!this.collection.isEmpty()) {
+            placeholder += ' (' + this.collection.length + ' available)';
+        }
         select = this.$('#isic-study-results-select-study-select');
         select.select2({
-            placeholder: 'Select a study...'
+            placeholder: placeholder
         });
         select.focus();
 
@@ -194,9 +199,14 @@ isic.views.StudyResultsSelectUsersView = isic.View.extend({
             getName: this.formatUser
         }));
 
+        // Set up select box
+        var placeholder = 'No users available';
+        if (!this.collection.isEmpty()) {
+            placeholder = 'Select a user... (' + this.collection.length + ' available)';
+        }
         select = this.$('#isic-study-results-select-users-select');
         select.select2({
-            placeholder: 'Select a user...'
+            placeholder: placeholder
         });
 
         return this;
@@ -226,14 +236,24 @@ isic.views.StudyResultsSelectLocalFeaturesView = isic.View.extend({
         var select = this.$('#isic-study-results-select-local-features-select');
         select.select2('destroy');
 
+        // Create local collection of those features that are annotated
+        var collection = this.collection.clone();
+        collection.reset(collection.filter(_.bind(function (model) {
+            return this.featureAnnotated(model.id);
+        }, this)));
+
         this.$el.html(isic.templates.studyResultsSelectLocalFeaturesPage({
-            models: this.collection.models,
-            featureAnnotated: this.featureAnnotated
+            models: collection.models
         }));
 
+        // Set up select box
+        var placeholder = 'No features available';
+        if (!collection.isEmpty()) {
+            placeholder = 'Select a feature... (' + collection.length + ' available)';
+        }
         select = this.$('#isic-study-results-select-local-features-select');
         select.select2({
-            placeholder: 'Select a feature...'
+            placeholder: placeholder
         });
 
         return this;
