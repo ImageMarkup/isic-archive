@@ -20,7 +20,8 @@ isic.views.ImagesViewSubViews.DatasetPane = Backbone.View.extend({
             this.histogram = new isic.views.ImagesViewSubViews.IndividualHistogram({
                 el: svg.node(),
                 model: this.model,
-                attributeName: 'folderId'
+                attributeName: 'folderId',
+                showCheckbox: false
             });
             this.addedSvgElement = true;
         } else {
