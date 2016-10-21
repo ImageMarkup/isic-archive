@@ -472,7 +472,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                         }
                         lowBound = '"' + lowBound + '"';
                     }
-                    temp += attrName + ' < ' + lowBound;
+                    temp += 'not (' + attrName + ' >= ' + lowBound + ')';
                     includeLow = true;
                 }
                 if (_.has(range, 'highBound')) {
@@ -487,7 +487,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                         }
                         highBound = '"' + highBound + '"';
                     }
-                    temp += attrName + ' >= ' + highBound;
+                    temp += 'not (' + attrName + ' < ' + highBound + ')';
                 }
                 temp += ')';
             }, this);
