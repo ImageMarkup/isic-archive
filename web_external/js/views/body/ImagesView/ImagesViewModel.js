@@ -28,6 +28,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
     initialize: function () {
         this.datasetCollection = new isic.collections.DatasetCollection();
         this.images = new isic.collections.ImageCollection();
+        this.images.pageLimit = 50;
 
         // Load the pegjs grammar and fetch the datasets
         // before attempting to get histograms or image IDs
@@ -116,13 +117,17 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         // Pass in filter settings
         pageDetails.filter = this.getFilterAstTree();
         var imagesDeferred = $.Deferred();
-        this.images.once('g:changed', _.bind(function () {
-            imagesDeferred.resolve();
-        }, this)).fetch({
-            limit: pageDetails.limit,
+
+        // upstream Girder contains a bug where parameters are not honored on a
+        // reset fetch, so set the parameters manually before triggering a fetch
+        // with (ignored) params set to null, and the reset flag set to true.
+        this.images.params = {
             offset: pageDetails.offset,
             filter: JSON.stringify(this.getFilterAstTree())
-        });
+        };
+        this.images.once('g:changed', _.bind(function () {
+            imagesDeferred.resolve();
+        }, this)).fetch(null, true);
 
         return imagesDeferred.promise();
     },
