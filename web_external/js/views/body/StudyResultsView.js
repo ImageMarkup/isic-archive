@@ -87,11 +87,15 @@ isic.views.StudyResultsSelectStudyView = isic.View.extend({
     },
 
     render: function () {
+        // Destroy previous select2
+        var select = this.$('#isic-study-results-select-study-select');
+        select.select2('destroy');
+
         this.$el.html(isic.templates.studyResultsSelectStudyPage({
             models: this.collection.models
         }));
 
-        var select = this.$('#isic-study-results-select-study-select');
+        select = this.$('#isic-study-results-select-study-select');
         select.select2({
             placeholder: 'Select a study...'
         });
@@ -181,12 +185,16 @@ isic.views.StudyResultsSelectUsersView = isic.View.extend({
     },
 
     render: function () {
+        // Destroy previous select2
+        var select = this.$('#isic-study-results-select-users-select');
+        select.select2('destroy');
+
         this.$el.html(isic.templates.studyResultsSelectUsersPage({
             models: this.collection.models,
             getName: this.formatUser
         }));
 
-        var select = this.$('#isic-study-results-select-users-select');
+        select = this.$('#isic-study-results-select-users-select');
         select.select2({
             placeholder: 'Select a user...'
         });
@@ -214,12 +222,16 @@ isic.views.StudyResultsSelectLocalFeaturesView = isic.View.extend({
     },
 
     render: function () {
+        // Destroy previous select2
+        var select = this.$('#isic-study-results-select-local-features-select');
+        select.select2('destroy');
+
         this.$el.html(isic.templates.studyResultsSelectLocalFeaturesPage({
             models: this.collection.models,
             featureAnnotated: this.featureAnnotated
         }));
 
-        var select = this.$('#isic-study-results-select-local-features-select');
+        select = this.$('#isic-study-results-select-local-features-select');
         select.select2({
             placeholder: 'Select a feature...'
         });
