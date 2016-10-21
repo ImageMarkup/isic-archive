@@ -52,23 +52,37 @@
     color: #ffcc00;
 }
 
-.isic-annotation-feature-local {
-    /* this ancestor must have a non-static position,
-       so children can have absolute position with respect to this */
-    position: relative;
+.isic-annotation-features-local {
+    display: block;
 }
-.isic-annotation-feature-local:hover {
-    color: #ffcc00;
+
+.isic-annotation-features-local-activate {
+    width: 80%;
+
+    text-align: left;
+    white-space: normal;
+    color: #ffffff;
+    background-color: #333333;
 }
-.isic-annotation-feature-local.selected {
-    font-weight: 700;
-    width: 100%;
-    color: #ffcc00;
+
+.isic-annotation-features-local-activate:focus {
+    color: #ffffff;
+    background-color: #333333;
 }
-.isic-annotation-feature-local > .overlay {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
+
+.isic-annotation-features-local-activate:hover {
+    background-color: #f2b866;
+}
+
+.isic-annotation-features-local-activate.active {
+    background-color: #f0ad4e;
+}
+
+.isic-annotation-features-local-delete {
+    color: #ffffff;
+    background-color: #99190d;
+}
+
+.isic-annotation-features-local-delete:hover {
+    background-color: #f05c4e;
 }

@@ -122,40 +122,51 @@
                         </div>
                     </div>
                     <div class="isic-annotation-body">
-                        <div class="alert alert-info" ng-show="!showReview && !selected_feature_id" ng-cloak>
+                        <div class="alert alert-info" ng-show="!showReview && !anyActive()" ng-cloak>
                             <i class="glyphicon glyphicon-info-sign"></i>
-                            <span> Click a feature sub-heading to select for markup.</span>
+                            <span> Click a feature type to select it for markup.</span>
                         </div>
-                        <div class="alert alert-info" ng-show="!showReview && selected_feature_id" ng-cloak>
+                        <div class="alert alert-info" ng-show="!showReview && anyActive()" ng-cloak>
                             <i class="glyphicon glyphicon-info-sign"></i>
-                            <span> Shift-click to erase tiles.</span>
+                            <span style="display: inline-block">
+                                <b>Left-click</b> to select tiles.<br>
+                                <b>Shift-left-click</b> to erase tiles.<br>
+                                <b>Mouse wheel</b> to zoom in and out.<br>
+                                <b>Right-click</b> and drag to move while zoomed in.
+                            </span>
                         </div>
                         <div class="alert alert-info" ng-show="showReview" ng-cloak>
                             <i class="glyphicon glyphicon-info-sign"></i>
                             <span> Mouse over a feature name to display markup.</span>
                         </div>
-                        <uib-accordion close-others="false">
-                            <uib-accordion-group
-                                    ng-repeat="(feature_group_name, feature_group) in feature_groups track by feature_group_name"
-                                    heading="{{ feature_group_name }}"
-                                    is-open="true">
-                                <div class="isic-annotation-feature-local"
-                                     ng-repeat="feature in feature_group track by feature.id"
-                                     ng-show="!showReview || featureHasPositiveTile(feature.id)"
-                                     ng-class="{selected: selected_feature_id === feature.id}">
-                                    <div ng-if="!showReview"
-                                         class="overlay"
-                                         ng-click="selectFeature(feature.id)"></div>
-                                    <div ng-if="showReview"
-                                         class="overlay"
-                                         ng-mouseenter="displayQuestionTiles(feature.id)"
-                                         ng-mouseleave="displayQuestionTiles(null)"></div>
-                                    <span ng-show="featureIsSet(feature.id)"
-                                          class="pull-right" >√</span>
-                                    <span>{{ feature.name.slice(1).join(': ') || feature.name[0] }}</span>
-                                </div>
-                            </uib-accordion-group>
-                        </uib-accordion>
+
+                        <div>
+                            <span
+                                    ng-repeat="feature in featureset.localFeatures track by feature.id"
+                                    class="isic-annotation-features-local"
+                                    ng-show="!showReview || featureIsSet(feature.id)">
+                                <button
+                                        ng-show="!showReview" ng-cloak
+                                        type="button" class="btn btn-default isic-annotation-features-local-activate"
+                                        ng-class="{active: isActive(feature.id)}"
+                                        ng-click="onActivateClick(feature.id)">
+                                    <span>{{ feature.name.join(': ') }}</span>
+                                </button>
+                                <button
+                                        ng-show="showReview" ng-cloak
+                                        type="button" class="btn btn-default isic-annotation-features-local-activate"
+                                        ng-mouseenter="displayFeature(feature.id)"
+                                        ng-mouseleave="displayFeature(null)">
+                                    <span>{{ feature.name.join(': ') }}</span>
+                                </button>
+                                <button
+                                        ng-show="!showReview && featureIsSet(feature.id)" ng-cloak
+                                        type="button" class="btn btn-default isic-annotation-features-local-delete"
+                                        ng-click="deleteFeature(feature.id)">
+                                    <i class="glyphicon glyphicon-remove"></i>
+                                </button>
+                            </span>
+                        </div>
                     </div>
                 </div>
 

@@ -136,46 +136,13 @@ derm_app.controller('GlobalFeatureAnnotationController', ['$scope',
 
 derm_app.controller('LocalFeatureAnnotationController', ['$scope', '$rootScope',
     function ($scope, $rootScope) {
-        $scope.$watch('featureset && featureset._id', function () {
-            if (!$scope.featureset || !$scope.featureset.$resolved) {
-                return;
-            }
-            $scope.feature_groups = {};
-            $scope.featureset.localFeatures.forEach(function (feature) {
-                if (!$scope.feature_groups.hasOwnProperty(feature.name[0])) {
-                    $scope.feature_groups[feature.name[0]] = [];
-                }
-                $scope.feature_groups[feature.name[0]].push(feature);
-            });
-        });
-
         // Manually initialize variables as a hack to deal with event race conditions
         $scope.certaintyModel = Pixelmap.State.DEFINITE;
+        $scope.activeFeatureId = null;
         $scope.$on('reset', function () {
             // will also be called to initialize
-            $scope.selected_feature_id = null;
-            // TODO: if annotation_values were specific to this scope, we could clear it here
             $scope.certaintyModel = Pixelmap.State.DEFINITE;
-            $scope.filterval = '';
-        });
-
-        $scope.$watch('selected_feature_id', function (newFeatureId, oldFeatureId) {
-            // store the previously selected feature
-            if (oldFeatureId !== undefined && oldFeatureId !== null) {
-                // TODO: don't store when in review mode
-                $scope.annotation_values[oldFeatureId] =
-                    $rootScope.pixelmap.getActiveValues();
-            }
-            if (newFeatureId !== undefined) {
-                if (newFeatureId === null) {
-                    // We are in review mode
-                    $rootScope.pixelmap.clear();
-                } else {
-                    $rootScope.pixelmap.activate(
-                        $scope.annotation_values[newFeatureId]
-                    );
-                }
-            }
+            $scope.activeFeatureId = null;
         });
 
         $scope.$watch('certaintyModel', function (certaintyModel) {
@@ -184,34 +151,55 @@ derm_app.controller('LocalFeatureAnnotationController', ['$scope', '$rootScope',
 
         $scope.$watch('showReview', function (showReview) {
             if (showReview === true) {
-                // this will clear the tiles
-                $scope.selected_feature_id = null;
+                $scope.activateFeature(null);
             }
         });
 
-        $scope.selectFeature = function (featureId) {
-            $scope.selected_feature_id = featureId;
+        $scope.anyActive = function () {
+            return Boolean($scope.activeFeatureId);
+        };
+
+        $scope.isActive = function (featureId) {
+            return $scope.activeFeatureId === featureId;
+        };
+
+        $scope.onActivateClick = function(featureId) {
+            if ($scope.isActive(featureId)) {
+                $scope.activateFeature(null);
+            } else {
+                $scope.activateFeature(featureId);
+            }
+        };
+
+        $scope.activateFeature = function (featureId) {
+            // store the previously active feature
+            if ($scope.activeFeatureId) {
+                $scope.annotation_values[$scope.activeFeatureId] =
+                    $rootScope.pixelmap.getActiveValues();
+            }
+
+            $scope.activeFeatureId = featureId;
+
+            if ($scope.activeFeatureId) {
+                $rootScope.pixelmap.activate(
+                    $scope.annotation_values[$scope.activeFeatureId]);
+            } else {
+                $rootScope.pixelmap.clear();
+            }
         };
 
         $scope.featureIsSet = function (featureId) {
             return $scope.annotation_values[featureId] !== undefined;
         };
 
-        $scope.featureHasPositiveTile = function (featureId) {
-            // TODO: this is being called way too much
-            var result;
-            var feature_value = $scope.annotation_values[featureId];
-            if (Array.isArray(feature_value)) {
-                result = feature_value.some(function (tile_val) {
-                    return tile_val !== 0;
-                });
-            } else {
-                result = false;
+        $scope.deleteFeature = function (featureId) {
+            if ($scope.isActive(featureId)) {
+                $scope.activateFeature(null);
             }
-            return result;
+            delete $scope.annotation_values[featureId];
         };
 
-        $scope.displayQuestionTiles = function (featureId) {
+        $scope.displayFeature = function (featureId) {
             if (featureId) {
                 $rootScope.pixelmap.display($scope.annotation_values[featureId]);
             } else {
