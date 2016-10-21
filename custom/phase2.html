@@ -122,24 +122,33 @@
                         </div>
                     </div>
                     <div class="isic-annotation-body">
-                        <div class="alert alert-info" ng-show="!showReview && !anyActive()" ng-cloak>
-                            <i class="glyphicon glyphicon-info-sign"></i>
-                            <span> Click a feature type to select it for markup.</span>
-                        </div>
-                        <div class="alert alert-info" ng-show="!showReview && anyActive()" ng-cloak>
-                            <i class="glyphicon glyphicon-info-sign"></i>
-                            <span style="display: inline-block">
-                                <b>Left-click</b> to select tiles.<br>
-                                <b>Shift-left-click</b> to erase tiles.<br>
-                                <b>Mouse wheel</b> to zoom in and out.<br>
-                                <b>Right-click</b> and drag to move while zoomed in.
+                        <div class="alert alert-warning" style="margin-bottom: 0;">
+                            <i class="glyphicon glyphicon-question-sign"></i>
+                            <span ng-show="!showReview && !anyActive()" ng-cloak>
+                                Click a feature type to select it for markup.
+                            </span>
+                            <span ng-show="!showReview && anyActive()" ng-cloak>
+                                Markup regions with this feature type.
+                            </span>
+                            <span ng-show="showReview" ng-cloak>
+                                Mouse over a feature type to display markup.
                             </span>
                         </div>
-                        <div class="alert alert-info" ng-show="showReview" ng-cloak>
-                            <i class="glyphicon glyphicon-info-sign"></i>
-                            <span> Mouse over a feature name to display markup.</span>
+                        <div class="alert alert-info">
+                            <i class="glyphicon glyphicon-info-sign" style="vertical-align: top;"></i>
+                            <span ng-show="!anyActive()" style="display: inline-block;" ng-cloak>
+                                <b>Mouse wheel</b> to zoom in and out.<br>
+                                <b>Left-click and drag</b> to move while zoomed in.<br>
+                                <b>Right-click and drag</b> to zoom in and out.<br>
+                                &nbsp;
+                            </span>
+                            <span ng-show="anyActive()" style="display: inline-block;" ng-cloak>
+                                <b>Left-click</b> to markup tiles.<br>
+                                <b>Shift-left-click</b> to erase tiles.<br>
+                                <b>Mouse wheel</b> to zoom in and out.<br>
+                                <b>Right-click and drag</b> to move while zoomed in.
+                            </span>
                         </div>
-
                         <div>
                             <span
                                     ng-repeat="feature in featureset.localFeatures track by feature.id"
