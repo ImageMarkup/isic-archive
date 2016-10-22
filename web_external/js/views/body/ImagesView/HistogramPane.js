@@ -17,7 +17,7 @@ isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
             var isicStylesheet = Array.from(document.styleSheets)
                 .filter(function (sheet) {
                     return sheet.href &&
-                        sheet.href.indexOf('isic_archive.min.css') !== -1;
+                        sheet.href.indexOf('isic_archive.app.min.css') !== -1;
                 })[0];
             isicStylesheet.insertRule('#isic-images-histogramPane ' +
                 '.attributeSection .header input.expander:before ' +
