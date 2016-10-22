@@ -151,10 +151,7 @@ module.exports = function (grunt) {
             files: files
         });
         grunt.config.set('concat.isic_archive.options', {
-            stripBanners: {
-                block: true,
-                line: true
-            }
+            stripBanners: false
         });
         defaultTasks.push('concat:isic_archive');
     };
