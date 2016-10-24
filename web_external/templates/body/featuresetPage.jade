@@ -26,7 +26,11 @@
               each feature in featureset.get(featureType.id)
                 - var hasOptions = (feature.type === 'radio');
                 tr
-                  td.isic-featureset-table-feature-header(colspan=3)= feature.name.join(', ')
+                  td.isic-featureset-table-feature-header(colspan=3)
+                    each nameComponent, index in feature.name
+                      = nameComponent
+                      if index < (feature.name.length - 1)
+                        i.icon-angle-right
                 tr
                   td.isic-featureset-table-label.isic-featureset-table-feature-id-key ID
                   td.isic-featureset-table-feature-id-value
