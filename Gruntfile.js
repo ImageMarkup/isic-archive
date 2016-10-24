@@ -136,6 +136,7 @@ module.exports = function (grunt) {
             ],
             dest: staticDir + '/libs'
         });
+        defaultTasks.push('copy:isic_archive_bower_libs');
 
         // External app JS and CSS libraries
         files = {};
