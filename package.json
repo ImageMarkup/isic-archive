@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "bower": "^1.7.7",
+    "geojs": "0.10.3",
     "select2": "~4.0.3",
     "select2-bootstrap-theme": ">=0.1.0-beta"
   },
