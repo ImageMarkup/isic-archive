@@ -24,7 +24,8 @@
           data-target="#{'#panel-' + model.cid}"
           )
           a.collapsed
-            | #{model.get('name')}
+            block heading
+              = model.get('name')
             span.isic-listing-panel-heading-indicator.pull-right
               i.icon-right-open
         .isic-listing-panel-collapse.panel-collapse.collapse(

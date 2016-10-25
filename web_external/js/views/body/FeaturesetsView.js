@@ -27,7 +27,7 @@ isic.views.FeaturesetsView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.listingPage({
+        this.$el.html(isic.templates.featuresetsPage({
             title: 'Featuresets',
             models: this.featuresets.models,
             loaded: this.loaded
