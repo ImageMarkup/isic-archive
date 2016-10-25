@@ -25,19 +25,19 @@ Prerequisites
 Installation
 ~~~~~~~~~~~~
 * Clone the repository:
-::
+  ::
 
-  # from within your preferred source development directory
-  git clone https://github.com/ImageMarkup/isic-archive.git
-  cd isic-archive
-  git submodule init && git submodule update
+    # from within your preferred source development directory
+    git clone https://github.com/ImageMarkup/isic-archive.git
+    cd isic-archive
+    git submodule init && git submodule update
 
 
 * Launch and automatically provision the development VM:
-::
+  ::
 
-  # from within the "isic-archive" sub-directory
-  vagrant up
+    # from within the "isic-archive" sub-directory
+    vagrant up
 
 
 * Add the following lines to your host systems's ``/etc/hosts`` file:
@@ -72,37 +72,37 @@ Usage
   ``https://isic-archive.com``.
 
 * To rebuild the front-end code after development changes:
-::
+  ::
 
-  # from within the "isic-archive" sub-directory
-  vagrant ssh
-  cd ~/girder
-  npm install --production
+    # from within the "isic-archive" sub-directory
+    vagrant ssh
+    cd ~/girder
+    npm install --production
 
 * To automatically rebuild the front-end code as changed client files are saved,
   start and leave running:
-::
+  ::
 
-  # from within the "isic-archive" sub-directory
-  vagrant ssh
-  cd ~/girder
-  ./node_modules/.bin/grunt watch
+    # from within the "isic-archive" sub-directory
+    vagrant ssh
+    cd ~/girder
+    ./node_modules/.bin/grunt watch
 
 * To restart the Girder server after changed server files are saved:
-::
+  ::
 
-  # from within the "isic-archive" sub-directory
-  vagrant ssh
-  sudo supervisorctl restart girder
+    # from within the "isic-archive" sub-directory
+    vagrant ssh
+    sudo supervisorctl restart girder
 
 * To inspect various logs:
-::
+  ::
 
-  # Girder's console output
-  tail -F /tmp/girder.std*
+    # Girder's console output
+    tail -F /tmp/girder.std*
 
-  # Mongodb's console output
-  tail -F /var/log/mongodb/mongod.log
+    # Mongodb's console output
+    tail -F /var/log/mongodb/mongod.log
 
 .. |build-status| image:: https://travis-ci.org/ImageMarkup/isic-archive.svg?branch=master
     :target: https://travis-ci.org/ImageMarkup/isic-archive
