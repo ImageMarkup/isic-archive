@@ -9,8 +9,10 @@ isic.views.ImageFullscreenWidget = isic.View.extend({
                 parentView: this
             });
         }, this)).on('hidden.bs.modal', _.bind(function () {
-            this.imageViewerWidget.destroy();
-            delete this.imageViewerWidget;
+            if (this.imageViewerWidget) {
+                this.imageViewerWidget.destroy();
+                delete this.imageViewerWidget;
+            }
         }, this));
     }
 });
