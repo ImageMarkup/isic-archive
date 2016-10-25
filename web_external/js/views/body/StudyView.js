@@ -30,7 +30,8 @@ isic.views.StudyView = isic.View.extend({
         this.$el.html(isic.templates.studyPage({
             study: this.study,
             studyAdmin: this.studyAdmin,
-            formatUser: this.formatUser
+            formatUser: this.formatUser,
+            formatFeatureset: this.formatFeatureset
         }));
 
         this.$('.isic-tooltip').tooltip({
