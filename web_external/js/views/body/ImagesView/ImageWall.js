@@ -55,7 +55,7 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
                         el: $('#g-dialog-container'),
                         model: this.model.images.findWhere({_id: d.id}),
                         parentView: this
-                    });
+                    }).render();
                 } else {
                     this.selectImage(d.id === this.image.id ? null : d.id);
                 }
