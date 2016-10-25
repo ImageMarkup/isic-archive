@@ -142,7 +142,8 @@ module.exports = function (grunt) {
         files = {};
         files[staticDir + '/isic_archive.ext.min.js'] = [
             pluginDir + '/bower_components/pegjs/peg-0.10.0.min.js',
-            pluginDir + '/node_modules/select2/dist/js/select2.min.js'
+            pluginDir + '/node_modules/select2/dist/js/select2.min.js',
+            pluginDir + '/node_modules/geojs/geo.min.js'
         ];
         files[staticDir + '/isic_archive.ext.min.css'] = [
             pluginDir + '/node_modules/select2/dist/css/select2.min.css',

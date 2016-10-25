@@ -82,7 +82,7 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
             el: $('#g-dialog-container'),
             model: this.image,
             parentView: this
-        });
+        }).render();
     },
 
     clearSelectedImage: function () {
