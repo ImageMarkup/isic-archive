@@ -1,14 +1,13 @@
 /*globals d3*/
 
-// For now we'll hard code this (and probably change it in the future),
-// depending on the page size
-var imageSize = 128;
-
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
 isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
     initialize: function (settings) {
         this.image = settings.image;
+        // For now we'll hard code this (and probably change it in the future),
+        // depending on the page size
+        this.imageSize = 128;
 
         this.listenTo(this.image, 'change:_id', this.render);
         this.listenTo(this.model.images, 'g:changed', this.render);
@@ -38,11 +37,11 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
             .append('img')
             .classed('thumb', true);
 
-        sel.attr('src', function (d) {
-            return girder.apiRoot + '/image/' + d.id + '/thumbnail?width=' + imageSize;
-        })
-            .attr('height', imageSize * 0.75)
-            .attr('width', imageSize)
+        sel.attr('src', _.bind(function (d) {
+            return girder.apiRoot + '/image/' + d.id + '/thumbnail?width=' + this.imageSize;
+        }, this))
+            .attr('height', this.imageSize * 0.75)
+            .attr('width', this.imageSize)
             .attr('data-toggle', 'tooltip')
             .attr('data-placement', 'auto')
             .attr('data-viewport', '#isic-images-imageWall')
