@@ -28,7 +28,7 @@
                 tr
                   td.isic-featureset-table-feature-header(colspan=3)
                     each nameComponent, index in feature.name
-                      = nameComponent
+                      span.isic-featureset-table-feature-name-component= nameComponent
                       if index < (feature.name.length - 1)
                         i.icon-angle-right
                 tr
