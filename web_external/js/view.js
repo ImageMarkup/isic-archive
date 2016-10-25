@@ -13,5 +13,13 @@ isic.View = girder.View.extend({
             str = user['login'];
         }
         return str;
+    },
+
+    // Format a featureset model or featureset object as a string
+    formatFeatureset: function (featureset) {
+        if (featureset instanceof isic.models.FeaturesetModel) {
+            featureset = featureset.attributes;
+        }
+        return featureset['name'] + ' (version ' + featureset['version'] + ')';
     }
 });
