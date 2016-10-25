@@ -1,6 +1,6 @@
 server {
     listen {% if ssl %}443{% else %}80{% endif %};
-    server_name {{ site_hostname }};
+    server_name {{ site_hostname }}{% if not redirect_canonical %} default_server{% endif %};
 
     {% if ssl -%}
     ssl on;
@@ -36,9 +36,9 @@ server {
         proxy_pass https://isic-archive.com;
     }
 }
-
 {% endif %}
 
+{% if redirect_canonical %}
 server {
     listen 80 default_server;
     server_name {% if ssl %}{{ site_hostname }}{% endif %} www.{{ site_hostname }};
@@ -65,4 +65,5 @@ server {
 
     return 301 https://{{ site_hostname }}$request_uri;
 }
+{% endif %}
 {% endif %}
