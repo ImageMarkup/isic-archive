@@ -116,7 +116,7 @@ isic.views.ImageViewerWidget = isic.View.extend({
             this.viewer.exit();
             this.viewer = null;
         }
-        isic.views.ImageViewerWidget.prototype.destroy.call(this);
+        isic.View.prototype.destroy.call(this);
     }
 
 });
