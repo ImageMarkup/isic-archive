@@ -451,19 +451,26 @@ isic.views.StudyResultsImageView = isic.View.extend({
     setVisible: function (visible) {
         if (visible) {
             this.$el.removeClass('hidden');
+
+            if (this.imageViewerWidget) {
+                this.imageViewerWidget.render();
+            }
         } else {
             this.$el.addClass('hidden');
         }
-    initialize: function (settings) {
-        this.listenTo(this.model, 'change', this.render);
     },
 
     render: function () {
-        var imageUrl = this.model.id ? this.model.downloadUrl({contentDisposition: 'inline'}) : null;
-
         this.$el.html(isic.templates.studyResultsImagePage({
-            imageUrl: imageUrl
         }));
+
+        this.imageViewerWidget = new isic.views.ImageViewerWidget({
+            el: this.$('.isic-study-results-image-preview-container'),
+            model: this.model,
+            parentView: this
+        }).render();
+
+        return this;
     }
 });
 
@@ -666,7 +673,7 @@ isic.views.StudyResultsView = isic.View.extend({
         this.localFeaturesView.setElement(
             this.$('#isic-study-results-local-features-container')).render();
         this.imageView.setElement(
-            this.$('#isic-study-results-image-container')).render();
+            this.$('#isic-study-results-image-preview-container')).render();
         this.localFeaturesImageView.setElement(
             this.$('#isic-study-results-local-features-image-container')).render();
 

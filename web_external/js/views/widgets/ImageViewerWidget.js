@@ -1,6 +1,18 @@
 isic.views.ImageViewerWidget = isic.View.extend({
     initialize: function (settings) {
         /* "model" and "el" must be passed as settings */
+
+        this.renderedModelId = null;
+
+        this.listenTo(this.model, 'change', this.fetchTileInfo);
+    },
+
+    fetchTileInfo: function () {
+        if (!this.model.id) {
+            this.destroyViewer();
+            return;
+        }
+
         girder.restRequest({
             type: 'GET',
             path: 'item/' + this.model.id + '/tiles'
@@ -10,15 +22,39 @@ isic.views.ImageViewerWidget = isic.View.extend({
             this.tileHeight = resp.tileHeight;
             this.sizeX = resp.sizeX;
             this.sizeY = resp.sizeY;
+            this.destroyViewer();
             this.render();
         }, this));
     },
 
     render: function () {
+        // Do nothing if model is not set
+        if (!this.model.id) {
+            return this;
+        }
+
+        // Ensure tile info is available before rendering
+        if (_.isUndefined(this.sizeX) || _.isUndefined(this.sizeY)) {
+            this.fetchTileInfo();
+            return this;
+        }
+
         var w = this.sizeX,
             h = this.sizeY,
             mapW = this.$el.innerWidth(),
             mapH = this.$el.innerHeight();
+
+        // Require map element to have a nonzero size
+        if (mapW === 0 || mapH === 0) {
+            return this;
+        }
+
+        // Do nothing if already rendered for the current model
+        if (this.model.id === this.renderedModelId) {
+            return this;
+        }
+
+        this.renderedModelId = this.model.id;
 
         var minLevel = Math.min(0, Math.floor(Math.log(Math.min(
             (mapW || this.tileWidth) / this.tileWidth,
@@ -111,11 +147,24 @@ isic.views.ImageViewerWidget = isic.View.extend({
         return this;
     },
 
-    destroy: function () {
+    destroyViewer: function () {
         if (this.viewer) {
             this.viewer.exit();
             this.viewer = null;
+
+            delete this.levels;
+            delete this.tileWidth;
+            delete this.tileHeight;
+            delete this.sizeX;
+            delete this.sizeY;
+
+            this.renderedModelId = null;
         }
+    },
+
+    destroy: function () {
+        this.destroyViewer();
+
         isic.View.prototype.destroy.call(this);
     }
 

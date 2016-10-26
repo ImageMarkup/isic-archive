@@ -7,7 +7,7 @@ isic.views.ImageFullscreenWidget = isic.View.extend({
                 el: this.$('.isic-image-fullscreen-container'),
                 model: this.model,
                 parentView: this
-            });
+            }).render();
         }, this)).on('hidden.bs.modal', _.bind(function () {
             if (this.imageViewerWidget) {
                 this.imageViewerWidget.destroy();
