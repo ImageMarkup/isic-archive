@@ -347,6 +347,14 @@ isic.views.StudyResultsFeatureImageView = isic.View.extend({
         this.listenTo(this.model, 'change', this.render);
     },
 
+    setVisible: function (visible) {
+        if (visible) {
+            this.$el.removeClass('hidden');
+        } else {
+            this.$el.addClass('hidden');
+        }
+    },
+
     render: function () {
         var featureId = this.model.get('featureId');
         var annotationId = this.model.get('annotationId');
@@ -440,6 +448,12 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
 
 // View for an image
 isic.views.StudyResultsImageView = isic.View.extend({
+    setVisible: function (visible) {
+        if (visible) {
+            this.$el.removeClass('hidden');
+        } else {
+            this.$el.addClass('hidden');
+        }
     initialize: function (settings) {
         this.listenTo(this.model, 'change', this.render);
     },
@@ -458,20 +472,20 @@ isic.views.StudyResultsView = isic.View.extend({
     events: {
         // Update image visibility when image preview tab is activated
         'shown.bs.tab #isic-study-results-image-preview-tab': function (event) {
-            this.imageView.$el.removeClass('hidden');
-            this.localFeaturesImageView.$el.addClass('hidden');
+            this.localFeaturesImageView.setVisible(false);
+            this.imageView.setVisible(true);
         },
 
         // Update image visibility when global features tab is activated
         'shown.bs.tab #isic-study-results-global-features-tab': function (event) {
-            this.imageView.$el.addClass('hidden');
-            this.localFeaturesImageView.$el.addClass('hidden');
+            this.imageView.setVisible(false);
+            this.localFeaturesImageView.setVisible(false);
         },
 
         // Update image visibility when local features tab is activated
         'shown.bs.tab #isic-study-results-local-features-tab': function (event) {
-            this.imageView.$el.addClass('hidden');
-            this.localFeaturesImageView.$el.removeClass('hidden');
+            this.imageView.setVisible(false);
+            this.localFeaturesImageView.setVisible(true);
         }
     },
 
