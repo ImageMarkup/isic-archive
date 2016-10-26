@@ -296,6 +296,8 @@ isic.views.StudyResultsGlobalFeaturesTableView = isic.View.extend({
         this.$el.html(isic.templates.studyResultsGlobalFeaturesTable({
             features: this.collection.models
         }));
+
+        return this;
     }
 });
 
@@ -360,6 +362,8 @@ isic.views.StudyResultsFeatureImageView = isic.View.extend({
         this.$el.html(isic.templates.studyResultsFeatureImagePage({
             imageUrl: imageUrl
         }));
+
+        return this;
     }
 });
 
