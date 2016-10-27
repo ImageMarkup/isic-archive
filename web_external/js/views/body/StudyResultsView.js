@@ -452,9 +452,7 @@ isic.views.StudyResultsImageView = isic.View.extend({
         if (visible) {
             this.$el.removeClass('hidden');
 
-            if (this.imageViewerWidget) {
-                this.imageViewerWidget.render();
-            }
+            this.imageViewerWidget.render();
         } else {
             this.$el.addClass('hidden');
         }
