@@ -17,12 +17,14 @@ isic.views.ImageViewerWidget = isic.View.extend({
             type: 'GET',
             path: 'item/' + this.model.id + '/tiles'
         }).done(_.bind(function (resp) {
+            this.destroyViewer();
+
             this.levels = resp.levels;
             this.tileWidth = resp.tileWidth;
             this.tileHeight = resp.tileHeight;
             this.sizeX = resp.sizeX;
             this.sizeY = resp.sizeY;
-            this.destroyViewer();
+
             this.render();
         }, this));
     },
