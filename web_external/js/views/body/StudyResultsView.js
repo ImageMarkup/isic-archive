@@ -286,6 +286,8 @@ isic.views.StudyResultsGlobalFeaturesTableView = isic.View.extend({
         this.$el.html(isic.templates.studyResultsGlobalFeaturesTable({
             features: this.collection.models
         }));
+
+        return this;
     }
 });
 
@@ -335,6 +337,14 @@ isic.views.StudyResultsFeatureImageView = isic.View.extend({
         this.listenTo(this.model, 'change', this.render);
     },
 
+    setVisible: function (visible) {
+        if (visible) {
+            this.$el.removeClass('hidden');
+        } else {
+            this.$el.addClass('hidden');
+        }
+    },
+
     render: function () {
         var featureId = this.model.get('featureId');
         var annotationId = this.model.get('annotationId');
@@ -350,6 +360,8 @@ isic.views.StudyResultsFeatureImageView = isic.View.extend({
         this.$el.html(isic.templates.studyResultsFeatureImagePage({
             imageUrl: imageUrl
         }));
+
+        return this;
     }
 });
 
@@ -426,16 +438,27 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
 
 // View for an image
 isic.views.StudyResultsImageView = isic.View.extend({
-    initialize: function (settings) {
-        this.listenTo(this.model, 'change', this.render);
+    setVisible: function (visible) {
+        if (visible) {
+            this.$el.removeClass('hidden');
+
+            this.imageViewerWidget.render();
+        } else {
+            this.$el.addClass('hidden');
+        }
     },
 
     render: function () {
-        var imageUrl = this.model.id ? this.model.downloadUrl({contentDisposition: 'inline'}) : null;
-
         this.$el.html(isic.templates.studyResultsImagePage({
-            imageUrl: imageUrl
         }));
+
+        this.imageViewerWidget = new isic.views.ImageViewerWidget({
+            el: this.$('.isic-study-results-image-preview-container'),
+            model: this.model,
+            parentView: this
+        }).render();
+
+        return this;
     }
 });
 
@@ -444,20 +467,20 @@ isic.views.StudyResultsView = isic.View.extend({
     events: {
         // Update image visibility when image preview tab is activated
         'shown.bs.tab #isic-study-results-image-preview-tab': function (event) {
-            this.imageView.$el.removeClass('hidden');
-            this.localFeaturesImageView.$el.addClass('hidden');
+            this.localFeaturesImageView.setVisible(false);
+            this.imageView.setVisible(true);
         },
 
         // Update image visibility when global features tab is activated
         'shown.bs.tab #isic-study-results-global-features-tab': function (event) {
-            this.imageView.$el.addClass('hidden');
-            this.localFeaturesImageView.$el.addClass('hidden');
+            this.imageView.setVisible(false);
+            this.localFeaturesImageView.setVisible(false);
         },
 
         // Update image visibility when local features tab is activated
         'shown.bs.tab #isic-study-results-local-features-tab': function (event) {
-            this.imageView.$el.addClass('hidden');
-            this.localFeaturesImageView.$el.removeClass('hidden');
+            this.imageView.setVisible(false);
+            this.localFeaturesImageView.setVisible(true);
         }
     },
 
@@ -638,7 +661,7 @@ isic.views.StudyResultsView = isic.View.extend({
         this.localFeaturesView.setElement(
             this.$('#isic-study-results-local-features-container')).render();
         this.imageView.setElement(
-            this.$('#isic-study-results-image-container')).render();
+            this.$('#isic-study-results-image-preview-container')).render();
         this.localFeaturesImageView.setElement(
             this.$('#isic-study-results-local-features-image-container')).render();
 
