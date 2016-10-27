@@ -35,9 +35,13 @@ class TaskResource(Resource):
         self.route('GET', ('me', 'review', 'redirect'),
                    self.redirectReviewTask)
         self.route('GET', ('me', 'segmentation'), self.getSegmentationTasks)
+        self.route('GET', ('me', 'segmentation', 'next'),
+                   self.nextSegmentationTask)
         self.route('GET', ('me', 'segmentation', 'redirect'),
                    self.redirectSegmentationTask)
         self.route('GET', ('me', 'annotation'), self.getAnnotationTasks)
+        self.route('GET', ('me', 'annotation', 'next'),
+                   self.nextAnnotationTask)
         self.route('GET', ('me', 'annotation', 'redirect'),
                    self.redirectAnnotationTask)
 
@@ -148,6 +152,8 @@ class TaskResource(Resource):
             # Drop extra fields in images (probably not necessary)
             {'$project': {
                 '_id': 1,
+                'name': 1,
+                'updated': 1,
                 'folderId': 1}},
             # Join all segmentations into images
             {'$lookup': {
@@ -158,6 +164,8 @@ class TaskResource(Resource):
             # Drop extra fields from embedded segmentations
             {'$project': {
                 '_id': 1,
+                'name': 1,
+                'updated': 1,
                 'folderId': 1,
                 'segmentations._id': 1,
                 'segmentations.skill': 1}}
@@ -211,7 +219,9 @@ class TaskResource(Resource):
                 'size': 1}},
             # Drop segmentation fields
             {'$project': {
-                '_id': 1}}
+                '_id': 1,
+                'name': 1,
+                'updated': 1}}
         ]
 
     @describeRoute(
@@ -248,14 +258,14 @@ class TaskResource(Resource):
         return results
 
     @describeRoute(
-        Description('Redirect to a random segmentation task.')
-        .param('datasetId',
-               'An ID for the dataset to get a segmentation task for.',
+        Description('Get the next image requiring segmentation.')
+        .notes('The image is selected randomly from all those requiring '
+               'segmentation in the given dataset.')
+        .param('datasetId', 'An ID for the dataset to filter by.',
                required=True)
     )
-    @access.cookie
     @access.user
-    def redirectSegmentationTask(self, params):
+    def nextSegmentationTask(self, params):
         Dataset = self.model('dataset', 'isic_archive')
         Image = self.model('image', 'isic_archive')
         Segmentation = self.model('segmentation', 'isic_archive')
@@ -289,7 +299,25 @@ class TaskResource(Resource):
         results = list(Image.collection.aggregate(pipeline))
         if not results:
             raise RestException('No segmentations are needed for this dataset.')
-        imageId = results[0]['_id']
+        nextImage = results[0]
+
+        return {
+            field: nextImage[field]
+            for field in
+            Image.summaryFields
+        }
+
+    @describeRoute(
+        Description('Redirect to a random segmentation task.')
+        .param('datasetId',
+               'An ID for the dataset to get a segmentation task for.',
+               required=True)
+    )
+    @access.cookie
+    @access.user
+    def redirectSegmentationTask(self, params):
+        nextResp = self.nextSegmentationTask(params)
+        imageId = nextResp['_id']
 
         segmentUrl = '/uda/segment#/%s' % imageId
         raise cherrypy.HTTPRedirect(segmentUrl, status=307)
@@ -326,14 +354,13 @@ class TaskResource(Resource):
         return results
 
     @describeRoute(
-        Description('Redirect to the next annotation task.')
+        Description('Get the next pending annotation.')
         .param('studyId',
-               'An ID for the study to get an annotation task for.',
+               'An ID for the study to get a pending annotation for.',
                required=True)
     )
-    @access.cookie
     @access.user
-    def redirectAnnotationTask(self, params):
+    def nextAnnotationTask(self, params):
         Study = self.model('study', 'isic_archive')
 
         self.requireParams(['studyId'], params)
@@ -353,5 +380,25 @@ class TaskResource(Resource):
         except StopIteration:
             raise RestException('No annotations are needed for this study.')
 
-        annotationUrl = '/uda/annotate#/%s' % nextAnnotation['_id']
+        return {
+            '_id': nextAnnotation['_id'],
+            'name': nextAnnotation['name'],
+            'studyId': nextAnnotation['meta']['studyId'],
+            'userId': nextAnnotation['meta']['userId'],
+            'imageId': nextAnnotation['meta']['imageId']
+        }
+
+    @describeRoute(
+        Description('Redirect to the next annotation task.')
+        .param('studyId',
+               'An ID for the study to get an annotation task for.',
+               required=True)
+    )
+    @access.cookie
+    @access.user
+    def redirectAnnotationTask(self, params):
+        nextResp = self.nextAnnotationTask(params)
+        annotationId = nextResp['_id']
+
+        annotationUrl = '/uda/annotate#/%s' % annotationId
         raise cherrypy.HTTPRedirect(annotationUrl, status=307)
