@@ -119,21 +119,11 @@ isic.views.StudyResultsStudyDetailsView = isic.View.extend({
     render: function () {
         var hasStudy = this.model.has('name');
 
-        var modal = this.$el.html(isic.templates.studyResultsStudyDetailPage({
+        this.$el.html(isic.templates.studyResultsStudyDetailPage({
             model: this.model,
             hasStudy: hasStudy,
             formatUser: this.formatUser
-        })).girderModal(this).on('shown.bs.modal', function () {
-        }).on('hidden.bs.modal', function () {
-            girder.dialogs.handleClose('studyDetails');
-        }).on('ready.girder.modal', function () {
-        });
-
-        modal.trigger($.Event('ready.girder.modal', {
-            relatedTarget: modal
-        }));
-
-        girder.dialogs.handleOpen('studyDetails');
+        })).girderModal(this);
 
         return this;
     }
