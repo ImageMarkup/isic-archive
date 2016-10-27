@@ -36,7 +36,7 @@ isic.views.ImageViewerWidget = isic.View.extend({
         }
 
         // Ensure tile info is available before rendering
-        if (_.isUndefined(this.sizeX) || _.isUndefined(this.sizeY)) {
+        if (_.isUndefined(this.sizeX)) {
             this.fetchTileInfo();
             return this;
         }
