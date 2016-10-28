@@ -146,7 +146,7 @@ Pixelmap.prototype.loadImage = function (imageId) {
                 ul: {x: 0, y: 0},
                 lr: {x: w, y: h}
             },
-            mapColor: function (dataValue, index) {
+            color: function (dataValue, index) {
                 var color = {r: 0, g: 0, b: 0, a: 0};
                 var shownAlpha = 0.4;
 

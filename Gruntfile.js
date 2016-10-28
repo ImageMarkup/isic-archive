@@ -136,6 +136,17 @@ module.exports = function (grunt) {
         });
         defaultTasks.push('copy:isic_archive_bower_libs');
 
+        // Angular app NPM packages
+        grunt.config.set('copy.isic_archive_npm_libs', {
+            expand: true,
+            cwd: pluginDir + '/node_modules',
+            src: [
+                'geojs/geo.min.js'
+            ],
+            dest: staticDir + '/libs'
+        });
+        defaultTasks.push('copy:isic_archive_npm_libs');
+
         // External app JS and CSS libraries
         files = {};
         files[staticDir + '/isic_archive.ext.min.js'] = [
