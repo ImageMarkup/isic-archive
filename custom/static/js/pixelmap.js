@@ -5,7 +5,7 @@ var Pixelmap = function (containerDiv) {
 
     this.activeState = Pixelmap.State.DEFINITE;
 
-    this.map = null;
+    this.viewer = null;
     this.imageLayer = null;
     this.annotationLayer = null;
     this.pixelmap = null;
@@ -43,100 +43,51 @@ Pixelmap.prototype.loadImage = function (imageId) {
     }
     $.ajax({
         url: '/api/v1/item/' + imageId + '/tiles',
-        headers: {'Girder-Token': getCookie('girderToken')},
+        headers: {'Girder-Token': getCookie('girderToken')}
     }).done(_.bind(function (resp) {
-        var w = resp.sizeX,
-            h = resp.sizeY,
-            mapW = this.container.innerWidth(),
-            mapH = this.container.innerHeight();
+        var params = window.geo.util.pixelCoordinateParams(
+            this.container, resp.sizeX, resp.sizeY, resp.tileWidth, resp.tileHeight);
 
-        var minLevel = Math.min(0, Math.floor(Math.log(Math.min(
-            (mapW || resp.tileWidth) / resp.tileWidth,
-            (mapH || resp.tileHeight) / resp.tileHeight)) / Math.log(2)));
-        var maxLevel = Math.ceil(Math.log(Math.max(
-            w / resp.tileWidth,
-            h / resp.tileHeight)) / Math.log(2));
-        this.map = window.geo.map({
-            node: this.container,
-            // Projection
-            gcs: '+proj=longlat +axis=enu',
-            ingcs: '+proj=longlat +axis=esu',
-            unitsPerPixel: Math.pow(2, maxLevel),
-            maxBounds: {
-                left: 0,
-                top: 0,
-                right: w,
-                bottom: h
-            },
-            // Initial view
-            zoom: 0,
-            center: {
-                x: w / 2,
-                y: h / 2
-            },
-            // Navigation
-            // TODO: this is a hack, and breaks after resize
-            width: mapW - 5,
-            height: mapH - 5,
-            min: minLevel,
-            max: maxLevel + 2,
+        _.extend(params.map, {
             // TODO: allow rotation? (add actions to interactor and set allowRotation)
             allowRotation: false,
-            // TODO: clampBoundsX seems to cause jarring camera behavior after
-            //   zoom or move momentum settles, even if it's false
-            clampBoundsX: true,
-            clampBoundsY: true,
-            clampZoom: true,
             interactor: window.geo.mapInteractor({
                 actions: [{
                     action: window.geo.geo_action.pan,
-                    name: 'click_pan',
                     input: 'left',
-                    modifiers: {shift: false, ctrl: false}
+                    modifiers: {shift: false, ctrl: false},
+                    owner: 'geo.mapInteractor',
+                    name: 'button pan'
                 }, {
                     action: window.geo.geo_action.zoom,
-                    name: 'click_zoom',
                     input: 'right',
-                    modifiers: {shift: false, ctrl: false}
+                    modifiers: {shift: false, ctrl: false},
+                    owner: 'geo.mapInteractor',
+                    name: 'button zoom'
                 }, {
                     action: window.geo.geo_action.zoom,
-                    name: 'wheel_zoom',
                     input: 'wheel',
-                    modifiers: {shift: false, ctrl: false}
+                    modifiers: {shift: false, ctrl: false},
+                    owner: 'geo.mapInteractor',
+                    name: 'wheel zoom'
                 }]
             })
         });
+        params.map.unitsPerPixel = Math.pow(2, params.map.max);
+        params.map.max += 2;
+        // TODO: this is a hack to keep scroll bars from appearing?,
+        //   and breaks after resize
+        params.map.width -= 5;
+        params.map.height -= 5;
+        this.viewer = window.geo.map(params.map);
 
-        this.imageLayer = this.map.createLayer('osm', {
+        _.extend(params.layer, {
             useCredentials: true,
-            url: '/api/v1/item/' + imageId + '/tiles/zxy/{z}/{x}/{y}',
-            maxLevel: maxLevel,
-            wrapX: false,
-            wrapY: false,
-            tileOffset: function () {
-                return {x: 0, y: 0};
-            },
-            attribution: '',
-            tileWidth: resp.tileWidth,
-            tileHeight: resp.tileHeight,
-            tileRounding: Math.ceil,
-            tilesAtZoom: function (level) {
-                var scale = Math.pow(2, maxLevel - level);
-                return {
-                    x: Math.ceil(resp.sizeX / resp.tileWidth / scale),
-                    y: Math.ceil(resp.sizeY / resp.tileHeight / scale)
-                };
-            },
-            tilesMaxBounds: function (level) {
-                var scale = Math.pow(2, maxLevel - level);
-                return {
-                    x: Math.floor(resp.sizeX / scale),
-                    y: Math.floor(resp.sizeY / scale)
-                };
-            }
+            url: '/api/v1/item/' + imageId + '/tiles/zxy/{z}/{x}/{y}'
         });
+        this.imageLayer = this.viewer.createLayer('osm', params.layer);
 
-        this.annotationLayer = this.map.createLayer('feature', {
+        this.annotationLayer = this.viewer.createLayer('feature', {
             features: ['pixelmap']
         });
         this.pixelmap = this.annotationLayer.createFeature('pixelmap', {
@@ -144,7 +95,7 @@ Pixelmap.prototype.loadImage = function (imageId) {
             url: '/api/v1/image/' + imageId + '/superpixels',
             position: {
                 ul: {x: 0, y: 0},
-                lr: {x: w, y: h}
+                lr: {x: resp.sizeX, y: resp.sizeY}
             },
             color: function (dataValue, index) {
                 var color = {r: 0, g: 0, b: 0, a: 0};
@@ -186,10 +137,10 @@ Pixelmap.prototype.clear = function () {
 
     this.pixelmap.geoOff();
 
-    var interactor = this.map.interactor();
+    var interactor = this.viewer.interactor();
     // TODO: change this to add and remove actions
-    interactor.hasAction(undefined, 'click_pan').input = {left: true};
-    interactor.hasAction(undefined, 'click_zoom').input = {right: true};
+    interactor.hasAction(undefined, 'button pan').input = {left: true};
+    interactor.hasAction(undefined, 'button zoom').input = {right: true};
 };
 
 Pixelmap.prototype._throttledPixelmapDraw = _.throttle(function () {
@@ -213,10 +164,10 @@ Pixelmap.prototype.activate = function (featureValues) {
     /* Enable drawing on the map, with an optional set of values to pre-fill. */
     this.clear();
 
-    var interactor = this.map.interactor();
+    var interactor = this.viewer.interactor();
     // TODO: change this to add and remove actions
-    interactor.hasAction(undefined, 'click_zoom').input = {middle: true};
-    interactor.hasAction(undefined, 'click_pan').input = {right: true};
+    interactor.hasAction(undefined, 'button zoom').input = {middle: true};
+    interactor.hasAction(undefined, 'button pan').input = {right: true};
 
     this.pixelmap.geoOn(window.geo.event.feature.mousemove, _.bind(function (evt) {
         if (evt.mouse.buttons.left) {
