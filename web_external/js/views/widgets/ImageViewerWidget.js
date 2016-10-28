@@ -53,6 +53,9 @@ isic.views.ImageViewerWidget = isic.View.extend({
 
         this.renderedModelId = this.model.id;
 
+        // work around a GeoJS sizing bug
+        this.$el.css('font-size', '0');
+
         var params = window.geo.util.pixelCoordinateParams(
             this.$el, this.sizeX, this.sizeY, this.tileWidth, this.tileHeight);
 
@@ -84,10 +87,6 @@ isic.views.ImageViewerWidget = isic.View.extend({
         // setting unitsPerPixel fixes a bug in pixelCoordinateParams
         params.map.unitsPerPixel = Math.pow(2, params.map.max);
         params.map.max += 2;
-        // TODO: this is a hack to keep scroll bars from appearing?,
-        //   and breaks after resize
-        params.map.width -= 5;
-        params.map.height -= 5;
         this.viewer = window.geo.map(params.map);
 
         _.extend(params.layer, {
