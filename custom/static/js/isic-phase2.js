@@ -136,9 +136,6 @@ derm_app.controller('GlobalFeatureAnnotationController', ['$scope',
 
 derm_app.controller('LocalFeatureAnnotationController', ['$scope', '$rootScope',
     function ($scope, $rootScope) {
-        // Manually initialize variables as a hack to deal with event race conditions
-        $scope.certaintyModel = Pixelmap.State.DEFINITE;
-        $scope.activeFeatureId = null;
         $scope.$on('reset', function () {
             // will also be called to initialize
             $scope.certaintyModel = Pixelmap.State.DEFINITE;
@@ -146,7 +143,9 @@ derm_app.controller('LocalFeatureAnnotationController', ['$scope', '$rootScope',
         });
 
         $scope.$watch('certaintyModel', function (certaintyModel) {
-            $rootScope.pixelmap.setActiveState(certaintyModel);
+            if (certaintyModel !== undefined) {
+                $rootScope.pixelmap.setActiveState(certaintyModel);
+            }
         });
 
         $scope.$watch('showReview', function (showReview) {
@@ -163,7 +162,7 @@ derm_app.controller('LocalFeatureAnnotationController', ['$scope', '$rootScope',
             return $scope.activeFeatureId === featureId;
         };
 
-        $scope.onActivateClick = function(featureId) {
+        $scope.onActivateClick = function (featureId) {
             if ($scope.isActive(featureId)) {
                 $scope.activateFeature(null);
             } else {
