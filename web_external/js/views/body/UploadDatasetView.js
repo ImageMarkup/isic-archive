@@ -137,6 +137,7 @@ isic.views.UploadDatasetView = isic.View.extend({
 
     submitDataset: function () {
         var name = $('#isic-dataset-name').val();
+        var owner = $('#isic-dataset-owner').val();
         var description = $('#isic-dataset-description').val();
         var license = $('#isic-dataset-license').val();
         var signature = $('#isic-dataset-agreement-signature').val();
@@ -152,6 +153,7 @@ isic.views.UploadDatasetView = isic.View.extend({
             data: {
                 uploadFolderId: uploadFolderId,
                 name: name,
+                owner: owner,
                 description: description,
                 license: license,
                 signature: signature,
