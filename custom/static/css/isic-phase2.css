@@ -27,21 +27,25 @@
 .isic-annotation-header {
     background: #282727;
     color: #fff;
-    /*font-size: 12pt;*/
-    /*font-weight: 300;*/
-    /*margin-top:10px;*/
-    /*margin-bottom:10px;*/
+
     padding: 10px 6px 6px 10px;
     border-bottom: 1px solid #333;
-
-    /*-webkit-box-shadow: 0px 4px 7px 2px rgba(0,0,0,0.7);*/
-    /*-moz-box-shadow: 1px 7px 11px 2px rgba(0,0,0,0.7);*/
-
-    box-shadow: 0px 4px 4px 5px rgba(0,0,0,0.7);
 }
 
 .isic-annotation-body {
     padding: 0px 5px;
+}
+
+.isic-annotation-body-help {
+    margin-bottom: 0;
+}
+
+.isic-annotation-body-help > i {
+    vertical-align: top;
+}
+
+.isic-annotation-body-help > span {
+    display: inline-block;
 }
 
 .isic-annotation-feature-option {
@@ -52,8 +56,31 @@
     color: #ffcc00;
 }
 
+.isic-annotation-section {
+    margin: 0;
+    padding: 5px;
+}
+
 .isic-annotation-features-local {
     display: block;
+}
+
+.isic-annotation-radio-btn {
+    color: #ffffff;
+    background-color: #333333;
+}
+
+.isic-annotation-radio-btn:focus {
+    color: #ffffff;
+    background-color: #333333;
+}
+
+.isic-annotation-radio-btn:hover {
+    background-color: #f2b866;
+}
+
+.isic-annotation-radio-btn.active {
+    background-color: #f0ad4e;
 }
 
 .isic-annotation-features-local-activate {
@@ -61,21 +88,6 @@
 
     text-align: left;
     white-space: normal;
-    color: #ffffff;
-    background-color: #333333;
-}
-
-.isic-annotation-features-local-activate:focus {
-    color: #ffffff;
-    background-color: #333333;
-}
-
-.isic-annotation-features-local-activate:hover {
-    background-color: #f2b866;
-}
-
-.isic-annotation-features-local-activate.active {
-    background-color: #f0ad4e;
 }
 
 .isic-annotation-features-local-delete {
