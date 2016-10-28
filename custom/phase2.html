@@ -28,41 +28,27 @@
     <!-- AngularUI Bootstrap -->
     <script src="/static/built/plugins/isic_archive/libs/angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js"></script>
 
-    <!-- angular-bootstrap-switch -->
-    <script src="/static/built/plugins/isic_archive/libs/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
-    <link href="/static/built/plugins/isic_archive/libs/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.min.css" rel="stylesheet" type="text/css">
-    <script src="/static/built/plugins/isic_archive/libs/angular-bootstrap-switch/dist/angular-bootstrap-switch.min.js"></script>
+    <!-- GeoJS -->
+    <script src="/static/built/plugins/isic_archive/libs/geojs/geo.min.js"></script>
 
-    <!-- OpenLayers3 -->
-    <script src="/uda/static/js/ol-debug.js"></script>
-    <link href="/uda/static/css/ol.css" rel="stylesheet" type="text/css">
-
-    <!-- js-segment-annotator -->
-    <script src="/uda/static/js/js-segment-annotator/pf-segmentation.js"></script>
-    <script src="/uda/static/js/slic-segmentation.js"></script>
-    <script src="/uda/static/js/segment-annotator-phase2.js"></script>
-    <script src="/uda/static/js/UDASegment.js"></script>
+    <!-- Underscore -->
+    <script src="/static/built/plugins/isic_archive/libs/underscore/underscore-min.js"></script>
 
     <!-- ISIC App -->
+    <script src="/uda/static/js/pixelmap.js"></script>
     <script src="/uda/static/js/isic-app.js"></script>
     <script src="/uda/static/js/isic-user-controller.js"></script>
-    <script src="/uda/static/js/dermapp-phase2.js"></script>
-    <script src="/uda/static/js/dermapp-utils.js"></script>
-    <script src="/uda/static/js/dermapp-labels.js"></script>
-    <script src="/uda/static/js/dermapp-viewer.js"></script>
+    <script src="/uda/static/js/isic-phase2.js"></script>
     <link href="/uda/static/css/derm.css" rel="stylesheet" type="text/css">
     <link href="/uda/static/css/isic-phase2.css" rel="stylesheet" type="text/css">
 </head>
 <body>
-    <div id="angular_id" ng-controller="ApplicationController">
-        <div ng-controller="AnnotationController">
-            <div id="hoverBar">
-                <img id="objectinfo" style="display:none;" class="optionimage" src="/uda/static/na.jpg" />
-            </div>
-            <div class="col-sm-3" id="toolContainer">
+    <div id="angular_id" class="container-fluid" ng-controller="ApplicationController">
+        <div class="row isic-page" ng-controller="AnnotationController">
+            <div class="col-sm-3 isic-pane">
                 <div class="isichead">
                     <div class="isictitle">
-                        <span>ISIC Annotation Tool : Exhaustive Annotation</span>
+                        <span>ISIC Annotation Tool</span>
                     </div>
                     <div class="btn-group btn-group-block">
                         <div class="btn">
@@ -71,11 +57,6 @@
                         <div class="btn" ng-controller="UserController">
                             <span ng-cloak ng-show="user"><b>User:</b> {{ user.firstName }} {{ user.lastName }} ({{ user.login }})</span>
                         </div>
-                    </div>
-                    <div class="btn">
-                        <label for="isic-overview-toggle">Overview Image: </label>
-                        <input bs-switch type="checkbox" id="isic-overview-toggle"
-                               ng-model="display_overview" switch-size="mini">
                     </div>
                     <div uib-dropdown ng-controller="FlagAnnotationController" class="btn-group">
                         <button uib-dropdown-toggle
@@ -101,7 +82,10 @@
                 <div class="clearfix"></div>
 
                 <!-- Step content -->
-                <div ng-controller="GlobalFeatureAnnotationController" ng-if="featureset.globalFeatures.length" class="isic-annotation">
+                <div
+                        ng-controller="GlobalFeatureAnnotationController"
+                        ng-show="featureset.globalFeatures.length" ng-cloak
+                        class="isic-annotation">
                     <h3 class="isic-annotation-header">Global Features</h3>
                     <div class="isic-annotation-body">
                         <uib-accordion close-others="false">
@@ -130,70 +114,105 @@
                     </div>
                 </div>
 
-                <div ng-controller="LocalFeatureAnnotationController" ng-if="featureset.localFeatures.length" class="isic-annotation">
-                    <div class="isic-annotation-header">
-                        <h3 style="display: inline;">Local Features</h3>
-                        <div class="btn-group pull-right" ng-hide="showReview">
-                            <label class="btn">Confidence</label>
-                            <label class="btn" ng-model="certaintyModel" btn-radio="'definite'">100%</label>
-                            <label class="btn" ng-model="certaintyModel" btn-radio="'possible'">50%?</label>
-                        </div>
-                    </div>
+                <div
+                        ng-controller="LocalFeatureAnnotationController"
+                        ng-show="featureset.localFeatures.length" ng-cloak
+                        class="isic-annotation">
+                    <h3 class="isic-annotation-header">Local Features</h3>
                     <div class="isic-annotation-body">
-                        <div ng-show="!showReview" ng-cloak>
-                            <i class="glyphicon glyphicon-info-sign"></i>
-                            <span> Click a feature sub-heading to select for markup.</span>
+                        <div class="isic-annotation-section">
+                            <div class="alert alert-warning isic-annotation-body-help">
+                                <i class="glyphicon glyphicon-question-sign"></i>
+                                <span ng-show="!showReview && !anyActive()" ng-cloak>
+                                    Click a feature type to select it for markup.
+                                </span>
+                                <span ng-show="!showReview && anyActive()" ng-cloak>
+                                    Markup regions with this feature type.
+                                </span>
+                                <span ng-show="showReview" ng-cloak>
+                                    Mouse over a feature type to display markup.
+                                </span>
+                            </div>
+                            <div class="alert alert-info isic-annotation-body-help">
+                                <i class="glyphicon glyphicon-info-sign"></i>
+                                <span ng-show="!anyActive()" ng-cloak>
+                                    <b>Mouse wheel</b> to zoom in and out.<br>
+                                    <b>Left-click and drag</b> to move while zoomed in.<br>
+                                    <b>Right-click and drag</b> to zoom in and out.<br>
+                                    &nbsp;
+                                </span>
+                                <span ng-show="anyActive()" ng-cloak>
+                                    <b>Left-click</b> to markup tiles.<br>
+                                    <b>Shift-left-click</b> to erase tiles.<br>
+                                    <b>Mouse wheel</b> to zoom in and out.<br>
+                                    <b>Right-click and drag</b> to move while zoomed in.
+                                </span>
+                            </div>
                         </div>
-                        <div ng-show="showReview" ng-cloak>
-                            <i class="glyphicon glyphicon-info-sign"></i>
-                            <span> Mouse over a feature name to display markup.</span>
+                        <div ng-hide="showReview" ng-cloak class="isic-annotation-section">
+                            <label>Confidence</label>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-default isic-annotation-radio-btn"
+                                        ng-model="certaintyModel" uib-btn-radio="1.0">100%</button>
+                                <button type="button" class="btn btn-default isic-annotation-radio-btn"
+                                        ng-model="certaintyModel" uib-btn-radio="0.5">50%?</button>
+                            </div>
                         </div>
-                        <uib-accordion close-others="false">
-                            <uib-accordion-group
-                                    ng-repeat="(feature_group_name, feature_group) in feature_groups track by feature_group_name"
-                                    heading="{{ feature_group_name }}"
-                                    is-open="true">
-                                <div class="isic-annotation-feature-local"
-                                     ng-repeat="feature in feature_group track by feature.id"
-                                     ng-show="!showReview || featureHasPositiveTile(feature.id)"
-                                     ng-class="{selected: selected_feature_id === feature.id}">
-                                    <div ng-if="!showReview"
-                                         class="overlay"
-                                         ng-click="selectFeature(feature.id)"></div>
-                                    <div ng-if="showReview"
-                                         class="overlay"
-                                         ng-mouseenter="displayQuestionTiles(feature.id)"
-                                         ng-mouseleave="displayQuestionTiles(null)"></div>
-                                    <span ng-show="featureHasPositiveTile(feature.id)"
-                                          class="pull-right" >√</span>
-                                    <span>{{ feature.name.slice(1).join(': ') || feature.name[0] }}</span>
-                                </div>
-                            </uib-accordion-group>
-                        </uib-accordion>
+                        <div class="isic-annotation-section">
+                            <span
+                                    ng-repeat="feature in featureset.localFeatures track by feature.id"
+                                    class="isic-annotation-features-local"
+                                    ng-show="!showReview || featureIsSet(feature.id)">
+                                <button
+                                        ng-show="!showReview" ng-cloak
+                                        type="button" class="btn btn-default isic-annotation-radio-btn isic-annotation-features-local-activate"
+                                        ng-class="{active: isActive(feature.id)}"
+                                        ng-click="onActivateClick(feature.id)">
+                                    <span>{{ feature.name.join(': ') }}</span>
+                                </button>
+                                <button
+                                        ng-show="showReview" ng-cloak
+                                        type="button" class="btn btn-default isic-annotation-radio-btn isic-annotation-features-local-activate"
+                                        ng-mouseenter="displayFeature(feature.id)"
+                                        ng-mouseleave="displayFeature(null)">
+                                    <span>{{ feature.name.join(': ') }}</span>
+                                </button>
+                                <button
+                                        ng-show="!showReview && featureIsSet(feature.id)" ng-cloak
+                                        type="button" class="btn btn-default isic-annotation-features-local-delete"
+                                        ng-click="deleteFeature(feature.id)">
+                                    <i class="glyphicon glyphicon-remove"></i>
+                                </button>
+                            </span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Step footer -->
-                <div class="lowertoolbar" ng-show="true" ng-cloak>
+                <div class="isic-annotation-section">
                     <div class="btn-group">
-                        <div class="btn btn-info" ng-click="clearAnnotations()" ng-hide="showReview">Reset current</div>
-                    </div>
-                    <div class="btn-group">
-                        <div class="btn btn-info" ng-click="showReview = false"  ng-show="showReview">Continue editing</div>
-                    </div>
-                    <div class="btn-group pull-right" ng-show="showReview">
-                        <div class="btn btn-success" ng-click="submitAnnotations(true)">Submit</div>
+                        <button
+                                ng-hide="showReview" ng-cloak
+                                type="button" class="btn btn-info"
+                                ng-click="clearAnnotations()">Reset current</button>
+                        <button
+                                ng-show="showReview" ng-cloak
+                                type="button" class="btn btn-info"
+                                ng-click="showReview = false">Continue editing</button>
                     </div>
                     <div class="btn-group pull-right">
-                        <div class="btn btn-success" ng-click="showReview = true"  ng-hide="showReview">Review</div>
+                        <button
+                                ng-show="showReview" ng-cloak
+                                type="button" class="btn btn-success"
+                                ng-click="submitAnnotations(true)">Submit</button>
+                        <button ng-hide="showReview" ng-cloak
+                                type="button" class="btn btn-success"
+                                ng-click="showReview = true">Review</button>
                     </div>
                 </div>
             </div>
-            <div class="col-sm-9 nopad">
-                <div id="map" class="map" ng-hide="showingSegmentation"></div>
-                <div id="annotatorcontainer" ng-show="showingSegmentation"></div>
-                <img ng-show="display_overview && overview_image_url" ng-src="{{ overview_image_url }}"
-                        class="isic-overview-frame">
+            <div class="col-sm-9 isic-map">
+                <div id="map-container" class="isic-map"></div>
             </div>
         </div>
     </div>

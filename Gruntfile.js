@@ -120,6 +120,7 @@ module.exports = function (grunt) {
             cwd: pluginDir + '/bower_components',
             src: [
                 'jquery/dist/jquery.min.js',
+                'underscore/underscore-min.js',
                 'flatstrap/dist/js/bootstrap.min.js',
                 'flatstrap/dist/css/bootstrap.min.css',
                 'flatstrap/dist/fonts/glyphicons-halflings-regular.woff',
@@ -129,14 +130,22 @@ module.exports = function (grunt) {
                 'font-awesome/fonts/fontawesome-webfont.woff',
                 'angular/angular.min.js',
                 'angular-resource/angular-resource.min.js',
-                'angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js',
-                'bootstrap-switch/dist/js/bootstrap-switch.min.js',
-                'bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.min.css',
-                'angular-bootstrap-switch/dist/angular-bootstrap-switch.min.js'
+                'angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js'
             ],
             dest: staticDir + '/libs'
         });
         defaultTasks.push('copy:isic_archive_bower_libs');
+
+        // Angular app NPM packages
+        grunt.config.set('copy.isic_archive_npm_libs', {
+            expand: true,
+            cwd: pluginDir + '/node_modules',
+            src: [
+                'geojs/geo.min.js'
+            ],
+            dest: staticDir + '/libs'
+        });
+        defaultTasks.push('copy:isic_archive_npm_libs');
 
         // External app JS and CSS libraries
         files = {};

@@ -1,3 +1,25 @@
+.isic-page {
+    height: 100vh;
+}
+
+.isic-map {
+    height: 100%;
+
+    padding: 0px;
+}
+
+.isic-pane {
+    height: 100%;
+    overflow-y: auto;
+
+    padding: 0px;
+
+    color: #fff;
+    background: black;
+    background-repeat: repeat;
+}
+
+
 .isic-annotation {
     /* "global" or "local" feature */
 }
@@ -5,21 +27,25 @@
 .isic-annotation-header {
     background: #282727;
     color: #fff;
-    /*font-size: 12pt;*/
-    /*font-weight: 300;*/
-    /*margin-top:10px;*/
-    /*margin-bottom:10px;*/
+
     padding: 10px 6px 6px 10px;
     border-bottom: 1px solid #333;
-
-    /*-webkit-box-shadow: 0px 4px 7px 2px rgba(0,0,0,0.7);*/
-    /*-moz-box-shadow: 1px 7px 11px 2px rgba(0,0,0,0.7);*/
-
-    box-shadow: 0px 4px 4px 5px rgba(0,0,0,0.7);
 }
 
 .isic-annotation-body {
     padding: 0px 5px;
+}
+
+.isic-annotation-body-help {
+    margin-bottom: 0;
+}
+
+.isic-annotation-body-help > i {
+    vertical-align: top;
+}
+
+.isic-annotation-body-help > span {
+    display: inline-block;
 }
 
 .isic-annotation-feature-option {
@@ -30,31 +56,45 @@
     color: #ffcc00;
 }
 
-.isic-annotation-feature-local {
-    /* this ancestor must have a non-static position,
-       so children can have absolute position with respect to this */
-    position: relative;
-}
-.isic-annotation-feature-local:hover {
-    color: #ffcc00;
-}
-.isic-annotation-feature-local.selected {
-    font-weight: 700;
-    width: 100%;
-    color: #ffcc00;
-}
-.isic-annotation-feature-local > .overlay {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
+.isic-annotation-section {
+    margin: 0;
+    padding: 5px;
 }
 
-.isic-overview-frame {
-    position: absolute;
-    z-index: 5000;
-    top: 5px;
-    right: 5px;
-    border: 5px solid #282727;
+.isic-annotation-features-local {
+    display: block;
+}
+
+.isic-annotation-radio-btn {
+    color: #ffffff;
+    background-color: #333333;
+}
+
+.isic-annotation-radio-btn:focus {
+    color: #ffffff;
+    background-color: #333333;
+}
+
+.isic-annotation-radio-btn:hover {
+    background-color: #f2b866;
+}
+
+.isic-annotation-radio-btn.active {
+    background-color: #f0ad4e;
+}
+
+.isic-annotation-features-local-activate {
+    width: 80%;
+
+    text-align: left;
+    white-space: normal;
+}
+
+.isic-annotation-features-local-delete {
+    color: #ffffff;
+    background-color: #99190d;
+}
+
+.isic-annotation-features-local-delete:hover {
+    background-color: #f05c4e;
 }
