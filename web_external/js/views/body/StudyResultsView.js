@@ -122,8 +122,7 @@ isic.views.StudyResultsStudyDetailsView = isic.View.extend({
         this.$el.html(isic.templates.studyResultsStudyDetailPage({
             model: this.model,
             hasStudy: hasStudy,
-            formatUser: this.formatUser,
-            formatFeatureset: this.formatFeatureset
+            formatUser: this.formatUser
         })).girderModal(this);
 
         return this;

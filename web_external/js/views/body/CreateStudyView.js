@@ -39,8 +39,6 @@ isic.views.CreateStudyView = isic.View.extend({
             parentView: this
         }).on('g:resultClicked', this._addUser, this);
 
-        var formatFeatureset = this.formatFeatureset;
-
         this.featuresetSearchWidget = new girder.views.SearchFieldWidget({
             placeholder: 'Search featuresets...',
             modes: ['prefix', 'text'],
@@ -48,7 +46,7 @@ isic.views.CreateStudyView = isic.View.extend({
             getInfoCallback: function (type, obj) {
                 if (type === 'featureset.isic_archive') {
                     return {
-                        text: formatFeatureset(obj),
+                        text: (new isic.models.FeaturesetModel(obj)).name(),
                         icon: 'th'
                     };
                 }

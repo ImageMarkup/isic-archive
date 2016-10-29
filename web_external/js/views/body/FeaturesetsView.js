@@ -30,8 +30,7 @@ isic.views.FeaturesetsView = isic.View.extend({
         this.$el.html(isic.templates.featuresetsPage({
             title: 'Featuresets',
             models: this.featuresets.models,
-            loaded: this.loaded,
-            formatFeatureset: this.formatFeatureset
+            loaded: this.loaded
         }));
 
         // Display loading indicator

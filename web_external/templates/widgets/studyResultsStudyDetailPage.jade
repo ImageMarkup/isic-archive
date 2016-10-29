@@ -16,7 +16,7 @@
                 code= model.id
             tr
               td.isic-study-results-study-details-table-label Featureset
-              td= formatFeatureset(model.featureset())
+              td= model.featureset().name()
             tr
               td.isic-study-results-study-details-table-label Creator
               td= formatUser(model.get('creator'))
