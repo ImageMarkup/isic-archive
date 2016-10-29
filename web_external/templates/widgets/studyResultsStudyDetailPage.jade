@@ -5,7 +5,7 @@
       h4.modal-title
         | Study details
       i.icon-eye
-      = model.get('name')
+      = model.name()
     .modal-body
       .isic-study-results-study-details-container
         if hasStudy
