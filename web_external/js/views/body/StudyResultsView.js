@@ -593,7 +593,7 @@ isic.views.StudyResultsView = isic.View.extend({
             this.users.reset(userModels);
 
             // Fetch featureset
-            var featureset = new isic.models.FeaturesetModel(this.study.get('featureset'));
+            var featureset = this.study.featureset();
             featureset.once('g:fetched', function () {
                 this.featureset.set(featureset.attributes);
             }, this).fetch();

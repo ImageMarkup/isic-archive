@@ -52,5 +52,16 @@ isic.models.StudyModel = girder.Model.extend({
             deferred.resolve(false);
         }
         return deferred.promise();
+    },
+
+    /**
+     * Return the featureset for this study.
+     *
+     * This returns a FeaturesetModel with only a few summary properties of
+     * the featureset. To retrieve all properties of the featureset, call
+     * ".fetch()" on the FeaturesetModel.
+     */
+    featureset: function () {
+        return new isic.models.FeaturesetModel(this.get('featureset'));
     }
 });
