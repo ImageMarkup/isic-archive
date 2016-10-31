@@ -15,6 +15,9 @@ isic.models.FeatureImageModel = Backbone.Model.extend({
 
 // Model for a global feature result
 isic.models.GlobalFeatureResultModel = Backbone.Model.extend({
+    name: function () {
+        return this.get('name');
+    }
 });
 
 // Collection of feature models
