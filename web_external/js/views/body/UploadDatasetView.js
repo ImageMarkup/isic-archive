@@ -15,6 +15,7 @@ isic.views.UploadDatasetView = isic.View.extend({
         'click #isic-upload-reset': function (event) {
             this.resetUpload();
         },
+        'click .isic-dataset-agreement-link': 'showLicenseInfo',
         'change input[name="attribution"]': function (event) {
             // Update attribution name field sensitivity
             var target = $(event.target);
@@ -243,6 +244,16 @@ isic.views.UploadDatasetView = isic.View.extend({
                 folderId: this.uploadFolder.id
             });
         }, this);
+    },
+
+    showLicenseInfo: function () {
+        if (!this.licenseInfoWidget) {
+            this.licenseInfoWidget = new isic.views.UploadDatasetLicenseInfoWidget({
+                el: $('#g-dialog-container'),
+                parentView: this
+            });
+        }
+        this.licenseInfoWidget.render();
     }
 });
 
