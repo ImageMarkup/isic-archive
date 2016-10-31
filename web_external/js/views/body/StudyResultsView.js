@@ -15,6 +15,9 @@ isic.models.FeatureImageModel = Backbone.Model.extend({
 
 // Model for a global feature result
 isic.models.GlobalFeatureResultModel = Backbone.Model.extend({
+    name: function () {
+        return this.get('name');
+    }
 });
 
 // Collection of feature models
@@ -592,7 +595,7 @@ isic.views.StudyResultsView = isic.View.extend({
             this.users.reset(userModels);
 
             // Fetch featureset
-            var featureset = new isic.models.FeaturesetModel(this.study.get('featureset'));
+            var featureset = this.study.featureset();
             featureset.once('g:fetched', function () {
                 this.featureset.set(featureset.attributes);
             }, this).fetch();

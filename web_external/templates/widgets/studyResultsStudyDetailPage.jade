@@ -5,11 +5,10 @@
       h4.modal-title
         | Study details
       i.icon-eye
-      = model.get('name')
+      = model.name()
     .modal-body
       .isic-study-results-study-details-container
         if hasStudy
-          - var featureset = model.get('featureset')
           table.table.table-condensed.isic-study-results-study-details-table
             tr
               td.isic-study-results-study-details-table-label Unique ID
@@ -17,7 +16,7 @@
                 code= model.id
             tr
               td.isic-study-results-study-details-table-label Featureset
-              td #{featureset['name']} (version #{featureset['version']})
+              td= model.featureset().name()
             tr
               td.isic-study-results-study-details-table-label Creator
               td= formatUser(model.get('creator'))

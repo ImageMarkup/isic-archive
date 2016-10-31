@@ -3,4 +3,4 @@
   select#isic-study-results-select-local-features-select.form-control.input(style='width:100%')
     option(selected disabled value='')
     each model in models
-      option(value=model.id)= model.get('name')
+      option(value=model.id)= model.name()
