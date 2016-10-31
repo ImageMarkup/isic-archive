@@ -45,8 +45,9 @@ isic.views.CreateStudyView = isic.View.extend({
             types: ['featureset.isic_archive'],
             getInfoCallback: function (type, obj) {
                 if (type === 'featureset.isic_archive') {
+                    var featureset = new isic.models.FeaturesetModel(obj);
                     return {
-                        text: (new isic.models.FeaturesetModel(obj)).name(),
+                        text: featureset.name(),
                         icon: 'th'
                     };
                 }
