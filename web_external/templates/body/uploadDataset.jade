@@ -5,10 +5,15 @@
     .isic-form-group
       h3 Basic information
       p.
-        Enter the name of the dataset and add a detailed description.
+        Enter the dataset's name, the dataset's owner, and a detailed
+        description. The owner may be an individual or an institution.
       .form-group
         label(for="isic-dataset-name") Name
         input#isic-dataset-name.form-control.input-sm(
+          type="text")
+      .form-group
+        label(for="isic-dataset-owner") Owner
+        input#isic-dataset-owner.form-control.input-sm(
           type="text")
       .form-group
         label.control-label(for="isic-dataset-description") Description

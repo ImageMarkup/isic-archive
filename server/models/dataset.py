@@ -147,8 +147,8 @@ class Dataset(FolderModel):
             raise ValidationException('Dataset name must not be empty.', 'name')
         return super(Dataset, self).validate(doc, **kwargs)
 
-    def ingestDataset(self, uploadFolder, user, name, description, license,
-                      signature, anonymous, attribution):
+    def ingestDataset(self, uploadFolder, user, name, owner, description,
+                      license, signature, anonymous, attribution):
         """
         Ingest an uploaded dataset. This upload folder is expected to contain a
         .zip file of images and a .csv file that contains metadata about the
@@ -179,8 +179,9 @@ class Dataset(FolderModel):
         # Create dataset folder
         dataset = self.createDataset(name, description, user)
 
-        # Set dataset license agreement metadata
+        # Set dataset metadata, including license info
         dataset = self.setMetadata(dataset, {
+            'owner': owner,
             'signature': signature,
             'anonymous': anonymous,
             'attribution': attribution,

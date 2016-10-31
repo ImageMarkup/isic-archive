@@ -136,12 +136,13 @@ isic.views.UploadDatasetView = isic.View.extend({
     },
 
     submitDataset: function () {
-        var name = $('#isic-dataset-name').val();
-        var description = $('#isic-dataset-description').val();
-        var license = $('#isic-dataset-license').val();
-        var signature = $('#isic-dataset-agreement-signature').val();
-        var anonymous = $('#isic-dataset-attribution-anonymous').prop('checked');
-        var attribution = $('#isic-dataset-attribution-name').val();
+        var name = this.$('#isic-dataset-name').val();
+        var owner = this.$('#isic-dataset-owner').val();
+        var description = this.$('#isic-dataset-description').val();
+        var license = this.$('#isic-dataset-license').val();
+        var signature = this.$('#isic-dataset-agreement-signature').val();
+        var anonymous = this.$('#isic-dataset-attribution-anonymous').prop('checked');
+        var attribution = this.$('#isic-dataset-attribution-name').val();
         var uploadFolderId = this.uploadFolder ? this.uploadFolder.id : null;
 
         // Post dataset
@@ -152,6 +153,7 @@ isic.views.UploadDatasetView = isic.View.extend({
             data: {
                 uploadFolderId: uploadFolderId,
                 name: name,
+                owner: owner,
                 description: description,
                 license: license,
                 signature: signature,
