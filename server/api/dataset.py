@@ -113,7 +113,7 @@ class DatasetResource(Resource):
         if cherrypy.request.headers['Content-Type'].split(';')[0] == \
                 'application/json':
             params = self.getBodyJson()
-        self.requireParams(('uploadFolderId', 'name'), params)
+        self.requireParams(('uploadFolderId', 'name', 'owner'), params)
 
         user = self.getCurrentUser()
         User.requireCreateDataset(user)
