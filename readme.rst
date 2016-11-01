@@ -39,17 +39,9 @@ Installation
     # from within the "isic-archive" sub-directory
     vagrant up
 
-
-* Add the following lines to your host systems's ``/etc/hosts`` file:
-::
-
-  172.28.128.100 isic-archive.devel
-  172.28.128.100 isic-archive.upstream
-
-
 Setup
 ~~~~~
-* Use a web browser to visit ``http://isic-archive.devel/`` from your host
+* Use a web browser to visit ``http://127.0.0.1:8080/`` from your host
   development machine
 
 * Register a new user (this will be an admin user)
@@ -66,10 +58,16 @@ Setup
 Usage
 ~~~~~
   **Note**:
-  Visit ``http://isic-archive.upstream`` on your host development machine to
-  access a version of the site that uses the local instance for all static
-  front-end code, but proxies all API calls to the instance at
-  ``https://isic-archive.com``.
+  Optionally, after adding the following line to your host systems's
+  ``/etc/hosts`` file:
+  ::
+
+    127.0.0.1 isic-archive.upstream
+
+  you can visit ``http://isic-archive.upstream:8080/`` on your host development
+  machine to access a version of the site that uses the local instance for all
+  static front-end code, but proxies all API calls to the instance at
+  ``isic-archive.com``.
 
 * To rebuild the front-end code after development changes:
   ::

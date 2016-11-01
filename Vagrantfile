@@ -6,11 +6,8 @@ Vagrant.configure("2") do |config|
 
   config.vm.hostname = "isic-archive.devel"
 
-  # config.vm.network "forwarded_port", guest: 80, host: 8080
-  PRIVATE_IP = "172.28.128.100"
-  config.vm.network "private_network", ip: PRIVATE_IP
-  # config.vm.network "private_network", type: "dhcp"
-  config.vm.post_up_message = "Web server is running at http://#{PRIVATE_IP}"
+  config.vm.network "forwarded_port", guest: 80, host: 8080
+  config.vm.post_up_message = "Web server is running at http://127.0.0.1:8080"
 
   config.vm.synced_folder ".", "/vagrant", disabled: true
   config.vm.synced_folder ".", "/home/vagrant/isic_archive"
