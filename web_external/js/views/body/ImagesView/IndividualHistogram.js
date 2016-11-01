@@ -88,12 +88,27 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
             bins.select('rect.overview')
                 .each(function (d) {
                     // this refers to the DOM element
-                    d3.select(this).attr(self.scale.getBinRect(d, 'overview'));
+                    d3.select(this)
+                        .attr(self.scale.getBinRect(d, 'overview'))
+                        .attr('data-toggle', 'tooltip')
+                        .attr('data-placement', 'auto');
+
+                    $(this).tooltip({
+                        container: 'body',
+                        title: function () {
+                            var overviewCount = self.scale.labelToCount(d, 'overview');
+                            var filteredCount = self.scale.labelToCount(d, 'filteredSet');
+
+                            return filteredCount + ' of ' + overviewCount;
+                        }
+                    });
                 });
             bins.select('rect.filteredSet')
                 .each(function (d) {
                     // this refers to the DOM element
-                    d3.select(this).attr(self.scale.getBinRect(d, 'filteredSet'));
+                    d3.select(this)
+                      .attr(self.scale.getBinRect(d, 'filteredSet'))
+                      .style('pointer-events', 'none');
                 });
             // Comment out these lines to hide the page histogram (2/2):
             // bins.select('rect.page')
