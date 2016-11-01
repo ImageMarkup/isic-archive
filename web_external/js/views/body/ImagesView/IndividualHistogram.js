@@ -105,7 +105,11 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
                             var overviewCount = self.scale.labelToCount(d, 'overview');
                             var filteredCount = self.scale.labelToCount(d, 'filteredSet');
 
-                            return filteredCount + ' of ' + overviewCount;
+                            if (filteredCount === overviewCount) {
+                                return String(filteredCount);
+                            } else {
+                                return filteredCount + ' (of ' + overviewCount + ')';
+                            }
                         }
                     });
                 });
