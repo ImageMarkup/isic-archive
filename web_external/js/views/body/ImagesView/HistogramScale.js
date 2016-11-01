@@ -149,6 +149,16 @@
             height: barHeight
         };
     };
+    HistogramScale.prototype.getFullRect = function () {
+        var barHeight = this.y(this.yMax);
+      console.log('barHeight', barHeight);
+        return {
+            x: -this.barSize / 2,
+            y: this.height - barHeight,
+            width: this.barSize,
+            height: barHeight
+        };
+    };
     HistogramScale.prototype.y = function (value) {
         return this.height * value / this.yMax;
     };
