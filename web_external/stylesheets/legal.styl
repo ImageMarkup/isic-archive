@@ -8,3 +8,22 @@
     em
       font-style normal
       text-decoration underline
+
+    ol
+      counter-reset item
+      margin-top 1em
+
+    li
+      display block
+      margin-bottom 1em
+
+      &:before
+        content counters(item, ".") ". "
+        counter-increment item
+        font-weight bold
+        margin-left -2em
+
+      li
+        li
+          &:before
+            font-weight normal
