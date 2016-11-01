@@ -93,6 +93,15 @@ def onGetItem(event):
             del itemResponse['meta']['originalFilename']
 
 
+def onDescribeResource(event):
+    # Patch a bug with how Girder's Swagger descriptions work with Vagrant
+    # port forwarding and Nginx proxies
+    # This is fundamentally a problem with "rest.getApiUrl"
+    describeResponse = event.info['returnVal']
+    # TODO: get this from the server config or the request
+    describeResponse['basePath'] = '/api/v1'
+
+
 def clearRouteDocs():
     from girder.api.docs import routes
     # preserve the user token login operation
@@ -110,6 +119,8 @@ def load(info):
     events.bind('model.setting.validate', 'isic', validateSettings)
     events.bind('model.user.save.created', 'onUserCreated', onUserCreated)
     events.bind('rest.get.item/:id.after', 'onGetItem', onGetItem)
+    events.bind('rest.get.describe/:resource.after',
+                'onDescribeResource', onDescribeResource)
     ModelImporter.model('setting').set(SettingKey.USER_DEFAULT_FOLDERS, 'none')
 
     # add custom model searching
