@@ -151,7 +151,6 @@
     };
     HistogramScale.prototype.getFullRect = function () {
         var barHeight = this.y(this.yMax);
-      console.log('barHeight', barHeight);
         return {
             x: -this.barSize / 2,
             y: this.height - barHeight,
