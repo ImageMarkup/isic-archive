@@ -33,22 +33,20 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
           .selectAll('img')
           .remove();
 
-        var sel = d3.select(this.el)
+        d3.select(this.el)
             .selectAll('img')
             .data(this.model.images.map(function (image) {
                 return {
                     id: image.id,
                     name: image.get('name')
                 };
-            }));
-
-        sel.enter()
+            }))
+            .enter()
             .append('img')
-            .classed('thumb', true);
-
-        sel.attr('src', _.bind(function (d) {
-            return girder.apiRoot + '/image/' + d.id + '/thumbnail?width=' + this.imageSize;
-        }, this))
+            .classed('thumb', true)
+            .attr('src', _.bind(function (d) {
+                return girder.apiRoot + '/image/' + d.id + '/thumbnail?width=' + this.imageSize;
+            }, this))
             .attr('height', this.imageSize * 0.75)
             .attr('width', this.imageSize)
             .attr('data-toggle', 'tooltip')
