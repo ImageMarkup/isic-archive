@@ -56,12 +56,9 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
             });
 
         // Draw the bin groups
-        var labels = this.scale.overviewHistogram.map(function (d) {
-            return d.label;
-        });
         var bins = svg.select('.bins').selectAll('.bin')
-            .data(labels, function (d) {
-                return d;
+            .data(this.scale.overviewHistogram, function (d) {
+                return d.label;
             });
         var binsEnter = bins.enter().append('g')
             .attr('class', 'bin');
@@ -69,7 +66,7 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
 
         // Move the bins horizontally
         bins.attr('transform', _.bind(function (d) {
-            var binNo = this.scale.labelToBin(d, 'overview');
+            var binNo = this.scale.labelToBin(d.label, 'overview');
             return 'translate(' + this.scale.binToPosition(binNo) + ',' + topPadding + ')';
         }, this));
 
@@ -97,13 +94,13 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
                 .each(function (d) {
                     // this refers to the DOM element
                     d3.select(this)
-                        .attr(self.scale.getBinRect(d, 'overview'));
+                        .attr(self.scale.getBinRect(d.label, 'overview'));
 
                     $(this).tooltip({
                         container: 'body',
                         title: function () {
-                            var overviewCount = self.scale.labelToCount(d, 'overview');
-                            var filteredCount = self.scale.labelToCount(d, 'filteredSet');
+                            var overviewCount = self.scale.labelToCount(d.label, 'overview');
+                            var filteredCount = self.scale.labelToCount(d.label, 'filteredSet');
 
                             if (filteredCount === overviewCount) {
                                 return String(filteredCount);
@@ -117,7 +114,7 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
                 .each(function (d) {
                     // this refers to the DOM element
                     d3.select(this)
-                      .attr(self.scale.getBinRect(d, 'filteredSet'));
+                      .attr(self.scale.getBinRect(d.label, 'filteredSet'));
                 });
             bins.select('rect.target')
                 .each(function (d) {
@@ -143,7 +140,7 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
             // bins.select('rect.page')
             //     .each(function (d) {
             //         // this refers to the DOM element
-            //         d3.select(this).attr(self.scale.getBinRect(d, 'page'));
+            //         d3.select(this).attr(self.scale.getBinRect(d.label, 'page'));
             //     });
         }, this);
         drawBars();
@@ -191,7 +188,7 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
             var self = this;
             bins.select('image.button').each(function (d) {
                 // this refers to the DOM element
-                var bin = self.scale.labelToBin(d, 'overview');
+                var bin = self.scale.labelToBin(d.label, 'overview');
                 bin = self.model.get('overviewHistogram')[self.attrName][bin];
                 var status = self.model.getBinStatus(self.attrName, bin);
 
@@ -248,12 +245,19 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
         var maxBoxHeight = svg.select('.selectAllBins').select('text')
             .node().getComputedTextLength();
         binsEnter.append('text');
+        var formatter = d3.format('0.3s');
         bins.select('text')
             .text(function (d) {
-                if (d === 'NaN' || d === 'undefined') {
-                    return 'unknown';
+                var label;
+                if (d.label === 'NaN' || d.label === 'undefined') {
+                    label = 'unknown';
+                } else if (_.has(d, 'lowBound')) {
+                    label = d.label[0] + formatter(d.lowBound) + ' - ' +
+                        formatter(d.highBound) + d.label[d.label.length - 1];
+                } else {
+                    label = d.label;
                 }
-                return d;
+                return label;
             })
             .attr('text-anchor', 'end')
             .attr('transform', 'translate(0 ' + transformHeight + ') rotate(' + transformAngle + ')')

@@ -1,4 +1,4 @@
-/*globals d3, peg*/
+/*globals peg*/
 
 // This is a pure, backbone-only helper model (i.e. not the same thing
 // as the stuff in js/models)
@@ -144,25 +144,8 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         return result;
     },
     postProcessHistogram: function (histogram) {
-        var formatter = d3.format('0.3s');
-        _.each(histogram, _.bind(function (value, key) {
-            _.each(value, _.bind(function (bin, index) {
-                if (key === 'folderId') {
-                    bin.label = this.datasetCollection.get(bin.label).name();
-                } else if (_.isNumber(bin.lowBound) &&
-                        _.isNumber(bin.highBound)) {
-                    // binUtils.js doesn't have access to D3's superior number
-                    // formatting abilities, so we patch on slightly better
-                    // human-readable labels
-                    bin.label = '[' + formatter(bin.lowBound) + ' - ' +
-                        formatter(bin.highBound);
-                    if (index === value.length - 1) {
-                        bin.label += ']';
-                    } else {
-                        bin.label += ')';
-                    }
-                }
-            }, this));
+        _.each(histogram.folderId, _.bind(function (bin, index) {
+            bin.label = this.datasetCollection.get(bin.label).name();
         }, this));
         return histogram;
     },
