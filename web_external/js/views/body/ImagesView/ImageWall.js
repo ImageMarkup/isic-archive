@@ -25,6 +25,10 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
             }, this));
     },
     render: _.debounce(function () {
+        // Ordinarily, we would use the exit selection to clean up after
+        // ourselves, but deleting all the img elements has the effect of
+        // visually "streaming in" the new data, rather than updating the old
+        // images, which feels error-prone.
         d3.select(this.el)
           .selectAll('img')
           .remove();
