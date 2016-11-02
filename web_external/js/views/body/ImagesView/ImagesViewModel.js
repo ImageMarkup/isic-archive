@@ -1,4 +1,4 @@
-/*globals d3, peg*/
+/*globals peg*/
 
 // This is a pure, backbone-only helper model (i.e. not the same thing
 // as the stuff in js/models)
@@ -144,13 +144,10 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         return result;
     },
     postProcessHistogram: function (histogram) {
-        _.each(histogram, _.bind(function (value, key) {
-            _.each(value, _.bind(function (bin, index) {
-                if (key === 'folderId') {
-                    bin.label = this.datasetCollection.get(bin.label).name();
-                }
-            }, this));
+        _.each(histogram.folderId, _.bind(function (bin, index) {
+            bin.label = this.datasetCollection.get(bin.label).name();
         }, this));
+
         return histogram;
     },
     autoDetectAttributeInterpretation: function (attrName) {
