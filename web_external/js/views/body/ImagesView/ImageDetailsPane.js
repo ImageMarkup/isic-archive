@@ -11,7 +11,7 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
     initialize: function (settings) {
         this.image = settings.image;
 
-        this.listenTo(this.image, 'changed:_id g:fetched g:error', this.render);
+        this.listenTo(this.image, 'g:fetched g:error', this.render);
 
         this.segmentationsDisplayView = new isic.views.SegmentationsDisplayView({
             image: this.image,

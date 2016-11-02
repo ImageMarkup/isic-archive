@@ -13,7 +13,9 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
     },
     selectImage: function (imageId) {
         if (imageId !== null) {
+            this.image.clear({silent: true});
             this.image.set('_id', imageId);
+            this.image.fetch();
         } else {
             this.image.clear();
         }
