@@ -245,19 +245,18 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
         var maxBoxHeight = svg.select('.selectAllBins').select('text')
             .node().getComputedTextLength();
         binsEnter.append('text');
+        var formatter = d3.format('0.3s');
         bins.select('text')
             .text(function (d) {
                 var label;
                 if (d.label === 'NaN' || d.label === 'undefined') {
                     label = 'unknown';
                 } else if (_.has(d, 'lowBound')) {
-                    var formatter = d3.format('0.3s');
                     label = d.label[0] + formatter(d.lowBound) + ' - ' +
                         formatter(d.highBound) + d.label[d.label.length - 1];
                 } else {
                     label = d.label;
                 }
-
                 return label;
             })
             .attr('text-anchor', 'end')
