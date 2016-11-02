@@ -11,22 +11,9 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
 
         this.listenTo(this.model.images, 'g:changed', this.render);
     },
-    selectImage: function (imageId) {
-        if (imageId !== null) {
-            this.image.clear({silent: true});
-            this.image.set('_id', imageId);
-            this.image.fetch();
-        } else {
-            this.image.clear();
-        }
-
-        var sel = d3.select(this.el)
-            .selectAll('img')
-            .classed('selected', _.bind(function (d) {
-                return d.id === this.image.id;
-            }, this));
-    },
     render: _.debounce(function () {
+        var self = this;
+
         // Ordinarily, we would use the exit selection to clean up after
         // ourselves, but deleting all the img elements has the effect of
         // visually "streaming in" the new data, rather than updating the old
@@ -54,18 +41,32 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
             .attr('data-toggle', 'tooltip')
             .attr('data-placement', 'auto')
             .attr('data-viewport', '#isic-images-imageWall')
-            .on('click', _.bind(function (d) {
-                this.clearTooltips();
+            .on('click', function (d) {
+                self.clearTooltips();
                 if (d3.event.shiftKey) {
                     new isic.views.ImageFullscreenWidget({ // eslint-disable-line no-new
                         el: $('#g-dialog-container'),
-                        model: this.model.images.findWhere({_id: d.id}),
-                        parentView: this
+                        model: self.model.images.findWhere({_id: d.id}),
+                        parentView: self
                     }).render();
                 } else {
-                    this.selectImage(d.id === this.image.id ? null : d.id);
+                    // Clear 'selected' class from all elements.
+                    d3.select(self.el)
+                        .selectAll('img')
+                        .classed('selected', false);
+
+                     if (d.id === self.image.id) {
+                        self.image.clear();
+                    } else {
+                        d3.select(this)
+                            .classed('selected', true);
+
+                        self.image.clear({silent: true});
+                        self.image.set('_id', d.id);
+                        self.image.fetch();
+                    }
                 }
-            }, this))
+            })
             .each(function (d) {
                 $(this).tooltip({
                     title: d.name
