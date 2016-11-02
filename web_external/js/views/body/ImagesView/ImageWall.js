@@ -9,7 +9,6 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
         // depending on the page size
         this.imageSize = 128;
 
-        this.listenTo(this.image, 'change:_id', this.render);
         this.listenTo(this.model.images, 'g:changed', this.render);
     },
     selectImage: function (imageId) {
@@ -18,6 +17,12 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
         } else {
             this.image.clear();
         }
+
+        var sel = d3.select(this.el)
+            .selectAll('img')
+            .classed('selected', _.bind(function (d) {
+                return d.id === this.image.id;
+            }, this));
     },
     render: _.debounce(function () {
         d3.select(this.el)
@@ -45,9 +50,6 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
             .attr('data-toggle', 'tooltip')
             .attr('data-placement', 'auto')
             .attr('data-viewport', '#isic-images-imageWall')
-            .classed('selected', _.bind(function (d) {
-                return d.id === this.image.id;
-            }, this))
             .on('click', _.bind(function (d) {
                 this.clearTooltips();
                 if (d3.event.shiftKey) {
