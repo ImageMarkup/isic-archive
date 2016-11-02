@@ -250,6 +250,9 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
         binsEnter.append('text');
         bins.select('text')
             .text(function (d) {
+                if (d === 'NaN' || d === 'undefined') {
+                    return 'unknown';
+                }
                 return d;
             })
             .attr('text-anchor', 'end')
