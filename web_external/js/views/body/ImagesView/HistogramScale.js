@@ -145,7 +145,7 @@
         var cap = this.y(this.yMax);
 
         if (barHeight > cap) {
-          barHeight = cap;
+            barHeight = cap;
         }
 
         return {
