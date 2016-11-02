@@ -55,7 +55,7 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
                         .selectAll('img')
                         .classed('selected', false);
 
-                     if (d.id === self.image.id) {
+                    if (d.id === self.image.id) {
                         self.image.clear();
                     } else {
                         d3.select(this)
