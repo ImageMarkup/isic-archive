@@ -247,15 +247,18 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
         binsEnter.append('text');
         bins.select('text')
             .text(function (d) {
+                var label;
                 if (d.label === 'NaN' || d.label === 'undefined') {
-                    return 'unknown';
+                    label = 'unknown';
                 } else if (_.has(d, 'lowBound')) {
                     var formatter = d3.format('0.3s');
-                    return d.label[0] + formatter(d.lowBound) + ' - ' +
-                            formatter(d.highBound) + d.label[d.label.length - 1];
+                    label = d.label[0] + formatter(d.lowBound) + ' - ' +
+                        formatter(d.highBound) + d.label[d.label.length - 1];
                 } else {
-                    return d.label;
+                    label = d.label;
                 }
+
+                return label;
             })
             .attr('text-anchor', 'end')
             .attr('transform', 'translate(0 ' + transformHeight + ') rotate(' + transformAngle + ')')
