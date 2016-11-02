@@ -147,7 +147,6 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         _.each(histogram.folderId, _.bind(function (bin, index) {
             bin.label = this.datasetCollection.get(bin.label).name();
         }, this));
-
         return histogram;
     },
     autoDetectAttributeInterpretation: function (attrName) {
