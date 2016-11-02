@@ -142,6 +142,21 @@
     };
     HistogramScale.prototype.getBinRect = function (binLabel, histogram) {
         var barHeight = this.y(this.labelToCount(binLabel, histogram));
+        var cap = this.y(this.yMax);
+
+        if (barHeight > cap) {
+            barHeight = cap;
+        }
+
+        return {
+            x: -this.barSize / 2,
+            y: this.height - barHeight,
+            width: this.barSize,
+            height: barHeight
+        };
+    };
+    HistogramScale.prototype.getFullRect = function () {
+        var barHeight = this.y(this.yMax);
         return {
             x: -this.barSize / 2,
             y: this.height - barHeight,

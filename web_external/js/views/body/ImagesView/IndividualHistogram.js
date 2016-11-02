@@ -78,6 +78,14 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
             .attr('class', 'overview');
         binsEnter.append('rect')
             .attr('class', 'filteredSet');
+
+        // This bar is the full height of the space allocated to the bars, and
+        // marked almost transparent so that it still picks up mouse events - it
+        // is used to trigger a tooltip on top of the overview bar showing how
+        // many elements are represented.
+        binsEnter.append('rect')
+            .classed('target', true)
+            .style('opacity', 1e-5);
         // Comment out this line to hide the page histogram (1/2):
         // binsEnter.append('rect')
         //     .attr('class', 'page');
@@ -88,12 +96,48 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
             bins.select('rect.overview')
                 .each(function (d) {
                     // this refers to the DOM element
-                    d3.select(this).attr(self.scale.getBinRect(d, 'overview'));
+                    d3.select(this)
+                        .attr(self.scale.getBinRect(d, 'overview'));
+
+                    $(this).tooltip({
+                        container: 'body',
+                        title: function () {
+                            var overviewCount = self.scale.labelToCount(d, 'overview');
+                            var filteredCount = self.scale.labelToCount(d, 'filteredSet');
+
+                            if (filteredCount === overviewCount) {
+                                return String(filteredCount);
+                            } else {
+                                return filteredCount + ' (of ' + overviewCount + ')';
+                            }
+                        }
+                    });
                 });
             bins.select('rect.filteredSet')
                 .each(function (d) {
                     // this refers to the DOM element
-                    d3.select(this).attr(self.scale.getBinRect(d, 'filteredSet'));
+                    d3.select(this)
+                      .attr(self.scale.getBinRect(d, 'filteredSet'));
+                });
+            bins.select('rect.target')
+                .each(function (d) {
+                    // this refers to the DOM element
+
+                    var el = d3.select(this.parentElement)
+                        .select('rect.overview')
+                        .node();
+
+                    // Delegate "mouseover" events to the tooltip on the
+                    // overview bar (so that it appears on top of the bar
+                    // itself, not at the top of the bar space).
+                    d3.select(this)
+                      .attr(self.scale.getFullRect())
+                      .on('mouseenter', function () {
+                          $(el).tooltip('show');
+                      })
+                      .on('mouseleave', function () {
+                          $(el).tooltip('hide');
+                      });
                 });
             // Comment out these lines to hide the page histogram (2/2):
             // bins.select('rect.page')
