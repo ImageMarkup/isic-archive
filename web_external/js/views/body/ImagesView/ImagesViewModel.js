@@ -144,18 +144,11 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         return result;
     },
     postProcessHistogram: function (histogram) {
-        var formatter = d3.format('0.3s');
         _.each(histogram, _.bind(function (value, key) {
             _.each(value, _.bind(function (bin, index) {
                 if (key === 'folderId') {
                     bin.label = this.datasetCollection.get(bin.label).name();
-                } else if (_.isNumber(bin.lowBound) && _.isNumber(bin.highBound)) {
-                    // binUtils.js doesn't have access to D3's superior number
-                    // formatting abilities, so we patch on slightly better
-                    // human-readable labels
-                    bin.label = bin.label[0] + formatter(bin.lowBound) + ' - ' +
-                        formatter(bin.highBound) + bin.label[bin.label.length - 1];
-                 }
+                }
             }, this));
         }, this));
         return histogram;
