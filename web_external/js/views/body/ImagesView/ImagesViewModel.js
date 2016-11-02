@@ -149,19 +149,13 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             _.each(value, _.bind(function (bin, index) {
                 if (key === 'folderId') {
                     bin.label = this.datasetCollection.get(bin.label).name();
-                } else if (_.isNumber(bin.lowBound) &&
-                        _.isNumber(bin.highBound)) {
+                } else if (_.isNumber(bin.lowBound) && _.isNumber(bin.highBound)) {
                     // binUtils.js doesn't have access to D3's superior number
                     // formatting abilities, so we patch on slightly better
                     // human-readable labels
-                    bin.label = '[' + formatter(bin.lowBound) + ' - ' +
-                        formatter(bin.highBound);
-                    if (index === value.length - 1) {
-                        bin.label += ']';
-                    } else {
-                        bin.label += ')';
-                    }
-                }
+                    bin.label = bin.label[0] + formatter(bin.lowBound) + ' - ' +
+                        formatter(bin.highBound) + bin.label[bin.label.length - 1];
+                 }
             }, this));
         }, this));
         return histogram;
