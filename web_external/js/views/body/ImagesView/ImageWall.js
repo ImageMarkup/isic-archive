@@ -41,9 +41,6 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
             }, this))
             .attr('height', this.imageSize * 0.75)
             .attr('width', this.imageSize)
-            .attr('data-toggle', 'tooltip')
-            .attr('data-placement', 'auto')
-            .attr('data-viewport', '#isic-images-imageWall')
             .on('click', function (d) {
                 self.clearTooltips();
                 if (d3.event.shiftKey) {
@@ -70,9 +67,13 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
                     }
                 }
             })
+            .attr('data-toggle', 'tooltip')
             .each(function (d) {
                 $(this).tooltip({
-                    title: d.name
+                    title: d.name,
+                    placement: 'auto',
+                    viewport: '#isic-images-imageWall',
+                    trigger: 'hover'
                 });
             });
     }, 50),
