@@ -10,6 +10,6 @@ isic.views.PrivacyPolicyView = isic.View.extend({
     }
 });
 
-isic.router.route('privacy_policy', 'privacyPolicy', function (id) {
+isic.router.route('privacyPolicy', 'privacyPolicy', function (id) {
     girder.events.trigger('g:navigateTo', isic.views.PrivacyPolicyView);
 });
