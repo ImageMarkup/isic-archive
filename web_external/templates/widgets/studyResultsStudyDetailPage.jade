@@ -19,6 +19,6 @@
               td= model.featureset().name()
             tr
               td.isic-study-results-study-details-table-label Creator
-              td= formatUser(model.get('creator'))
+              td= model.creator().name()
     .modal-footer
       a.btn.btn-small.btn-primary(data-dismiss="modal") Close

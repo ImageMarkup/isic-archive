@@ -9,8 +9,7 @@ isic.views.FeaturesetView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.featuresetPage({
-            featureset: this.featureset,
-            formatUser: this.formatUser
+            featureset: this.featureset
         }));
 
         return this;

@@ -124,8 +124,7 @@ isic.views.StudyResultsStudyDetailsView = isic.View.extend({
 
         this.$el.html(isic.templates.studyResultsStudyDetailPage({
             model: this.model,
-            hasStudy: hasStudy,
-            formatUser: this.formatUser
+            hasStudy: hasStudy
         })).girderModal(this);
 
         return this;
@@ -188,8 +187,7 @@ isic.views.StudyResultsSelectUsersView = isic.View.extend({
         select.select2('destroy');
 
         this.$el.html(isic.templates.studyResultsSelectUsersPage({
-            models: this.collection.models,
-            getName: this.formatUser
+            models: this.collection.models
         }));
 
         // Set up select box
@@ -494,7 +492,7 @@ isic.views.StudyResultsView = isic.View.extend({
         this.images = new isic.collections.ImageCollection();
         this.images.pageLimit = Number.MAX_SAFE_INTEGER;
 
-        this.users = new girder.collections.UserCollection();
+        this.users = new isic.collections.UserCollection();
         this.users.pageLimit = Number.MAX_SAFE_INTEGER;
 
         this.study = new isic.models.StudyModel();
@@ -589,10 +587,7 @@ isic.views.StudyResultsView = isic.View.extend({
             this.images.reset(imageModels);
 
             // Populate users collection
-            var userModels = _.map(this.study.get('users'), function (user) {
-                return new girder.models.UserModel(user);
-            });
-            this.users.reset(userModels);
+            this.users.reset(this.study.users());
 
             // Fetch featureset
             var featureset = this.study.featureset();

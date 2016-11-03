@@ -1,5 +1,3 @@
-- var user = featureset.get('creator')
-
 .isic-featureset-container
   table.table.table-condensed.isic-featureset-table
     tr
@@ -13,7 +11,7 @@
       td= featureset.get('version')
     tr
       td.isic-featureset-table-label Creator
-      td= formatUser(user)
+      td= featureset.creator().name()
 
   each featureType in [{id: 'globalFeatures', name: 'Global Features'}, {id: 'localFeatures', name: 'Local Features'}]
     table.table.table-condensed.isic-featureset-table
