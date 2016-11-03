@@ -12,19 +12,14 @@ isic.views.LayoutHeaderView = isic.View.extend({
     },
 
     initialize: function () {
-        this.datasetContributor = false;
-
-        this._updateUserInfo();
-
-        girder.events.on('g:login', this._updateUserInfo, this);
-
         this.render();
+
+        girder.events.on('g:login', this.render, this);
     },
 
     render: function () {
         this.$el.html(isic.templates.layoutHeader({
-            currentUser: girder.currentUser,
-            datasetContributor: this.datasetContributor
+            currentUser: girder.currentUser
         }));
 
         // Specify trigger for tooltip to ensure that tooltip hides when button
@@ -39,16 +34,5 @@ isic.views.LayoutHeaderView = isic.View.extend({
             el: this.$('.isic-current-user-wrapper'),
             parentView: this
         }).render();
-    },
-
-    _updateUserInfo: function () {
-        // Check whether user has permission to contribute datasets
-        var datasetModel = new isic.models.DatasetModel();
-        datasetModel.userCanContribute(girder.currentUser).then(_.bind(function (datasetContributor) {
-            if (this.datasetContributor !== datasetContributor) {
-                this.datasetContributor = datasetContributor;
-                this.render();
-            }
-        }, this));
     }
 });
