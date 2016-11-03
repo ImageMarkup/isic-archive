@@ -50,35 +50,39 @@ isic.views.TasksView = isic.View.extend({
     },
 
     initialize: function (settings) {
-        this.qcTasks = new isic.collections.TaskCollection();
-        this.qcTasks.altUrl = 'task/me/review';
-        this.qcTasks.pageLimit = Number.MAX_SAFE_INTEGER;
+        if (girder.currentUser.canReviewDataset()) {
+            this.reviewTasks = new isic.collections.TaskCollection();
+            this.reviewTasks.altUrl = 'task/me/review';
+            this.reviewTasks.pageLimit = Number.MAX_SAFE_INTEGER;
 
-        this.segmentationTasks = new isic.collections.TaskCollection();
-        this.segmentationTasks.altUrl = 'task/me/segmentation';
-        this.segmentationTasks.pageLimit = Number.MAX_SAFE_INTEGER;
+            this.taskReviewView = new isic.views.TasksGroupView({
+                title: 'Dataset Review',
+                subtitle: 'QC review newly uploaded datasets',
+                linkPrefix: girder.apiRoot + '/task/me/review/redirect?datasetId=',
+                resourceName: 'dataset',
+                collection: this.reviewTasks,
+                parentView: this
+            });
+        }
+
+        if (girder.currentUser.getSegmentationSkill() !== null) {
+            this.segmentationTasks = new isic.collections.TaskCollection();
+            this.segmentationTasks.altUrl = 'task/me/segmentation';
+            this.segmentationTasks.pageLimit = Number.MAX_SAFE_INTEGER;
+
+            this.taskSegmentationView = new isic.views.TasksGroupView({
+                title: 'Lesion Segmentation',
+                subtitle: 'Segment boundaries between lesion and normal skin',
+                linkPrefix: girder.apiRoot + '/task/me/segmentation/redirect?datasetId=',
+                resourceName: 'dataset',
+                collection: this.segmentationTasks,
+                parentView: this
+            });
+        }
 
         this.annotationTasks = new isic.collections.TaskCollection();
         this.annotationTasks.altUrl = 'task/me/annotation';
         this.annotationTasks.pageLimit = Number.MAX_SAFE_INTEGER;
-
-        this.taskQCView = new isic.views.TasksGroupView({
-            title: 'Dataset Review',
-            subtitle: 'QC review newly uploaded datasets',
-            linkPrefix: girder.apiRoot + '/task/me/review/redirect?datasetId=',
-            resourceName: 'dataset',
-            collection: this.qcTasks,
-            parentView: this
-        });
-
-        this.taskSegmentationView = new isic.views.TasksGroupView({
-            title: 'Lesion Segmentation',
-            subtitle: 'Segment boundaries between lesion and normal skin',
-            linkPrefix: girder.apiRoot + '/task/me/segmentation/redirect?datasetId=',
-            resourceName: 'dataset',
-            collection: this.segmentationTasks,
-            parentView: this
-        });
 
         this.taskAnnotationView = new isic.views.TasksGroupView({
             title: 'Annotation Studies',
@@ -99,10 +103,14 @@ isic.views.TasksView = isic.View.extend({
             title: 'Task Dashboard'
         }));
 
-        this.taskQCView.setElement(
-            this.$('#isic-tasks-qc-container')).render();
-        this.taskSegmentationView.setElement(
-            this.$('#isic-tasks-segmentation-container')).render();
+        if (this.taskReviewView) {
+            this.taskReviewView.setElement(
+                this.$('#isic-tasks-qc-container')).render();
+        }
+        if (this.taskSegmentationView) {
+            this.taskSegmentationView.setElement(
+                this.$('#isic-tasks-segmentation-container')).render();
+        }
         this.taskAnnotationView.setElement(
             this.$('#isic-tasks-annotation-container')).render();
 
@@ -114,8 +122,12 @@ isic.views.TasksView = isic.View.extend({
     },
 
     fetchTasks: function () {
-        this.qcTasks.fetch();
-        this.segmentationTasks.fetch();
+        if (this.reviewTasks) {
+            this.reviewTasks.fetch();
+        }
+        if (this.segmentationTasks) {
+            this.segmentationTasks.fetch();
+        }
         this.annotationTasks.fetch();
     }
 });

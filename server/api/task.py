@@ -58,11 +58,7 @@ class TaskResource(Resource):
         User = self.model('user', 'isic_archive')
 
         user = self.getCurrentUser()
-        # TODO: remove "try" once the client doesn't always call this endpoint
-        try:
-            User.requireReviewDataset(user)
-        except AccessException:
-            return []
+        User.requireReviewDataset(user)
 
         results = []
         for prereviewFolder in Folder.find({
@@ -249,10 +245,8 @@ class TaskResource(Resource):
                 self._pipeline3MissingSegmentations() + \
                 self._pipeline4CountImage()
         else:  # userSkill is None
-            return []
-            # TODO: raise this once the client doesn't always call this endpoint
-            # raise AccessException(
-            #     'You are not authorized to perform segmentations.')
+            raise AccessException(
+                'You are not authorized to perform segmentations.')
 
         results = list(Image.collection.aggregate(pipeline))
         return results
