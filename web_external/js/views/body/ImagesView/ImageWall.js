@@ -14,6 +14,9 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
     render: _.debounce(function () {
         var self = this;
 
+        // Since tooltip-enabled elements are about to be destroyed, first
+        // remove any active tooltips from them.
+        this.clearTooltips();
         // Ordinarily, we would use the exit selection to clean up after
         // ourselves, but deleting all the img elements has the effect of
         // visually "streaming in" the new data, rather than updating the old
@@ -74,6 +77,9 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
             });
     }, 50),
     clearTooltips: function () {
-        $('[data-toggle="tooltip"]').tooltip('hide');
+        this.$('[data-toggle="tooltip"]').tooltip('hide');
+        // For unknown reasons, tooltips sometimes remain after they've been
+        // hidden, so manually destroy the tooltip element.
+        this.$('.tooltip').remove();
     }
 });
