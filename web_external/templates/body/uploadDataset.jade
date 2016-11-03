@@ -53,7 +53,7 @@
           option(value="CC-BY-NC")
             | CC-BY-NC (Attribution-NonCommercial)
         .isic-dataset-agreement-link-container
-          a.isic-dataset-agreement-link
+          a#isic-upload-show-license-info-link.isic-dataset-agreement-link
             | Help me choose
       .form-group
         label.control-label(for="isic-dataset-agreement")
@@ -63,10 +63,10 @@
             include legal/terms_of_use.html
 
         .isic-dataset-agreement-link-container
-          a.isic-dataset-agreement-link
+          a.isic-dataset-agreement-link(href="#{documentsRoot}/Terms of Use.txt" download="Terms of Use.txt")
             i.icon-doc-text
             | Download as text
-          a.isic-dataset-agreement-link
+          a.isic-dataset-agreement-link(href="#{documentsRoot}/Terms of Use.pdf" download="Terms of Use.pdf")
             i.icon-file-pdf
             | Download as PDF
       .form-group
