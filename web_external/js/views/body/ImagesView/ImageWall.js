@@ -9,64 +9,78 @@ isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
         // depending on the page size
         this.imageSize = 128;
 
-        this.listenTo(this.image, 'change:_id', this.render);
         this.listenTo(this.model.images, 'g:changed', this.render);
     },
-    selectImage: function (imageId) {
-        if (imageId !== null) {
-            this.image.set('_id', imageId);
-        } else {
-            this.image.clear();
-        }
-    },
     render: _.debounce(function () {
+        var self = this;
+
+        // Since tooltip-enabled elements are about to be destroyed, first
+        // remove any active tooltips from them.
+        this.clearTooltips();
+        // Ordinarily, we would use the exit selection to clean up after
+        // ourselves, but deleting all the img elements has the effect of
+        // visually "streaming in" the new data, rather than updating the old
+        // images, which feels error-prone.
         d3.select(this.el)
           .selectAll('img')
           .remove();
 
-        var sel = d3.select(this.el)
+        d3.select(this.el)
             .selectAll('img')
             .data(this.model.images.map(function (image) {
                 return {
                     id: image.id,
                     name: image.get('name')
                 };
-            }));
-
-        sel.enter()
+            }))
+            .enter()
             .append('img')
-            .classed('thumb', true);
-
-        sel.attr('src', _.bind(function (d) {
-            return girder.apiRoot + '/image/' + d.id + '/thumbnail?width=' + this.imageSize;
-        }, this))
+            .classed('thumb', true)
+            .attr('src', _.bind(function (d) {
+                return girder.apiRoot + '/image/' + d.id + '/thumbnail?width=' + this.imageSize;
+            }, this))
             .attr('height', this.imageSize * 0.75)
             .attr('width', this.imageSize)
-            .attr('data-toggle', 'tooltip')
-            .attr('data-placement', 'auto')
-            .attr('data-viewport', '#isic-images-imageWall')
-            .classed('selected', _.bind(function (d) {
-                return d.id === this.image.id;
-            }, this))
-            .on('click', _.bind(function (d) {
-                this.clearTooltips();
+            .on('click', function (d) {
+                self.clearTooltips();
                 if (d3.event.shiftKey) {
                     new isic.views.ImageFullscreenWidget({ // eslint-disable-line no-new
                         el: $('#g-dialog-container'),
-                        model: this.model.images.findWhere({_id: d.id}),
-                        parentView: this
+                        model: self.model.images.findWhere({_id: d.id}),
+                        parentView: self
                     }).render();
                 } else {
-                    this.selectImage(d.id === this.image.id ? null : d.id);
+                    // Clear 'selected' class from all elements.
+                    d3.select(self.el)
+                        .selectAll('img')
+                        .classed('selected', false);
+
+                    if (d.id === self.image.id) {
+                        self.image.clear();
+                    } else {
+                        d3.select(this)
+                            .classed('selected', true);
+
+                        self.image.clear({silent: true});
+                        self.image.set('_id', d.id);
+                        self.image.fetch();
+                    }
                 }
-            }, this))
+            })
+            .attr('data-toggle', 'tooltip')
             .each(function (d) {
                 $(this).tooltip({
-                    title: d.name
+                    title: d.name,
+                    placement: 'auto',
+                    viewport: '#isic-images-imageWall',
+                    trigger: 'hover'
                 });
             });
     }, 50),
     clearTooltips: function () {
-        $('[data-toggle="tooltip"]').tooltip('hide');
+        this.$('[data-toggle="tooltip"]').tooltip('hide');
+        // For unknown reasons, tooltips sometimes remain after they've been
+        // hidden, so manually destroy the tooltip element.
+        this.$('.tooltip').remove();
     }
 });

@@ -27,7 +27,7 @@ isic.views.ImagesView = isic.View.extend({
         this.listenTo(this.model.images, 'g:changed', function () {
             this.image.clear();
         });
-        this.listenTo(this.image, 'change:_id', this.selectedImageChanged);
+        this.listenTo(this.image, 'change:_id', this.toggleDetailsPane);
 
         this.render();
     },
@@ -35,12 +35,6 @@ isic.views.ImagesView = isic.View.extend({
         $(window).off('resize.ImagesView');
 
         isic.View.prototype.destroy.call(this);
-    },
-    selectedImageChanged: function () {
-        if (this.image.id) {
-            this.image.fetch();
-        }
-        this.toggleDetailsPane();
     },
     toggleDetailsPane: function () {
         if (this.image.id) {
