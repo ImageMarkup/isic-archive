@@ -27,6 +27,8 @@ from .image import ImageResource
 from .segmentation import SegmentationResource
 from .study import StudyResource
 from .task import TaskResource
+from .user import attachUserApi
 
 __all__ = [AnnotationResource, DatasetResource, FeaturesetResource,
-           ImageResource, SegmentationResource, StudyResource, TaskResource]
+           ImageResource, SegmentationResource, StudyResource, TaskResource,
+           attachUserApi]
