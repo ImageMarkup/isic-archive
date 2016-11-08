@@ -1,5 +1,4 @@
 if segmentation.id
-  - var creator = segmentation.get('creator')
   table.table.table-condensed.isic-segmentation-display-table
     tbody
       tr
@@ -10,7 +9,7 @@ if segmentation.id
         td= segmentation.get('skill')
       tr
         td Creator
-        td= formatUser(creator)
+        td= segmentation.creator().name()
       tr
         td Source
         td= segmentation.get('lesionBoundary')['properties']['source']
