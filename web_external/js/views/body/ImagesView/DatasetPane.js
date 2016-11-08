@@ -3,6 +3,14 @@
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
 isic.views.ImagesViewSubViews.DatasetPane = Backbone.View.extend({
+    events: {
+        'click .toggle': function (evt) {
+            this.$('.toggle').toggleClass('icon-down-open')
+                .toggleClass('icon-right-open');
+
+            this.$('svg.content').toggle();
+        }
+    },
     initialize: function () {
         this.listenTo(this.model, 'change:overviewHistogram', this.render);
         this.listenTo(this.model, 'change:filteredSetHistogram', this.render);
