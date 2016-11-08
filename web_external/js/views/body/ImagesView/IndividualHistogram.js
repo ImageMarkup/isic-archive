@@ -248,7 +248,7 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
                 var label;
                 if (this.attrName === 'folderId') {
                     label = this.model.datasetCollection.findWhere({
-                      _id: d.label
+                        _id: d.label
                     }).name();
                 } else if (d.label === 'NaN' || d.label === 'undefined') {
                     label = 'unknown';

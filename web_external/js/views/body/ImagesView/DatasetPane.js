@@ -27,5 +27,7 @@ isic.views.ImagesViewSubViews.DatasetPane = Backbone.View.extend({
             svg = d3.select(this.el).select('svg.content');
         }
         this.histogram.render();
+
+        return this;
     }
 });
