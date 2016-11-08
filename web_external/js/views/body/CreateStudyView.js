@@ -173,12 +173,9 @@ isic.views.CreateStudyView = isic.View.extend({
 
 isic.router.route('createStudy', 'createStudy', function (id) {
     // Route to index if user isn't a study administrator
-    var studyModel = new isic.models.StudyModel();
-    studyModel.isAdministrator(girder.currentUser).then(_.bind(function (studyAdmin) {
-        if (studyAdmin) {
-            girder.events.trigger('g:navigateTo', isic.views.CreateStudyView);
-        } else {
-            isic.router.navigate('', {trigger: true});
-        }
-    }, this));
+    if (girder.currentUser && girder.currentUser.canAdminStudy()) {
+        girder.events.trigger('g:navigateTo', isic.views.CreateStudyView);
+    } else {
+        isic.router.navigate('', {trigger: true});
+    }
 });

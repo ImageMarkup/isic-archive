@@ -25,10 +25,6 @@ isic.views.LayoutHeaderUserView = isic.View.extend({
         }
     },
 
-    initialize: function () {
-        girder.events.on('g:login', this.render, this);
-    },
-
     render: function () {
         this.$el.html(isic.templates.layoutHeaderUser({
             user: girder.currentUser

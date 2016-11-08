@@ -19,42 +19,6 @@ isic.models.StudyModel = girder.Model.extend({
     },
 
     /**
-     * Check whether user is a a study administrator.
-     *
-     * Returns a promise that is resolved with a single boolean argument that
-     * indicates whether the user is a study administrator.
-     *
-     */
-    isAdministrator: function (user) {
-        var deferred = $.Deferred();
-        if (user) {
-            if (user.get('admin')) {
-                deferred.resolve(true);
-            } else {
-                var groups = new girder.collections.GroupCollection();
-                groups.once('g:changed', function () {
-                    if (!groups.isEmpty()) {
-                        var groupId = groups.first().id;
-                        var userGroups = user.get('groups');
-                        var studyAdmin = _.contains(userGroups, groupId);
-                        deferred.resolve(studyAdmin);
-                    } else {
-                        deferred.resolve(false);
-                    }
-                }, this).once('g:error', function () {
-                    deferred.reject();
-                }, this).fetch({
-                    text: 'Study Administrators',
-                    exact: true
-                });
-            }
-        } else {
-            deferred.resolve(false);
-        }
-        return deferred.promise();
-    },
-
-    /**
      * Return the featureset for this study.
      *
      * This returns a FeaturesetModel with only a few summary properties of

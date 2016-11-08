@@ -19,18 +19,8 @@ isic.views.StudiesView = isic.View.extend({
 
     initialize: function (settings) {
         this.loaded = false;
-        this.studyAdmin = false;
+        this.studyAdmin = girder.currentUser && girder.currentUser.canAdminStudy();
         this.studies = new isic.collections.StudyCollection();
-
-        // Check whether user has permission to create studies
-        // TODO re-render open study listings if this changes
-        var studyModel = new isic.models.StudyModel();
-        studyModel.isAdministrator(girder.currentUser).then(_.bind(function (studyAdmin) {
-            if (this.studyAdmin !== studyAdmin) {
-                this.studyAdmin = studyAdmin;
-                this.render();
-            }
-        }, this));
 
         this.studies.once('g:changed', function () {
             this.loaded = true;

@@ -258,13 +258,10 @@ isic.views.UploadDatasetView = isic.View.extend({
 });
 
 isic.router.route('uploadDataset', 'uploadDataset', function (id) {
-    // Route to index if user doesn't have permission to contribute datasets
-    var datasetModel = new isic.models.DatasetModel();
-    datasetModel.userCanContribute(girder.currentUser).then(_.bind(function (datasetContributor) {
-        if (datasetContributor) {
-            girder.events.trigger('g:navigateTo', isic.views.UploadDatasetView);
-        } else {
-            isic.router.navigate('', {trigger: true});
-        }
-    }, this));
+    // Route to index if user doesn't have permission to create datasets
+    if (girder.currentUser && girder.currentUser.canCreateDataset()) {
+        girder.events.trigger('g:navigateTo', isic.views.UploadDatasetView);
+    } else {
+        isic.router.navigate('', {trigger: true});
+    }
 });
