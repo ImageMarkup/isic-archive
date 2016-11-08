@@ -21,7 +21,7 @@ isic.views.ImagesViewSubViews.DatasetPane = Backbone.View.extend({
                 el: svg.node(),
                 model: this.model,
                 attributeName: 'folderId',
-                showCheckbox: false
+                showCheckbox: true
             });
             this.addedSvgElement = true;
         } else {
@@ -30,10 +30,11 @@ isic.views.ImagesViewSubViews.DatasetPane = Backbone.View.extend({
         this.histogram.render();
 
         // Add special listeners to open a modal about each dataset
+        var self = this;
         svg.select('.bins').selectAll('.bin')
             .on('click', _.bind(function (d) {
-                var dataset = this.model.datasetCollection.find(function (dataset) {
-                    return dataset.name() === d;
+                var dataset = self.model.datasetCollection.find(function (dataset) {
+                    return dataset.name() === d.label;
                 });
                 console.log('TODO: show a modal, describing the ' +
                     d + ' dataset (id: ' + dataset.id + ')');
