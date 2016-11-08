@@ -20,8 +20,7 @@ isic.views.ImagesViewSubViews.DatasetPane = Backbone.View.extend({
             this.histogram = new isic.views.ImagesViewSubViews.IndividualHistogram({
                 el: svg.node(),
                 model: this.model,
-                attributeName: 'folderId',
-                showCheckbox: false
+                attributeName: 'folderId'
             });
             this.addedSvgElement = true;
         } else {
@@ -29,15 +28,6 @@ isic.views.ImagesViewSubViews.DatasetPane = Backbone.View.extend({
         }
         this.histogram.render();
 
-        // Add special listeners to open a modal about each dataset
-        svg.select('.bins').selectAll('.bin')
-            .on('click', _.bind(function (d) {
-                var dataset = this.model.datasetCollection.find(function (dataset) {
-                    return dataset.name() === d;
-                });
-                console.log('TODO: show a modal, describing the ' +
-                    d + ' dataset (id: ' + dataset.id + ')');
-            }, this));
         return this;
     }
 });
