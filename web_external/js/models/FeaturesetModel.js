@@ -8,7 +8,7 @@ isic.models.FeaturesetModel = girder.Model.extend({
         return this.get('name') + ' (version ' + this.get('version') + ')';
     },
 
-    creator: function() {
+    creator: function () {
         return new isic.models.UserModel(this.get('creator'));
     }
 });

@@ -1,7 +1,7 @@
 isic.models.StudyModel = girder.Model.extend({
     resourceName: 'study',
 
-    creator: function() {
+    creator: function () {
         return new isic.models.UserModel(this.get('creator'));
     },
 
@@ -17,7 +17,7 @@ isic.models.StudyModel = girder.Model.extend({
     },
 
     users: function () {
-        var userModels = study.get('users').map(function (user) {
+        var userModels = this.get('users').map(function (user) {
             return new isic.models.UserModel(user);
         });
         return new isic.collections.UserCollection(userModels);
@@ -38,7 +38,5 @@ isic.models.StudyModel = girder.Model.extend({
         }, this)).error(_.bind(function (err) {
             this.trigger('g:error', err);
         }, this));
-    },
-
-
+    }
 });
