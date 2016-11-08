@@ -30,8 +30,8 @@ derm_app.controller('AnnotationController', [
         $scope.clearAnnotations = function () {
             // annotation_values should be set before initialization,
             //   but must also be re-cleared after child controllers run
-            $scope.$broadcast('reset');
             $scope.annotation_values = {};
+            $scope.$broadcast('reset');
             $scope.showReview = false;
         };
 
@@ -132,6 +132,7 @@ derm_app.controller('LocalFeatureAnnotationController', ['$scope', '$rootScope',
             // will also be called to initialize
             $scope.certaintyModel = Pixelmap.State.DEFINITE;
             $scope.activeFeatureId = null;
+            $rootScope.pixelmap.clear();
         });
 
         $scope.$watch('certaintyModel', function (certaintyModel) {
