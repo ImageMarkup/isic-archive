@@ -45,28 +45,29 @@ class Study(FolderModel):
 
     def createStudy(self, name, creatorUser, featureset, annotatorUsers,
                     images):
+        Group = self.model('group')
         # this may raise a ValidationException if the name already exists
         studyFolder = self.createFolder(
             parent=self.loadStudyCollection(),
             name=name,
             description='',
             parentType='collection',
-            public=None,
+            public=False,
             creator=creatorUser,
             allowRename=False
         )
-        studyFolder = self.copyAccessPolicies(
-            src=self.loadStudyCollection(),
-            dest=studyFolder,
-            save=False
-        )
-        studyFolder = self.setUserAccess(
+        # Clear all inherited accesses
+        studyFolder = self.setAccessList(
             doc=studyFolder,
-            user=creatorUser,
-            # TODO: make admin
+            access={},
+            save=False)
+        # Allow study admins to read
+        studyFolder = self.setGroupAccess(
+            doc=studyFolder,
+            group=Group.findOne({'name': 'Study Administrators'}),
             level=AccessType.READ,
-            save=False
-        )
+            save=False)
+
         # "setMetadata" will always save
         studyFolder = self.setMetadata(
             folder=studyFolder,
@@ -76,14 +77,15 @@ class Study(FolderModel):
         )
 
         for annotatorUser in annotatorUsers:
-            self.addAnnotator(studyFolder, annotatorUser, creatorUser,
-                              images)
+            studyFolder = self.addAnnotator(
+                studyFolder, annotatorUser, creatorUser, images)
 
         return studyFolder
 
     def addAnnotator(self, study, annotatorUser, creatorUser,
                      images=None):
         Annotation = self.model('annotation', 'isic_archive')
+        Group = self.model('group')
         if not images:
             images = self.getImages(study)
 
@@ -93,25 +95,42 @@ class Study(FolderModel):
             raise ValidationException(
                 'Annotator user is already part of the study.')
 
+        # Allow annotator to read parent study
+        study = self.setUserAccess(
+            doc=study,
+            user=annotatorUser,
+            level=AccessType.READ,
+            save=True)
+
         annotatorFolder = self.createFolder(
             parent=study,
             name='%(login)s (%(firstName)s %(lastName)s)' % annotatorUser,
             description='',
             parentType='folder',
-            public=True,
+            # Inherit public access state from parent
+            public=None,
             creator=creatorUser
         )
-        # study creator accesses will already have been copied to this
-        # sub-folder
-        # TODO: all users from the study don't need access; this should be
-        # changed and migrated
-        self.setUserAccess(
+        # Clear all inherited accesses
+        annotatorFolder = self.setAccessList(
+            doc=annotatorFolder,
+            access={},
+            save=False)
+        # Allow study admins to read
+        annotatorFolder = self.setGroupAccess(
+            doc=annotatorFolder,
+            group=Group.findOne({'name': 'Study Administrators'}),
+            level=AccessType.READ,
+            save=False)
+        # Allow annotator to read
+        annotatorFolder = self.setUserAccess(
             doc=annotatorFolder,
             user=annotatorUser,
-            # TODO: make write
+            # TODO: make write?
             level=AccessType.READ,
-            save=True
-        )
+            save=False)
+
+        # "setMetadata" will always save
         self.setMetadata(
             folder=annotatorFolder,
             metadata={
@@ -122,6 +141,9 @@ class Study(FolderModel):
         for image in images:
             Annotation.createAnnotation(
                 study, image, creatorUser, annotatorFolder)
+
+        # Since parent study could theoretically have changed, return it
+        return study
 
     def addImage(self, study, image, creatorUser):
         Folder = self.model('folder')
