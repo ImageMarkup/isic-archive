@@ -36,7 +36,7 @@ isic.ENUMS.BIN_STATES = {
 // autodetect this (requires an additional server endpoint)
 isic.ENUMS.SCHEMA = {
     'folderId': {
-        'coerceToType': 'string',
+        'coerceToType': 'objectid',
         'humanName': 'Dataset'
     },
     'meta.clinical.benign_malignant': {

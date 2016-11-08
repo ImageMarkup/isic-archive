@@ -20,6 +20,8 @@
 import datetime
 import dateutil.parser
 
+from bson import ObjectId
+
 
 _opfunc = {
     '<=': lambda x, y: x <= y,
@@ -38,6 +40,8 @@ def cast(value, typename):
     """
     if typename is None:
         return value
+    elif typename == 'objectid':
+        return ObjectId(value)
     elif typename == 'integer':
         try:
             return int(value)
@@ -146,7 +150,11 @@ def _astToMongo_helper(ast):
             '_astToMongo_helper() cannot operate on an AST with not-nodes.')
     elif operator in ['in', 'not in', '<=', '<', '>=', '>', '=', '!=']:
         field = operands[0]['identifier']
+        typename = operands[0].get('type')
         value = operands[1]
+
+        if typename == 'objectid':
+            value = map(lambda x: cast(x, 'objectid'), value)
 
         if operator in ['in', 'not in']:
             value = map(lambda x: None if x in ['NaN', 'undefined'] else x,
