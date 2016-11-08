@@ -12,7 +12,6 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
         this.attrName = parameters.attributeName;
         this.scale = new isic.views.ImagesViewSubViews
             .HistogramScale(this.attrName);
-        this.showCheckbox = parameters.showCheckbox === undefined ? true : parameters.showCheckbox;
     },
     render: function () {
         var parentWidth = this.el.parentNode.getBoundingClientRect().width;
@@ -176,66 +175,64 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
             }));
 
         // Add an include / exclude button for each bin
-        if (this.showCheckbox) {
-            binsEnter.append('image')
-                .attr('class', 'button')
-                .attr({
-                    x: -0.5 * emSize,
-                    y: height + 0.5 * emSize,
-                    width: emSize,
-                    height: emSize
-                });
-            var self = this;
-            bins.select('image.button').each(function (d) {
-                // this refers to the DOM element
-                var bin = self.scale.labelToBin(d.label, 'overview');
-                bin = self.model.get('overviewHistogram')[self.attrName][bin];
-                var status = self.model.getBinStatus(self.attrName, bin);
-
-                // To add / remove ranges, we might need to provide a comparison
-                // function (undefined will just do default comparisons)
-                var comparator;
-                if (self.model.getAttributeType(self.attrName) === 'string') {
-                    comparator = function (a, b) {
-                        return a.localeCompare(b);
-                    };
-                }
-
-                d3.select(this)
-                    .attr('xlink:href', function () {
-                        if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
-                            return ICONS.check;
-                        } else if (status === isic.ENUMS.BIN_STATES.EXCLUDED) {
-                            return ICONS.ex;
-                        } else {
-                            return ICONS.dash;
-                        }
-                    }).on('click', function (d) {
-                        if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
-                            // Remove this bin
-                            if (bin.hasOwnProperty('lowBound') &&
-                                    bin.hasOwnProperty('highBound')) {
-                                self.model.removeRange(self.attrName,
-                                    bin.lowBound, bin.highBound, comparator);
-                            } else {
-                                self.model.removeValue(self.attrName, bin.label);
-                            }
-                        } else {
-                            // Add this bin
-                            if (bin.hasOwnProperty('lowBound') &&
-                                    bin.hasOwnProperty('highBound')) {
-                                self.model.includeRange(self.attrName,
-                                    bin.lowBound, bin.highBound, comparator);
-                            } else {
-                                self.model.includeValue(self.attrName, bin.label);
-                            }
-                        }
-
-                        self.render();
-                    });
+        binsEnter.append('image')
+            .attr('class', 'button')
+            .attr({
+                x: -0.5 * emSize,
+                y: height + 0.5 * emSize,
+                width: emSize,
+                height: emSize
             });
-            height += 2 * emSize;
-        }
+        var self = this;
+        bins.select('image.button').each(function (d) {
+            // this refers to the DOM element
+            var bin = self.scale.labelToBin(d.label, 'overview');
+            bin = self.model.get('overviewHistogram')[self.attrName][bin];
+            var status = self.model.getBinStatus(self.attrName, bin);
+
+            // To add / remove ranges, we might need to provide a comparison
+            // function (undefined will just do default comparisons)
+            var comparator;
+            if (self.model.getAttributeType(self.attrName) === 'string') {
+                comparator = function (a, b) {
+                    return a.localeCompare(b);
+                };
+            }
+
+            d3.select(this)
+                .attr('xlink:href', function () {
+                    if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
+                        return ICONS.check;
+                    } else if (status === isic.ENUMS.BIN_STATES.EXCLUDED) {
+                        return ICONS.ex;
+                    } else {
+                        return ICONS.dash;
+                    }
+                }).on('click', function (d) {
+                    if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
+                        // Remove this bin
+                        if (bin.hasOwnProperty('lowBound') &&
+                                bin.hasOwnProperty('highBound')) {
+                            self.model.removeRange(self.attrName,
+                                bin.lowBound, bin.highBound, comparator);
+                        } else {
+                            self.model.removeValue(self.attrName, bin.label);
+                        }
+                    } else {
+                        // Add this bin
+                        if (bin.hasOwnProperty('lowBound') &&
+                                bin.hasOwnProperty('highBound')) {
+                            self.model.includeRange(self.attrName,
+                                bin.lowBound, bin.highBound, comparator);
+                        } else {
+                            self.model.includeValue(self.attrName, bin.label);
+                        }
+                    }
+
+                    self.render();
+                });
+        });
+        height += 2 * emSize;
 
         // Add each bin label, and compute the total needed height
         var offsetY = 0.25 * emSize;
@@ -247,9 +244,13 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
         binsEnter.append('text');
         var formatter = d3.format('0.3s');
         bins.select('text')
-            .text(function (d) {
+            .text(_.bind(function (d) {
                 var label;
-                if (d.label === 'NaN' || d.label === 'undefined') {
+                if (this.attrName === 'folderId') {
+                    label = this.model.datasetCollection.findWhere({
+                      _id: d.label
+                    }).name();
+                } else if (d.label === 'NaN' || d.label === 'undefined') {
                     label = 'unknown';
                 } else if (_.has(d, 'lowBound')) {
                     label = d.label[0] + formatter(d.lowBound) + ' - ' +
@@ -258,7 +259,7 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
                     label = d.label;
                 }
                 return label;
-            })
+            }, this))
             .attr('text-anchor', 'end')
             .attr('transform', 'translate(0 ' + transformHeight + ') rotate(' + transformAngle + ')')
             .each(function () {

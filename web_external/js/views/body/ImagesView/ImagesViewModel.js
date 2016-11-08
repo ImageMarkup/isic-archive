@@ -68,8 +68,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         return girder.restRequest({
             path: 'image/histogram'
         }).then(_.bind(function (resp) {
-            var histogram = this.postProcessHistogram(resp);
-            this.set('overviewHistogram', histogram);
+            this.set('overviewHistogram', resp);
         }, this));
     },
     updateFilteredSetHistogram: function () {
@@ -79,8 +78,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                 filter: JSON.stringify(this.getFilterAstTree())
             }
         }).then(_.bind(function (resp) {
-            var histogram = this.postProcessHistogram(resp);
-            this.set('filteredSetHistogram', histogram);
+            this.set('filteredSetHistogram', resp);
         }, this));
     },
     updateFilters: function () {
@@ -142,12 +140,6 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             result.limit = result.filteredSetCount - result.offset;
         }
         return result;
-    },
-    postProcessHistogram: function (histogram) {
-        _.each(histogram.folderId, _.bind(function (bin, index) {
-            bin.label = this.datasetCollection.get(bin.label).name();
-        }, this));
-        return histogram;
     },
     autoDetectAttributeInterpretation: function (attrName) {
         // Go with the default interpretation for the attribute type
