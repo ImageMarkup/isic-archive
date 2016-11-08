@@ -66,6 +66,7 @@ before_install:
     - mongod --dbpath=/tmp/db >/dev/null 2>/dev/null &
     - mongod --version
 
+    - unset PREFIX
     - nvm install v2.3.3
     - npm install -g npm
     - node --version
