@@ -39,9 +39,9 @@ isic.App = girder.App.extend({
         // it's an undocumented property of Backbone that events get called in
         // the order they were bound, so this isn't a great solution
         girder.events.off('g:login', this.login);
-        girder.events.on('g:login', this._updateCurrentUser(), this);
+        girder.events.on('g:login', this._updateCurrentUser, this);
         // "g:login-changed" is triggered when users change passwords
-        girder.events.on('g:login-changed', this._updateCurrentUser(), this);
+        girder.events.on('g:login-changed', this._updateCurrentUser, this);
         girder.events.on('g:login', this.login, this);
     },
 
