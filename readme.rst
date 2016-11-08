@@ -42,18 +42,26 @@ Installation
 Setup
 ~~~~~
 * Use a web browser to visit ``http://127.0.0.1:8080/`` from your host
-  development machine
+  development machine.
 
-* Register a new user (this will be an admin user)
+* Register a new user (this will be an admin user).
 
 * Go to ``Admin console`` -> ``Plugins`` and enable the ``ISIC Archive`` plugin
   (and optionally the ``OAuth2 login`` plugin), then use the button at the top
   of the page to restart the server.
 
+* Visit ``http://127.0.0.1:8080/girder``in your web browser, as this is where
+  the Girder administrative interface is exposed when the plugin is enabled.
+
 * Go to ``Admin console`` -> ``Plugins`` and open the configuration page (gear
   icon) for ``Remote worker``. Set the value
   ``mongodb://localhost:27017/girder_worker`` for both ``Celery broker URL``
   and ``Celery backend URL``, and ``Save``.
+
+* Go to ``Admin console`` -> ``Assetstores`` ->
+  ``Create new Filesystem assetstore``, enter ``default`` as the
+  ``Assetstore name``, ``/home/vagrant/assetstores/default`` as the
+  ``Root directory``, then click ``Create``.
 
 Usage
 ~~~~~
