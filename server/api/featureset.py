@@ -23,6 +23,7 @@ import json
 from girder.api import access
 from girder.api.rest import Resource, loadmodel, RestException
 from girder.api.describe import Description, describeRoute
+from girder.constants import SortDir
 from girder.models.model_base import ValidationException
 
 
@@ -46,6 +47,14 @@ class FeaturesetResource(Resource):
 
         # TODO: make the default sort lowerName (after adding that field)
         limit, offset, sort = self.getPagingParameters(params, 'name')
+
+        # Since names may be identical, add an additional sort field for
+        # convenience, especially as the REST interface cannot specify multiple
+        # fields
+        if sort == [('name', SortDir.ASCENDING)]:
+            sort.append(('version', SortDir.ASCENDING))
+        elif sort == [('name', SortDir.DESCENDING)]:
+            sort.append(('version', SortDir.DESCENDING))
 
         return [
             {
