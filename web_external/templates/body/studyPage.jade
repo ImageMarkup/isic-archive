@@ -10,7 +10,7 @@
   .isic-listing-content.isic-study-users-content
     if study.get('users').length
       ul
-        each user in study.users().toArray()
+        each user in study.users().models
           li= user.name()
     else
       | (no users)

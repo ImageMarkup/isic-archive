@@ -587,7 +587,7 @@ isic.views.StudyResultsView = isic.View.extend({
             this.images.reset(imageModels);
 
             // Populate users collection
-            this.users.reset(this.study.users());
+            this.users.reset(this.study.users().models);
 
             // Fetch featureset
             var featureset = this.study.featureset();
