@@ -50,7 +50,7 @@
                     <div class="isictitle">
                         <span>ISIC Annotation Tool</span>
                     </div>
-                    <div class="btn-group btn-group-block">
+                    <div class="btn-group">
                         <div class="btn">
                             <span ng-cloak ng-show="image"><b>Image:</b> {{ image.name }}</span>
                         </div>
@@ -58,24 +58,26 @@
                             <span ng-cloak ng-show="user"><b>User:</b> {{ user.firstName }} {{ user.lastName }} ({{ user.login }})</span>
                         </div>
                     </div>
-                    <div uib-dropdown ng-controller="FlagAnnotationController" class="btn-group">
-                        <button uib-dropdown-toggle
-                                type="button"
-                                class="btn btn-warning dropdown-toggle"
-                                data-toggle="dropdown"
-                                aria-haspopup="true"
-                                aria-expanded="false">
-                            Flag Image <span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a ng-click="flag('phi')">Contains PHI</a></li>
-                            <li><a ng-click="flag('quality')">Low optical quality</a></li>
-                            <li><a ng-click="flag('zoom')">Inadequate zoom factor</a></li>
-                            <li><a ng-click="flag('inappropriate')">Clinically inappropriate</a></li>
-                            <li role="separator" class="divider"></li>
-                            <li><a ng-click="flag('other')">Other reason</a></li>
-                            <!--<li><a ng-click="flag('custom')">Custom reason (specify...)</a></li>-->
-                        </ul>
+                    <div class="btn-group">
+                        <div class="dropdown" style="display: inline;">
+                            <button
+                                    type="button"
+                                    data-toggle="dropdown"
+                                    class="btn btn-warning">
+                                Flag Image <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a ng-click="flag('ok')">Normal</a></li>
+                                <li><a ng-click="flag('phi')">Contains PHI</a></li>
+                                <li><a ng-click="flag('quality')">Low optical quality</a></li>
+                                <li><a ng-click="flag('zoom')">Inadequate zoom factor</a></li>
+                                <li><a ng-click="flag('inappropriate')">Clinically inappropriate</a></li>
+                                <li class="divider"></li>
+                                <li><a ng-click="flag('other')">Other reason</a></li>
+                                <!--<li><a ng-click="flag('custom')">Custom reason (specify...)</a></li>-->
+                            </ul>
+                        </div>
+                        <span><b>Flag Status:</b> {{ flagStatus }}</span>
                     </div>
                     <div class="clearfix"></div>
                 </div>
@@ -151,7 +153,7 @@
                         </div>
                         <div ng-hide="showReview" ng-cloak class="isic-annotation-section">
                             <label>Confidence</label>
-                            <div class="btn-group" role="group">
+                            <div class="btn-group">
                                 <button type="button" class="btn btn-default isic-annotation-radio-btn"
                                         ng-model="certaintyModel" uib-btn-radio="1.0">100%</button>
                                 <button type="button" class="btn btn-default isic-annotation-radio-btn"

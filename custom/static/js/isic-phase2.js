@@ -74,15 +74,16 @@ derm_app.controller('AnnotationController', [
             $scope.featureset = Featureset.get({'id': $scope.study.featureset._id});
         });
 
-        /* Submit an annotation task.
-         *
-         * status should be either 'true', or a string describing the reason
-         * for failure.
-         */
-        $scope.submitAnnotations = function (status) {
+        $scope.flagStatus = 'ok';
+        $scope.flag = function (newStatus) {
+            $scope.flagStatus = newStatus;
+        };
+
+        // Submit an annotation task.
+        $scope.submitAnnotations = function () {
             var submit_url = '/api/v1/annotation/' + $scope.annotation._id;
             var annotation_to_store = {
-                status: status === true ? 'ok' : status,
+                status: $scope.flagStatus,
                 imageId: $scope.image._id,
                 startTime: start_time,
                 stopTime: Date.now(),
@@ -93,15 +94,6 @@ derm_app.controller('AnnotationController', [
                 // TODO: this won't work if study has no more annotations
                 window.location.replace('/api/v1/task/me/annotation/redirect?studyId=' + $scope.study._id);
             });
-        };
-    }
-]);
-
-derm_app.controller('FlagAnnotationController', ['$scope',
-    function ($scope) {
-        $scope.flag = function (reason) {
-            $scope.clearAnnotations();
-            $scope.submitAnnotations(reason);
         };
     }
 ]);
