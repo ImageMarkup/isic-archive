@@ -7,28 +7,39 @@ var ICONS = {
     dash: girder.staticRoot + '/built/plugins/isic_archive/extra/img/dash.svg'
 };
 
-isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
+isic.views.ImagesViewSubViews.IndividualHistogram = isic.View.extend({
+    events: {
+        'click .toggle': function (evt) {
+            this.$('.toggle').toggleClass('icon-down-open')
+                .toggleClass('icon-right-open');
+
+            this.$('svg.content').toggle();
+        }
+    },
     initialize: function (parameters) {
         this.attrName = parameters.attributeName;
         this.scale = new isic.views.ImagesViewSubViews
             .HistogramScale(this.attrName);
+        this.title = parameters.title;
     },
     render: function () {
-        var parentWidth = this.el.parentNode.getBoundingClientRect().width;
-        var emSize = parseFloat(this.$el.css('font-size'));
+        this.$el.html(isic.templates.individualHistogram({
+            title: this.title
+        }));
+
+        var svg = d3.select(this.el).select('svg.content');
+
+        var parentWidth = this.el.getBoundingClientRect().width;
+        var emSize = parseFloat(this.$('svg').css('font-size'));
         this.scale.update(this.model, emSize, parentWidth);
 
-        var svg = d3.select(this.el);
         var width = this.scale.width;
         var topPadding = 0.5 * emSize;
         var height = this.scale.height + topPadding;
 
-        if (!this.addedTemplate) {
-            svg.html(isic.templates.imagesPageHistogram({
-                staticRoot: girder.staticRoot
-            }));
-            this.addedTemplate = true;
-        }
+        svg.html(isic.templates.imagesPageHistogram({
+            staticRoot: girder.staticRoot
+        }));
 
         // Draw the y axis
         var yScale = d3.scale.linear()
@@ -274,5 +285,14 @@ isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
             height: height + 'px'
         });
         return this;
+    },
+
+    destroy: function () {
+        // Since the tooltips are attached to the HTML <body> (way outside the
+        // scope of this view's element, just destroy all tooltip elements
+        // globally; this is overkill, but can be fixed in a future refactor
+        $('.tooltip').remove();
+
+        isic.View.prototype.destroy.call(this);
     }
 });
