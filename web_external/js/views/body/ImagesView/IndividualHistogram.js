@@ -7,7 +7,7 @@ var ICONS = {
     dash: girder.staticRoot + '/built/plugins/isic_archive/extra/img/dash.svg'
 };
 
-isic.views.ImagesViewSubViews.IndividualHistogram = Backbone.View.extend({
+isic.views.ImagesViewSubViews.IndividualHistogram = isic.View.extend({
     events: {
         'click .toggle': function (evt) {
             this.$('.toggle').toggleClass('icon-down-open')

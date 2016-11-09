@@ -1,6 +1,6 @@
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
-isic.views.ImagesViewSubViews.DatasetPane = Backbone.View.extend({
+isic.views.ImagesViewSubViews.DatasetPane = isic.View.extend({
     initialize: function () {
         this.listenTo(this.model, 'change:overviewHistogram', this.render);
         this.listenTo(this.model, 'change:filteredSetHistogram', this.render);
@@ -12,7 +12,8 @@ isic.views.ImagesViewSubViews.DatasetPane = Backbone.View.extend({
             el: histogramContainer,
             model: this.model,
             attributeName: 'folderId',
-            title: 'Dataset'
+            title: 'Dataset',
+            parentView: this
         }).render();
 
         return this;

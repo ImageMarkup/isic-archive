@@ -2,7 +2,7 @@
 
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
-isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
+isic.views.ImagesViewSubViews.HistogramPane = isic.View.extend({
     initialize: function () {
         this.individualHistograms = {};
 
@@ -65,7 +65,8 @@ isic.views.ImagesViewSubViews.HistogramPane = Backbone.View.extend({
                         el: this,
                         model: self.model,
                         attributeName: d,
-                        title: title
+                        title: title,
+                        parentView: self
                     }).render();
             });
         attributeSections.select('.content').each(_.bind(function (d) {
