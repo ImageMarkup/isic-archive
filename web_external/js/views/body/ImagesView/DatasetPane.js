@@ -1,5 +1,3 @@
-/*globals d3*/
-
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
 isic.views.ImagesViewSubViews.DatasetPane = Backbone.View.extend({
