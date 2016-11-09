@@ -285,5 +285,14 @@ isic.views.ImagesViewSubViews.IndividualHistogram = isic.View.extend({
             height: height + 'px'
         });
         return this;
+    },
+
+    destroy: function () {
+        // Since the tooltips are attached to the HTML <body> (way outside the
+        // scope of this view's element, just destroy all tooltip elements
+        // globally; this is overkill, but can be fixed in a future refactor
+        $('.tooltip').remove();
+
+        isic.View.prototype.destroy.call(this);
     }
 });

@@ -71,6 +71,8 @@ isic.views.ImagesViewSubViews.HistogramPane = isic.View.extend({
             });
         attributeSections.select('.content').each(_.bind(function (d) {
             var histogramId = isic.shims.makeValidId(d + '_histogramContent');
+            // Destroy all tooltips before re-rendering, as a precaution
+            $('.tooltip').remove();
             this.individualHistograms[histogramId].render();
         }, this));
         return this;
