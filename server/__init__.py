@@ -112,6 +112,28 @@ def onJobSave(event):
     # This is fundamentally a problem with "rest.getApiUrl"
     job = event.info
     if job['handler'] == 'worker_handler':
+        # All girder_worker jobs have 3 absolute external URLs, which need to
+        # patched; these are located at (excluding other job fields):
+        # job = {
+        #     'kwargs': {
+        #         'inputs': {
+        #             '<input_name1>': {
+        #                 'mode': 'girder',
+        #                 'api_url': '<external_url>'
+        #             }
+        #         },
+        #         'outputs': {
+        #             '<output_name1>': {
+        #                 'mode': 'girder',
+        #                 'api_url': '<external_url>'
+        #             }
+        #         },
+        #         'jobInfo': {
+        #             'url': '<external_url>'
+        #         }
+        #     }
+        # }
+
         # We need to do this for all job statuses, since due to the way that
         # Job.save is overridden, the local model may be desynchronized from
         # the database after saving; this is fine, since girder_worker

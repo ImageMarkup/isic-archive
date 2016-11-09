@@ -30,7 +30,7 @@ Installation
     # from within your preferred source development directory
     git clone https://github.com/ImageMarkup/isic-archive.git
     cd isic-archive
-    git submodule init && git submodule update
+    git submodule update --init
 
 
 * Launch and automatically provision the development VM:
@@ -50,7 +50,7 @@ Setup
   (and optionally the ``OAuth2 login`` plugin), then use the button at the top
   of the page to restart the server.
 
-* Visit ``http://127.0.0.1:8080/girder``in your web browser, as this is where
+* Visit ``http://127.0.0.1:8080/girder`` in your web browser, as this is where
   the Girder administrative interface is exposed when the plugin is enabled.
 
 * Go to ``Admin console`` -> ``Plugins`` and open the configuration page (gear
