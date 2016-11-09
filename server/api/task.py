@@ -45,6 +45,14 @@ class TaskResource(Resource):
         self.route('GET', ('me', 'annotation', 'redirect'),
                    self.redirectAnnotationTask)
 
+    def _doRedirect(self, url):
+        exc = cherrypy.HTTPRedirect(url, status=307)
+        # "cherrypy.HTTPRedirect" will convert all URLs to be absolute and
+        # external; however, the hostname for external URLs may not be deduced
+        # correctly in all environments, so keep the url as-is
+        exc.urls = [url]
+        raise exc
+
     @describeRoute(
         Description('Get the current user\'s QC review tasks.')
         .responseClass('Task')
@@ -125,7 +133,7 @@ class TaskResource(Resource):
                 'No Pre-review images are available for this dataset.')
 
         reviewUrl = '/uda/gallery#/qc/%s' % dataset['_id']
-        raise cherrypy.HTTPRedirect(reviewUrl, status=307)
+        self._doRedirect(reviewUrl)
 
     def _pipeline1AllImages(self, user):
         Dataset = self.model('dataset', 'isic_archive')
@@ -314,7 +322,7 @@ class TaskResource(Resource):
         imageId = nextResp['_id']
 
         segmentUrl = '/uda/segment#/%s' % imageId
-        raise cherrypy.HTTPRedirect(segmentUrl, status=307)
+        self._doRedirect(segmentUrl)
 
     @describeRoute(
         Description('Get the current user\'s annotation tasks.')
@@ -395,4 +403,4 @@ class TaskResource(Resource):
         annotationId = nextResp['_id']
 
         annotationUrl = '/uda/annotate#/%s' % annotationId
-        raise cherrypy.HTTPRedirect(annotationUrl, status=307)
+        self._doRedirect(annotationUrl)
