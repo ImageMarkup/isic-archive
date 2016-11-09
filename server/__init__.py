@@ -17,7 +17,11 @@
 #  limitations under the License.
 ###############################################################################
 
+import itertools
 import os
+
+import six
+from bson import json_util
 
 from girder import events
 from girder.api.rest import getCurrentUser
@@ -93,6 +97,64 @@ def onGetItem(event):
             del itemResponse['meta']['originalFilename']
 
 
+def onDescribeResource(event):
+    # Patch a bug with how Girder's Swagger descriptions work with Vagrant
+    # port forwarding and Nginx proxies
+    # This is fundamentally a problem with "rest.getApiUrl"
+    describeResponse = event.info['returnVal']
+    # TODO: get this from the server config or the request
+    describeResponse['basePath'] = '/api/v1'
+
+
+def onJobSave(event):
+    # Patch a bug with how girder_worker's Girder task spec's 'api_url' is set
+    # with Vagrant port forwarding and Nginx proxies
+    # This is fundamentally a problem with "rest.getApiUrl"
+    job = event.info
+    if job['handler'] == 'worker_handler':
+        # All girder_worker jobs have 3 absolute external URLs, which need to
+        # patched; these are located at (excluding other job fields):
+        # job = {
+        #     'kwargs': {
+        #         'inputs': {
+        #             '<input_name1>': {
+        #                 'mode': 'girder',
+        #                 'api_url': '<external_url>'
+        #             }
+        #         },
+        #         'outputs': {
+        #             '<output_name1>': {
+        #                 'mode': 'girder',
+        #                 'api_url': '<external_url>'
+        #             }
+        #         },
+        #         'jobInfo': {
+        #             'url': '<external_url>'
+        #         }
+        #     }
+        # }
+
+        # We need to do this for all job statuses, since due to the way that
+        # Job.save is overridden, the local model may be desynchronized from
+        # the database after saving; this is fine, since girder_worker
+        # (where it matters) will always load directly from the correct entry
+        # in the database
+        def replaceHost(url):
+            # TODO: get this from the server config or the request
+            return 'http://127.0.0.1:8080' + url[url.find('/api/v1'):]
+
+        job['kwargs'] = json_util.loads(job['kwargs'])
+        for specValue in itertools.chain(
+                six.viewvalues(job['kwargs'].get('inputs', {})),
+                six.viewvalues(job['kwargs'].get('outputs', {}))):
+            if specValue['mode'] == 'girder':
+                specValue['api_url'] = replaceHost(specValue['api_url'])
+        if job['kwargs'].get('jobInfo'):
+            job['kwargs']['jobInfo']['url'] = replaceHost(
+                job['kwargs']['jobInfo']['url'])
+        job['kwargs'] = json_util.dumps(job['kwargs'])
+
+
 def clearRouteDocs():
     from girder.api.docs import routes
     # preserve the user token login operation
@@ -110,6 +172,9 @@ def load(info):
     events.bind('model.setting.validate', 'isic', validateSettings)
     events.bind('model.user.save.created', 'onUserCreated', onUserCreated)
     events.bind('rest.get.item/:id.after', 'onGetItem', onGetItem)
+    events.bind('rest.get.describe/:resource.after',
+                'onDescribeResource', onDescribeResource)
+    events.bind('model.job.save', 'onJobSave', onJobSave)
     ModelImporter.model('setting').set(SettingKey.USER_DEFAULT_FOLDERS, 'none')
 
     # add custom model searching
