@@ -43,10 +43,6 @@ isic.ENUMS.SCHEMA = {
         'coerceToType': 'string',
         'humanName': 'Benign / Malignant'
     },
-    'meta.clinical.sex': {
-        'coerceToType': 'string',
-        'humanName': 'Sex'
-    },
     'meta.clinical.age': {
         'coerceToType': 'number',
         'interpretation': 'ordinal',
@@ -54,6 +50,10 @@ isic.ENUMS.SCHEMA = {
         'lowBound': 0,
         'highBound': 90,
         'numBins': 9
+    },
+    'meta.clinical.sex': {
+        'coerceToType': 'string',
+        'humanName': 'Sex'
     },
     'meta.clinical.clin_size_long_diam_mm': {
         'coerceToType': 'number',

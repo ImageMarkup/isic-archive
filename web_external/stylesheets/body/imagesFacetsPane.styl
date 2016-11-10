@@ -1,0 +1,89 @@
+@import 'imagesPage'
+
+.isic-images-facet
+  img.button:hover
+  image.button:hover
+    -webkit-filter $rolloverImageFilter
+    filter $rolloverImageFilter
+
+  img.button.disabled
+  image.button.disabled
+    -webkit-filter $disabledImageFilter
+    filter $disabledImageFilter
+
+  .overview
+    fill $overviewColor
+
+  .filteredSet
+    fill $filteredSetColor
+
+  .page
+    fill $pageColor
+
+  .attributeSection
+    position relative
+    width 100%
+
+    .header
+      width 100%
+      display flex
+      align-items center
+      line-height 2.0
+
+      input.expander
+        position relative
+        left -999em
+        width 1em
+      input.expander:before
+        display inline-block
+        position relative
+        content ''
+        cursor pointer
+        width 1em
+        height 1em
+        left 999em
+        top -0.25em
+      input.expander:checked:before
+        -webkit-transform rotate(90deg)
+        transform rotate(90deg)
+
+      img
+        width 1em
+        height 1em
+      img.button
+        margin-left 0.5em
+
+      input.expander:hover:before
+      img.button:hover
+        cursor pointer
+        -webkit-filter $rolloverImageFilter
+        filter $rolloverImageFilter
+
+      span
+        position relative
+        left 0.25em
+
+      .title
+        font-size 20px
+        margin-left 5px
+
+  .content
+    display inline
+    position relative
+    width 100%
+    overflow-x auto
+    user-select none
+
+    .collapsed
+      display none
+
+    .yAxis line
+    .yAxis path
+      fill none
+      stroke $dataAxisColor
+      stroke-width 1px
+
+    .yAxisKnob
+      cursor ns-resize
+      fill $dataAxisColor
+      stroke none
