@@ -34,8 +34,6 @@ isic.views.ImagesFacetsPane = isic.View.extend({
             }
 
             var facetView = new FacetView({
-                // TODO: do we want a class?
-                // className: '',
                 model: this.model,
                 facetName: facetName,
                 parentView: this

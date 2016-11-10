@@ -7,6 +7,8 @@ var ICONS = {
 };
 
 isic.views.ImagesFacetView = isic.View.extend({
+    className: 'isic-images-facet',
+
     _getFieldLabel: function (fieldInfo) {
         if (fieldInfo.label === 'NaN' || fieldInfo.label === 'undefined') {
             return 'unknown';
