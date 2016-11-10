@@ -1,5 +1,4 @@
 /*globals d3*/
-isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
 var ICONS = {
     check: girder.staticRoot + '/built/plugins/isic_archive/extra/img/check.svg',
@@ -7,7 +6,10 @@ var ICONS = {
     dash: girder.staticRoot + '/built/plugins/isic_archive/extra/img/dash.svg'
 };
 
-isic.views.ImagesViewSubViews.IndividualHistogram = isic.View.extend({
+isic.views.ImagesFacetView = isic.View.extend({
+});
+
+isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
     events: {
         'click .toggle': function (evt) {
             this.$('.toggle').toggleClass('icon-down-open')
@@ -18,9 +20,10 @@ isic.views.ImagesViewSubViews.IndividualHistogram = isic.View.extend({
     },
     initialize: function (parameters) {
         this.attrName = parameters.attributeName;
-        this.scale = new isic.views.ImagesViewSubViews
-            .HistogramScale(this.attrName);
-        this.title = parameters.title;
+
+        this.title = isic.ENUMS.SCHEMA[this.attrName].humanName;
+
+        this.scale = new isic.views.ImagesViewSubViews.HistogramScale(this.attrName);
     },
     render: function () {
         this.$el.html(isic.templates.individualHistogram({
@@ -293,6 +296,9 @@ isic.views.ImagesViewSubViews.IndividualHistogram = isic.View.extend({
         // globally; this is overkill, but can be fixed in a future refactor
         $('.tooltip').remove();
 
-        isic.View.prototype.destroy.call(this);
+        isic.views.ImagesFacetView.prototype.destroy.call(this);
     }
+});
+
+isic.views.ImagesFacetHistogramDatasetView = isic.views.ImagesFacetHistogramView.extend({
 });

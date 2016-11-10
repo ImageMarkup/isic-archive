@@ -6,17 +6,19 @@ isic.views.ImagesView = isic.View.extend({
         this.image = new isic.models.ImageModel();
 
         // Initialize our subviews
-        var params = {
+        this.facetsPane = new isic.views.ImagesFacetsPane({
             model: this.model,
             parentView: this
-        };
-        this.datasetPane = new isic.views.ImagesViewSubViews.DatasetPane(params);
-        this.histogramPane = new isic.views.ImagesViewSubViews.HistogramPane(params);
-        this.imageWall = new isic.views.ImagesViewSubViews.ImageWall(
-            _.extend(_.clone(params), {
-                image: this.image
-            }));
-        this.pagingPane = new isic.views.ImagesViewSubViews.PagingPane(params);
+        });
+        this.imageWall = new isic.views.ImagesViewSubViews.ImageWall({
+            model: this.model,
+            image: this.image,
+            parentView: this
+        });
+        this.pagingPane = new isic.views.ImagesViewSubViews.PagingPane({
+            model: this.model,
+            parentView: this
+        });
         this.imageDetailsPane = new isic.views.ImagesViewSubViews.ImageDetailsPane({
             image: this.image,
             parentView: this
@@ -49,8 +51,7 @@ isic.views.ImagesView = isic.View.extend({
                 staticRoot: girder.staticRoot
             }));
             isic.shims.recolorImageFilters(['#00ABFF', '#444499', '#CCCCCC']);
-            this.datasetPane.setElement(this.$('#isic-images-datasetPane'));
-            this.histogramPane.setElement(this.$('#isic-images-histogramPane'));
+            this.facetsPane.setElement(this.$('#isic-images-facetsPane'));
             this.imageWall.setElement(this.$('#isic-images-imageWall'));
             this.pagingPane.setElement(this.$('#isic-images-pagingPane'));
             this.imageDetailsPane.setElement(this.$('#isic-images-imageDetailsPane'));
@@ -58,8 +59,7 @@ isic.views.ImagesView = isic.View.extend({
         }
         this.imageWall.render();
         this.pagingPane.render();
-        this.datasetPane.render();
-        this.histogramPane.render();
+        this.facetsPane.render();
         this.imageDetailsPane.render();
 
         this.toggleDetailsPane();
