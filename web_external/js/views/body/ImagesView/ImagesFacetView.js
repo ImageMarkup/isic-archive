@@ -7,6 +7,19 @@ var ICONS = {
 };
 
 isic.views.ImagesFacetView = isic.View.extend({
+    _getFieldLabel: function (fieldInfo) {
+        if (fieldInfo.label === 'NaN' || fieldInfo.label === 'undefined') {
+            return 'unknown';
+        } else if (_.has(fieldInfo, 'lowBound')) {
+            var formatter = d3.format('0.3s');
+            return fieldInfo.label[0] +
+                formatter(fieldInfo.lowBound) + ' - ' +
+                formatter(fieldInfo.highBound) +
+                fieldInfo.label[fieldInfo.label.length - 1];
+        } else {
+            return fieldInfo.label;
+        }
+    }
 });
 
 isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
@@ -19,30 +32,39 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
         }
     },
     initialize: function (parameters) {
-        this.attrName = parameters.attributeName;
+        this.attrName = parameters.facetName;
 
         this.title = isic.ENUMS.SCHEMA[this.attrName].humanName;
+        this.scale = new isic.views.ImagesViewSubViews.HistogramScale();
 
-        this.scale = new isic.views.ImagesViewSubViews.HistogramScale(this.attrName);
+        this.listenTo(this.model, 'change:overviewHistogram', this._renderHistogram);
+        this.listenTo(this.model, 'change:filteredSetHistogram', this._renderHistogram);
     },
     render: function () {
-        this.$el.html(isic.templates.individualHistogram({
-            title: this.title
+        this.$el.html(isic.templates.imagesFacetHistogram({
+            title: this.title,
+            staticRoot: girder.staticRoot
         }));
+        this._renderHistogram();
+    },
 
+    _renderHistogram: function () {
         var svg = d3.select(this.el).select('svg.content');
+        if (svg.empty()) {
+            // Do nothing until render() has been called
+            return;
+        }
 
         var parentWidth = this.el.getBoundingClientRect().width;
-        var emSize = parseFloat(this.$('svg').css('font-size'));
-        this.scale.update(this.model, emSize, parentWidth);
+        var emSize = parseFloat(svg.style('font-size'));
+        this.scale.update(
+            this.model.get('overviewHistogram')[this.attrName],
+            this.model.get('filteredSetHistogram')[this.attrName],
+            emSize, parentWidth);
 
         var width = this.scale.width;
         var topPadding = 0.5 * emSize;
         var height = this.scale.height + topPadding;
-
-        svg.html(isic.templates.imagesPageHistogram({
-            staticRoot: girder.staticRoot
-        }));
 
         // Draw the y axis
         var yScale = d3.scale.linear()
@@ -225,8 +247,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                 }).on('click', function (d) {
                     if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
                         // Remove this bin
-                        if (bin.hasOwnProperty('lowBound') &&
-                                bin.hasOwnProperty('highBound')) {
+                        if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
                             self.model.removeRange(self.attrName,
                                 bin.lowBound, bin.highBound, comparator);
                         } else {
@@ -234,8 +255,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                         }
                     } else {
                         // Add this bin
-                        if (bin.hasOwnProperty('lowBound') &&
-                                bin.hasOwnProperty('highBound')) {
+                        if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
                             self.model.includeRange(self.attrName,
                                 bin.lowBound, bin.highBound, comparator);
                         } else {
@@ -243,7 +263,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                         }
                     }
 
-                    self.render();
+                    self._renderHistogram();
                 });
         });
         height += 2 * emSize;
@@ -256,24 +276,8 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
         var maxBoxHeight = svg.select('.selectAllBins').select('text')
             .node().getComputedTextLength();
         binsEnter.append('text');
-        var formatter = d3.format('0.3s');
         bins.select('text')
-            .text(_.bind(function (d) {
-                var label;
-                if (this.attrName === 'folderId') {
-                    label = this.model.datasetCollection.findWhere({
-                        _id: d.label
-                    }).name();
-                } else if (d.label === 'NaN' || d.label === 'undefined') {
-                    label = 'unknown';
-                } else if (_.has(d, 'lowBound')) {
-                    label = d.label[0] + formatter(d.lowBound) + ' - ' +
-                        formatter(d.highBound) + d.label[d.label.length - 1];
-                } else {
-                    label = d.label;
-                }
-                return label;
-            }, this))
+            .text(_.bind(this._getFieldLabel, this))
             .attr('text-anchor', 'end')
             .attr('transform', 'translate(0 ' + transformHeight + ') rotate(' + transformAngle + ')')
             .each(function () {
@@ -301,4 +305,9 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
 });
 
 isic.views.ImagesFacetHistogramDatasetView = isic.views.ImagesFacetHistogramView.extend({
+    _getFieldLabel: function (fieldInfo) {
+        return this.model.datasetCollection.findWhere({
+            _id: fieldInfo.label
+        }).name();
+    }
 });

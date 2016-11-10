@@ -1,9 +1,7 @@
 (function () {
     // This is simply a helper class (not really a model or a view) that
     // abstracts away some of the nuances of the histogram scales (both x and y)
-    function HistogramScale(attrName) {
-        this.attrName = attrName;
-
+    function HistogramScale() {
         // The x scale is a funky one - we may (or may not) have an ordinal chunk
         // and a categorical chunk on the same scale. We want to try to use the
         // available horizontal space, but don't let bars get smaller than 1em
@@ -20,13 +18,12 @@
         // of a custom max y, as well as the actual max value of the data
         this.customYmax = null;
     }
-    HistogramScale.prototype.update = function (model, emSize, idealWidth) {
+    HistogramScale.prototype.update = function (overviewHistogram, filteredSetHistogram, emSize, idealWidth) {
+        this.overviewHistogram = overviewHistogram || [];
+        this.filteredSetHistogram = filteredSetHistogram || [];
+
         this.leftAxisPadding = 3 * emSize;
         this.height = 6 * emSize;
-
-        this.coerceToType = model.getAttributeType(this.attrName);
-        this.overviewHistogram = model.get('overviewHistogram')[this.attrName] || [];
-        this.filteredSetHistogram = model.get('filteredSetHistogram')[this.attrName] || [];
 
         this.dividerIndex = undefined;
         this.dividerPosition = undefined;

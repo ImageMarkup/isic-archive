@@ -1,9 +1,6 @@
 isic.views.ImagesFacetsPane = isic.View.extend({
     initialize: function () {
         this.facetViews = {};
-
-        this.listenTo(this.model, 'change:overviewHistogram', this.render);
-        this.listenTo(this.model, 'change:filteredSetHistogram', this.render);
     },
     render: function () {
         if (!this.addedCollapseImage) {
@@ -42,12 +39,14 @@ isic.views.ImagesFacetsPane = isic.View.extend({
                 // TODO: do we want a class?
                 // className: '',
                 model: this.model,
-                attrName: facetName,
+                facetName: facetName,
                 parentView: this
-            }).render();
+            });
 
             this.facetViews[facetName] = facetView;
             this.$el.append(facetView.el);
+            // Do not render until the view has been inserted into the main DOM
+            facetView.render();
         }, this);
 
         return this;
