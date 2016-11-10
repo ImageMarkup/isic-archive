@@ -34,8 +34,6 @@ isic.views.ImagesFacetsPane = isic.View.extend({
             }
 
             var facetView = new FacetView({
-                // TODO: setting the ID is probably not necessary
-                id: isic.shims.makeValidId(facetName + '_histogramContent'),
                 // TODO: do we want a class?
                 // className: '',
                 model: this.model,
