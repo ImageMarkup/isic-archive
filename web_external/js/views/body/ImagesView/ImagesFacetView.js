@@ -247,6 +247,13 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                         return ICONS.dash;
                     }
                 }).on('click', function (d) {
+                    // TODO: Ideally, this should select and cancel only the old
+                    // set of requests (and could be called in
+                    // ImagesViewModel.updateFilters); until that's fixed,
+                    // hopefully nobody will click histogram buttons too early
+                    // in the page load
+                    girder.cancelRestRequests();
+
                     if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
                         // Remove this bin
                         if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
