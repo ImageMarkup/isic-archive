@@ -1,7 +1,4 @@
 isic.views.ImagesFacetsPane = isic.View.extend({
-    initialize: function () {
-        this.facetViews = {};
-    },
     render: function () {
         if (!this.addedCollapseImage) {
             // little hack to inject the correct expander image path into the
@@ -23,6 +20,7 @@ isic.views.ImagesFacetsPane = isic.View.extend({
         _.each(this.facetViews, function (facetView) {
             facetView.destroy();
         }, this);
+        this.$el.empty();
 
         this.facetViews = {};
         _.each(_.keys(isic.ENUMS.SCHEMA), function (facetName) {
