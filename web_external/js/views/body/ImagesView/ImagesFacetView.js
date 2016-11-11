@@ -359,15 +359,17 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetHistogramDatasetVi
 
         this.scale = new isic.views.ImagesViewSubViews.HistogramScale();
 
-        this.listenTo(this.model, 'change:overviewHistogram', this.render);
-        this.listenTo(this.model, 'change:filteredSetHistogram', this.render);
+        this.listenTo(this.model, 'change:overviewHistogram', this._renderCategories);
+        this.listenTo(this.model, 'change:filteredSetHistogram', this._renderCategories);
     },
     render: function () {
-        this.scale.update(this.model.get('overviewHistogram')[this.attrName], this.model.get('filteredSetHistogram')[this.attrName], 0, 0);
-
         this.$el.html(isic.templates.imagesFacetCategorical({
             title: this.title
         }));
+        this._renderCategories();
+    },
+    _renderCategories: function () {
+        this.scale.update(this.model.get('overviewHistogram')[this.attrName], this.model.get('filteredSetHistogram')[this.attrName], 0, 0);
 
         var cats = d3.select(this.el)
             .select('ul.categories')
@@ -376,6 +378,7 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetHistogramDatasetVi
                 return d.label;
             });
 
+        var self = this;
         var labels = cats.enter()
             .append('li')
             .append('div')
@@ -384,10 +387,54 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetHistogramDatasetVi
             .append('label');
 
         labels.append('input')
-            .attr('type', 'checkbox');
+            .attr('type', 'checkbox')
+            .property('checked', true)
+            .each(function (d) {
+                var bin = self.scale.labelToBin(d.label, 'overview');
+                bin = self.model.get('overviewHistogram')[self.attrName][bin];
 
-        var self = this;
+                // To add / remove ranges, we might need to provide a comparison
+                // function (undefined will just do default comparisons)
+                var comparator;
+                if (self.model.getAttributeType(self.attrName) === 'string') {
+                    comparator = function (a, b) {
+                        return a.localeCompare(b);
+                    };
+                }
+
+                var me = d3.select(this);
+
+                // me.property('checked', true);
+
+                me.on('click', function () {
+                    var status = self.model.getBinStatus(self.attrName, bin);
+                    girder.cancelRestRequests();
+
+                    if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
+                        // Remove this bin
+                        if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
+                            self.model.removeRange(self.attrName,
+                                bin.lowBound, bin.highBound, comparator);
+                        } else {
+                            self.model.removeValue(self.attrName, bin.label);
+                        }
+                    } else {
+                        // Add this bin
+                        if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
+                            self.model.includeRange(self.attrName,
+                                bin.lowBound, bin.highBound, comparator);
+                        } else {
+                            self.model.includeValue(self.attrName, bin.label);
+                        }
+                    }
+                });
+            });
+
         labels.append('span')
+            .classed('isic-text', true);
+
+        d3.select(this.el)
+            .selectAll('span.isic-text')
             .text(function (d) {
                 var name = self._getFieldLabel(d);
                 var filteredSetCount = self.scale.labelToCount(d.label, 'filteredSet');
