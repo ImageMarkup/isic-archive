@@ -68,6 +68,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         return girder.restRequest({
             path: 'image/histogram'
         }).then(_.bind(function (resp) {
+            this.postProcessHistogram(resp)
             this.set('overviewHistogram', resp);
         }, this));
     },
@@ -78,8 +79,41 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                 filter: JSON.stringify(this.getFilterAstTree())
             }
         }).then(_.bind(function (resp) {
+            this.postProcessHistogram(resp)
             this.set('filteredSetHistogram', resp);
         }, this));
+    },
+    postProcessHistogram: function (histograms) {
+        // This folds any "null" values into "undefined" or "NaN" values,
+        // mutating the "histograms" object in-place
+        _.each(_.keys(histograms), function (facetName) {
+            if (facetName === '__passedFilters__') {
+                return;
+            }
+            var facetHistogram = histograms[facetName];
+            var nullField = _.findWhere(facetHistogram, {label: 'null'});
+            if (nullField) {
+                var missingField =
+                    _.findWhere(facetHistogram, {label: 'undefined'}) ||
+                    _.findWhere(facetHistogram, {label: 'NaN'});
+                if (missingField) {
+                    // Add the null value to "missing" field
+                    missingField.count += nullField.count;
+                    // Remove the null field
+                    histograms[facetName] = _.without(facetHistogram, nullField)
+                } else {
+                    // Add a new "missing" field, by changing the null field label
+                    var isOrdinalFacet = _.some(facetHistogram, function (field) {
+                        return _.has(field, 'lowBound') || _.has(field, 'highBound')
+                    });
+                    if (isOrdinalFacet) {
+                        nullField.label = 'undefined';
+                    } else {
+                        nullField.label = 'NaN';
+                    }
+                }
+            }
+        });
     },
     updateFilters: function () {
         return $.when(
