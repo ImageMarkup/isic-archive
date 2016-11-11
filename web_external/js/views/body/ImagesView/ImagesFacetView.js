@@ -344,7 +344,7 @@ isic.views.ImagesFacetHistogramDatasetView = isic.views.ImagesFacetHistogramView
     }
 });
 
-isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
+isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetHistogramDatasetView.extend({
     events: {
         'click .toggle': function (evt) {
             this.$('.toggle').toggleClass('icon-down-open')
@@ -355,15 +355,40 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
     },
     initialize: function (parameters) {
         this.attrName = parameters.facetName;
-
         this.title = isic.ENUMS.SCHEMA[this.attrName].humanName;
 
-        this.listenTo(this.model, 'change:overviewHistogram', this._renderHistogram);
-        this.listenTo(this.model, 'change:filteredSetHistogram', this._renderHistogram);
+        this.scale = new isic.views.ImagesViewSubViews.HistogramScale();
+
+        this.listenTo(this.model, 'change:overviewHistogram', this.render);
+        this.listenTo(this.model, 'change:filteredSetHistogram', this.render);
     },
     render: function () {
+        this.scale.update(this.model.get('overviewHistogram')[this.attrName], this.model.get('filteredSetHistogram')[this.attrName], 0, 0);
+
         this.$el.html(isic.templates.imagesFacetCategorical({
             title: this.title
         }));
+
+        var cats = d3.select(this.el)
+            .select('ul.categories')
+            .selectAll('li')
+            .data(this.scale.overviewHistogram, function (d) {
+                return d.label;
+            });
+
+        cats.enter()
+            .append('li');
+
+        cats.exit()
+            .remove();
+
+        var self = this;
+        cats.text(function (d) {
+            var name = self._getFieldLabel(d);
+            var filteredSetCount = self.scale.labelToCount(d.label, 'filteredSet');
+            var overviewCount = self.scale.labelToCount(d.label, 'overview');
+
+            return name + ': ' + filteredSetCount + ' / ' + overviewCount;
+        });
     }
 });
