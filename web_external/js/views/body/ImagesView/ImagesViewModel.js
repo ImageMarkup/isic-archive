@@ -68,7 +68,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         return girder.restRequest({
             path: 'image/histogram'
         }).then(_.bind(function (resp) {
-            this.postProcessHistogram(resp)
+            this.postProcessHistogram(resp);
             this.set('overviewHistogram', resp);
         }, this));
     },
@@ -79,7 +79,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                 filter: JSON.stringify(this.getFilterAstTree())
             }
         }).then(_.bind(function (resp) {
-            this.postProcessHistogram(resp)
+            this.postProcessHistogram(resp);
             this.set('filteredSetHistogram', resp);
         }, this));
     },
@@ -100,11 +100,11 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                     // Add the null value to "missing" field
                     missingField.count += nullField.count;
                     // Remove the null field
-                    histograms[facetName] = _.without(facetHistogram, nullField)
+                    histograms[facetName] = _.without(facetHistogram, nullField);
                 } else {
                     // Add a new "missing" field, by changing the null field label
                     var isOrdinalFacet = _.some(facetHistogram, function (field) {
-                        return _.has(field, 'lowBound') || _.has(field, 'highBound')
+                        return _.has(field, 'lowBound') || _.has(field, 'highBound');
                     });
                     if (isOrdinalFacet) {
                         nullField.label = 'undefined';
