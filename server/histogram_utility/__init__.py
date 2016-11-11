@@ -104,15 +104,24 @@ class HistogramUtility(object):
             'meta.clinical.benign_malignant': {
                 'coerceToType': 'string'
             },
-            'meta.clinical.sex': {
-                'coerceToType': 'string'
-            },
             'meta.clinical.age': {
                 'coerceToType': 'number',
                 'interpretation': 'ordinal',
                 'lowBound': 0,
                 'highBound': 90,
                 'numBins': 9
+            },
+            'meta.clinical.sex': {
+                'coerceToType': 'string'
+            },
+            'meta.clinical.diagnosis_confirm_type': {
+                'coerceToType': 'string'
+            },
+            'meta.clinical.clin_diagnosis': {
+                'coerceToType': 'string'
+            },
+            'meta.clinical.path_diagnosis': {
+                'coerceToType': 'string'
             },
             'meta.clinical.clin_size_long_diam_mm': {
                 'coerceToType': 'number',
