@@ -376,19 +376,27 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetHistogramDatasetVi
                 return d.label;
             });
 
-        cats.enter()
-            .append('li');
+        var labels = cats.enter()
+            .append('li')
+            .append('div')
+            .style('display', 'inline')
+            .classed('checkbox', true)
+            .append('label');
+
+        labels.append('input')
+            .attr('type', 'checkbox');
+
+        var self = this;
+        labels.append('span')
+            .text(function (d) {
+                var name = self._getFieldLabel(d);
+                var filteredSetCount = self.scale.labelToCount(d.label, 'filteredSet');
+                var overviewCount = self.scale.labelToCount(d.label, 'overview');
+
+                return name + ': ' + filteredSetCount + ' / ' + overviewCount;
+            });
 
         cats.exit()
             .remove();
-
-        var self = this;
-        cats.text(function (d) {
-            var name = self._getFieldLabel(d);
-            var filteredSetCount = self.scale.labelToCount(d.label, 'filteredSet');
-            var overviewCount = self.scale.labelToCount(d.label, 'overview');
-
-            return name + ': ' + filteredSetCount + ' / ' + overviewCount;
-        });
     }
 });
