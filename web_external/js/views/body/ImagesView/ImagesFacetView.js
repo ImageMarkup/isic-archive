@@ -343,3 +343,27 @@ isic.views.ImagesFacetHistogramDatasetView = isic.views.ImagesFacetHistogramView
         }).name();
     }
 });
+
+isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
+    events: {
+        'click .toggle': function (evt) {
+            this.$('.toggle').toggleClass('icon-down-open')
+                .toggleClass('icon-right-open');
+
+            this.$('.content').toggle();
+        }
+    },
+    initialize: function (parameters) {
+        this.attrName = parameters.facetName;
+
+        this.title = isic.ENUMS.SCHEMA[this.attrName].humanName;
+
+        this.listenTo(this.model, 'change:overviewHistogram', this._renderHistogram);
+        this.listenTo(this.model, 'change:filteredSetHistogram', this._renderHistogram);
+    },
+    render: function () {
+        this.$el.html(isic.templates.imagesFacetCategorical({
+            title: this.title
+        }));
+    }
+});
