@@ -68,7 +68,7 @@ nav.navbar.navbar-default.navbar-fixed-top.isic-header-wrapper
             | Lesion Images&nbsp;
             span.caret
           ul.dropdown-menu
-            if currentUser && currentUser.canCreateDataset()
+            if currentUser
               li(role="presentation")
                 a(title="Upload Dataset", href="#uploadDataset")
                   i.icon-upload

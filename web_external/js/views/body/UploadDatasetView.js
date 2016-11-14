@@ -257,10 +257,61 @@ isic.views.UploadDatasetView = isic.View.extend({
     }
 });
 
+isic.views.UploadDatasetRequestView = isic.View.extend({
+    events: {
+        'submit #isic-dataset-form': function (event) {
+            event.preventDefault();
+            this.$('#isic-dataset-submit').prop('disabled', true);
+            this.requestCreateDatasetPermission();
+        }
+    },
+
+    initialize: function (settings) {
+        this.render();
+    },
+
+    render: function () {
+        this.$el.html(isic.templates.uploadDatasetRequest({
+            user: girder.currentUser
+        }));
+
+        return this;
+    },
+
+    requestCreateDatasetPermission: function () {
+        girder.restRequest({
+            path: 'user/requestCreateDatasetPermission',
+            type: 'POST'
+        }).done(_.bind(function (resp) {
+            if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
+                // Directly update user permissions
+                girder.currentUser.setCanCreateDataset(true);
+                // Refresh page
+                Backbone.history.loadUrl();
+            } else {
+                // Display notification and route to index
+                isic.showAlertDialog({
+                    text: resp.message,
+                    callback: function () {
+                        isic.router.navigate('', {trigger: true});
+                    }
+                });
+            }
+        }, this));
+    }
+});
+
 isic.router.route('uploadDataset', 'uploadDataset', function (id) {
-    // Route to index if user doesn't have permission to create datasets
-    if (girder.currentUser && girder.currentUser.canCreateDataset()) {
-        girder.events.trigger('g:navigateTo', isic.views.UploadDatasetView);
+    // Route registered users to upload dataset view or upload dataset request view.
+    // Route anonymous users to index.
+    if (girder.currentUser) {
+        var view;
+        if (girder.currentUser.canCreateDataset()) {
+            view = isic.views.UploadDatasetView;
+        } else {
+            view = isic.views.UploadDatasetRequestView;
+        }
+        girder.events.trigger('g:navigateTo', view);
     } else {
         isic.router.navigate('', {trigger: true});
     }
