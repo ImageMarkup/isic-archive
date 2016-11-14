@@ -299,9 +299,22 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                 // ellipsis, until the string is a manageable length.
                 var me = d3.select(this);
                 var text = me.text();
+                var shortened = false;
                 while (this.getComputedTextLength() > 95) {
-                  text = text.slice(0, -1);
-                  me.html(text + '&hellip;');
+                    shortened = true;
+
+                    text = text.slice(0, -1);
+                    me.html(text + '&hellip;');
+                }
+
+                // Add a tooltip to shortened labels, containing the full label.
+                if (shortened) {
+                    $(this).tooltip({
+                        container: 'body',
+                        title: function () {
+                            return self._getFieldLabel(d);
+                        }
+                    });
                 }
             });
         height += maxBoxHeight + topPadding + offsetY;
