@@ -102,7 +102,9 @@ class ImageResource(Resource):
         Image = self.model('image', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
-        output = Image.filter(image, self.getCurrentUser())
+        user = self.getCurrentUser()
+
+        output = Image.filter(image, user)
         output['_modelType'] = 'image'
 
         output['dataset'] = Dataset.load(
@@ -118,11 +120,10 @@ class ImageResource(Resource):
             User.load(
                 output.pop('creatorId'),
                 force=True, exc=True),
-            self.getCurrentUser())
+            user)
 
         if 'originalFilename' in output['meta']:
-            currentUser = self.getCurrentUser()
-            if not (currentUser and currentUser['admin']):
+            if not User.canReviewDataset(user):
                 del output['meta']['originalFilename']
 
         return output
