@@ -88,12 +88,12 @@ def validateSettings(event):
 
 
 def onGetItem(event):
+    User = ModelImporter.model('user', 'isic_archive')
     itemResponse = event.info['returnVal']
 
     # Hide the 'originalFilename' metadata on Images from non-site admins
     if 'originalFilename' in itemResponse.get('meta', {}):
-        currentUser = getCurrentUser()
-        if not (currentUser and currentUser['admin']):
+        if not User.canReviewDataset(getCurrentUser()):
             del itemResponse['meta']['originalFilename']
 
 

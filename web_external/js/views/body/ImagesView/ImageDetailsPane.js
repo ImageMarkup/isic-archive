@@ -56,6 +56,7 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
         this.$el.html(isic.templates.imageDetailsPage({
             imgRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/img',
             image: this.image,
+            currentUser: girder.currentUser,
             created: created,
             license: license,
             acquisitionMetadata: acquisitionMetadata,
