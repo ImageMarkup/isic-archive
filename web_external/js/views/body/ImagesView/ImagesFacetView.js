@@ -289,10 +289,20 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
             .text(_.bind(this._getFieldLabel, this))
             .attr('text-anchor', 'end')
             .attr('transform', 'translate(0 ' + transformHeight + ') rotate(' + transformAngle + ')')
-            .each(function () {
+            .each(function (d) {
                 // this refers to the DOM element
                 var boxHeight = Math.abs(this.getComputedTextLength() * Math.sin(transformAngleRadians));
                 maxBoxHeight = Math.max(boxHeight, maxBoxHeight);
+
+                // Shorten any labels that are too long. Remove letters from the
+                // end of the string one by one, and replace with an HTML
+                // ellipsis, until the string is a manageable length.
+                var me = d3.select(this);
+                var text = me.text();
+                while (this.getComputedTextLength() > 95) {
+                  text = text.slice(0, -1);
+                  me.html(text + '&hellip;');
+                }
             });
         height += maxBoxHeight + topPadding + offsetY;
 
