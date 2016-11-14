@@ -43,6 +43,8 @@ class User(UserModel):
 
     def _isAdminOrMember(self, user, groupName):
         Group = self.model('group')
+        if not user:
+            return False
         if user.get('admin', False):
             return True
         group = Group.findOne({'name': groupName})
@@ -71,6 +73,8 @@ class User(UserModel):
     def getSegmentationSkill(self, user):
         Group = self.model('group')
         Segmentation = self.model('segmentation', 'isic_archive')
+        if not user:
+            return None
         expertGroup = Group.findOne({'name': 'Segmentation Experts'})
         if expertGroup['_id'] in user['groups']:
             return Segmentation.Skill.EXPERT
