@@ -9,6 +9,13 @@ var ICONS = {
 isic.views.ImagesFacetView = isic.View.extend({
     className: 'isic-images-facet',
 
+    initialize: function (parameters) {
+        this.attrName = parameters.facetName;
+
+        this.attrType = this.model.getAttributeType(this.attrName)
+        this.title = isic.ENUMS.SCHEMA[this.attrName].humanName;
+    },
+
     _getFieldLabel: function (fieldInfo) {
         if (fieldInfo.label === '__NaN__' || fieldInfo.label === '__undefined__') {
             return 'unknown';
@@ -34,9 +41,8 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
         }
     },
     initialize: function (parameters) {
-        this.attrName = parameters.facetName;
+        isic.views.ImagesFacetView.prototype.initialize.call(this, parameters);
 
-        this.title = isic.ENUMS.SCHEMA[this.attrName].humanName;
         this.scale = new isic.views.ImagesViewSubViews.HistogramScale();
 
         this.listenTo(this.model, 'change:overviewHistogram', this._renderHistogram);
@@ -238,7 +244,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
             // To add / remove ranges, we might need to provide a comparison
             // function (undefined will just do default comparisons)
             var comparator;
-            if (self.model.getAttributeType(self.attrName) === 'string') {
+            if (self.attrType === 'string') {
                 comparator = function (a, b) {
                     return a.localeCompare(b);
                 };
@@ -360,9 +366,9 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetHistogramDatasetVi
             this.$('.content').toggle();
         }
     },
+
     initialize: function (parameters) {
-        this.attrName = parameters.facetName;
-        this.title = isic.ENUMS.SCHEMA[this.attrName].humanName;
+        isic.views.ImagesFacetView.prototype.initialize.call(this, parameters);
 
         this.scale = new isic.views.ImagesViewSubViews.HistogramScale();
 
@@ -402,7 +408,7 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetHistogramDatasetVi
                 // To add / remove ranges, we might need to provide a comparison
                 // function (undefined will just do default comparisons)
                 var comparator;
-                if (self.model.getAttributeType(self.attrName) === 'string') {
+                if (self.attrType === 'string') {
                     comparator = function (a, b) {
                         return a.localeCompare(b);
                     };
