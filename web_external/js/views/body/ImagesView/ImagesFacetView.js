@@ -12,8 +12,17 @@ isic.views.ImagesFacetView = isic.View.extend({
     initialize: function (parameters) {
         this.attrName = parameters.facetName;
 
-        this.attrType = this.model.getAttributeType(this.attrName)
+        this.attrType = this.model.getAttributeType(this.attrName);
         this.title = isic.ENUMS.SCHEMA[this.attrName].humanName;
+    },
+
+    events: {
+        'click .toggle': function (evt) {
+            this.$('.toggle').toggleClass('icon-down-open')
+                .toggleClass('icon-right-open');
+
+            this.$('.isic-images-facet-content').toggle();
+        }
     },
 
     _getFieldLabel: function (fieldInfo) {
@@ -70,14 +79,6 @@ isic.views.ImagesFacetView = isic.View.extend({
 });
 
 isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
-    events: {
-        'click .toggle': function (evt) {
-            this.$('.toggle').toggleClass('icon-down-open')
-                .toggleClass('icon-right-open');
-
-            this.$('svg.content').toggle();
-        }
-    },
     initialize: function (parameters) {
         isic.views.ImagesFacetView.prototype.initialize.call(this, parameters);
 
@@ -86,6 +87,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
         this.listenTo(this.model, 'change:overviewHistogram', this._renderHistogram);
         this.listenTo(this.model, 'change:filteredSetHistogram', this._renderHistogram);
     },
+
     render: function () {
         this.$el.html(isic.templates.imagesFacetHistogram({
             title: this.title,
@@ -95,7 +97,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
     },
 
     _renderHistogram: function () {
-        var svg = d3.select(this.el).select('svg.content');
+        var svg = d3.select(this.el).select('svg.isic-images-facet-histogram-content');
         if (svg.empty()) {
             // Do nothing until render() has been called
             return;
@@ -171,9 +173,10 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
         // binsEnter.append('rect')
         //     .attr('class', 'page');
 
+        var self = this;
+
         // Update each bar
         var drawBars = _.bind(function () {
-            var self = this;
             bins.select('rect.overview')
                 .each(function (d) {
                     // this refers to the DOM element
@@ -286,7 +289,11 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                     return ICONS.dash;
                 }
             }, this))
-            .on('click', _.bind(this._toggleBin, this));
+            .on('click', _.bind(function (d) {
+                var bin = d;
+                this._toggleBin(bin);
+                this._renderHistogram();
+            }, this));
 
         height += 2 * emSize;
 
@@ -359,72 +366,56 @@ isic.views.ImagesFacetHistogramDatasetView = isic.views.ImagesFacetHistogramView
 });
 
 isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
-    events: {
-        'click .toggle': function (evt) {
-            this.$('.toggle').toggleClass('icon-down-open')
-                .toggleClass('icon-right-open');
+    events: function () {
+        return _.extend({}, isic.views.ImagesFacetView.prototype.events, {
+            'click input': function (event) {
+                // TODO: there should be a better way to get this data
+                var liElem = $(event.currentTarget).parent().parent().parent();
+                var bin = d3.select(liElem[0]).datum();
 
-            this.$('.content').toggle();
-        }
+                this._toggleBin(bin);
+            }
+        });
     },
 
     initialize: function (parameters) {
         isic.views.ImagesFacetView.prototype.initialize.call(this, parameters);
 
-        this.scale = new isic.views.ImagesViewSubViews.HistogramScale();
-
-        this.listenTo(this.model, 'change:overviewHistogram', this._renderCategories);
-        this.listenTo(this.model, 'change:filteredSetHistogram', this._renderCategories);
+        this.listenTo(this.model, 'change:overviewHistogram', this.render);
+        this.listenTo(this.model, 'change:filteredSetHistogram', this._rerenderLabels);
     },
+
     render: function () {
+        var overviewBins = this.model.get('overviewHistogram')[this.attrName];
+
         this.$el.html(isic.templates.imagesFacetCategorical({
-            title: this.title
+            title: this.title,
+            bins: overviewBins || []
         }));
-        this._renderCategories();
+        if (!overviewBins) {
+            return;
+        }
+
+        d3.select(this.el).selectAll('li')
+            .data(overviewBins);
+
+        this._rerenderLabels();
     },
-    _renderCategories: function () {
-        this.scale.update(this.model.get('overviewHistogram')[this.attrName], this.model.get('filteredSetHistogram')[this.attrName], 0, 0);
 
-        var cats = d3.select(this.el)
-            .select('ul.categories')
-            .selectAll('li')
-            .data(this.scale.overviewHistogram, function (d) {
-                return d.label;
-            });
+    _rerenderLabels: function () {
+        var filteredBins = this.model.get('filteredSetHistogram')[this.attrName];
 
-        var labels = cats.enter()
-            .append('li')
-            .append('div')
-            .style('display', 'inline')
-            .classed('checkbox', true)
-            .append('label');
-
-        labels.append('input')
-            .attr('type', 'checkbox')
-            .property('checked', true)
-            .on('click', _.bind(this._toggleBin, this));
-
-        labels.append('span')
-            .classed('isic-text', true);
-
-        var self = this;
-        d3.select(this.el)
-            .selectAll('span.isic-text')
-            .text(function (d) {
-                var name = self._getFieldLabel(d);
+        // Don't selectAll to 'span.isic-text' directly, so data is propagated
+        d3.select(this.el).selectAll('li').select('span.isic-text')
+            .text(_.bind(function (d) {
+                var name = this._getFieldLabel(d);
 
                 var overviewCount = d.count;
 
-                var filteredSetBin = _.findWhere(
-                    self.model.get('filteredSetHistogram')[self.attrName],
-                    {label: d.label}
-                );
+                var filteredSetBin = _.findWhere(filteredBins, {label: d.label});
                 var filteredSetCount = filteredSetBin ? filteredSetBin.count : 0;
 
                 return name + ': ' + filteredSetCount + ' / ' + overviewCount;
-            });
-
-        cats.exit()
-            .remove();
+            }, this));
     }
 });

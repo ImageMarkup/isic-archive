@@ -67,23 +67,31 @@
         font-size 20px
         margin-left 5px
 
-  .content
-    display inline
-    position relative
-    width 100%
-    overflow-x auto
-    user-select none
+  .isic-images-facet-content
 
-    .collapsed
-      display none
+    .isic-images-facet-histogram-content
+      display inline
+      position relative
+      width 100%
+      overflow-x auto
+      user-select none
 
-    .yAxis line
-    .yAxis path
-      fill none
-      stroke $dataAxisColor
-      stroke-width 1px
+      .yAxis line
+      .yAxis path
+        fill none
+        stroke $dataAxisColor
+        stroke-width 1px
 
-    .yAxisKnob
-      cursor ns-resize
-      fill $dataAxisColor
-      stroke none
+      .yAxisKnob
+        cursor ns-resize
+        fill $dataAxisColor
+        stroke none
+
+    .isic-images-facet-categorical-content
+      padding-left 25px
+
+      li
+        list-style none
+
+        .checkbox
+          display inline

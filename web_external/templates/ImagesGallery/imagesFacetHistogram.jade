@@ -1,9 +1,7 @@
-.attributeSection
-  .header
-    i.toggle.icon-down-open
-    .title= title
-.isic-image-histogram-container
-  svg.content
+extends imagesFacet
+
+block content
+  svg.isic-images-facet-histogram-content
     g.yAxis
     g.yAxisKnob
       rect(
