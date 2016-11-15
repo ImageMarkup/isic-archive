@@ -28,6 +28,44 @@ isic.views.ImagesFacetView = isic.View.extend({
         } else {
             return fieldInfo.label;
         }
+    },
+
+    _toggleBin: function (bin) {
+        var status = this.model.getBinStatus(this.attrName, bin);
+
+        // To add / remove ranges, we might need to provide a comparison
+        // function (undefined will just do default comparisons)
+        var comparator;
+        if (this.attrType === 'string') {
+            comparator = function (a, b) {
+                return a.localeCompare(b);
+            };
+        }
+
+        // TODO: Ideally, this should select and cancel only the old
+        // set of requests (and could be called in
+        // ImagesViewModel.updateFilters); until that's fixed,
+        // hopefully nobody will click histogram buttons too early
+        // in the page load
+        girder.cancelRestRequests();
+
+        if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
+            // Remove this bin
+            if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
+                this.model.removeRange(this.attrName,
+                    bin.lowBound, bin.highBound, comparator);
+            } else {
+                this.model.removeValue(this.attrName, bin.label);
+            }
+        } else {
+            // Add this bin
+            if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
+                this.model.includeRange(this.attrName,
+                    bin.lowBound, bin.highBound, comparator);
+            } else {
+                this.model.includeValue(this.attrName, bin.label);
+            }
+        }
     }
 });
 
@@ -235,59 +273,21 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                 width: emSize,
                 height: emSize
             });
-        var self = this;
-        bins.select('image.button').each(function (d) {
-            // this refers to the DOM element
-            var bin = d;
-            var status = self.model.getBinStatus(self.attrName, bin);
 
-            // To add / remove ranges, we might need to provide a comparison
-            // function (undefined will just do default comparisons)
-            var comparator;
-            if (self.attrType === 'string') {
-                comparator = function (a, b) {
-                    return a.localeCompare(b);
-                };
-            }
+        bins.select('image.button')
+            .attr('xlink:href', _.bind(function (d) {
+                var status = this.model.getBinStatus(this.attrName, d);
 
-            d3.select(this)
-                .attr('xlink:href', function () {
-                    if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
-                        return ICONS.check;
-                    } else if (status === isic.ENUMS.BIN_STATES.EXCLUDED) {
-                        return ICONS.ex;
-                    } else {
-                        return ICONS.dash;
-                    }
-                }).on('click', function (d) {
-                    // TODO: Ideally, this should select and cancel only the old
-                    // set of requests (and could be called in
-                    // ImagesViewModel.updateFilters); until that's fixed,
-                    // hopefully nobody will click histogram buttons too early
-                    // in the page load
-                    girder.cancelRestRequests();
+                if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
+                    return ICONS.check;
+                } else if (status === isic.ENUMS.BIN_STATES.EXCLUDED) {
+                    return ICONS.ex;
+                } else {
+                    return ICONS.dash;
+                }
+            }, this))
+            .on('click', _.bind(this._toggleBin, this));
 
-                    if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
-                        // Remove this bin
-                        if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
-                            self.model.removeRange(self.attrName,
-                                bin.lowBound, bin.highBound, comparator);
-                        } else {
-                            self.model.removeValue(self.attrName, bin.label);
-                        }
-                    } else {
-                        // Add this bin
-                        if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
-                            self.model.includeRange(self.attrName,
-                                bin.lowBound, bin.highBound, comparator);
-                        } else {
-                            self.model.includeValue(self.attrName, bin.label);
-                        }
-                    }
-
-                    self._renderHistogram();
-                });
-        });
         height += 2 * emSize;
 
         // Add each bin label, and compute the total needed height
@@ -391,7 +391,6 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetHistogramDatasetVi
                 return d.label;
             });
 
-        var self = this;
         var labels = cats.enter()
             .append('li')
             .append('div')
@@ -402,49 +401,12 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetHistogramDatasetVi
         labels.append('input')
             .attr('type', 'checkbox')
             .property('checked', true)
-            .each(function (d) {
-                var bin = d;
-
-                // To add / remove ranges, we might need to provide a comparison
-                // function (undefined will just do default comparisons)
-                var comparator;
-                if (self.attrType === 'string') {
-                    comparator = function (a, b) {
-                        return a.localeCompare(b);
-                    };
-                }
-
-                var me = d3.select(this);
-
-                // me.property('checked', true);
-
-                me.on('click', function () {
-                    var status = self.model.getBinStatus(self.attrName, bin);
-                    girder.cancelRestRequests();
-
-                    if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
-                        // Remove this bin
-                        if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
-                            self.model.removeRange(self.attrName,
-                                bin.lowBound, bin.highBound, comparator);
-                        } else {
-                            self.model.removeValue(self.attrName, bin.label);
-                        }
-                    } else {
-                        // Add this bin
-                        if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
-                            self.model.includeRange(self.attrName,
-                                bin.lowBound, bin.highBound, comparator);
-                        } else {
-                            self.model.includeValue(self.attrName, bin.label);
-                        }
-                    }
-                });
-            });
+            .on('click', _.bind(this._toggleBin, this));
 
         labels.append('span')
             .classed('isic-text', true);
 
+        var self = this;
         d3.select(this.el)
             .selectAll('span.isic-text')
             .text(function (d) {
