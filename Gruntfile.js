@@ -84,6 +84,7 @@ module.exports = function (grunt) {
             staticDir + '/isic_archive_templates.js',
             jsDir + '/view.js',
             jsDir + '/app.js',
+            jsDir + '/utilities.js',
             jsDir + '/models/**/*.js',
             jsDir + '/collections/**/*.js',
             jsDir + '/views/**/*.js'
