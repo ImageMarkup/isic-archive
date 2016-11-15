@@ -36,43 +36,51 @@ isic.ENUMS.BIN_STATES = {
 // autodetect this (requires an additional server endpoint)
 isic.ENUMS.SCHEMA = {
     'folderId': {
-        'coerceToType': 'objectid',
-        'humanName': 'Dataset'
+        FacetView: isic.views.ImagesFacetHistogramDatasetView,
+        coerceToType: 'objectid',
+        humanName: 'Dataset'
     },
     'meta.clinical.benign_malignant': {
-        'coerceToType': 'string',
-        'humanName': 'Benign or Malignant'
+        FacetView: isic.views.ImagesFacetHistogramView,
+        coerceToType: 'string',
+        humanName: 'Benign or Malignant'
     },
     'meta.clinical.age': {
-        'coerceToType': 'number',
-        'interpretation': 'ordinal',
-        'humanName': 'Age',
-        'lowBound': 0,
-        'highBound': 90,
-        'numBins': 9
+        FacetView: isic.views.ImagesFacetHistogramView,
+        coerceToType: 'number',
+        interpretation: 'ordinal',
+        humanName: 'Age',
+        lowBound: 0,
+        highBound: 90,
+        numBins: 9
     },
     'meta.clinical.sex': {
-        'coerceToType': 'string',
-        'humanName': 'Sex'
+        FacetView: isic.views.ImagesFacetHistogramView,
+        coerceToType: 'string',
+        humanName: 'Sex'
     },
     'meta.clinical.diagnosis_confirm_type': {
-        'coerceToType': 'string',
-        'humanName': 'Type of Diagnosis'
+        FacetView: isic.views.ImagesFacetHistogramView,
+        coerceToType: 'string',
+        humanName: 'Type of Diagnosis'
     },
     'meta.clinical.clin_size_long_diam_mm': {
-        'coerceToType': 'number',
-        'interpretation': 'ordinal',
-        'humanName': 'Clinical Size - Longest Diameter (mm)',
-        'lowBound': 0,
-        'highBound': 110,
-        'numBins': 11
+        FacetView: isic.views.ImagesFacetHistogramView,
+        coerceToType: 'number',
+        interpretation: 'ordinal',
+        humanName: 'Clinical Size - Longest Diameter (mm)',
+        lowBound: 0,
+        highBound: 110,
+        numBins: 11
     },
     'meta.clinical.personal_hx_mm': {
-        'coerceToType': 'string',
-        'humanName': 'Personal History of Melanoma'
+        FacetView: isic.views.ImagesFacetHistogramView,
+        coerceToType: 'string',
+        humanName: 'Personal History of Melanoma'
     },
     'meta.clinical.family_hx_mm': {
-        'coerceToType': 'string',
-        'humanName': 'Family History of Melanoma'
+        FacetView: isic.views.ImagesFacetHistogramView,
+        coerceToType: 'string',
+        humanName: 'Family History of Melanoma'
     }
 };

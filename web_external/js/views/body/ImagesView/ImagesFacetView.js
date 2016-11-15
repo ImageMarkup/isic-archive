@@ -357,7 +357,7 @@ isic.views.ImagesFacetHistogramDatasetView = isic.views.ImagesFacetHistogramView
     }
 });
 
-isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetHistogramDatasetView.extend({
+isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
     events: {
         'click .toggle': function (evt) {
             this.$('.toggle').toggleClass('icon-down-open')

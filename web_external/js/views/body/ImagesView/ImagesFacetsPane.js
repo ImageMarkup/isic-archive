@@ -24,14 +24,7 @@ isic.views.ImagesFacetsPane = isic.View.extend({
 
         this.facetViews = {};
         _.each(_.keys(isic.ENUMS.SCHEMA), function (facetName) {
-            var FacetView;
-            if (facetName === 'folderId') {
-                FacetView = isic.views.ImagesFacetCategoricalView;
-            } else {
-                FacetView = isic.views.ImagesFacetHistogramView;
-            }
-
-            var facetView = new FacetView({
+            var facetView = new isic.ENUMS.SCHEMA[facetName].FacetView({
                 model: this.model,
                 facetName: facetName,
                 parentView: this
