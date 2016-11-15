@@ -21,6 +21,10 @@ function coerceValue(value, coerceToType) {
     } else if (coerceToType === 'string') {
         if (value && value.str) {
             value = value.str;
+        } else if (value === undefined) {
+            value = '__undefined__';
+        } else if (value === null) {
+            value = '__null__';
         } else {
             value = String(value);
         }
@@ -263,13 +267,13 @@ function findBinLabel(value, coerceToType, lowBound, highBound, specialBins, ord
     }
 
     // Is the value a special value (always emit the value directly)?
-    if (value === undefined || value === 'undefined') {
-        return 'undefined';
-    } else if (value === null || value === 'null') {
-        return 'null';
+    if (value === undefined || value === '__undefined__') {
+        return '__undefined__';
+    } else if (value === null || value === '__null__') {
+        return '__null__';
     } else if (isNaN(value)) {
         if (coerceToType === 'number' || coerceToType === 'integer') {
-            return 'NaN';
+            return '__NaN__';
         } else if (value instanceof Date) {
             return 'Invalid Date';
         }
@@ -328,7 +332,7 @@ function findBinLabel(value, coerceToType, lowBound, highBound, specialBins, ord
         }
         // Okay, the value didn't make it into any of the ordinal bins.
         // The bins must not include the full range of the data.
-        return 'other';
+        return '__other__';
     }
 }
 

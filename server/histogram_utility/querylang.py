@@ -157,8 +157,12 @@ def _astToMongo_helper(ast):
             value = map(lambda x: cast(x, 'objectid'), value)
 
         if operator in ['in', 'not in']:
-            value = map(lambda x: None if x in ['NaN', 'undefined'] else x,
-                        value)
+            value = map(
+                lambda x:
+                    None
+                    if x in ['__null__', '__NaN__', '__undefined__']
+                    else x,
+                value)
 
         return {field: {_mongo_operators[operator]: value}}
 

@@ -84,18 +84,18 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         }, this));
     },
     postProcessHistogram: function (histograms) {
-        // This folds any "null" values into "undefined" or "NaN" values,
-        // mutating the "histograms" object in-place
+        // This folds any "__null__" values into "__undefined__" or "__NaN__"
+        // values, mutating the "histograms" object in-place
         _.each(_.keys(histograms), function (facetName) {
             if (facetName === '__passedFilters__') {
                 return;
             }
             var facetHistogram = histograms[facetName];
-            var nullField = _.findWhere(facetHistogram, {label: 'null'});
+            var nullField = _.findWhere(facetHistogram, {label: '__null__'});
             if (nullField) {
                 var missingField =
-                    _.findWhere(facetHistogram, {label: 'undefined'}) ||
-                    _.findWhere(facetHistogram, {label: 'NaN'});
+                    _.findWhere(facetHistogram, {label: '__undefined__'}) ||
+                    _.findWhere(facetHistogram, {label: '__NaN__'});
                 if (missingField) {
                     // Add the null value to "missing" field
                     missingField.count += nullField.count;
@@ -107,9 +107,9 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                         return _.has(field, 'lowBound') || _.has(field, 'highBound');
                     });
                     if (isOrdinalFacet) {
-                        nullField.label = 'undefined';
+                        nullField.label = '__NaN__';
                     } else {
-                        nullField.label = 'NaN';
+                        nullField.label = '__undefined__';
                     }
                 }
             }

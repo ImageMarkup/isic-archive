@@ -10,7 +10,7 @@ isic.views.ImagesFacetView = isic.View.extend({
     className: 'isic-images-facet',
 
     _getFieldLabel: function (fieldInfo) {
-        if (fieldInfo.label === 'NaN' || fieldInfo.label === 'undefined') {
+        if (fieldInfo.label === '__NaN__' || fieldInfo.label === '__undefined__') {
             return 'unknown';
         } else if (_.has(fieldInfo, 'lowBound')) {
             var formatter = d3.format('0.3s');
