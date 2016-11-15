@@ -103,7 +103,10 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
 
         // Move the bins horizontally
         bins.attr('transform', _.bind(function (d) {
-            var binNo = this.scale.labelToBin(d.label, 'overview');
+            var binNo = _.findIndex(
+                this.model.get('overviewHistogram')[this.attrName],
+                {label: d.label}
+            );
             return 'translate(' + this.scale.binToPosition(binNo) + ',' + topPadding + ')';
         }, this));
 
@@ -136,8 +139,13 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                     $(this).tooltip({
                         container: 'body',
                         title: function () {
-                            var overviewCount = self.scale.labelToCount(d.label, 'overview');
-                            var filteredCount = self.scale.labelToCount(d.label, 'filteredSet');
+                            var overviewCount = d.count;
+
+                            var filteredBin = _.findWhere(
+                                self.model.get('filteredSetHistogram')[self.attrName],
+                                {label: d.label}
+                            );
+                            var filteredCount = filteredBin ? filteredBin.count : 0;
 
                             if (filteredCount === overviewCount) {
                                 return String(filteredCount);
@@ -224,8 +232,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
         var self = this;
         bins.select('image.button').each(function (d) {
             // this refers to the DOM element
-            var bin = self.scale.labelToBin(d.label, 'overview');
-            bin = self.model.get('overviewHistogram')[self.attrName][bin];
+            var bin = d;
             var status = self.model.getBinStatus(self.attrName, bin);
 
             // To add / remove ranges, we might need to provide a comparison
@@ -390,8 +397,7 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetHistogramDatasetVi
             .attr('type', 'checkbox')
             .property('checked', true)
             .each(function (d) {
-                var bin = self.scale.labelToBin(d.label, 'overview');
-                bin = self.model.get('overviewHistogram')[self.attrName][bin];
+                var bin = d;
 
                 // To add / remove ranges, we might need to provide a comparison
                 // function (undefined will just do default comparisons)
@@ -437,8 +443,14 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetHistogramDatasetVi
             .selectAll('span.isic-text')
             .text(function (d) {
                 var name = self._getFieldLabel(d);
-                var filteredSetCount = self.scale.labelToCount(d.label, 'filteredSet');
-                var overviewCount = self.scale.labelToCount(d.label, 'overview');
+
+                var overviewCount = d.count;
+
+                var filteredSetBin = _.findWhere(
+                    self.model.get('filteredSetHistogram')[self.attrName],
+                    {label: d.label}
+                );
+                var filteredSetCount = filteredSetBin ? filteredSetBin.count : 0;
 
                 return name + ': ' + filteredSetCount + ' / ' + overviewCount;
             });

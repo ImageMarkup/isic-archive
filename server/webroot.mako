@@ -32,8 +32,8 @@
       <script src="${staticRoot}/built/plugins/${plugin}/plugin.min.js">
       </script>
     % endfor
-    <script src="${staticRoot}/built/plugins/isic_archive/isic_archive.app.min.js"></script>
     <script src="${staticRoot}/built/plugins/isic_archive/isic_archive.ext.min.js"></script>
+    <script src="${staticRoot}/built/plugins/isic_archive/isic_archive.app.min.js"></script>
     <script src="${staticRoot}/built/plugins/isic_archive/main.min.js"></script>
   </body>
 </html>

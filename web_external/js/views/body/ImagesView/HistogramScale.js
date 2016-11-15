@@ -35,7 +35,6 @@
         this.highBound;
         this.categoricalLookup = {};
         this.overviewLabelLookup = {};
-        this.filteredLabelLookup = {};
 
         // First, how many bins are ordinal vs categorical, and what's the
         // overall ordinal range (if there is one)? Where do we encounter
@@ -59,11 +58,7 @@
                 this.categoricalBinCount += 1;
                 this.categoricalLookup[bin.label] = index;
             }
-            this.overviewLabelLookup[bin.label] = index;
             this.realYmax = Math.max(this.realYmax, bin.count);
-        }, this);
-        _.each(this.filteredSetHistogram, function (bin, index) {
-            this.filteredLabelLookup[bin.label] = index;
         }, this);
 
         // If the new data is shorter than the previous custom
@@ -107,38 +102,16 @@
             return Math.round(position / (1.5 * this.categoricalBinCount));
         }
     };
-    HistogramScale.prototype.labelToBin = function (value, histogram) {
-        // Given a bin label and histogram name, get the bin number
-        var lookup;
+    HistogramScale.prototype.getBinRect = function (binLabel, histogram) {
         if (histogram === 'filteredSet') {
-            lookup = this.filteredLabelLookup;
-        } else {  // default: return the overview label index
-            lookup = this.overviewLabelLookup;
-        }
-        if (!(value in lookup)) {
-            return undefined;
-        } else {
-            return lookup[value];
-        }
-    };
-    HistogramScale.prototype.labelToCount = function (value, histogram) {
-        // Given a bin label and histogram name, get the bin number
-        var lookup;
-        if (histogram === 'filteredSet') {
-            lookup = this.filteredLabelLookup;
             histogram = this.filteredSetHistogram;
         } else {  // default: return the overview count
-            lookup = this.overviewLabelLookup;
             histogram = this.overviewHistogram;
         }
-        if (!(value in lookup)) {
-            return 0;
-        } else {
-            return histogram[lookup[value]].count;
-        }
-    };
-    HistogramScale.prototype.getBinRect = function (binLabel, histogram) {
-        var barHeight = this.y(this.labelToCount(binLabel, histogram));
+        var bin = _.findWhere(histogram, {label: binLabel});
+        var binCount = bin ? bin.count : 0;
+
+        var barHeight = this.y(binCount);
         var cap = this.y(this.yMax);
 
         if (barHeight > cap) {
