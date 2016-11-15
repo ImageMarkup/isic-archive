@@ -164,19 +164,17 @@ isic.views.UploadDatasetView = isic.View.extend({
             error: null
         }).done(_.bind(function () {
             // TODO: if updated to use jobs, navigate to job status page instead
-            girder.confirm({
+            isic.showAlertDialog({
                 text: '<h4>Dataset successfully submitted.</h4>',
-                yesClass: 'hidden',
-                noText: 'OK',
-                escapedHtml: true
+                escapedHtml: true,
+                callback: function () {
+                    isic.router.navigate('', {trigger: true});
+                }
             });
-            isic.router.navigate('', {trigger: true});
         }, this)).error(_.bind(function (resp) {
             // TODO: add custom error dialog instead of using confirm dialog
-            girder.confirm({
+            isic.showAlertDialog({
                 text: '<h4>Error submitting dataset</h4><br>' + resp.responseJSON.message,
-                yesClass: 'hidden',
-                noText: 'OK',
                 escapedHtml: true
             });
             this.$('#isic-dataset-submit').prop('disabled', false);
