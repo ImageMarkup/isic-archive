@@ -64,6 +64,16 @@ isic.ENUMS.SCHEMA = {
         coerceToType: 'string',
         humanName: 'Type of Diagnosis'
     },
+    'meta.clinical.clin_diagnosis': {
+        FacetView: isic.views.ImagesFacetCategoricalView,
+        coerceToType: 'string',
+        humanName: 'Clinical Impression'
+    },
+    'meta.clinical.path_diagnosis': {
+        FacetView: isic.views.ImagesFacetCategoricalView,
+        coerceToType: 'string',
+        humanName: 'Lesion Diagnosis'
+    },
     'meta.clinical.clin_size_long_diam_mm': {
         FacetView: isic.views.ImagesFacetHistogramView,
         coerceToType: 'number',
