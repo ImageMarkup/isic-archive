@@ -171,7 +171,7 @@ class HistogramUtility(object):
             binSettings[attrName]['specialBins'] = specialBins
 
             # Get user-defined or default number of bins
-            numBins = binSettings[attrName].get('numBins', 10)
+            numBins = binSettings[attrName].get('numBins', 0)
             binSettings[attrName]['numBins'] = numBins
 
             # For ordinal binning, we need some more details:

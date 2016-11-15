@@ -2,7 +2,7 @@
 
 /*
 TODO: For now, we keep the first m categorical values that we encounter,
-and throw the rest into an "other" bin.
+and throw the rest into an "__other__" bin.
 
 Instead, we *SHOULD* count the top m-most frequent values...:
 Pass #1:
@@ -25,14 +25,14 @@ var histogram = [];
 var specialBins = {};
 var binLookup = {};
 var specialValues = {
-    'undefined': true,
-    'null': true,
-    'NaN': true,
+    '__undefined__': true,
+    '__null__': true,
+    '__NaN__': true,
     'Infinity': true,
     '-Infinity': true,
     '"" (empty string)': true,
     'Invalid Date': true,
-    'other': true
+    '__other__': true
 };
 
 var binSettings = params.binSettings[attrName];
@@ -78,8 +78,9 @@ allHistograms.forEach(function (wrappedHistogram) {
             }
             specialBins[bin.label].count += bin.count;
         } else {
-            // This is a regular value that we don't have a bin for. Do we have space?
-            if (histogram.length < binSettings.numBins) {
+            // This is a regular value that we don't have a bin for.
+            // Are we not limiting bins or do we have space?
+            if (!binSettings.numBins || histogram.length < binSettings.numBins) {
                 // We still have room; create a new bin
                 // TODO: do the fancier stuff outlined at the top of this file
                 binLookup[bin.label] = histogram.length;
@@ -88,14 +89,14 @@ allHistograms.forEach(function (wrappedHistogram) {
                     count: bin.count
                 });
             } else {
-                // Okay, there's no room left. Add a count to the special "other" bin
-                if (!(specialBins.hasOwnProperty('other'))) {
-                    specialBins['other'] = {
-                        label: 'other',
+                // Okay, there's no room left. Add a count to the special "__other__" bin
+                if (!(specialBins.hasOwnProperty('__other__'))) {
+                    specialBins['__other__'] = {
+                        label: '__other__',
                         count: 0
                     };
                 }
-                specialBins['other'].count += bin.count;
+                specialBins['__other__'].count += bin.count;
             }
         }
     });
@@ -111,12 +112,12 @@ if (!binSettings.ordinalBins) {
 }
 
 // Okay, add the special bins on to the end of the regular ones
-// (starting with "other" if it exists)
-if (specialBins.hasOwnProperty('other')) {
-    histogram.push(specialBins['other']);
+// (starting with "__other__" if it exists)
+if (specialBins.hasOwnProperty('__other__')) {
+    histogram.push(specialBins['__other__']);
 }
 Object.keys(specialBins).forEach(function (bin) {
-    if (bin !== 'other') {
+    if (bin !== '__other__') {
         histogram.push(specialBins[bin]);
     }
 });
