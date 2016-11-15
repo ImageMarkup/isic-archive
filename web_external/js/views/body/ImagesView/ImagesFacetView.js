@@ -303,9 +303,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
             .attr('text-anchor', 'end')
             .attr('transform', 'translate(0 ' + transformHeight + ') rotate(' + transformAngle + ')')
             .each(function (d) {
-                // this refers to the DOM element
-                var boxHeight = Math.abs(this.getComputedTextLength() * Math.sin(transformAngleRadians));
-                maxBoxHeight = Math.max(boxHeight, maxBoxHeight);
+                // "this" refers to the DOM element
 
                 // Shorten any labels that are too long. Remove letters from the
                 // end of the string one by one, and replace with an HTML
@@ -329,6 +327,9 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                         }
                     });
                 }
+
+                var boxHeight = Math.abs(this.getComputedTextLength() * Math.sin(transformAngleRadians));
+                maxBoxHeight = Math.max(boxHeight, maxBoxHeight);
             });
         height += maxBoxHeight + topPadding + offsetY;
 
