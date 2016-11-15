@@ -78,8 +78,9 @@ allHistograms.forEach(function (wrappedHistogram) {
             }
             specialBins[bin.label].count += bin.count;
         } else {
-            // This is a regular value that we don't have a bin for. Do we have space?
-            if (histogram.length < binSettings.numBins) {
+            // This is a regular value that we don't have a bin for.
+            // Are we not limiting bins or do we have space?
+            if (!binSettings.numBins || histogram.length < binSettings.numBins) {
                 // We still have room; create a new bin
                 // TODO: do the fancier stuff outlined at the top of this file
                 binLookup[bin.label] = histogram.length;
