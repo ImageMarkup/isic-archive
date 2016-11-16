@@ -61,16 +61,16 @@ isic.views.ImagesFacetView = isic.View.extend({
         if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
             // Remove this bin
             if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
-                this.model.removeRange(this.attrName,
-                    bin.lowBound, bin.highBound, comparator);
+                this.model.removeRange(
+                    this.attrName, bin.lowBound, bin.highBound, comparator);
             } else {
                 this.model.removeValue(this.attrName, bin.label);
             }
         } else {
             // Add this bin
             if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
-                this.model.includeRange(this.attrName,
-                    bin.lowBound, bin.highBound, comparator);
+                this.model.includeRange(
+                    this.attrName, bin.lowBound, bin.highBound, comparator);
             } else {
                 this.model.includeValue(this.attrName, bin.label);
             }
@@ -385,7 +385,7 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
         isic.views.ImagesFacetView.prototype.initialize.call(this, parameters);
 
         this.listenTo(this.model, 'change:overviewHistogram', this.render);
-        this.listenTo(this.model, 'change:filteredSetHistogram', this._rerenderLabels);
+        this.listenTo(this.model, 'change:filteredSetHistogram', this._rerenderCounts);
     },
 
     render: function () {
@@ -399,20 +399,19 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
             return;
         }
 
-        d3.select(this.el).selectAll('.isic-images-facet-bin')
+        var binElems = d3.select(this.el).selectAll('.isic-images-facet-bin')
             .data(overviewBins);
-
-        this._rerenderLabels();
-    },
-
-    _rerenderLabels: function () {
-        var binElems = d3.select(this.el).selectAll('.isic-images-facet-bin');
-
-        // Don't selectAll to 'isic-images-facet-bin-name' directly, so data is propagated
         binElems.select('.isic-images-facet-bin-name')
             .text(_.bind(this._getFieldLabel, this));
 
+        this._rerenderCounts();
+    },
+
+    _rerenderCounts: function () {
+        var binElems = d3.select(this.el).selectAll('.isic-images-facet-bin');
+
         var filteredBins = this.model.get('filteredSetHistogram')[this.attrName];
+        // Don't selectAll to 'isic-images-facet-bin-count' directly, so data is propagated
         binElems.select('.isic-images-facet-bin-count')
             .text(_.bind(function (d) {
                 var overviewCount = d.count;
