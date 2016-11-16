@@ -368,11 +368,14 @@ isic.views.ImagesFacetHistogramDatasetView = isic.views.ImagesFacetHistogramView
 isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
     events: function () {
         return _.extend({}, isic.views.ImagesFacetView.prototype.events, {
-            'click input': function (event) {
-                // TODO: there should be a better way to get this data
-                var liElem = $(event.currentTarget).parent().parent().parent();
-                var bin = d3.select(liElem[0]).datum();
+            'click .isic-images-facet-bin': function (event) {
+                var binElem = event.currentTarget;
 
+                this.$(binElem).find('i')
+                    .toggleClass('icon-check')
+                    .toggleClass('icon-check-empty');
+
+                var bin = d3.select(binElem).datum();
                 this._toggleBin(bin);
             }
         });
@@ -396,26 +399,34 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
             return;
         }
 
-        d3.select(this.el).selectAll('li')
+        d3.select(this.el).selectAll('.isic-images-facet-bin')
             .data(overviewBins);
 
         this._rerenderLabels();
     },
 
     _rerenderLabels: function () {
+        var binElems = d3.select(this.el).selectAll('.isic-images-facet-bin');
+
+        // Don't selectAll to 'isic-images-facet-bin-name' directly, so data is propagated
+        binElems.select('.isic-images-facet-bin-name')
+            .text(_.bind(this._getFieldLabel, this));
+
         var filteredBins = this.model.get('filteredSetHistogram')[this.attrName];
-
-        // Don't selectAll to 'span.isic-text' directly, so data is propagated
-        d3.select(this.el).selectAll('li').select('span.isic-text')
+        binElems.select('.isic-images-facet-bin-count')
             .text(_.bind(function (d) {
-                var name = this._getFieldLabel(d);
-
                 var overviewCount = d.count;
 
                 var filteredSetBin = _.findWhere(filteredBins, {label: d.label});
                 var filteredSetCount = filteredSetBin ? filteredSetBin.count : 0;
 
-                return name + ': ' + filteredSetCount + ' / ' + overviewCount;
+                var label;
+                if (overviewCount === filteredSetCount) {
+                    label = overviewCount;
+                } else {
+                    label = filteredSetCount + ' / ' + overviewCount;
+                }
+                return '(' + label + ')';
             }, this));
     }
 });

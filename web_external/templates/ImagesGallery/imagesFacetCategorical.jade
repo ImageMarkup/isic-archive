@@ -1,10 +1,9 @@
 extends imagesFacet
 
 block content
-  ul.isic-images-facet-categorical-content
+  div.isic-images-facet-categorical-content
     for bin in bins
-      li
-        .checkbox
-          label
-            input(type="checkbox" checked)
-            span.isic-text= bin.label
+      a.isic-images-facet-bin
+        i.icon-check
+        span.isic-images-facet-bin-name= bin.label
+        span.isic-images-facet-bin-count
