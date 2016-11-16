@@ -23,7 +23,7 @@ isic_app.controller('ApplicationController',
             var images_url = '/api/v1/dataset/' + dataset_id + '/review?limit=50';
             $http.get(images_url).success(function (data) {
                 $scope.images = data.map(function (image) {
-                    image.thumbnail = '/api/v1/image/' + image._id + '/download?contentDisposition=inline';
+                    image.thumbnail = '/api/v1/item/' + image._id + '/tiles/region?width=768';
 
                     image.diagnosis_strings = [];
                     [
