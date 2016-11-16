@@ -9,6 +9,22 @@ var ICONS = {
 isic.views.ImagesFacetView = isic.View.extend({
     className: 'isic-images-facet',
 
+    initialize: function (parameters) {
+        this.attrName = parameters.facetName;
+
+        this.attrType = this.model.getAttributeType(this.attrName);
+        this.title = isic.ENUMS.SCHEMA[this.attrName].humanName;
+    },
+
+    events: {
+        'click .toggle': function (evt) {
+            this.$('.toggle').toggleClass('icon-down-open')
+                .toggleClass('icon-right-open');
+
+            this.$('.isic-images-facet-content').toggle();
+        }
+    },
+
     _getFieldLabel: function (fieldInfo) {
         if (fieldInfo.label === '__NaN__' || fieldInfo.label === '__undefined__') {
             return 'unknown';
@@ -21,27 +37,57 @@ isic.views.ImagesFacetView = isic.View.extend({
         } else {
             return fieldInfo.label;
         }
+    },
+
+    _toggleBin: function (bin) {
+        var status = this.model.getBinStatus(this.attrName, bin);
+
+        // To add / remove ranges, we might need to provide a comparison
+        // function (undefined will just do default comparisons)
+        var comparator;
+        if (this.attrType === 'string') {
+            comparator = function (a, b) {
+                return a.localeCompare(b);
+            };
+        }
+
+        // TODO: Ideally, this should select and cancel only the old
+        // set of requests (and could be called in
+        // ImagesViewModel.updateFilters); until that's fixed,
+        // hopefully nobody will click histogram buttons too early
+        // in the page load
+        girder.cancelRestRequests();
+
+        if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
+            // Remove this bin
+            if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
+                this.model.removeRange(
+                    this.attrName, bin.lowBound, bin.highBound, comparator);
+            } else {
+                this.model.removeValue(this.attrName, bin.label);
+            }
+        } else {
+            // Add this bin
+            if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
+                this.model.includeRange(
+                    this.attrName, bin.lowBound, bin.highBound, comparator);
+            } else {
+                this.model.includeValue(this.attrName, bin.label);
+            }
+        }
     }
 });
 
 isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
-    events: {
-        'click .toggle': function (evt) {
-            this.$('.toggle').toggleClass('icon-down-open')
-                .toggleClass('icon-right-open');
-
-            this.$('svg.content').toggle();
-        }
-    },
     initialize: function (parameters) {
-        this.attrName = parameters.facetName;
+        isic.views.ImagesFacetView.prototype.initialize.call(this, parameters);
 
-        this.title = isic.ENUMS.SCHEMA[this.attrName].humanName;
         this.scale = new isic.views.ImagesViewSubViews.HistogramScale();
 
         this.listenTo(this.model, 'change:overviewHistogram', this._renderHistogram);
         this.listenTo(this.model, 'change:filteredSetHistogram', this._renderHistogram);
     },
+
     render: function () {
         this.$el.html(isic.templates.imagesFacetHistogram({
             title: this.title,
@@ -51,7 +97,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
     },
 
     _renderHistogram: function () {
-        var svg = d3.select(this.el).select('svg.content');
+        var svg = d3.select(this.el).select('svg.isic-images-facet-histogram-content');
         if (svg.empty()) {
             // Do nothing until render() has been called
             return;
@@ -103,7 +149,10 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
 
         // Move the bins horizontally
         bins.attr('transform', _.bind(function (d) {
-            var binNo = this.scale.labelToBin(d.label, 'overview');
+            var binNo = _.findIndex(
+                this.model.get('overviewHistogram')[this.attrName],
+                {label: d.label}
+            );
             return 'translate(' + this.scale.binToPosition(binNo) + ',' + topPadding + ')';
         }, this));
 
@@ -124,9 +173,10 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
         // binsEnter.append('rect')
         //     .attr('class', 'page');
 
+        var self = this;
+
         // Update each bar
         var drawBars = _.bind(function () {
-            var self = this;
             bins.select('rect.overview')
                 .each(function (d) {
                     // this refers to the DOM element
@@ -136,8 +186,13 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                     $(this).tooltip({
                         container: 'body',
                         title: function () {
-                            var overviewCount = self.scale.labelToCount(d.label, 'overview');
-                            var filteredCount = self.scale.labelToCount(d.label, 'filteredSet');
+                            var overviewCount = d.count;
+
+                            var filteredBin = _.findWhere(
+                                self.model.get('filteredSetHistogram')[self.attrName],
+                                {label: d.label}
+                            );
+                            var filteredCount = filteredBin ? filteredBin.count : 0;
 
                             if (filteredCount === overviewCount) {
                                 return String(filteredCount);
@@ -221,60 +276,25 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                 width: emSize,
                 height: emSize
             });
-        var self = this;
-        bins.select('image.button').each(function (d) {
-            // this refers to the DOM element
-            var bin = self.scale.labelToBin(d.label, 'overview');
-            bin = self.model.get('overviewHistogram')[self.attrName][bin];
-            var status = self.model.getBinStatus(self.attrName, bin);
 
-            // To add / remove ranges, we might need to provide a comparison
-            // function (undefined will just do default comparisons)
-            var comparator;
-            if (self.model.getAttributeType(self.attrName) === 'string') {
-                comparator = function (a, b) {
-                    return a.localeCompare(b);
-                };
-            }
+        bins.select('image.button')
+            .attr('xlink:href', _.bind(function (d) {
+                var status = this.model.getBinStatus(this.attrName, d);
 
-            d3.select(this)
-                .attr('xlink:href', function () {
-                    if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
-                        return ICONS.check;
-                    } else if (status === isic.ENUMS.BIN_STATES.EXCLUDED) {
-                        return ICONS.ex;
-                    } else {
-                        return ICONS.dash;
-                    }
-                }).on('click', function (d) {
-                    // TODO: Ideally, this should select and cancel only the old
-                    // set of requests (and could be called in
-                    // ImagesViewModel.updateFilters); until that's fixed,
-                    // hopefully nobody will click histogram buttons too early
-                    // in the page load
-                    girder.cancelRestRequests();
+                if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
+                    return ICONS.check;
+                } else if (status === isic.ENUMS.BIN_STATES.EXCLUDED) {
+                    return ICONS.ex;
+                } else {
+                    return ICONS.dash;
+                }
+            }, this))
+            .on('click', _.bind(function (d) {
+                var bin = d;
+                this._toggleBin(bin);
+                this._renderHistogram();
+            }, this));
 
-                    if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
-                        // Remove this bin
-                        if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
-                            self.model.removeRange(self.attrName,
-                                bin.lowBound, bin.highBound, comparator);
-                        } else {
-                            self.model.removeValue(self.attrName, bin.label);
-                        }
-                    } else {
-                        // Add this bin
-                        if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
-                            self.model.includeRange(self.attrName,
-                                bin.lowBound, bin.highBound, comparator);
-                        } else {
-                            self.model.includeValue(self.attrName, bin.label);
-                        }
-                    }
-
-                    self._renderHistogram();
-                });
-        });
         height += 2 * emSize;
 
         // Add each bin label, and compute the total needed height
@@ -290,9 +310,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
             .attr('text-anchor', 'end')
             .attr('transform', 'translate(0 ' + transformHeight + ') rotate(' + transformAngle + ')')
             .each(function (d) {
-                // this refers to the DOM element
-                var boxHeight = Math.abs(this.getComputedTextLength() * Math.sin(transformAngleRadians));
-                maxBoxHeight = Math.max(boxHeight, maxBoxHeight);
+                // "this" refers to the DOM element
 
                 // Shorten any labels that are too long. Remove letters from the
                 // end of the string one by one, and replace with an HTML
@@ -316,6 +334,9 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                         }
                     });
                 }
+
+                var boxHeight = Math.abs(this.getComputedTextLength() * Math.sin(transformAngleRadians));
+                maxBoxHeight = Math.max(boxHeight, maxBoxHeight);
             });
         height += maxBoxHeight + topPadding + offsetY;
 
@@ -341,5 +362,70 @@ isic.views.ImagesFacetHistogramDatasetView = isic.views.ImagesFacetHistogramView
         return this.model.datasetCollection.findWhere({
             _id: fieldInfo.label
         }).name();
+    }
+});
+
+isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
+    events: function () {
+        return _.extend({}, isic.views.ImagesFacetView.prototype.events, {
+            'click .isic-images-facet-bin': function (event) {
+                var binElem = event.currentTarget;
+
+                this.$(binElem).find('i')
+                    .toggleClass('icon-check')
+                    .toggleClass('icon-check-empty');
+
+                var bin = d3.select(binElem).datum();
+                this._toggleBin(bin);
+            }
+        });
+    },
+
+    initialize: function (parameters) {
+        isic.views.ImagesFacetView.prototype.initialize.call(this, parameters);
+
+        this.listenTo(this.model, 'change:overviewHistogram', this.render);
+        this.listenTo(this.model, 'change:filteredSetHistogram', this._rerenderCounts);
+    },
+
+    render: function () {
+        var overviewBins = this.model.get('overviewHistogram')[this.attrName];
+
+        this.$el.html(isic.templates.imagesFacetCategorical({
+            title: this.title,
+            bins: overviewBins || []
+        }));
+        if (!overviewBins) {
+            return;
+        }
+
+        var binElems = d3.select(this.el).selectAll('.isic-images-facet-bin')
+            .data(overviewBins);
+        binElems.select('.isic-images-facet-bin-name')
+            .text(_.bind(this._getFieldLabel, this));
+
+        this._rerenderCounts();
+    },
+
+    _rerenderCounts: function () {
+        var binElems = d3.select(this.el).selectAll('.isic-images-facet-bin');
+
+        var filteredBins = this.model.get('filteredSetHistogram')[this.attrName];
+        // Don't selectAll to 'isic-images-facet-bin-count' directly, so data is propagated
+        binElems.select('.isic-images-facet-bin-count')
+            .text(_.bind(function (d) {
+                var overviewCount = d.count;
+
+                var filteredSetBin = _.findWhere(filteredBins, {label: d.label});
+                var filteredSetCount = filteredSetBin ? filteredSetBin.count : 0;
+
+                var label;
+                if (overviewCount === filteredSetCount) {
+                    label = overviewCount;
+                } else {
+                    label = filteredSetCount + ' / ' + overviewCount;
+                }
+                return '(' + label + ')';
+            }, this));
     }
 });

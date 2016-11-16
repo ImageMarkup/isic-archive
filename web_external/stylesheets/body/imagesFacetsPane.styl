@@ -67,23 +67,41 @@
         font-size 20px
         margin-left 5px
 
-  .content
-    display inline
-    position relative
-    width 100%
-    overflow-x auto
-    user-select none
+  .isic-images-facet-content
 
-    .collapsed
-      display none
+    .isic-images-facet-histogram-content
+      display inline
+      position relative
+      width 100%
+      overflow-x auto
+      user-select none
 
-    .yAxis line
-    .yAxis path
-      fill none
-      stroke $dataAxisColor
-      stroke-width 1px
+      .yAxis line
+      .yAxis path
+        fill none
+        stroke $dataAxisColor
+        stroke-width 1px
 
-    .yAxisKnob
-      cursor ns-resize
-      fill $dataAxisColor
-      stroke none
+      .yAxisKnob
+        cursor ns-resize
+        fill $dataAxisColor
+        stroke none
+
+    .isic-images-facet-categorical-content
+      margin-left 25px
+      user-select none
+
+      .isic-images-facet-bin
+        display block
+        margin-bottom 2px
+        color #333333
+
+        &:hover
+          color #4eb3d3
+
+        .isic-images-facet-bin-name
+          margin-left 5px
+
+        .isic-images-facet-bin-count
+          margin-left 7px
+          color #737373

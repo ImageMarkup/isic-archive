@@ -1,0 +1,9 @@
+extends imagesFacet
+
+block content
+  div.isic-images-facet-categorical-content
+    for bin in bins
+      a.isic-images-facet-bin
+        i.icon-check
+        span.isic-images-facet-bin-name= bin.label
+        span.isic-images-facet-bin-count
