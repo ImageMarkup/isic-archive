@@ -1,9 +1,8 @@
 <%include file="_header.mako"/>
 
 <p>
-This is an automated message from ISIC Archive.
-You are receiving this message because you are
- a moderator of the "${group['name']}" group.
+This is an automated message from the ISIC Archive. You are receiving this
+message because you are a moderator of the "${group['name']}" group.
 </p>
 
 <p>
