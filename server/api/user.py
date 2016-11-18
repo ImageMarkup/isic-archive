@@ -102,7 +102,7 @@ def requestCreateDatasetPermission(params):
                 })
             mail_utils.sendEmail(
                 to=emails,
-                subject='ISIC Archive Dataset Contributor Request',
+                subject='ISIC Archive: Dataset Contributor Request',
                 text=html)
 
     return resp
