@@ -15,6 +15,7 @@ isic.models.UserModel = girder.models.UserModel.extend({
     },
     setCanCreateDataset: function () {
         this.get('permissions').createDataset = true;
+        this.trigger('change:permissions');
     },
     canReviewDataset: function () {
         return this.get('permissions').reviewDataset;
