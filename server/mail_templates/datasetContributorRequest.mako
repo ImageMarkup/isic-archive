@@ -15,7 +15,7 @@ requested access to contribute datasets.
 <p>
 To approve or deny the request, visit the "${group['name']}" group page:
 <br>
-<a href="${host}/girder#group/58065fb2d831130465472bb3/pending">${host}/girder#group/58065fb2d831130465472bb3/pending</a>
+<a href="${host}/girder#group/${group['_id']}/pending">${host}/girder#group/${group['_id']}/pending</a>
 </p>
 
 <%include file="_footer.mako"/>
