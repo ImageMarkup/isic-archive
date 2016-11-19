@@ -229,4 +229,4 @@ def load(info):
     info['apiRoot'].segmentation = api.SegmentationResource()
     info['apiRoot'].study = api.StudyResource()
     info['apiRoot'].task = api.TaskResource()
-    api.attachUserApi()
+    api.attachUserApi(info['apiRoot'].user)
