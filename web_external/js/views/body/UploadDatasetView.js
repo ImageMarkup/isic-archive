@@ -15,7 +15,7 @@ isic.views.UploadDatasetView = isic.View.extend({
         'click #isic-upload-reset': function (event) {
             this.resetUpload();
         },
-        'click .isic-dataset-agreement-link': 'showLicenseInfo',
+        'click #isic-upload-show-license-info-link': 'showLicenseInfo',
         'change input[name="attribution"]': function (event) {
             // Update attribution name field sensitivity
             var target = $(event.target);
@@ -56,7 +56,8 @@ isic.views.UploadDatasetView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.uploadDataset({
-            user: girder.currentUser
+            user: girder.currentUser,
+            documentsRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/documents'
         }));
 
         if (!this.uploadWidget) {
