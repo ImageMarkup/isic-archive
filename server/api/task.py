@@ -17,6 +17,8 @@
 #  limitations under the License.
 ###############################################################################
 
+import itertools
+
 import cherrypy
 
 from girder.api import access
@@ -190,13 +192,32 @@ class TaskResource(Resource):
                 'segmentations.skill': {'$nin': [Segmentation.Skill.EXPERT]}}}
         ]
 
-    def _pipeline4CountImage(self):
+    def _pipeline4CountImages(self):
         return [
             # Count results by dataset id
             {'$group': {
                 '_id': '$folderId',
                 'count': {'$sum': 1}}},
-            # Join dataset details into counts
+        ]
+
+    def _pipeline4ListImages(self):
+        return [
+            # Sort images by name
+            {'$sort': {
+                'name': SortDir.ASCENDING}},
+            # Group images by dataset id
+            {'$group': {
+                '_id': '$folderId',
+                'images': {'$push': {
+                    '_id': '$_id',
+                    'name': '$name',
+                    'updated': '$updated'
+                }}}},
+        ]
+
+    def _pipeline5JoinDataset(self):
+        return [
+            # Join dataset details into groups
             {'$lookup': {
                 'from': 'folder',
                 'localField': '_id',
@@ -207,7 +228,9 @@ class TaskResource(Resource):
                 '_id': 0,
                 'dataset._id': 1,
                 'dataset.name': 1,
-                'count': 1}},
+                # Note, only one of these two will actually be present
+                'count': 1,
+                'images': 1}},
             # Flatten dataset array (which is always 1 element)
             {'$unwind': {
                 'path': '$dataset'}},
@@ -231,6 +254,8 @@ class TaskResource(Resource):
     @describeRoute(
         Description('Get the current user\'s segmentation tasks.')
         .responseClass('Task')
+        .param('details', 'Whether a full listing of images is returned, or '
+                          'just counts.', dataType='boolean', default=False)
     )
     @access.user
     def getSegmentationTasks(self, params):
@@ -238,25 +263,32 @@ class TaskResource(Resource):
         Segmentation = self.model('segmentation', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
+        details = self.boolParam('details', params, False)
+
         user = self.getCurrentUser()
         userSkill = User.getSegmentationSkill(user)
-        if userSkill == Segmentation.Skill.EXPERT:
-            pipeline = \
-                self._pipeline1AllImages(user) + \
-                self._pipeline2ImagesWithSegmentations() + \
-                self._pipeline3NoExpertSegmentations() + \
-                self._pipeline4CountImage()
-        elif userSkill == Segmentation.Skill.NOVICE:
-            pipeline = \
-                self._pipeline1AllImages(user) + \
-                self._pipeline2ImagesWithSegmentations() + \
-                self._pipeline3MissingSegmentations() + \
-                self._pipeline4CountImage()
-        else:  # userSkill is None
+        if userSkill is None:
             raise AccessException(
                 'You are not authorized to perform segmentations.')
 
+        pipeline = list(itertools.chain(
+            self._pipeline1AllImages(user),
+            self._pipeline2ImagesWithSegmentations(),
+            (
+                self._pipeline3NoExpertSegmentations()
+                if userSkill == Segmentation.Skill.EXPERT else
+                self._pipeline3MissingSegmentations()
+            ),
+            (
+                self._pipeline4ListImages()
+                if details else
+                self._pipeline4CountImages()
+            ),
+            self._pipeline5JoinDataset()
+        ))
+
         results = list(Image.collection.aggregate(pipeline))
+
         return results
 
     @describeRoute(
@@ -280,23 +312,22 @@ class TaskResource(Resource):
             params['datasetId'], user=user, level=AccessType.READ, exc=True)
 
         userSkill = User.getSegmentationSkill(user)
-        if userSkill == Segmentation.Skill.EXPERT:
-            # TODO: prefer an image with a novice segmentation to one with
-            # no segmentations
-            pipeline = \
-                self._pipeline1ImagesFromDataset(dataset) + \
-                self._pipeline2ImagesWithSegmentations() + \
-                self._pipeline3NoExpertSegmentations() + \
-                self._pipeline4RandomImage()
-        elif userSkill == Segmentation.Skill.NOVICE:
-            pipeline = \
-                self._pipeline1ImagesFromDataset(dataset) + \
-                self._pipeline2ImagesWithSegmentations() + \
-                self._pipeline3MissingSegmentations() + \
-                self._pipeline4RandomImage()
-        else:  # userSkill is None
+        if userSkill is None:
             raise AccessException(
                 'You are not authorized to perform segmentations.')
+
+        pipeline = list(itertools.chain(
+            self._pipeline1ImagesFromDataset(dataset),
+            self._pipeline2ImagesWithSegmentations(),
+            (
+                # TODO: prefer an image with a novice segmentation to one with
+                # no segmentations
+                self._pipeline3NoExpertSegmentations()
+                if userSkill == Segmentation.Skill.EXPERT else
+                self._pipeline3MissingSegmentations()
+            ),
+            self._pipeline4RandomImage()
+        ))
 
         results = list(Image.collection.aggregate(pipeline))
         if not results:

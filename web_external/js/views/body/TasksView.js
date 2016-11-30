@@ -67,7 +67,7 @@ isic.views.TasksView = isic.View.extend({
 
         if (girder.currentUser.getSegmentationSkill() !== null) {
             this.segmentationTasks = new isic.collections.TaskCollection();
-            this.segmentationTasks.altUrl = 'task/me/segmentation';
+            this.segmentationTasks.altUrl = 'task/me/segmentation?details=false';
             this.segmentationTasks.pageLimit = Number.MAX_SAFE_INTEGER;
 
             this.taskSegmentationView = new isic.views.TasksGroupView({
