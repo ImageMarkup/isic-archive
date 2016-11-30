@@ -21,7 +21,9 @@ import datetime
 import itertools
 import mimetypes
 import os
+import six
 
+from girder.api.rest import RestException
 from girder.constants import AccessType
 from girder.models.folder import Folder as FolderModel
 from girder.models.model_base import GirderException, ValidationException
@@ -148,9 +150,8 @@ class Dataset(FolderModel):
                       license, signature, anonymous, attribution):
         """
         Ingest an uploaded dataset. This upload folder is expected to contain a
-        .zip file of images and a .csv file that contains metadata about the
-        images. The images are extracted to a new "Pre-review" folder within a
-        new dataset folder.
+        .zip file of images. The images are extracted to a new "Pre-review"
+        folder within a new dataset folder.
         """
         Folder = self.model('folder')
         Item = self.model('item')
@@ -165,13 +166,6 @@ class Dataset(FolderModel):
         if not zipFileItems:
             raise ValidationException(
                 'No .zip files were uploaded.', 'uploadFolder')
-
-        csvFileItems = [f for f in Folder.childItems(uploadFolder)
-                        if mimetypes.guess_type(f['name'], strict=False)[0] in
-                        CSV_FORMATS]
-        if not csvFileItems:
-            raise ValidationException(
-                'No .csv files were uploaded.', 'uploadFolder')
 
         # Create dataset folder
         dataset = self.createDataset(name, description, user)
@@ -200,18 +194,6 @@ class Dataset(FolderModel):
             for zipFile in zipFiles:
                 # TODO: gracefully clean up after exceptions in handleZip
                 self._handleZip(prereviewFolder, user, zipFile)
-
-        # Process metadata in CSV files
-        for item in csvFileItems:
-            csvFiles = Item.childFiles(item)
-            for csvFile in csvFiles:
-                handleCsv(dataset, prereviewFolder, user, csvFile)
-
-        # TODO: remove this entirely, and report CSV errors another way
-        # Move metadata item to dataset folder. This preserves any parsing
-        # errors that were added to the item for review.
-        # for item in csvFileItems:
-        #     Item.move(item, dataset)
 
         # Delete uploaded files
         # Folder.clean(uploadFolder)
@@ -315,3 +297,65 @@ class Dataset(FolderModel):
         if (Folder.countItems(prereviewFolder) +
                 Folder.countFolders(prereviewFolder)) == 0:
             Folder.remove(prereviewFolder)
+
+    def validateMetadata(self, dataset, uploadFolder, user, save):
+        """
+        Validate, add, or update metadata about images in a dataset. The upload
+        folder is expected to contain a .csv file that contains metadata about
+        the images.
+        """
+        Folder = self.model('folder')
+        Item = self.model('item')
+
+        if not dataset:
+            raise ValidationException(
+                'Invalid dataset.', 'dataset')
+
+        if not uploadFolder:
+            raise ValidationException(
+                'No files were uploaded.', 'uploadFolder')
+
+        csvFileItems = [f for f in Folder.childItems(uploadFolder)
+                        if mimetypes.guess_type(f['name'], strict=False)[0] in
+                        CSV_FORMATS]
+        if not csvFileItems:
+            raise ValidationException(
+                'No .csv files were uploaded.', 'uploadFolder')
+
+        # Validate metadata in CSV files
+        validationResults = []
+        prereviewFolder = self.prereviewFolder(dataset)
+        for item in csvFileItems:
+            csvFiles = Item.childFiles(item)
+            for csvFile in csvFiles:
+                parseErrors, validationErrors = handleCsv(
+                    dataset, prereviewFolder, user, csvFile, False)
+                validationResult = {'filename': csvFile['name']}
+                if parseErrors:
+                    validationResult['parseErrors'] = \
+                        [{'message': message} for message in parseErrors]
+                if validationErrors:
+                    validationResult['validationErrors'] = \
+                        sorted([{'message': filename + ": " + message}
+                                for filename, messages in
+                                six.viewitems(validationErrors)
+                                for message in messages],
+                               key=lambda item: item['message'])
+                validationResults.append(validationResult)
+
+        # Save metadata to images when requested and there are no validation
+        # errors
+        # TODO: reorganize to avoid reprocessing, or, alternatively,
+        # simplify by supporting only a single .csv file
+        if save and all(('parseErrors' not in validationResult and
+                        'validationErrors' not in validationResult)
+                        for validationResult in validationResults):
+            for item in csvFileItems:
+                csvFiles = Item.childFiles(item)
+                for csvFile in csvFiles:
+                    parseErrors, validationErrors = handleCsv(
+                        dataset, prereviewFolder, user, csvFile, True)
+                    if parseErrors or validationErrors:
+                        raise RestException('Error saving metadata.')
+
+        return validationResults

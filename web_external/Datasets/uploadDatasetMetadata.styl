@@ -1,0 +1,57 @@
+// TODO: refactor with uploadDataset.styl
+.isic-upload-dataset-metadata-container
+  .isic-upload-description-container
+    margin-top 10px
+
+  .isic-upload-container
+    margin 5px 0px
+    h4
+      font-size 14px
+      font-weight bold
+      font-color #eee
+
+    .g-drop-zone
+      width 100%
+      text-align center
+      height 60px
+      line-height 60px
+      box-shadow 0 2px 5px rgba(0,0,0,0.2)
+      background-color #5cb897
+      border 1px solid #4a8
+      height 30px
+      line-height 100%
+      padding 7px 22px 5px 17px
+      font-size 14px
+      font-weight normal
+
+      &:hover
+        background-color #6cc8a7
+        background linear-gradient(top,#6cc8a7 50%,#5cb897 100%)
+
+      &:active
+        background #6cc8a7
+        box-shadow inset 0 3px 5px rgba(0,0,0,0.125);
+
+      &.g-dropzone-show
+        background white
+        border 2px dashed #bbb
+        box-shadow none
+        padding 0
+
+  .isic-upload-widget-container
+    padding 10px 0px
+    text-align left
+    display inline-block
+    max-width 370px
+
+    .g-dialog-subtitle
+      display none
+
+  .isic-upload-reset-container
+    padding 10px 0px
+
+  .isic-upload-list
+    padding-bottom 10px
+
+  .isic-upload-dataset-metadata-validation-container
+    margin-top 8px

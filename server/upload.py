@@ -20,6 +20,7 @@
 import csv
 import os
 import shutil
+import six
 import sys
 import subprocess
 import tempfile
@@ -30,8 +31,6 @@ from girder.models.notification import ProgressState
 from girder.utility import assetstore_utilities
 from girder.utility.model_importer import ModelImporter
 from girder.utility.progress import ProgressContext
-
-from .provision_utility import getAdminUser
 
 
 class TempDir(object):
@@ -124,22 +123,24 @@ class ZipFileOpener(object):
             return iter(fileList), len(fileList)
 
 
-def handleCsv(dataset, prereviewFolder, user, csvFile):
+def handleCsv(dataset, prereviewFolder, user, csvFile, save):
+    """Validate, add, or update metadata about images in a dataset."""
     Assetstore = ModelImporter.model('assetstore')
     Item = ModelImporter.model('item')
-    Upload = ModelImporter.model('upload')
 
     # Folders where images from this dataset may be
     datasetFolderIds = [
         dataset['_id'],
-        prereviewFolder['_id']
     ]
+    if prereviewFolder:
+        datasetFolderIds.append(prereviewFolder['_id'])
 
     assetstore = Assetstore.getCurrent()
     assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(assetstore)
     fullPath = assetstoreAdapter.fullPath(csvFile)
 
-    parseErrors = list()
+    parseErrors = []
+    validationErrors = {}
     with open(fullPath, 'rUb') as uploadFileStream,\
         ProgressContext(
             on=True,
@@ -183,24 +184,96 @@ def handleCsv(dataset, prereviewFolder, user, csvFile):
                 imageItem = next(iter(imageItems))
 
             unstructuredMetadata = imageItem['meta']['unstructured']
+            clinicalMetadata = imageItem['meta']['clinical']
             unstructuredMetadata.update(csvRow)
-            Item.setMetadata(imageItem, {
-                'unstructured': unstructuredMetadata
-            })
+            imageValidationErrors = _addImageClinicalMetadata(
+                unstructuredMetadata, clinicalMetadata)
+            if imageValidationErrors:
+                validationErrors[filename] = imageValidationErrors
+            if save and not parseErrors and not validationErrors:
+                Item.setMetadata(imageItem, {
+                    'unstructured': unstructuredMetadata
+                })
 
-    if parseErrors:
-        # TODO: eventually don't store whole string in memory
-        parseErrorsStr = '\n'.join(parseErrors)
+    return (parseErrors, validationErrors)
 
-        parentItem = Item.load(csvFile['itemId'], force=True, exc=True)
 
-        upload = Upload.createUpload(
-            user=getAdminUser(),
-            name='parse_errors.txt',
-            parentType='item',
-            parent=parentItem,
-            size=len(parseErrorsStr),
-            mimeType='text/plain',
-        )
-        Upload.handleChunk(
-            upload, parseErrorsStr)
+class MetadataValidationError(Exception):
+    """Exception raised for metadata validation errors."""
+    def __init__(self, message):
+        self.message = message
+        Exception.__init__(self, message)
+
+
+def _addImageClinicalMetadata(unstructured, clinical):
+    """Parse unstructured metadata to clinical metadata and validate."""
+    validationErrors = []
+    for parser in [
+        _parseAge,
+        _parseSex
+    ]:
+        try:
+            parser(unstructured, clinical)
+        except MetadataValidationError as e:
+            validationErrors.append(str(e))
+    return validationErrors
+
+
+def _getOneFrom(containerDict, allowedSet):
+    foundSet = set(six.viewkeys(containerDict)) & allowedSet
+    if not foundSet:
+        return None
+    elif len(foundSet) == 1:
+        return containerDict.pop(foundSet.pop())
+    else:
+        raise MetadataValidationError(
+            'only one of %s may be present' % sorted(foundSet))
+
+
+def _assertInt(value):
+    try:
+        value = int(float(value))
+    except ValueError:
+        raise MetadataValidationError(
+            'value of "%s" must be an integer' % value)
+    return value
+
+
+def _assertEnumerated(value, allowed):
+    if value not in allowed:
+        raise MetadataValidationError(
+            'value of "%s" must be one of: %s' % (value, sorted(allowed)))
+    return value
+
+
+def _parseAge(unstructured, clinical):
+    value = unstructured.pop('age', None)
+    if value is not None:
+        if value in ['', 'unknown']:
+            value = None
+        else:
+            if value == '85+':
+                value = '85'
+            value = _assertInt(value)
+            if value > 85:
+                # TODO: 99 is used as a placeholder for unknown in existing
+                # images
+                value = 85
+        clinical['age'] = value
+
+    # Drop deprecated fields
+    unstructured.pop('age_categ', None)
+
+
+def _parseSex(unstructured, clinical):
+    value = _getOneFrom(unstructured, {'sex', 'gender'})
+    if value is not None:
+        value = value.lower()
+        if value in ['', 'unknown']:
+            value = None
+        elif value == 'm':
+            value = 'male'
+        elif value == 'f':
+            value = 'female'
+        _assertEnumerated(value, {'male', 'female', None})
+        clinical['sex'] = value

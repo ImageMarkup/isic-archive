@@ -1,0 +1,43 @@
+if !errors.isEmpty()
+  h3 Results
+  each model in errors.models
+    - var numParseErrors = model.parseErrors.length
+    - var numValidationErrors = model.validationErrors.length
+    - var ok = !numParseErrors && !numValidationErrors
+    .isic-upload-dataset-metadata-validation-result
+      .isic-upload-dataset-metadata-validation-result-header(
+        class=ok ?
+          'isic-upload-dataset-metadata-validation-result-header-ok' :
+          'isic-upload-dataset-metadata-validation-result-header-error')
+        .isic-upload-dataset-metadata-validation-result-header-filename
+          = model.filename()
+        .isic-upload-dataset-metadata-validation-result-header-status
+          if ok
+            | OK&nbsp;
+            i.icon-ok
+          else
+            - var numErrors = numParseErrors + numValidationErrors
+            = numErrors
+            if numErrors > 1
+              |  Errors&nbsp;
+            else
+              |  Error&nbsp;
+            i.icon-attention
+      if !ok
+        .isic-upload-dataset-metadata-validation-result-content
+          if numParseErrors
+            .isic-upload-dataset-metadata-validation-result-error-header
+              | Parse errors:
+            .isic-upload-dataset-metadata-validation-result-error-content
+              ul
+                each error in model.parseErrors.models
+                  li= error.message()
+          if numValidationErrors
+            .isic-upload-dataset-metadata-validation-result-error-header
+              | Validation errors:
+            .isic-upload-dataset-metadata-validation-result-error-content
+              ul
+                each error in model.validationErrors.models
+                  li= error.message()
+  .isic-upload-dataset-metadata-save-button-container.text-center.hidden
+    button#isic-upload-dataset-metadata-save.btn.btn-primary.btn-md Save

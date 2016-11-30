@@ -38,6 +38,7 @@ class DatasetResource(Resource):
         self.route('POST', (), self.ingestDataset)
         self.route('GET', (':id', 'review'), self.getReviewImages)
         self.route('POST', (':id', 'review'), self.submitReviewImages)
+        self.route('POST', (':id', 'metadata'), self.validateMetadata)
 
     @describeRoute(
         Description('Return a list of lesion image datasets.')
@@ -89,8 +90,7 @@ class DatasetResource(Resource):
 
     @describeRoute(
         Description('Create a lesion image dataset.')
-        .param('uploadFolderId', 'The ID of the folder that contains images '
-               'and metadata.')
+        .param('uploadFolderId', 'The ID of the folder that contains images.')
         .param('name', 'Name of the dataset.')
         .param('owner', 'Owner of the dataset.')
         .param('description', 'Description of the dataset.', required=False,
@@ -242,3 +242,42 @@ class DatasetResource(Resource):
 
         # TODO: return value?
         return {'status': 'success'}
+
+    @describeRoute(
+        Description('Validate, add, or update dataset metadata.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('uploadFolderId', 'The ID of the folder that contains metadata.',
+               paramType='path')
+        .param('save', 'Save the metadata in addition to validating it.',
+               required=False, paramType='path')
+    )
+    @access.user
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
+    def validateMetadata(self, dataset, params):
+        Dataset = self.model('dataset', 'isic_archive')
+        Folder = self.model('folder')
+        User = self.model('user', 'isic_archive')
+
+        if cherrypy.request.headers['Content-Type'].split(';')[0] == \
+                'application/json':
+            params = self.getBodyJson()
+        self.requireParams('uploadFolderId', params)
+
+        user = self.getCurrentUser()
+        User.requireCreateDataset(user)
+
+        uploadFolderId = params.get('uploadFolderId', None)
+        if not uploadFolderId:
+            raise ValidationException(
+                'No files were uploaded.', 'uploadFolderId')
+        uploadFolder = Folder.load(
+            uploadFolderId, user=user, level=AccessType.WRITE, exc=False)
+        if not uploadFolder:
+            raise ValidationException(
+                'Invalid upload folder ID.', 'uploadFolderId')
+
+        save = self.boolParam('save', params, False)
+
+        return Dataset.validateMetadata(
+            dataset=dataset, uploadFolder=uploadFolder, user=user,
+            save=save)
