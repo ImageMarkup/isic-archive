@@ -22,10 +22,12 @@ import json
 
 import cherrypy
 import execjs
-from querylang import astToMongo
+import six
 
 from girder.api.rest import RestException
 from girder.utility.model_importer import ModelImporter
+
+from .querylang import astToMongo
 
 
 TRUE_VALUES = set([True, 'true', 1, 'True'])
@@ -148,7 +150,7 @@ class HistogramUtility(object):
             params['filter'] = json.loads(params['filter'])
 
         binSettings = json.loads(params.get('binSettings', '{}'))
-        for attrName in binSettings.iterkeys():
+        for attrName in six.viewkeys(binSettings):
             binSettings[attrName] = binSettings.get(attrName, {})
 
             # Get user-defined or default type coercion setting
@@ -255,7 +257,7 @@ class HistogramUtility(object):
         # We have to clean up the histogram wrappers (mongodb can't return
         # an array from reduce functions). While we're at it, add the
         # lowBound / highBound details to each ordinal bin
-        for attrName, wrappedHistogram in histogram.iteritems():
+        for attrName, wrappedHistogram in six.viewitems(histogram):
             histogram[attrName] = wrappedHistogram['histogram']
 
         if '__passedFilters__' not in histogram:
