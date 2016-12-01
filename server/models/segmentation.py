@@ -46,8 +46,6 @@ class Segmentation(Model):
             'imageId',
             'skill',
             'creatorId',
-            'startTime'
-            'stopTime'
             'created'
         ])
         self.summaryFields = ['_id', 'imageId', 'skill']
@@ -103,6 +101,55 @@ class Segmentation(Model):
         })
         return segmentation
 
+    def createRasterSegmentation(self, image, skill, creator, mask):
+        File = self.model('file')
+        Upload = self.model('upload')
+
+        now = datetime.datetime.utcnow()
+
+        if len(mask.shape) != 2:
+            raise ValidationException('Mask must be a single-channel image.')
+        if mask.shape != (
+                image['meta']['acquisition']['pixelsY'],
+                image['meta']['acquisition']['pixelsX']):
+            raise ValidationException(
+                'Mask must have the same dimensions as the image.')
+        if mask.dtype != numpy.uint8:
+            raise ValidationException('Mask may only contain 8-bit values.')
+        # TODO: validate that only a single contiguous region is present
+
+        maskOutputStream = ScikitSegmentationHelper.writeImage(
+            mask, encoding='png')
+
+        segmentation = self.save({
+            'imageId': image['_id'],
+            'skill': skill,
+            'creatorId': creator['_id'],
+            'created': now
+        })
+
+        maskFile = Upload.uploadFromFile(
+            obj=maskOutputStream,
+            size=len(maskOutputStream.getvalue()),
+            name='%s_segmentation.png' % (image['name']),
+            parentType=None,
+            parent=None,
+            user=creator,
+            mimeType='image/png',
+        )
+        maskFile['attachedToId'] = segmentation['_id']
+        maskFile['attachedToType'] = ['segmentation', 'isic_archive']
+        maskFile = File.save(maskFile)
+
+        segmentation['maskId'] = maskFile['_id']
+        segmentation = self.save(segmentation)
+
+        return segmentation
+
+    def maskFile(self, segmentation):
+        File = self.model('file')
+        return File.load(segmentation['maskId'], force=True, exc=True)
+
     def mask(self, segmentation, image=None):
         Image = self.model('image', 'isic_archive')
         if not image:
@@ -146,10 +193,19 @@ class Segmentation(Model):
         }):
             self.remove(segmentation, **event.info['kwargs'])
 
+    def remove(self, segmentation, **kwargs):
+        File = self.model('file')
+        if 'maskId' in segmentation:
+            File.remove(self.maskFile(segmentation))
+        super(Segmentation, self).remove(segmentation, **kwargs)
+
     def validate(self, doc):
         try:
-            assert set(six.viewkeys(doc)) == {
-                'imageId', 'skill', 'creatorId', 'lesionBoundary', 'created'}
+            assert set(six.viewkeys(doc)) >= {
+                'imageId', 'skill', 'creatorId', 'created'}
+            assert set(six.viewkeys(doc)) <= {
+                '_id', 'imageId', 'skill', 'creatorId', 'created',
+                'maskId', 'lesionBoundary'}
 
             assert isinstance(doc['imageId'], ObjectId)
             assert self.model('image', 'isic_archive').find(
@@ -161,6 +217,10 @@ class Segmentation(Model):
             assert self.model('user', 'isic_archive').find(
                 {'_id': doc['creatorId']}).count()
 
+            assert isinstance(doc['created'], datetime.datetime)
+
+            if 'lesionBoundary' not in doc:
+                return doc
             assert isinstance(doc['lesionBoundary'], dict)
             assert set(six.viewkeys(doc['lesionBoundary'])) == {
                 'type', 'properties', 'geometry'}
@@ -197,8 +257,6 @@ class Segmentation(Model):
                 for val in coord:
                     assert isinstance(val, (int, float))
                     assert val >= 0
-
-            assert isinstance(doc['created'], datetime.datetime)
 
         except (AssertionError, KeyError):
             # TODO: message
