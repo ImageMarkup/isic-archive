@@ -117,10 +117,7 @@ class HistogramUtility(object):
             'meta.clinical.diagnosis_confirm_type': {
                 'coerceToType': 'string'
             },
-            'meta.clinical.clin_diagnosis': {
-                'coerceToType': 'string'
-            },
-            'meta.clinical.path_diagnosis': {
+            'meta.clinical.diagnosis': {
                 'coerceToType': 'string'
             },
             'meta.clinical.clin_size_long_diam_mm': {
