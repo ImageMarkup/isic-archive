@@ -49,8 +49,8 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
             # https://github.com/scikit-image/scikit-image/issues/2154
             imageData = imageData[0]
 
-        if imageData.shape[2] == 4:
-            # cv2.floodFill doesn't work correctly with array views
+        if len(imageData.shape) == 3 and imageData.shape[2] == 4:
+            # cv2.floodFill doesn't work correctly with array views, so copy
             imageData = imageData[:, :, :3].copy()
         return imageData
 

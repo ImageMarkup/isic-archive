@@ -17,13 +17,18 @@
 #  limitations under the License.
 ###############################################################################
 
+import base64
 import datetime
+
+import six
 
 from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel, rawResponse, \
     setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
+
+from ..models.segmentation_helpers import ScikitSegmentationHelper
 
 
 class SegmentationResource(Resource):
@@ -76,7 +81,9 @@ class SegmentationResource(Resource):
 
     @describeRoute(
         Description('Add a segmentation to an image.')
-        .param('image_id', 'The ID of the image.', paramType='body')
+        .param('imageId', 'The ID of the image.', paramType='body')
+        .param('mask', 'A Base64-encoded PNG 8-bit image, containing the '
+                       'segmentation mask.', paramType='body')
         .errorResponse('ID was invalid.')
     )
     @access.user
@@ -85,7 +92,7 @@ class SegmentationResource(Resource):
         User = self.model('user', 'isic_archive')
 
         bodyJson = self.getBodyJson()
-        self.requireParams(('imageId', 'lesionBoundary'), bodyJson)
+        self.requireParams(['imageId'], bodyJson)
 
         user = self.getCurrentUser()
         User.requireSegmentationSkill(user)
@@ -93,22 +100,40 @@ class SegmentationResource(Resource):
         image = self.model('image', 'isic_archive').load(
             bodyJson['imageId'], level=AccessType.READ, user=user, exc=True)
 
-        lesionBoundary = bodyJson['lesionBoundary']
-        lesionBoundary['properties']['startTime'] = \
-            datetime.datetime.utcfromtimestamp(
-                lesionBoundary['properties']['startTime'] / 1000.0)
-        lesionBoundary['properties']['stopTime'] = \
-            datetime.datetime.utcfromtimestamp(
-                lesionBoundary['properties']['stopTime'] / 1000.0)
-
         skill = User.getSegmentationSkill(user)
 
-        segmentation = Segmentation.createSegmentation(
-            image=image,
-            skill=skill,
-            creator=user,
-            lesionBoundary=lesionBoundary
-        )
+        if 'lesionBoundary' in bodyJson:
+            lesionBoundary = bodyJson['lesionBoundary']
+            lesionBoundary['properties']['startTime'] = \
+                datetime.datetime.utcfromtimestamp(
+                    lesionBoundary['properties']['startTime'] / 1000.0)
+            lesionBoundary['properties']['stopTime'] = \
+                datetime.datetime.utcfromtimestamp(
+                    lesionBoundary['properties']['stopTime'] / 1000.0)
+
+            segmentation = Segmentation.createSegmentation(
+                image=image,
+                skill=skill,
+                creator=user,
+                lesionBoundary=lesionBoundary
+            )
+        elif 'mask' in bodyJson:
+            maskStream = six.BytesIO()
+            maskStream.write(base64.b64decode(bodyJson['mask']))
+            mask = ScikitSegmentationHelper.loadImage(maskStream)
+
+            segmentation = Segmentation.createRasterSegmentation(
+                image=image,
+                skill=skill,
+                creator=user,
+                mask=mask
+            )
+        else:
+            raise RestException(
+                'One of "lesionBoundary" or "mask" must be present')
+
+        # TODO: return 201?
+        # TODO: remove maskId from return?
         return segmentation
 
     @describeRoute(
