@@ -126,7 +126,9 @@ isic.views.TasksView = isic.View.extend({
             this.reviewTasks.fetch();
         }
         if (this.segmentationTasks) {
-            this.segmentationTasks.fetch();
+            this.segmentationTasks.fetch({
+                details: false
+            });
         }
         this.annotationTasks.fetch();
     }
