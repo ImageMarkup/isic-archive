@@ -180,7 +180,7 @@ def handleCsv(dataset, prereviewFolder, user, csvFile):
                     filename)
                 continue
             else:
-                imageItem = imageItems.next()
+                imageItem = next(imageItems)
 
             unstructuredMetadata = imageItem['meta']['unstructured']
             unstructuredMetadata.update(csvRow)

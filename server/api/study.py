@@ -24,6 +24,7 @@ import itertools
 import json
 
 import cherrypy
+import six
 
 from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel, \
@@ -205,14 +206,14 @@ class StudyResource(Resource):
 
                 # TODO: move this into the query
                 if 'localFeatures' in annotation['meta']['annotations']:
-                    superpixelCount = len(
-                        annotation['meta']['annotations']['localFeatures'].itervalues().next())  # noqa: E501
+                    superpixelCount = len(next(six.viewvalues(
+                        annotation['meta']['annotations']['localFeatures'])))
                     for superpixelMum in xrange(superpixelCount):
 
                         outDict = outDictBase.copy()
                         outDict['superpixel_id'] = superpixelMum
-                        for featureName, featureValue in \
-                                annotation['meta']['annotations']['localFeatures'].iteritems():  # noqa: E501
+                        for featureName, featureValue in six.viewitems(
+                                annotation['meta']['annotations']['localFeatures']):  # noqa: E501
                             outDict[featureName] = featureValue[superpixelMum]
 
                         csvWriter.writerow(outDict)
