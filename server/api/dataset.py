@@ -193,8 +193,6 @@ class DatasetResource(Resource):
                 limit=limit, sort=[('name', SortDir.ASCENDING)]
             )
         ]
-        for image in output:
-            del image['meta']['originalFilename']
 
         return output
 

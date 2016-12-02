@@ -30,10 +30,6 @@
               a(target="_blank", href=license.url)= license.name
             else
               = license.name
-        if currentUser && currentUser.canReviewDataset()
-          tr
-            td Original Filename
-            td= image.get('meta').originalFilename
 
         tr
           td.isic-image-details-table-section-header(colspan=2) Clinical Metadata
@@ -55,5 +51,13 @@
           tr
             td= key
             td !{value}
+
+        if privateMetadata
+          tr
+            td.isic-image-details-table-section-header(colspan=2) Private Metadata
+          each value, key in privateMetadata
+            tr
+              td= key
+              td !{value}
 
     #isic-image-details-segmentations-display-view-container
