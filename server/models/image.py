@@ -63,11 +63,13 @@ class Image(ItemModel):
         self.model('setting').set(
             constants.PluginSettings.MAX_ISIC_ID, newIsicId)
 
+        image['privateMeta'] = {
+            'originalFilename': originalName
+        }
         image = self.setMetadata(image, {
             'acquisition': {},
             'clinical': {},
             'unstructured': {},
-            'originalFilename': originalName
         })
 
         originalFile = self.model('upload').uploadFromFile(

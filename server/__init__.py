@@ -24,7 +24,6 @@ import six
 from bson import json_util
 
 from girder import events
-from girder.api.rest import getCurrentUser
 from girder.api.v1 import resource
 from girder.constants import SettingKey, PACKAGE_DIR, STATIC_ROOT_DIR
 from girder.models.model_base import ValidationException
@@ -85,16 +84,6 @@ def validateSettings(event):
             raise ValidationException(
                 'Maximum ISIC ID must be provided as an integer.', 'value')
         event.preventDefault().stopPropagation()
-
-
-def onGetItem(event):
-    User = ModelImporter.model('user', 'isic_archive')
-    itemResponse = event.info['returnVal']
-
-    # Hide the 'originalFilename' metadata on Images from non-site admins
-    if 'originalFilename' in itemResponse.get('meta', {}):
-        if not User.canReviewDataset(getCurrentUser()):
-            del itemResponse['meta']['originalFilename']
 
 
 def onDescribeResource(event):
@@ -171,7 +160,6 @@ def load(info):
     # note, 'model.setting.validate' must be bound before initialSetup is called
     events.bind('model.setting.validate', 'isic', validateSettings)
     events.bind('model.user.save.created', 'onUserCreated', onUserCreated)
-    events.bind('rest.get.item/:id.after', 'onGetItem', onGetItem)
     events.bind('rest.get.describe/:resource.after',
                 'onDescribeResource', onDescribeResource)
     events.bind('model.job.save', 'onJobSave', onJobSave)

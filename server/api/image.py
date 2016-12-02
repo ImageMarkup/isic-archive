@@ -122,9 +122,8 @@ class ImageResource(Resource):
                 force=True, exc=True),
             user)
 
-        if 'originalFilename' in output['meta']:
-            if not User.canReviewDataset(user):
-                del output['meta']['originalFilename']
+        if User.canReviewDataset(user):
+            output['privateMeta'] = image['privateMeta']
 
         return output
 

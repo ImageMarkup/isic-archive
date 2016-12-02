@@ -165,9 +165,9 @@ def handleCsv(dataset, prereviewFolder, user, csvFile):
                 continue
 
             # TODO: require 'user' to match image creator?
-            # TODO: index on meta.originalFilename?
+            # TODO: index on privateMeta.originalFilename?
             imageItems = Item.find({
-                'meta.originalFilename': filename,
+                'privateMeta.originalFilename': filename,
                 'folderId': {'$in': datasetFolderIds}
             })
             if not imageItems.count():
