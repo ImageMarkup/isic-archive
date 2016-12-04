@@ -409,7 +409,7 @@ class TaskResource(Resource):
                 limit=1,
                 sort=[('lowerName', SortDir.ASCENDING)]
             )
-            nextAnnotation = next(activeAnnotations)
+            nextAnnotation = next(iter(activeAnnotations))
         except StopIteration:
             raise RestException('No annotations are needed for this study.')
 
