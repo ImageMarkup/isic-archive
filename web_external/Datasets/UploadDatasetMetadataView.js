@@ -168,9 +168,6 @@ isic.views.UploadDatasetMetadataView = isic.View.extend({
             user: girder.currentUser
         }));
 
-        // Set select2 default options
-        $.fn.select2.defaults.set('theme', 'bootstrap');
-
         this.selectDatasetView.setElement(
             this.$('#isic-upload-dataset-metadata-dataset-select-container')).render();
 

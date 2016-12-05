@@ -641,9 +641,6 @@ isic.views.StudyResultsView = isic.View.extend({
     render: function () {
         this.$el.html(isic.templates.studyResultsPage());
 
-        // Set select2 default options
-        $.fn.select2.defaults.set('theme', 'bootstrap');
-
         this.selectStudyView.setElement(
             this.$('#isic-study-results-select-study-container')).render();
         this.studyDetailsView.setElement(
