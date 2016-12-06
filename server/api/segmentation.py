@@ -84,6 +84,9 @@ class SegmentationResource(Resource):
         .param('imageId', 'The ID of the image.', paramType='body')
         .param('mask', 'A Base64-encoded PNG 8-bit image, containing the '
                        'segmentation mask.', paramType='body')
+        .param('failed',
+               'Whether the segmentation should be marked as a failure.',
+               paramType='body', dataType='boolean', required=False)
         .errorResponse('ID was invalid.')
     )
     @access.user
@@ -102,7 +105,15 @@ class SegmentationResource(Resource):
 
         skill = User.getSegmentationSkill(user)
 
-        if 'lesionBoundary' in bodyJson:
+        failed = self.boolParam('failed', bodyJson)
+
+        if failed:
+            segmentation = Segmentation.createFailedSegmentation(
+                image=image,
+                skill=skill,
+                creator=user,
+            )
+        elif 'lesionBoundary' in bodyJson:
             lesionBoundary = bodyJson['lesionBoundary']
             lesionBoundary['properties']['startTime'] = \
                 datetime.datetime.utcfromtimestamp(
@@ -130,7 +141,7 @@ class SegmentationResource(Resource):
             )
         else:
             raise RestException(
-                'One of "lesionBoundary" or "mask" must be present')
+                'One of "failed", "lesionBoundary", or "mask" must be present')
 
         # TODO: return 201?
         # TODO: remove maskId from return?

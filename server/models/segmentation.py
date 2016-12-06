@@ -146,6 +146,19 @@ class Segmentation(Model):
 
         return segmentation
 
+    def createFailedSegmentation(self, image, skill, creator):
+        now = datetime.datetime.utcnow()
+
+        segmentation = self.save({
+            'imageId': image['_id'],
+            'skill': skill,
+            'creatorId': creator['_id'],
+            'created': now,
+            'failed': True
+        })
+
+        return segmentation
+
     def maskFile(self, segmentation):
         File = self.model('file')
         return File.load(segmentation['maskId'], force=True, exc=True)
@@ -205,7 +218,7 @@ class Segmentation(Model):
                 'imageId', 'skill', 'creatorId', 'created'}
             assert set(six.viewkeys(doc)) <= {
                 '_id', 'imageId', 'skill', 'creatorId', 'created',
-                'maskId', 'lesionBoundary'}
+                'maskId', 'lesionBoundary', 'failed'}
 
             assert isinstance(doc['imageId'], ObjectId)
             assert self.model('image', 'isic_archive').find(

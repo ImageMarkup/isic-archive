@@ -59,7 +59,6 @@
                         </div>
                     </div>
                     <div uib-dropdown
-                         ng-controller="FlagAnnotationController"
                          class="btn-group">
                         <button uib-dropdown-toggle
                                 type="button"
@@ -71,11 +70,7 @@
                             Flag Image <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu">
-                            <li><a ng-click="flag('phi')">Contains PHI</a></li>
-                            <li><a ng-click="flag('quality')">Low optical quality</a></li>
-                            <li role="separator" class="divider"></li>
-                            <li><a ng-click="flag('other')">Other reason</a></li>
-                            <!--<li><a ng-click="flag('custom')">Custom reason (specify...)</a></li>-->
+                            <li><a ng-click="flag()">Failed to segment</a></li>
                         </ul>
                     </div>
                     <div class="clearfix"></div>
