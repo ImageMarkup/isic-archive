@@ -29,15 +29,6 @@ derm_app.controller('ApplicationController', [
     }
 ]);
 
-derm_app.controller('FlagAnnotationController', [
-    '$scope', '$log',
-    function ($scope, $log) {
-        $scope.flag = function (reason) {
-            $scope.abort(reason);
-        };
-    }
-]);
-
 derm_app.controller('SegmentationController', [
     '$scope', '$rootScope', '$location', '$http', '$log', 'Image', 'Segmentation',
     function ($scope, $rootScope, $location, $http, $log, Image, Segmentation) {
@@ -98,6 +89,21 @@ derm_app.controller('SegmentationController', [
             $scope.isSubmitting = true;
             // TODO: cause stop() to be called on the active sub-controller,
             //   but without clearing the annotation
+            $rootScope.imageviewer.removeDrawInteraction();
+            $rootScope.imageviewer.setDrawMode('navigate', 'lesion');
+        };
+
+        $scope.flag = function () {
+            var post_data = {
+                imageId: $scope.image._id,
+                failed: true
+            };
+            Segmentation.save({}, post_data, function() {
+                $scope.isSubmitting = false;
+                window.location.replace('/#tasks');
+            });
+
+            $scope.isSubmitting = true;
             $rootScope.imageviewer.removeDrawInteraction();
             $rootScope.imageviewer.setDrawMode('navigate', 'lesion');
         };
