@@ -21,9 +21,7 @@ import datetime
 import itertools
 import mimetypes
 import os
-import six
 
-from girder.api.rest import RestException
 from girder.constants import AccessType
 from girder.models.folder import Folder as FolderModel
 from girder.models.model_base import GirderException, ValidationException
@@ -31,7 +29,7 @@ from girder.models.notification import ProgressState
 from girder.utility import assetstore_utilities
 from girder.utility.progress import ProgressContext
 
-from ..upload import handleCsv, ZipFileOpener
+from ..upload import addImageClinicalMetadata, ParseMetadataCsv, ZipFileOpener
 
 ZIP_FORMATS = [
     'multipart/x-zip',
@@ -323,39 +321,16 @@ class Dataset(FolderModel):
                 'No .csv files were uploaded.', 'uploadFolder')
 
         # Validate metadata in CSV files
-        validationResults = []
         prereviewFolder = self.prereviewFolder(dataset)
+        validator = addImageClinicalMetadata
+        parseCsv = ParseMetadataCsv(dataset, prereviewFolder, user, validator)
         for item in csvFileItems:
             csvFiles = Item.childFiles(item)
             for csvFile in csvFiles:
-                parseErrors, validationErrors = handleCsv(
-                    dataset, prereviewFolder, user, csvFile, False)
-                validationResult = {'filename': csvFile['name']}
-                if parseErrors:
-                    validationResult['parseErrors'] = \
-                        [{'message': message} for message in parseErrors]
-                if validationErrors:
-                    validationResult['validationErrors'] = \
-                        sorted([{'message': filename + ": " + message}
-                                for filename, messages in
-                                six.viewitems(validationErrors)
-                                for message in messages],
-                               key=lambda item: item['message'])
-                validationResults.append(validationResult)
+                parseCsv.validate(csvFile)
 
-        # Save metadata to images when requested and there are no validation
-        # errors
-        # TODO: reorganize to avoid reprocessing, or, alternatively,
-        # simplify by supporting only a single .csv file
-        if save and all(('parseErrors' not in validationResult and
-                        'validationErrors' not in validationResult)
-                        for validationResult in validationResults):
-            for item in csvFileItems:
-                csvFiles = Item.childFiles(item)
-                for csvFile in csvFiles:
-                    parseErrors, validationErrors = handleCsv(
-                        dataset, prereviewFolder, user, csvFile, True)
-                    if parseErrors or validationErrors:
-                        raise RestException('Error saving metadata.')
+        # Save metadata
+        if save:
+            parseCsv.save()
 
-        return validationResults
+        return parseCsv.validationResults

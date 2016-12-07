@@ -20,6 +20,7 @@
 import json
 
 import cherrypy
+import six
 
 from girder.api import access
 from girder.api.rest import Resource, loadmodel, RestException
@@ -278,6 +279,25 @@ class DatasetResource(Resource):
 
         save = self.boolParam('save', params, False)
 
-        return Dataset.validateMetadata(
+        validationResults = Dataset.validateMetadata(
             dataset=dataset, uploadFolder=uploadFolder, user=user,
             save=save)
+
+        # Format validation results
+        results = []
+        for csvFilename, validationResult in six.viewitems(validationResults):
+            result = {'filename': csvFilename}
+            if 'parseErrors' in validationResult:
+                result['parseErrors'] = \
+                    [{'message': message}
+                     for message in validationResult['parseErrors']]
+            if 'validationErrors' in validationResult:
+                result['validationErrors'] = \
+                    sorted([{'message': imageFilename + ': ' + message}
+                            for imageFilename, messages in
+                            six.viewitems(validationResult['validationErrors'])
+                            for message in messages],
+                           key=lambda item: item['message'])
+            results.append(result)
+
+        return results

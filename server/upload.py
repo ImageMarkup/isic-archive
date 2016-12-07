@@ -123,79 +123,133 @@ class ZipFileOpener(object):
             return iter(fileList), len(fileList)
 
 
-def handleCsv(dataset, prereviewFolder, user, csvFile, save):
-    """Validate, add, or update metadata about images in a dataset."""
-    Assetstore = ModelImporter.model('assetstore')
-    Item = ModelImporter.model('item')
+class ParseMetadataCsv:
+    """
+    Parse a CSV file containing metadata about images in a dataset and validate
+    the metadata. Optionally save the validated metadata to the images.
+    """
+    def __init__(self, dataset, prereviewFolder, user, validator):
+        self.user = user
+        self.validator = validator
 
-    # Folders where images from this dataset may be
-    datasetFolderIds = [
-        dataset['_id'],
-    ]
-    if prereviewFolder:
-        datasetFolderIds.append(prereviewFolder['_id'])
+        # Folders where images from this dataset may be
+        self.datasetFolderIds = [dataset['_id']]
+        if prereviewFolder:
+            self.datasetFolderIds.append(prereviewFolder['_id'])
 
-    assetstore = Assetstore.getCurrent()
-    assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(assetstore)
-    fullPath = assetstoreAdapter.fullPath(csvFile)
+        # Metadata stored after validation, indexed by image item id
+        self.validatedMetadata = {}
 
-    parseErrors = []
-    validationErrors = {}
-    with open(fullPath, 'rUb') as uploadFileStream,\
-        ProgressContext(
-            on=True,
-            user=user,
-            title='Processing "%s"' % csvFile['name'],
-            state=ProgressState.ACTIVE,
-            message='Parsing CSV') as progress:  # NOQA
+        # Record image items that have been validated
+        self.imageItemIds = set()
 
-        # csv.reader(csvfile, delimiter=',', quotechar='"')
-        csvReader = csv.DictReader(uploadFileStream)
+        # Final validation results
+        self.validationResults = {}
 
-        for filenameField in csvReader.fieldnames:
-            if filenameField.lower() == 'filename':
-                break
-        else:
-            raise ValidationException('No "filename" field found in CSV.')
+    def validate(self, csvFile):
+        Assetstore = ModelImporter.model('assetstore')
+        Item = ModelImporter.model('item')
 
-        for csvRow in csvReader:
-            filename = csvRow.pop(filenameField, None)
-            if not filename:
-                parseErrors.append(
-                    'No "filename" field in row %d' % csvReader.line_num)
-                continue
+        csvFileName = csvFile['name']
+        if csvFileName in self.validationResults:
+            raise ValidationException(
+                'Already validated CSV file "%s"' % csvFileName)
 
-            # TODO: require 'user' to match image creator?
-            # TODO: index on privateMeta.originalFilename?
-            imageItems = Item.find({
-                'privateMeta.originalFilename': filename,
-                'folderId': {'$in': datasetFolderIds}
-            })
-            if not imageItems.count():
-                parseErrors.append(
-                    'No image found with original filename "%s"' % filename)
-                continue
-            elif imageItems.count() > 1:
-                parseErrors.append(
-                    'Multiple images found with original filename "%s"' %
-                    filename)
-                continue
+        assetstore = Assetstore.getCurrent()
+        assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(
+            assetstore)
+        fullPath = assetstoreAdapter.fullPath(csvFile)
+
+        parseErrors = []
+        validationErrors = {}
+        with open(fullPath, 'rUb') as uploadFileStream,\
+            ProgressContext(
+                on=True,
+                user=self.user,
+                title='Processing "%s"' % csvFileName,
+                state=ProgressState.ACTIVE,
+                message='Parsing CSV') as progress:  # NOQA
+
+            # csv.reader(csvfile, delimiter=',', quotechar='"')
+            csvReader = csv.DictReader(uploadFileStream)
+
+            for filenameField in csvReader.fieldnames:
+                if filenameField.lower() == 'filename':
+                    break
             else:
-                imageItem = next(iter(imageItems))
+                raise ValidationException('No "filename" field found in CSV.')
 
-            unstructuredMetadata = imageItem['meta']['unstructured']
-            clinicalMetadata = imageItem['meta']['clinical']
-            unstructuredMetadata.update(csvRow)
-            imageValidationErrors = _addImageClinicalMetadata(
-                unstructuredMetadata, clinicalMetadata)
-            if imageValidationErrors:
-                validationErrors[filename] = imageValidationErrors
-            if save and not parseErrors and not validationErrors:
-                Item.setMetadata(imageItem, {
-                    'unstructured': unstructuredMetadata
+            for csvRow in csvReader:
+                filename = csvRow.pop(filenameField, None)
+                if not filename:
+                    parseErrors.append(
+                        'No "filename" field in row %d' % csvReader.line_num)
+                    continue
+
+                # TODO: require 'user' to match image creator?
+                # TODO: index on privateMeta.originalFilename?
+                imageItems = Item.find({
+                    'privateMeta.originalFilename': filename,
+                    'folderId': {'$in': self.datasetFolderIds}
                 })
+                if not imageItems.count():
+                    parseErrors.append(
+                        'No image found with original filename "%s"' % filename)
+                    continue
+                elif imageItems.count() > 1:
+                    parseErrors.append(
+                        'Multiple images found with original filename "%s"' %
+                        filename)
+                    continue
+                else:
+                    imageItem = next(iter(imageItems))
 
-    return (parseErrors, validationErrors)
+                # Expect image to be listed in only one CSV file
+                imageItemId = imageItem['_id']
+                if imageItemId in self.imageItemIds:
+                    parseErrors.append(
+                        'Image with original filename "%s" found in multiple '
+                        'CSV files' % filename)
+                self.imageItemIds.add(imageItemId)
+
+                unstructuredMetadata = imageItem['meta']['unstructured']
+                clinicalMetadata = imageItem['meta']['clinical']
+                unstructuredMetadata.update(csvRow)
+                imageValidationErrors = self.validator(
+                    unstructuredMetadata, clinicalMetadata)
+                if imageValidationErrors:
+                    validationErrors[filename] = imageValidationErrors
+
+                # Store metadata to enable saving to image item later
+                self.validatedMetadata[imageItemId] = {
+                    'unstructured': unstructuredMetadata,
+                    'clinical': clinicalMetadata
+                }
+
+        # Store validation result for the CSV file
+        validationResult = {}
+        if parseErrors:
+            validationResult['parseErrors'] = parseErrors
+        if validationErrors:
+            validationResult['validationErrors'] = validationErrors
+        self.validationResults[csvFileName] = validationResult
+
+    def save(self):
+        Item = ModelImporter.model('item')
+
+        if not self.validationResults:
+            raise ValidationException('Refusing to save unvalidated metadata.')
+        if any(('parseErrors' in validationResult or
+                'validationErrors' in validationResult)
+               for validationResult in self.validationResults):
+            raise ValidationException('Refusing to save invalid metadata.')
+
+        for imageItemId, metadata in six.viewitems(self.validatedMetadata):
+            imageItem = Item.findOne({'_id': imageItemId})
+            if not imageItem:
+                raise ValidationException(
+                    'Unable to find image: %s' % imageItemId)
+            Item.setMetadata(imageItem, metadata)
 
 
 class MetadataValidationError(Exception):
@@ -205,7 +259,7 @@ class MetadataValidationError(Exception):
         Exception.__init__(self, message)
 
 
-def _addImageClinicalMetadata(unstructured, clinical):
+def addImageClinicalMetadata(unstructured, clinical):
     """Parse unstructured metadata to clinical metadata and validate."""
     validationErrors = []
     for parser in [
