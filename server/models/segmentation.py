@@ -116,6 +116,7 @@ class Segmentation(Model):
                 'Mask must have the same dimensions as the image.')
         if mask.dtype != numpy.uint8:
             raise ValidationException('Mask may only contain 8-bit values.')
+        # TODO: threshold to a binary mask
         # TODO: validate that only a single contiguous region is present
 
         maskOutputStream = ScikitSegmentationHelper.writeImage(
@@ -163,21 +164,30 @@ class Segmentation(Model):
         File = self.model('file')
         return File.load(segmentation['maskId'], force=True, exc=True)
 
-    def mask(self, segmentation, image=None):
+    def maskData(self, segmentation, image=None):
+        """
+        Return the mask data associated with this segmentation.
+
+        :rtype: numpy.ndarray
+        """
         Image = self.model('image', 'isic_archive')
-        if not image:
-            image = Image.load(segmentation['imageId'], force=True, exc=True)
+        if 'maskId' in segmentation:
+            return Image._decodeDataFromFile(self.maskFile(segmentation))
+        else:
+            if not image:
+                image = Image.load(
+                    segmentation['imageId'], force=True, exc=True)
 
-        segmentationMask = ScikitSegmentationHelper._contourToMask(
-            numpy.zeros(Image.imageData(image).shape),
-            segmentation['lesionBoundary']['geometry']['coordinates'][0]
-        ).astype(numpy.uint8)
-        segmentationMask *= 255
+            segmentationMask = ScikitSegmentationHelper._contourToMask(
+                numpy.zeros(Image.imageData(image).shape),
+                segmentation['lesionBoundary']['geometry']['coordinates'][0]
+            ).astype(numpy.uint8)
+            segmentationMask *= 255
 
-        return segmentationMask
+            return segmentationMask
 
     def renderedMask(self, segmentation, image=None):
-        segmentationMask = self.mask(segmentation, image)
+        segmentationMask = self.maskData(segmentation, image)
         return ScikitSegmentationHelper.writeImage(segmentationMask, 'png')
 
     def boundaryThumbnail(self, segmentation, image=None, width=256):
@@ -185,12 +195,18 @@ class Segmentation(Model):
         if not image:
             image = Image.load(segmentation['imageId'], force=True, exc=True)
 
+        if 'maskId' in segmentation:
+            segmentationMask = self.maskData(segmentation)
+            segmentationContour = OpenCVSegmentationHelper._maskToContour(
+                segmentationMask, paddedInput=False)
+        else:
+            segmentationContour = \
+                segmentation['lesionBoundary']['geometry']['coordinates'][0]
+
         pilImageData = PIL_Image.fromarray(Image.imageData(image))
         pilDraw = PIL_ImageDraw.Draw(pilImageData)
         pilDraw.line(
-            list(six.moves.map(tuple,
-                               segmentation['lesionBoundary']
-                                           ['geometry']['coordinates'][0])),
+            list(six.moves.map(tuple, segmentationContour)),
             fill=(0, 255, 0),  # TODO: make color an option
             width=5
         )
