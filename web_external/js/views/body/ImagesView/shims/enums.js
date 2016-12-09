@@ -45,11 +45,11 @@ isic.ENUMS.SCHEMA = {
         coerceToType: 'string',
         humanName: 'Benign or Malignant'
     },
-    'meta.clinical.age': {
+    'meta.clinical.age_approx': {
         FacetView: isic.views.ImagesFacetHistogramView,
         coerceToType: 'number',
         interpretation: 'ordinal',
-        humanName: 'Age',
+        humanName: 'Approximate Age',
         lowBound: 0,
         highBound: 90,
         numBins: 9
