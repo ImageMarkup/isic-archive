@@ -53,8 +53,10 @@ class ImageResource(Resource):
         Description('Return a list of lesion images.')
         .pagingParams(defaultSort='name')
         .param('datasetId', 'The ID of the dataset to use.', required=False)
+        .param('name', 'Find an image with a specific name.',
+               required=False)
         .param('filter', 'Filter the images by a PegJS-specified grammar '
-                         '(causing "datasetId" to be ignored).',
+                         '(causing "datasetId" and "name" to be ignored).',
                required=False)
         .errorResponse()
     )
@@ -67,15 +69,16 @@ class ImageResource(Resource):
 
         if 'filter' in params:
             query = querylang.astToMongo(json.loads(params['filter']))
-        elif 'datasetId' in params:
-            # ensure the user has access to the dataset
-            try:
-                query = {'folderId': ObjectId(params['datasetId'])}
-            except InvalidId:
-                raise RestException(
-                    'Invalid "folderId" ObjectId: %s' % params['datasetId'])
         else:
             query = {}
+            if 'datasetId' in params:
+                try:
+                    query.update({'folderId': ObjectId(params['datasetId'])})
+                except InvalidId:
+                    raise RestException(
+                        'Invalid "folderId" ObjectId: %s' % params['datasetId'])
+            if 'name' in params:
+                query.update({'name': params['name']})
 
         return [
             {

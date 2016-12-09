@@ -94,16 +94,14 @@ class Dataset(FolderModel):
     def childImages(self, dataset, limit=0, offset=0, sort=None, filters=None,
                     **kwargs):
         Image = self.model('image', 'isic_archive')
-        if not filters:
-            filters = {}
 
-        q = {
+        query = filters.copy() if filters is not None else {}
+        query.update({
             'folderId': dataset['_id']
-        }
-        q.update(filters)
+        })
 
         return Image.find(
-            q, limit=limit, offset=offset, sort=sort, **kwargs)
+            query, limit=limit, offset=offset, sort=sort, **kwargs)
 
     def _findQueryFilter(self, query):
         Collection = self.model('collection')
@@ -114,12 +112,11 @@ class Dataset(FolderModel):
             fields={'_id': 1}
         )
 
-        datasetQuery = {
+        newQuery = query.copy() if query is not None else {}
+        newQuery.update({
             'parentId': datasetCollection['_id']
-        }
-        if query:
-            datasetQuery.update(query)
-        return datasetQuery
+        })
+        return newQuery
 
     def list(self, user=None, limit=0, offset=0, sort=None):
         """

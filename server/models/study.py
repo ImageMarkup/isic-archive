@@ -191,20 +191,19 @@ class Study(FolderModel):
         return Annotation.find(query, **kwargs)
 
     def _findQueryFilter(self, query, annotatorUser, state):
-        studyQuery = {
+        newQuery = query.copy() if query is not None else {}
+        newQuery.update({
             'parentId': self.loadStudyCollection()['_id']
-        }
-        if query:
-            studyQuery.update(query)
+        })
         if state or annotatorUser:
             annotations = self.childAnnotations(
                 annotatorUser=annotatorUser,
                 state=state
             )
-            studyQuery.update({
+            newQuery.update({
                 '_id': {'$in': annotations.distinct('meta.studyId')}
             })
-        return studyQuery
+        return newQuery
 
     def list(self, user=None, limit=0, offset=0, sort=None):
         """

@@ -118,12 +118,11 @@ class Annotation(ItemModel):
 
     def _findQueryFilter(self, query):
         Study = self.model('study', 'isic_archive')
-        annotationQuery = {
+        newQuery = query.copy() if query is not None else {}
+        newQuery.update({
             'baseParentId': Study.loadStudyCollection()['_id']
-        }
-        if query:
-            annotationQuery.update(query)
-        return annotationQuery
+        })
+        return newQuery
 
     def find(self, query=None, **kwargs):
         annotationQuery = self._findQueryFilter(query)
