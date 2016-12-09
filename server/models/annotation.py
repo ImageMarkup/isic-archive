@@ -134,6 +134,7 @@ class Annotation(ItemModel):
         return super(Annotation, self).findOne(annotationQuery, **kwargs)
 
     def validate(self, doc):  # noqa - C901
+        Image = self.model('image', 'isic_archive')
         Study = self.model('study', 'isic_archive')
         # If annotation is fully created
         if doc.get('meta') and 'studyId' in doc['meta']:
@@ -174,6 +175,12 @@ class Annotation(ItemModel):
                     for feature in
                     featureset['localFeatures']
                 }
+                if featuresetLocalFeatures:
+                    image = Image.load(doc['meta']['imageId'], force=True)
+                    superpixels = Image.superpixelsData(image)
+                    maxSuperpixel = superpixels.max()
+                else:
+                    maxSuperpixel = None
                 for featureId, featureValue in six.viewitems(
                         doc['meta']['annotations']):
                     if featureId in featuresetGlobalFeatures:
@@ -186,9 +193,11 @@ class Annotation(ItemModel):
                                 'Annotation feature "%s" has invalid '
                                 'value "%s".' % (featureId, featureValue))
                     elif featureId in featuresetLocalFeatures:
-                        if not isinstance(featureValue, list) or not all(
-                            superpixelValue in [0.0, 0.5, 1.0]
-                            for superpixelValue in featureValue
+                        if not (
+                            isinstance(featureValue, list) and
+                            len(featureValue) == maxSuperpixel + 1 and
+                            all(superpixelValue in [0.0, 0.5, 1.0]
+                                for superpixelValue in featureValue)
                         ):
                             raise ValidationException(
                                 'Annotation feature "%s" has invalid '

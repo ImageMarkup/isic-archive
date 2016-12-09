@@ -188,7 +188,7 @@ Pixelmap.prototype.activate = function (featureValues) {
     }, this));
 
     if (featureValues === undefined) {
-        featureValues = new Array(this.pixelmap.maxIndex());
+        featureValues = new Array(this.pixelmap.maxIndex() + 1);
         for (var i = 0, len = featureValues.length; i < len; ++i) {
             featureValues[i] = Pixelmap.State.ABSENT;
         }
