@@ -282,12 +282,11 @@ class Image(ItemModel):
         )
 
         # TODO: this will also include Pre-review images; should it?
-        datasetQuery = {
+        newQuery = query.copy() if query is not None else {}
+        newQuery.update({
             'baseParentId': imageCollection['_id']
-        }
-        if query:
-            datasetQuery.update(query)
-        return datasetQuery
+        })
+        return newQuery
 
     def find(self, query=None, **kwargs):
         imageQuery = self._findQueryFilter(query)
