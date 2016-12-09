@@ -106,7 +106,7 @@ class HistogramUtility(object):
             'meta.clinical.benign_malignant': {
                 'coerceToType': 'string'
             },
-            'meta.clinical.age': {
+            'meta.clinical.age_approx': {
                 'coerceToType': 'number',
                 'interpretation': 'ordinal',
                 'lowBound': 0,
