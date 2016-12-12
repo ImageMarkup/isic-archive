@@ -25,9 +25,9 @@ add_python_style_test(
 
 add_eslint_test(
   isic_archive_external
-  "${CMAKE_CURRENT_LIST_DIR}/web_external/js"
-  ESLINT_CONFIG_FILE "${CMAKE_CURRENT_LIST_DIR}/web_external/js/.eslintrc.js"
-  ESLINT_IGNORE_FILE "${CMAKE_CURRENT_LIST_DIR}/web_external/js/.eslintignore"
+  "${CMAKE_CURRENT_LIST_DIR}/web_external"
+  ESLINT_CONFIG_FILE "${CMAKE_CURRENT_LIST_DIR}/web_external/.eslintrc.js"
+  ESLINT_IGNORE_FILE "${CMAKE_CURRENT_LIST_DIR}/web_external/.eslintignore"
 )
 
 add_eslint_test(

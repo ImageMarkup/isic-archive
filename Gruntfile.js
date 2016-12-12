@@ -41,10 +41,9 @@ module.exports = function (grunt) {
         }
 
         // External app Jade templates
-        var jadeDir = pluginDir + '/web_external/templates';
         files = {};
         files[staticDir + '/isic_archive_templates.js'] = [
-            jadeDir + '/**/*.jade'
+            pluginDir + '/web_external/**/*.jade'
         ];
         grunt.config.set('jade.isic_archive', {
             files: files
@@ -53,50 +52,57 @@ module.exports = function (grunt) {
             namespace: 'isic.templates'
         });
         grunt.config.set('watch.jade_isic_archive_app', {
-            files: [jadeDir + '/**/*.jade'],
+            files: [pluginDir + '/web_external/**/*.jade'],
             tasks: ['jade:isic_archive', 'uglify:isic_archive']
         });
         defaultTasks.push('jade:isic_archive');
 
         // External app Stylus stylesheets
-        var cssDir = pluginDir + '/web_external/stylesheets';
         files = {};
         files[staticDir + '/isic_archive.app.min.css'] = [
-            cssDir + '/**/*.styl'
+            pluginDir + '/web_external/global.styl',
+            pluginDir + '/web_external/**/*.styl'
         ];
         grunt.config.set('stylus.isic_archive', {
             files: files
         });
         grunt.config.set('watch.stylus_isic_archive_app', {
-            files: [cssDir + '/**/*.styl'],
+            files: [pluginDir + '/web_external/**/*.styl'],
             tasks: ['stylus:isic_archive']
         });
         defaultTasks.push('stylus:isic_archive');
 
         // External app JS app
-        var jsDir = pluginDir + '/web_external/js';
         files = {};
         // name this isic_archive.app.min.js instead of plugin.min.js
         // so that girder app won't load isic_archive, which
         // should only be loaded as a separate web app running as isic_archive
         files[staticDir + '/isic_archive.app.min.js'] = [
-            jsDir + '/init.js',
+            pluginDir + '/web_external/init.js',
             staticDir + '/isic_archive_templates.js',
-            jsDir + '/view.js',
-            jsDir + '/app.js',
-            jsDir + '/utilities.js',
-            jsDir + '/models/**/*.js',
-            jsDir + '/collections/**/*.js',
-            jsDir + '/views/**/*.js'
+            pluginDir + '/web_external/view.js',
+            pluginDir + '/web_external/app.js',
+            pluginDir + '/web_external/models/*.js',
+            pluginDir + '/web_external/collections/*.js',
+            // Include all other .js files, except the top level ones
+            pluginDir + '/web_external/*/**/*.js'
         ];
         files[staticDir + '/main.min.js'] = [
-            jsDir + '/main.js'
+            pluginDir + '/web_external/main.js'
         ];
         grunt.config.set('uglify.isic_archive', {
             files: files
         });
         grunt.config.set('watch.js_isic_archive_app', {
-            files: [jsDir + '/**/*.js'],
+            files: [
+                pluginDir + '/web_external/init.js',
+                pluginDir + '/web_external/view.js',
+                pluginDir + '/web_external/app.js',
+                pluginDir + '/web_external/models/*.js',
+                pluginDir + '/web_external/collections/*.js',
+                pluginDir + '/web_external/*/**/*.js',
+                pluginDir + '/web_external/main.js'
+            ],
             tasks: ['uglify:isic_archive']
         });
         defaultTasks.push('uglify:isic_archive');
