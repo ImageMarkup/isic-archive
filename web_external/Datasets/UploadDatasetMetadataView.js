@@ -215,7 +215,7 @@ isic.views.UploadDatasetMetadataView = isic.View.extend({
             this.uploadFolder = new girder.models.FolderModel({
                 name: 'isic_upload_' + Date.now(),
                 parentType: 'user',
-                parentId: girder.currentUser.get('_id'),
+                parentId: girder.currentUser.id,
                 description: 'ISIC uploads'
             });
 

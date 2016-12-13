@@ -20,7 +20,7 @@ isic.views.LayoutHeaderUserView = isic.View.extend({
         },
 
         'click a.g-my-settings': function () {
-            isic.router.navigate('useraccount/' + girder.currentUser.get('_id') +
+            isic.router.navigate('useraccount/' + girder.currentUser.id +
                                     '/info', {trigger: true});
         }
     },
