@@ -9,7 +9,7 @@ isic.models.DatasetModel = girder.Model.extend({
      */
     validateMetadata: function (uploadFolderId, save) {
         girder.restRequest({
-            path: this.resourceName + '/' + this.get('_id') + '/metadata',
+            path: this.resourceName + '/' + this.id + '/metadata',
             type: 'POST',
             data: {
                 uploadFolderId: uploadFolderId,
