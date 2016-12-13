@@ -38,11 +38,6 @@ ZIP_FORMATS = [
     'application/x-zip-compressed',
 ]
 
-CSV_FORMATS = [
-    'text/csv',
-    'application/vnd.ms-excel'
-]
-
 
 class Dataset(FolderModel):
     def initialize(self):
@@ -296,41 +291,20 @@ class Dataset(FolderModel):
                 Folder.countFolders(prereviewFolder)) == 0:
             Folder.remove(prereviewFolder)
 
-    def validateMetadata(self, dataset, uploadFolder, user, save):
+    def validateMetadata(self, dataset, csvFile, user, save):
         """
-        Validate, add, or update metadata about images in a dataset. The upload
-        folder is expected to contain a .csv file that contains metadata about
-        the images.
+        Validate, add, or update metadata about images in a dataset from a .csv
+        file.
         """
-        Folder = self.model('folder')
-        Item = self.model('item')
-
-        if not dataset:
-            raise ValidationException(
-                'Invalid dataset.', 'dataset')
-
-        if not uploadFolder:
-            raise ValidationException(
-                'No files were uploaded.', 'uploadFolder')
-
-        csvFileItems = [f for f in Folder.childItems(uploadFolder)
-                        if mimetypes.guess_type(f['name'], strict=False)[0] in
-                        CSV_FORMATS]
-        if not csvFileItems:
-            raise ValidationException(
-                'No .csv files were uploaded.', 'uploadFolder')
-
-        # Validate metadata in CSV files
+        # Validate metadata in CSV file
         prereviewFolder = self.prereviewFolder(dataset)
         validator = addImageClinicalMetadata
-        parseCsv = ParseMetadataCsv(dataset, prereviewFolder, user, validator)
-        for item in csvFileItems:
-            csvFiles = Item.childFiles(item)
-            for csvFile in csvFiles:
-                parseCsv.validate(csvFile)
+        parseCsv = ParseMetadataCsv(dataset, prereviewFolder, csvFile, user,
+                                    validator)
+        parseCsv.validate()
 
         # Save metadata
         if save:
             parseCsv.save()
 
-        return parseCsv.validationResults
+        return parseCsv.validationResult

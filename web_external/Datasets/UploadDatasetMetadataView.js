@@ -9,29 +9,49 @@ isic.collections.MetadataErrorCollection = Backbone.Collection.extend({
 });
 
 isic.models.MetadataFileErrorModel = Backbone.Model.extend({
-    initialize: function (options) {
-        this.parseErrors = new isic.collections.MetadataErrorCollection(options.parseErrors);
-        this.validationErrors = new isic.collections.MetadataErrorCollection(options.validationErrors);
+    defaults: {
+        parseErrors: new isic.collections.MetadataErrorCollection(),
+        validationErrors: new isic.collections.MetadataErrorCollection()
+    },
+
+    parse: function (data) {
+        data.parseErrors = new isic.collections.MetadataErrorCollection(
+            _.has(data, 'parseErrors') ? data.parseErrors : null);
+        data.validationErrors = new isic.collections.MetadataErrorCollection(
+            _.has(data, 'validationErrors') ? data.validationErrors : null);
+        return data;
     },
 
     filename: function () {
         return this.get('filename');
     },
 
+    hasParseErrors: function () {
+        return this.parseErrors() && this.parseErrors().length;
+    },
+
+    parseErrors: function () {
+        return this.get('parseErrors');
+    },
+
+    hasValidationErrors: function () {
+        return this.validationErrors() && this.validationErrors().length;
+    },
+
+    validationErrors: function () {
+        return this.get('validationErrors');
+    },
+
+    empty: function () {
+        return !this.has('filename');
+    },
+
     // Check whether model passed validation
     validated: function () {
-        return this.parseErrors.isEmpty() && this.validationErrors.isEmpty();
-    }
-});
-
-isic.collections.MetadataFileErrorCollection = Backbone.Collection.extend({
-    model: isic.models.MetadataFileErrorModel,
-
-    // Check whether all models passed validation
-    validated: function () {
-        return this.all(function (model) {
-            return model.validated();
-        });
+        if (!this.parseErrors() || !this.validationErrors()) {
+            return false;
+        }
+        return this.parseErrors().isEmpty() && this.validationErrors().isEmpty();
     }
 });
 
@@ -83,17 +103,17 @@ isic.views.UploadDatasetMetadataValidationView = isic.View.extend({
         }
     },
     initialize: function (options) {
-        this.listenTo(this.collection, 'reset', this.render);
+        this.listenTo(this.model, 'change', this.render);
         this.render();
     },
 
     render: function () {
         this.$el.html(isic.templates.uploadDatasetMetadataValidationPage({
-            errors: this.collection
+            model: this.model
         }));
 
         // Show save button when there are no validation errors
-        if (this.collection.validated()) {
+        if (this.model.validated()) {
             this.$('.isic-upload-dataset-metadata-save-button-container').removeClass('hidden');
         }
 
@@ -120,7 +140,7 @@ isic.views.UploadDatasetMetadataView = isic.View.extend({
         this.dataset = new isic.models.DatasetModel();
         this.datasets = new isic.collections.DatasetCollection();
 
-        this.metadataFileErrors = new isic.collections.MetadataFileErrorCollection();
+        this.metadataFileError = new isic.models.MetadataFileErrorModel();
 
         this.selectDatasetView = new isic.views.UploadDatasetMetadataSelectDatasetView({
             collection: this.datasets,
@@ -128,7 +148,7 @@ isic.views.UploadDatasetMetadataView = isic.View.extend({
         });
 
         this.validationView = new isic.views.UploadDatasetMetadataValidationView({
-            collection: this.metadataFileErrors,
+            model: this.metadataFileError,
             parentView: this
         });
 
@@ -300,8 +320,8 @@ isic.views.UploadDatasetMetadataView = isic.View.extend({
         }
 
         this.dataset.off().on('isic:validated', function (resp) {
-            // Populate metadata file error collection
-            this.metadataFileErrors.reset(resp);
+            // Update metadata file error model
+            this.metadataFileError.set(this.metadataFileError.parse(resp));
 
             if (save) {
                 isic.showAlertDialog({
@@ -318,7 +338,7 @@ isic.views.UploadDatasetMetadataView = isic.View.extend({
     },
 
     clearResults: function () {
-        this.metadataFileErrors.reset();
+        this.metadataFileError.clear();
     }
 });
 

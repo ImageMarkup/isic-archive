@@ -128,7 +128,8 @@ class ParseMetadataCsv:
     Parse a CSV file containing metadata about images in a dataset and validate
     the metadata. Optionally save the validated metadata to the images.
     """
-    def __init__(self, dataset, prereviewFolder, user, validator):
+    def __init__(self, dataset, prereviewFolder, csvFile, user, validator):
+        self.csvFile = csvFile
         self.user = user
         self.validator = validator
 
@@ -140,25 +141,19 @@ class ParseMetadataCsv:
         # Metadata stored after validation, indexed by image item id
         self.validatedMetadata = {}
 
-        # Record image items that have been validated
-        self.imageItemIds = set()
+        # Validation result, created after calling validate()
+        self.validationResult = None
 
-        # Final validation results
-        self.validationResults = {}
-
-    def validate(self, csvFile):
+    def validate(self):
         Assetstore = ModelImporter.model('assetstore')
         Item = ModelImporter.model('item')
 
-        csvFileName = csvFile['name']
-        if csvFileName in self.validationResults:
-            raise ValidationException(
-                'Already validated CSV file "%s"' % csvFileName)
+        csvFileName = self.csvFile['name']
 
         assetstore = Assetstore.getCurrent()
         assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(
             assetstore)
-        fullPath = assetstoreAdapter.fullPath(csvFile)
+        fullPath = assetstoreAdapter.fullPath(self.csvFile)
 
         parseErrors = []
         validationErrors = {}
@@ -204,14 +199,6 @@ class ParseMetadataCsv:
                 else:
                     imageItem = next(iter(imageItems))
 
-                # Expect image to be listed in only one CSV file
-                imageItemId = imageItem['_id']
-                if imageItemId in self.imageItemIds:
-                    parseErrors.append(
-                        'Image with original filename "%s" found in multiple '
-                        'CSV files' % filename)
-                self.imageItemIds.add(imageItemId)
-
                 unstructuredMetadata = imageItem['meta']['unstructured']
                 clinicalMetadata = imageItem['meta']['clinical']
                 unstructuredMetadata.update(csvRow)
@@ -221,28 +208,28 @@ class ParseMetadataCsv:
                     validationErrors[filename] = imageValidationErrors
 
                 # Store metadata to enable saving to image item later
+                imageItemId = imageItem['_id']
                 self.validatedMetadata[imageItemId] = {
                     'unstructured': unstructuredMetadata,
                     'clinical': clinicalMetadata
                 }
 
         # Store validation result for the CSV file
-        validationResult = {}
+        self.validationResult = {}
         if parseErrors:
-            validationResult['parseErrors'] = parseErrors
+            self.validationResult['parseErrors'] = parseErrors
         if validationErrors:
-            validationResult['validationErrors'] = validationErrors
-        self.validationResults[csvFileName] = validationResult
+            self.validationResult['validationErrors'] = validationErrors
 
     def save(self):
         Item = ModelImporter.model('item')
 
-        if not self.validationResults:
+        if self.validationResult is None:
             raise ValidationException('Refusing to save unvalidated metadata.')
-        if any(('parseErrors' in validationResult or
-                'validationErrors' in validationResult)
-               for validationResult in self.validationResults):
-            raise ValidationException('Refusing to save invalid metadata.')
+        if 'parseErrors' in self.validationResult or \
+                'validationErrors' in self.validationResult:
+                    raise ValidationException(
+                        'Refusing to save invalid metadata.')
 
         for imageItemId, metadata in six.viewitems(self.validatedMetadata):
             imageItem = Item.findOne({'_id': imageItemId})
