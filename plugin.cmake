@@ -50,8 +50,8 @@ add_python_test(
 add_eslint_test(
   isic_archive_external
   "${CMAKE_CURRENT_LIST_DIR}/web_external"
-  ESLINT_CONFIG_FILE "${CMAKE_CURRENT_LIST_DIR}/web_external/.eslintrc.js"
-  ESLINT_IGNORE_FILE "${CMAKE_CURRENT_LIST_DIR}/web_external/.eslintignore")
+  ESLINT_CONFIG_FILE "${CMAKE_CURRENT_LIST_DIR}/.eslintrc"
+  ESLINT_IGNORE_FILE "${CMAKE_CURRENT_LIST_DIR}/.eslintignore")
 #add_puglint_test(
 #  isic_archive_external
 #  "${CMAKE_CURRENT_LIST_DIR}/web_external")
@@ -71,4 +71,5 @@ add_test(
   COMMAND "${PUGLINT_EXECUTABLE}" -c "${CMAKE_CURRENT_LIST_DIR}/.pug-lintrc" "${CMAKE_CURRENT_LIST_DIR}/web_client/templates")
 add_eslint_test(
   isic_archive_grunt
-  "${CMAKE_CURRENT_LIST_DIR}/Gruntfile.js")
+  "${CMAKE_CURRENT_LIST_DIR}/Gruntfile.js"
+  ESLINT_CONFIG_FILE "${CMAKE_CURRENT_LIST_DIR}/.eslintrc")
