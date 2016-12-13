@@ -247,10 +247,9 @@ class DatasetResource(Resource):
     @describeRoute(
         Description('Validate, add, or update dataset metadata.')
         .param('id', 'The ID of the dataset.', paramType='path')
-        .param('uploadFolderId', 'The ID of the folder that contains metadata.',
-               paramType='path')
+        .param('uploadFolderId', 'The ID of the folder that contains metadata.')
         .param('save', 'Save the metadata in addition to validating it.',
-               required=False, paramType='path')
+               required=False)
     )
     @access.user
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
