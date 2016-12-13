@@ -319,7 +319,7 @@ isic.views.UploadDatasetMetadataView = isic.View.extend({
             return;
         }
 
-        this.dataset.off().on('isic:validated', function (resp) {
+        this.dataset.off().once('isic:validated', function (resp) {
             // Update metadata file error model
             this.metadataFileError.set(this.metadataFileError.parse(resp));
 
@@ -332,7 +332,7 @@ isic.views.UploadDatasetMetadataView = isic.View.extend({
                     }
                 });
             }
-        }, this).on('g:error', function (err) {
+        }, this).once('g:error', function (err) {
             isic.showAlertDialog({ text: 'Error: ' + err.responseJSON.message });
         }, this).validateMetadata(this.uploadFolder.id, save);
     },
