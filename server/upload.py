@@ -144,29 +144,39 @@ class ParseMetadataCsv:
         # Validation result, created after calling validate()
         self.validationResult = None
 
+    def lines(self, stream):
+        """Generate individual lines of text from a stream."""
+        lastLine = ''
+        try:
+            # Read chunk from stream and split into lines. Always process the
+            # last line with the next chunk, or at the end of the stream,
+            # because it may be incomplete.
+            while True:
+                chunk = lastLine + ''.join(next(stream))
+                lines = chunk.splitlines(True)
+                lastLine = lines.pop()
+                for line in lines:
+                    yield line
+        except StopIteration:
+            yield lastLine
+
     def validate(self):
-        Assetstore = ModelImporter.model('assetstore')
         Item = ModelImporter.model('item')
+        File = ModelImporter.model('file')
 
         csvFileName = self.csvFile['name']
-
-        assetstore = Assetstore.getCurrent()
-        assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(
-            assetstore)
-        fullPath = assetstoreAdapter.fullPath(self.csvFile)
+        csvFileStream = File.download(self.csvFile, headers=False)()
 
         parseErrors = []
         validationErrors = {}
-        with open(fullPath, 'rUb') as uploadFileStream,\
-            ProgressContext(
+        with ProgressContext(
                 on=True,
                 user=self.user,
                 title='Processing "%s"' % csvFileName,
                 state=ProgressState.ACTIVE,
                 message='Parsing CSV') as progress:  # NOQA
 
-            # csv.reader(csvfile, delimiter=',', quotechar='"')
-            csvReader = csv.DictReader(uploadFileStream)
+            csvReader = csv.DictReader(self.lines(csvFileStream))
 
             for filenameField in csvReader.fieldnames:
                 if filenameField.lower() == 'filename':
