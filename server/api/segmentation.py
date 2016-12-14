@@ -20,6 +20,7 @@
 import base64
 import datetime
 
+import numpy
 import six
 
 from girder.api import access
@@ -41,6 +42,7 @@ class SegmentationResource(Resource):
         self.route('GET', (':id',), self.getSegmentation)
         self.route('GET', (':id', 'mask'), self.mask)
         self.route('GET', (':id', 'thumbnail'), self.thumbnail)
+        self.route('POST', (':id', 'review'), self.doReview)
 
     @describeRoute(
         Description('List the segmentations for an image.')
@@ -51,6 +53,7 @@ class SegmentationResource(Resource):
     )
     @access.public
     def find(self, params):
+        Image = self.model('image', 'isic_archive')
         Segmentation = self.model('segmentation', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
@@ -59,7 +62,7 @@ class SegmentationResource(Resource):
             params,
             defaultSortField='created', defaultSortDir=SortDir.DESCENDING)
 
-        image = self.model('image', 'isic_archive').load(
+        image = Image.load(
             params['imageId'], level=AccessType.READ,
             user=self.getCurrentUser(), exc=True)
 
@@ -74,7 +77,7 @@ class SegmentationResource(Resource):
         return list(Segmentation.find(
             query=filters,
             sort=sort,
-            fields=['_id', 'skill', 'created'],
+            fields=Segmentation.summaryFields,
             limit=limit,
             offset=offset,
         ))
@@ -91,6 +94,7 @@ class SegmentationResource(Resource):
     )
     @access.user
     def createSegmentation(self, params):
+        Image = self.model('image', 'isic_archive')
         Segmentation = self.model('segmentation', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
@@ -100,44 +104,54 @@ class SegmentationResource(Resource):
         user = self.getCurrentUser()
         User.requireSegmentationSkill(user)
 
-        image = self.model('image', 'isic_archive').load(
+        image = Image.load(
             bodyJson['imageId'], level=AccessType.READ, user=user, exc=True)
-
-        skill = User.getSegmentationSkill(user)
 
         failed = self.boolParam('failed', bodyJson)
 
         if failed:
-            segmentation = Segmentation.createFailedSegmentation(
+            segmentation = Segmentation.createSegmentation(
                 image=image,
-                skill=skill,
                 creator=user,
+                mask=None,
+                meta={
+                    'flagged': 'could not segment'
+                }
             )
         elif 'lesionBoundary' in bodyJson:
             lesionBoundary = bodyJson['lesionBoundary']
-            lesionBoundary['properties']['startTime'] = \
-                datetime.datetime.utcfromtimestamp(
-                    lesionBoundary['properties']['startTime'] / 1000.0)
-            lesionBoundary['properties']['stopTime'] = \
-                datetime.datetime.utcfromtimestamp(
-                    lesionBoundary['properties']['stopTime'] / 1000.0)
+
+            imageShape = (
+                image['meta']['acquisition']['pixelsY'],
+                image['meta']['acquisition']['pixelsX'])
+            mask = ScikitSegmentationHelper._contourToMask(
+                numpy.zeros(imageShape),
+                lesionBoundary['geometry']['coordinates'][0]
+            ).astype(numpy.uint8)
+            mask *= 255
+
+            meta = lesionBoundary['properties']
+            meta['startTime'] = datetime.datetime.utcfromtimestamp(
+                meta['startTime'] / 1000.0),
+            meta['stopTime'] = datetime.datetime.utcfromtimestamp(
+                meta['stopTime'] / 1000.0)
 
             segmentation = Segmentation.createSegmentation(
                 image=image,
-                skill=skill,
                 creator=user,
-                lesionBoundary=lesionBoundary
+                mask=mask,
+                meta=meta
             )
         elif 'mask' in bodyJson:
             maskStream = six.BytesIO()
             maskStream.write(base64.b64decode(bodyJson['mask']))
             mask = ScikitSegmentationHelper.loadImage(maskStream)
 
-            segmentation = Segmentation.createRasterSegmentation(
+            segmentation = Segmentation.createSegmentation(
                 image=image,
-                skill=skill,
                 creator=user,
-                mask=mask
+                mask=mask,
+                meta={}
             )
         else:
             raise RestException(
@@ -168,6 +182,7 @@ class SegmentationResource(Resource):
                 segmentation.pop('creatorId'),
                 force=True, exc=True),
             self.getCurrentUser())
+        del segmentation['maskId']
 
         return segmentation
 
@@ -184,6 +199,7 @@ class SegmentationResource(Resource):
     @rawResponse
     @loadmodel(model='segmentation', plugin='isic_archive')
     def mask(self, segmentation, params):
+        File = self.model('file')
         Image = self.model('image', 'isic_archive')
         Segmentation = self.model('segmentation', 'isic_archive')
         contentDisp = params.get('contentDisposition', None)
@@ -193,26 +209,15 @@ class SegmentationResource(Resource):
                                 contentDisp)
 
         # TODO: convert this to make Segmentation use an AccessControlMixin
-        image = Image.load(
+        Image.load(
             segmentation['imageId'], level=AccessType.READ,
             user=self.getCurrentUser(), exc=True)
 
-        renderedMaskStream = Segmentation.renderedMask(segmentation, image)
-        renderedMaskData = renderedMaskStream.getvalue()
+        maskFile = Segmentation.maskFile(segmentation)
 
-        setResponseHeader('Content-Type', 'image/png')
-        contentName = '%s_segmentation_mask.png' % image['_id']
-        if contentDisp == 'inline':
-            setResponseHeader(
-                'Content-Disposition',
-                'inline; filename="%s"' % contentName)
-        else:
-            setResponseHeader(
-                'Content-Disposition',
-                'attachment; filename="%s"' % contentName)
-        setResponseHeader('Content-Length', len(renderedMaskData))
-
-        return renderedMaskData
+        maskStream = File.download(
+            maskFile, headers=True, contentDisposition=contentDisp)
+        return maskStream
 
     @describeRoute(
         Description('Get a segmentation, rendered as a thumbnail with a '
@@ -250,7 +255,7 @@ class SegmentationResource(Resource):
         thumbnailImageData = thumbnailImageStream.getvalue()
 
         setResponseHeader('Content-Type', 'image/jpeg')
-        contentName = '%s_segmentation_thumbnail.jpg' % image['_id']
+        contentName = '%s_segmentation_thumbnail.jpg' % image['name']
         if contentDisp == 'inline':
             setResponseHeader(
                 'Content-Disposition',
@@ -262,3 +267,30 @@ class SegmentationResource(Resource):
         setResponseHeader('Content-Length', len(thumbnailImageData))
 
         return thumbnailImageData
+
+    @describeRoute(
+        Description('Review a segmentation.')
+        .param('id', 'The ID of the segmentation.', paramType='path')
+        .param('approved', 'Whether the segmentation was approved by the user.',
+               paramType='body', dataType='boolean')
+        .errorResponse('ID was invalid.')
+    )
+    @access.user
+    @loadmodel(model='segmentation', plugin='isic_archive')
+    def doReview(self, segmentation, params):
+        Segmentation = self.model('segmentation', 'isic_archive')
+        User = self.model('user', 'isic_archive')
+
+        bodyJson = self.getBodyJson()
+        self.requireParams(['approved'], bodyJson)
+
+        approved = self.boolParam('approved', bodyJson)
+
+        user = self.getCurrentUser()
+        User.requireSegmentationSkill(user)
+
+        segmentation = Segmentation.review(segmentation, approved, user)
+
+        # TODO: return 201?
+        # TODO: remove maskId from return?
+        return segmentation
