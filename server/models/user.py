@@ -87,7 +87,7 @@ class User(UserModel):
         if self.getSegmentationSkill(user) is None:
             raise AccessException(
                 'Only members of the Segmentation Experts and Segmentation '
-                'Novices groups can create segmentations.')
+                'Novices groups can create or review segmentations.')
 
     def canAdminStudy(self, user):
         return self._isAdminOrMember(user, 'Study Administrators')

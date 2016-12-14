@@ -173,9 +173,9 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         return morphedImage
 
     @classmethod
-    def _maskToContour(cls, maskImage, paddedInput=False, safe=True):
+    def _maskToContours(cls, maskImage, paddedInput=False, safe=True):
         """
-        Extract the contour line within a segmented label mask, using OpenCV.
+        Extract the contour lines within a segmented label mask, using OpenCV.
 
         :param maskImage: A binary label mask. Values are considered as only 0
         or non-0.
@@ -211,6 +211,24 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
             offset=(-1, -1)
         )
 
+        # each contour initially looks like [ [[0,1]], [[0,2]] ], so squeeze it
+        contours = map(numpy.squeeze, contours)
+
+        # place a duplicate of the first value at the end
+        contours = map(
+            lambda contour: numpy.append(contour, contour[0:1], axis=0),
+            contours)
+
+        return contours
+
+    @classmethod
+    def _maskToContour(cls, maskImage, paddedInput=False, safe=True):
+        """
+        Extract the longest contour line within a segmented label mask,
+        using OpenCV.
+        """
+        contours = cls._maskToContours(maskImage, paddedInput, safe)
+
         # Morphological operations may cause multiple disconnected components;
         #   ideally, the seed point + region growing would be used to eliminate
         #   these, but this is slower and the seed point is not available for
@@ -223,12 +241,4 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
             key=lambda contour: len(contour)
         )
 
-        # contour initially looks like [ [[0,1]], [[0,2]] ], so squeeze it
-        largestContour = numpy.squeeze(largestContour)
-        # place a duplicate of the first value at the end
-        largestContour = numpy.append(
-            largestContour,
-            largestContour[0:1],
-            axis=0
-        )
         return largestContour

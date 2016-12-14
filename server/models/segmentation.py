@@ -44,11 +44,12 @@ class Segmentation(Model):
 
         self.exposeFields(AccessType.READ, [
             'imageId',
-            'skill',
             'creatorId',
-            'created'
+            'created',
+            'reviews',
+            'meta'
         ])
-        self.summaryFields = ['_id', 'imageId', 'skill']
+        self.summaryFields = ['_id', 'created']
         events.bind('model.item.remove_with_kwargs',
                     'isic_archive.gc_segmentation',
                     self._onDeleteItem)
@@ -90,59 +91,48 @@ class Segmentation(Model):
         )
         return contourFeature
 
-    def createSegmentation(self, image, skill, creator, lesionBoundary):
-        now = datetime.datetime.utcnow()
-        segmentation = self.save({
-            'imageId': image['_id'],
-            'skill': skill,
-            'creatorId': creator['_id'],
-            'lesionBoundary': lesionBoundary,
-            'created': now
-        })
-        return segmentation
-
-    def createRasterSegmentation(self, image, skill, creator, mask):
+    def createSegmentation(self, image, creator, mask, meta=None):
         File = self.model('file')
         Upload = self.model('upload')
 
         now = datetime.datetime.utcnow()
 
-        if len(mask.shape) != 2:
-            raise ValidationException('Mask must be a single-channel image.')
-        if mask.shape != (
-                image['meta']['acquisition']['pixelsY'],
-                image['meta']['acquisition']['pixelsX']):
-            raise ValidationException(
-                'Mask must have the same dimensions as the image.')
-        if mask.dtype != numpy.uint8:
-            raise ValidationException('Mask may only contain 8-bit values.')
-        # TODO: validate that only a single contiguous region is present
-
-        maskOutputStream = ScikitSegmentationHelper.writeImage(
-            mask, encoding='png')
+        if mask:
+            mask = self._validateMask(mask, image)
+            maskOutputStream = ScikitSegmentationHelper.writeImage(
+                mask, encoding='png')
 
         segmentation = self.save({
             'imageId': image['_id'],
-            'skill': skill,
             'creatorId': creator['_id'],
-            'created': now
+            'created': now,
+            'maskId': None,
+            'reviews': [],
+            'meta': meta or {}
         })
 
-        maskFile = Upload.uploadFromFile(
-            obj=maskOutputStream,
-            size=len(maskOutputStream.getvalue()),
-            name='%s_segmentation.png' % (image['name']),
-            parentType=None,
-            parent=None,
-            user=creator,
-            mimeType='image/png',
-        )
-        maskFile['attachedToId'] = segmentation['_id']
-        maskFile['attachedToType'] = ['segmentation', 'isic_archive']
-        maskFile = File.save(maskFile)
+        if mask:
+            maskFile = Upload.uploadFromFile(
+                obj=maskOutputStream,
+                size=len(maskOutputStream.getvalue()),
+                name='%s_segmentation.png' % (image['name']),
+                parentType=None,
+                parent=None,
+                user=creator,
+                mimeType='image/png',
+            )
+            maskFile['attachedToId'] = segmentation['_id']
+            maskFile['attachedToType'] = ['segmentation', 'isic_archive']
+            maskFile = File.save(maskFile)
 
-        segmentation['maskId'] = maskFile['_id']
-        segmentation = self.save(segmentation)
+            segmentation['maskId'] = maskFile['_id']
+
+        # review will save the segmentation
+        segmentation = self.review(
+            segmentation=segmentation,
+            approved=bool(mask),
+            user=creator,
+            time=now)
 
         return segmentation
 
@@ -150,40 +140,50 @@ class Segmentation(Model):
         File = self.model('file')
         return File.load(segmentation['maskId'], force=True, exc=True)
 
-    def mask(self, segmentation, image=None):
+    def maskData(self, segmentation):
+        """
+        Return the mask data associated with this segmentation.
+
+        :rtype: numpy.ndarray
+        """
         Image = self.model('image', 'isic_archive')
-        if not image:
-            image = Image.load(segmentation['imageId'], force=True, exc=True)
-
-        segmentationMask = ScikitSegmentationHelper._contourToMask(
-            numpy.zeros(Image.imageData(image).shape),
-            segmentation['lesionBoundary']['geometry']['coordinates'][0]
-        ).astype(numpy.uint8)
-        segmentationMask *= 255
-
-        return segmentationMask
-
-    def renderedMask(self, segmentation, image=None):
-        segmentationMask = self.mask(segmentation, image)
-        return ScikitSegmentationHelper.writeImage(segmentationMask, 'png')
+        return Image._decodeDataFromFile(self.maskFile(segmentation))
 
     def boundaryThumbnail(self, segmentation, image=None, width=256):
         Image = self.model('image', 'isic_archive')
         if not image:
             image = Image.load(segmentation['imageId'], force=True, exc=True)
 
+        segmentationMask = self.maskData(segmentation)
+        segmentationContour = OpenCVSegmentationHelper._maskToContour(
+            segmentationMask, paddedInput=False)
+
         pilImageData = PIL_Image.fromarray(Image.imageData(image))
         pilDraw = PIL_ImageDraw.Draw(pilImageData)
         pilDraw.line(
-            list(six.moves.map(tuple,
-                               segmentation['lesionBoundary']
-                                           ['geometry']['coordinates'][0])),
+            list(six.moves.map(tuple, segmentationContour)),
             fill=(0, 255, 0),  # TODO: make color an option
             width=5
         )
 
         return ScikitSegmentationHelper.writeImage(
             numpy.asarray(pilImageData), 'jpeg', width)
+
+    def review(self, segmentation, approved, user, time=None):
+        User = self.model('user', 'isic_archive')
+
+        skill = User.getSegmentationSkill(user)
+        if time is None:
+            time = datetime.datetime.utcnow()
+
+        segmentation['reviews'].append({
+            'userId': user['_id'],
+            'skill': skill,
+            'time': time,
+            'approved': approved
+        })
+
+        return self.save(segmentation)
 
     def _onDeleteItem(self, event):
         item = event.info['document']
@@ -195,68 +195,82 @@ class Segmentation(Model):
 
     def remove(self, segmentation, **kwargs):
         File = self.model('file')
-        if 'maskId' in segmentation:
+        # A segmentation could be "failed" and have a "maskId" of None
+        if segmentation.get('maskId'):
             File.remove(self.maskFile(segmentation))
         super(Segmentation, self).remove(segmentation, **kwargs)
 
+    def _validateMask(self, mask, image):
+        if len(mask.shape) != 2:
+            raise ValidationException('Mask must be a single-channel image.')
+        if mask.shape != (
+                image['meta']['acquisition']['pixelsY'],
+                image['meta']['acquisition']['pixelsX']):
+            raise ValidationException(
+                'Mask must have the same dimensions as the image.')
+        if mask.dtype != numpy.uint8:
+            raise ValidationException('Mask may only contain 8-bit values.')
+
+        maskValues = frozenset(numpy.unique(mask))
+        if maskValues <= {0, 255}:
+            # Expected values
+            pass
+        elif len(maskValues) == 1:
+            # Single value, non-0
+            mask.fill(0)
+        elif len(maskValues) == 2:
+            # Binary image with high value other than 255 can be corrected
+            lowValue = min(maskValues)
+            if lowValue != 0:
+                mask[mask == lowValue] = 0
+            highValue = max(maskValues)
+            if highValue != 255:
+                mask[mask == highValue] = 255
+        else:
+            raise ValidationException(
+                'Mask may only contain values of 0 and 255.')
+
+        contours = OpenCVSegmentationHelper._maskToContours(
+            mask, paddedInput=False)
+        if len(contours) > 1:
+            raise ValidationException(
+                'Mask may not contain multiple disconnected components.')
+
+        return mask
+
     def validate(self, doc):
+        File = self.model('file')
+        Image = self.model('image', 'isic_archive')
+        User = self.model('user', 'isic_archive')
         try:
             assert set(six.viewkeys(doc)) >= {
-                'imageId', 'skill', 'creatorId', 'created'}
+                'imageId', 'creatorId', 'created', 'maskId', 'reviews', 'meta'}
             assert set(six.viewkeys(doc)) <= {
-                '_id', 'imageId', 'skill', 'creatorId', 'created',
-                'maskId', 'lesionBoundary'}
+                '_id', 'imageId', 'creatorId', 'created', 'maskId', 'reviews',
+                'meta', 'lesionBoundary'}
 
             assert isinstance(doc['imageId'], ObjectId)
-            assert self.model('image', 'isic_archive').find(
+            assert Image.find(
                 {'_id': doc['imageId']}).count()
 
-            assert doc['skill'] in {self.Skill.NOVICE, self.Skill.EXPERT}
-
             assert isinstance(doc['creatorId'], ObjectId)
-            assert self.model('user', 'isic_archive').find(
-                {'_id': doc['creatorId']}).count()
+            assert User.find({'_id': doc['creatorId']}).count()
 
             assert isinstance(doc['created'], datetime.datetime)
 
-            if 'lesionBoundary' not in doc:
-                return doc
-            assert isinstance(doc['lesionBoundary'], dict)
-            assert set(six.viewkeys(doc['lesionBoundary'])) == {
-                'type', 'properties', 'geometry'}
+            if doc['maskId']:
+                assert isinstance(doc['maskId'], ObjectId)
+                assert File.find({'_id': doc['maskId']}).count()
 
-            assert doc['lesionBoundary']['type'] == 'Feature'
-
-            assert isinstance(doc['lesionBoundary']['properties'], dict)
-            assert set(six.viewkeys(doc['lesionBoundary']['properties'])) <= {
-                'source', 'startTime', 'stopTime', 'seedPoint', 'tolerance'}
-            assert set(six.viewkeys(doc['lesionBoundary']['properties'])) >= {
-                'source', 'startTime', 'stopTime'}
-            assert doc['lesionBoundary']['properties']['source'] in {
-                'autofill', 'manual pointlist'}
-            assert isinstance(doc['lesionBoundary']['properties']['startTime'],
-                              datetime.datetime)
-            assert isinstance(doc['lesionBoundary']['properties']['stopTime'],
-                              datetime.datetime)
-
-            assert isinstance(doc['lesionBoundary']['geometry'], dict)
-            assert set(six.viewkeys(doc['lesionBoundary']['geometry'])) == {
-                'type', 'coordinates'}
-            assert doc['lesionBoundary']['geometry']['type'] == 'Polygon'
-            assert isinstance(doc['lesionBoundary']['geometry']['coordinates'],
-                              list)
-            assert len(doc['lesionBoundary']['geometry']['coordinates']) == 1
-            assert isinstance(
-                doc['lesionBoundary']['geometry']['coordinates'][0], list)
-            assert len(doc['lesionBoundary']['geometry']['coordinates'][0]) > 2
-            assert doc['lesionBoundary']['geometry']['coordinates'][0][0] == \
-                doc['lesionBoundary']['geometry']['coordinates'][0][-1]
-            for coord in doc['lesionBoundary']['geometry']['coordinates'][0]:
-                assert isinstance(coord, list)
-                assert len(coord) == 2
-                for val in coord:
-                    assert isinstance(val, (int, float))
-                    assert val >= 0
+            assert isinstance(doc['reviews'], list)
+            for review in doc['reviews']:
+                assert set(six.viewkeys(review)) == {
+                    'userId', 'skill', 'time', 'approved'}
+                assert isinstance(review['userId'], ObjectId)
+                assert User.find({'_id': review['userId']}).count()
+                assert review['skill'] in {self.Skill.NOVICE, self.Skill.EXPERT}
+                assert isinstance(review['time'], datetime.datetime)
+                assert isinstance(review['approved'], bool)
 
         except (AssertionError, KeyError):
             # TODO: message

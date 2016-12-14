@@ -187,9 +187,15 @@ class TaskResource(Resource):
     def _pipeline3NoExpertSegmentations(self):
         Segmentation = self.model('segmentation', 'isic_archive')
         return [
-            # Get only images with no expert segmentations
+            # Get only images with no successful expert segmentations
             {'$match': {
-                'segmentations.skill': {'$nin': [Segmentation.Skill.EXPERT]}}}
+                'segmentations.reviews': {
+                    '$not': {'$elemMatch': {
+                        'skill': Segmentation.Skill.EXPERT,
+                        'approved': True
+                    }}
+                }
+            }}
         ]
 
     def _pipeline4CountImages(self):
