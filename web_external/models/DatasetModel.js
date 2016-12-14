@@ -16,7 +16,7 @@ isic.models.DatasetModel = girder.Model.extend({
                 save: save
             }
         }).done(_.bind(function (resp) {
-            this.trigger('isic:validated', resp);
+            this.trigger('isic:validated', resp, save);
         }, this)).error(_.bind(function (err) {
             this.trigger('g:error', err);
         }, this));

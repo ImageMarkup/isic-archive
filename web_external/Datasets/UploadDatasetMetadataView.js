@@ -154,6 +154,13 @@ isic.views.UploadDatasetMetadataView = isic.View.extend({
 
         this.datasets.fetch();
 
+        // Attach event listeners
+
+        this.listenTo(this.dataset, 'isic:validated', this.metadataValidated);
+        this.listenTo(this.dataset, 'g:error', function (err) {
+            isic.showAlertDialog({ text: 'Error: ' + err.responseJSON.message });
+        });
+
         this.listenTo(this.selectDatasetView, 'changed', this.datasetChanged);
         this.listenTo(this.validationView, 'saveMetadata', function () {
             // Show confirmation dialog
@@ -319,22 +326,22 @@ isic.views.UploadDatasetMetadataView = isic.View.extend({
             return;
         }
 
-        this.dataset.off().once('isic:validated', function (resp) {
-            // Update metadata file error model
-            this.metadataFileError.set(this.metadataFileError.parse(resp));
+        this.dataset.validateMetadata(this.uploadFolder.id, save);
+    },
 
-            if (save) {
-                isic.showAlertDialog({
-                    text: '<h4>Metadata successfully saved.</h4>',
-                    escapedHtml: true,
-                    callback: function () {
-                        isic.router.navigate('', {trigger: true});
-                    }
-                });
-            }
-        }, this).once('g:error', function (err) {
-            isic.showAlertDialog({ text: 'Error: ' + err.responseJSON.message });
-        }, this).validateMetadata(this.uploadFolder.id, save);
+    metadataValidated: function (resp, save) {
+        // Update metadata file error model
+        this.metadataFileError.set(this.metadataFileError.parse(resp));
+
+        if (save) {
+            isic.showAlertDialog({
+                text: '<h4>Metadata successfully saved.</h4>',
+                escapedHtml: true,
+                callback: function () {
+                    isic.router.navigate('', {trigger: true});
+                }
+            });
+        }
     },
 
     clearResults: function () {
