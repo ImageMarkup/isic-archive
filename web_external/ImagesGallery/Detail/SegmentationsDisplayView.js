@@ -27,10 +27,15 @@ isic.views.SegmentationDisplayView = isic.View.extend({
         this.$el.html(isic.templates.segmentationDisplayPage({
             segmentation: this.model,
             created: created,
-            thumbnailUrl: thumbnailUrl
+            thumbnailUrl: thumbnailUrl,
+            stringify: this._stringify
         }));
 
         return this;
+    },
+
+    _stringify: function (val) {
+        return JSON.stringify(val, null, 4);
     }
 });
 

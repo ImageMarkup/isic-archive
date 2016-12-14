@@ -5,12 +5,14 @@ if segmentation.id
         td Created
         td= created
       tr
-        td Skill
-        td= segmentation.get('skill')
-      tr
         td Creator
         td= segmentation.creator().name()
       tr
-        td Source
-        td= segmentation.get('lesionBoundary')['properties']['source']
+        td Metadata
+        td
+          pre.pre-scrollable= stringify(segmentation.get('meta'))
+      tr
+        td Reviews
+        td
+          pre.pre-scrollable= stringify(segmentation.get('reviews'))
   img(src=thumbnailUrl)
