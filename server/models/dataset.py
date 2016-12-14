@@ -291,7 +291,7 @@ class Dataset(FolderModel):
                 Folder.countFolders(prereviewFolder)) == 0:
             Folder.remove(prereviewFolder)
 
-    def validateMetadata(self, dataset, csvFile, user, save):
+    def validateMetadata(self, dataset, csvFile, save):
         """
         Validate, add, or update metadata about images in a dataset from a .csv
         file.
@@ -299,8 +299,8 @@ class Dataset(FolderModel):
         # Validate metadata in CSV file
         prereviewFolder = self.prereviewFolder(dataset)
         validator = addImageClinicalMetadata
-        parseCsv = ParseMetadataCsv(dataset, prereviewFolder, csvFile, user,
-                                    validator)
+        parseCsv = ParseMetadataCsv(
+            dataset, prereviewFolder, csvFile, validator)
         parseCsv.validate()
 
         # Save metadata

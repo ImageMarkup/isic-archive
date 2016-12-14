@@ -28,6 +28,7 @@ from girder.api.rest import Resource, loadmodel, RestException
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 from girder.models.model_base import AccessException, ValidationException
+from girder.utility.progress import ProgressContext
 
 CSV_FORMATS = [
     'text/csv',
@@ -300,15 +301,17 @@ class DatasetResource(Resource):
             raise ValidationException(
                 'Only one .csv file may be uploaded.', 'uploadFolder')
         csvFile = csvFiles[0]
+        csvFileName = csvFile['name']
 
         save = self.boolParam('save', params, False)
 
-        validationResult = Dataset.validateMetadata(
-            dataset=dataset, csvFile=csvFile, user=user,
-            save=save)
+        with ProgressContext(
+                on=True, user=user, title='Processing "%s"' % csvFileName):
+            validationResult = Dataset.validateMetadata(
+                dataset=dataset, csvFile=csvFile, save=save)
 
         # Format validation results
-        result = {'filename': csvFile['name']}
+        result = {'filename': csvFileName}
         if 'parseErrors' in validationResult:
             result['parseErrors'] = \
                 [{'message': message}
