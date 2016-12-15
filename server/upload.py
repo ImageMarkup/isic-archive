@@ -144,13 +144,14 @@ class ParseMetadataCsv:
     def lines(self, stream):
         """Generate individual lines of text from a stream."""
         lastLine = ''
+        keepends = True
         try:
             # Read chunk from stream and split into lines. Always process the
             # last line with the next chunk, or at the end of the stream,
             # because it may be incomplete.
             while True:
                 chunk = lastLine + ''.join(next(stream))
-                lines = chunk.splitlines(True)
+                lines = chunk.splitlines(keepends)
                 lastLine = lines.pop()
                 for line in lines:
                     yield line
