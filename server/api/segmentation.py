@@ -29,8 +29,7 @@ from girder.api.rest import Resource, RestException, loadmodel, rawResponse, \
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 
-from ..models.segmentation_helpers import ScikitSegmentationHelper, \
-    OpenCVSegmentationHelper
+from ..models.segmentation_helpers import ScikitSegmentationHelper
 
 
 class SegmentationResource(Resource):
