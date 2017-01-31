@@ -67,15 +67,41 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
 
     @classmethod
     def segment(cls, image, seedCoord, tolerance):
+        """
+        Do a flood-fill segmentation of an image, yielding a single contiguous
+        region with no holes.
+
+        :param image: A Numpy array with the image to be segmented.
+        :type image: numpy.ndarray
+        :param seedCoord: (X, Y) coordinates of the segmentation seed point.
+        :type seedCoord: tuple[int]
+        :param tolerance: The intensity tolerance value for the segmentation.
+        :type tolerance: int
+        :return: The mask image of the segmented region, with values 0 or 255.
+        :rtype: numpy.ndarray
+        """
         maskImage = cls._floodFill(
             image,
             seedCoord,
-            tolerance,
-            connectivity=8
-        )
-        # maskImage = cls._binaryOpening(maskImage)
-        contourCoords = cls._maskToContour(maskImage)
-        return contourCoords
+            tolerance)
+
+        # Now, fill in any holes in the maskImage
+        # First, add a padded border, allowing the next operation to reach
+        # around edge-touching components
+        maskImage = numpy.pad(maskImage, 1, 'constant', constant_values=1)
+        maskImageBackground = cls._floodFill(
+            maskImage,
+            # The seed point is a part of the padded border of maskImage
+            seedCoord=(0, 0),
+            # The seed point and border will have a value of 1, but we want to
+            # also include the actual mask background, which has a value of 0
+            tolerance=1)
+        # Remove the extra padding
+        maskImageBackground = maskImageBackground[1:-1, 1:-1]
+        # Flip the background, to get the mask with holes removed
+        maskImage = numpy.invert(maskImageBackground)
+
+        return maskImage
 
     @classmethod
     def _clippedAdd(cls, array, value):
@@ -86,6 +112,29 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
 
     @classmethod
     def _floodFill(cls, image, seedCoord, tolerance, connectivity=8):
+        """
+        Segment an image into a region connected to a seed point, using OpenCV.
+
+        :param image: The image to be segmented.
+        :type image: numpy.ndarray
+        :param seedCoord: The point inside the connected region where the
+        segmentation will start.
+        :type seedCoord: tuple[int]
+        :param tolerance: The maximum color/intensity difference between the
+        seed point and a point in the connected region.
+        :type tolerance: int
+        :param connectivity: (optional) The number of allowed connectivity
+        propagation directions. Allowed values are:
+          * 4 for edge pixels
+          * 8 for edge and corner pixels
+        :type connectivity: int
+        :param padOutput: (optional)  Return the output with a 1-pixel wide
+        padded border.
+        :type padOutput: bool
+        :returns: A binary label mask, with an extra 1-pixel wide padded border.
+        The values are either ``0`` or ``fillValue``.
+        :rtype: numpy.ndarray
+        """
         seedValue = image[seedCoord[1], seedCoord[0]]
         seedValueMin = cls._clippedAdd(seedValue, -tolerance)
         seedValueMax = cls._clippedAdd(seedValue, tolerance)
@@ -97,20 +146,26 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         else:
             raise ValueError('Unknown connectivity value.')
 
-        maskImage = skimage.measure.label(
-            numpy.all(
-                numpy.logical_and(
-                    image >= seedValueMin,
-                    image <= seedValueMax
-                ),
-                2
-            ).astype(int),
+        binaryImage = numpy.logical_and(
+            image >= seedValueMin,
+            image <= seedValueMax
+        )
+        if len(image.shape) == 3:
+            # Reduce RGB components, requiring all to be within threshold
+            binaryImage = numpy.all(binaryImage, 2)
+
+        labelImage = skimage.measure.label(
+            binaryImage.astype(int),
             return_num=False,
             connectivity=connectivityArg
         )
+        del binaryImage
 
         maskImage = numpy.equal(
-            maskImage, maskImage[seedCoord[1], seedCoord[0]])
+            labelImage, labelImage[seedCoord[1], seedCoord[0]])
+        del labelImage
+        maskImage = maskImage.astype(numpy.uint8) * 255
+
         return maskImage
 
     @classmethod
@@ -154,21 +209,22 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         return collapsedCoords
 
     @classmethod
-    def _maskToContour(cls, maskImage):
+    def maskToContour(cls, maskImage):
         """
         Extract the contour line within a segmented label mask, using
         Scikit-Image.
 
         :param maskImage: A binary label mask.
-        :type maskImage: numpy.ndarray of bool
+        :type maskImage: numpy.ndarray of numpy.uint8
         :return: An array of point pairs.
         :rtype: numpy.ndarray
         """
-        if maskImage.dtype != bool:
-            raise TypeError('maskImage must be an array of bool.')
+        if maskImage.dtype != numpy.uint8:
+            raise TypeError('maskImage must be an array of uint8.')
 
         coords = skimage.measure.find_contours(
-            array=maskImage.astype(numpy.double),
+            # TODO: threshold image more efficiently
+            array=maskImage.astype(bool).astype(numpy.double),
             level=0.5,
             fully_connected='low',
             positive_orientation='low'

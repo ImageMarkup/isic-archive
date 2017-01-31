@@ -59,22 +59,43 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
 
     @classmethod
     def segment(cls, image, seedCoord, tolerance):
+        """
+        Do a flood-fill segmentation of an image, yielding a single contiguous
+        region with no holes.
+
+        :param image: A Numpy array with the image to be segmented.
+        :type image: numpy.ndarray
+        :param seedCoord: (X, Y) coordinates of the segmentation seed point.
+        :type seedCoord: tuple[int]
+        :param tolerance: The intensity tolerance value for the segmentation.
+        :type tolerance: int
+        :return: The mask image of the segmented region, with values 0 or 255.
+        :rtype: numpy.ndarray
+        """
         maskImage = cls._floodFill(
             image,
             seedCoord,
             tolerance,
-            connectivity=8,
-            padOutput=True
-        )
-        # TODO: for _binaryOpening to work, a new _floodFill must be run on the
-        #   mask image afterwards, or else _maskToContour will fail
-        # maskImage = cls._binaryOpening(maskImage, padded_input=True)
-        contourCoords = cls._maskToContour(
+            # Leaving padOutput allows the next operation to reach around
+            # edge-touching components
+            padOutput=True)
+
+        # Now, fill in any holes in the maskImage
+        maskImageBackground = cls._floodFill(
             maskImage,
-            paddedInput=True,
-            safe=False
-        )
-        return contourCoords
+            # The seed point is a part of the padded border of maskImage
+            seedCoord=(0, 0),
+            # The seed point and border will have a value of 1, but we want to
+            # also include the actual mask background, which has a value of 0
+            tolerance=1,
+            # A second additional layer of padding is not required
+            padOutput=False)
+        # Remove the extra padding
+        maskImageBackground = maskImageBackground[1:-1, 1:-1]
+        # Flip the background, to get the mask with holes removed
+        maskImage = numpy.invert(maskImageBackground)
+
+        return maskImage
 
     @classmethod
     def _floodFill(cls, image, seedCoord, tolerance, connectivity=8,
@@ -86,7 +107,7 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         :type image: numpy.ndarray
         :param seedCoord: The point inside the connected region where the
         segmentation will start.
-        :type seedCoord: list
+        :type seedCoord: tuple[int]
         :param tolerance: The maximum color/intensity difference between the
         seed point and a point in the connected region.
         :type tolerance: int
@@ -105,14 +126,14 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         # create padded mask to store output
         maskImage = numpy.zeros(
             image.shape[:2] + numpy.array([2, 2]), numpy.uint8)
-        fillValue = 1
+        fillValue = 255
 
         flags = 0
         flags |= connectivity
         flags |= (fillValue << 8)  # fill value is
         # compare each candidate to the seed, not its nearest neighbor; for
         #   lesion images, the gradient is too shallow for even very small
-        #   tolerances to work with a neared neighbor comparison
+        #   tolerances to work with a nearest neighbor comparison
         flags |= cv2.FLOODFILL_FIXED_RANGE
         flags |= cv2.FLOODFILL_MASK_ONLY
 
@@ -123,8 +144,7 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
             newVal=(0,) * 3,  # this is ignored, due to FLOODFILL_MASK_ONLY
             loDiff=(tolerance,) * 3,
             upDiff=(tolerance,) * 3,
-            flags=flags
-        )
+            flags=flags)
 
         if not padOutput:
             maskImage = maskImage[1:-1, 1:-1]
@@ -225,7 +245,7 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         return contours
 
     @classmethod
-    def _maskToContour(cls, maskImage, paddedInput=False, safe=True):
+    def maskToContour(cls, maskImage, paddedInput=False, safe=True):
         """
         Extract the longest contour line within a segmented label mask,
         using OpenCV.

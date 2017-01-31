@@ -37,5 +37,5 @@ class BaseSegmentationHelper(object):
         raise NotImplementedError()
 
     @classmethod
-    def segment(cls, image, seed_coord, tolerance):
+    def segment(cls, image, seedCoord, tolerance):
         raise NotImplementedError()

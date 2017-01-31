@@ -21,7 +21,6 @@ import datetime
 import six
 
 from bson import ObjectId
-import geojson
 import numpy
 from PIL import Image as PIL_Image, ImageDraw as PIL_ImageDraw
 
@@ -59,12 +58,12 @@ class Segmentation(Model):
         Run a lesion segmentation.
 
         :param image: A Girder Image item.
-        :param seedCoord: X, Y coordinates of the segmentation seed point.
+        :param seedCoord: (X, Y) coordinates of the segmentation seed point.
         :type seedCoord: tuple[int]
         :param tolerance: The intensity tolerance value for the segmentation.
         :type tolerance: int
-        :return: The lesion segmentation, as a GeoJSON Polygon Feature.
-        :rtype: geojson.Feature
+        :return: The lesion segmentation, as a mask.
+        :rtype: numpy.ndarray
         """
         Image = self.model('image', 'isic_archive')
         imageData = Image.imageData(image)
@@ -77,20 +76,19 @@ class Segmentation(Model):
             raise GirderException('seedCoord is out of bounds')
 
         # OpenCV is significantly faster at segmentation right now
-        contourCoords = OpenCVSegmentationHelper.segment(
+        mask = OpenCVSegmentationHelper.segment(
             imageData, seedCoord, tolerance)
 
-        contourFeature = geojson.Feature(
-            geometry=geojson.Polygon(
-                coordinates=(contourCoords.tolist(),)
-            ),
-            properties={
-                'source': 'autofill',
-                'seedPoint': seedCoord,
-                'tolerance': tolerance
-            }
+        return mask
+
+    def doContourSegmentation(self, image, seedCoord, tolerance):
+        mask = self.doSegmentation(image, seedCoord, tolerance)
+        contourCoords = OpenCVSegmentationHelper.maskToContour(
+            mask,
+            paddedInput=True,
+            safe=False
         )
-        return contourFeature
+        return contourCoords
 
     def createSegmentation(self, image, creator, mask, meta=None):
         File = self.model('file')
@@ -156,7 +154,7 @@ class Segmentation(Model):
             image = Image.load(segmentation['imageId'], force=True, exc=True)
 
         segmentationMask = self.maskData(segmentation)
-        segmentationContour = OpenCVSegmentationHelper._maskToContour(
+        segmentationContour = OpenCVSegmentationHelper.maskToContour(
             segmentationMask, paddedInput=False)
 
         pilImageData = PIL_Image.fromarray(Image.imageData(image))
