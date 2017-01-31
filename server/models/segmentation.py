@@ -66,7 +66,8 @@ class Segmentation(Model):
         :return: The lesion segmentation, as a GeoJSON Polygon Feature.
         :rtype: geojson.Feature
         """
-        imageData = self.model('image', 'isic_archive').imageData(image)
+        Image = self.model('image', 'isic_archive')
+        imageData = Image.imageData(image)
 
         if not(
             # The imageData has a shape of (rows, cols), the seed is (x, y)
@@ -97,7 +98,7 @@ class Segmentation(Model):
 
         now = datetime.datetime.utcnow()
 
-        if mask:
+        if mask is not None:
             mask = self._validateMask(mask, image)
             maskOutputStream = ScikitSegmentationHelper.writeImage(
                 mask, encoding='png')
@@ -111,7 +112,7 @@ class Segmentation(Model):
             'meta': meta or {}
         })
 
-        if mask:
+        if mask is not None:
             maskFile = Upload.uploadFromFile(
                 obj=maskOutputStream,
                 size=len(maskOutputStream.getvalue()),
@@ -130,7 +131,7 @@ class Segmentation(Model):
         # review will save the segmentation
         segmentation = self.review(
             segmentation=segmentation,
-            approved=bool(mask),
+            approved=mask is not None,
             user=creator,
             time=now)
 
