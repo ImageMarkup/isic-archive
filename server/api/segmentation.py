@@ -29,7 +29,8 @@ from girder.api.rest import Resource, RestException, loadmodel, rawResponse, \
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 
-from ..models.segmentation_helpers import ScikitSegmentationHelper
+from ..models.segmentation_helpers import ScikitSegmentationHelper, \
+    OpenCVSegmentationHelper
 
 
 class SegmentationResource(Resource):
@@ -121,20 +122,42 @@ class SegmentationResource(Resource):
         elif 'lesionBoundary' in bodyJson:
             lesionBoundary = bodyJson['lesionBoundary']
 
-            imageShape = (
-                image['meta']['acquisition']['pixelsY'],
-                image['meta']['acquisition']['pixelsX'])
-            mask = ScikitSegmentationHelper._contourToMask(
-                numpy.zeros(imageShape),
-                lesionBoundary['geometry']['coordinates'][0]
-            ).astype(numpy.uint8)
-            mask *= 255
-
             meta = lesionBoundary['properties']
             meta['startTime'] = datetime.datetime.utcfromtimestamp(
                 meta['startTime'] / 1000.0),
             meta['stopTime'] = datetime.datetime.utcfromtimestamp(
                 meta['stopTime'] / 1000.0)
+
+            if meta.get('source') == 'autofill':
+                # Since converting an autofill coordinate list back to a mask
+                # sometimes crates disconnected mask components, just redo the
+                # autofill segmentation internally.
+                # Note, this code will all go away once masks are used directly
+                # by the client.
+                seedCoord = meta['seedPoint']
+                if not (
+                    isinstance(seedCoord, list) and
+                    len(seedCoord) == 2 and
+                    all(isinstance(value, int) for value in seedCoord)
+                ):
+                    raise RestException(
+                        'Submitted "seed" must be a coordinate pair.')
+
+                tolerance = meta['tolerance']
+                if not isinstance(tolerance, int):
+                    raise RestException(
+                        'Submitted "tolerance" must be an integer.')
+
+                mask = Segmentation.doSegmentation(image, seedCoord, tolerance)
+            else:
+                imageShape = (
+                    image['meta']['acquisition']['pixelsY'],
+                    image['meta']['acquisition']['pixelsX'])
+                mask = ScikitSegmentationHelper._contourToMask(
+                    numpy.zeros(imageShape),
+                    lesionBoundary['geometry']['coordinates'][0]
+                ).astype(numpy.uint8)
+                mask *= 255
 
             segmentation = Segmentation.createSegmentation(
                 image=image,
