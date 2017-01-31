@@ -212,7 +212,10 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         )
 
         # each contour initially looks like [ [[0,1]], [[0,2]] ], so squeeze it
-        contours = map(numpy.squeeze, contours)
+        # note, don't use numpy.squeeze, as that will break singleton contours
+        contours = map(
+            lambda contour: contour[:, 0],
+            contours)
 
         # place a duplicate of the first value at the end
         contours = map(
