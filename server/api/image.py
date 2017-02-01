@@ -21,6 +21,7 @@ import json
 
 from bson import ObjectId
 from bson.errors import InvalidId
+import geojson
 
 from girder.api import access
 from girder.api.rest import Resource, RestException, loadmodel, rawResponse, \
@@ -232,9 +233,20 @@ class ImageResource(Resource):
             raise RestException('Submitted "tolerance" must be an integer.')
 
         try:
-            contourFeature = Segmentation.doSegmentation(
+            contourCoords = Segmentation.doContourSegmentation(
                 image, seedCoord, tolerance)
         except GirderException as e:
             raise RestException(e.message)
+
+        contourFeature = geojson.Feature(
+            geometry=geojson.Polygon(
+                coordinates=(contourCoords.tolist(),)
+            ),
+            properties={
+                'source': 'autofill',
+                'seedPoint': seedCoord,
+                'tolerance': tolerance
+            }
+        )
 
         return contourFeature

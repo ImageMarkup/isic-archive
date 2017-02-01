@@ -19,9 +19,15 @@ add_python_style_test(
   "${CMAKE_CURRENT_LIST_DIR}/server"
 )
 add_python_style_test(
+  python_static_analysis_isic_archive_tests
+  "${CMAKE_CURRENT_LIST_DIR}/plugin_tests"
+)
+add_python_style_test(
   python_static_analysis_isic_archive_scripts
   "${CMAKE_CURRENT_LIST_DIR}/scripts"
 )
+add_python_test(segmentation_helper PLUGIN isic_archive)
+
 
 add_eslint_test(
   isic_archive_external
