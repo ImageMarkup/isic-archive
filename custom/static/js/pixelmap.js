@@ -45,9 +45,6 @@ Pixelmap.prototype.loadImage = function (imageId) {
         url: '/api/v1/item/' + imageId + '/tiles',
         headers: {'Girder-Token': getCookie('girderToken')}
     }).done(_.bind(function (resp) {
-        // work around a GeoJS sizing bug
-        this.container.css('font-size', '0');
-
         var params = window.geo.util.pixelCoordinateParams(
             this.container, resp.sizeX, resp.sizeY, resp.tileWidth, resp.tileHeight);
 
@@ -76,7 +73,6 @@ Pixelmap.prototype.loadImage = function (imageId) {
                 }]
             })
         });
-        params.map.unitsPerPixel = Math.pow(2, params.map.max);
         params.map.max += 2;
         this.viewer = window.geo.map(params.map);
 

@@ -30,9 +30,6 @@ isic.views.ImageViewerWidget = isic.View.extend({
     },
 
     _createViewer: function () {
-        // work around a GeoJS sizing bug
-        this.$el.css('font-size', '0');
-
         var params = window.geo.util.pixelCoordinateParams(
             this.$el, this.sizeX, this.sizeY, this.tileWidth, this.tileHeight);
 
@@ -61,8 +58,6 @@ isic.views.ImageViewerWidget = isic.View.extend({
                 }]
             })
         });
-        // setting unitsPerPixel fixes a bug in pixelCoordinateParams
-        params.map.unitsPerPixel = Math.pow(2, params.map.max);
         params.map.max += 2;
         this.viewer = window.geo.map(params.map);
 
