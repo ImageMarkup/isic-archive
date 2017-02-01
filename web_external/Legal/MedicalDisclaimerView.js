@@ -10,6 +10,6 @@ isic.views.MedicalDisclaimerView = isic.View.extend({
     }
 });
 
-isic.router.route('medicalDisclaimer', 'medicalDisclaimer', function (id) {
+isic.router.route('medicalDisclaimer', 'medicalDisclaimer', function () {
     girder.events.trigger('g:navigateTo', isic.views.MedicalDisclaimerView);
 });

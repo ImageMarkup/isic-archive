@@ -134,6 +134,6 @@ isic.views.TasksView = isic.View.extend({
     }
 });
 
-isic.router.route('tasks', 'tasks', function (id) {
+isic.router.route('tasks', 'tasks', function () {
     girder.events.trigger('g:navigateTo', isic.views.TasksView);
 });

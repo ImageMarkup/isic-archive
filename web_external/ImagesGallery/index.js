@@ -68,6 +68,6 @@ isic.views.ImagesView = isic.View.extend({
     }
 });
 
-isic.router.route('images', 'images', function (id) {
+isic.router.route('images', 'images', function () {
     girder.events.trigger('g:navigateTo', isic.views.ImagesView);
 });

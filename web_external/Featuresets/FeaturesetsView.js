@@ -63,6 +63,6 @@ isic.views.FeaturesetsView = isic.View.extend({
     }
 });
 
-isic.router.route('featuresets', 'featuresets', function (id) {
+isic.router.route('featuresets', 'featuresets', function () {
     girder.events.trigger('g:navigateTo', isic.views.FeaturesetsView);
 });

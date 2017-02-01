@@ -73,6 +73,6 @@ isic.views.StudiesView = isic.View.extend({
     }
 });
 
-isic.router.route('studies', 'studies', function (id) {
+isic.router.route('studies', 'studies', function () {
     girder.events.trigger('g:navigateTo', isic.views.StudiesView);
 });
