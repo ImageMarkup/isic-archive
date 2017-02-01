@@ -7,7 +7,7 @@ isic.models.TaskModel = girder.Model.extend({
 });
 
 // Collection of tasks
-isic.collections.TaskCollection = girder.Collection.extend({
+isic.collections.TaskCollection = isic.Collection.extend({
     model: isic.models.TaskModel
 });
 
