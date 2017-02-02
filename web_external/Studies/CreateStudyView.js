@@ -171,7 +171,7 @@ isic.views.CreateStudyView = isic.View.extend({
     }
 });
 
-isic.router.route('createStudy', 'createStudy', function (id) {
+isic.router.route('createStudy', 'createStudy', function () {
     // Route to index if user isn't a study administrator
     if (girder.currentUser && girder.currentUser.canAdminStudy()) {
         girder.events.trigger('g:navigateTo', isic.views.CreateStudyView);

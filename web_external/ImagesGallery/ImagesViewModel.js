@@ -150,16 +150,12 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         pageDetails.filter = this.getFilterAstTree();
         var imagesDeferred = $.Deferred();
 
-        // upstream Girder contains a bug where parameters are not honored on a
-        // reset fetch, so set the parameters manually before triggering a fetch
-        // with (ignored) params set to null, and the reset flag set to true.
-        this.images.params = {
+        this.images.once('g:changed', function () {
+            imagesDeferred.resolve();
+        }, this).fetch({
             offset: pageDetails.offset,
             filter: JSON.stringify(this.getFilterAstTree())
-        };
-        this.images.once('g:changed', _.bind(function () {
-            imagesDeferred.resolve();
-        }, this)).fetch(null, true);
+        });
 
         return imagesDeferred.promise();
     },

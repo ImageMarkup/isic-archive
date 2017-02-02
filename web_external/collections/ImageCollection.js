@@ -1,4 +1,4 @@
-isic.collections.ImageCollection = girder.Collection.extend({
+isic.collections.ImageCollection = isic.Collection.extend({
     resourceName: 'image',
     model: isic.models.ImageModel
 });

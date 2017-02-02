@@ -686,6 +686,6 @@ isic.views.StudyResultsView = isic.View.extend({
 
 });
 
-isic.router.route('studyResults', 'studyResults', function (id) {
+isic.router.route('studyResults', 'studyResults', function () {
     girder.events.trigger('g:navigateTo', isic.views.StudyResultsView);
 });

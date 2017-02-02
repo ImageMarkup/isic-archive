@@ -1,4 +1,4 @@
-isic.collections.FeaturesetCollection = girder.Collection.extend({
+isic.collections.FeaturesetCollection = isic.Collection.extend({
     resourceName: 'featureset',
     model: isic.models.FeaturesetModel
 });

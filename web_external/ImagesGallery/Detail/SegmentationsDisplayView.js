@@ -84,17 +84,12 @@ isic.views.SegmentationsDisplayView = isic.View.extend({
         this.render();
 
         if (this.image.id) {
-            // upstream Girder contains a bug where parameters are not honored on
-            // a reset fetch, so set the parameters manually before triggering a
-            // fetch with (ignored) params set to null, and the reset flag set to
-            // true.
-            this.segmentations.params = {
+            this.segmentations.once('g:changed', function () {
+                this.render();
+            }, this).fetch({
                 imageId: this.image.id,
                 limit: 0
-            };
-            this.segmentations.once('g:changed', _.bind(function () {
-                this.render();
-            }, this)).fetch(null, true);
+            });
         }
     }
 });

@@ -7,7 +7,7 @@ isic.models.TaskModel = girder.Model.extend({
 });
 
 // Collection of tasks
-isic.collections.TaskCollection = girder.Collection.extend({
+isic.collections.TaskCollection = isic.Collection.extend({
     model: isic.models.TaskModel
 });
 
@@ -134,6 +134,6 @@ isic.views.TasksView = isic.View.extend({
     }
 });
 
-isic.router.route('tasks', 'tasks', function (id) {
+isic.router.route('tasks', 'tasks', function () {
     girder.events.trigger('g:navigateTo', isic.views.TasksView);
 });

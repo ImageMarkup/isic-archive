@@ -10,6 +10,6 @@ isic.views.TermsOfUseView = isic.View.extend({
     }
 });
 
-isic.router.route('termsOfUse', 'termsOfUse', function (id) {
+isic.router.route('termsOfUse', 'termsOfUse', function () {
     girder.events.trigger('g:navigateTo', isic.views.TermsOfUseView);
 });

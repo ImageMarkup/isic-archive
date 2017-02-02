@@ -300,7 +300,7 @@ isic.views.UploadDatasetRequestView = isic.View.extend({
     }
 });
 
-isic.router.route('uploadDataset', 'uploadDataset', function (id) {
+isic.router.route('uploadDataset', 'uploadDataset', function () {
     // Route registered users to upload dataset view or upload dataset request view.
     // Route anonymous users to index.
     if (girder.currentUser) {

@@ -4,10 +4,10 @@ isic.views.ImageViewerWidget = isic.View.extend({
 
         this.renderedModelId = null;
 
-        this.listenTo(this.model, 'change', this.fetchTileInfo);
+        this.listenTo(this.model, 'change:_id', this._fetchTileInfo);
     },
 
-    fetchTileInfo: function () {
+    _fetchTileInfo: function () {
         if (!this.model.id) {
             this.destroyViewer();
             return;
@@ -29,33 +29,7 @@ isic.views.ImageViewerWidget = isic.View.extend({
         }, this));
     },
 
-    render: function () {
-        // Do nothing if model is not set
-        if (!this.model.id) {
-            return this;
-        }
-
-        // Ensure tile info is available before rendering
-        if (_.isUndefined(this.sizeX)) {
-            this.fetchTileInfo();
-            return this;
-        }
-
-        // Require map element to have a nonzero size
-        if (this.$el.innerWidth() === 0 || this.$el.innerHeight() === 0) {
-            return this;
-        }
-
-        // Do nothing if already rendered for the current model
-        if (this.model.id === this.renderedModelId) {
-            return this;
-        }
-
-        this.renderedModelId = this.model.id;
-
-        // work around a GeoJS sizing bug
-        this.$el.css('font-size', '0');
-
+    _createViewer: function () {
         var params = window.geo.util.pixelCoordinateParams(
             this.$el, this.sizeX, this.sizeY, this.tileWidth, this.tileHeight);
 
@@ -84,8 +58,6 @@ isic.views.ImageViewerWidget = isic.View.extend({
                 }]
             })
         });
-        // setting unitsPerPixel fixes a bug in pixelCoordinateParams
-        params.map.unitsPerPixel = Math.pow(2, params.map.max);
         params.map.max += 2;
         this.viewer = window.geo.map(params.map);
 
@@ -95,6 +67,33 @@ isic.views.ImageViewerWidget = isic.View.extend({
                 '/tiles/zxy/{z}/{x}/{y}'
         });
         this.imageLayer = this.viewer.createLayer('osm', params.layer);
+    },
+
+    render: function () {
+        // Do nothing if model is not set
+        if (!this.model.id) {
+            return this;
+        }
+
+        // Ensure tile info is available before rendering
+        if (_.isUndefined(this.sizeX)) {
+            this._fetchTileInfo();
+            return this;
+        }
+
+        // Require map element to have a nonzero size
+        if (this.$el.innerWidth() === 0 || this.$el.innerHeight() === 0) {
+            return this;
+        }
+
+        // Do nothing if already rendered for the current model
+        if (this.model.id === this.renderedModelId) {
+            return this;
+        }
+
+        this.renderedModelId = this.model.id;
+
+        this._createViewer();
 
         return this;
     },

@@ -7,9 +7,9 @@ isic.views.StudyView = isic.View.extend({
                     study: this.study,
                     parentView: this
                 }).on('g:saved', function () {
-                    this.study.once('g:fetched', _.bind(function () {
+                    this.study.once('g:fetched', function () {
                         this.render();
-                    }, this)).fetch();
+                    }, this).fetch();
                 }, this);
             }
             this.studyAddUserWidget.render();

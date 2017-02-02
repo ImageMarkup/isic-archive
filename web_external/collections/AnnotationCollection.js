@@ -1,4 +1,4 @@
-isic.collections.AnnotationCollection = girder.Collection.extend({
+isic.collections.AnnotationCollection = isic.Collection.extend({
     resourceName: 'annotation',
     model: isic.models.AnnotationModel
 });
