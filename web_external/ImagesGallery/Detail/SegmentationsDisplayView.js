@@ -84,9 +84,9 @@ isic.views.SegmentationsDisplayView = isic.View.extend({
         this.render();
 
         if (this.image.id) {
-            this.segmentations.once('g:changed', _.bind(function () {
+            this.segmentations.once('g:changed', function () {
                 this.render();
-            }, this)).fetch({
+            }, this).fetch({
                 imageId: this.image.id,
                 limit: 0
             });

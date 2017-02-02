@@ -150,9 +150,9 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         pageDetails.filter = this.getFilterAstTree();
         var imagesDeferred = $.Deferred();
 
-        this.images.once('g:changed', _.bind(function () {
+        this.images.once('g:changed', function () {
             imagesDeferred.resolve();
-        }, this)).fetch({
+        }, this).fetch({
             offset: pageDetails.offset,
             filter: JSON.stringify(this.getFilterAstTree())
         });

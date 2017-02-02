@@ -7,10 +7,10 @@ isic.views.StudyAddUserWidget = isic.View.extend({
 
             var study = new isic.models.StudyModel({
                 _id: this.study.id
-            }).once('g:addedUser', _.bind(function () {
+            }).once('g:addedUser', function () {
                 this.trigger('g:saved');
                 $('.modal').modal('hide');
-            }, this)).once('g:error', function () {
+            }, this).once('g:error', function () {
                 $('.modal').modal('hide');
             });
             study.addUser(this.user.id);
