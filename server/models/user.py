@@ -17,6 +17,7 @@
 #  limitations under the License.
 ###############################################################################
 
+from girder.constants import AccessType
 from girder.models.user import User as UserModel
 from girder.models.model_base import AccessException, ValidationException
 
@@ -24,6 +25,9 @@ from girder.models.model_base import AccessException, ValidationException
 class User(UserModel):
     def initialize(self):
         super(User, self).initialize()
+
+        # Note, this will not expose this field though the upstream User API
+        self.exposeFields(level=AccessType.READ, fields=('acceptTerms',))
 
         # self.summaryFields = ['_id', 'login', 'firstName', 'lastName']
 
@@ -51,6 +55,17 @@ class User(UserModel):
         if not group:
             raise ValidationException('Could not load group: %s' % groupName)
         return group['_id'] in user['groups']
+
+    def canAcceptTerms(self, user):
+        return user.get('acceptTerms', False)
+
+    def acceptTerms(self, user):
+        user['acceptTerms'] = True
+
+    def requireAcceptTerms(self, user):
+        if not self.canAcceptTerms(user):
+            raise AccessException(
+                'The user has not accepted the Terms of Service.')
 
     def canCreateDataset(self, user):
         return self._isAdminOrMember(user, 'Dataset Contributors')

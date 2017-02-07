@@ -10,6 +10,23 @@ isic.models.UserModel = girder.models.UserModel.extend({
         return name;
     },
 
+    canAcceptTerms: function () {
+        return this.get('permissions').acceptTerms === true;
+    },
+    setAcceptTerms: function (successCallback) {
+        girder.restRequest({
+            path: 'user/acceptTerms',
+            type: 'POST'
+        }).done(_.bind(function (resp) {
+            if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
+                // Directly update user permissions
+                this.get('permissions').acceptTerms = true;
+                this.trigger('change:permissions');
+                successCallback(resp);
+            }
+            // This should not fail
+        }, this));
+    },
     canCreateDataset: function () {
         return this.get('permissions').createDataset;
     },

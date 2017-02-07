@@ -69,5 +69,9 @@ isic.views.ImagesView = isic.View.extend({
 });
 
 isic.router.route('images', 'images', function () {
-    girder.events.trigger('g:navigateTo', isic.views.ImagesView);
+    var nextView = isic.views.ImagesView;
+    if (!isic.views.TermsAcceptanceView.hasAcceptedTerms()) {
+        nextView = isic.views.TermsAcceptanceView;
+    }
+    girder.events.trigger('g:navigateTo', nextView);
 });

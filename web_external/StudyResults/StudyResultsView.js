@@ -687,5 +687,9 @@ isic.views.StudyResultsView = isic.View.extend({
 });
 
 isic.router.route('studyResults', 'studyResults', function () {
-    girder.events.trigger('g:navigateTo', isic.views.StudyResultsView);
+    var nextView = isic.views.StudyResultsView;
+    if (!isic.views.TermsAcceptanceView.hasAcceptedTerms()) {
+        nextView = isic.views.TermsAcceptanceView;
+    }
+    girder.events.trigger('g:navigateTo', nextView);
 });

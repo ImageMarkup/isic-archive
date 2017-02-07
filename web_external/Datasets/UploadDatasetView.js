@@ -301,17 +301,20 @@ isic.views.UploadDatasetRequestView = isic.View.extend({
 });
 
 isic.router.route('uploadDataset', 'uploadDataset', function () {
-    // Route registered users to upload dataset view or upload dataset request view.
-    // Route anonymous users to index.
     if (girder.currentUser) {
-        var view;
-        if (girder.currentUser.canCreateDataset()) {
-            view = isic.views.UploadDatasetView;
-        } else {
-            view = isic.views.UploadDatasetRequestView;
+        // Registered users must:
+        //  (1) Accept the TOS
+        //  (2) Request and receive create dataset access
+        // before being able to see the upload dataset view
+        var nextView = isic.views.UploadDatasetView;
+        if (!isic.views.TermsAcceptanceView.hasAcceptedTerms()) {
+            nextView = isic.views.TermsAcceptanceView;
+        } else if (!girder.currentUser.canCreateDataset()) {
+            nextView = isic.views.UploadDatasetRequestView;
         }
-        girder.events.trigger('g:navigateTo', view);
+        girder.events.trigger('g:navigateTo', nextView);
     } else {
+        // Anonymous users should not be here, so route to home page
         isic.router.navigate('', {trigger: true});
     }
 });

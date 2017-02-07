@@ -64,5 +64,9 @@ isic.views.FeaturesetsView = isic.View.extend({
 });
 
 isic.router.route('featuresets', 'featuresets', function () {
-    girder.events.trigger('g:navigateTo', isic.views.FeaturesetsView);
+    var nextView = isic.views.FeaturesetsView;
+    if (!isic.views.TermsAcceptanceView.hasAcceptedTerms()) {
+        nextView = isic.views.TermsAcceptanceView;
+    }
+    girder.events.trigger('g:navigateTo', nextView);
 });

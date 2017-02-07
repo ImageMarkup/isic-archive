@@ -32,6 +32,7 @@ def attachUserPermissions(userResponse):
     user = User.load(userResponse['_id'], exc=True, force=True)
 
     userResponse['permissions'] = {
+        'acceptTerms': User.canAcceptTerms(user),
         'createDataset': User.canCreateDataset(user),
         'reviewDataset': User.canReviewDataset(user),
         'segmentationSkill': User.getSegmentationSkill(user),
@@ -108,6 +109,21 @@ def requestCreateDatasetPermission(params):
     return resp
 
 
+def acceptTerms(params):
+    User = ModelImporter.model('user', 'isic_archive')
+
+    currentUser = getCurrentUser()
+    if not User.canAcceptTerms(currentUser):
+        User.acceptTerms(currentUser)
+        User.save(currentUser)
+
+    resp = {
+        'message': 'Terms of Service accepted.',
+        'extra': 'hasPermission'
+    }
+    return resp
+
+
 def attachUserApi(user):
     events.bind('rest.get.user/authentication.after',
                 'onGetUserAuthentication', onGetUserAuthentication)
@@ -117,3 +133,5 @@ def attachUserApi(user):
                 'onPostUser', onPostUser)
     user.route('POST', ('requestCreateDatasetPermission',),
                requestCreateDatasetPermission)
+    user.route('POST', ('acceptTerms',),
+               acceptTerms)

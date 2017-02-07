@@ -1,0 +1,18 @@
+.isic-terms-acceptance
+  label.control-label(for="isic-terms-agreement")
+    | Terms of Use
+  #isic-terms-agreement.isic-legal-container
+    .isic-legal-content
+      include legal/terms_of_use.html
+
+  .isic-terms-agreement-link-container
+    a.isic-terms-agreement-link(href="#{documentsRoot}/Terms of Use.txt" download="Terms of Use.txt")
+      i.icon-doc-text
+      | Download as text
+    a.isic-terms-agreement-link(href="#{documentsRoot}/Terms of Use.pdf" download="Terms of Use.pdf")
+      i.icon-file-pdf
+      | Download as PDF
+
+  p
+    button#isic-terms-accept.btn.btn-primary.btn-md I Accept
+    button#isic-terms-reject.btn.btn-primary.btn-md I Decline

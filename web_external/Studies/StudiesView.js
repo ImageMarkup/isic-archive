@@ -74,5 +74,9 @@ isic.views.StudiesView = isic.View.extend({
 });
 
 isic.router.route('studies', 'studies', function () {
-    girder.events.trigger('g:navigateTo', isic.views.StudiesView);
+    var nextView = isic.views.StudiesView;
+    if (!isic.views.TermsAcceptanceView.hasAcceptedTerms()) {
+        nextView = isic.views.TermsAcceptanceView;
+    }
+    girder.events.trigger('g:navigateTo', nextView);
 });
