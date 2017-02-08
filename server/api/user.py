@@ -109,6 +109,9 @@ def requestCreateDatasetPermission(params):
     return resp
 
 
+@access.user
+@describeRoute(
+    Description('Accept Terms of Service.'))
 def acceptTerms(params):
     User = ModelImporter.model('user', 'isic_archive')
 
