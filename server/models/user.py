@@ -17,6 +17,8 @@
 #  limitations under the License.
 ###############################################################################
 
+import datetime
+
 from girder.constants import AccessType
 from girder.models.user import User as UserModel
 from girder.models.model_base import AccessException, ValidationException
@@ -57,10 +59,10 @@ class User(UserModel):
         return group['_id'] in user['groups']
 
     def canAcceptTerms(self, user):
-        return user.get('acceptTerms', False)
+        return user.get('acceptTerms') is not None
 
     def acceptTerms(self, user):
-        user['acceptTerms'] = True
+        user['acceptTerms'] = datetime.datetime.utcnow()
 
     def requireAcceptTerms(self, user):
         if not self.canAcceptTerms(user):
