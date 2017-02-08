@@ -51,19 +51,25 @@ isic.views.UploadDatasetView = isic.View.extend({
         this.uploadedCsvFiles = [];
         this.uploadFolder = null;
 
+        this.termsOfUseWidget = new isic.views.TermsOfUseWidget({
+            parentView: this
+        });
+
         this.render();
     },
 
     render: function () {
         this.$el.html(isic.templates.uploadDataset({
-            user: girder.currentUser,
-            documentsRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/documents'
+            user: girder.currentUser
         }));
 
         if (!this.uploadWidget) {
             this.initializeUploadWidget();
         }
         this.updateUploadWidget();
+
+        this.termsOfUseWidget.setElement(
+            this.$('#isic-terms-of-use-container')).render();
 
         this.$('input#isic-dataset-name').focus();
 

@@ -16,14 +16,21 @@ isic.views.TermsAcceptanceView = isic.View.extend({
             girder.events.trigger('g:navigateTo', isic.views.FrontPageView);
         }
     },
+
     initialize: function () {
+        this.termsOfUseWidget = new isic.views.TermsOfUseWidget({
+            parentView: this
+        });
+
         this.render();
     },
 
     render: function () {
-        this.$el.html(isic.templates.termsAcceptancePage({
-            documentsRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/documents'
-        }));
+        this.$el.html(isic.templates.termsAcceptancePage());
+
+        this.termsOfUseWidget.setElement(
+            this.$('#isic-terms-of-use-container')).render();
+
         return this;
     }
 }, {
