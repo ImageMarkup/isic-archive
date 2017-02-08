@@ -1,12 +1,15 @@
 isic.views.TermsAcceptanceView = isic.View.extend({
     events: {
         'click #isic-terms-accept': function (event) {
+            // Disable buttons while request is pending
+            var buttons = this.$('.isic-terms-agreement-button-container button');
+            buttons.prop('disabled', true);
+
             if (girder.currentUser) {
                 girder.currentUser.setAcceptTerms(function () {
                     // Refresh page
                     Backbone.history.loadUrl();
                 });
-                // TODO: disable buttons while request is pending
             } else {
                 window.sessionStorage.setItem('acceptTerms', 'true');
                 Backbone.history.loadUrl();
