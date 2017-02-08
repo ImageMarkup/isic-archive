@@ -16,7 +16,8 @@ isic.views.TermsAcceptanceView = isic.View.extend({
             }
         },
         'click #isic-terms-reject': function (event) {
-            girder.events.trigger('g:navigateTo', isic.views.FrontPageView);
+            // Route to home page
+            isic.router.navigate('', {trigger: true});
         }
     },
 
