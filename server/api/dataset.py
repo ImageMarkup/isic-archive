@@ -152,7 +152,7 @@ class DatasetResource(Resource):
         return Dataset.ingestDataset(
             uploadFolder=uploadFolder, user=user, name=name, owner=owner,
             description=description, license=licenseValue, signature=signature,
-            anonymous=anonymous, attribution=attribution)
+            anonymous=anonymous, attribution=attribution, sendMail=True)
 
     @describeRoute(
         Description('Get a list of images in this dataset to QC Review.')
