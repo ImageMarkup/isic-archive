@@ -5,7 +5,7 @@ isic.views.TermsAcceptanceView = isic.View.extend({
             var buttons = this.$('.isic-terms-agreement-button-container button');
             buttons.prop('disabled', true);
 
-            girder.models.UserModel.currentUserSetAcceptTerms(function () {
+            isic.models.UserModel.currentUserSetAcceptTerms(function () {
                 // Refresh page
                 Backbone.history.loadUrl();
             });
