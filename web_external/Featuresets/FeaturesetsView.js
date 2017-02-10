@@ -65,7 +65,7 @@ isic.views.FeaturesetsView = isic.View.extend({
 
 isic.router.route('featuresets', 'featuresets', function () {
     var nextView = isic.views.FeaturesetsView;
-    if (!isic.views.TermsAcceptanceView.hasAcceptedTerms()) {
+    if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
         nextView = isic.views.TermsAcceptanceView;
     }
     girder.events.trigger('g:navigateTo', nextView);

@@ -136,7 +136,7 @@ isic.views.TasksView = isic.View.extend({
 
 isic.router.route('tasks', 'tasks', function () {
     var nextView = isic.views.TasksView;
-    if (!isic.views.TermsAcceptanceView.hasAcceptedTerms()) {
+    if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
         nextView = isic.views.TermsAcceptanceView;
     }
     girder.events.trigger('g:navigateTo', nextView);

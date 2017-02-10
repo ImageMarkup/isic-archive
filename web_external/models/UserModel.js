@@ -43,4 +43,23 @@ isic.models.UserModel = girder.models.UserModel.extend({
     canAdminStudy: function () {
         return this.get('permissions').adminStudy;
     }
-});
+}, {
+    // Static methods
+    currentUserCanAcceptTerms: function () {
+        if (girder.currentUser) {
+            return girder.currentUser.canAcceptTerms();
+        } else {
+            return window.sessionStorage.getItem('acceptTerms') === 'true';
+        }
+    },
+    currentUserSetAcceptTerms: function (successCallback) {
+        if (girder.currentUser) {
+            girder.currentUser.setAcceptTerms(successCallback);
+        } else {
+            window.sessionStorage.setItem('acceptTerms', 'true');
+            successCallback();
+        }
+    }
+}
+
+);

@@ -688,7 +688,7 @@ isic.views.StudyResultsView = isic.View.extend({
 
 isic.router.route('studyResults', 'studyResults', function () {
     var nextView = isic.views.StudyResultsView;
-    if (!isic.views.TermsAcceptanceView.hasAcceptedTerms()) {
+    if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
         nextView = isic.views.TermsAcceptanceView;
     }
     girder.events.trigger('g:navigateTo', nextView);

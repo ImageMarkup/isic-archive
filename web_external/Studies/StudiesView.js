@@ -75,7 +75,7 @@ isic.views.StudiesView = isic.View.extend({
 
 isic.router.route('studies', 'studies', function () {
     var nextView = isic.views.StudiesView;
-    if (!isic.views.TermsAcceptanceView.hasAcceptedTerms()) {
+    if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
         nextView = isic.views.TermsAcceptanceView;
     }
     girder.events.trigger('g:navigateTo', nextView);

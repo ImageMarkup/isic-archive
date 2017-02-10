@@ -313,7 +313,7 @@ isic.router.route('uploadDataset', 'uploadDataset', function () {
         //  (2) Request and receive create dataset access
         // before being able to see the upload dataset view
         var nextView = isic.views.UploadDatasetView;
-        if (!isic.views.TermsAcceptanceView.hasAcceptedTerms()) {
+        if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
             nextView = isic.views.TermsAcceptanceView;
         } else if (!girder.currentUser.canCreateDataset()) {
             nextView = isic.views.UploadDatasetRequestView;

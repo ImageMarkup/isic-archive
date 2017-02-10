@@ -5,15 +5,10 @@ isic.views.TermsAcceptanceView = isic.View.extend({
             var buttons = this.$('.isic-terms-agreement-button-container button');
             buttons.prop('disabled', true);
 
-            if (girder.currentUser) {
-                girder.currentUser.setAcceptTerms(function () {
-                    // Refresh page
-                    Backbone.history.loadUrl();
-                });
-            } else {
-                window.sessionStorage.setItem('acceptTerms', 'true');
+            girder.models.UserModel.currentUserSetAcceptTerms(function () {
+                // Refresh page
                 Backbone.history.loadUrl();
-            }
+            });
         },
         'click #isic-terms-reject': function (event) {
             // Route to home page
@@ -36,15 +31,6 @@ isic.views.TermsAcceptanceView = isic.View.extend({
             this.$('#isic-terms-of-use-container')).render();
 
         return this;
-    }
-}, {
-    // Static methods
-    hasAcceptedTerms: function () {
-        if (girder.currentUser) {
-            return girder.currentUser.canAcceptTerms();
-        } else {
-            return window.sessionStorage.getItem('acceptTerms') === 'true';
-        }
     }
 });
 

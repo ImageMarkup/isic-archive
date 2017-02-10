@@ -70,7 +70,7 @@ isic.views.ImagesView = isic.View.extend({
 
 isic.router.route('images', 'images', function () {
     var nextView = isic.views.ImagesView;
-    if (!isic.views.TermsAcceptanceView.hasAcceptedTerms()) {
+    if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
         nextView = isic.views.TermsAcceptanceView;
     }
     girder.events.trigger('g:navigateTo', nextView);
