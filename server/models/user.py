@@ -41,6 +41,11 @@ class User(UserModel):
                 ['_id', 'login', 'firstName', 'lastName']
             }
         else:
+            # For 4 characters of a Base32 encoding, we have 20 bits of entropy,
+            # or 1,048,576 possible combinations. Per the formula at
+            # http://preshing.com/20110504/hash-collision-probabilities/
+            # and assuming 100 (active) users, we have a collision probability
+            # of 0.47%.
             obfuscatedName = base64.b32encode(
                 hashlib.sha256(user['login'].encode('utf8')).digest()
             ).decode('ascii')[:4]
