@@ -81,17 +81,22 @@ def requestCreateDatasetPermission(params):
             raise RestException('Could not load group: %s' % groupName)
         resp['message'] = 'Dataset Contributor access requested. Please wait ' \
             'for an administrator to approve your request.'
-        requests = Group.getFullRequestList(group)
-        ids = [request['id'] for request in requests]
-        if not currentUser['_id'] in ids:
+
+        for request in Group.getFullRequestList(group):
+            if request['id'] == currentUser['_id']:
+                # Request for this user is already pending
+                break
+        else:
+            # No request for this user yet
             Group.joinGroup(group, currentUser)
 
             # Send email to group moderators and administrators
             groupAcl = Group.getFullAccessList(group)
-            groupModerators = [user for user
-                               in groupAcl['users']
-                               if user['level'] >= AccessType.WRITE]
-            emails = [getUserEmail(user) for user in groupModerators]
+            groupModeratorEmails = [
+                getUserEmail(user)
+                for user in groupAcl['users']
+                if user['level'] >= AccessType.WRITE
+            ]
             host = mail_utils.getEmailUrlPrefix()
             html = mail_utils.renderTemplate(
                 'datasetContributorRequest.mako',
@@ -101,7 +106,7 @@ def requestCreateDatasetPermission(params):
                     'host': host,
                 })
             mail_utils.sendEmail(
-                to=emails,
+                to=groupModeratorEmails,
                 subject='ISIC Archive: Dataset Contributor Request',
                 text=html)
 

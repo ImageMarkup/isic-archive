@@ -261,7 +261,24 @@ isic.views.UploadDatasetRequestView = isic.View.extend({
         'submit #isic-dataset-form': function (event) {
             event.preventDefault();
             this.$('#isic-dataset-submit').prop('disabled', true);
-            this.requestCreateDatasetPermission();
+
+            girder.currentUser.setCanCreateDataset(
+                // Success callback
+                function (resp) {
+                    // Refresh page
+                    Backbone.history.loadUrl();
+                },
+                // Failure (or request pending) callback
+                function (resp) {
+                    // Display notification and route to index
+                    isic.showAlertDialog({
+                        text: resp.message,
+                        callback: function () {
+                            isic.router.navigate('', {trigger: true});
+                        }
+                    });
+                }
+            );
         }
     },
 
@@ -275,28 +292,6 @@ isic.views.UploadDatasetRequestView = isic.View.extend({
         }));
 
         return this;
-    },
-
-    requestCreateDatasetPermission: function () {
-        girder.restRequest({
-            path: 'user/requestCreateDatasetPermission',
-            type: 'POST'
-        }).done(_.bind(function (resp) {
-            if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
-                // Directly update user permissions
-                girder.currentUser.setCanCreateDataset(true);
-                // Refresh page
-                Backbone.history.loadUrl();
-            } else {
-                // Display notification and route to index
-                isic.showAlertDialog({
-                    text: resp.message,
-                    callback: function () {
-                        isic.router.navigate('', {trigger: true});
-                    }
-                });
-            }
-        }, this));
     }
 });
 
