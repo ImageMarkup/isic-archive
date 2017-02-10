@@ -26,7 +26,7 @@ from girder.constants import AccessType
 from girder.models.folder import Folder as FolderModel
 from girder.models.model_base import GirderException, ValidationException
 from girder.models.notification import ProgressState
-from girder.utility import assetstore_utilities
+from girder.utility import assetstore_utilities, mail_utils
 from girder.utility.progress import ProgressContext
 
 from ..upload import handleCsv, ZipFileOpener
@@ -145,7 +145,8 @@ class Dataset(FolderModel):
         return super(Dataset, self).validate(doc, **kwargs)
 
     def ingestDataset(self, uploadFolder, user, name, owner, description,
-                      license, signature, anonymous, attribution):
+                      license, signature, anonymous, attribution,
+                      sendMail=False):
         """
         Ingest an uploaded dataset. This upload folder is expected to contain a
         .zip file of images and a .csv file that contains metadata about the
@@ -154,6 +155,7 @@ class Dataset(FolderModel):
         """
         Folder = self.model('folder')
         Item = self.model('item')
+        Group = self.model('group')
 
         if not uploadFolder:
             raise ValidationException(
@@ -215,6 +217,38 @@ class Dataset(FolderModel):
 
         # Delete uploaded files
         # Folder.clean(uploadFolder)
+
+        # Send email confirmations
+        if sendMail:
+            host = mail_utils.getEmailUrlPrefix()
+            params = {
+                'group': False,
+                'host': host,
+                'user': user,
+                'name': name,
+                'owner': owner,
+                'description': description,
+                'license': license,
+                'signature': signature,
+                'attribution': 'Anonymous' if anonymous else attribution
+            }
+            subject = 'ISIC Archive: Dataset Upload Confirmation'
+            templateFilename = 'ingestDatasetConfirmation.mako'
+
+            # Mail user
+            html = mail_utils.renderTemplate(templateFilename, params)
+            mail_utils.sendEmail(to=user['email'], subject=subject, text=html)
+
+            # Mail 'Dataset QC Reviewers' group
+            groupName = 'Dataset QC Reviewers'
+            group = Group.findOne({'name': groupName})
+            if not group:
+                raise GirderException('Could not load group: %s.' % groupName)
+            emails = [member['email'] for member in Group.listMembers(group)]
+            if emails:
+                params['group'] = True
+                html = mail_utils.renderTemplate(templateFilename, params)
+                mail_utils.sendEmail(to=emails, subject=subject, text=html)
 
         return dataset
 
