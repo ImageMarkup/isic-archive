@@ -49,14 +49,14 @@ isic.models.UserModel = girder.models.UserModel.extend({
         if (girder.currentUser) {
             return girder.currentUser.canAcceptTerms();
         } else {
-            return window.sessionStorage.getItem('acceptTerms') === 'true';
+            return window.localStorage.getItem('acceptTerms') === 'true';
         }
     },
     currentUserSetAcceptTerms: function (successCallback) {
         if (girder.currentUser) {
             girder.currentUser.setAcceptTerms(successCallback);
         } else {
-            window.sessionStorage.setItem('acceptTerms', 'true');
+            window.localStorage.setItem('acceptTerms', 'true');
             successCallback();
         }
     }
