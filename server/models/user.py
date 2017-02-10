@@ -67,7 +67,7 @@ class User(UserModel):
     def requireAcceptTerms(self, user):
         if not self.canAcceptTerms(user):
             raise AccessException(
-                'The user has not accepted the Terms of Service.')
+                'The user has not accepted the Terms of Use.')
 
     def canCreateDataset(self, user):
         return self._isAdminOrMember(user, 'Dataset Contributors')

@@ -111,7 +111,7 @@ def requestCreateDatasetPermission(params):
 
 @access.user
 @describeRoute(
-    Description('Accept Terms of Service.'))
+    Description('Accept Terms of Use.'))
 def acceptTerms(params):
     User = ModelImporter.model('user', 'isic_archive')
 
@@ -121,7 +121,7 @@ def acceptTerms(params):
         User.save(currentUser)
 
     resp = {
-        'message': 'Terms of Service accepted.',
+        'message': 'Terms of Use accepted.',
         'extra': 'hasPermission'
     }
     return resp
