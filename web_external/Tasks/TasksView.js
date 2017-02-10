@@ -135,5 +135,9 @@ isic.views.TasksView = isic.View.extend({
 });
 
 isic.router.route('tasks', 'tasks', function () {
-    girder.events.trigger('g:navigateTo', isic.views.TasksView);
+    var nextView = isic.views.TasksView;
+    if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
+        nextView = isic.views.TermsAcceptanceView;
+    }
+    girder.events.trigger('g:navigateTo', nextView);
 });

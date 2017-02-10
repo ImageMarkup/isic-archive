@@ -56,19 +56,9 @@
           a#isic-upload-show-license-info-link.isic-dataset-agreement-link
             | Help me choose
       .form-group
-        label.control-label(for="isic-dataset-agreement")
+        label.control-label
           | Contributor license agreement
-        #isic-dataset-agreement.isic-legal-container
-          .isic-legal-content
-            include ../Legal/legal/terms_of_use.html
-
-        .isic-dataset-agreement-link-container
-          a.isic-dataset-agreement-link(href="#{documentsRoot}/Terms of Use.txt" download="Terms of Use.txt")
-            i.icon-doc-text
-            | Download as text
-          a.isic-dataset-agreement-link(href="#{documentsRoot}/Terms of Use.pdf" download="Terms of Use.pdf")
-            i.icon-file-pdf
-            | Download as PDF
+        #isic-terms-of-use-container
       .form-group
         label(for="isic-dataset-agreement-signature") Electronic signature
         input#isic-dataset-agreement-signature.form-control.input-sm(

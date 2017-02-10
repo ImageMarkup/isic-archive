@@ -51,19 +51,25 @@ isic.views.UploadDatasetView = isic.View.extend({
         this.uploadedCsvFiles = [];
         this.uploadFolder = null;
 
+        this.termsOfUseWidget = new isic.views.TermsOfUseWidget({
+            parentView: this
+        });
+
         this.render();
     },
 
     render: function () {
         this.$el.html(isic.templates.uploadDataset({
-            user: girder.currentUser,
-            documentsRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/documents'
+            user: girder.currentUser
         }));
 
         if (!this.uploadWidget) {
             this.initializeUploadWidget();
         }
         this.updateUploadWidget();
+
+        this.termsOfUseWidget.setElement(
+            this.$('#isic-terms-of-use-container')).render();
 
         this.$('input#isic-dataset-name').focus();
 
@@ -296,17 +302,20 @@ isic.views.UploadDatasetRequestView = isic.View.extend({
 });
 
 isic.router.route('uploadDataset', 'uploadDataset', function () {
-    // Route registered users to upload dataset view or upload dataset request view.
-    // Route anonymous users to index.
     if (girder.currentUser) {
-        var view;
-        if (girder.currentUser.canCreateDataset()) {
-            view = isic.views.UploadDatasetView;
-        } else {
-            view = isic.views.UploadDatasetRequestView;
+        // Registered users must:
+        //  (1) Accept the TOS
+        //  (2) Request and receive create dataset access
+        // before being able to see the upload dataset view
+        var nextView = isic.views.UploadDatasetView;
+        if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
+            nextView = isic.views.TermsAcceptanceView;
+        } else if (!girder.currentUser.canCreateDataset()) {
+            nextView = isic.views.UploadDatasetRequestView;
         }
-        girder.events.trigger('g:navigateTo', view);
+        girder.events.trigger('g:navigateTo', nextView);
     } else {
+        // Anonymous users should not be here, so route to home page
         isic.router.navigate('', {trigger: true});
     }
 });
