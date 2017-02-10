@@ -224,6 +224,8 @@ class Dataset(FolderModel):
             params = {
                 'group': False,
                 'host': host,
+                # We intentionally leak full user details here, even though all
+                # email recipients may not have access permissions to the user
                 'user': user,
                 'name': name,
                 'owner': owner,

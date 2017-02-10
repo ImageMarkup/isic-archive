@@ -17,7 +17,9 @@
 #  limitations under the License.
 ###############################################################################
 
+import base64
 import datetime
+import hashlib
 
 from girder.constants import AccessType
 from girder.models.user import User as UserModel
@@ -31,8 +33,6 @@ class User(UserModel):
         # Note, this will not expose this field though the upstream User API
         self.exposeFields(level=AccessType.READ, fields=('acceptTerms',))
 
-        # self.summaryFields = ['_id', 'login', 'firstName', 'lastName']
-
     def filteredSummary(self, user, accessorUser):
         if self.hasAccess(user, accessorUser):
             return {
@@ -41,10 +41,17 @@ class User(UserModel):
                 ['_id', 'login', 'firstName', 'lastName']
             }
         else:
+            # For 4 characters of a Base32 encoding, we have 20 bits of entropy,
+            # or 1,048,576 possible combinations. Per the formula at
+            # http://preshing.com/20110504/hash-collision-probabilities/
+            # and assuming 100 (active) users, we have a collision probability
+            # of 0.47%.
+            obfuscatedName = base64.b32encode(
+                hashlib.sha256(user['login'].encode('utf8')).digest()
+            ).decode('ascii')[:4]
             return {
-                field: user[field]
-                for field in
-                ['_id', 'login']
+                '_id': user['_id'],
+                'name': 'User %s' % obfuscatedName
             }
 
     def _isAdminOrMember(self, user, groupName):

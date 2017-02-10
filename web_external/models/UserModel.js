@@ -1,11 +1,11 @@
 isic.models.UserModel = girder.models.UserModel.extend({
     name: function () {
         var name;
-        if (this.has('firstName') && this.has('lastName')) {
+        if (this.has('login')) {
             name = this.get('firstName') + ' ' + this.get('lastName') +
                 ' (' + this.get('login') + ')';
         } else {
-            name = this.get('login');
+            name = this.get('name');
         }
         return name;
     },

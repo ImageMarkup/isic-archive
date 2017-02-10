@@ -145,11 +145,14 @@ class StudyResource(Resource):
     def _getStudyCSVStream(self, study):
         Study = self.model('study', 'isic_archive')
         Featureset = self.model('featureset', 'isic_archive')
+        User = self.model('user', 'isic_archive')
+
+        currentUser = self.getCurrentUser()
 
         featureset = Featureset.load(study['meta']['featuresetId'], exc=True)
         csvFields = tuple(itertools.chain(
             ('study_name', 'study_id',
-             'user_login_name', 'user_id',
+             'user_name', 'user_id',
              'image_name', 'image_id',
              'flag_status', 'elapsed_seconds'),
             (feature['id'] for feature in featureset['globalFeatures']),
@@ -183,10 +186,15 @@ class StudyResource(Resource):
                     int((annotation['meta']['stopTime'] -
                          annotation['meta']['startTime']).total_seconds())
 
+                filteredAnnotatorUser = User.filteredSummary(
+                    annotatorUser, currentUser)
+                annotatorUserName = filteredAnnotatorUser.get(
+                    'login', filteredAnnotatorUser['name'])
+
                 outDictBase = {
                     'study_name': study['name'],
                     'study_id': str(study['_id']),
-                    'user_login_name': annotatorUser['login'],
+                    'user_name': annotatorUserName,
                     'user_id': str(annotatorUser['_id']),
                     'image_name': image['name'],
                     'image_id': str(image['_id']),
