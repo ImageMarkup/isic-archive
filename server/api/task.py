@@ -174,7 +174,7 @@ class TaskResource(Resource):
                 'updated': 1,
                 'folderId': 1,
                 'segmentations._id': 1,
-                'segmentations.skill': 1}}
+                'segmentations.reviews': 1}}
         ]
 
     def _pipeline3MissingSegmentations(self):
