@@ -79,8 +79,9 @@ def requestCreateDatasetPermission(params):
         group = Group.findOne({'name': groupName})
         if not group:
             raise RestException('Could not load group: %s' % groupName)
-        resp['message'] = 'Dataset Contributor access requested. Please wait ' \
-            'for an administrator to approve your request.'
+        resp['message'] = 'Dataset Contributor access requested. An ' \
+                          'administrator may contact you via email (at %s) ' \
+                          'to process your request.' % currentUser['email']
 
         for request in Group.getFullRequestList(group):
             if request['id'] == currentUser['_id']:
