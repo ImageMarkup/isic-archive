@@ -20,18 +20,15 @@
 import csv
 import os
 import shutil
+import six
 import sys
 import subprocess
 import tempfile
 import zipfile
 
 from girder.models.model_base import ValidationException
-from girder.models.notification import ProgressState
 from girder.utility import assetstore_utilities
 from girder.utility.model_importer import ModelImporter
-from girder.utility.progress import ProgressContext
-
-from .provision_utility import getAdminUser
 
 
 class TempDir(object):
@@ -124,32 +121,53 @@ class ZipFileOpener(object):
             return iter(fileList), len(fileList)
 
 
-def handleCsv(dataset, prereviewFolder, user, csvFile):
-    Assetstore = ModelImporter.model('assetstore')
-    Item = ModelImporter.model('item')
-    Upload = ModelImporter.model('upload')
+class ParseMetadataCsv:
+    """
+    Parse a CSV file containing metadata about images in a dataset and validate
+    the metadata. Optionally save the validated metadata to the images.
+    """
+    def __init__(self, dataset, prereviewFolder, csvFile, validator):
+        self.csvFile = csvFile
+        self.validator = validator
 
-    # Folders where images from this dataset may be
-    datasetFolderIds = [
-        dataset['_id'],
-        prereviewFolder['_id']
-    ]
+        # Folders where images from this dataset may be
+        self.datasetFolderIds = [dataset['_id']]
+        if prereviewFolder:
+            self.datasetFolderIds.append(prereviewFolder['_id'])
 
-    assetstore = Assetstore.getCurrent()
-    assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(assetstore)
-    fullPath = assetstoreAdapter.fullPath(csvFile)
+        # Metadata stored after validation, indexed by image item id
+        self.validatedMetadata = {}
 
-    parseErrors = list()
-    with open(fullPath, 'rUb') as uploadFileStream,\
-        ProgressContext(
-            on=True,
-            user=user,
-            title='Processing "%s"' % csvFile['name'],
-            state=ProgressState.ACTIVE,
-            message='Parsing CSV') as progress:  # NOQA
+        # Validation result, created after calling validate()
+        self.validationResult = None
 
-        # csv.reader(csvfile, delimiter=',', quotechar='"')
-        csvReader = csv.DictReader(uploadFileStream)
+    def lines(self, stream):
+        """Generate individual lines of text from a stream."""
+        lastLine = ''
+        keepends = True
+        try:
+            # Read chunk from stream and split into lines. Always process the
+            # last line with the next chunk, or at the end of the stream,
+            # because it may be incomplete.
+            while True:
+                chunk = lastLine + ''.join(next(stream))
+                lines = chunk.splitlines(keepends)
+                lastLine = lines.pop()
+                for line in lines:
+                    yield line
+        except StopIteration:
+            yield lastLine
+
+    def validate(self):
+        Item = ModelImporter.model('item')
+        File = ModelImporter.model('file')
+
+        csvFileStream = File.download(self.csvFile, headers=False)()
+
+        parseErrors = []
+        validationErrors = {}
+
+        csvReader = csv.DictReader(self.lines(csvFileStream))
 
         for filenameField in csvReader.fieldnames:
             if filenameField.lower() == 'filename':
@@ -168,7 +186,7 @@ def handleCsv(dataset, prereviewFolder, user, csvFile):
             # TODO: index on privateMeta.originalFilename?
             imageItems = Item.find({
                 'privateMeta.originalFilename': filename,
-                'folderId': {'$in': datasetFolderIds}
+                'folderId': {'$in': self.datasetFolderIds}
             })
             if not imageItems.count():
                 parseErrors.append(
@@ -183,24 +201,121 @@ def handleCsv(dataset, prereviewFolder, user, csvFile):
                 imageItem = next(iter(imageItems))
 
             unstructuredMetadata = imageItem['meta']['unstructured']
+            clinicalMetadata = imageItem['meta']['clinical']
             unstructuredMetadata.update(csvRow)
-            Item.setMetadata(imageItem, {
-                'unstructured': unstructuredMetadata
-            })
+            imageValidationErrors = self.validator(
+                unstructuredMetadata, clinicalMetadata)
+            if imageValidationErrors:
+                validationErrors[filename] = imageValidationErrors
 
-    if parseErrors:
-        # TODO: eventually don't store whole string in memory
-        parseErrorsStr = '\n'.join(parseErrors)
+            # Store metadata to enable saving to image item later
+            imageItemId = imageItem['_id']
+            self.validatedMetadata[imageItemId] = {
+                'unstructured': unstructuredMetadata,
+                'clinical': clinicalMetadata
+            }
 
-        parentItem = Item.load(csvFile['itemId'], force=True, exc=True)
+        # Store validation result for the CSV file
+        self.validationResult = {}
+        if parseErrors:
+            self.validationResult['parseErrors'] = parseErrors
+        if validationErrors:
+            self.validationResult['validationErrors'] = validationErrors
 
-        upload = Upload.createUpload(
-            user=getAdminUser(),
-            name='parse_errors.txt',
-            parentType='item',
-            parent=parentItem,
-            size=len(parseErrorsStr),
-            mimeType='text/plain',
-        )
-        Upload.handleChunk(
-            upload, parseErrorsStr)
+    def save(self):
+        Item = ModelImporter.model('item')
+
+        if self.validationResult is None:
+            raise ValidationException('Refusing to save unvalidated metadata.')
+        if 'parseErrors' in self.validationResult or \
+                'validationErrors' in self.validationResult:
+                    raise ValidationException(
+                        'Refusing to save invalid metadata.')
+
+        for imageItemId, metadata in six.viewitems(self.validatedMetadata):
+            imageItem = Item.findOne({'_id': imageItemId})
+            if not imageItem:
+                raise ValidationException(
+                    'Unable to find image: %s' % imageItemId)
+            Item.setMetadata(imageItem, metadata)
+
+
+class MetadataValidationError(Exception):
+    """Exception raised for metadata validation errors."""
+    def __init__(self, message):
+        self.message = message
+        Exception.__init__(self, message)
+
+
+def addImageClinicalMetadata(unstructured, clinical):
+    """Parse unstructured metadata to clinical metadata and validate."""
+    validationErrors = []
+    for parser in [
+        _parseAge,
+        _parseSex
+    ]:
+        try:
+            parser(unstructured, clinical)
+        except MetadataValidationError as e:
+            validationErrors.append(str(e))
+    return validationErrors
+
+
+def _getOneFrom(containerDict, allowedSet):
+    foundSet = set(six.viewkeys(containerDict)) & allowedSet
+    if not foundSet:
+        return None
+    elif len(foundSet) == 1:
+        return containerDict.pop(foundSet.pop())
+    else:
+        raise MetadataValidationError(
+            'only one of %s may be present' % sorted(foundSet))
+
+
+def _assertInt(value):
+    try:
+        value = int(float(value))
+    except ValueError:
+        raise MetadataValidationError(
+            'value of "%s" must be an integer' % value)
+    return value
+
+
+def _assertEnumerated(value, allowed):
+    if value not in allowed:
+        raise MetadataValidationError(
+            'value of "%s" must be one of: %s' % (value, sorted(allowed)))
+    return value
+
+
+def _parseAge(unstructured, clinical):
+    value = unstructured.pop('age', None)
+    if value is not None:
+        if value in ['', 'unknown']:
+            value = None
+        else:
+            if value == '85+':
+                value = '85'
+            value = _assertInt(value)
+            if value > 85:
+                # TODO: 99 is used as a placeholder for unknown in existing
+                # images
+                value = 85
+        clinical['age'] = value
+
+    # Drop deprecated fields
+    unstructured.pop('age_categ', None)
+
+
+def _parseSex(unstructured, clinical):
+    value = _getOneFrom(unstructured, {'sex', 'gender'})
+    if value is not None:
+        value = value.lower()
+        if value in ['', 'unknown']:
+            value = None
+        elif value == 'm':
+            value = 'male'
+        elif value == 'f':
+            value = 'female'
+        _assertEnumerated(value, {'male', 'female', None})
+        clinical['sex'] = value

@@ -20,12 +20,20 @@
 import json
 
 import cherrypy
+import mimetypes
+import six
 
 from girder.api import access
 from girder.api.rest import Resource, loadmodel, RestException
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 from girder.models.model_base import AccessException, ValidationException
+from girder.utility.progress import ProgressContext
+
+CSV_FORMATS = [
+    'text/csv',
+    'application/vnd.ms-excel'
+]
 
 
 class DatasetResource(Resource):
@@ -38,6 +46,7 @@ class DatasetResource(Resource):
         self.route('POST', (), self.ingestDataset)
         self.route('GET', (':id', 'review'), self.getReviewImages)
         self.route('POST', (':id', 'review'), self.submitReviewImages)
+        self.route('POST', (':id', 'metadata'), self.validateMetadata)
 
     @describeRoute(
         Description('Return a list of lesion image datasets.')
@@ -89,8 +98,7 @@ class DatasetResource(Resource):
 
     @describeRoute(
         Description('Create a lesion image dataset.')
-        .param('uploadFolderId', 'The ID of the folder that contains images '
-               'and metadata.')
+        .param('uploadFolderId', 'The ID of the folder that contains images.')
         .param('name', 'Name of the dataset.')
         .param('owner', 'Owner of the dataset.')
         .param('description', 'Description of the dataset.', required=False,
@@ -242,3 +250,77 @@ class DatasetResource(Resource):
 
         # TODO: return value?
         return {'status': 'success'}
+
+    @describeRoute(
+        Description('Validate, add, or update dataset metadata.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('uploadFolderId', 'The ID of the folder that contains metadata.')
+        .param('save', 'Save the metadata in addition to validating it.',
+               required=False)
+    )
+    @access.user
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
+    def validateMetadata(self, dataset, params):
+        Dataset = self.model('dataset', 'isic_archive')
+        Folder = self.model('folder')
+        Item = self.model('item')
+        User = self.model('user', 'isic_archive')
+
+        if cherrypy.request.headers['Content-Type'].split(';')[0] == \
+                'application/json':
+            params = self.getBodyJson()
+        self.requireParams('uploadFolderId', params)
+
+        user = self.getCurrentUser()
+        User.requireCreateDataset(user)
+
+        uploadFolderId = params.get('uploadFolderId', None)
+        if not uploadFolderId:
+            raise ValidationException(
+                'No files were uploaded.', 'uploadFolderId')
+        uploadFolder = Folder.load(
+            uploadFolderId, user=user, level=AccessType.WRITE, exc=False)
+        if not uploadFolder:
+            raise ValidationException(
+                'Invalid upload folder ID.', 'uploadFolderId')
+
+        csvFileItems = [f for f in Folder.childItems(uploadFolder)
+                        if mimetypes.guess_type(f['name'], strict=False)[0] in
+                        CSV_FORMATS]
+        if not csvFileItems:
+            raise ValidationException(
+                'No .csv files were uploaded.', 'uploadFolder')
+        if len(csvFileItems) > 1:
+            raise ValidationException(
+                'Only one .csv file may be uploaded.', 'uploadFolder')
+        csvFiles = Item.childFiles(csvFileItems[0], limit=2)
+        if not csvFiles.count():
+            raise ValidationException(
+                'No .csv files were uploaded.', 'uploadFolder')
+        if csvFiles.count() > 1:
+            raise ValidationException(
+                'Only one .csv file may be uploaded.', 'uploadFolder')
+        csvFile = csvFiles[0]
+        csvFileName = csvFile['name']
+
+        save = self.boolParam('save', params, False)
+
+        with ProgressContext(
+                on=True, user=user, title='Processing "%s"' % csvFileName):
+            validationResult = Dataset.validateMetadata(
+                dataset=dataset, csvFile=csvFile, save=save)
+
+        # Format validation results
+        result = {'filename': csvFileName}
+        if 'parseErrors' in validationResult:
+            result['parseErrors'] = \
+                [{'message': message}
+                 for message in validationResult['parseErrors']]
+        if 'validationErrors' in validationResult:
+            result['validationErrors'] = \
+                sorted([{'message': imageFilename + ': ' + message}
+                        for imageFilename, messages in
+                        six.viewitems(validationResult['validationErrors'])
+                        for message in messages],
+                       key=lambda item: item['message'])
+        return result

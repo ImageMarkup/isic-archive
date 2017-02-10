@@ -23,6 +23,9 @@ isic.App = girder.App.extend({
             Backbone.history.start({
                 pushState: false
             });
+
+            // Set select2 default options
+            $.fn.select2.defaults.set('theme', 'bootstrap');
         }, this));
     },
 
