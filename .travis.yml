@@ -32,7 +32,7 @@ addons:
             - p7zip-full
 
 before_install:
-    - GIRDER_VERSION=ae461ee437b9a788cd2ed2d2e47b567ac0996de8
+    - GIRDER_VERSION=a24de8e4643fdaba227144dbdcaa6bb1866158f5
     - WORKER_VERSION=2cfb739c096c2373f8bbe00853e3709f433192a6
     - LARGE_IMAGE_VERSION=60c32b11abb4d5f0d1696221a7e81ab21c611980
     - export MONGO_VERSION=3.2.7
