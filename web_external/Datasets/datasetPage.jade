@@ -1,0 +1,37 @@
+.isic-dataset-container
+  table.table.table-condensed.isic-dataset-table
+    tr
+      td.isic-dataset-table-section-header(colspan=2) Info
+    tr
+      td.isic-dataset-table-label Unique ID
+      td
+        code= dataset.id
+    tr
+      td.isic-dataset-table-label Creator
+      td= dataset.creator().name()
+    tr
+      td.isic-dataset-table-label Created
+      td= formatDate(dataset.get('created'))
+
+  table.table.table-condensed.isic-dataset-table
+    tr
+      td.isic-dataset-table-section-header(colspan=2) Description
+    tr
+      td.isic-dataset-table-label Owner
+      td= dataset.get('owner')
+    tr
+      td.isic-dataset-table-label Description
+      td= dataset.get('description')
+    tr
+      td.isic-dataset-table-label License
+      td= dataset.get('license')
+    tr
+      td.isic-dataset-table-label Attribution
+      td
+        if dataset.get('anonymous')
+          | Anonymous
+        else
+          = dataset.get('attribution')
+    tr
+      td.isic-dataset-table-label Signature
+      td= dataset.get('signature')

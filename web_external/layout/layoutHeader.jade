@@ -73,6 +73,10 @@ nav.navbar.navbar-default.navbar-fixed-top.isic-header-wrapper
             | Lesion Images&nbsp;
             span.caret
           ul.dropdown-menu
+            li(role="presentation")
+              a(title="Datasets", href="#datasets")
+                i.icon-list
+                | Datasets
             if currentUser
               li(role="presentation")
                 a(title="Upload Dataset", href="#uploadDataset")

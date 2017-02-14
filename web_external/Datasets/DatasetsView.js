@@ -1,4 +1,4 @@
-isic.views.FeaturesetsView = isic.View.extend({
+isic.views.DatasetsView = isic.View.extend({
     // TODO refactor
     events: {
         'show.bs.collapse .isic-listing-panel-collapse': function (event) {
@@ -7,7 +7,7 @@ isic.views.FeaturesetsView = isic.View.extend({
 
             var viewIndex = parseInt(target.attr('data-model-index'), 10);
             var viewContainer = target.find('.isic-listing-panel-body');
-            this.renderFeatureset(viewIndex, viewContainer);
+            this.renderDataset(viewIndex, viewContainer);
         },
         'hide.bs.collapse .isic-listing-panel-collapse': function (event) {
             $(event.target).parent().find('.icon-down-open').removeClass('icon-down-open').addClass('icon-right-open');
@@ -17,15 +17,15 @@ isic.views.FeaturesetsView = isic.View.extend({
     initialize: function (settings) {
         this.loaded = false;
 
-        this.featuresets = new isic.collections.FeaturesetCollection();
-        this.listenTo(this.featuresets, 'g:changed', function () {
+        this.datasets = new isic.collections.DatasetCollection();
+        this.listenTo(this.datasets, 'g:changed', function () {
             this.loaded = true;
             this.render();
         }, this);
-        this.featuresets.fetch();
+        this.datasets.fetch();
 
         this.paginateWidget = new girder.views.PaginateWidget({
-            collection: this.featuresets,
+            collection: this.datasets,
             parentView: this
         });
 
@@ -34,8 +34,8 @@ isic.views.FeaturesetsView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.listingPage({
-            title: 'Featuresets',
-            models: this.featuresets.models,
+            title: 'Datasets',
+            models: this.datasets.models,
             loaded: this.loaded
         }));
 
@@ -52,9 +52,9 @@ isic.views.FeaturesetsView = isic.View.extend({
         return this;
     },
 
-    renderFeatureset: function (index, container) {
+    renderDataset: function (index, container) {
         if (container.children().length === 0) {
-            var featuresetId = this.featuresets.at(index).id;
+            var datasetId = this.datasets.at(index).id;
 
             // Display loading indicator
             new girder.views.LoadingAnimation({
@@ -62,17 +62,17 @@ isic.views.FeaturesetsView = isic.View.extend({
                 parentView: this
             }).render();
 
-            new isic.views.FeaturesetView({ // eslint-disable-line no-new
+            new isic.views.DatasetView({ // eslint-disable-line no-new
                 el: container,
-                id: featuresetId,
+                id: datasetId,
                 parentView: this
             });
         }
     }
 });
 
-isic.router.route('featuresets', 'featuresets', function () {
-    var nextView = isic.views.FeaturesetsView;
+isic.router.route('datasets', 'datasets', function () {
+    var nextView = isic.views.DatasetsView;
     if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
         nextView = isic.views.TermsAcceptanceView;
     }

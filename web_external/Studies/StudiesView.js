@@ -22,10 +22,16 @@ isic.views.StudiesView = isic.View.extend({
         this.studyAdmin = girder.currentUser && girder.currentUser.canAdminStudy();
         this.studies = new isic.collections.StudyCollection();
 
-        this.studies.once('g:changed', function () {
+        this.listenTo(this.studies, 'g:changed', function () {
             this.loaded = true;
             this.render();
-        }, this).fetch();
+        }, this);
+        this.studies.fetch();
+
+        this.paginateWidget = new girder.views.PaginateWidget({
+            collection: this.studies,
+            parentView: this
+        });
 
         this.render();
     },
@@ -37,6 +43,8 @@ isic.views.StudiesView = isic.View.extend({
             loaded: this.loaded,
             studyAdmin: this.studyAdmin
         }));
+
+        this.paginateWidget.setElement(this.$('.isic-listing-paginate-container')).render();
 
         // Display loading indicator
         if (!this.loaded) {
