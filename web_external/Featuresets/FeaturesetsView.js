@@ -18,10 +18,16 @@ isic.views.FeaturesetsView = isic.View.extend({
         this.loaded = false;
 
         this.featuresets = new isic.collections.FeaturesetCollection();
-        this.featuresets.once('g:changed', function () {
+        this.listenTo(this.featuresets, 'g:changed', function () {
             this.loaded = true;
             this.render();
-        }, this).fetch();
+        }, this);
+        this.featuresets.fetch();
+
+        this.paginateWidget = new girder.views.PaginateWidget({
+            collection: this.featuresets,
+            parentView: this
+        });
 
         this.render();
     },
@@ -32,6 +38,8 @@ isic.views.FeaturesetsView = isic.View.extend({
             models: this.featuresets.models,
             loaded: this.loaded
         }));
+
+        this.paginateWidget.setElement(this.$('.isic-listing-paginate-container')).render();
 
         // Display loading indicator
         if (!this.loaded) {

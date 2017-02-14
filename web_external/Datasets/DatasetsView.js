@@ -18,10 +18,16 @@ isic.views.DatasetsView = isic.View.extend({
         this.loaded = false;
 
         this.datasets = new isic.collections.DatasetCollection();
-        this.datasets.once('g:changed', function () {
+        this.listenTo(this.datasets, 'g:changed', function () {
             this.loaded = true;
             this.render();
-        }, this).fetch();
+        }, this);
+        this.datasets.fetch();
+
+        this.paginateWidget = new girder.views.PaginateWidget({
+            collection: this.datasets,
+            parentView: this
+        });
 
         this.render();
     },
@@ -32,6 +38,8 @@ isic.views.DatasetsView = isic.View.extend({
             models: this.datasets.models,
             loaded: this.loaded
         }));
+
+        this.paginateWidget.setElement(this.$('.isic-listing-paginate-container')).render();
 
         // Display loading indicator
         if (!this.loaded) {
