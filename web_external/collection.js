@@ -43,16 +43,16 @@ isic.Collection = girder.Collection.extend({ // eslint-disable-line backbone/col
     fetchPreviousPage: function (params) {
         var offset = this._currentOffset(params) - this.pageLimit;
         offset = Math.max(0, offset);
-        this.fetch(_.extend(params, {offset: offset}), false);
+        this.fetch(_.extend(params || {}, {offset: offset}), false);
     },
 
     fetchNextPage: function (params) {
         var offset = this._currentOffset(params) + this.pageLimit;
-        this.fetch(_.extend(params, {offset: offset}), false);
+        this.fetch(_.extend(params || {}, {offset: offset}), false);
     },
 
     fetchFirstPage: function (params) {
-        this.fetch(_.extend(params, {offset: 0}), false);
+        this.fetch(_.extend(params || {}, {offset: 0}), false);
     },
 
     fetchLastPage: function (params, total) {
@@ -63,7 +63,7 @@ isic.Collection = girder.Collection.extend({ // eslint-disable-line backbone/col
             offset -= this.pageLimit;
             offset = Math.max(0, offset);
         }
-        this.fetch(_.extend(params, {offset: offset}), false);
+        this.fetch(_.extend(params || {}, {offset: offset}), false);
     },
 
     pageNum: function () {
