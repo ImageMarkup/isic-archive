@@ -80,6 +80,8 @@ before_install:
     - bash $build_path/install_miniconda.sh -b -p $build_path/miniconda
     - source $build_path/miniconda/bin/activate $build_path/miniconda
     - conda update --yes --all
+    # Work around a change in 2.7.13 that we don't yet have in Girder upstream: https://github.com/girder/girder/pull/1733
+    - conda install --yes python==2.7.12
 
 install:
     - cd $girder_path
