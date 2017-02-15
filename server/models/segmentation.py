@@ -83,12 +83,12 @@ class Segmentation(Model):
 
     def doContourSegmentation(self, image, seedCoord, tolerance):
         mask = self.doSegmentation(image, seedCoord, tolerance)
-        contourCoords = OpenCVSegmentationHelper.maskToContour(
+        contour = OpenCVSegmentationHelper.maskToContour(
             mask,
             paddedInput=False,
             safe=False
         )
-        return contourCoords
+        return contour
 
     def createSegmentation(self, image, creator, mask, meta=None):
         File = self.model('file')
@@ -153,14 +153,14 @@ class Segmentation(Model):
         if not image:
             image = Image.load(segmentation['imageId'], force=True, exc=True)
 
-        segmentationMask = self.maskData(segmentation)
-        segmentationContour = OpenCVSegmentationHelper.maskToContour(
-            segmentationMask, paddedInput=False)
+        mask = self.maskData(segmentation)
+        contour = OpenCVSegmentationHelper.maskToContour(
+            mask, paddedInput=False)
 
         pilImageData = PIL_Image.fromarray(Image.imageData(image))
         pilDraw = PIL_ImageDraw.Draw(pilImageData)
         pilDraw.line(
-            list(six.moves.map(tuple, segmentationContour)),
+            list(six.moves.map(tuple, contour)),
             fill=(0, 255, 0),  # TODO: make color an option
             width=5
         )

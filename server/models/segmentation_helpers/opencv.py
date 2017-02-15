@@ -265,3 +265,26 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         )
 
         return largestContour
+
+    @classmethod
+    def contourToMask(cls, imageShape, coords):
+        """
+        Convert a contour line to a label mask.
+
+        :param imageShape: The [Y, X] shape of the image.
+        :type imageShape: tuple[int]
+        :param coords: An array of point pairs.
+        :type coords: numpy.ndarray
+        :return: A binary label mask.
+        :rtype: numpy.ndarray of numpy.uint8
+        """
+        maskImage = numpy.zeros(imageShape, dtype=numpy.uint8)
+        cv2.drawContours(
+            image=maskImage,
+            contours=[coords],
+            contourIdx=-1,  # all contours
+            color=255,
+            thickness=cv2.cv.CV_FILLED,
+            lineType=8  # allow diagonal lines
+        )
+        return maskImage

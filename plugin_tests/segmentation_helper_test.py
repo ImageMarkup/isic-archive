@@ -69,6 +69,9 @@ class SegmentationHelperTestCase(base.TestCase):
         self._testFloodFill(OpenCVSegmentationHelper)
         self._testSegment(OpenCVSegmentationHelper)
 
+        self._testEasyMaskToContour(OpenCVSegmentationHelper)
+        self._testHardMaskToContour(OpenCVSegmentationHelper)
+
     def testScikitSegmentationHelper(self):
         self._testFloodFill(ScikitSegmentationHelper)
         self._testSegment(ScikitSegmentationHelper)
@@ -84,6 +87,10 @@ class SegmentationHelperTestCase(base.TestCase):
             ScikitSegmentationHelper._clippedAdd(testImage, -5),
             numpy.array([0, 123, 248], numpy.uint8))
         self.assertArrayEqual(testImage, originalTestImage)
+
+        self._testEasyMaskToContour(ScikitSegmentationHelper)
+        # TODO: this is broken, likely due to coordinate rounding issues
+        # self._testHardMaskToContour(ScikitSegmentationHelper)
 
     def _testFloodFill(self, SegmentationHelper):
         filledMask = SegmentationHelper._floodFill(
@@ -133,3 +140,30 @@ class SegmentationHelperTestCase(base.TestCase):
         self.assertArrayEqual(self.testImage, self.originalTestImage)
 
         # TODO: test tolerance more thoroughly
+
+    def _testMaskToContour(self, SegmentationHelper, inputMask):
+        originalInputMask = inputMask.copy()
+
+        contour = SegmentationHelper.maskToContour(inputMask)
+        self.assertIsInstance(contour, numpy.ndarray)
+        self.assertEqual(len(contour.shape), 2)
+        self.assertEqual(contour.shape[1], 2)
+        self.assertArrayEqual(inputMask, originalInputMask)
+
+        originalContour = contour.copy()
+        outputMask = SegmentationHelper.contourToMask(inputMask.shape, contour)
+        self.assertIsInstance(outputMask, numpy.ndarray)
+        self.assertEqual(outputMask.shape, inputMask.shape)
+        self.assertEqual(outputMask.dtype, numpy.uint8)
+        self.assertArrayEqual(outputMask, inputMask)
+        self.assertArrayEqual(contour, originalContour)
+
+    def _testEasyMaskToContour(self, SegmentationHelper):
+        inputMask = numpy.zeros((20, 20), dtype=numpy.uint8)
+        inputMask[5:15, 5:15] = 255
+        self._testMaskToContour(SegmentationHelper, inputMask)
+
+    def _testHardMaskToContour(self, SegmentationHelper):
+        inputMask = SegmentationHelper.segment(
+            self.testImage, (1, 1), 5)
+        self._testMaskToContour(SegmentationHelper, inputMask)
