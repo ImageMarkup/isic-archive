@@ -85,7 +85,7 @@ class Segmentation(Model):
         mask = self.doSegmentation(image, seedCoord, tolerance)
         contourCoords = OpenCVSegmentationHelper.maskToContour(
             mask,
-            paddedInput=True,
+            paddedInput=False,
             safe=False
         )
         return contourCoords

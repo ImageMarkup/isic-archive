@@ -111,7 +111,7 @@ class Image(ItemModel):
         # Use admin user, to ensure that worker always has access
         token = Token.createToken(
             user=getAdminUser(),
-            days=0.25,  # 6 hours
+            days=1,
             scope=[TokenScope.DATA_READ, TokenScope.DATA_WRITE])
 
         job = ImageItem.createImageItem(image, originalFile, user, token)
@@ -128,7 +128,7 @@ class Image(ItemModel):
         # Use admin user, to ensure that worker always has access
         token = Token.createToken(
             user=getAdminUser(),
-            days=0.25,  # 6 hours
+            days=1,
             scope=[TokenScope.DATA_READ, TokenScope.DATA_WRITE])
 
         with open(os.path.join(

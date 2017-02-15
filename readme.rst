@@ -114,8 +114,8 @@ Usage
     :target: https://travis-ci.org/ImageMarkup/isic-archive
     :alt: Build Status
 
-.. |license-badge| image:: https://raw.githubusercontent.com/girder/girder/master/docs/license.png
-    :target: https://pypi.python.org/pypi/girder
+.. |license-badge| image:: https://img.shields.io/github/license/ImageMarkup/isic-archive.svg
+    :target: https://raw.githubusercontent.com/ImageMarkup/isic-archive/master/LICENSE
     :alt: License
 
 .. _Vagrant: https://www.vagrantup.com/downloads.html
