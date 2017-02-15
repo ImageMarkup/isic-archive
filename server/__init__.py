@@ -33,7 +33,7 @@ from girder.utility.webroot import WebrootBase
 
 from . import constants
 from . import api
-from .provision_utility import initialSetup, onUserCreated
+from .provision_utility import initialSetup
 
 
 class Webroot(WebrootBase):
@@ -159,7 +159,6 @@ def load(info):
     # add event listeners
     # note, 'model.setting.validate' must be bound before initialSetup is called
     events.bind('model.setting.validate', 'isic', validateSettings)
-    events.bind('model.user.save.created', 'onUserCreated', onUserCreated)
     events.bind('rest.get.describe/:resource.after',
                 'onDescribeResource', onDescribeResource)
     events.bind('model.job.save', 'onJobSave', onJobSave)

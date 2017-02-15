@@ -24,23 +24,6 @@ from girder.utility.model_importer import ModelImporter
 from . import constants
 
 
-def onUserCreated(event):
-    User = ModelImporter.model('user')
-    Group = ModelImporter.model('group')
-    user = event.info
-
-    # make all users private
-    user['public'] = False
-    if user['login'] != 'isic-admin':
-        User.setGroupAccess(
-            doc=user,
-            group=Group.findOne({'name': 'Study Administrators'}),
-            level=AccessType.READ,
-            save=False
-        )
-    User.save(user)
-
-
 def getAdminUser():
     User = ModelImporter.model('user')
     # TODO: cache this?

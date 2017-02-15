@@ -22,6 +22,7 @@ import datetime
 import hashlib
 
 from girder.constants import AccessType
+from girder import events
 from girder.models.user import User as UserModel
 from girder.models.model_base import AccessException, ValidationException
 
@@ -32,6 +33,24 @@ class User(UserModel):
 
         # Note, this will not expose this field though the upstream User API
         self.exposeFields(level=AccessType.READ, fields=('acceptTerms',))
+
+        events.bind('model.user.save.created',
+                    'onUserCreated', self._onUserCreated)
+
+    def _onUserCreated(self, event):
+        Group = self.model('group')
+        user = event.info
+
+        # make all users private
+        user['public'] = False
+        if user['login'] != 'isic-admin':
+            self.setGroupAccess(
+                doc=user,
+                group=Group.findOne({'name': 'Study Administrators'}),
+                level=AccessType.READ,
+                save=False
+            )
+        self.save(user)
 
     def filteredSummary(self, user, accessorUser):
         if self.hasAccess(user, accessorUser):

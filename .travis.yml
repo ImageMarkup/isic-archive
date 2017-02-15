@@ -32,7 +32,7 @@ addons:
             - p7zip-full
 
 before_install:
-    - GIRDER_VERSION=ae461ee437b9a788cd2ed2d2e47b567ac0996de8
+    - GIRDER_VERSION=a24de8e4643fdaba227144dbdcaa6bb1866158f5
     - WORKER_VERSION=2cfb739c096c2373f8bbe00853e3709f433192a6
     - LARGE_IMAGE_VERSION=60c32b11abb4d5f0d1696221a7e81ab21c611980
     - export MONGO_VERSION=3.2.7
@@ -80,6 +80,8 @@ before_install:
     - bash $build_path/install_miniconda.sh -b -p $build_path/miniconda
     - source $build_path/miniconda/bin/activate $build_path/miniconda
     - conda update --yes --all
+    # Work around a change in 2.7.13 that we don't yet have in Girder upstream: https://github.com/girder/girder/pull/1733
+    - conda install --yes python==2.7.12
 
 install:
     - cd $girder_path
@@ -103,5 +105,6 @@ script:
     - mkdir -p $build_path/girder_testing_build
     - cd $build_path/girder_testing_build
     - cmake -DPYTHON_COVERAGE:BOOL=${PY_COVG} -DPYTHON_VERSION:STRING=${TRAVIS_PYTHON_VERSION} -DRUN_CORE_TESTS:BOOL=OFF -DTEST_PLUGINS:STRING="isic_archive" $girder_path
+    - make
     # js_coverage_combine_report and py_coverage* fail due to an upstream bug
     - JASMINE_TIMEOUT=15000 ctest -VV -E '(py|js)_coverage'
