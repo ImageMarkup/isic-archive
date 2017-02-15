@@ -28,7 +28,8 @@ from girder.api.rest import Resource, RestException, loadmodel, rawResponse, \
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 
-from ..models.segmentation_helpers import ScikitSegmentationHelper
+from ..models.segmentation_helpers import OpenCVSegmentationHelper, \
+    ScikitSegmentationHelper
 
 
 class SegmentationResource(Resource):
@@ -148,7 +149,7 @@ class SegmentationResource(Resource):
 
                 mask = Segmentation.doSegmentation(image, seedCoord, tolerance)
             else:
-                mask = ScikitSegmentationHelper.contourToMask(
+                mask = OpenCVSegmentationHelper.contourToMask(
                     (
                         image['meta']['acquisition']['pixelsY'],
                         image['meta']['acquisition']['pixelsX']
