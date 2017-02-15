@@ -36,7 +36,7 @@ def tearDownModule():
     base.stopServer()
 
 
-class SegmentationHelperTestCase(IsicTestCase):
+class UploadTestCase(IsicTestCase):
     def testUpload(self):
         Folder = self.model('folder')
         print Folder.database
