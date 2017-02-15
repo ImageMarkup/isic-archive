@@ -20,12 +20,18 @@
 import json
 
 import cherrypy
+import mimetypes
 
 from girder.api import access
 from girder.api.rest import Resource, loadmodel, RestException
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 from girder.models.model_base import AccessException, ValidationException
+
+CSV_FORMATS = [
+    'text/csv',
+    'application/vnd.ms-excel'
+]
 
 
 class DatasetResource(Resource):
@@ -38,6 +44,7 @@ class DatasetResource(Resource):
         self.route('POST', (), self.ingestDataset)
         self.route('GET', (':id', 'review'), self.getReviewImages)
         self.route('POST', (':id', 'review'), self.submitReviewImages)
+        self.route('POST', (':id', 'metadata'), self.registerMetadata)
 
     @describeRoute(
         Description('Return a list of lesion image datasets.')
@@ -241,3 +248,55 @@ class DatasetResource(Resource):
 
         # TODO: return value?
         return {'status': 'success'}
+
+    @describeRoute(
+        Description('Register metadata with a dataset.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('uploadFolderId', 'The ID of the folder that contains metadata '
+               'in a .csv file.')
+    )
+    @access.user
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
+    def registerMetadata(self, dataset, params):
+        Dataset = self.model('dataset', 'isic_archive')
+        Folder = self.model('folder')
+        Item = self.model('item')
+        User = self.model('user', 'isic_archive')
+
+        if cherrypy.request.headers['Content-Type'].split(';')[0] == \
+                'application/json':
+            params = self.getBodyJson()
+        self.requireParams('uploadFolderId', params)
+
+        user = self.getCurrentUser()
+        User.requireCreateDataset(user)
+
+        uploadFolderId = params.get('uploadFolderId', None)
+        if not uploadFolderId:
+            raise ValidationException(
+                'No files were uploaded.', 'uploadFolderId')
+        uploadFolder = Folder.load(
+            uploadFolderId, user=user, level=AccessType.WRITE, exc=False)
+        if not uploadFolder:
+            raise ValidationException(
+                'Invalid upload folder ID.', 'uploadFolderId')
+
+        csvFileItems = [f for f in Folder.childItems(uploadFolder)
+                        if mimetypes.guess_type(f['name'], strict=False)[0] in
+                        CSV_FORMATS]
+        if not csvFileItems:
+            raise ValidationException(
+                'No .csv files were uploaded.', 'uploadFolder')
+        if len(csvFileItems) > 1:
+            raise ValidationException(
+                'Only one .csv file may be uploaded.', 'uploadFolder')
+        csvFiles = Item.childFiles(csvFileItems[0], limit=2)
+        if not csvFiles.count():
+            raise ValidationException(
+                'No .csv files were uploaded.', 'uploadFolder')
+        if csvFiles.count() > 1:
+            raise ValidationException(
+                'Only one .csv file may be uploaded.', 'uploadFolder')
+        csvFile = csvFiles[0]
+
+        return Dataset.registerMetadata(dataset, csvFile)

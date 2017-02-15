@@ -88,19 +88,6 @@ class UploadTestCase(IsicTestCase):
             mimeType='application/zip'
         )
 
-        # Upload the CSV metadata file
-        csvPath = os.path.join(testDataDir, 'test_1_metadata.csv')
-        with open(csvPath, 'rb') as csvStream:
-            Upload.uploadFromFile(
-                obj=csvStream,
-                size=os.path.getsize(csvPath),
-                name='test_1_metadata.csv',
-                parentType='folder',
-                parent=Folder.load(uploadFolder['_id'], force=True),
-                user=uploaderUser,
-                mimeType='text/csv'
-            )
-
         # Create a new dataset
         resp = self.request(
             path='/dataset', method='POST', user=uploaderUser, params={
@@ -114,3 +101,35 @@ class UploadTestCase(IsicTestCase):
                 'attribution': 'Test Organization'
             })
         self.assertStatusOk(resp)
+        dataset = resp.json
+
+        # Clean folder contents
+        resp = self.request(
+            path='/folder/%s/contents' % uploadFolder['_id'], method='DELETE',
+            user=uploaderUser)
+        self.assertStatusOk(resp)
+
+        # Upload the CSV metadata file
+        csvPath = os.path.join(testDataDir, 'test_1_metadata.csv')
+        with open(csvPath, 'rb') as csvStream:
+            Upload.uploadFromFile(
+                obj=csvStream,
+                size=os.path.getsize(csvPath),
+                name='test_1_metadata.csv',
+                parentType='folder',
+                parent=Folder.load(uploadFolder['_id'], force=True),
+                user=uploaderUser,
+                mimeType='text/csv'
+            )
+
+        # Register metadata with dataset
+        resp = self.request(
+            path='/dataset/%s/metadata' % dataset['_id'], method='POST',
+            user=uploaderUser, params={
+                'uploadFolderId': uploadFolder['_id'],
+            })
+        self.assertStatusOk(resp)
+        dataset = resp.json
+        self.assertHasKeys(dataset['meta'], ['metadata'])
+        self.assertEqual(len(dataset['meta']['metadata']), 1)
+        self.assertHasKeys(dataset['meta']['metadata'][0], ('fileId', 'time'))

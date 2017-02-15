@@ -326,3 +326,17 @@ class Dataset(FolderModel):
         if (Folder.countItems(prereviewFolder) +
                 Folder.countFolders(prereviewFolder)) == 0:
             Folder.remove(prereviewFolder)
+
+    def registerMetadata(self, dataset, csvFile):
+        """Register a .csv file containing metadata about images."""
+        # Add image metadata information to list
+        registeredMetadata = dataset['meta'].get('metadata', [])
+        registeredMetadata.append({
+            'fileId': csvFile['_id'],
+            'time': datetime.datetime.utcnow()
+        })
+        dataset = self.setMetadata(dataset, {
+            'metadata': registeredMetadata
+        })
+
+        return dataset
