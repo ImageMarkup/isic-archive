@@ -1,17 +1,5 @@
 isic.views.UploadDatasetView = isic.View.extend({
     events: {
-        'click #isic-upload-images': function (event) {
-            this.$('#isic-upload-images').addClass('active');
-            this.$('#isic-upload-metadata').removeClass('active');
-            this.initializeUploadWidget();
-            this.updateUploadWidget();
-        },
-        'click #isic-upload-metadata': function (event) {
-            this.$('#isic-upload-images').removeClass('active');
-            this.$('#isic-upload-metadata').addClass('active');
-            this.initializeUploadWidget();
-            this.updateUploadWidget();
-        },
         'click #isic-upload-reset': function (event) {
             this.resetUpload();
         },
@@ -48,7 +36,6 @@ isic.views.UploadDatasetView = isic.View.extend({
 
     initialize: function (settings) {
         this.uploadedZipFiles = [];
-        this.uploadedCsvFiles = [];
         this.uploadFolder = null;
 
         this.termsOfUseWidget = new isic.views.TermsOfUseWidget({
@@ -127,12 +114,7 @@ isic.views.UploadDatasetView = isic.View.extend({
     },
 
     uploadFinished: function (files) {
-        var filenames = _.pluck(files.files, 'name');
-        if (this.uploadingImages()) {
-            this.uploadedZipFiles = filenames;
-        } else {
-            this.uploadedCsvFiles = filenames;
-        }
+        this.uploadedZipFiles = _.pluck(files.files, 'name');
         this.updateUploadWidget();
     },
 
@@ -188,33 +170,16 @@ isic.views.UploadDatasetView = isic.View.extend({
         }, this));
     },
 
-    uploadingImages: function () {
-        return (this.$('#isic-upload-images.active').length > 0);
-    },
-
     updateUploadWidget: function () {
         var visible = false;
         var uploadList = [];
-        var uploadingImages = this.uploadingImages();
-        if (uploadingImages) {
-            if (this.uploadedZipFiles.length) {
-                visible = false;
-                uploadList = this.uploadedZipFiles;
-            } else {
-                visible = true;
-            }
+        if (this.uploadedZipFiles.length) {
+            visible = false;
+            uploadList = this.uploadedZipFiles;
         } else {
-            if (this.uploadedCsvFiles.length) {
-                visible = false;
-                uploadList = this.uploadedCsvFiles;
-            } else {
-                visible = true;
-            }
+            visible = true;
         }
 
-        this.$('.isic-upload-description-container').toggle(visible);
-        this.$('.isic-upload-description-zip').toggle(uploadingImages);
-        this.$('.isic-upload-description-csv').toggle(!uploadingImages);
         this.$('.isic-upload-widget-container').toggle(visible);
         this.$('.isic-upload-reset-container').toggle(!visible);
 
@@ -224,12 +189,7 @@ isic.views.UploadDatasetView = isic.View.extend({
     },
 
     resetUpload: function () {
-        var uploadList = null;
-        if (this.uploadingImages()) {
-            uploadList = this.uploadedZipFiles;
-        } else {
-            uploadList = this.uploadedCsvFiles;
-        }
+        var uploadList = this.uploadedZipFiles;
 
         // Delete uploaded files
         _.each(uploadList, function (name) {

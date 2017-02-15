@@ -89,8 +89,7 @@ class DatasetResource(Resource):
 
     @describeRoute(
         Description('Create a lesion image dataset.')
-        .param('uploadFolderId', 'The ID of the folder that contains images '
-               'and metadata.')
+        .param('uploadFolderId', 'The ID of the folder that contains images.')
         .param('name', 'Name of the dataset.')
         .param('owner', 'Owner of the dataset.')
         .param('description', 'Description of the dataset.', required=False,

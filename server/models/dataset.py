@@ -29,18 +29,13 @@ from girder.models.notification import ProgressState
 from girder.utility import assetstore_utilities, mail_utils
 from girder.utility.progress import ProgressContext
 
-from ..upload import handleCsv, ZipFileOpener
+from ..upload import ZipFileOpener
 
 ZIP_FORMATS = [
     'multipart/x-zip',
     'application/zip',
     'application/zip-compressed',
     'application/x-zip-compressed',
-]
-
-CSV_FORMATS = [
-    'text/csv',
-    'application/vnd.ms-excel'
 ]
 
 
@@ -149,9 +144,8 @@ class Dataset(FolderModel):
                       sendMail=False):
         """
         Ingest an uploaded dataset. This upload folder is expected to contain a
-        .zip file of images and a .csv file that contains metadata about the
-        images. The images are extracted to a new "Pre-review" folder within a
-        new dataset folder.
+        .zip file of images. The images are extracted to a new "Pre-review"
+        folder within a new dataset folder.
         """
         Folder = self.model('folder')
         Item = self.model('item')
@@ -167,13 +161,6 @@ class Dataset(FolderModel):
         if not zipFileItems:
             raise ValidationException(
                 'No .zip files were uploaded.', 'uploadFolder')
-
-        csvFileItems = [f for f in Folder.childItems(uploadFolder)
-                        if mimetypes.guess_type(f['name'], strict=False)[0] in
-                        CSV_FORMATS]
-        if not csvFileItems:
-            raise ValidationException(
-                'No .csv files were uploaded.', 'uploadFolder')
 
         # Create dataset folder
         dataset = self.createDataset(name, description, user)
@@ -202,18 +189,6 @@ class Dataset(FolderModel):
             for zipFile in zipFiles:
                 # TODO: gracefully clean up after exceptions in handleZip
                 self._handleZip(prereviewFolder, user, zipFile)
-
-        # Process metadata in CSV files
-        for item in csvFileItems:
-            csvFiles = Item.childFiles(item)
-            for csvFile in csvFiles:
-                handleCsv(dataset, prereviewFolder, user, csvFile)
-
-        # TODO: remove this entirely, and report CSV errors another way
-        # Move metadata item to dataset folder. This preserves any parsing
-        # errors that were added to the item for review.
-        # for item in csvFileItems:
-        #     Item.move(item, dataset)
 
         # Delete uploaded files
         # Folder.clean(uploadFolder)
