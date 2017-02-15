@@ -137,6 +137,8 @@ class Segmentation(Model):
 
     def maskFile(self, segmentation):
         File = self.model('file')
+        if segmentation['maskId'] is None:
+            return None
         return File.load(segmentation['maskId'], force=True, exc=True)
 
     def maskData(self, segmentation):
@@ -146,7 +148,10 @@ class Segmentation(Model):
         :rtype: numpy.ndarray
         """
         Image = self.model('image', 'isic_archive')
-        return Image._decodeDataFromFile(self.maskFile(segmentation))
+        maskFile = self.maskFile(segmentation)
+        if maskFile is None:
+            return None
+        return Image._decodeDataFromFile(maskFile)
 
     def boundaryThumbnail(self, segmentation, image=None, width=256):
         Image = self.model('image', 'isic_archive')
@@ -154,6 +159,8 @@ class Segmentation(Model):
             image = Image.load(segmentation['imageId'], force=True, exc=True)
 
         mask = self.maskData(segmentation)
+        if mask is None:
+            return None
         contour = OpenCVSegmentationHelper.maskToContour(
             mask, paddedInput=False)
 
@@ -195,7 +202,7 @@ class Segmentation(Model):
     def remove(self, segmentation, **kwargs):
         File = self.model('file')
         # A segmentation could be "failed" and have a "maskId" of None
-        if segmentation['maskId']:
+        if segmentation['maskId'] is not None:
             File.remove(self.maskFile(segmentation))
         super(Segmentation, self).remove(segmentation, **kwargs)
 

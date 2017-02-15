@@ -237,6 +237,9 @@ class SegmentationResource(Resource):
             user=self.getCurrentUser(), exc=True)
 
         maskFile = Segmentation.maskFile(segmentation)
+        if maskFile is None:
+            raise RestException(
+                'This segmentation is failed, and thus has no mask.', code=410)
 
         maskStream = File.download(
             maskFile, headers=True, contentDisposition=contentDisp)
@@ -275,6 +278,10 @@ class SegmentationResource(Resource):
 
         thumbnailImageStream = Segmentation.boundaryThumbnail(
             segmentation, image, width)
+        if thumbnailImageStream is None:
+            raise RestException(
+                'This segmentation is failed, and thus has no thumbnail.',
+                code=410)
         thumbnailImageData = thumbnailImageStream.getvalue()
 
         setResponseHeader('Content-Type', 'image/jpeg')
