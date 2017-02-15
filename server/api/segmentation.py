@@ -20,7 +20,6 @@
 import base64
 import datetime
 
-import numpy
 import six
 
 from girder.api import access
@@ -149,14 +148,13 @@ class SegmentationResource(Resource):
 
                 mask = Segmentation.doSegmentation(image, seedCoord, tolerance)
             else:
-                imageShape = (
-                    image['meta']['acquisition']['pixelsY'],
-                    image['meta']['acquisition']['pixelsX'])
-                mask = ScikitSegmentationHelper._contourToMask(
-                    numpy.zeros(imageShape),
+                mask = ScikitSegmentationHelper.contourToMask(
+                    (
+                        image['meta']['acquisition']['pixelsY'],
+                        image['meta']['acquisition']['pixelsX']
+                    ),
                     lesionBoundary['geometry']['coordinates'][0]
-                ).astype(numpy.uint8)
-                mask *= 255
+                )
 
             segmentation = Segmentation.createSegmentation(
                 image=image,

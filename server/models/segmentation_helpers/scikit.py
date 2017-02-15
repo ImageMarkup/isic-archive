@@ -234,11 +234,22 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         return coords
 
     @classmethod
-    def _contourToMask(cls, image, coords):
+    def contourToMask(cls, imageShape, coords):
+        """
+        Convert a contour line to a label mask.
+
+        :param imageShape: The [Y, X] shape of the image.
+        :type imageShape: tuple[int]
+        :param coords: An array of point pairs.
+        :type coords: numpy.ndarray
+        :return: A binary label mask.
+        :rtype: numpy.ndarray of numpy.uint8
+        """
         maskImage = skimage.measure.grid_points_in_poly(
-            shape=image.shape[:2],
+            shape=imageShape,
             verts=numpy.fliplr(coords)
-        )
+        ).astype(numpy.uint8)
+        maskImage *= 255
         return maskImage
 
     @classmethod
@@ -307,7 +318,7 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
 
     @classmethod
     def superpixels_legacy(cls, image, coords):
-        maskImage = cls._contourToMask(image, coords)
+        maskImage = cls.contourToMask(image.shape[:2], coords)
 
         from .opencv import OpenCVSegmentationHelper
         # This operation is much faster in OpenCV
