@@ -20,6 +20,7 @@
 import base64
 import datetime
 
+import numpy
 import six
 
 from girder.api import access
@@ -149,12 +150,13 @@ class SegmentationResource(Resource):
 
                 mask = Segmentation.doSegmentation(image, seedCoord, tolerance)
             else:
+                coords = lesionBoundary['geometry']['coordinates'][0]
                 mask = OpenCVSegmentationHelper.contourToMask(
                     (
                         image['meta']['acquisition']['pixelsY'],
                         image['meta']['acquisition']['pixelsX']
                     ),
-                    lesionBoundary['geometry']['coordinates'][0]
+                    numpy.rint(numpy.array(coords)).astype(int)
                 )
 
             segmentation = Segmentation.createSegmentation(
