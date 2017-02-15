@@ -130,6 +130,7 @@ class UploadTestCase(IsicTestCase):
             })
         self.assertStatusOk(resp)
         dataset = resp.json
-        self.assertHasKeys(dataset['meta'], ['metadata'])
-        self.assertEqual(len(dataset['meta']['metadata']), 1)
-        self.assertHasKeys(dataset['meta']['metadata'][0], ('fileId', 'time'))
+        self.assertHasKeys(dataset['meta'], ['metadataFiles'])
+        self.assertEqual(len(dataset['meta']['metadataFiles']), 1)
+        self.assertHasKeys(dataset['meta']['metadataFiles'][0],
+                           ('fileId', 'time'))

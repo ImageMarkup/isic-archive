@@ -329,14 +329,14 @@ class Dataset(FolderModel):
 
     def registerMetadata(self, dataset, csvFile):
         """Register a .csv file containing metadata about images."""
-        # Add image metadata information to list
-        registeredMetadata = dataset['meta'].get('metadata', [])
-        registeredMetadata.append({
+        # Add image metadata file information to list
+        metadataFiles = dataset['meta'].get('metadataFiles', [])
+        metadataFiles.append({
             'fileId': csvFile['_id'],
             'time': datetime.datetime.utcnow()
         })
         dataset = self.setMetadata(dataset, {
-            'metadata': registeredMetadata
+            'metadataFiles': metadataFiles
         })
 
         return dataset
