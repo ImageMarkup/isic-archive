@@ -75,13 +75,26 @@ class SegmentationResource(Resource):
             creatorUser = User.load(params['creatorId'], force=True, exc=True)
             filters['creatorId'] = creatorUser['_id']
 
-        return list(Segmentation.find(
-            query=filters,
-            sort=sort,
-            fields=Segmentation.summaryFields,
-            limit=limit,
-            offset=offset,
-        ))
+        return [
+            {
+                '_id': segmentation['_id'],
+                'created': segmentation['created'],
+                'failed': segmentation['maskId'] is None,
+                'skill':
+                    'expert'
+                    if any(
+                        review['skill'] == Segmentation.Skill.EXPERT
+                        for review in segmentation['reviews']
+                    )
+                    else 'novice'
+            }
+            for segmentation in Segmentation.find(
+                query=filters,
+                sort=sort,
+                limit=limit,
+                offset=offset,
+            )
+        ]
 
     @describeRoute(
         Description('Add a segmentation to an image.')
@@ -205,7 +218,8 @@ class SegmentationResource(Resource):
                 segmentation.pop('creatorId'),
                 force=True, exc=True),
             self.getCurrentUser())
-        del segmentation['maskId']
+
+        segmentation['failed'] = segmentation.pop('maskId') is None
 
         return segmentation
 
@@ -237,6 +251,9 @@ class SegmentationResource(Resource):
             user=self.getCurrentUser(), exc=True)
 
         maskFile = Segmentation.maskFile(segmentation)
+        if maskFile is None:
+            raise RestException(
+                'This segmentation is failed, and thus has no mask.', code=410)
 
         maskStream = File.download(
             maskFile, headers=True, contentDisposition=contentDisp)
@@ -275,6 +292,10 @@ class SegmentationResource(Resource):
 
         thumbnailImageStream = Segmentation.boundaryThumbnail(
             segmentation, image, width)
+        if thumbnailImageStream is None:
+            raise RestException(
+                'This segmentation is failed, and thus has no thumbnail.',
+                code=410)
         thumbnailImageData = thumbnailImageStream.getvalue()
 
         setResponseHeader('Content-Type', 'image/jpeg')
