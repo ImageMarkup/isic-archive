@@ -63,7 +63,7 @@ class UploadTestCase(IsicTestCase):
         zipSize = zipStream.tell()
         zipStream.seek(0)
 
-        # Create a new folder in the uploader user's home
+        # Create new folders in the uploader user's home
         uploaderUser = User.findOne({'login': 'uploader-user'})
         self.assertIsNotNone(uploaderUser)
 
@@ -74,7 +74,16 @@ class UploadTestCase(IsicTestCase):
                 'name': 'isic_upload_1'
             })
         self.assertStatusOk(resp)
-        uploadFolder = resp.json
+        uploadZipFolder = resp.json
+
+        resp = self.request(
+            path='/folder', method='POST', user=uploaderUser, params={
+                'parentType': 'user',
+                'parentId': str(uploaderUser['_id']),
+                'name': 'isic_upload_2'
+            })
+        self.assertStatusOk(resp)
+        uploadCsvFolder = resp.json
 
         # Uploading files is complicated via REST, so upload the ZIP via models
         # No special behavior should be attached to uploading a plain ZIP file
@@ -83,7 +92,7 @@ class UploadTestCase(IsicTestCase):
             size=zipSize,
             name='test_dataset_1.zip',
             parentType='folder',
-            parent=Folder.load(uploadFolder['_id'], force=True),
+            parent=Folder.load(uploadZipFolder['_id'], force=True),
             user=uploaderUser,
             mimeType='application/zip'
         )
@@ -91,7 +100,7 @@ class UploadTestCase(IsicTestCase):
         # Create a new dataset
         resp = self.request(
             path='/dataset', method='POST', user=uploaderUser, params={
-                'uploadFolderId': uploadFolder['_id'],
+                'uploadFolderId': uploadZipFolder['_id'],
                 'name': 'test_dataset_1',
                 'owner': 'Test Organization',
                 'description': 'A test dataset',
@@ -103,12 +112,6 @@ class UploadTestCase(IsicTestCase):
         self.assertStatusOk(resp)
         dataset = resp.json
 
-        # Clean folder contents
-        resp = self.request(
-            path='/folder/%s/contents' % uploadFolder['_id'], method='DELETE',
-            user=uploaderUser)
-        self.assertStatusOk(resp)
-
         # Upload the CSV metadata file
         csvPath = os.path.join(testDataDir, 'test_1_metadata.csv')
         with open(csvPath, 'rb') as csvStream:
@@ -117,7 +120,7 @@ class UploadTestCase(IsicTestCase):
                 size=os.path.getsize(csvPath),
                 name='test_1_metadata.csv',
                 parentType='folder',
-                parent=Folder.load(uploadFolder['_id'], force=True),
+                parent=Folder.load(uploadCsvFolder['_id'], force=True),
                 user=uploaderUser,
                 mimeType='text/csv'
             )
@@ -126,7 +129,7 @@ class UploadTestCase(IsicTestCase):
         resp = self.request(
             path='/dataset/%s/metadata' % dataset['_id'], method='POST',
             user=uploaderUser, params={
-                'uploadFolderId': uploadFolder['_id'],
+                'uploadFolderId': uploadCsvFolder['_id'],
             })
         self.assertStatusOk(resp)
         dataset = resp.json
