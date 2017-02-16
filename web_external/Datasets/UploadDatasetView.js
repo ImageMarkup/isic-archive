@@ -63,6 +63,26 @@ isic.views.UploadDatasetView = isic.View.extend({
             parentView: this
         });
 
+        this.dataset = new isic.models.DatasetModel();
+
+        this.listenTo(this.dataset, 'isic:ingestImages:success', function () {
+            isic.showAlertDialog({
+                text: '<h4>Dataset successfully submitted.</h4>',
+                escapedHtml: true,
+                callback: function () {
+                    isic.router.navigate('', {trigger: true});
+                }
+            });
+        });
+
+        this.listenTo(this.dataset, 'isic:ingestImages:error', function (resp) {
+            isic.showAlertDialog({
+                text: '<h4>Error submitting dataset</h4><br>' + resp.responseJSON.message,
+                escapedHtml: true
+            });
+            this.$('#isic-dataset-submit').prop('disabled', false);
+        });
+
         this.render();
     },
 
@@ -156,35 +176,8 @@ isic.views.UploadDatasetView = isic.View.extend({
         var attribution = this.$('#isic-dataset-attribution-name').val();
 
         // Post dataset
-        girder.restRequest({
-            type: 'POST',
-            path: 'dataset',
-            data: {
-                zipFileId: zipFileId,
-                name: name,
-                owner: owner,
-                description: description,
-                license: license,
-                signature: signature,
-                anonymous: anonymous,
-                attribution: attribution
-            },
-            error: null
-        }).done(_.bind(function () {
-            isic.showAlertDialog({
-                text: '<h4>Dataset successfully submitted.</h4>',
-                escapedHtml: true,
-                callback: function () {
-                    isic.router.navigate('', {trigger: true});
-                }
-            });
-        }, this)).error(_.bind(function (resp) {
-            isic.showAlertDialog({
-                text: '<h4>Error submitting dataset</h4><br>' + resp.responseJSON.message,
-                escapedHtml: true
-            });
-            this.$('#isic-dataset-submit').prop('disabled', false);
-        }, this));
+        this.dataset.ingestImages(zipFileId, name, owner, description, license,
+            signature, anonymous, attribution);
     },
 
     updateUploadWidget: function () {
