@@ -266,7 +266,7 @@ class DatasetResource(Resource):
         .param('metadataFileId', 'The ID of the .csv metadata file.')
     )
     @access.user
-    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
+    @loadmodel(model='dataset', plugin='isic_archive', force=True)
     def registerMetadata(self, dataset, params):
         Dataset = self.model('dataset', 'isic_archive')
         File = self.model('file')
@@ -285,7 +285,7 @@ class DatasetResource(Resource):
             raise ValidationException(
                 'No file was uploaded.', 'metadataFileId')
         metadataFile = File.load(
-            metadataFileId, user=user, level=AccessType.WRITE, exc=False)
+            metadataFileId, user=user, level=AccessType.READ, exc=False)
         if not metadataFile:
             raise ValidationException(
                 'Invalid metadata file ID.', 'metadataFileId')
@@ -294,4 +294,5 @@ class DatasetResource(Resource):
                 raise ValidationException(
                     'File must be in .csv format.', 'metadataFileId')
 
-        return Dataset.registerMetadata(dataset=dataset, csvFile=metadataFile)
+        return Dataset.registerMetadata(dataset=dataset, user=user,
+                                        csvFile=metadataFile, sendMail=True)

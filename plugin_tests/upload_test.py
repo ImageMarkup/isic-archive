@@ -21,6 +21,7 @@ import os
 
 from six import BytesIO
 
+from girder.constants import AccessType
 from girder.utility.ziputil import ZipGenerator
 from tests import base
 
@@ -40,8 +41,23 @@ class UploadTestCase(IsicTestCase):
     def testUpload(self):
         Folder = self.model('folder')
         print Folder.database
+        Group = self.model('group')
         Upload = self.model('upload')
         User = self.model('user', 'isic_archive')
+
+        # Create a reviewer user that will receive notification emails
+        resp = self.request(path='/user', method='POST', params={
+            'email': 'reviewer-user@isic-archive.com',
+            'login': 'reviewer-user',
+            'firstName': 'reviewer',
+            'lastName': 'user',
+            'password': 'password'
+        })
+        self.assertStatusOk(resp)
+        reviewerUser = User.findOne({'login': 'reviewer-user'})
+        reviewersGroup = Group.findOne({'name': 'Dataset QC Reviewers'})
+        reviewersGroup = Group.addUser(
+            reviewersGroup, reviewerUser, level=AccessType.READ)
 
         testDataDir = os.path.join(
             os.environ['GIRDER_TEST_DATA_PREFIX'], 'plugins', 'isic_archive')
@@ -98,6 +114,7 @@ class UploadTestCase(IsicTestCase):
         )
 
         # Create a new dataset
+        self.assertNoMail()
         resp = self.request(
             path='/dataset', method='POST', user=uploaderUser, params={
                 'zipFileId': zipFile['_id'],
@@ -111,6 +128,8 @@ class UploadTestCase(IsicTestCase):
             })
         self.assertStatusOk(resp)
         dataset = resp.json
+        # Uploader user and reviewer user should receive emails
+        self.assertMails(count=2)
 
         # Upload the CSV metadata file
         csvPath = os.path.join(testDataDir, 'test_1_metadata.csv')
@@ -126,6 +145,7 @@ class UploadTestCase(IsicTestCase):
             )
 
         # Register metadata with dataset
+        self.assertNoMail()
         resp = self.request(
             path='/dataset/%s/metadata' % dataset['_id'], method='POST',
             user=uploaderUser, params={
@@ -137,3 +157,5 @@ class UploadTestCase(IsicTestCase):
         self.assertEqual(len(dataset['meta']['metadataFiles']), 1)
         self.assertHasKeys(dataset['meta']['metadataFiles'][0],
                            ('fileId', 'time'))
+        # Reviewer user should receive email
+        self.assertMails(count=1)

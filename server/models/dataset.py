@@ -139,7 +139,6 @@ class Dataset(FolderModel):
         extracted to a "Pre-review" folder within a new dataset folder.
         """
         Folder = self.model('folder')
-        Group = self.model('group')
 
         # Create dataset folder
         dataset = self.createDataset(name, description, user)
@@ -190,15 +189,12 @@ class Dataset(FolderModel):
             mail_utils.sendEmail(to=user['email'], subject=subject, text=html)
 
             # Mail 'Dataset QC Reviewers' group
-            groupName = 'Dataset QC Reviewers'
-            group = Group.findOne({'name': groupName})
-            if not group:
-                raise GirderException('Could not load group: %s.' % groupName)
-            emails = [member['email'] for member in Group.listMembers(group)]
-            if emails:
-                params['group'] = True
-                html = mail_utils.renderTemplate(templateFilename, params)
-                mail_utils.sendEmail(to=emails, subject=subject, text=html)
+            params['group'] = True
+            self._mailGroup(
+                groupName='Dataset QC Reviewers',
+                templateFilename=templateFilename,
+                templateParams=params,
+                subject=subject)
 
         return dataset
 
@@ -300,16 +296,49 @@ class Dataset(FolderModel):
                 Folder.countFolders(prereviewFolder)) == 0:
             Folder.remove(prereviewFolder)
 
-    def registerMetadata(self, dataset, csvFile):
+    def registerMetadata(self, dataset, csvFile, user, sendMail=False):
         """Register a .csv file containing metadata about images."""
+        # Check if image metadata is already registered
+        if self.findOne({'meta.metadataFiles.fileId': csvFile['_id']}):
+            raise ValidationException('Metadata file is already registered.')
+
         # Add image metadata file information to list
+        now = datetime.datetime.utcnow()
         metadataFiles = dataset['meta'].get('metadataFiles', [])
         metadataFiles.append({
             'fileId': csvFile['_id'],
-            'time': datetime.datetime.utcnow()
+            'user': user['_id'],
+            'time': now
         })
         dataset = self.setMetadata(dataset, {
             'metadataFiles': metadataFiles
         })
 
+        # Send email notification
+        if sendMail:
+            host = mail_utils.getEmailUrlPrefix()
+            self._mailGroup(
+                groupName='Dataset QC Reviewers',
+                templateFilename='registerMetadataNotification.mako',
+                templateParams={
+                    'host': host,
+                    'dataset': dataset,
+                    'user': user,
+                    'csvFile': csvFile,
+                    'date': now.replace(microsecond=0)
+                },
+                subject='ISIC Archive: Dataset Metadata Notification')
+
         return dataset
+
+    def _mailGroup(self, groupName, templateFilename, templateParams, subject):
+        """Send email to all members of a group."""
+        Group = self.model('group')
+
+        group = Group.findOne({'name': groupName})
+        if not group:
+            raise GirderException('Could not load group: %s.' % groupName)
+        emails = [member['email'] for member in Group.listMembers(group)]
+        if emails:
+            html = mail_utils.renderTemplate(templateFilename, templateParams)
+            mail_utils.sendEmail(to=emails, subject=subject, text=html)
