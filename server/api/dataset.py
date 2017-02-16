@@ -33,6 +33,13 @@ CSV_FORMATS = [
     'application/vnd.ms-excel'
 ]
 
+ZIP_FORMATS = [
+    'multipart/x-zip',
+    'application/zip',
+    'application/zip-compressed',
+    'application/x-zip-compressed',
+]
+
 
 class DatasetResource(Resource):
     def __init__(self):
@@ -96,7 +103,7 @@ class DatasetResource(Resource):
 
     @describeRoute(
         Description('Create a lesion image dataset.')
-        .param('uploadFolderId', 'The ID of the folder that contains images.')
+        .param('zipFileId', 'The ID of the .zip file of images.')
         .param('name', 'Name of the dataset.')
         .param('owner', 'Owner of the dataset.')
         .param('description', 'Description of the dataset.', required=False,
@@ -113,26 +120,30 @@ class DatasetResource(Resource):
     @access.user
     def ingestDataset(self, params):
         Dataset = self.model('dataset', 'isic_archive')
-        Folder = self.model('folder')
+        File = self.model('file')
         User = self.model('user', 'isic_archive')
 
         if cherrypy.request.headers['Content-Type'].split(';')[0] == \
                 'application/json':
             params = self.getBodyJson()
-        self.requireParams(('uploadFolderId', 'name', 'owner'), params)
+        self.requireParams(('zipFileId', 'name', 'owner'), params)
 
         user = self.getCurrentUser()
         User.requireCreateDataset(user)
 
-        uploadFolderId = params.get('uploadFolderId', None)
-        if not uploadFolderId:
+        zipFileId = params.get('zipFileId')
+        if not zipFileId:
             raise ValidationException(
-                'No files were uploaded.', 'uploadFolderId')
-        uploadFolder = Folder.load(
-            uploadFolderId, user=user, level=AccessType.WRITE, exc=False)
-        if not uploadFolder:
+                'No file was uploaded.', 'zipFileId')
+        zipFile = File.load(
+            zipFileId, user=user, level=AccessType.WRITE, exc=False)
+        if not zipFile:
             raise ValidationException(
-                'Invalid upload folder ID.', 'uploadFolderId')
+                'Invalid upload file ID.', 'zipFileId')
+        if not mimetypes.guess_type(zipFile['name'], strict=False)[0] \
+                in ZIP_FORMATS:
+                raise ValidationException(
+                    'File must be in .zip format.', 'zipFileId')
 
         name = params['name'].strip()
         owner = params['owner'].strip()
@@ -156,7 +167,7 @@ class DatasetResource(Resource):
 
         # TODO: make this return only the dataset fields
         return Dataset.ingestDataset(
-            uploadFolder=uploadFolder, user=user, name=name, owner=owner,
+            zipFile=zipFile, user=user, name=name, owner=owner,
             description=description, license=licenseValue, signature=signature,
             anonymous=anonymous, attribution=attribution, sendMail=True)
 
@@ -252,51 +263,35 @@ class DatasetResource(Resource):
     @describeRoute(
         Description('Register metadata with a dataset.')
         .param('id', 'The ID of the dataset.', paramType='path')
-        .param('uploadFolderId', 'The ID of the folder that contains metadata '
-               'in a .csv file.')
+        .param('metadataFileId', 'The ID of the .csv metadata file.')
     )
     @access.user
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
     def registerMetadata(self, dataset, params):
         Dataset = self.model('dataset', 'isic_archive')
-        Folder = self.model('folder')
-        Item = self.model('item')
+        File = self.model('file')
         User = self.model('user', 'isic_archive')
 
         if cherrypy.request.headers['Content-Type'].split(';')[0] == \
                 'application/json':
             params = self.getBodyJson()
-        self.requireParams('uploadFolderId', params)
+        self.requireParams('metadataFileId', params)
 
         user = self.getCurrentUser()
         User.requireCreateDataset(user)
 
-        uploadFolderId = params.get('uploadFolderId', None)
-        if not uploadFolderId:
+        metadataFileId = params.get('metadataFileId')
+        if not metadataFileId:
             raise ValidationException(
-                'No files were uploaded.', 'uploadFolderId')
-        uploadFolder = Folder.load(
-            uploadFolderId, user=user, level=AccessType.WRITE, exc=False)
-        if not uploadFolder:
+                'No file was uploaded.', 'metadataFileId')
+        metadataFile = File.load(
+            metadataFileId, user=user, level=AccessType.WRITE, exc=False)
+        if not metadataFile:
             raise ValidationException(
-                'Invalid upload folder ID.', 'uploadFolderId')
+                'Invalid metadata file ID.', 'metadataFileId')
+        if not mimetypes.guess_type(metadataFile['name'], strict=False)[0] \
+                in CSV_FORMATS:
+                raise ValidationException(
+                    'File must be in .csv format.', 'metadataFileId')
 
-        csvFileItems = [f for f in Folder.childItems(uploadFolder)
-                        if mimetypes.guess_type(f['name'], strict=False)[0] in
-                        CSV_FORMATS]
-        if not csvFileItems:
-            raise ValidationException(
-                'No .csv files were uploaded.', 'uploadFolder')
-        if len(csvFileItems) > 1:
-            raise ValidationException(
-                'Only one .csv file may be uploaded.', 'uploadFolder')
-        csvFiles = Item.childFiles(csvFileItems[0], limit=2)
-        if not csvFiles.count():
-            raise ValidationException(
-                'No .csv files were uploaded.', 'uploadFolder')
-        if csvFiles.count() > 1:
-            raise ValidationException(
-                'Only one .csv file may be uploaded.', 'uploadFolder')
-        csvFile = csvFiles[0]
-
-        return Dataset.registerMetadata(dataset, csvFile)
+        return Dataset.registerMetadata(dataset=dataset, csvFile=metadataFile)

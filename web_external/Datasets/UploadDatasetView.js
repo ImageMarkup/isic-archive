@@ -30,7 +30,28 @@ isic.views.UploadDatasetView = isic.View.extend({
         'submit #isic-dataset-form': function (event) {
             event.preventDefault();
             this.$('#isic-dataset-submit').prop('disabled', true);
-            this.submitDataset();
+
+            // If no files have been uploaded, delegate error handling to submitDataset()
+            if (!this.uploadFolder) {
+                this.submitDataset(null);
+                return;
+            }
+
+            // Get file ID of uploaded file, then submit dataset
+            var items = new isic.collections.ItemCollection();
+            items.once('g:changed', function () {
+                if (!items.isEmpty()) {
+                    var item = items.first();
+                    item.once('g:files', function (fileCollection) {
+                        var fileId = fileCollection.first().id;
+                        this.submitDataset(fileId);
+                    }, this).getFiles();
+                } else {
+                    this.submitDataset(null);
+                }
+            }, this).fetch({
+                folderId: this.uploadFolder.id
+            });
         }
     },
 
@@ -125,7 +146,7 @@ isic.views.UploadDatasetView = isic.View.extend({
         this.uploadWidget.uploadNextFile();
     },
 
-    submitDataset: function () {
+    submitDataset: function (zipFileId) {
         var name = this.$('#isic-dataset-name').val();
         var owner = this.$('#isic-dataset-owner').val();
         var description = this.$('#isic-dataset-description').val();
@@ -133,14 +154,13 @@ isic.views.UploadDatasetView = isic.View.extend({
         var signature = this.$('#isic-dataset-agreement-signature').val();
         var anonymous = this.$('#isic-dataset-attribution-anonymous').prop('checked');
         var attribution = this.$('#isic-dataset-attribution-name').val();
-        var uploadFolderId = this.uploadFolder ? this.uploadFolder.id : null;
 
         // Post dataset
         girder.restRequest({
             type: 'POST',
             path: 'dataset',
             data: {
-                uploadFolderId: uploadFolderId,
+                zipFileId: zipFileId,
                 name: name,
                 owner: owner,
                 description: description,

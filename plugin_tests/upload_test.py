@@ -87,7 +87,7 @@ class UploadTestCase(IsicTestCase):
 
         # Uploading files is complicated via REST, so upload the ZIP via models
         # No special behavior should be attached to uploading a plain ZIP file
-        Upload.uploadFromFile(
+        zipFile = Upload.uploadFromFile(
             obj=zipStream,
             size=zipSize,
             name='test_dataset_1.zip',
@@ -100,7 +100,7 @@ class UploadTestCase(IsicTestCase):
         # Create a new dataset
         resp = self.request(
             path='/dataset', method='POST', user=uploaderUser, params={
-                'uploadFolderId': uploadZipFolder['_id'],
+                'zipFileId': zipFile['_id'],
                 'name': 'test_dataset_1',
                 'owner': 'Test Organization',
                 'description': 'A test dataset',
@@ -115,7 +115,7 @@ class UploadTestCase(IsicTestCase):
         # Upload the CSV metadata file
         csvPath = os.path.join(testDataDir, 'test_1_metadata.csv')
         with open(csvPath, 'rb') as csvStream:
-            Upload.uploadFromFile(
+            metadataFile = Upload.uploadFromFile(
                 obj=csvStream,
                 size=os.path.getsize(csvPath),
                 name='test_1_metadata.csv',
@@ -129,7 +129,7 @@ class UploadTestCase(IsicTestCase):
         resp = self.request(
             path='/dataset/%s/metadata' % dataset['_id'], method='POST',
             user=uploaderUser, params={
-                'uploadFolderId': uploadCsvFolder['_id'],
+                'metadataFileId': metadataFile['_id']
             })
         self.assertStatusOk(resp)
         dataset = resp.json

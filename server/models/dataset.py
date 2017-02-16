@@ -19,7 +19,6 @@
 
 import datetime
 import itertools
-import mimetypes
 import os
 
 from girder.constants import AccessType
@@ -30,13 +29,6 @@ from girder.utility import assetstore_utilities, mail_utils
 from girder.utility.progress import ProgressContext
 
 from ..upload import ZipFileOpener
-
-ZIP_FORMATS = [
-    'multipart/x-zip',
-    'application/zip',
-    'application/zip-compressed',
-    'application/x-zip-compressed',
-]
 
 
 class Dataset(FolderModel):
@@ -139,28 +131,15 @@ class Dataset(FolderModel):
             raise ValidationException('Dataset name must not be empty.', 'name')
         return super(Dataset, self).validate(doc, **kwargs)
 
-    def ingestDataset(self, uploadFolder, user, name, owner, description,
+    def ingestDataset(self, zipFile, user, name, owner, description,
                       license, signature, anonymous, attribution,
                       sendMail=False):
         """
-        Ingest an uploaded dataset. This upload folder is expected to contain a
-        .zip file of images. The images are extracted to a new "Pre-review"
-        folder within a new dataset folder.
+        Ingest an uploaded dataset from a .zip file of images. The images are
+        extracted to a "Pre-review" folder within a new dataset folder.
         """
         Folder = self.model('folder')
-        Item = self.model('item')
         Group = self.model('group')
-
-        if not uploadFolder:
-            raise ValidationException(
-                'No files were uploaded.', 'uploadFolder')
-
-        zipFileItems = [f for f in Folder.childItems(uploadFolder)
-                        if mimetypes.guess_type(f['name'], strict=False)[0] in
-                        ZIP_FORMATS]
-        if not zipFileItems:
-            raise ValidationException(
-                'No .zip files were uploaded.', 'uploadFolder')
 
         # Create dataset folder
         dataset = self.createDataset(name, description, user)
@@ -183,15 +162,9 @@ class Dataset(FolderModel):
         prereviewFolder = Folder.copyAccessPolicies(
             dataset, prereviewFolder, save=True)
 
-        # Process zip files
-        for item in zipFileItems:
-            zipFiles = Item.childFiles(item)
-            for zipFile in zipFiles:
-                # TODO: gracefully clean up after exceptions in handleZip
-                self._handleZip(prereviewFolder, user, zipFile)
-
-        # Delete uploaded files
-        # Folder.clean(uploadFolder)
+        # Process zip file
+        # TODO: gracefully clean up after exceptions in handleZip
+        self._handleZip(prereviewFolder, user, zipFile)
 
         # Send email confirmations
         if sendMail:
