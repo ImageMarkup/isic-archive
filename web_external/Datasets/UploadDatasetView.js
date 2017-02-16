@@ -93,7 +93,7 @@ isic.views.UploadDatasetView = isic.View.extend({
             this.startUpload(this.uploadFolder);
         } else {
             // Create new upload folder with unique name
-            this.uploadFolder = new girder.models.FolderModel({
+            this.uploadFolder = new isic.models.FolderModel({
                 name: 'isic_upload_' + Date.now(),
                 parentType: 'user',
                 parentId: girder.currentUser.id,
@@ -186,26 +186,11 @@ isic.views.UploadDatasetView = isic.View.extend({
     },
 
     resetUpload: function () {
-        var uploadList = this.uploadedZipFiles;
-
         // Delete uploaded files
-        _.each(uploadList, function (name) {
-            var items = new girder.collections.ItemCollection();
-            items.once('g:changed', function () {
-                if (!items.isEmpty()) {
-                    var item = items.first();
-                    item.destroy();
-
-                    while (uploadList.length) {
-                        uploadList.pop();
-                    }
-                    this.updateUploadWidget();
-                }
-            }, this).fetch({
-                name: name,
-                folderId: this.uploadFolder.id
-            });
-        }, this);
+        this.uploadFolder.once('g:success', function () {
+            this.uploadedZipFiles = [];
+            this.updateUploadWidget();
+        }, this).removeContents();
     },
 
     showLicenseInfo: function () {
