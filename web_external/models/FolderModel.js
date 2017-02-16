@@ -2,7 +2,7 @@ isic.models.FolderModel = girder.models.FolderModel.extend({
     /**
      * Remove the contents of the folder.
      */
-     removeContents: function () {
+    removeContents: function () {
         girder.restRequest({
             path: this.resourceName + '/' + this.id + '/contents',
             type: 'DELETE'
@@ -11,5 +11,5 @@ isic.models.FolderModel = girder.models.FolderModel.extend({
         }, this)).error(_.bind(function (err) {
             this.trigger('g:error', err);
         }, this));
-     }
+    }
 });
