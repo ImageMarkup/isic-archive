@@ -136,7 +136,6 @@ isic.views.UploadDatasetView = isic.View.extend({
         var uploadFolderId = this.uploadFolder ? this.uploadFolder.id : null;
 
         // Post dataset
-        // TODO: processing happens synchronously; revisit using jobs?
         girder.restRequest({
             type: 'POST',
             path: 'dataset',
@@ -152,7 +151,6 @@ isic.views.UploadDatasetView = isic.View.extend({
             },
             error: null
         }).done(_.bind(function () {
-            // TODO: if updated to use jobs, navigate to job status page instead
             isic.showAlertDialog({
                 text: '<h4>Dataset successfully submitted.</h4>',
                 escapedHtml: true,
@@ -161,7 +159,6 @@ isic.views.UploadDatasetView = isic.View.extend({
                 }
             });
         }, this)).error(_.bind(function (resp) {
-            // TODO: add custom error dialog instead of using confirm dialog
             isic.showAlertDialog({
                 text: '<h4>Error submitting dataset</h4><br>' + resp.responseJSON.message,
                 escapedHtml: true
