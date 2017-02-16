@@ -82,6 +82,11 @@ nav.navbar.navbar-default.navbar-fixed-top.isic-header-wrapper
                 a(title="Upload Dataset", href="#uploadDataset")
                   i.icon-upload
                   | Upload Dataset
+            if currentUser
+              li(role="presentation")
+                a(title="Upload Dataset Metadata", href="#uploadDatasetMetadata")
+                  i.icon-upload
+                  | Upload Dataset Metadata
             li(role="presentation")
               a(title="Lesion Images", href="#images")
                 i.icon-picture
