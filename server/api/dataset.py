@@ -266,7 +266,7 @@ class DatasetResource(Resource):
         .param('metadataFileId', 'The ID of the .csv metadata file.')
     )
     @access.user
-    @loadmodel(model='dataset', plugin='isic_archive', force=True)
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
     def registerMetadata(self, dataset, params):
         Dataset = self.model('dataset', 'isic_archive')
         File = self.model('file')
