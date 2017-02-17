@@ -166,6 +166,10 @@ isic.views.UploadDatasetView = isic.View.extend({
         this.uploadWidget.uploadNextFile();
     },
 
+    /**
+     * Submit dataset. Delegate all validation to the server.
+     * @param [zipFileId] The ID of the .zip file, or null.
+     */
     submitDataset: function (zipFileId) {
         var name = this.$('#isic-dataset-name').val();
         var owner = this.$('#isic-dataset-owner').val();
@@ -175,7 +179,6 @@ isic.views.UploadDatasetView = isic.View.extend({
         var anonymous = this.$('#isic-dataset-attribution-anonymous').prop('checked');
         var attribution = this.$('#isic-dataset-attribution-name').val();
 
-        // Post dataset
         this.dataset.ingestImages(zipFileId, name, owner, description, license,
             signature, anonymous, attribution);
     },
