@@ -140,10 +140,10 @@ class DatasetResource(Resource):
         if not zipFile:
             raise ValidationException(
                 'Invalid upload file ID.', 'zipFileId')
-        if not mimetypes.guess_type(zipFile['name'], strict=False)[0] \
-                in ZIP_FORMATS:
-                raise ValidationException(
-                    'File must be in .zip format.', 'zipFileId')
+        if not self._checkFileFormat(zipFile, ZIP_FORMATS):
+            print(zipFile)
+            raise ValidationException(
+                'File must be in .zip format.', 'zipFileId')
 
         name = params['name'].strip()
         owner = params['owner'].strip()
@@ -289,10 +289,24 @@ class DatasetResource(Resource):
         if not metadataFile:
             raise ValidationException(
                 'Invalid metadata file ID.', 'metadataFileId')
-        if not mimetypes.guess_type(metadataFile['name'], strict=False)[0] \
-                in CSV_FORMATS:
-                raise ValidationException(
-                    'File must be in .csv format.', 'metadataFileId')
+        if not self._checkFileFormat(metadataFile, CSV_FORMATS):
+            raise ValidationException(
+                'File must be in .csv format.', 'metadataFileId')
 
         return Dataset.registerMetadata(dataset=dataset, user=user,
                                         csvFile=metadataFile, sendMail=True)
+
+    def _checkFileFormat(self, file, formats):
+        """
+        Check whether a file is of an expected format.
+
+        :param file: The file document.
+        :param formats: A list of valid formats.
+        :return: True if the file is of an expected format.
+        """
+        if file['mimeType'] in formats:
+            return True
+        if file['mimeType'] in ['application/octet-stream', None] and \
+                mimetypes.guess_type(file['name'], strict=False)[0] in formats:
+            return True
+        return False
