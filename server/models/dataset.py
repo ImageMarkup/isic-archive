@@ -300,7 +300,8 @@ class Dataset(FolderModel):
         """Register a .csv file containing metadata about images."""
         # Check if image metadata is already registered
         if self.findOne({'meta.metadataFiles.fileId': csvFile['_id']}):
-            raise ValidationException('Metadata file is already registered.')
+            raise ValidationException(
+                'Metadata file is already registered on a dataset.')
 
         # Add image metadata file information to list
         now = datetime.datetime.utcnow()
