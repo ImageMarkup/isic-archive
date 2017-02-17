@@ -307,7 +307,7 @@ class Dataset(FolderModel):
         metadataFiles = dataset['meta'].get('metadataFiles', [])
         metadataFiles.append({
             'fileId': csvFile['_id'],
-            'user': user['_id'],
+            'userId': user['_id'],
             'time': now
         })
         dataset = self.setMetadata(dataset, {
