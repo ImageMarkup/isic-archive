@@ -38,7 +38,7 @@ isic.views.UploadDatasetView = isic.View.extend({
             }
 
             // Get file ID of uploaded file, then submit dataset
-            var items = new isic.collections.ItemCollection();
+            var items = new girder.collections.ItemCollection();
             items.once('g:changed', function () {
                 if (!items.isEmpty()) {
                     var item = items.first();
@@ -134,7 +134,7 @@ isic.views.UploadDatasetView = isic.View.extend({
             this.startUpload(this.uploadFolder);
         } else {
             // Create new upload folder with unique name
-            this.uploadFolder = new isic.models.FolderModel({
+            this.uploadFolder = new girder.models.FolderModel({
                 name: 'isic_upload_' + Date.now(),
                 parentType: 'user',
                 parentId: girder.currentUser.id,
