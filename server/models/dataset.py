@@ -29,6 +29,7 @@ from girder.utility import assetstore_utilities, mail_utils
 from girder.utility.progress import ProgressContext
 
 from ..upload import ZipFileOpener
+from ..utility import mail_utils as isic_mail_utils
 
 
 class Dataset(FolderModel):
@@ -190,7 +191,7 @@ class Dataset(FolderModel):
 
             # Mail 'Dataset QC Reviewers' group
             params['group'] = True
-            self._mailGroup(
+            isic_mail_utils.sendEmailToGroup(
                 groupName='Dataset QC Reviewers',
                 templateFilename=templateFilename,
                 templateParams=params,
@@ -318,7 +319,7 @@ class Dataset(FolderModel):
         # Send email notification
         if sendMail:
             host = mail_utils.getEmailUrlPrefix()
-            self._mailGroup(
+            isic_mail_utils.sendEmailToGroup(
                 groupName='Dataset QC Reviewers',
                 templateFilename='registerMetadataNotification.mako',
                 templateParams={
@@ -331,15 +332,3 @@ class Dataset(FolderModel):
                 subject='ISIC Archive: Dataset Metadata Notification')
 
         return dataset
-
-    def _mailGroup(self, groupName, templateFilename, templateParams, subject):
-        """Send email to all members of a group."""
-        Group = self.model('group')
-
-        group = Group.findOne({'name': groupName})
-        if not group:
-            raise GirderException('Could not load group: %s.' % groupName)
-        emails = [member['email'] for member in Group.listMembers(group)]
-        if emails:
-            html = mail_utils.renderTemplate(templateFilename, templateParams)
-            mail_utils.sendEmail(to=emails, subject=subject, text=html)
