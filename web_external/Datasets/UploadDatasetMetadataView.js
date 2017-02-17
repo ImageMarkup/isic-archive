@@ -1,59 +1,12 @@
-// View for a collection of datasets in a select tag
-isic.views.UploadDatasetMetadataSelectDatasetView = isic.View.extend({
-    events: {
-        'change': 'datasetChanged'
-    },
-
-    initialize: function (options) {
-        this.listenTo(this.collection, 'reset', this.render);
-
-        this.render();
-    },
-
-    datasetChanged: function () {
-        this.trigger('changed', this.$('select').val());
-    },
-
-    render: function () {
-        // Destroy previous select2
-        var select = this.$('#isic-upload-dataset-metadata-dataset-select');
-        select.select2('destroy');
-
-        this.$el.html(isic.templates.uploadDatasetMetadataSelectDatasetPage({
-            models: this.collection.models
-        }));
-
-        // Set up select box
-        var placeholder = 'Select a dataset...';
-        if (!this.collection.isEmpty()) {
-            placeholder += ' (' + this.collection.length + ' available)';
-        }
-        select = this.$('#isic-upload-dataset-metadata-dataset-select');
-        select.select2({
-            placeholder: placeholder
-        });
-        select.focus();
-
-        return this;
-    }
-});
-
 isic.views.UploadDatasetMetadataView = isic.View.extend({
     events: {
         'click #isic-upload-reset': function (event) {
             this.resetUpload();
         },
         'click #isic-upload-dataset-metadata-submit': function (event) {
-            // Require dataset to be selected and CSV file to be uploaded
-            var errorMessage = null;
-            if (!this.dataset.id) {
-                errorMessage = 'Please select a dataset.';
-            } else if (_.isEmpty(this.uploadedCsvFiles) || !this.uploadFolder) {
-                errorMessage = 'Please upload a CSV file.';
-            }
-
-            if (errorMessage !== null) {
-                isic.showAlertDialog({ text: errorMessage });
+            // Require CSV file to be uploaded
+            if (_.isEmpty(this.uploadedCsvFiles) || !this.uploadFolder) {
+                isic.showAlertDialog({ text: 'Please upload a CSV file.' });
                 return;
             }
 
@@ -78,18 +31,10 @@ isic.views.UploadDatasetMetadataView = isic.View.extend({
     },
 
     initialize: function (settings) {
+        this.dataset = settings.dataset;
+
         this.uploadedCsvFiles = [];
         this.uploadFolder = null;
-
-        this.dataset = new isic.models.DatasetModel();
-        this.datasets = new isic.collections.DatasetCollection();
-
-        this.selectDatasetView = new isic.views.UploadDatasetMetadataSelectDatasetView({
-            collection: this.datasets,
-            parentView: this
-        });
-
-        this.datasets.fetch();
 
         this.listenTo(this.dataset, 'isic:registerMetadata:success', function () {
             isic.showAlertDialog({
@@ -110,22 +55,14 @@ isic.views.UploadDatasetMetadataView = isic.View.extend({
             this.$('#isic-upload-dataset-metadata-submit').prop('disabled', false);
         });
 
-        this.listenTo(this.selectDatasetView, 'changed', this.datasetChanged);
-
         this.render();
-    },
-
-    datasetChanged: function (datasetId) {
-        this.dataset.set({'_id': datasetId});
     },
 
     render: function () {
         this.$el.html(isic.templates.uploadDatasetMetadata({
-            user: girder.currentUser
+            user: girder.currentUser,
+            dataset: this.dataset
         }));
-
-        this.selectDatasetView.setElement(
-            this.$('#isic-upload-dataset-metadata-dataset-select-container')).render();
 
         if (!this.uploadWidget) {
             this.initializeUploadWidget();
@@ -228,19 +165,29 @@ isic.views.UploadDatasetMetadataView = isic.View.extend({
     }
 });
 
-isic.router.route('uploadDatasetMetadata', 'uploadDatasetMetadata', function () {
+isic.router.route('uploadDatasetMetadata/:id', 'uploadDatasetMetadata', function (id) {
     if (girder.currentUser) {
         // Registered users must:
         //  (1) Accept the TOS
         //  (2) Request and receive create dataset access
         // before being able to see the upload dataset metadata view
-        var nextView = isic.views.UploadDatasetMetadataView;
         if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
-            nextView = isic.views.TermsAcceptanceView;
+            girder.events.trigger('g:navigateTo', isic.views.TermsAcceptanceView);
         } else if (!girder.currentUser.canCreateDataset()) {
-            nextView = isic.views.UploadDatasetRequestView;
+            girder.events.trigger('g:navigateTo', isic.views.UploadDatasetRequestView);
+        } else {
+            // Fetch the dataset, then navigate to the view
+            var dataset = new isic.models.DatasetModel();
+            dataset.set({
+                _id: id
+            }).once('g:fetched', function () {
+                girder.events.trigger('g:navigateTo', isic.views.UploadDatasetMetadataView, {
+                    dataset: dataset
+                });
+            }, this).once('g:error', function () {
+                isic.router.navigate('', {trigger: true});
+            }, this).fetch();
         }
-        girder.events.trigger('g:navigateTo', nextView);
     } else {
         // Anonymous users should not be here, so route to home page
         isic.router.navigate('', {trigger: true});

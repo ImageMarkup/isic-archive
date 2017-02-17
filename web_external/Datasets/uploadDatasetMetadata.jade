@@ -1,12 +1,16 @@
 .isic-form-page.isic-upload-dataset-metadata-container
-  h2.isic-page-title Upload dataset metadata
+  h2.isic-page-title Register dataset metadata
 
   .isic-form-container
     .isic-form-group
-      h3 Select dataset
-      p.
-        Select the dataset for which to upload metadata:
-      .form-group#isic-upload-dataset-metadata-dataset-select-container
+      h3 Dataset
+      table.table.table-condensed.isic-upload-dataset-metadata-table
+        tr
+          td.isic-upload-dataset-metadata-table-label Name
+          td= dataset.name()
+        tr
+          td.isic-upload-dataset-metadata-table-label Description
+          td= dataset.get('description')
     .isic-form-group
       h3 Upload metadata
       .isic-upload-description-container

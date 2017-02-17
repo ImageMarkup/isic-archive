@@ -33,6 +33,7 @@ isic.models.DatasetModel = girder.Model.extend({
             },
             error: null
         }).done(_.bind(function (resp) {
+            this.set(resp);
             this.trigger('isic:ingestImages:success', resp);
         }, this)).error(_.bind(function (err) {
             this.trigger('isic:ingestImages:error', err);
@@ -52,6 +53,7 @@ isic.models.DatasetModel = girder.Model.extend({
             },
             error: null
         }).done(_.bind(function (resp) {
+            this.set(resp);
             this.trigger('isic:registerMetadata:success', resp);
         }, this)).error(_.bind(function (err) {
             this.trigger('isic:registerMetadata:error', err);

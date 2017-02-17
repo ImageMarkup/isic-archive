@@ -35,3 +35,12 @@
     tr
       td.isic-dataset-table-label Signature
       td= dataset.get('signature')
+  if user && user.canCreateDataset()
+    table.table.table-condensed.isic-dataset-table
+      tr
+        td.isic-dataset-table-section-header Actions
+      tr
+        td
+          button.isic-dataset-register-metadata-button.btn.btn-default.btn-md
+            i.icon-tags
+            |  Register metadata
