@@ -20,12 +20,25 @@
 import json
 
 import cherrypy
+import mimetypes
 
 from girder.api import access
 from girder.api.rest import Resource, loadmodel, RestException
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 from girder.models.model_base import AccessException, ValidationException
+
+CSV_FORMATS = [
+    'text/csv',
+    'application/vnd.ms-excel'
+]
+
+ZIP_FORMATS = [
+    'multipart/x-zip',
+    'application/zip',
+    'application/zip-compressed',
+    'application/x-zip-compressed',
+]
 
 
 class DatasetResource(Resource):
@@ -38,6 +51,7 @@ class DatasetResource(Resource):
         self.route('POST', (), self.ingestDataset)
         self.route('GET', (':id', 'review'), self.getReviewImages)
         self.route('POST', (':id', 'review'), self.submitReviewImages)
+        self.route('POST', (':id', 'metadata'), self.registerMetadata)
 
     @describeRoute(
         Description('Return a list of lesion image datasets.')
@@ -89,8 +103,7 @@ class DatasetResource(Resource):
 
     @describeRoute(
         Description('Create a lesion image dataset.')
-        .param('uploadFolderId', 'The ID of the folder that contains images '
-               'and metadata.')
+        .param('zipFileId', 'The ID of the .zip file of images.')
         .param('name', 'Name of the dataset.')
         .param('owner', 'Owner of the dataset.')
         .param('description', 'Description of the dataset.', required=False,
@@ -107,26 +120,30 @@ class DatasetResource(Resource):
     @access.user
     def ingestDataset(self, params):
         Dataset = self.model('dataset', 'isic_archive')
-        Folder = self.model('folder')
+        File = self.model('file')
         User = self.model('user', 'isic_archive')
 
         if cherrypy.request.headers['Content-Type'].split(';')[0] == \
                 'application/json':
             params = self.getBodyJson()
-        self.requireParams(('uploadFolderId', 'name', 'owner'), params)
+        self.requireParams(('zipFileId', 'name', 'owner'), params)
 
         user = self.getCurrentUser()
         User.requireCreateDataset(user)
 
-        uploadFolderId = params.get('uploadFolderId', None)
-        if not uploadFolderId:
+        zipFileId = params.get('zipFileId')
+        if not zipFileId:
             raise ValidationException(
-                'No files were uploaded.', 'uploadFolderId')
-        uploadFolder = Folder.load(
-            uploadFolderId, user=user, level=AccessType.WRITE, exc=False)
-        if not uploadFolder:
+                'No file was uploaded.', 'zipFileId')
+        zipFile = File.load(
+            zipFileId, user=user, level=AccessType.WRITE, exc=False)
+        if not zipFile:
             raise ValidationException(
-                'Invalid upload folder ID.', 'uploadFolderId')
+                'Invalid upload file ID.', 'zipFileId')
+        if not self._checkFileFormat(zipFile, ZIP_FORMATS):
+            print(zipFile)
+            raise ValidationException(
+                'File must be in .zip format.', 'zipFileId')
 
         name = params['name'].strip()
         owner = params['owner'].strip()
@@ -150,7 +167,7 @@ class DatasetResource(Resource):
 
         # TODO: make this return only the dataset fields
         return Dataset.ingestDataset(
-            uploadFolder=uploadFolder, user=user, name=name, owner=owner,
+            zipFile=zipFile, user=user, name=name, owner=owner,
             description=description, license=licenseValue, signature=signature,
             anonymous=anonymous, attribution=attribution, sendMail=True)
 
@@ -242,3 +259,54 @@ class DatasetResource(Resource):
 
         # TODO: return value?
         return {'status': 'success'}
+
+    @describeRoute(
+        Description('Register metadata with a dataset.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('metadataFileId', 'The ID of the .csv metadata file.')
+    )
+    @access.user
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
+    def registerMetadata(self, dataset, params):
+        Dataset = self.model('dataset', 'isic_archive')
+        File = self.model('file')
+        User = self.model('user', 'isic_archive')
+
+        if cherrypy.request.headers['Content-Type'].split(';')[0] == \
+                'application/json':
+            params = self.getBodyJson()
+        self.requireParams('metadataFileId', params)
+
+        user = self.getCurrentUser()
+        User.requireCreateDataset(user)
+
+        metadataFileId = params.get('metadataFileId')
+        if not metadataFileId:
+            raise ValidationException(
+                'No file was uploaded.', 'metadataFileId')
+        metadataFile = File.load(
+            metadataFileId, user=user, level=AccessType.READ, exc=False)
+        if not metadataFile:
+            raise ValidationException(
+                'Invalid metadata file ID.', 'metadataFileId')
+        if not self._checkFileFormat(metadataFile, CSV_FORMATS):
+            raise ValidationException(
+                'File must be in .csv format.', 'metadataFileId')
+
+        return Dataset.registerMetadata(dataset=dataset, user=user,
+                                        csvFile=metadataFile, sendMail=True)
+
+    def _checkFileFormat(self, file, formats):
+        """
+        Check whether a file is of an expected format.
+
+        :param file: The file document.
+        :param formats: A list of valid formats.
+        :return: True if the file is of an expected format.
+        """
+        if file['mimeType'] in formats:
+            return True
+        if file['mimeType'] in ['application/octet-stream', None] and \
+                mimetypes.guess_type(file['name'], strict=False)[0] in formats:
+            return True
+        return False

@@ -21,6 +21,7 @@ import os
 
 from six import BytesIO
 
+from girder.constants import AccessType
 from girder.utility.ziputil import ZipGenerator
 from tests import base
 
@@ -36,12 +37,27 @@ def tearDownModule():
     base.stopServer()
 
 
-class SegmentationHelperTestCase(IsicTestCase):
+class UploadTestCase(IsicTestCase):
     def testUpload(self):
         Folder = self.model('folder')
         print Folder.database
+        Group = self.model('group')
         Upload = self.model('upload')
         User = self.model('user', 'isic_archive')
+
+        # Create a reviewer user that will receive notification emails
+        resp = self.request(path='/user', method='POST', params={
+            'email': 'reviewer-user@isic-archive.com',
+            'login': 'reviewer-user',
+            'firstName': 'reviewer',
+            'lastName': 'user',
+            'password': 'password'
+        })
+        self.assertStatusOk(resp)
+        reviewerUser = User.findOne({'login': 'reviewer-user'})
+        reviewersGroup = Group.findOne({'name': 'Dataset QC Reviewers'})
+        reviewersGroup = Group.addUser(
+            reviewersGroup, reviewerUser, level=AccessType.READ)
 
         testDataDir = os.path.join(
             os.environ['GIRDER_TEST_DATA_PREFIX'], 'plugins', 'isic_archive')
@@ -63,7 +79,7 @@ class SegmentationHelperTestCase(IsicTestCase):
         zipSize = zipStream.tell()
         zipStream.seek(0)
 
-        # Create a new folder in the uploader user's home
+        # Create new folders in the uploader user's home
         uploaderUser = User.findOne({'login': 'uploader-user'})
         self.assertIsNotNone(uploaderUser)
 
@@ -74,37 +90,34 @@ class SegmentationHelperTestCase(IsicTestCase):
                 'name': 'isic_upload_1'
             })
         self.assertStatusOk(resp)
-        uploadFolder = resp.json
+        uploadZipFolder = resp.json
+
+        resp = self.request(
+            path='/folder', method='POST', user=uploaderUser, params={
+                'parentType': 'user',
+                'parentId': str(uploaderUser['_id']),
+                'name': 'isic_upload_2'
+            })
+        self.assertStatusOk(resp)
+        uploadCsvFolder = resp.json
 
         # Uploading files is complicated via REST, so upload the ZIP via models
         # No special behavior should be attached to uploading a plain ZIP file
-        Upload.uploadFromFile(
+        zipFile = Upload.uploadFromFile(
             obj=zipStream,
             size=zipSize,
             name='test_dataset_1.zip',
             parentType='folder',
-            parent=Folder.load(uploadFolder['_id'], force=True),
+            parent=Folder.load(uploadZipFolder['_id'], force=True),
             user=uploaderUser,
             mimeType='application/zip'
         )
 
-        # Upload the CSV metadata file
-        csvPath = os.path.join(testDataDir, 'test_1_metadata.csv')
-        with open(csvPath, 'rb') as csvStream:
-            Upload.uploadFromFile(
-                obj=csvStream,
-                size=os.path.getsize(csvPath),
-                name='test_1_metadata.csv',
-                parentType='folder',
-                parent=Folder.load(uploadFolder['_id'], force=True),
-                user=uploaderUser,
-                mimeType='text/csv'
-            )
-
         # Create a new dataset
+        self.assertNoMail()
         resp = self.request(
             path='/dataset', method='POST', user=uploaderUser, params={
-                'uploadFolderId': uploadFolder['_id'],
+                'zipFileId': zipFile['_id'],
                 'name': 'test_dataset_1',
                 'owner': 'Test Organization',
                 'description': 'A test dataset',
@@ -114,3 +127,35 @@ class SegmentationHelperTestCase(IsicTestCase):
                 'attribution': 'Test Organization'
             })
         self.assertStatusOk(resp)
+        dataset = resp.json
+        # Uploader user and reviewer user should receive emails
+        self.assertMails(count=2)
+
+        # Upload the CSV metadata file
+        csvPath = os.path.join(testDataDir, 'test_1_metadata.csv')
+        with open(csvPath, 'rb') as csvStream:
+            metadataFile = Upload.uploadFromFile(
+                obj=csvStream,
+                size=os.path.getsize(csvPath),
+                name='test_1_metadata.csv',
+                parentType='folder',
+                parent=Folder.load(uploadCsvFolder['_id'], force=True),
+                user=uploaderUser,
+                mimeType='text/csv'
+            )
+
+        # Register metadata with dataset
+        self.assertNoMail()
+        resp = self.request(
+            path='/dataset/%s/metadata' % dataset['_id'], method='POST',
+            user=uploaderUser, params={
+                'metadataFileId': metadataFile['_id']
+            })
+        self.assertStatusOk(resp)
+        dataset = resp.json
+        self.assertHasKeys(dataset['meta'], ['metadataFiles'])
+        self.assertEqual(len(dataset['meta']['metadataFiles']), 1)
+        self.assertHasKeys(dataset['meta']['metadataFiles'][0],
+                           ('fileId', 'time'))
+        # Reviewer user should receive email
+        self.assertMails(count=1)

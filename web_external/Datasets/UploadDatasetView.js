@@ -1,17 +1,5 @@
 isic.views.UploadDatasetView = isic.View.extend({
     events: {
-        'click #isic-upload-images': function (event) {
-            this.$('#isic-upload-images').addClass('active');
-            this.$('#isic-upload-metadata').removeClass('active');
-            this.initializeUploadWidget();
-            this.updateUploadWidget();
-        },
-        'click #isic-upload-metadata': function (event) {
-            this.$('#isic-upload-images').removeClass('active');
-            this.$('#isic-upload-metadata').addClass('active');
-            this.initializeUploadWidget();
-            this.updateUploadWidget();
-        },
         'click #isic-upload-reset': function (event) {
             this.resetUpload();
         },
@@ -42,17 +30,58 @@ isic.views.UploadDatasetView = isic.View.extend({
         'submit #isic-dataset-form': function (event) {
             event.preventDefault();
             this.$('#isic-dataset-submit').prop('disabled', true);
-            this.submitDataset();
+
+            // If no files have been uploaded, delegate error handling to submitDataset()
+            if (!this.uploadFolder) {
+                this.submitDataset(null);
+                return;
+            }
+
+            // Get file ID of uploaded file, then submit dataset
+            var items = new girder.collections.ItemCollection();
+            items.once('g:changed', function () {
+                if (!items.isEmpty()) {
+                    var item = items.first();
+                    item.once('g:files', function (fileCollection) {
+                        var fileId = fileCollection.first().id;
+                        this.submitDataset(fileId);
+                    }, this).getFiles();
+                } else {
+                    this.submitDataset(null);
+                }
+            }, this).fetch({
+                folderId: this.uploadFolder.id
+            });
         }
     },
 
     initialize: function (settings) {
         this.uploadedZipFiles = [];
-        this.uploadedCsvFiles = [];
         this.uploadFolder = null;
 
         this.termsOfUseWidget = new isic.views.TermsOfUseWidget({
             parentView: this
+        });
+
+        this.dataset = new isic.models.DatasetModel();
+
+        this.listenTo(this.dataset, 'isic:ingestImages:success', function () {
+            isic.showAlertDialog({
+                text: '<h4>Dataset successfully submitted.</h4>',
+                escapedHtml: true,
+                callback: _.bind(function () {
+                    // Navigate to register metadata view
+                    isic.router.navigate('registerMetadata/' + this.dataset.id, {trigger: true});
+                }, this)
+            });
+        });
+
+        this.listenTo(this.dataset, 'isic:ingestImages:error', function (resp) {
+            isic.showAlertDialog({
+                text: '<h4>Error submitting dataset</h4><br>' + resp.responseJSON.message,
+                escapedHtml: true
+            });
+            this.$('#isic-dataset-submit').prop('disabled', false);
         });
 
         this.render();
@@ -107,10 +136,10 @@ isic.views.UploadDatasetView = isic.View.extend({
         } else {
             // Create new upload folder with unique name
             this.uploadFolder = new girder.models.FolderModel({
-                name: 'isic_upload_' + Date.now(),
+                name: 'isic_dataset_' + Date.now(),
                 parentType: 'user',
-                parentId: girder.currentUser.get('_id'),
-                description: 'ISIC uploads'
+                parentId: girder.currentUser.id,
+                description: 'ISIC dataset upload'
             });
 
             this.uploadFolder.once('g:saved', function () {
@@ -127,12 +156,7 @@ isic.views.UploadDatasetView = isic.View.extend({
     },
 
     uploadFinished: function (files) {
-        var filenames = _.pluck(files.files, 'name');
-        if (this.uploadingImages()) {
-            this.uploadedZipFiles = filenames;
-        } else {
-            this.uploadedCsvFiles = filenames;
-        }
+        this.uploadedZipFiles = _.pluck(files.files, 'name');
         this.updateUploadWidget();
     },
 
@@ -143,7 +167,11 @@ isic.views.UploadDatasetView = isic.View.extend({
         this.uploadWidget.uploadNextFile();
     },
 
-    submitDataset: function () {
+    /**
+     * Submit dataset. Delegate all validation to the server.
+     * @param [zipFileId] The ID of the .zip file, or null.
+     */
+    submitDataset: function (zipFileId) {
         var name = this.$('#isic-dataset-name').val();
         var owner = this.$('#isic-dataset-owner').val();
         var description = this.$('#isic-dataset-description').val();
@@ -151,70 +179,21 @@ isic.views.UploadDatasetView = isic.View.extend({
         var signature = this.$('#isic-dataset-agreement-signature').val();
         var anonymous = this.$('#isic-dataset-attribution-anonymous').prop('checked');
         var attribution = this.$('#isic-dataset-attribution-name').val();
-        var uploadFolderId = this.uploadFolder ? this.uploadFolder.id : null;
 
-        // Post dataset
-        // TODO: processing happens synchronously; revisit using jobs?
-        girder.restRequest({
-            type: 'POST',
-            path: 'dataset',
-            data: {
-                uploadFolderId: uploadFolderId,
-                name: name,
-                owner: owner,
-                description: description,
-                license: license,
-                signature: signature,
-                anonymous: anonymous,
-                attribution: attribution
-            },
-            error: null
-        }).done(_.bind(function () {
-            // TODO: if updated to use jobs, navigate to job status page instead
-            isic.showAlertDialog({
-                text: '<h4>Dataset successfully submitted.</h4>',
-                escapedHtml: true,
-                callback: function () {
-                    isic.router.navigate('', {trigger: true});
-                }
-            });
-        }, this)).error(_.bind(function (resp) {
-            // TODO: add custom error dialog instead of using confirm dialog
-            isic.showAlertDialog({
-                text: '<h4>Error submitting dataset</h4><br>' + resp.responseJSON.message,
-                escapedHtml: true
-            });
-            this.$('#isic-dataset-submit').prop('disabled', false);
-        }, this));
-    },
-
-    uploadingImages: function () {
-        return (this.$('#isic-upload-images.active').length > 0);
+        this.dataset.ingestImages(zipFileId, name, owner, description, license,
+            signature, anonymous, attribution);
     },
 
     updateUploadWidget: function () {
         var visible = false;
         var uploadList = [];
-        var uploadingImages = this.uploadingImages();
-        if (uploadingImages) {
-            if (this.uploadedZipFiles.length) {
-                visible = false;
-                uploadList = this.uploadedZipFiles;
-            } else {
-                visible = true;
-            }
+        if (this.uploadedZipFiles.length) {
+            visible = false;
+            uploadList = this.uploadedZipFiles;
         } else {
-            if (this.uploadedCsvFiles.length) {
-                visible = false;
-                uploadList = this.uploadedCsvFiles;
-            } else {
-                visible = true;
-            }
+            visible = true;
         }
 
-        this.$('.isic-upload-description-container').toggle(visible);
-        this.$('.isic-upload-description-zip').toggle(uploadingImages);
-        this.$('.isic-upload-description-csv').toggle(!uploadingImages);
         this.$('.isic-upload-widget-container').toggle(visible);
         this.$('.isic-upload-reset-container').toggle(!visible);
 
@@ -224,31 +203,11 @@ isic.views.UploadDatasetView = isic.View.extend({
     },
 
     resetUpload: function () {
-        var uploadList = null;
-        if (this.uploadingImages()) {
-            uploadList = this.uploadedZipFiles;
-        } else {
-            uploadList = this.uploadedCsvFiles;
-        }
-
         // Delete uploaded files
-        _.each(uploadList, function (name) {
-            var items = new girder.collections.ItemCollection();
-            items.once('g:changed', function () {
-                if (!items.isEmpty()) {
-                    var item = items.first();
-                    item.destroy();
-
-                    while (uploadList.length) {
-                        uploadList.pop();
-                    }
-                    this.updateUploadWidget();
-                }
-            }, this).fetch({
-                name: name,
-                folderId: this.uploadFolder.id
-            });
-        }, this);
+        this.uploadFolder.once('g:success', function () {
+            this.uploadedZipFiles = [];
+            this.updateUploadWidget();
+        }, this).removeContents();
     },
 
     showLicenseInfo: function () {

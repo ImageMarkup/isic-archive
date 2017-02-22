@@ -18,6 +18,9 @@
 ###############################################################################
 
 import os
+import time
+
+from six.moves import queue
 
 from girder.constants import ROOT_DIR, SettingKey
 from tests import base
@@ -44,3 +47,32 @@ class IsicTestCase(base.TestCase):
         Setting.set(SettingKey.SMTP_HOST, addr)
         Setting.set(SettingKey.UPLOAD_MINIMUM_CHUNK_SIZE, 0)
         Setting.set(SettingKey.PLUGINS_ENABLED, base.enabledPlugins)
+
+    def assertNoMail(self):
+        """Assert that the email queue is empty."""
+        self.assertTrue(base.mockSmtp.isMailQueueEmpty())
+
+    def assertMails(self, count=1, timeout=10):
+        """
+        Assert that emails have been sent.
+
+        :param count: The number of emails.
+        :param timeout: Timeout in seconds.
+        """
+        remaining = count
+        startTime = time.time()
+        while remaining > 0:
+            if base.mockSmtp.waitForMail():
+                try:
+                    while base.mockSmtp.getMail():
+                        remaining -= 1
+                except queue.Empty:
+                    pass
+
+            if time.time() > startTime + timeout:
+                raise AssertionError(
+                    'Failed to receive all emails within %s seconds '
+                    '(expected %s, received %s)' %
+                    (timeout, count, count - remaining))
+
+            time.sleep(0.1)

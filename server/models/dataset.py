@@ -19,7 +19,6 @@
 
 import datetime
 import itertools
-import mimetypes
 import os
 
 from girder.constants import AccessType
@@ -29,19 +28,8 @@ from girder.models.notification import ProgressState
 from girder.utility import assetstore_utilities, mail_utils
 from girder.utility.progress import ProgressContext
 
-from ..upload import handleCsv, ZipFileOpener
-
-ZIP_FORMATS = [
-    'multipart/x-zip',
-    'application/zip',
-    'application/zip-compressed',
-    'application/x-zip-compressed',
-]
-
-CSV_FORMATS = [
-    'text/csv',
-    'application/vnd.ms-excel'
-]
+from ..upload import ZipFileOpener
+from ..utility import mail_utils as isic_mail_utils
 
 
 class Dataset(FolderModel):
@@ -144,36 +132,14 @@ class Dataset(FolderModel):
             raise ValidationException('Dataset name must not be empty.', 'name')
         return super(Dataset, self).validate(doc, **kwargs)
 
-    def ingestDataset(self, uploadFolder, user, name, owner, description,
+    def ingestDataset(self, zipFile, user, name, owner, description,
                       license, signature, anonymous, attribution,
                       sendMail=False):
         """
-        Ingest an uploaded dataset. This upload folder is expected to contain a
-        .zip file of images and a .csv file that contains metadata about the
-        images. The images are extracted to a new "Pre-review" folder within a
-        new dataset folder.
+        Ingest an uploaded dataset from a .zip file of images. The images are
+        extracted to a "Pre-review" folder within a new dataset folder.
         """
         Folder = self.model('folder')
-        Item = self.model('item')
-        Group = self.model('group')
-
-        if not uploadFolder:
-            raise ValidationException(
-                'No files were uploaded.', 'uploadFolder')
-
-        zipFileItems = [f for f in Folder.childItems(uploadFolder)
-                        if mimetypes.guess_type(f['name'], strict=False)[0] in
-                        ZIP_FORMATS]
-        if not zipFileItems:
-            raise ValidationException(
-                'No .zip files were uploaded.', 'uploadFolder')
-
-        csvFileItems = [f for f in Folder.childItems(uploadFolder)
-                        if mimetypes.guess_type(f['name'], strict=False)[0] in
-                        CSV_FORMATS]
-        if not csvFileItems:
-            raise ValidationException(
-                'No .csv files were uploaded.', 'uploadFolder')
 
         # Create dataset folder
         dataset = self.createDataset(name, description, user)
@@ -196,27 +162,9 @@ class Dataset(FolderModel):
         prereviewFolder = Folder.copyAccessPolicies(
             dataset, prereviewFolder, save=True)
 
-        # Process zip files
-        for item in zipFileItems:
-            zipFiles = Item.childFiles(item)
-            for zipFile in zipFiles:
-                # TODO: gracefully clean up after exceptions in handleZip
-                self._handleZip(prereviewFolder, user, zipFile)
-
-        # Process metadata in CSV files
-        for item in csvFileItems:
-            csvFiles = Item.childFiles(item)
-            for csvFile in csvFiles:
-                handleCsv(dataset, prereviewFolder, user, csvFile)
-
-        # TODO: remove this entirely, and report CSV errors another way
-        # Move metadata item to dataset folder. This preserves any parsing
-        # errors that were added to the item for review.
-        # for item in csvFileItems:
-        #     Item.move(item, dataset)
-
-        # Delete uploaded files
-        # Folder.clean(uploadFolder)
+        # Process zip file
+        # TODO: gracefully clean up after exceptions in handleZip
+        self._handleZip(prereviewFolder, user, zipFile)
 
         # Send email confirmations
         if sendMail:
@@ -242,15 +190,12 @@ class Dataset(FolderModel):
             mail_utils.sendEmail(to=user['email'], subject=subject, text=html)
 
             # Mail 'Dataset QC Reviewers' group
-            groupName = 'Dataset QC Reviewers'
-            group = Group.findOne({'name': groupName})
-            if not group:
-                raise GirderException('Could not load group: %s.' % groupName)
-            emails = [member['email'] for member in Group.listMembers(group)]
-            if emails:
-                params['group'] = True
-                html = mail_utils.renderTemplate(templateFilename, params)
-                mail_utils.sendEmail(to=emails, subject=subject, text=html)
+            params['group'] = True
+            isic_mail_utils.sendEmailToGroup(
+                groupName='Dataset QC Reviewers',
+                templateFilename=templateFilename,
+                templateParams=params,
+                subject=subject)
 
         return dataset
 
@@ -351,3 +296,39 @@ class Dataset(FolderModel):
         if (Folder.countItems(prereviewFolder) +
                 Folder.countFolders(prereviewFolder)) == 0:
             Folder.remove(prereviewFolder)
+
+    def registerMetadata(self, dataset, csvFile, user, sendMail=False):
+        """Register a .csv file containing metadata about images."""
+        # Check if image metadata is already registered
+        if self.findOne({'meta.metadataFiles.fileId': csvFile['_id']}):
+            raise ValidationException(
+                'Metadata file is already registered on a dataset.')
+
+        # Add image metadata file information to list
+        now = datetime.datetime.utcnow()
+        metadataFiles = dataset['meta'].get('metadataFiles', [])
+        metadataFiles.append({
+            'fileId': csvFile['_id'],
+            'userId': user['_id'],
+            'time': now
+        })
+        dataset = self.setMetadata(dataset, {
+            'metadataFiles': metadataFiles
+        })
+
+        # Send email notification
+        if sendMail:
+            host = mail_utils.getEmailUrlPrefix()
+            isic_mail_utils.sendEmailToGroup(
+                groupName='Dataset QC Reviewers',
+                templateFilename='registerMetadataNotification.mako',
+                templateParams={
+                    'host': host,
+                    'dataset': dataset,
+                    'user': user,
+                    'csvFile': csvFile,
+                    'date': now.replace(microsecond=0)
+                },
+                subject='ISIC Archive: Dataset Metadata Notification')
+
+        return dataset
