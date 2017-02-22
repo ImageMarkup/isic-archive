@@ -177,8 +177,7 @@ isic.router.route('uploadDatasetMetadata/:id', 'uploadDatasetMetadata', function
             girder.events.trigger('g:navigateTo', isic.views.UploadDatasetRequestView);
         } else {
             // Fetch the dataset, then navigate to the view
-            var dataset = new isic.models.DatasetModel();
-            dataset.set({
+            var dataset = new isic.models.DatasetModel({
                 _id: id
             }).once('g:fetched', function () {
                 girder.events.trigger('g:navigateTo', isic.views.UploadDatasetMetadataView, {
