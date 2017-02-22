@@ -71,7 +71,7 @@ isic.views.DatasetsView = isic.View.extend({
     }
 });
 
-isic.router.route('datasets', 'datasets', function () {
+isic.router.route('dataset', 'dataset', function () {
     var nextView = isic.views.DatasetsView;
     if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
         nextView = isic.views.TermsAcceptanceView;
