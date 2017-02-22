@@ -165,7 +165,7 @@ isic.views.RegisterMetadataView = isic.View.extend({
     }
 });
 
-isic.router.route('registerMetadata/:id', 'registerMetadata', function (id) {
+isic.router.route('dataset/:id/metadata/register', 'registerMetadata', function (id) {
     if (girder.currentUser) {
         // Registered users must:
         //  (1) Accept the TOS

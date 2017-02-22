@@ -71,7 +71,9 @@ isic.views.UploadDatasetView = isic.View.extend({
                 escapedHtml: true,
                 callback: _.bind(function () {
                     // Navigate to register metadata view
-                    isic.router.navigate('registerMetadata/' + this.dataset.id, {trigger: true});
+                    isic.router.navigate(
+                        'dataset/' + this.dataset.id + '/metadata/register',
+                        {trigger: true});
                 }, this)
             });
         });
@@ -260,7 +262,7 @@ isic.views.UploadDatasetRequestView = isic.View.extend({
     }
 });
 
-isic.router.route('uploadDataset', 'uploadDataset', function () {
+isic.router.route('dataset/upload', 'uploadDataset', function () {
     if (girder.currentUser) {
         // Registered users must:
         //  (1) Accept the TOS
