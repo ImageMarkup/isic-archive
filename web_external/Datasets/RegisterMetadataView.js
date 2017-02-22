@@ -1,16 +1,16 @@
-isic.views.UploadDatasetMetadataView = isic.View.extend({
+isic.views.RegisterMetadataView = isic.View.extend({
     events: {
         'click #isic-upload-reset': function (event) {
             this.resetUpload();
         },
-        'click #isic-upload-dataset-metadata-submit': function (event) {
+        'click #isic-register-metadata-submit': function (event) {
             // Require CSV file to be uploaded
             if (_.isEmpty(this.uploadedCsvFiles) || !this.uploadFolder) {
                 isic.showAlertDialog({ text: 'Please upload a CSV file.' });
                 return;
             }
 
-            this.$('#isic-upload-dataset-metadata-submit').prop('disabled', true);
+            this.$('#isic-register-metadata-submit').prop('disabled', true);
 
             // Get file ID of uploaded file, then register metadata
             var items = new girder.collections.ItemCollection();
@@ -52,14 +52,14 @@ isic.views.UploadDatasetMetadataView = isic.View.extend({
                 text: '<h4>Error registering metadata</h4><br>' + resp.responseJSON.message,
                 escapedHtml: true
             });
-            this.$('#isic-upload-dataset-metadata-submit').prop('disabled', false);
+            this.$('#isic-register-metadata-submit').prop('disabled', false);
         });
 
         this.render();
     },
 
     render: function () {
-        this.$el.html(isic.templates.uploadDatasetMetadata({
+        this.$el.html(isic.templates.registerMetadata({
             user: girder.currentUser,
             dataset: this.dataset
         }));
@@ -165,12 +165,12 @@ isic.views.UploadDatasetMetadataView = isic.View.extend({
     }
 });
 
-isic.router.route('uploadDatasetMetadata/:id', 'uploadDatasetMetadata', function (id) {
+isic.router.route('registerMetadata/:id', 'registerMetadata', function (id) {
     if (girder.currentUser) {
         // Registered users must:
         //  (1) Accept the TOS
         //  (2) Request and receive create dataset access
-        // before being able to see the upload dataset metadata view
+        // before being able to see the register metadata view
         if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
             girder.events.trigger('g:navigateTo', isic.views.TermsAcceptanceView);
         } else if (!girder.currentUser.canCreateDataset()) {
@@ -180,7 +180,7 @@ isic.router.route('uploadDatasetMetadata/:id', 'uploadDatasetMetadata', function
             var dataset = new isic.models.DatasetModel({
                 _id: id
             }).once('g:fetched', function () {
-                girder.events.trigger('g:navigateTo', isic.views.UploadDatasetMetadataView, {
+                girder.events.trigger('g:navigateTo', isic.views.RegisterMetadataView, {
                     dataset: dataset
                 });
             }, this).once('g:error', function () {

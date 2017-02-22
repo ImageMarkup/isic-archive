@@ -70,8 +70,8 @@ isic.views.UploadDatasetView = isic.View.extend({
                 text: '<h4>Dataset successfully submitted.</h4>',
                 escapedHtml: true,
                 callback: _.bind(function () {
-                    // Navigate to upload dataset metadata view
-                    isic.router.navigate('uploadDatasetMetadata/' + this.dataset.id, {trigger: true});
+                    // Navigate to register metadata view
+                    isic.router.navigate('registerMetadata/' + this.dataset.id, {trigger: true});
                 }, this)
             });
         });

@@ -1,15 +1,15 @@
-.isic-form-page.isic-upload-dataset-metadata-container
-  h2.isic-page-title Register dataset metadata
+.isic-form-page.isic-register-metadata-container
+  h2.isic-page-title Register metadata
 
   .isic-form-container
     .isic-form-group
       h3 Dataset
-      table.table.table-condensed.isic-upload-dataset-metadata-table
+      table.table.table-condensed.isic-register-metadata-table
         tr
-          td.isic-upload-dataset-metadata-table-label Name
+          td.isic-register-metadata-table-label Name
           td= dataset.name()
         tr
-          td.isic-upload-dataset-metadata-table-label Description
+          td.isic-register-metadata-table-label Description
           td= dataset.get('description')
     .isic-form-group
       h3 Upload metadata
@@ -25,4 +25,4 @@
            button#isic-upload-reset.btn.btn-secondary.btn-md Reset
 
   p
-    button#isic-upload-dataset-metadata-submit.btn.btn-primary.btn-md Submit
+    button#isic-register-metadata-submit.btn.btn-primary.btn-md Submit

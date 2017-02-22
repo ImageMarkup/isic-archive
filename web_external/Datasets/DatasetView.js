@@ -1,7 +1,7 @@
 isic.views.DatasetView = isic.View.extend({
     events: {
         'click .isic-dataset-register-metadata-button': function () {
-            isic.router.navigate('uploadDatasetMetadata/' + this.dataset.id, {trigger: true});
+            isic.router.navigate('registerMetadata/' + this.dataset.id, {trigger: true});
         }
     },
 
