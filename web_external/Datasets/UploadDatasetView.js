@@ -136,10 +136,10 @@ isic.views.UploadDatasetView = isic.View.extend({
         } else {
             // Create new upload folder with unique name
             this.uploadFolder = new girder.models.FolderModel({
-                name: 'isic_upload_' + Date.now(),
+                name: 'isic_dataset_' + Date.now(),
                 parentType: 'user',
                 parentId: girder.currentUser.id,
-                description: 'ISIC uploads'
+                description: 'ISIC dataset upload'
             });
 
             this.uploadFolder.once('g:saved', function () {
