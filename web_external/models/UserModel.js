@@ -60,14 +60,19 @@ isic.models.UserModel = girder.models.UserModel.extend({
         if (girder.currentUser) {
             return girder.currentUser.canAcceptTerms();
         } else {
-            return window.localStorage.getItem('acceptTerms') === 'true';
+            return (window.localStorage.getItem('acceptTerms') === 'true') ||
+                   (isic.acceptTerms === true);
         }
     },
     currentUserSetAcceptTerms: function (successCallback) {
         if (girder.currentUser) {
             girder.currentUser.setAcceptTerms(successCallback);
         } else {
-            window.localStorage.setItem('acceptTerms', 'true');
+            try {
+                window.localStorage.setItem('acceptTerms', 'true');
+            } catch (e) {
+                isic.acceptTerms = true;
+            }
             successCallback();
         }
     }
