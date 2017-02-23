@@ -30,8 +30,7 @@ from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
 from girder.models.model_base import GirderException
 
-from ..histogram_utility import HistogramUtility
-from ..histogram_utility import querylang
+from ..utility import querylang
 
 
 class ImageResource(Resource):
@@ -40,13 +39,11 @@ class ImageResource(Resource):
         self.resourceName = 'image'
 
         self.route('GET', (), self.find)
+        self.route('GET', ('histogram',), self.getHistogram)
         self.route('GET', (':id',), self.getImage)
         self.route('GET', (':id', 'thumbnail'), self.thumbnail)
         self.route('GET', (':id', 'download'), self.download)
         self.route('GET', (':id', 'superpixels'), self.getSuperpixels)
-
-        self.route('GET', ('histogram',), self.histogram)
-        self.histogramUtility = HistogramUtility()
 
         self.route('POST', (':id', 'segment'), self.doSegmentation)
 
@@ -93,6 +90,24 @@ class ImageResource(Resource):
                 Image.find(query, sort=sort, fields={'meta': 0}),
                 user=user, level=AccessType.READ, limit=limit, offset=offset)
         ]
+
+    @describeRoute(
+        Description('Return histograms of image metadata.')
+        .param('filter',
+               'Get the histogram after the results of this filter. ' +
+               'TODO: describe our filter grammar (an AST tree).',
+               required=False)
+        .errorResponse()
+    )
+    @access.public
+    def getHistogram(self, params):
+        Image = self.model('image', 'isic_archive')
+
+        filters = params.get('filter')
+        if filters is not None:
+            filters = json.loads(filters)
+        user = self.getCurrentUser()
+        return Image.getHistograms(filters, user)
 
     @describeRoute(
         Description('Return an image\'s details.')
@@ -188,19 +203,6 @@ class ImageResource(Resource):
             image)
         return self.model('file').download(superpixelsFile, headers=True)
 
-    @describeRoute(
-        Description('Return histograms of image metadata.')
-        .param('filter',
-               'Get the histogram after the results of this filter. ' +
-               'TODO: describe our filter grammar (an AST tree).',
-               required=False)
-        .errorResponse()
-    )
-    @access.public
-    def histogram(self, params):
-        user = self.getCurrentUser()
-
-        return self.histogramUtility.getHistograms(user, params)
 
     @describeRoute(
         Description('Run and return a new semi-automated segmentation.')
