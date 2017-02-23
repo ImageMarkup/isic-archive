@@ -3,9 +3,8 @@ isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 // View for image details
 isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
     events: {
-        'click .button': 'clearSelectedImage',
-        'click .openwindow': 'openwindow',
-        'click .zoom': 'zoom'
+        'click #isic-image-details-zoom': 'zoom',
+        'click #isic-image-details-close': 'clearSelectedImage'
     },
 
     initialize: function (settings) {
@@ -73,11 +72,6 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
         this.initializeTooltips();
 
         return this;
-    },
-
-    openwindow: function () {
-        this.clearTooltips();
-        window.open('/api/v1/image/' + this.image.id + '/download?contentDisposition=inline');
     },
 
     zoom: function () {
