@@ -178,14 +178,17 @@ class ImageResource(Resource):
     @access.public
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def download(self, image, params):
+        File = self.model('file')
+        Image = self.model('image', 'isic_archive')
+
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and \
                 contentDisp not in {'inline', 'attachment'}:
             raise RestException('Unallowed contentDisposition type "%s".' %
                                 contentDisp)
 
-        originalFile = self.model('image', 'isic_archive').originalFile(image)
-        fileStream = self.model('file').download(
+        originalFile = Image.originalFile(image)
+        fileStream = File.download(
             originalFile, headers=True, contentDisposition=contentDisp)
         return fileStream
 
@@ -199,10 +202,11 @@ class ImageResource(Resource):
     @access.public
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def getSuperpixels(self, image, params):
-        superpixelsFile = self.model('image', 'isic_archive').superpixelsFile(
-            image)
-        return self.model('file').download(superpixelsFile, headers=True)
+        File = self.model('file')
+        Image = self.model('image', 'isic_archive')
 
+        superpixelsFile = Image.superpixelsFile(image)
+        return File.download(superpixelsFile, headers=True)
 
     @describeRoute(
         Description('Run and return a new semi-automated segmentation.')
