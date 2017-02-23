@@ -1,14 +1,24 @@
 .isic-image-details-container
-  .button
-    img(src='#{imgRoot}/ex.svg')
+
+  .isic-image-details-heading
+    if image.id
+      span.isic-image-details-name= image.name()
+      button#isic-image-details-zoom.isic-image-details-button.btn.btn-xs.btn-default(
+        data-toggle="tooltip"
+        data-placement="bottom"
+        title="View this image in full resolution"
+      )
+        i.icon-zoom-in
+      button#isic-image-details-openwindow.isic-image-details-button.btn.btn-xs.btn-default(
+        data-toggle="tooltip"
+        data-placement="bottom"
+        title="Open this image in a new window"
+      )
+        i.icon-link-ext
+    button#isic-image-details-close.close
+      i.icon-cancel
 
   if image.id
-    .isic-image-details-name= image.name()
-      button.btn.btn-xs.btn-default.padleft.padbottom.zoom(data-toggle="tooltip" data-placement="bottom" title="View this image in full resolution")
-        i.icon-zoom-in
-      button.btn.btn-xs.btn-default.padleft.padbottom.openwindow(data-toggle="tooltip" data-placement="bottom" title="Open this image in a new window")
-        i.icon-link-ext
-
     table.table.table-condensed.isic-image-details-table
       tbody
         tr
