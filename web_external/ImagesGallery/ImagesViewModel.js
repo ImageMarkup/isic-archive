@@ -68,7 +68,6 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         return girder.restRequest({
             path: 'image/histogram'
         }).then(_.bind(function (resp) {
-            this.postProcessHistogram(resp);
             this.set('overviewHistogram', resp);
         }, this));
     },
@@ -79,41 +78,8 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
                 filter: JSON.stringify(this.getFilterAstTree())
             }
         }).then(_.bind(function (resp) {
-            this.postProcessHistogram(resp);
             this.set('filteredSetHistogram', resp);
         }, this));
-    },
-    postProcessHistogram: function (histograms) {
-        // This folds any "__null__" values into "__undefined__" or "__NaN__"
-        // values, mutating the "histograms" object in-place
-        _.each(_.keys(histograms), function (facetName) {
-            if (facetName === '__passedFilters__') {
-                return;
-            }
-            var facetHistogram = histograms[facetName];
-            var nullField = _.findWhere(facetHistogram, {label: '__null__'});
-            if (nullField) {
-                var missingField =
-                    _.findWhere(facetHistogram, {label: '__undefined__'}) ||
-                    _.findWhere(facetHistogram, {label: '__NaN__'});
-                if (missingField) {
-                    // Add the null value to "missing" field
-                    missingField.count += nullField.count;
-                    // Remove the null field
-                    histograms[facetName] = _.without(facetHistogram, nullField);
-                } else {
-                    // Add a new "missing" field, by changing the null field label
-                    var isOrdinalFacet = _.some(facetHistogram, function (field) {
-                        return _.has(field, 'lowBound') || _.has(field, 'highBound');
-                    });
-                    if (isOrdinalFacet) {
-                        nullField.label = '__NaN__';
-                    } else {
-                        nullField.label = '__undefined__';
-                    }
-                }
-            }
-        });
     },
     updateFilters: function () {
         return $.when(
@@ -520,6 +486,9 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
         return exprList;
     },
     stringToHex: function (value) {
+        if (value === null) {
+            value = '__null__';
+        }
         var result = '';
         for (var i = 0; i < value.length; i += 1) {
             result += '%' + value.charCodeAt(i).toString(16);

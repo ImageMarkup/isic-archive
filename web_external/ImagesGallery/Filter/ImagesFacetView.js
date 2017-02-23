@@ -26,7 +26,7 @@ isic.views.ImagesFacetView = isic.View.extend({
     },
 
     _getFieldLabel: function (fieldInfo) {
-        if (fieldInfo.label === '__NaN__' || fieldInfo.label === '__undefined__') {
+        if (fieldInfo.label === null) {
             return 'unknown';
         } else if (_.has(fieldInfo, 'lowBound')) {
             var formatter = d3.format('0.3s');

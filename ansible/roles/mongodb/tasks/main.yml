@@ -2,13 +2,13 @@
 
 - name: Add PPA key
   apt_key:
-    id: "EA312927"
+    id: "0C49F3730359A14518585931BC711F9BA15703C6"
     keyserver: "keyserver.ubuntu.com"
   sudo: yes
 
 - name: Add PPA
   apt_repository:
-    repo: "deb https://repo.mongodb.org/apt/ubuntu {{ ansible_distribution_release }}/mongodb-org/3.2 multiverse"
+    repo: "deb https://repo.mongodb.org/apt/ubuntu {{ ansible_distribution_release }}/mongodb-org/3.4 multiverse"
   sudo: yes
 
 - name: Install package

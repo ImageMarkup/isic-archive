@@ -31,6 +31,7 @@ from . import segmentation_helpers
 from .. import constants
 from ..provision_utility import getAdminUser
 from .segmentation_helpers import ScikitSegmentationHelper
+from ..utility import querylang
 
 
 class Image(ItemModel):
@@ -295,6 +296,105 @@ class Image(ItemModel):
     def findOne(self, query=None, **kwargs):
         imageQuery = self._findQueryFilter(query)
         return super(Image, self).findOne(imageQuery, **kwargs)
+
+    def getHistograms(self, filters, user):
+        Dataset = self.model('dataset', 'isic_archive')
+
+        # Define facets
+        categorialFacets = [
+            'folderId',
+            'meta.clinical.benign_malignant',
+            'meta.clinical.sex',
+            'meta.clinical.diagnosis_confirm_type',
+            'meta.clinical.diagnosis',
+            'meta.clinical.personal_hx_mm',
+            'meta.clinical.family_hx_mm',
+        ]
+        ordinalFacets = [
+            (
+                'meta.clinical.age_approx',
+                [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+            ),
+            (
+                'meta.clinical.clin_size_long_diam_mm',
+                # [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0,
+                #  16.0, 18.0, 20.0, 100.0, 200.0, 1000.0])
+                [0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0,
+                 70.0, 80.0, 90.0, 100.0, 110.0]
+            )
+        ]
+
+        # Build and run the pipeline
+        folderQuery = {
+            'folderId': {'$in': [
+                dataset['_id'] for dataset in Dataset.list(user=user)]}
+        }
+        if filters:
+            query = {
+                '$and': [
+                    folderQuery,
+                    querylang.astToMongo(filters)
+                ]
+            }
+        else:
+            query = folderQuery
+        facetStages = {
+            '__passedFilters__': [
+                {'$count': 'count'}],
+        }
+        for facetName in categorialFacets:
+            facetId = facetName.replace('.', '__')
+            facetStages[facetId] = [
+                {'$sortByCount': '$' + facetName}
+            ]
+        for facetName, boundaries in ordinalFacets:
+            facetId = facetName.replace('.', '__')
+            facetStages[facetId] = [
+                {'$bucket': {
+                    'groupBy': '$' + facetName,
+                    'boundaries': boundaries,
+                    'default': None
+                }}
+            ]
+        histogram = next(self.collection.aggregate([
+            {'$match': query},
+            {'$facet': facetStages}
+        ]))
+
+        # Fix up the pipeline result
+        if not histogram['__passedFilters__']:
+            # If the set of filtered images is empty, add a count manually
+            histogram['__passedFilters__'] = [{'count': 0}]
+        histogram['__passedFilters__'][0]['label'] = 'count'
+        for facetName in \
+                categorialFacets + \
+                [facetName for facetName, boundaries in ordinalFacets]:
+            facetId = facetName.replace('.', '__')
+            histogram[facetName] = histogram.pop(facetId, [])
+            histogram[facetName].sort(
+                # Sort facet bins, placing "None" at the end
+                key=lambda facetBin: (facetBin['_id'] is None, facetBin['_id']))
+        for facetName in categorialFacets:
+            for facetBin in histogram[facetName]:
+                facetBin['label'] = facetBin.pop('_id')
+        for facetName, boundaries in ordinalFacets:
+            boundariesMap = {
+                lowBound: {
+                    'label': '[%s - %s)' % (lowBound, highBound),
+                    'lowBound': lowBound,
+                    'highBound': highBound,
+                }
+                for lowBound, highBound in zip(boundaries, boundaries[1:])
+            }
+            for facetBin in histogram[facetName]:
+                # Remove the '_id' field and replace it with the 3 other fields
+                binId = facetBin.pop('_id')
+                if binId is not None:
+                    facetBin.update(boundariesMap[binId])
+                else:
+                    facetBin['label'] = None
+
+        return histogram
 
     def validate(self, doc):
         # TODO: implement

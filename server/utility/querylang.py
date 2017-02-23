@@ -18,19 +18,9 @@
 ###############################################################################
 
 import datetime
-import dateutil.parser
 
 from bson import ObjectId
-
-
-_opfunc = {
-    '<=': lambda x, y: x <= y,
-    '<': lambda x, y: x < y,
-    '>=': lambda x, y: x >= y,
-    '>': lambda x, y: x > y,
-    '=': lambda x, y: x == y,
-    '!=': lambda x, y: x != y
-}
+import dateutil.parser
 
 
 def cast(value, typename):
@@ -64,53 +54,6 @@ def cast(value, typename):
                 value, default=datetime.datetime.fromtimestamp(0))
     else:
         raise ValueError('Illegal value for argument "typename": %s' % typename)
-
-
-def astToFunction(ast):
-    """Convert a query language AST to a Python function that implements it."""
-    operator = ast['operator']
-    operands = ast['operands']
-
-    if operator == 'or':
-        f0 = astToFunction(operands[0])
-        f1 = astToFunction(operands[1])
-
-        return lambda row: f0(row) or f1(row)
-    elif operator == 'and':
-        f0 = astToFunction(operands[0])
-        f1 = astToFunction(operands[1])
-
-        return lambda row: f0(row) and f1(row)
-    elif operator == 'not':
-        f = astToFunction(operands)
-        return lambda row: not f(row)
-    elif operator == 'in':
-        field = operands[0]['identifier']
-
-        def coerce(x):
-            return cast(x, operands[0]['type'])
-
-        candidates = map(coerce, operands[1])
-
-        return lambda row: field in row and coerce(row[field]) in candidates
-    elif operator == 'not in':
-        field = operands[0]['identifier']
-
-        def coerce(x):
-            return cast(x, operands[0]['type'])
-
-        candidates = map(coerce, operands[1])
-
-        return lambda row: field in row and coerce(row[field]) not in candidates
-    elif operator in ['<=', '<', '>=', '>', '=', '!=']:
-        field = operands[0]['identifier']
-
-        def coerce(x):
-            return cast(x, operands[0]['type'])
-
-        value = coerce(operands[1])
-
-        return lambda row: _opfunc[operator](coerce(row[field]), value)
 
 
 _mongo_operators = {
@@ -160,7 +103,7 @@ def _astToMongo_helper(ast):
             value = map(
                 lambda x:
                     None
-                    if x in ['__null__', '__NaN__', '__undefined__']
+                    if x == '__null__'
                     else x,
                 value)
 
