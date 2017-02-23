@@ -4,8 +4,6 @@ isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
     events: {
         'click #isic-image-details-zoom': 'zoom',
-        'click #isic-image-details-openwindow': 'openwindow',
-        'click #isic-image-details-download': 'download',
         'click #isic-image-details-close': 'clearSelectedImage'
     },
 
@@ -83,17 +81,6 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
             model: this.image,
             parentView: this
         }).render();
-    },
-
-    openwindow: function () {
-        this.clearTooltips();
-        window.open('/api/v1/image/' + this.image.id + '/download?contentDisposition=inline');
-    },
-
-    download: function () {
-        this.clearTooltips();
-        // the "contentDisposition" option defaults to "attachment"
-        window.open('/api/v1/image/' + this.image.id + '/download');
     },
 
     clearSelectedImage: function () {
