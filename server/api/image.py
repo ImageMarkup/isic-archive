@@ -24,16 +24,17 @@ from bson.errors import InvalidId
 import geojson
 
 from girder.api import access
-from girder.api.rest import Resource, RestException, loadmodel, \
-    setRawResponse, setResponseHeader
+from girder.api.rest import RestException, loadmodel, setRawResponse, \
+    setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
 from girder.models.model_base import GirderException
 
+from .base import IsicResource
 from ..utility import querylang
 
 
-class ImageResource(Resource):
+class ImageResource(IsicResource):
     def __init__(self,):
         super(ImageResource, self).__init__()
         self.resourceName = 'image'
@@ -224,11 +225,11 @@ class ImageResource(Resource):
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def doSegmentation(self, image, params):
         Segmentation = self.model('segmentation', 'isic_archive')
-        bodyJson = self.getBodyJson()
-        self.requireParams(('seed', 'tolerance'), bodyJson)
+        params = self._decodeParams(params)
+        self.requireParams(('seed', 'tolerance'), params)
 
         # validate parameters
-        seedCoord = bodyJson['seed']
+        seedCoord = params['seed']
         if not (
             isinstance(seedCoord, list) and
             len(seedCoord) == 2 and
@@ -236,7 +237,7 @@ class ImageResource(Resource):
         ):
             raise RestException('Submitted "seed" must be a coordinate pair.')
 
-        tolerance = bodyJson['tolerance']
+        tolerance = params['tolerance']
         if not isinstance(tolerance, int):
             raise RestException('Submitted "tolerance" must be an integer.')
 

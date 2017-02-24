@@ -24,16 +24,17 @@ import numpy
 import six
 
 from girder.api import access
-from girder.api.rest import Resource, RestException, loadmodel, \
-    setRawResponse, setResponseHeader
+from girder.api.rest import RestException, loadmodel, setRawResponse, \
+    setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 
+from .base import IsicResource
 from ..models.segmentation_helpers import OpenCVSegmentationHelper, \
     ScikitSegmentationHelper
 
 
-class SegmentationResource(Resource):
+class SegmentationResource(IsicResource):
     def __init__(self,):
         super(SegmentationResource, self).__init__()
         self.resourceName = 'segmentation'
@@ -112,16 +113,16 @@ class SegmentationResource(Resource):
         Segmentation = self.model('segmentation', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
-        bodyJson = self.getBodyJson()
-        self.requireParams(['imageId'], bodyJson)
+        params = self._decodeParams(params)
+        self.requireParams(['imageId'], params)
 
         user = self.getCurrentUser()
         User.requireSegmentationSkill(user)
 
         image = Image.load(
-            bodyJson['imageId'], level=AccessType.READ, user=user, exc=True)
+            params['imageId'], level=AccessType.READ, user=user, exc=True)
 
-        failed = self.boolParam('failed', bodyJson)
+        failed = self.boolParam('failed', params)
 
         if failed:
             segmentation = Segmentation.createSegmentation(
@@ -132,8 +133,8 @@ class SegmentationResource(Resource):
                     'flagged': 'could not segment'
                 }
             )
-        elif 'lesionBoundary' in bodyJson:
-            lesionBoundary = bodyJson['lesionBoundary']
+        elif 'lesionBoundary' in params:
+            lesionBoundary = params['lesionBoundary']
 
             meta = lesionBoundary['properties']
             meta['startTime'] = datetime.datetime.utcfromtimestamp(
@@ -178,9 +179,9 @@ class SegmentationResource(Resource):
                 mask=mask,
                 meta=meta
             )
-        elif 'mask' in bodyJson:
+        elif 'mask' in params:
             maskStream = six.BytesIO()
-            maskStream.write(base64.b64decode(bodyJson['mask']))
+            maskStream.write(base64.b64decode(params['mask']))
             mask = ScikitSegmentationHelper.loadImage(maskStream)
 
             segmentation = Segmentation.createSegmentation(
@@ -325,10 +326,10 @@ class SegmentationResource(Resource):
         Segmentation = self.model('segmentation', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
-        bodyJson = self.getBodyJson()
-        self.requireParams(['approved'], bodyJson)
+        params = self._decodeParams(params)
+        self.requireParams(['approved'], params)
 
-        approved = self.boolParam('approved', bodyJson)
+        approved = self.boolParam('approved', params)
 
         user = self.getCurrentUser()
         User.requireSegmentationSkill(user)

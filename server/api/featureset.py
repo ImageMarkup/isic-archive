@@ -17,17 +17,16 @@
 #  limitations under the License.
 ###############################################################################
 
-import cherrypy
-import json
-
 from girder.api import access
-from girder.api.rest import Resource, loadmodel, RestException
+from girder.api.rest import loadmodel
 from girder.api.describe import Description, describeRoute
 from girder.constants import SortDir
 from girder.models.model_base import ValidationException
 
+from .base import IsicResource
 
-class FeaturesetResource(Resource):
+
+class FeaturesetResource(IsicResource):
     def __init__(self):
         super(FeaturesetResource, self).__init__()
         self.resourceName = 'featureset'
@@ -114,21 +113,10 @@ class FeaturesetResource(Resource):
         # For now, study admins will be the ones that can create featuresets
         User.requireAdminStudy(creatorUser)
 
-        isJson = cherrypy.request.headers['Content-Type'].split(';')[0] == \
-            'application/json'
-        if isJson:
-            params = self.getBodyJson()
+        params = self._decodeParams(params)
         self.requireParams(
             ['name', 'version', 'globalFeatures', 'localFeatures'],
             params)
-
-        if not isJson:
-            for field in ['globalFeatures', 'localFeatures']:
-                try:
-                    params[field] = json.loads(params[field])
-                except ValueError:
-                    raise RestException(
-                        'Invalid JSON passed in %s parameter.' % field)
 
         featuresetName = params['name'].strip()
         if not featuresetName:

@@ -21,20 +21,19 @@ import csv
 from cStringIO import StringIO
 import functools
 import itertools
-import json
 
-import cherrypy
 import six
 
 from girder.api import access
-from girder.api.rest import Resource, RestException, loadmodel, \
-    setResponseHeader
+from girder.api.rest import RestException, loadmodel, setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 from girder.models.model_base import ValidationException
 
+from .base import IsicResource
 
-class StudyResource(Resource):
+
+class StudyResource(IsicResource):
     def __init__(self,):
         super(StudyResource, self).__init__()
         self.resourceName = 'study'
@@ -252,21 +251,10 @@ class StudyResource(Resource):
         creatorUser = self.getCurrentUser()
         User.requireAdminStudy(creatorUser)
 
-        isJson = cherrypy.request.headers['Content-Type'].split(';')[0] == \
-            'application/json'
-        if isJson:
-            params = self.getBodyJson()
+        params = self._decodeParams(params)
         self.requireParams(
             ['name', 'featuresetId', 'userIds', 'imageIds'],
             params)
-
-        if not isJson:
-            for field in ['userIds', 'imageIds']:
-                try:
-                    params[field] = json.loads(params[field])
-                except ValueError:
-                    raise RestException(
-                        'Invalid JSON passed in %s parameter.' % field)
 
         studyName = params['name'].strip()
         if not studyName:
@@ -315,9 +303,7 @@ class StudyResource(Resource):
 
         # TODO: make the loadmodel decorator use AccessType.WRITE,
         # once permissions work
-        if cherrypy.request.headers['Content-Type'].split(';')[0] == \
-                'application/json':
-            params = self.getBodyJson()
+        params = self._decodeParams(params)
         self.requireParams('userId', params)
 
         creatorUser = self.getCurrentUser()

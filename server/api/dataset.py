@@ -17,16 +17,15 @@
 #  limitations under the License.
 ###############################################################################
 
-import json
-
-import cherrypy
 import mimetypes
 
 from girder.api import access
-from girder.api.rest import Resource, loadmodel, RestException
+from girder.api.rest import loadmodel
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 from girder.models.model_base import AccessException, ValidationException
+
+from .base import IsicResource
 
 CSV_FORMATS = [
     'text/csv',
@@ -41,7 +40,7 @@ ZIP_FORMATS = [
 ]
 
 
-class DatasetResource(Resource):
+class DatasetResource(IsicResource):
     def __init__(self):
         super(DatasetResource, self).__init__()
         self.resourceName = 'dataset'
@@ -123,9 +122,7 @@ class DatasetResource(Resource):
         File = self.model('file')
         User = self.model('user', 'isic_archive')
 
-        if cherrypy.request.headers['Content-Type'].split(';')[0] == \
-                'application/json':
-            params = self.getBodyJson()
+        params = self._decodeParams(params)
         self.requireParams(('zipFileId', 'name', 'owner'), params)
 
         user = self.getCurrentUser()
@@ -232,19 +229,9 @@ class DatasetResource(Resource):
         user = self.getCurrentUser()
         User.requireReviewDataset(user)
 
-        isJson = cherrypy.request.headers['Content-Type'].split(';')[0] == \
-            'application/json'
-        if isJson:
-            params = self.getBodyJson()
+        params = self._decodeParams(params)
         self.requireParams(['accepted', 'flagged'], params)
-
-        if not isJson:
-            for field in ['accepted', 'flagged']:
-                try:
-                    params[field] = json.loads(params[field])
-                except ValueError:
-                    raise RestException(
-                        'Invalid JSON passed in %s parameter.' % field)
+        # TODO: validate that parameters are lists of strings
 
         acceptedImages = [
             Image.load(imageId, user=user, level=AccessType.READ, exc=True)
@@ -272,9 +259,7 @@ class DatasetResource(Resource):
         File = self.model('file')
         User = self.model('user', 'isic_archive')
 
-        if cherrypy.request.headers['Content-Type'].split(';')[0] == \
-                'application/json':
-            params = self.getBodyJson()
+        params = self._decodeParams(params)
         self.requireParams('metadataFileId', params)
 
         user = self.getCurrentUser()
