@@ -151,7 +151,8 @@ class Dataset(FolderModel):
             'signature': signature,
             'anonymous': anonymous,
             'attribution': attribution,
-            'license': license
+            'license': license,
+            'metadataFiles': []
         })
 
         prereviewFolder = Folder.createFolder(
@@ -307,7 +308,7 @@ class Dataset(FolderModel):
 
         # Add image metadata file information to list
         now = datetime.datetime.utcnow()
-        metadataFiles = dataset['meta'].get('metadataFiles', [])
+        metadataFiles = dataset['meta']['metadataFiles']
         metadataFiles.append({
             'fileId': csvFile['_id'],
             'userId': user['_id'],
