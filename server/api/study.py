@@ -42,6 +42,7 @@ class StudyResource(IsicResource):
         self.route('GET', (':id',), self.getStudy)
         self.route('POST', (), self.createStudy)
         self.route('POST', (':id', 'users'), self.addAnnotators)
+        self.route('POST', (':id', 'images'), self.addImages)
 
     @describeRoute(
         Description('Return a list of annotation studies.')
@@ -337,4 +338,49 @@ class StudyResource(IsicResource):
         images = Study.getImages(study)
         for annotatorUser in annotatorUsers:
             Study.addAnnotator(study, annotatorUser, creatorUser, images)
+        # TODO: return?
+
+    @describeRoute(
+        Description('Add images to a study.')
+        .param('id', 'The ID of the study.', paramType='path')
+        .param('imageIds', 'The image IDs to add, as a JSON array.',
+               paramType='form')
+        .errorResponse('ID was invalid.')
+        .errorResponse('You don\'t have permission to add a study image.', 403)
+    )
+    @access.user
+    @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
+    def addImages(self, study, params):
+        Annotation = self.model('annotation', 'isic_archive')
+        Image = self.model('image', 'isic_archive')
+        Study = self.model('study', 'isic_archive')
+        User = self.model('user', 'isic_archive')
+
+        params = self._decodeParams(params)
+        self.requireParams('imageIds', params)
+
+        creatorUser = self.getCurrentUser()
+        User.requireAdminStudy(creatorUser)
+
+        # Load all images before adding any, to ensure all are valid and
+        # accessible
+        if len(set(params['imageIds'])) != len(params['imageIds']):
+            raise RestException('Duplicate image IDs.')
+        images = [
+            Image.load(
+                imageId, user=creatorUser, level=AccessType.READ, exc=True)
+            for imageId in params['imageIds']
+        ]
+        duplicateAnnotations = Annotation.find({
+            'meta.studyId': study['_id'],
+            'meta.imageId': {'$in': [image['_id'] for image in images]}
+        })
+        if duplicateAnnotations.count():
+            # Just list the first duplicate
+            duplicateAnnotation = next(iter(duplicateAnnotations))
+            raise ValidationException(
+                'Image "%s" is already part of the study.' %
+                duplicateAnnotation['meta']['imageId'])
+        for image in images:
+            Study.addImage(study, image, creatorUser)
         # TODO: return?
