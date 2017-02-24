@@ -265,6 +265,8 @@ class StudyResource(IsicResource):
             raise ValidationException('Invalid featureset ID.', 'featuresetId')
         featureset = Featureset.load(featuresetId, exc=True)
 
+        if len(set(params['userIds'])) != len(params['userIds']):
+            raise RestException('Duplicate user IDs.')
         annotatorUsers = [
             User.load(
                 annotatorUserId, user=creatorUser, level=AccessType.READ,
@@ -272,6 +274,8 @@ class StudyResource(IsicResource):
             for annotatorUserId in params['userIds']
         ]
 
+        if len(set(params['imageIds'])) != len(params['imageIds']):
+            raise RestException('Duplicate image IDs.')
         images = [
             Image.load(
                 imageId, user=creatorUser, level=AccessType.READ, exc=True)
@@ -311,6 +315,8 @@ class StudyResource(IsicResource):
         User.requireAdminStudy(creatorUser)
 
         # Load all users before adding any, to ensure all are valid
+        if len(set(params['userIds'])) != len(params['userIds']):
+            raise RestException('Duplicate user IDs.')
         annotatorUsers = [
             User.load(userId, user=creatorUser, level=AccessType.READ, exc=True)
             for userId in params['userIds']
