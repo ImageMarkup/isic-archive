@@ -303,6 +303,7 @@ class StudyResource(IsicResource):
     @access.user
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
     def addAnnotators(self, study, params):
+        Annotation = self.model('annotation', 'isic_archive')
         Study = self.model('study', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
@@ -321,6 +322,17 @@ class StudyResource(IsicResource):
             User.load(userId, user=creatorUser, level=AccessType.READ, exc=True)
             for userId in params['userIds']
         ]
+        duplicateAnnotations = Annotation.find({
+            'meta.studyId': study['_id'],
+            'meta.userId': {'$in': [
+                annotatorUser['_id'] for annotatorUser in annotatorUsers]}
+        })
+        if duplicateAnnotations.count():
+            # Just list the first duplicate
+            duplicateAnnotation = next(iter(duplicateAnnotations))
+            raise ValidationException(
+                'Annotator user "%s" is already part of the study.' %
+                duplicateAnnotation['meta']['userId'])
         # Look up images only once for efficiency
         images = Study.getImages(study)
         for annotatorUser in annotatorUsers:
