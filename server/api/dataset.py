@@ -50,6 +50,7 @@ class DatasetResource(IsicResource):
         self.route('POST', (), self.ingestDataset)
         self.route('GET', (':id', 'review'), self.getReviewImages)
         self.route('POST', (':id', 'review'), self.submitReviewImages)
+        self.route('GET', (':id', 'metadata'), self.getRegisteredMetadata)
         self.route('POST', (':id', 'metadata'), self.registerMetadata)
 
     @describeRoute(
@@ -246,6 +247,34 @@ class DatasetResource(IsicResource):
 
         # TODO: return value?
         return {'status': 'success'}
+
+    @describeRoute(
+        Description('Get registered metadata for a dataset.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+    )
+    @access.user
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
+    def getRegisteredMetadata(self, dataset, params):
+        File = self.model('file')
+        User = self.model('user', 'isic_archive')
+
+        user = self.getCurrentUser()
+        User.requireCreateDataset(user)
+
+        return [
+            {
+                'file': File.load(
+                    registration['fileId'], force=True, exc=True,
+                    fields=['_id', 'name']),
+                'user': User.filteredSummary(
+                    User.load(registration['userId'], force=True, exc=True),
+                    user),
+                'time': registration['time']
+
+            }
+            for registration in
+            dataset['meta']['metadataFiles']
+        ]
 
     @describeRoute(
         Description('Register metadata with a dataset.')
