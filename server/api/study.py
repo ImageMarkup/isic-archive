@@ -41,7 +41,7 @@ class StudyResource(IsicResource):
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getStudy)
         self.route('POST', (), self.createStudy)
-        self.route('POST', (':id', 'user'), self.addAnnotator)
+        self.route('POST', (':id', 'users'), self.addAnnotators)
 
     @describeRoute(
         Description('Return a list of annotation studies.')
@@ -288,29 +288,35 @@ class StudyResource(IsicResource):
         return self.getStudy(id=study['_id'], params={})
 
     @describeRoute(
-        Description('Add a user as an annotator of a study.')
+        Description('Add annotator users to a study.')
         .param('id', 'The ID of the study.', paramType='path')
-        .param('userId', 'The ID of the user.', paramType='form')
+        .param('userIds', 'The user IDs to add, as a JSON array.',
+               paramType='form')
         .errorResponse('ID was invalid.')
         .errorResponse('You don\'t have permission to add a study annotator.',
                        403)
     )
     @access.user
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
-    def addAnnotator(self, study, params):
+    def addAnnotators(self, study, params):
         Study = self.model('study', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
         # TODO: make the loadmodel decorator use AccessType.WRITE,
         # once permissions work
         params = self._decodeParams(params)
-        self.requireParams('userId', params)
+        self.requireParams('userIds', params)
 
         creatorUser = self.getCurrentUser()
         User.requireAdminStudy(creatorUser)
 
-        annotatorUser = User.load(
-            params['userId'], user=creatorUser, level=AccessType.READ, exc=True)
-
-        Study.addAnnotator(study, annotatorUser, creatorUser)
+        # Load all users before adding any, to ensure all are valid
+        annotatorUsers = [
+            User.load(userId, user=creatorUser, level=AccessType.READ, exc=True)
+            for userId in params['userIds']
+        ]
+        # Look up images only once for efficiency
+        images = Study.getImages(study)
+        for annotatorUser in annotatorUsers:
+            Study.addAnnotator(study, annotatorUser, creatorUser, images)
         # TODO: return?
