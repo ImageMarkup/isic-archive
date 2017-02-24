@@ -17,6 +17,7 @@
 #  limitations under the License.
 ###############################################################################
 
+import csv
 import datetime
 import itertools
 import os
@@ -332,3 +333,104 @@ class Dataset(FolderModel):
                 subject='ISIC Archive: Dataset Metadata Notification')
 
         return dataset
+
+    def applyMetadata(self, dataset, csvFile):
+        Assetstore = self.model('assetstore')
+
+        assetstore = Assetstore.getCurrent()
+        assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(
+            assetstore)
+        csvFilePath = assetstoreAdapter.fullPath(csvFile)
+
+        with open(csvFilePath, 'rU') as csvFileStream:
+            try:
+                csvReader = csv.DictReader(csvFileStream)
+
+                for originalNameField in csvReader.fieldnames:
+                    if originalNameField.strip().lower() == 'filename':
+                        break
+                else:
+                    originalNameField = None
+                for isicIdField in csvReader.fieldnames:
+                    if isicIdField.strip().lower() == 'isic_id':
+                        break
+                else:
+                    isicIdField = None
+                if (not originalNameField) and (not isicIdField):
+                    raise FileMetadataException(
+                        'no "filename" or "isic_id" field found in CSV')
+
+                rowErrors = list()
+                for rowNum, csvRow in enumerate(csvReader):
+                    try:
+                        self._applyMetadataRow(
+                            dataset, csvRow, originalNameField, isicIdField)
+                    except RowMetadataException as e:
+                        rowErrors.append('on CSV row %d: %s' % (rowNum, str(e)))
+                if rowErrors:
+                    raise FileMetadataException('\n'.join(rowErrors))
+            except csv.Error as e:
+                raise FileMetadataException('parsing CSV: %s' % str(e))
+
+
+    def _applyMetadataRow(self, dataset, csvRow, originalNameField, isicIdField):
+        Image = self.model('image', 'isic_archive')
+
+        imageQuery = {
+            'folderId': dataset['_id']
+            # TODO: match images in the Pre-review folder too
+            # 'folderId': {'$in': datasetFolderIds}
+        }
+        if originalNameField:
+            originalName = csvRow.pop(originalNameField, None)
+            imageQuery.update({
+                'privateMeta.originalFilename': originalName
+            })
+        else:
+            originalName = None
+        if isicIdField:
+            isicId = csvRow.pop(isicIdField, None)
+            imageQuery.update({
+                'name': isicId
+            })
+        else:
+            isicId = None
+
+        images = Image.find(imageQuery)
+        try:
+            if not images.count():
+                raise RowMetadataException('no images found')
+            if images.count() > 1:
+                raise RowMetadataException('multiple images found')
+        except RowMetadataException as e:
+            if originalNameField and isicIdField:
+                errorStr = 'that match both "%s": "%s" and "%s": "%s"' % (
+                    originalNameField, originalName, isicIdField, isicId)
+            elif originalNameField:
+                errorStr = 'that match "%s": "%s"' % (
+                    originalNameField, originalName)
+            else:  # isicIdField
+                errorStr = 'that match "%s": "%s"' % (
+                    isicIdField, isicId)
+            raise RowMetadataException('%s %s' % (str(e), errorStr))
+        image = next(iter(images))
+
+        # TODO: ...
+
+        # unstructuredMetadata = image['meta']['unstructured']
+        # unstructuredMetadata.update(csvRow)
+        # Item.setMetadata(image, {
+        #     'unstructured': unstructuredMetadata
+        # })
+
+
+class FileMetadataException(Exception):
+    pass
+
+
+class RowMetadataException(Exception):
+    pass
+
+
+class FieldMetadataException(Exception):
+    pass

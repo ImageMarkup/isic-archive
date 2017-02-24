@@ -17,7 +17,6 @@
 #  limitations under the License.
 ###############################################################################
 
-import csv
 import os
 import shutil
 import sys
@@ -25,13 +24,8 @@ import subprocess
 import tempfile
 import zipfile
 
-from girder.models.model_base import ValidationException
-from girder.models.notification import ProgressState
 from girder.utility import assetstore_utilities
 from girder.utility.model_importer import ModelImporter
-from girder.utility.progress import ProgressContext
-
-from .provision_utility import getAdminUser
 
 
 class TempDir(object):
@@ -122,85 +116,3 @@ class ZipFileOpener(object):
                         tempFilePath, tempDir)
                     fileList.append((tempFilePath, originalFileRelpath))
             return iter(fileList), len(fileList)
-
-
-def handleCsv(dataset, prereviewFolder, user, csvFile):
-    Assetstore = ModelImporter.model('assetstore')
-    Item = ModelImporter.model('item')
-    Upload = ModelImporter.model('upload')
-
-    # Folders where images from this dataset may be
-    datasetFolderIds = [
-        dataset['_id'],
-        prereviewFolder['_id']
-    ]
-
-    assetstore = Assetstore.getCurrent()
-    assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(assetstore)
-    fullPath = assetstoreAdapter.fullPath(csvFile)
-
-    parseErrors = list()
-    with open(fullPath, 'rUb') as uploadFileStream,\
-        ProgressContext(
-            on=True,
-            user=user,
-            title='Processing "%s"' % csvFile['name'],
-            state=ProgressState.ACTIVE,
-            message='Parsing CSV') as progress:  # NOQA
-
-        # csv.reader(csvfile, delimiter=',', quotechar='"')
-        csvReader = csv.DictReader(uploadFileStream)
-
-        for filenameField in csvReader.fieldnames:
-            if filenameField.lower() == 'filename':
-                break
-        else:
-            raise ValidationException('No "filename" field found in CSV.')
-
-        for csvRow in csvReader:
-            filename = csvRow.pop(filenameField, None)
-            if not filename:
-                parseErrors.append(
-                    'No "filename" field in row %d' % csvReader.line_num)
-                continue
-
-            # TODO: require 'user' to match image creator?
-            # TODO: index on privateMeta.originalFilename?
-            imageItems = Item.find({
-                'privateMeta.originalFilename': filename,
-                'folderId': {'$in': datasetFolderIds}
-            })
-            if not imageItems.count():
-                parseErrors.append(
-                    'No image found with original filename "%s"' % filename)
-                continue
-            elif imageItems.count() > 1:
-                parseErrors.append(
-                    'Multiple images found with original filename "%s"' %
-                    filename)
-                continue
-            else:
-                imageItem = next(iter(imageItems))
-
-            unstructuredMetadata = imageItem['meta']['unstructured']
-            unstructuredMetadata.update(csvRow)
-            Item.setMetadata(imageItem, {
-                'unstructured': unstructuredMetadata
-            })
-
-    if parseErrors:
-        # TODO: eventually don't store whole string in memory
-        parseErrorsStr = '\n'.join(parseErrors)
-
-        parentItem = Item.load(csvFile['itemId'], force=True, exc=True)
-
-        upload = Upload.createUpload(
-            user=getAdminUser(),
-            name='parse_errors.txt',
-            parentType='item',
-            parent=parentItem,
-            size=len(parseErrorsStr),
-            mimeType='text/plain',
-        )
-        Upload.handleChunk(
-            upload, parseErrorsStr)
