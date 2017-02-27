@@ -60,7 +60,7 @@ class SegmentationResource(IsicResource):
         Segmentation = self.model('segmentation', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
-        self.requireParams(('imageId',), params)
+        self.requireParams(['imageId'], params)
         limit, offset, sort = self.getPagingParameters(
             params,
             defaultSortField='created', defaultSortDir=SortDir.DESCENDING)

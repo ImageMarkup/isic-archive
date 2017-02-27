@@ -229,7 +229,7 @@ class ImageResource(IsicResource):
     def doSegmentation(self, image, params):
         Segmentation = self.model('segmentation', 'isic_archive')
         params = self._decodeParams(params)
-        self.requireParams(('seed', 'tolerance'), params)
+        self.requireParams(['seed', 'tolerance'], params)
 
         # validate parameters
         seedCoord = params['seed']

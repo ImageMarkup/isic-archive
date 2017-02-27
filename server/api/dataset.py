@@ -125,7 +125,7 @@ class DatasetResource(IsicResource):
         User = self.model('user', 'isic_archive')
 
         params = self._decodeParams(params)
-        self.requireParams(('zipFileId', 'name', 'owner'), params)
+        self.requireParams(['zipFileId', 'name', 'owner'], params)
 
         user = self.getCurrentUser()
         User.requireCreateDataset(user)
@@ -262,7 +262,7 @@ class DatasetResource(IsicResource):
         User = self.model('user', 'isic_archive')
 
         params = self._decodeParams(params)
-        self.requireParams('metadataFileId', params)
+        self.requireParams(['metadataFileId'], params)
 
         user = self.getCurrentUser()
         User.requireCreateDataset(user)
