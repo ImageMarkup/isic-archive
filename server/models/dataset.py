@@ -335,17 +335,17 @@ class Dataset(FolderModel):
 
         return dataset
 
-    def applyMetadata(self, dataset, csvFile):
+    def applyMetadata(self, dataset, metadataFile, save):
         Assetstore = self.model('assetstore')
 
         assetstore = Assetstore.getCurrent()
         assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(
             assetstore)
-        csvFilePath = assetstoreAdapter.fullPath(csvFile)
+        metadataFilePath = assetstoreAdapter.fullPath(metadataFile)
 
-        with open(csvFilePath, 'rU') as csvFileStream:
+        with open(metadataFilePath, 'rU') as metadataFileStream:
             try:
-                csvReader = csv.DictReader(csvFileStream)
+                csvReader = csv.DictReader(metadataFileStream)
 
                 for originalNameField in csvReader.fieldnames:
                     if originalNameField.strip().lower() == 'filename':
@@ -364,8 +364,9 @@ class Dataset(FolderModel):
                 rowErrors = list()
                 for rowNum, csvRow in enumerate(csvReader):
                     try:
-                        self._applyMetadataRow(
+                        image = self._getImageForMetadataCsvRow(
                             dataset, csvRow, originalNameField, isicIdField)
+                        self._applyMetadataCsvRow(image, csvRow, save)
                     except RowMetadataException as e:
                         rowErrors.append('on CSV row %d: %s' % (rowNum, str(e)))
                 if rowErrors:
@@ -374,7 +375,8 @@ class Dataset(FolderModel):
                 raise FileMetadataException('parsing CSV: %s' % str(e))
 
 
-    def _applyMetadataRow(self, dataset, csvRow, originalNameField, isicIdField):
+    def _getImageForMetadataCsvRow(self, dataset, csvRow, originalNameField,
+                                   isicIdField):
         Image = self.model('image', 'isic_archive')
 
         imageQuery = {
@@ -415,7 +417,10 @@ class Dataset(FolderModel):
                     isicIdField, isicId)
             raise RowMetadataException('%s %s' % (str(e), errorStr))
         image = next(iter(images))
+        return image
 
+    def _applyMetadataCsvRow(self, image, csvRow, save):
+        pass
         # TODO: ...
 
         # unstructuredMetadata = image['meta']['unstructured']

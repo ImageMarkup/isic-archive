@@ -52,6 +52,7 @@ class DatasetResource(IsicResource):
         self.route('POST', (':id', 'review'), self.submitReviewImages)
         self.route('GET', (':id', 'metadata'), self.getRegisteredMetadata)
         self.route('POST', (':id', 'metadata'), self.registerMetadata)
+        self.route('POST', (':id', 'metadata', ':fileId'), self.applyMetadata)
 
     @describeRoute(
         Description('Return a list of lesion image datasets.')
@@ -325,3 +326,25 @@ class DatasetResource(IsicResource):
                 mimetypes.guess_type(file['name'], strict=False)[0] in formats:
             return True
         return False
+
+    @describeRoute(
+        Description('Apply registered metadata to a dataset.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('fileId', 'The ID of the .csv metadata file.', paramType='path')
+    )
+    @access.user
+    @loadmodel(model='file', map={'fileId': 'metadataFile'}, force=True)
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
+    def applyMetadata(self, dataset, metadataFile, params):
+        Dataset = self.model('dataset', 'isic_archive')
+        User = self.model('user', 'isic_archive')
+
+        params = self._decodeParams(params)
+        self.requireParams('save', params)
+        save = self.boolParam('save', params)
+
+        user = self.getCurrentUser()
+        User.requireCreateDataset(user)
+
+        return Dataset.applyMetadata(dataset=dataset, metadataFile=metadataFile,
+                                     save=save)
