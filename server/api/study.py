@@ -304,7 +304,7 @@ class StudyResource(IsicResource):
     @access.user
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
     def addAnnotators(self, study, params):
-        Annotation = self.model('annotation', 'isic_archive')
+        Folder = self.model('folder')
         Study = self.model('study', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
@@ -323,17 +323,21 @@ class StudyResource(IsicResource):
             User.load(userId, user=creatorUser, level=AccessType.READ, exc=True)
             for userId in params['userIds']
         ]
-        duplicateAnnotations = Annotation.find({
-            'meta.studyId': study['_id'],
+        # Existing duplicate Annotators are tricky to check for, because it's
+        # possible to have a Study with multiple annotator Users (each with a
+        # sub-Folder), but with no Images yet, and thus no Annotation (Items)
+        # inside yet
+        duplicateAnnotatorFolders = Folder.find({
+            'parentId': study['_id'],
             'meta.userId': {'$in': [
                 annotatorUser['_id'] for annotatorUser in annotatorUsers]}
         })
-        if duplicateAnnotations.count():
+        if duplicateAnnotatorFolders.count():
             # Just list the first duplicate
-            duplicateAnnotation = next(iter(duplicateAnnotations))
+            duplicateAnnotatorFolder = next(iter(duplicateAnnotatorFolders))
             raise ValidationException(
                 'Annotator user "%s" is already part of the study.' %
-                duplicateAnnotation['meta']['userId'])
+                duplicateAnnotatorFolder['meta']['userId'])
         # Look up images only once for efficiency
         images = Study.getImages(study)
         for annotatorUser in annotatorUsers:
