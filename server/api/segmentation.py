@@ -24,8 +24,8 @@ import numpy
 import six
 
 from girder.api import access
-from girder.api.rest import Resource, RestException, loadmodel, rawResponse, \
-    setResponseHeader
+from girder.api.rest import Resource, RestException, loadmodel, \
+    setRawResponse, setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 
@@ -233,7 +233,6 @@ class SegmentationResource(Resource):
     )
     @access.cookie
     @access.public
-    @rawResponse
     @loadmodel(model='segmentation', plugin='isic_archive')
     def mask(self, segmentation, params):
         File = self.model('file')
@@ -255,9 +254,8 @@ class SegmentationResource(Resource):
             raise RestException(
                 'This segmentation is failed, and thus has no mask.', code=410)
 
-        maskStream = File.download(
+        return File.download(
             maskFile, headers=True, contentDisposition=contentDisp)
-        return maskStream
 
     @describeRoute(
         Description('Get a segmentation, rendered as a thumbnail with a '
@@ -272,7 +270,6 @@ class SegmentationResource(Resource):
     )
     @access.cookie
     @access.public
-    @rawResponse
     @loadmodel(model='segmentation', plugin='isic_archive')
     def thumbnail(self, segmentation, params):
         Image = self.model('image', 'isic_archive')
@@ -298,6 +295,9 @@ class SegmentationResource(Resource):
                 code=410)
         thumbnailImageData = thumbnailImageStream.getvalue()
 
+        # Only setRawResponse now, as this handler may return a JSON error
+        # earlier
+        setRawResponse()
         setResponseHeader('Content-Type', 'image/jpeg')
         contentName = '%s_segmentation_thumbnail.jpg' % image['name']
         if contentDisp == 'inline':
