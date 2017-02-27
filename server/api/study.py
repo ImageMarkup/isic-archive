@@ -338,7 +338,8 @@ class StudyResource(IsicResource):
         images = Study.getImages(study)
         for annotatorUser in annotatorUsers:
             Study.addAnnotator(study, annotatorUser, creatorUser, images)
-        # TODO: return?
+
+        return self.getStudy(id=study['_id'], params={})
 
     @describeRoute(
         Description('Add images to a study.')
@@ -383,4 +384,5 @@ class StudyResource(IsicResource):
                 duplicateAnnotation['meta']['imageId'])
         for image in images:
             Study.addImage(study, image, creatorUser)
-        # TODO: return?
+
+        return self.getStudy(id=study['_id'], params={})
