@@ -20,8 +20,8 @@
 import datetime
 
 from girder.api import access
-from girder.api.rest import Resource, RestException, loadmodel, rawResponse, \
-    setResponseHeader
+from girder.api.rest import Resource, RestException, loadmodel, \
+    setRawResponse, setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
 
@@ -154,7 +154,6 @@ class AnnotationResource(Resource):
     )
     @access.cookie
     @access.public
-    @rawResponse
     @loadmodel(model='annotation', plugin='isic_archive', level=AccessType.READ)
     def renderAnnotation(self, annotation, params):
         Study = self.model('study', 'isic_archive')
@@ -184,6 +183,9 @@ class AnnotationResource(Resource):
             renderData, 'jpeg')
         renderEncodedData = renderEncodedStream.getvalue()
 
+        # Only setRawResponse now, as this handler may return a JSON error
+        # earlier
+        setRawResponse()
         setResponseHeader('Content-Type', 'image/jpeg')
         contentName = '%s_%s_annotation.jpg' % (
             annotation['_id'],

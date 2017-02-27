@@ -24,8 +24,8 @@ from bson.errors import InvalidId
 import geojson
 
 from girder.api import access
-from girder.api.rest import Resource, RestException, loadmodel, rawResponse, \
-    setResponseHeader
+from girder.api.rest import Resource, RestException, loadmodel, \
+    setRawResponse, setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
 from girder.models.model_base import GirderException
@@ -155,7 +155,6 @@ class ImageResource(Resource):
     )
     @access.cookie
     @access.public
-    @rawResponse
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def thumbnail(self, image, params):
         width = int(params.get('width', 256))
@@ -163,6 +162,9 @@ class ImageResource(Resource):
         thumbData, thumbMime = self.model('image_item', 'large_image')\
             .getThumbnail(image, width=width)
 
+        # Only setRawResponse now, as this handler may return a JSON error
+        # earlier
+        setRawResponse()
         setResponseHeader('Content-Type', thumbMime)
         return thumbData
 
