@@ -22,13 +22,15 @@ import itertools
 import cherrypy
 
 from girder.api import access
-from girder.api.rest import Resource, RestException
+from girder.api.rest import RestException
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 from girder.models.model_base import AccessException
 
+from .base import IsicResource
 
-class TaskResource(Resource):
+
+class TaskResource(IsicResource):
     def __init__(self):
         super(TaskResource, self).__init__()
         self.resourceName = 'task'

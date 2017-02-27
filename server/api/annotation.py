@@ -20,15 +20,16 @@
 import datetime
 
 from girder.api import access
-from girder.api.rest import Resource, RestException, loadmodel, \
-    setRawResponse, setResponseHeader
+from girder.api.rest import RestException, loadmodel, setRawResponse, \
+    setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
 
+from .base import IsicResource
 from ..models.segmentation_helpers import ScikitSegmentationHelper
 
 
-class AnnotationResource(Resource):
+class AnnotationResource(IsicResource):
     def __init__(self):
         super(AnnotationResource, self).__init__()
         self.resourceName = 'annotation'

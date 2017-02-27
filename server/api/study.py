@@ -21,20 +21,19 @@ import csv
 from cStringIO import StringIO
 import functools
 import itertools
-import json
 
-import cherrypy
 import six
 
 from girder.api import access
-from girder.api.rest import Resource, RestException, loadmodel, \
-    setResponseHeader
+from girder.api.rest import RestException, loadmodel, setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 from girder.models.model_base import ValidationException
 
+from .base import IsicResource
 
-class StudyResource(Resource):
+
+class StudyResource(IsicResource):
     def __init__(self,):
         super(StudyResource, self).__init__()
         self.resourceName = 'study'
@@ -42,7 +41,8 @@ class StudyResource(Resource):
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getStudy)
         self.route('POST', (), self.createStudy)
-        self.route('POST', (':id', 'user'), self.addAnnotator)
+        self.route('POST', (':id', 'users'), self.addAnnotators)
+        self.route('POST', (':id', 'images'), self.addImages)
 
     @describeRoute(
         Description('Return a list of annotation studies.')
@@ -252,21 +252,10 @@ class StudyResource(Resource):
         creatorUser = self.getCurrentUser()
         User.requireAdminStudy(creatorUser)
 
-        isJson = cherrypy.request.headers['Content-Type'].split(';')[0] == \
-            'application/json'
-        if isJson:
-            params = self.getBodyJson()
+        params = self._decodeParams(params)
         self.requireParams(
             ['name', 'featuresetId', 'userIds', 'imageIds'],
             params)
-
-        if not isJson:
-            for field in ['userIds', 'imageIds']:
-                try:
-                    params[field] = json.loads(params[field])
-                except ValueError:
-                    raise RestException(
-                        'Invalid JSON passed in %s parameter.' % field)
 
         studyName = params['name'].strip()
         if not studyName:
@@ -277,6 +266,8 @@ class StudyResource(Resource):
             raise ValidationException('Invalid featureset ID.', 'featuresetId')
         featureset = Featureset.load(featuresetId, exc=True)
 
+        if len(set(params['userIds'])) != len(params['userIds']):
+            raise RestException('Duplicate user IDs.')
         annotatorUsers = [
             User.load(
                 annotatorUserId, user=creatorUser, level=AccessType.READ,
@@ -284,6 +275,8 @@ class StudyResource(Resource):
             for annotatorUserId in params['userIds']
         ]
 
+        if len(set(params['imageIds'])) != len(params['imageIds']):
+            raise RestException('Duplicate image IDs.')
         images = [
             Image.load(
                 imageId, user=creatorUser, level=AccessType.READ, exc=True)
@@ -300,31 +293,100 @@ class StudyResource(Resource):
         return self.getStudy(id=study['_id'], params={})
 
     @describeRoute(
-        Description('Add a user as an annotator of a study.')
+        Description('Add annotator users to a study.')
         .param('id', 'The ID of the study.', paramType='path')
-        .param('userId', 'The ID of the user.', paramType='form')
+        .param('userIds', 'The user IDs to add, as a JSON array.',
+               paramType='form')
         .errorResponse('ID was invalid.')
         .errorResponse('You don\'t have permission to add a study annotator.',
                        403)
     )
     @access.user
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
-    def addAnnotator(self, study, params):
+    def addAnnotators(self, study, params):
+        Folder = self.model('folder')
         Study = self.model('study', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
         # TODO: make the loadmodel decorator use AccessType.WRITE,
         # once permissions work
-        if cherrypy.request.headers['Content-Type'].split(';')[0] == \
-                'application/json':
-            params = self.getBodyJson()
-        self.requireParams('userId', params)
+        params = self._decodeParams(params)
+        self.requireParams('userIds', params)
 
         creatorUser = self.getCurrentUser()
         User.requireAdminStudy(creatorUser)
 
-        annotatorUser = User.load(
-            params['userId'], user=creatorUser, level=AccessType.READ, exc=True)
+        # Load all users before adding any, to ensure all are valid
+        if len(set(params['userIds'])) != len(params['userIds']):
+            raise RestException('Duplicate user IDs.')
+        annotatorUsers = [
+            User.load(userId, user=creatorUser, level=AccessType.READ, exc=True)
+            for userId in params['userIds']
+        ]
+        # Existing duplicate Annotators are tricky to check for, because it's
+        # possible to have a Study with multiple annotator Users (each with a
+        # sub-Folder), but with no Images yet, and thus no Annotation (Items)
+        # inside yet
+        duplicateAnnotatorFolders = Folder.find({
+            'parentId': study['_id'],
+            'meta.userId': {'$in': [
+                annotatorUser['_id'] for annotatorUser in annotatorUsers]}
+        })
+        if duplicateAnnotatorFolders.count():
+            # Just list the first duplicate
+            duplicateAnnotatorFolder = next(iter(duplicateAnnotatorFolders))
+            raise ValidationException(
+                'Annotator user "%s" is already part of the study.' %
+                duplicateAnnotatorFolder['meta']['userId'])
+        # Look up images only once for efficiency
+        images = Study.getImages(study)
+        for annotatorUser in annotatorUsers:
+            Study.addAnnotator(study, annotatorUser, creatorUser, images)
 
-        Study.addAnnotator(study, annotatorUser, creatorUser)
-        # TODO: return?
+        return self.getStudy(id=study['_id'], params={})
+
+    @describeRoute(
+        Description('Add images to a study.')
+        .param('id', 'The ID of the study.', paramType='path')
+        .param('imageIds', 'The image IDs to add, as a JSON array.',
+               paramType='form')
+        .errorResponse('ID was invalid.')
+        .errorResponse('You don\'t have permission to add a study image.', 403)
+    )
+    @access.user
+    @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
+    def addImages(self, study, params):
+        Annotation = self.model('annotation', 'isic_archive')
+        Image = self.model('image', 'isic_archive')
+        Study = self.model('study', 'isic_archive')
+        User = self.model('user', 'isic_archive')
+
+        params = self._decodeParams(params)
+        self.requireParams('imageIds', params)
+
+        creatorUser = self.getCurrentUser()
+        User.requireAdminStudy(creatorUser)
+
+        # Load all images before adding any, to ensure all are valid and
+        # accessible
+        if len(set(params['imageIds'])) != len(params['imageIds']):
+            raise RestException('Duplicate image IDs.')
+        images = [
+            Image.load(
+                imageId, user=creatorUser, level=AccessType.READ, exc=True)
+            for imageId in params['imageIds']
+        ]
+        duplicateAnnotations = Annotation.find({
+            'meta.studyId': study['_id'],
+            'meta.imageId': {'$in': [image['_id'] for image in images]}
+        })
+        if duplicateAnnotations.count():
+            # Just list the first duplicate
+            duplicateAnnotation = next(iter(duplicateAnnotations))
+            raise ValidationException(
+                'Image "%s" is already part of the study.' %
+                duplicateAnnotation['meta']['imageId'])
+        for image in images:
+            Study.addImage(study, image, creatorUser)
+
+        return self.getStudy(id=study['_id'], params={})

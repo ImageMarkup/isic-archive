@@ -28,10 +28,10 @@ isic.models.StudyModel = girder.Model.extend({
      */
     addUser: function (userId) {
         girder.restRequest({
-            path: this.resourceName + '/' + this.get('_id') + '/user',
+            path: this.resourceName + '/' + this.get('_id') + '/users',
             type: 'POST',
             data: {
-                userId: userId
+                userIds: JSON.stringify([userId])
             }
         }).done(_.bind(function (resp) {
             this.trigger('g:addedUser');

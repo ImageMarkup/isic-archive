@@ -139,6 +139,7 @@ isic.views.CreateStudyView = isic.View.extend({
         var userIds = JSON.stringify(this.userIds);
         var imageIds = JSON.stringify([]);
 
+        // TODO: move this into the StudyModel
         girder.restRequest({
             type: 'POST',
             path: 'study',

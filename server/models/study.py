@@ -19,7 +19,6 @@
 
 from girder.constants import AccessType
 from girder.models.folder import Folder as FolderModel
-from girder.models.model_base import ValidationException
 
 
 class Study(FolderModel):
@@ -88,12 +87,6 @@ class Study(FolderModel):
         Group = self.model('group')
         if not images:
             images = self.getImages(study)
-
-        if self.childAnnotations(
-                study=study,
-                annotatorUser=annotatorUser).count():
-            raise ValidationException(
-                'Annotator user is already part of the study.')
 
         # Allow annotator to read parent study
         study = self.setUserAccess(
