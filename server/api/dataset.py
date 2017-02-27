@@ -307,8 +307,9 @@ class DatasetResource(IsicResource):
             raise ValidationException(
                 'File must be in .csv format.', 'metadataFileId')
 
-        return Dataset.registerMetadata(dataset=dataset, user=user,
-                                        csvFile=metadataFile, sendMail=True)
+        return Dataset.registerMetadata(
+            dataset=dataset, user=user, metadataFile=metadataFile,
+            sendMail=True)
 
     def _checkFileFormat(self, file, formats):
         """

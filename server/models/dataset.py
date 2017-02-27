@@ -299,10 +299,10 @@ class Dataset(FolderModel):
                 Folder.countFolders(prereviewFolder)) == 0:
             Folder.remove(prereviewFolder)
 
-    def registerMetadata(self, dataset, csvFile, user, sendMail=False):
+    def registerMetadata(self, dataset, metadataFile, user, sendMail=False):
         """Register a .csv file containing metadata about images."""
         # Check if image metadata is already registered
-        if self.findOne({'meta.metadataFiles.fileId': csvFile['_id']}):
+        if self.findOne({'meta.metadataFiles.fileId': metadataFile['_id']}):
             raise ValidationException(
                 'Metadata file is already registered on a dataset.')
 
@@ -310,7 +310,7 @@ class Dataset(FolderModel):
         now = datetime.datetime.utcnow()
         metadataFiles = dataset['meta']['metadataFiles']
         metadataFiles.append({
-            'fileId': csvFile['_id'],
+            'fileId': metadataFile['_id'],
             'userId': user['_id'],
             'time': now
         })
@@ -328,7 +328,7 @@ class Dataset(FolderModel):
                     'host': host,
                     'dataset': dataset,
                     'user': user,
-                    'csvFile': csvFile,
+                    'metadataFile': metadataFile,
                     'date': now.replace(microsecond=0)
                 },
                 subject='ISIC Archive: Dataset Metadata Notification')
