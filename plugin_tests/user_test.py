@@ -173,3 +173,29 @@ class UserTestCase(IsicTestCase):
         resp = self.request(path='/user/me', method='GET', user=uploaderUser)
         self.assertStatusOk(resp)
         self.assertEqual(resp.json['permissions']['createDataset'], True)
+
+    def testReviewerUser(self):
+        Group = self.model('group')
+        User = self.model('user', 'isic_archive')
+
+        # Create a reviewer user
+        resp = self.request(path='/user', method='POST', params={
+            'email': 'reviewer-user@isic-archive.com',
+            'login': 'reviewer-user',
+            'firstName': 'reviewer',
+            'lastName': 'user',
+            'password': 'password'
+        })
+        self.assertStatusOk(resp)
+        reviewerUser = User.findOne({'login': 'reviewer-user'})
+        self.assertIsNotNone(reviewerUser)
+
+        # Add the user to the reviewers group
+        reviewersGroup = Group.findOne({'name': 'Dataset QC Reviewers'})
+        self.assertIsNotNone(reviewersGroup)
+        Group.addUser(reviewersGroup, reviewerUser, level=AccessType.READ)
+
+        # Ensure they can review datasets
+        resp = self.request(path='/user/me', method='GET', user=reviewerUser)
+        self.assertStatusOk(resp)
+        self.assertEqual(resp.json['permissions']['reviewDataset'], True)
