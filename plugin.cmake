@@ -26,8 +26,7 @@ add_python_style_test(
 
 add_python_test(
   user
-  PLUGIN isic_archive
-  DBNAME isic_archive)
+  PLUGIN isic_archive)
 add_python_test(
   upload
   PLUGIN isic_archive
@@ -37,11 +36,7 @@ add_python_test(
     "plugins/isic_archive/test_1_small_3.jpg"
     "plugins/isic_archive/test_1_large_1.jpg"
     "plugins/isic_archive/test_1_large_2.jpg"
-    "plugins/isic_archive/test_1_metadata.csv"
-    DBNAME isic_archive)
-set_property(
-  TEST server_isic_archive.upload
-  PROPERTY DEPENDS server_isic_archive.user)
+    "plugins/isic_archive/test_1_metadata.csv")
 add_python_test(
   segmentation_helper
   PLUGIN isic_archive)

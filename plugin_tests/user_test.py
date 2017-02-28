@@ -24,10 +24,6 @@ from .isic_base import IsicTestCase
 
 
 def setUpModule():
-    # This should be the first module to run in the testing pipeline
-    base.dropTestDatabase()
-    # base.dropFsAssetstore()  # TODO: do this
-
     base.enabledPlugins.append('isic_archive')
     base.startServer()
 
