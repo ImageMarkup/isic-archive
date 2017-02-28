@@ -46,6 +46,7 @@ class UserTestCase(IsicTestCase):
         })
         self.assertStatusOk(resp)
         testUser = User.findOne({'login': 'test-user'})
+        self.assertIsNotNone(testUser)
 
         # Ensure creation returns permissions
         negativePermissions = {
@@ -126,9 +127,10 @@ class UserTestCase(IsicTestCase):
         })
         self.assertStatusOk(resp)
         uploaderAdmin = User.findOne({'login': 'uploader-admin'})
+        self.assertIsNotNone(uploaderAdmin)
         contributorsGroup = Group.findOne({'name': 'Dataset Contributors'})
-        contributorsGroup = Group.addUser(
-            contributorsGroup, uploaderAdmin, level=AccessType.WRITE)
+        self.assertIsNotNone(contributorsGroup)
+        Group.addUser(contributorsGroup, uploaderAdmin, level=AccessType.WRITE)
 
         # Create an uploader user
         resp = self.request(path='/user', method='POST', params={
@@ -140,6 +142,7 @@ class UserTestCase(IsicTestCase):
         })
         self.assertStatusOk(resp)
         uploaderUser = User.findOne({'login': 'uploader-user'})
+        self.assertIsNotNone(uploaderUser)
 
         # TODO: check if a user can upload without agreeing to terms
 
@@ -148,7 +151,7 @@ class UserTestCase(IsicTestCase):
                             method='POST', user=uploaderUser)
         self.assertStatusOk(resp)
 
-        # TODO: Ensure that an email was just sent
+        self.assertMails(count=1)
 
         # Ensure that the user can't create datasets yet
         resp = self.request(path='/user/me', method='GET', user=uploaderUser)
@@ -163,11 +166,10 @@ class UserTestCase(IsicTestCase):
         else:
             self.fail('Group join request not found.')
 
-        # TODO: Ensure that a second request does not send an email
+        self.assertNoMail()
 
         # Add the user, then ensure they can create datasets
-        Group.inviteUser(
-            contributorsGroup, uploaderUser, level=AccessType.READ)
+        Group.inviteUser(contributorsGroup, uploaderUser, level=AccessType.READ)
         resp = self.request(path='/user/me', method='GET', user=uploaderUser)
         self.assertStatusOk(resp)
         self.assertEqual(resp.json['permissions']['createDataset'], True)
