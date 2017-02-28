@@ -59,6 +59,7 @@ class ImageResource(IsicResource):
                required=False)
         .errorResponse()
     )
+    @access.cookie
     @access.public
     def find(self, params):
         Image = self.model('image', 'isic_archive')
@@ -100,6 +101,7 @@ class ImageResource(IsicResource):
                required=False)
         .errorResponse()
     )
+    @access.cookie
     @access.public
     def getHistogram(self, params):
         Image = self.model('image', 'isic_archive')
@@ -115,6 +117,7 @@ class ImageResource(IsicResource):
         .param('id', 'The ID of the image.', paramType='path')
         .errorResponse('ID was invalid.')
     )
+    @access.cookie
     @access.public
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def getImage(self, image, params):

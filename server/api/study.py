@@ -54,6 +54,7 @@ class StudyResource(IsicResource):
                paramType='query', required=False)
         .errorResponse()
     )
+    @access.cookie
     @access.public
     def find(self, params):
         Study = self.model('study', 'isic_archive')
@@ -100,6 +101,7 @@ class StudyResource(IsicResource):
                default='json')
         .errorResponse()
     )
+    @access.cookie
     @access.public
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
     def getStudy(self, study, params):

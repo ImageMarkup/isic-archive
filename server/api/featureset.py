@@ -40,6 +40,7 @@ class FeaturesetResource(IsicResource):
         .pagingParams(defaultSort='name')
         .responseClass('Featureset')
     )
+    @access.cookie
     @access.public
     def find(self, params):
         Featureset = self.model('featureset', 'isic_archive')
@@ -75,6 +76,7 @@ class FeaturesetResource(IsicResource):
         .param('id', 'The ID of the featureset.', paramType='path')
         .errorResponse('ID was invalid.')
     )
+    @access.cookie
     @access.public
     @loadmodel(model='featureset', plugin='isic_archive')
     def getFeatureset(self, featureset, params):
