@@ -85,6 +85,8 @@ class Study(FolderModel):
                      images=None):
         Annotation = self.model('annotation', 'isic_archive')
         Group = self.model('group')
+        User = self.model('user', 'isic_archive')
+
         if not images:
             images = self.getImages(study)
 
@@ -97,7 +99,9 @@ class Study(FolderModel):
 
         annotatorFolder = self.createFolder(
             parent=study,
-            name='%(login)s (%(firstName)s %(lastName)s)' % annotatorUser,
+            name=User.obfuscatedName(annotatorUser),
+            # Allow a rename, in the rare event of an obfuscated name collision
+            allowRename=True,
             description='',
             parentType='folder',
             # Inherit public access state from parent
