@@ -1,14 +1,24 @@
 isic.models.UserModel = girder.models.UserModel.extend({
     name: function () {
-        var name = this.get('name');
+        var realName;
         if (this.has('login')) {
-            var privateName =
+            realName =
                 this.get('firstName') +
                 ' ' + this.get('lastName') +
                 ' (' + this.get('login') + ')';
-            name += ' [' + privateName + ']';
         }
-        return name;
+
+        var displayName;
+        if (this.has('name')) {
+            displayName = this.get('name');
+            if (realName) {
+                displayName += ' [' + realName + ']';
+            }
+        } else {
+            // The user should always have either a 'login' or a 'name'
+            displayName = realName;
+        }
+        return displayName;
     },
 
     canAcceptTerms: function () {
