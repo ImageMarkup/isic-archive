@@ -175,8 +175,10 @@ class StudyResource(IsicResource):
             Study.getImages(study).sort('lowerName', SortDir.ASCENDING))
 
         for annotatorUser, image in itertools.product(
-            Study.getAnnotators(study).sort('login', SortDir.ASCENDING),
-                images
+            sorted(
+                Study.getAnnotators(study),
+                key=lambda annotatorUser: User.obfuscatedName(annotatorUser)),
+            images
         ):
             # this will iterate either 0 or 1 times
             for annotation in Study.childAnnotations(
@@ -191,8 +193,12 @@ class StudyResource(IsicResource):
 
                 filteredAnnotatorUser = User.filteredSummary(
                     annotatorUser, currentUser)
-                annotatorUserName = filteredAnnotatorUser.get(
-                    'login', filteredAnnotatorUser['name'])
+                annotatorUserName = filteredAnnotatorUser['name']
+                if 'login' in filteredAnnotatorUser:
+                    annotatorUserName += ' [%s %s (%s)]' % (
+                        filteredAnnotatorUser['firstName'],
+                        filteredAnnotatorUser['lastName'],
+                        filteredAnnotatorUser['login'])
 
                 outDictBase = {
                     'study_name': study['name'],
