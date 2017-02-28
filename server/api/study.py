@@ -129,11 +129,14 @@ class StudyResource(IsicResource):
                         output.pop('creatorId'),
                         force=True, exc=True),
                     currentUser),
-                'users': [
-                    User.filteredSummary(annotatorUser, currentUser)
-                    for annotatorUser in
-                    Study.getAnnotators(study).sort('login', SortDir.ASCENDING)
-                ],
+                'users': sorted(
+                    (
+                        User.filteredSummary(annotatorUser, currentUser)
+                        for annotatorUser in
+                        Study.getAnnotators(study)
+                    ),
+                    key=lambda annotatorUser: User.obfuscatedName(annotatorUser)
+                ),
                 'images': list(
                     Study.getImages(
                         study, Image.summaryFields
