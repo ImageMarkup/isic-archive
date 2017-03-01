@@ -17,11 +17,13 @@
 #  limitations under the License.
 ###############################################################################
 
+import datetime
 import os
 
 from six import BytesIO
 
 from girder.constants import AccessType
+from girder.utility import parseTimestamp
 from girder.utility.ziputil import ZipGenerator
 from tests import base
 
@@ -159,3 +161,16 @@ class UploadTestCase(IsicTestCase):
                            ('fileId', 'time'))
         # Reviewer user should receive email
         self.assertMails(count=1)
+
+        # Get registered metadata
+        resp = self.request(
+            path='/dataset/%s/metadata' % dataset['_id'],
+            user=uploaderUser)
+        self.assertStatusOk(resp)
+        self.assertEqual(len(resp.json), 1)
+        self.assertHasKeys(resp.json[0], ['file', 'user', 'time'])
+        self.assertEqual(resp.json[0]['file']['_id'], str(metadataFile['_id']))
+        self.assertEqual(resp.json[0]['file']['name'], 'test_1_metadata.csv')
+        self.assertEqual(resp.json[0]['user']['_id'], str(uploaderUser['_id']))
+        self.assertLess(parseTimestamp(resp.json[0]['time']),
+                        datetime.datetime.utcnow())
