@@ -40,7 +40,6 @@ def tearDownModule():
 class UploadTestCase(IsicTestCase):
     def testUpload(self):
         Folder = self.model('folder')
-        print Folder.database
         Group = self.model('group')
         Upload = self.model('upload')
         User = self.model('user', 'isic_archive')
@@ -56,8 +55,7 @@ class UploadTestCase(IsicTestCase):
         self.assertStatusOk(resp)
         reviewerUser = User.findOne({'login': 'reviewer-user'})
         reviewersGroup = Group.findOne({'name': 'Dataset QC Reviewers'})
-        reviewersGroup = Group.addUser(
-            reviewersGroup, reviewerUser, level=AccessType.READ)
+        Group.addUser(reviewersGroup, reviewerUser, level=AccessType.READ)
 
         testDataDir = os.path.join(
             os.environ['GIRDER_TEST_DATA_PREFIX'], 'plugins', 'isic_archive')
@@ -79,10 +77,20 @@ class UploadTestCase(IsicTestCase):
         zipSize = zipStream.tell()
         zipStream.seek(0)
 
-        # Create new folders in the uploader user's home
+        # Create an uploader user
+        resp = self.request(path='/user', method='POST', params={
+            'email': 'uploader-user@isic-archive.com',
+            'login': 'uploader-user',
+            'firstName': 'uploader',
+            'lastName': 'user',
+            'password': 'password'
+        })
+        self.assertStatusOk(resp)
         uploaderUser = User.findOne({'login': 'uploader-user'})
-        self.assertIsNotNone(uploaderUser)
+        contributorsGroup = Group.findOne({'name': 'Dataset Contributors'})
+        Group.addUser(contributorsGroup, uploaderUser, level=AccessType.READ)
 
+        # Create new folders in the uploader user's home
         resp = self.request(
             path='/folder', method='POST', user=uploaderUser, params={
                 'parentType': 'user',

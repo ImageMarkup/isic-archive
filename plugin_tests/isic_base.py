@@ -17,36 +17,29 @@
 #  limitations under the License.
 ###############################################################################
 
-import os
 import time
 
 from six.moves import queue
 
-from girder.constants import ROOT_DIR, SettingKey
 from tests import base
 
 
 class IsicTestCase(base.TestCase):
-    def setUp(self, drop=False):
-        Assetstore = self.model('assetstore')
-        Setting = self.model('setting')
+    def setUp(self):
+        # The isic_archive plugin provisions multiple magic collections, groups,
+        # etc. upon startup. Under an upstream Girder testing workflow, the
+        # server is started only once for the test module, then the database is
+        # dropped before each test method. For isic_archive, this would cause
+        # these magic database entries to be dropped and not regenerated. To
+        # prevent this, we will drop the database and then re-provision the
+        # database before each test method.
+        # Attempting to restart the full server in between test methods is buggy
+        # and fails.
+        super(IsicTestCase, self).setUp()
 
-        if drop:
-            base.dropTestDatabase(dropModels=True)
-
-        assetstoreName = os.environ.get('GIRDER_TEST_ASSETSTORE', 'test')
-        assetstorePath = os.path.join(
-            ROOT_DIR, 'tests', 'assetstore', assetstoreName)
-        if drop:
-            base.dropFsAssetstore(assetstorePath)
-        if not Assetstore.find({'name': 'Test'}).count():
-            self.assetstore = Assetstore.createFilesystemAssetstore(
-                name='Test', root=assetstorePath)
-
-        addr = ':'.join(map(str, base.mockSmtp.address or ('localhost', 25)))
-        Setting.set(SettingKey.SMTP_HOST, addr)
-        Setting.set(SettingKey.UPLOAD_MINIMUM_CHUNK_SIZE, 0)
-        Setting.set(SettingKey.PLUGINS_ENABLED, base.enabledPlugins)
+        from girder.plugins.isic_archive.provision_utility import \
+            provisionDatabase
+        provisionDatabase()
 
     def assertNoMail(self):
         """Assert that the email queue is empty."""

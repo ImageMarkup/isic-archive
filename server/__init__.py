@@ -33,7 +33,7 @@ from girder.utility.webroot import WebrootBase
 
 from . import constants
 from . import api
-from .provision_utility import initialSetup
+from .provision_utility import provisionDatabase
 
 
 class Webroot(WebrootBase):
@@ -162,7 +162,6 @@ def load(info):
     events.bind('rest.get.describe/:resource.after',
                 'onDescribeResource', onDescribeResource)
     events.bind('model.job.save', 'onJobSave', onJobSave)
-    ModelImporter.model('setting').set(SettingKey.USER_DEFAULT_FOLDERS, 'none')
 
     # add custom model searching
     resource.allowedSearchTypes.update({
@@ -172,7 +171,7 @@ def load(info):
     })
 
     # create all necessary users, groups, collections, etc
-    initialSetup()
+    provisionDatabase()
 
     # add static file serving
     app_base = os.path.join(os.curdir, os.pardir)
