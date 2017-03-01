@@ -49,6 +49,7 @@ class AnnotationResource(IsicResource):
                paramType='query', required=False)
         .errorResponse()
     )
+    @access.cookie
     @access.public
     def find(self, params):
         Annotation = self.model('annotation', 'isic_archive')
@@ -100,6 +101,7 @@ class AnnotationResource(IsicResource):
                paramType='path')
         .errorResponse()
     )
+    @access.cookie
     @access.public
     @loadmodel(model='annotation', plugin='isic_archive', level=AccessType.READ)
     def getAnnotation(self, annotation, params):

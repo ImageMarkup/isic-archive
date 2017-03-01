@@ -57,6 +57,7 @@ class DatasetResource(IsicResource):
         .pagingParams(defaultSort='name')
         .errorResponse()
     )
+    @access.cookie
     @access.public
     def find(self, params):
         Dataset = self.model('dataset', 'isic_archive')
@@ -80,6 +81,7 @@ class DatasetResource(IsicResource):
         .param('id', 'The ID of the dataset.', paramType='path')
         .errorResponse('ID was invalid.')
     )
+    @access.cookie
     @access.public
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
     def getDataset(self, dataset, params):
