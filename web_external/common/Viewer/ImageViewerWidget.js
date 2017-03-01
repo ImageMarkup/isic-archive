@@ -55,7 +55,12 @@ isic.views.ImageViewerWidget = isic.View.extend({
                     modifiers: {shift: false, ctrl: false},
                     owner: 'geo.mapInteractor',
                     name: 'wheel zoom'
-                }]
+                }],
+                keyboard: {
+                    actions: {},
+                    meta: {},
+                    focusHighlight: false
+                }
             })
         });
         params.map.max += 2;
