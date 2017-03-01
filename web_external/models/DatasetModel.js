@@ -58,5 +58,39 @@ isic.models.DatasetModel = girder.Model.extend({
         }, this)).error(_.bind(function (err) {
             this.trigger('isic:registerMetadata:error', err);
         }, this));
+    },
+
+     /**
+     * Get the registered metadata for the dataset. Returns a promise.
+     */
+    getRegisteredMetadata: function () {
+        var deferred = $.Deferred();
+        girder.restRequest({
+            path: this.resourceName + '/' + this.id + '/metadata'
+        }).done(function (resp) {
+            deferred.resolve(resp);
+        });
+        return deferred.promise();
+    },
+
+     /**
+     * Apply registered metadata to the dataset. Returns a promise.
+     * @param [metadataFileId] The ID of the metadata file.
+     */
+    applyMetadata: function (metadataFileId, save) {
+        var deferred = $.Deferred();
+        girder.restRequest({
+            path: this.resourceName + '/' + this.id + '/metadata/' + metadataFileId,
+            type: 'POST',
+            data: {
+                save: save
+            },
+            error: null
+        }).done(function (resp) {
+            deferred.resolve(resp);
+        }).error(function (err) {
+            deferred.reject(err);
+        });
+        return deferred.promise();
     }
 });

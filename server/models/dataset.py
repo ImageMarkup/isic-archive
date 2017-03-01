@@ -336,6 +336,11 @@ class Dataset(FolderModel):
         return dataset
 
     def applyMetadata(self, dataset, metadataFile, save):
+        """
+        Apply metadata in a .csv file to a dataset.
+        :return: A list of strings describing parsing or validation errors.
+        :rtype: list
+        """
         Assetstore = self.model('assetstore')
 
         assetstore = Assetstore.getCurrent()
@@ -373,6 +378,10 @@ class Dataset(FolderModel):
                     raise FileMetadataException('\n'.join(rowErrors))
             except csv.Error as e:
                 raise FileMetadataException('parsing CSV: %s' % str(e))
+
+        # TODO: return list of error strings, can be empty
+        return ['on CSV row 4: unable to parse age',
+                'on CSV row 10: unrecognized gender']
 
 
     def _getImageForMetadataCsvRow(self, dataset, csvRow, originalNameField,

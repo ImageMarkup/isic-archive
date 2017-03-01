@@ -271,7 +271,6 @@ class DatasetResource(IsicResource):
                     User.load(registration['userId'], force=True, exc=True),
                     user),
                 'time': registration['time']
-
             }
             for registration in
             dataset['meta']['metadataFiles']
@@ -331,6 +330,9 @@ class DatasetResource(IsicResource):
         Description('Apply registered metadata to a dataset.')
         .param('id', 'The ID of the dataset.', paramType='path')
         .param('fileId', 'The ID of the .csv metadata file.', paramType='path')
+        .param('save', 'Whether to save the metadata to the dataset if '
+               'validation succeeds.', dataType='boolean', default=False,
+               paramType='form')
     )
     @access.user
     @loadmodel(model='file', map={'fileId': 'metadataFile'}, force=True)
@@ -346,5 +348,9 @@ class DatasetResource(IsicResource):
         user = self.getCurrentUser()
         User.requireCreateDataset(user)
 
-        return Dataset.applyMetadata(dataset=dataset, metadataFile=metadataFile,
-                                     save=save)
+        errors = Dataset.applyMetadata(
+            dataset=dataset, metadataFile=metadataFile, save=save)
+        return {
+            'fileId': metadataFile['_id'],
+            'errors': [{'description': description} for description in errors]
+        }

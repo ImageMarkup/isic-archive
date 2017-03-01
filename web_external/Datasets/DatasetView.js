@@ -4,6 +4,11 @@ isic.views.DatasetView = isic.View.extend({
             isic.router.navigate(
                 'dataset/' + this.dataset.id + '/metadata/register',
                 {trigger: true});
+        },
+        'click .isic-dataset-apply-metadata-button': function () {
+            isic.router.navigate(
+                'dataset/' + this.dataset.id + '/metadata/apply',
+                {trigger: true});
         }
     },
 
