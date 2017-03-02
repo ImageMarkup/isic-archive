@@ -54,12 +54,13 @@ class Webroot(WebrootBase):
             }
 
     def _renderHTML(self):
+        Setting = ModelImporter.model('setting')
+
         self.vars['pluginCss'] = []
         self.vars['pluginJs'] = []
         builtDir = os.path.join(
             STATIC_ROOT_DIR, 'clients', 'web', 'static', 'built', 'plugins')
-        self.vars['plugins'] = ModelImporter.model('setting').get(
-            SettingKey.PLUGINS_ENABLED, ())
+        self.vars['plugins'] = Setting.get(SettingKey.PLUGINS_ENABLED, ())
         for plugin in self.vars['plugins']:
             if os.path.exists(os.path.join(builtDir, plugin, 'plugin.min.css')):
                 self.vars['pluginCss'].append(plugin)

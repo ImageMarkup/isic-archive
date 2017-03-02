@@ -39,7 +39,8 @@ class TempDir(object):
         pass
 
     def __enter__(self):
-        assetstore = ModelImporter.model('assetstore').getCurrent()
+        Assetstore = ModelImporter.model('assetstore')
+        assetstore = Assetstore.getCurrent()
         assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(
             assetstore)
         try:
