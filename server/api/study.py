@@ -322,7 +322,7 @@ class StudyResource(IsicResource):
         # TODO: make the loadmodel decorator use AccessType.WRITE,
         # once permissions work
         params = self._decodeParams(params)
-        self.requireParams('userIds', params)
+        self.requireParams(['userIds'], params)
 
         creatorUser = self.getCurrentUser()
         User.requireAdminStudy(creatorUser)
@@ -373,7 +373,7 @@ class StudyResource(IsicResource):
         User = self.model('user', 'isic_archive')
 
         params = self._decodeParams(params)
-        self.requireParams('imageIds', params)
+        self.requireParams(['imageIds'], params)
 
         creatorUser = self.getCurrentUser()
         User.requireAdminStudy(creatorUser)

@@ -24,11 +24,11 @@ from . import constants
 
 
 def getAdminUser():
-    User = ModelImporter.model('user')
+    User = ModelImporter.model('user', 'isic_archive')
     # TODO: cache this?
     adminUser = User.findOne({'login': 'isic-admin'})
     if not adminUser:
-        adminUser = ModelImporter.model('user').createUser(
+        adminUser = User.createUser(
             login='isic-admin',
             password='isic-admin',
             firstName='ISIC Archive',

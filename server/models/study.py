@@ -38,9 +38,10 @@ class Study(FolderModel):
         self.prefixSearchFields = ['lowerName', 'name']
 
     def loadStudyCollection(self):
+        Collection = self.model('collection')
         # assumes collection has been created by provision_utility
         # TODO: cache this value
-        return self.model('collection').findOne({'name': 'Annotation Studies'})
+        return Collection.findOne({'name': 'Annotation Studies'})
 
     def createStudy(self, name, creatorUser, featureset, annotatorUsers,
                     images):
@@ -150,8 +151,8 @@ class Study(FolderModel):
                 study, image, creatorUser, annotatorFolder)
 
     def getFeatureset(self, study):
-        return self.model('featureset', 'isic_archive').load(
-            study['meta']['featuresetId'], exc=True)
+        Featureset = self.model('featureset', 'isic_archive')
+        return Featureset.load(study['meta']['featuresetId'], exc=True)
 
     def getAnnotators(self, study):
         Folder = self.model('folder')
