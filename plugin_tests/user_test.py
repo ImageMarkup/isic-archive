@@ -199,3 +199,29 @@ class UserTestCase(IsicTestCase):
         resp = self.request(path='/user/me', method='GET', user=reviewerUser)
         self.assertStatusOk(resp)
         self.assertEqual(resp.json['permissions']['reviewDataset'], True)
+
+    def testStudyAdminUser(self):
+        Group = self.model('group')
+        User = self.model('user', 'isic_archive')
+
+        # Create a study admin user
+        resp = self.request(path='/user', method='POST', params={
+            'email': 'study-admin-user@isic-archive.com',
+            'login': 'study-admin-user',
+            'firstName': 'study admin',
+            'lastName': 'user',
+            'password': 'password'
+        })
+        self.assertStatusOk(resp)
+        studyAdminUser = User.findOne({'login': 'study-admin-user'})
+        self.assertIsNotNone(studyAdminUser)
+
+        # Add the user to the study admins group
+        studyAdminsGroup = Group.findOne({'name': 'Study Administrators'})
+        self.assertIsNotNone(studyAdminsGroup)
+        Group.addUser(studyAdminsGroup, studyAdminUser, level=AccessType.READ)
+
+        # Ensure they can admin studies
+        resp = self.request(path='/user/me', method='GET', user=studyAdminUser)
+        self.assertStatusOk(resp)
+        self.assertEqual(resp.json['permissions']['adminStudy'], True)

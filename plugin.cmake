@@ -38,6 +38,9 @@ add_python_test(
     "plugins/isic_archive/test_1_large_2.jpg"
     "plugins/isic_archive/test_1_metadata.csv")
 add_python_test(
+  featureset
+  PLUGIN isic_archive)
+add_python_test(
   segmentation_helper
   PLUGIN isic_archive)
 

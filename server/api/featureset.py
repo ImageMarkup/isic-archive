@@ -127,7 +127,7 @@ class FeaturesetResource(IsicResource):
         try:
             featuresetVersion = float(params['version'])
         except ValueError:
-            raise ValidationException('Version must be a number.', 'name')
+            raise ValidationException('Version must be a number.', 'version')
 
         # These will be validated once the new featureset is created
         globalFeatures = params['globalFeatures']
