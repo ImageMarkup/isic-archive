@@ -43,6 +43,7 @@ class FeaturesetTestCase(IsicTestCase):
     def testFeatureset(self):
         Featureset = self.model('featureset', 'isic_archive')
         Group = self.model('group')
+        Study = self.model('study', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
         # Create a basic user
@@ -196,3 +197,70 @@ class FeaturesetTestCase(IsicTestCase):
             'globalFeatures': basicFeaturesetParams['globalFeatures'],
             'localFeatures': basicFeaturesetParams['localFeatures']
         }, resp.json)
+
+        # Ensure that normal users don't get private creator info
+        resp = self.request(
+            path='/featureset/%s' % basicFeatureset['_id'], method='GET',
+            user=basicUser)
+        self.assertStatusOk(resp)
+        self.assertDictEqual({
+            '_id': str(studyAdminUser['_id']),
+            'name': User.obfuscatedName(studyAdminUser)
+        }, resp.json['creator'])
+
+        # Ensure that study admin users do get private creator info
+        resp = self.request(
+            path='/featureset/%s' % basicFeatureset['_id'], method='GET',
+            user=studyAdminUser)
+        self.assertStatusOk(resp)
+        self.assertDictEqual({
+            '_id': str(studyAdminUser['_id']),
+            'name': User.obfuscatedName(studyAdminUser),
+            'firstName': studyAdminUser['firstName'],
+            'lastName': studyAdminUser['lastName'],
+            'login': studyAdminUser['login']
+        }, resp.json['creator'])
+
+        # Try to delete a featureset as anonymous
+        resp = self.request(
+            path='/featureset/%s' % basicFeatureset['_id'], method='DELETE')
+        self.assertStatus(resp, 401)
+
+        # Try to delete a featureset without privileges
+        resp = self.request(
+            path='/featureset/%s' % basicFeatureset['_id'], method='DELETE',
+            user=basicUser)
+        self.assertStatus(resp, 403)
+
+        # Try to delete a featureset being used by a study
+        resp = self.request(
+            path='/study', method='POST', user=studyAdminUser,
+            type='application/json', body=json.dumps({
+                'name': 'Test Study',
+                'featuresetId': str(basicFeatureset['_id']),
+                'userIds': [],
+                'imageIds': []
+            }))
+        self.assertStatusOk(resp)
+        testStudy = Study.load(resp.json['_id'], force=True)
+        resp = self.request(
+            path='/featureset/%s' % basicFeatureset['_id'], method='DELETE',
+            user=studyAdminUser)
+        self.assertStatus(resp, 409)
+        resp = self.request(
+            path='/featureset', method='GET')
+        self.assertStatusOk(resp)
+        self.assertEqual(len(resp.json), 1)
+
+        # TODO: Use the Study API, once it exists
+        Study.remove(testStudy)
+
+        # Delete an unused featureset
+        resp = self.request(
+            path='/featureset/%s' % basicFeatureset['_id'], method='DELETE',
+            user=studyAdminUser, isJson=False)
+        self.assertStatus(resp, 204)
+        resp = self.request(
+            path='/featureset', method='GET')
+        self.assertStatusOk(resp)
+        self.assertEqual(resp.json, [])
