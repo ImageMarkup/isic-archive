@@ -27,5 +27,6 @@ if errors.initialized()
           ul
             each error in errors.models
               li= error.description()
-  .isic-apply-metadata-save-button-container.text-center.hidden
+  .isic-apply-metadata-save-button-container.text-center(
+    class=hasErrors ? 'hidden' : undefined)
     button#isic-apply-metadata-save.btn.btn-primary.btn-md Save

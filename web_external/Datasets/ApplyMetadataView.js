@@ -123,11 +123,6 @@ isic.views.ApplyMetadataValidationView = isic.View.extend({
             file: this.file
         }));
 
-        // Show save button if metadata has no errors
-        if (this.errors.initialized() && this.errors.isEmpty()) {
-            this.$('.isic-apply-metadata-save-button-container').removeClass('hidden');
-        }
-
         return this;
     }
 });
