@@ -17,8 +17,10 @@
 #  limitations under the License.
 ###############################################################################
 
+import cherrypy
+
 from girder.api import access
-from girder.api.rest import loadmodel
+from girder.api.rest import loadmodel, RestException
 from girder.api.describe import Description, describeRoute
 from girder.constants import SortDir
 from girder.models.model_base import ValidationException
@@ -34,6 +36,7 @@ class FeaturesetResource(IsicResource):
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getFeatureset)
         self.route('POST', (), self.createFeatureset)
+        self.route('DELETE', (':id',), self.deleteFeatureset)
 
     @describeRoute(
         Description('List featuresets.')
@@ -104,7 +107,6 @@ class FeaturesetResource(IsicResource):
         .param('localFeatures',
                'The local features of the featureset, as a JSON array.',
                paramType='form')
-        .errorResponse('Write access was denied on the parent folder.', 403)
     )
     @access.user
     def createFeatureset(self, params):
@@ -127,7 +129,7 @@ class FeaturesetResource(IsicResource):
         try:
             featuresetVersion = float(params['version'])
         except ValueError:
-            raise ValidationException('Version must be a number.', 'name')
+            raise ValidationException('Version must be a number.', 'version')
 
         # These will be validated once the new featureset is created
         globalFeatures = params['globalFeatures']
@@ -141,3 +143,28 @@ class FeaturesetResource(IsicResource):
             localFeatures=localFeatures)
 
         return self.getFeatureset(id=featureset['_id'], params={})
+
+    @describeRoute(
+        Description('Delete a featureset.')
+        .param('id', 'The ID of the featureset.', paramType='path')
+        .errorResponse('ID was invalid.')
+    )
+    @access.user
+    @loadmodel(model='featureset', plugin='isic_archive')
+    def deleteFeatureset(self, featureset, params):
+        Featureset = self.model('featureset', 'isic_archive')
+        Study = self.model('study', 'isic_archive')
+        User = self.model('user', 'isic_archive')
+
+        creatorUser = self.getCurrentUser()
+        # For now, study admins will be the ones that can delete featuresets
+        User.requireAdminStudy(creatorUser)
+
+        if Study.find({'meta.featuresetId': featureset['_id']}).count():
+            raise RestException(
+                'Featureset is in use by one or more studies.', 409)
+
+        Featureset.remove(featureset)
+
+        # No Content
+        cherrypy.response.status = 204

@@ -40,65 +40,6 @@ def getAdminUser():
     return adminUser
 
 
-def _provisionDefaultFeatureset():
-    Featureset = ModelImporter.model('featureset', 'isic_archive')
-
-    if not Featureset.findOne({'name': 'Basic'}):
-        Featureset.createFeatureset(
-            name='Basic',
-            version=1.0,
-            creator=getAdminUser(),
-            globalFeatures=[
-                {
-                    'id': 'quality',
-                    'name': ['Quality'],
-                    'options': [
-                        {
-                            'id': 'acceptable',
-                            'name': 'Acceptable'
-                        },
-                        {
-                            'id': 'unacceptable',
-                            'name': 'Unacceptable'
-                        }
-                    ],
-                    'type': 'radio'
-                },
-                {
-                    'id': 'diagnosis',
-                    'name': ['Diagnosis'],
-                    'options': [
-                        {
-                            'id': 'benign',
-                            'name': 'Benign'
-                        },
-                        {
-                            'id': 'indeterminate',
-                            'name': 'Indeterminate'
-                        },
-                        {
-                            'id': 'malignant',
-                            'name': 'Malignant'
-                        }
-                    ],
-                    'type': 'radio'
-                }
-            ],
-            localFeatures=[
-                {
-                    'id': 'lesion',
-                    'name': ['Lesion'],
-                    'type': 'superpixel'
-                },
-                {
-                    'id': 'skin',
-                    'name': ['Normal Skin'],
-                    'type': 'superpixel'
-                }
-            ]
-        )
-
-
 def _provisionImages():
     Collection = ModelImporter.model('collection')
     Group = ModelImporter.model('group')
@@ -225,4 +166,3 @@ def provisionDatabase():
     _provisionImages()
     _provisionSegmentationGroups()
     _provisionStudies()
-    _provisionDefaultFeatureset()
