@@ -1,7 +1,6 @@
-if !model.empty()
+if errors.initialized()
   h3 Results
-  - var hasErrors = model.hasErrors()
-  - var numErrors = hasErrors ? model.errors().length : 0
+  - var hasErrors = !errors.isEmpty()
   .isic-apply-metadata-validation-result
     .isic-apply-metadata-validation-result-header(
       class=hasErrors ?
@@ -14,8 +13,8 @@ if !model.empty()
           | OK&nbsp;
           i.icon-ok
         else
-          = numErrors
-          if numErrors > 1
+          = errors.length
+          if errors.length > 1
             |  Errors&nbsp;
           else
             |  Error&nbsp;
@@ -26,7 +25,7 @@ if !model.empty()
           | Errors:
         .isic-apply-metadata-validation-result-error-content
           ul
-            each error in model.errors().models
+            each error in errors.models
               li= error.description()
   .isic-apply-metadata-save-button-container.text-center.hidden
     button#isic-apply-metadata-save.btn.btn-primary.btn-md Save

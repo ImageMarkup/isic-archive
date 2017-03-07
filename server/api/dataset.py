@@ -351,6 +351,5 @@ class DatasetResource(IsicResource):
         errors = Dataset.applyMetadata(
             dataset=dataset, metadataFile=metadataFile, save=save)
         return {
-            'fileId': metadataFile['_id'],
             'errors': [{'description': description} for description in errors]
         }

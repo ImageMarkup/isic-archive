@@ -35,37 +35,25 @@ isic.models.MetadataErrorModel = girder.Model.extend({
     }
 });
 
-// Collection of metadata errors
+// Collection of metadata errors. The list of items in the collection is
+// meaningful only when initialized() is true.
 isic.collections.MetadataErrorCollection = girder.Collection.extend({
-    model: isic.models.MetadataErrorModel
-});
+    model: isic.models.MetadataErrorModel,
 
-// Model for the result of DatasetModel.applyMetadata()
-isic.models.MetadataFileErrorModel = girder.Model.extend({
-    defaults: {
-        errors: new isic.collections.MetadataErrorCollection()
+    _initialized: false,
+
+    parse: function (resp) {
+        this._initialized = true;
+        return resp.errors;
     },
 
-    parse: function (data) {
-        data.errors = new isic.collections.MetadataErrorCollection(
-            _.has(data, 'errors') ? data.errors : null);
-        return data;
+    initialized: function () {
+        return this._initialized;
     },
 
-    empty: function () {
-        return !this.has('fileId');
-    },
-
-    fileId: function () {
-        return this.get('fileId');
-    },
-
-    errors: function () {
-        return this.get('errors');
-    },
-
-    hasErrors: function () {
-        return this.has('errors') && !this.get('errors').isEmpty();
+    uninitialize: function () {
+        this._initialized = false;
+        this.reset();
     }
 });
 
@@ -120,22 +108,23 @@ isic.views.ApplyMetadataValidationView = isic.View.extend({
     },
 
     // Initialize with:
-    //   model: MetadataFileErrorModel
+    //   errors: MetadataErrorCollection
     //   file: MetadataFileModel
     initialize: function (options) {
+        this.errors = options.errors;
         this.file = options.file;
-        this.listenTo(this.model, 'change', this.render);
+        this.listenTo(this.errors, 'reset', this.render);
         this.render();
     },
 
     render: function () {
         this.$el.html(isic.templates.applyMetadataValidationPage({
-            model: this.model,
+            errors: this.errors,
             file: this.file
         }));
 
-        // Show save button if metadata is valid
-        if (!this.model.hasErrors()) {
+        // Show save button if metadata has no errors
+        if (this.errors.initialized() && this.errors.isEmpty()) {
             this.$('.isic-apply-metadata-save-button-container').removeClass('hidden');
         }
 
@@ -165,7 +154,7 @@ isic.views.ApplyMetadataView = isic.View.extend({
         this.file = new isic.models.MetadataFileModel();
         this.files = new isic.collections.MetadataFileCollection();
 
-        this.metadataFileError = new isic.models.MetadataFileErrorModel();
+        this.metadataErrorCollection = new isic.collections.MetadataErrorCollection();
 
         this.selectFileView = new isic.views.ApplyMetadataSelectFileView({
             collection: this.files,
@@ -173,7 +162,7 @@ isic.views.ApplyMetadataView = isic.View.extend({
         });
 
         this.validationView = new isic.views.ApplyMetadataValidationView({
-            model: this.metadataFileError,
+            errors: this.metadataErrorCollection,
             file: this.file,
             parentView: this
         });
@@ -209,7 +198,7 @@ isic.views.ApplyMetadataView = isic.View.extend({
 
     fileChanged: function (file) {
         this.file.set(file.attributes);
-        this.clearResults();
+        this.metadataErrorCollection.uninitialize();
 
         // Enable action buttons
         this.$('#isic-apply-metadata-download-button, #isic-apply-metadata-validate-button').removeAttr('disabled');
@@ -229,7 +218,7 @@ isic.views.ApplyMetadataView = isic.View.extend({
 
     validateMetadata: function (save) {
         this.dataset.applyMetadata(this.file.id, save).then(_.bind(function (resp) {
-            this.metadataFileError.set(this.metadataFileError.parse(resp));
+            this.metadataErrorCollection.reset(resp, {parse: true});
 
             if (save) {
                 isic.showAlertDialog({
@@ -243,10 +232,6 @@ isic.views.ApplyMetadataView = isic.View.extend({
         }, this), function (err) {
             isic.showAlertDialog({text: 'Error: ' + err.responseJSON.message});
         });
-    },
-
-    clearResults: function () {
-        this.metadataFileError.clear();
     }
 });
 
