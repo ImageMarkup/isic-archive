@@ -19,9 +19,8 @@
 
 import json
 
-import pytz
-
 from girder.constants import AccessType
+from girder.utility import parseTimestamp
 from tests import base
 
 from .isic_base import IsicTestCase
@@ -183,13 +182,15 @@ class FeaturesetTestCase(IsicTestCase):
         resp = self.request(
             path='/featureset/%s' % basicFeatureset['_id'], method='GET')
         self.assertStatusOk(resp)
+        # Parse the "created" field first, to make comparison easier
+        self.assertIn('created', resp.json)
+        resp.json['created'] = parseTimestamp(resp.json['created'])
         self.assertDictEqual({
             '_id': str(basicFeatureset['_id']),
             '_modelType': 'featureset',
             'name': basicFeaturesetParams['name'].strip(),
             'version': float(basicFeaturesetParams['version']),
-            'created':
-                basicFeatureset['created'].replace(tzinfo=pytz.UTC).isoformat(),
+            'created': basicFeatureset['created'],
             'creator': {
                 '_id': str(studyAdminUser['_id']),
                 'name': User.obfuscatedName(studyAdminUser)
