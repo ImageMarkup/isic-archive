@@ -147,6 +147,12 @@ isic.views.ApplyMetadataValidationView = isic.View.extend({
 // the metadata to the dataset if validation is successful.
 isic.views.ApplyMetadataView = isic.View.extend({
     events: {
+        'click #isic-apply-metadata-download-button': function () {
+            // Download selected metadata file
+            var fileModel = new girder.models.FileModel({_id: this.file.id});
+            fileModel.download();
+        },
+
         'click #isic-apply-metadata-validate-button': function () {
             var save = false;
             this.validateMetadata(save);
@@ -205,8 +211,8 @@ isic.views.ApplyMetadataView = isic.View.extend({
         this.file.set(file.attributes);
         this.clearResults();
 
-        // Enable Validate button
-        this.$('#isic-apply-metadata-validate-button').removeAttr('disabled');
+        // Enable action buttons
+        this.$('#isic-apply-metadata-download-button, #isic-apply-metadata-validate-button').removeAttr('disabled');
     },
 
     render: function () {
