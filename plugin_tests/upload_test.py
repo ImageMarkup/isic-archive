@@ -319,6 +319,6 @@ class UploadTestCase(IsicTestCase):
                 '_id': str(uploaderUser['_id']),
                 'name': User.obfuscatedName(uploaderUser)
             },
-            # This is is actually checked above
+            # This is actually checked above
             'time': resp.json[0]['time']
         }, resp.json[0])
