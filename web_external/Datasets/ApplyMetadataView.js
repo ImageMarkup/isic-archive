@@ -29,7 +29,7 @@ isic.collections.MetadataFileCollection = girder.Collection.extend({
 });
 
 // Model for a single metadata error
-isic.models.MetadataErrorModel = girder.Model.extend({
+isic.models.MetadataErrorModel = Backbone.Model.extend({
     description: function () {
         return this.get('description');
     }
@@ -37,7 +37,7 @@ isic.models.MetadataErrorModel = girder.Model.extend({
 
 // Collection of metadata errors. The list of items in the collection is
 // meaningful only when initialized() is true.
-isic.collections.MetadataErrorCollection = girder.Collection.extend({
+isic.collections.MetadataErrorCollection = Backbone.Collection.extend({
     model: isic.models.MetadataErrorModel,
 
     _initialized: false,
