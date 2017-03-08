@@ -33,7 +33,7 @@ from girder.utility.webroot import WebrootBase
 
 from . import constants
 from . import api
-from .provision_utility import initialSetup
+from .provision_utility import provisionDatabase
 
 
 class Webroot(WebrootBase):
@@ -54,12 +54,13 @@ class Webroot(WebrootBase):
             }
 
     def _renderHTML(self):
+        Setting = ModelImporter.model('setting')
+
         self.vars['pluginCss'] = []
         self.vars['pluginJs'] = []
         builtDir = os.path.join(
             STATIC_ROOT_DIR, 'clients', 'web', 'static', 'built', 'plugins')
-        self.vars['plugins'] = ModelImporter.model('setting').get(
-            SettingKey.PLUGINS_ENABLED, ())
+        self.vars['plugins'] = Setting.get(SettingKey.PLUGINS_ENABLED, ())
         for plugin in self.vars['plugins']:
             if os.path.exists(os.path.join(builtDir, plugin, 'plugin.min.css')):
                 self.vars['pluginCss'].append(plugin)
@@ -162,7 +163,6 @@ def load(info):
     events.bind('rest.get.describe/:resource.after',
                 'onDescribeResource', onDescribeResource)
     events.bind('model.job.save', 'onJobSave', onJobSave)
-    ModelImporter.model('setting').set(SettingKey.USER_DEFAULT_FOLDERS, 'none')
 
     # add custom model searching
     resource.allowedSearchTypes.update({
@@ -172,7 +172,7 @@ def load(info):
     })
 
     # create all necessary users, groups, collections, etc
-    initialSetup()
+    provisionDatabase()
 
     # add static file serving
     app_base = os.path.join(os.curdir, os.pardir)

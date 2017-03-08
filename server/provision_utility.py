@@ -17,19 +17,18 @@
 #  limitations under the License.
 ###############################################################################
 
-
-from girder.constants import AccessType
+from girder.constants import AccessType, SettingKey
 from girder.utility.model_importer import ModelImporter
 
 from . import constants
 
 
 def getAdminUser():
-    User = ModelImporter.model('user')
+    User = ModelImporter.model('user', 'isic_archive')
     # TODO: cache this?
     adminUser = User.findOne({'login': 'isic-admin'})
     if not adminUser:
-        adminUser = ModelImporter.model('user').createUser(
+        adminUser = User.createUser(
             login='isic-admin',
             password='isic-admin',
             firstName='ISIC Archive',
@@ -39,65 +38,6 @@ def getAdminUser():
             public=False
         )
     return adminUser
-
-
-def _provisionDefaultFeatureset():
-    Featureset = ModelImporter.model('featureset', 'isic_archive')
-
-    if not Featureset.findOne({'name': 'Basic'}):
-        Featureset.createFeatureset(
-            name='Basic',
-            version=1.0,
-            creator=getAdminUser(),
-            globalFeatures=[
-                {
-                    'id': 'quality',
-                    'name': ['Quality'],
-                    'options': [
-                        {
-                            'id': 'acceptable',
-                            'name': 'Acceptable'
-                        },
-                        {
-                            'id': 'unacceptable',
-                            'name': 'Unacceptable'
-                        }
-                    ],
-                    'type': 'radio'
-                },
-                {
-                    'id': 'diagnosis',
-                    'name': ['Diagnosis'],
-                    'options': [
-                        {
-                            'id': 'benign',
-                            'name': 'Benign'
-                        },
-                        {
-                            'id': 'indeterminate',
-                            'name': 'Indeterminate'
-                        },
-                        {
-                            'id': 'malignant',
-                            'name': 'Malignant'
-                        }
-                    ],
-                    'type': 'radio'
-                }
-            ],
-            localFeatures=[
-                {
-                    'id': 'lesion',
-                    'name': ['Lesion'],
-                    'type': 'superpixel'
-                },
-                {
-                    'id': 'skin',
-                    'name': ['Normal Skin'],
-                    'type': 'superpixel'
-                }
-            ]
-        )
 
 
 def _provisionImages():
@@ -215,12 +155,14 @@ def _provisionStudies():
     )
 
 
-def initialSetup():
+def provisionDatabase():
     Setting = ModelImporter.model('setting')
+
+    Setting.set(SettingKey.USER_DEFAULT_FOLDERS, 'none')
+
     if Setting.get(constants.PluginSettings.DEMO_MODE, None) is None:
         Setting.set(constants.PluginSettings.DEMO_MODE, False)
 
     _provisionImages()
     _provisionSegmentationGroups()
     _provisionStudies()
-    _provisionDefaultFeatureset()

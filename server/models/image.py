@@ -53,7 +53,10 @@ class Image(ItemModel):
 
     def createImage(self, imageDataStream, imageDataSize, originalName,
                     parentFolder, creator):
-        newIsicId = self.model('setting').get(
+        Setting = self.model('setting')
+        Upload = self.model('upload')
+
+        newIsicId = Setting.get(
             constants.PluginSettings.MAX_ISIC_ID, default=-1) + 1
         image = self.createItem(
             name='ISIC_%07d' % newIsicId,
@@ -61,7 +64,7 @@ class Image(ItemModel):
             folder=parentFolder,
             description=''
         )
-        self.model('setting').set(
+        Setting.set(
             constants.PluginSettings.MAX_ISIC_ID, newIsicId)
 
         image['privateMeta'] = {
@@ -73,7 +76,7 @@ class Image(ItemModel):
             'unstructured': {},
         })
 
-        originalFile = self.model('upload').uploadFromFile(
+        originalFile = Upload.uploadFromFile(
             obj=imageDataStream,
             size=imageDataSize,
             name='%s%s' % (
@@ -227,25 +230,30 @@ class Image(ItemModel):
         if not superpixelsFileNameMatch:
             return
 
+        File = self.model('file')
         superpixelsVersion = float(superpixelsFileNameMatch.group(1))
         superpixelsFile['superpixelVersion'] = superpixelsVersion
-        superpixelsFile = self.model('file').save(superpixelsFile)
+        superpixelsFile = File.save(superpixelsFile)
 
         image['superpixelsId'] = superpixelsFile['_id']
         self.save(image)
 
     def originalFile(self, image):
-        return self.model('file').load(
+        File = self.model('file')
+        return File.load(
             image['largeImage']['originalId'], force=True, exc=True)
 
     def superpixelsFile(self, image):
-        return self.model('file').load(
+        File = self.model('file')
+        return File.load(
             image['superpixelsId'], force=True, exc=True)
 
     def _decodeDataFromFile(self, fileObj):
+        File = self.model('file')
+
         fileStream = six.BytesIO()
         fileStream.writelines(
-            self.model('file').download(fileObj, headers=False)()
+            File.download(fileObj, headers=False)()
         )
         # Scikit-Image is ~70ms faster at decoding image data
         data = ScikitSegmentationHelper.loadImage(fileStream)

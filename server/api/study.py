@@ -54,6 +54,7 @@ class StudyResource(IsicResource):
                paramType='query', required=False)
         .errorResponse()
     )
+    @access.cookie
     @access.public
     def find(self, params):
         Study = self.model('study', 'isic_archive')
@@ -100,6 +101,7 @@ class StudyResource(IsicResource):
                default='json')
         .errorResponse()
     )
+    @access.cookie
     @access.public
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
     def getStudy(self, study, params):
@@ -129,11 +131,14 @@ class StudyResource(IsicResource):
                         output.pop('creatorId'),
                         force=True, exc=True),
                     currentUser),
-                'users': [
-                    User.filteredSummary(annotatorUser, currentUser)
-                    for annotatorUser in
-                    Study.getAnnotators(study).sort('login', SortDir.ASCENDING)
-                ],
+                'users': sorted(
+                    (
+                        User.filteredSummary(annotatorUser, currentUser)
+                        for annotatorUser in
+                        Study.getAnnotators(study)
+                    ),
+                    key=lambda annotatorUser: User.obfuscatedName(annotatorUser)
+                ),
                 'images': list(
                     Study.getImages(
                         study, Image.summaryFields
@@ -172,8 +177,10 @@ class StudyResource(IsicResource):
             Study.getImages(study).sort('lowerName', SortDir.ASCENDING))
 
         for annotatorUser, image in itertools.product(
-            Study.getAnnotators(study).sort('login', SortDir.ASCENDING),
-                images
+            sorted(
+                Study.getAnnotators(study),
+                key=lambda annotatorUser: User.obfuscatedName(annotatorUser)),
+            images
         ):
             # this will iterate either 0 or 1 times
             for annotation in Study.childAnnotations(
@@ -188,8 +195,12 @@ class StudyResource(IsicResource):
 
                 filteredAnnotatorUser = User.filteredSummary(
                     annotatorUser, currentUser)
-                annotatorUserName = filteredAnnotatorUser.get(
-                    'login', filteredAnnotatorUser['name'])
+                annotatorUserName = filteredAnnotatorUser['name']
+                if 'login' in filteredAnnotatorUser:
+                    annotatorUserName += ' [%s %s (%s)]' % (
+                        filteredAnnotatorUser['firstName'],
+                        filteredAnnotatorUser['lastName'],
+                        filteredAnnotatorUser['login'])
 
                 outDictBase = {
                     'study_name': study['name'],
@@ -311,7 +322,7 @@ class StudyResource(IsicResource):
         # TODO: make the loadmodel decorator use AccessType.WRITE,
         # once permissions work
         params = self._decodeParams(params)
-        self.requireParams('userIds', params)
+        self.requireParams(['userIds'], params)
 
         creatorUser = self.getCurrentUser()
         User.requireAdminStudy(creatorUser)
@@ -362,7 +373,7 @@ class StudyResource(IsicResource):
         User = self.model('user', 'isic_archive')
 
         params = self._decodeParams(params)
-        self.requireParams('imageIds', params)
+        self.requireParams(['imageIds'], params)
 
         creatorUser = self.getCurrentUser()
         User.requireAdminStudy(creatorUser)

@@ -52,26 +52,27 @@ class User(UserModel):
             )
         self.save(user)
 
+    def obfuscatedName(self, user):
+        # For 4 characters of a Base32 encoding, we have 20 bits of entropy,
+        # or 1,048,576 possible combinations. Per the formula at
+        # http://preshing.com/20110504/hash-collision-probabilities/
+        # and assuming 100 (active) users, we have a collision probability
+        # of 0.47%.
+        obfuscatedId = base64.b32encode(
+            hashlib.sha256(user['login'].encode('utf8')).digest()
+        ).decode('ascii')[:4]
+        obfuscatedName = 'User %s' % obfuscatedId
+        return obfuscatedName
+
     def filteredSummary(self, user, accessorUser):
+        userSummary = {
+            '_id': user['_id'],
+            'name': self.obfuscatedName(user)
+        }
         if self.hasAccess(user, accessorUser):
-            return {
-                field: user[field]
-                for field in
-                ['_id', 'login', 'firstName', 'lastName']
-            }
-        else:
-            # For 4 characters of a Base32 encoding, we have 20 bits of entropy,
-            # or 1,048,576 possible combinations. Per the formula at
-            # http://preshing.com/20110504/hash-collision-probabilities/
-            # and assuming 100 (active) users, we have a collision probability
-            # of 0.47%.
-            obfuscatedName = base64.b32encode(
-                hashlib.sha256(user['login'].encode('utf8')).digest()
-            ).decode('ascii')[:4]
-            return {
-                '_id': user['_id'],
-                'name': 'User %s' % obfuscatedName
-            }
+            for field in ['login', 'firstName', 'lastName']:
+                userSummary[field] = user[field]
+        return userSummary
 
     def _isAdminOrMember(self, user, groupName):
         Group = self.model('group')

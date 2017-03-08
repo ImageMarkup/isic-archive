@@ -49,6 +49,7 @@ class AnnotationResource(IsicResource):
                paramType='query', required=False)
         .errorResponse()
     )
+    @access.cookie
     @access.public
     def find(self, params):
         Annotation = self.model('annotation', 'isic_archive')
@@ -56,7 +57,7 @@ class AnnotationResource(IsicResource):
         Study = self.model('study', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
-        self.requireParams(('studyId',), params)
+        self.requireParams(['studyId'], params)
 
         # check access here for simplicity
         study = Study.load(
@@ -100,6 +101,7 @@ class AnnotationResource(IsicResource):
                paramType='path')
         .errorResponse()
     )
+    @access.cookie
     @access.public
     @loadmodel(model='annotation', plugin='isic_archive', level=AccessType.READ)
     def getAnnotation(self, annotation, params):
@@ -165,7 +167,7 @@ class AnnotationResource(IsicResource):
             raise RestException('Unallowed contentDisposition type "%s".' %
                                 contentDisp)
 
-        self.requireParams(('featureId',), params)
+        self.requireParams(['featureId'], params)
         featureId = params['featureId']
 
         study = Study.load(annotation['meta']['studyId'], force=True, exc=True)
@@ -215,7 +217,9 @@ class AnnotationResource(IsicResource):
     @access.user
     @loadmodel(model='annotation', plugin='isic_archive', level=AccessType.READ)
     def submitAnnotation(self, annotation, params):
+        Annotation = self.model('annotation', 'isic_archive')
         Study = self.model('study', 'isic_archive')
+
         if annotation['baseParentId'] != Study.loadStudyCollection()['_id']:
             raise RestException(
                 'Annotation id references a non-annotation item.')
@@ -227,7 +231,7 @@ class AnnotationResource(IsicResource):
             raise RestException('Annotation is already complete.')
 
         bodyJson = self.getBodyJson()
-        self.requireParams(('status', 'startTime', 'stopTime', 'annotations'),
+        self.requireParams(['status', 'startTime', 'stopTime', 'annotations'],
                            bodyJson)
 
         annotation['meta']['status'] = bodyJson['status']
@@ -237,4 +241,4 @@ class AnnotationResource(IsicResource):
             datetime.datetime.utcfromtimestamp(bodyJson['stopTime'] / 1000.0)
         annotation['meta']['annotations'] = bodyJson['annotations']
 
-        self.model('annotation', 'isic_archive').save(annotation)
+        Annotation.save(annotation)

@@ -53,13 +53,14 @@ class SegmentationResource(IsicResource):
         .param('creatorId', 'The ID of the creator user.', required=False)
         .errorResponse('ID was invalid.')
     )
+    @access.cookie
     @access.public
     def find(self, params):
         Image = self.model('image', 'isic_archive')
         Segmentation = self.model('segmentation', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
-        self.requireParams(('imageId',), params)
+        self.requireParams(['imageId'], params)
         limit, offset, sort = self.getPagingParameters(
             params,
             defaultSortField='created', defaultSortDir=SortDir.DESCENDING)
@@ -203,6 +204,7 @@ class SegmentationResource(IsicResource):
         .param('id', 'The ID of the segmentation.', paramType='path')
         .errorResponse('ID was invalid.')
     )
+    @access.cookie
     @access.public
     @loadmodel(model='segmentation', plugin='isic_archive')
     def getSegmentation(self, segmentation, params):

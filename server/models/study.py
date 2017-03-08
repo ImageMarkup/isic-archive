@@ -38,9 +38,10 @@ class Study(FolderModel):
         self.prefixSearchFields = ['lowerName', 'name']
 
     def loadStudyCollection(self):
+        Collection = self.model('collection')
         # assumes collection has been created by provision_utility
         # TODO: cache this value
-        return self.model('collection').findOne({'name': 'Annotation Studies'})
+        return Collection.findOne({'name': 'Annotation Studies'})
 
     def createStudy(self, name, creatorUser, featureset, annotatorUsers,
                     images):
@@ -85,6 +86,8 @@ class Study(FolderModel):
                      images=None):
         Annotation = self.model('annotation', 'isic_archive')
         Group = self.model('group')
+        User = self.model('user', 'isic_archive')
+
         if not images:
             images = self.getImages(study)
 
@@ -97,7 +100,9 @@ class Study(FolderModel):
 
         annotatorFolder = self.createFolder(
             parent=study,
-            name='%(login)s (%(firstName)s %(lastName)s)' % annotatorUser,
+            name=User.obfuscatedName(annotatorUser),
+            # Allow a rename, in the rare event of an obfuscated name collision
+            allowRename=True,
             description='',
             parentType='folder',
             # Inherit public access state from parent
@@ -146,8 +151,8 @@ class Study(FolderModel):
                 study, image, creatorUser, annotatorFolder)
 
     def getFeatureset(self, study):
-        return self.model('featureset', 'isic_archive').load(
-            study['meta']['featuresetId'], exc=True)
+        Featureset = self.model('featureset', 'isic_archive')
+        return Featureset.load(study['meta']['featuresetId'], exc=True)
 
     def getAnnotators(self, study):
         Folder = self.model('folder')

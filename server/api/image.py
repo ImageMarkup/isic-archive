@@ -59,6 +59,7 @@ class ImageResource(IsicResource):
                required=False)
         .errorResponse()
     )
+    @access.cookie
     @access.public
     def find(self, params):
         Image = self.model('image', 'isic_archive')
@@ -100,6 +101,7 @@ class ImageResource(IsicResource):
                required=False)
         .errorResponse()
     )
+    @access.cookie
     @access.public
     def getHistogram(self, params):
         Image = self.model('image', 'isic_archive')
@@ -115,6 +117,7 @@ class ImageResource(IsicResource):
         .param('id', 'The ID of the image.', paramType='path')
         .errorResponse('ID was invalid.')
     )
+    @access.cookie
     @access.public
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def getImage(self, image, params):
@@ -158,10 +161,10 @@ class ImageResource(IsicResource):
     @access.public
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def thumbnail(self, image, params):
-        width = int(params.get('width', 256))
+        ImageItem = self.model('image_item', 'large_image')
 
-        thumbData, thumbMime = self.model('image_item', 'large_image')\
-            .getThumbnail(image, width=width)
+        width = int(params.get('width', 256))
+        thumbData, thumbMime = ImageItem.getThumbnail(image, width=width)
 
         # Only setRawResponse now, as this handler may return a JSON error
         # earlier
@@ -226,7 +229,7 @@ class ImageResource(IsicResource):
     def doSegmentation(self, image, params):
         Segmentation = self.model('segmentation', 'isic_archive')
         params = self._decodeParams(params)
-        self.requireParams(('seed', 'tolerance'), params)
+        self.requireParams(['seed', 'tolerance'], params)
 
         # validate parameters
         seedCoord = params['seed']

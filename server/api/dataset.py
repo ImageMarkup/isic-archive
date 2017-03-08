@@ -59,6 +59,7 @@ class DatasetResource(IsicResource):
         .pagingParams(defaultSort='name')
         .errorResponse()
     )
+    @access.cookie
     @access.public
     def find(self, params):
         Dataset = self.model('dataset', 'isic_archive')
@@ -82,6 +83,7 @@ class DatasetResource(IsicResource):
         .param('id', 'The ID of the dataset.', paramType='path')
         .errorResponse('ID was invalid.')
     )
+    @access.cookie
     @access.public
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
     def getDataset(self, dataset, params):
@@ -125,7 +127,7 @@ class DatasetResource(IsicResource):
         User = self.model('user', 'isic_archive')
 
         params = self._decodeParams(params)
-        self.requireParams(('zipFileId', 'name', 'owner'), params)
+        self.requireParams(['zipFileId', 'name', 'owner'], params)
 
         user = self.getCurrentUser()
         User.requireCreateDataset(user)
@@ -289,7 +291,7 @@ class DatasetResource(IsicResource):
         User = self.model('user', 'isic_archive')
 
         params = self._decodeParams(params)
-        self.requireParams('metadataFileId', params)
+        self.requireParams(['metadataFileId'], params)
 
         user = self.getCurrentUser()
         User.requireCreateDataset(user)
