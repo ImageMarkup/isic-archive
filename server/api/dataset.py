@@ -264,19 +264,23 @@ class DatasetResource(IsicResource):
         user = self.getCurrentUser()
         User.requireCreateDataset(user)
 
-        return [
-            {
-                'file': File.load(
-                    registration['fileId'], force=True, exc=True,
-                    fields=['_id', 'name']),
+        output = []
+        for registration in dataset['meta']['metadataFiles']:
+            # TODO: "File.load" can use the "fields" argument and be expressed
+            # as a comprehension, once the fix from upstream Girder is available
+            metadataFile = File.load(
+                registration['fileId'], force=True, exc=True)
+            output.append({
+                'file': {
+                    '_id': metadataFile['_id'],
+                    'name': metadataFile['name']
+                },
                 'user': User.filteredSummary(
                     User.load(registration['userId'], force=True, exc=True),
                     user),
                 'time': registration['time']
-            }
-            for registration in
-            dataset['meta']['metadataFiles']
-        ]
+            })
+        return output
 
     @describeRoute(
         Description('Register metadata with a dataset.')
