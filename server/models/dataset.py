@@ -30,6 +30,7 @@ from girder.utility import assetstore_utilities, mail_utils
 from girder.utility.progress import ProgressContext
 
 from ..upload import ZipFileOpener
+from ..utility import generateLines
 from ..utility import mail_utils as isic_mail_utils
 
 
@@ -341,46 +342,42 @@ class Dataset(FolderModel):
         :return: A list of strings describing parsing or validation errors.
         :rtype: list
         """
-        Assetstore = self.model('assetstore')
+        File = self.model('file')
 
-        assetstore = Assetstore.getCurrent()
-        assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(
-            assetstore)
-        metadataFilePath = assetstoreAdapter.fullPath(metadataFile)
+        metadataFileStream = File.download(metadataFile, headers=False)()
 
-        with open(metadataFilePath, 'rU') as metadataFileStream:
-            try:
-                csvReader = csv.DictReader(metadataFileStream)
+        try:
+            csvReader = csv.DictReader(generateLines(metadataFileStream))
 
-                if not csvReader.fieldnames:
-                    raise FileMetadataException(
-                        'no field names found on the first line of the CSV')
-                for originalNameField in csvReader.fieldnames:
-                    if originalNameField.strip().lower() == 'filename':
-                        break
-                else:
-                    originalNameField = None
-                for isicIdField in csvReader.fieldnames:
-                    if isicIdField.strip().lower() == 'isic_id':
-                        break
-                else:
-                    isicIdField = None
-                if (not originalNameField) and (not isicIdField):
-                    raise FileMetadataException(
-                        'no "filename" or "isic_id" field found in CSV')
+            if not csvReader.fieldnames:
+                raise FileMetadataException(
+                    'no field names found on the first line of the CSV')
+            for originalNameField in csvReader.fieldnames:
+                if originalNameField.strip().lower() == 'filename':
+                    break
+            else:
+                originalNameField = None
+            for isicIdField in csvReader.fieldnames:
+                if isicIdField.strip().lower() == 'isic_id':
+                    break
+            else:
+                isicIdField = None
+            if (not originalNameField) and (not isicIdField):
+                raise FileMetadataException(
+                    'no "filename" or "isic_id" field found in CSV')
 
-                rowErrors = list()
-                for rowNum, csvRow in enumerate(csvReader):
-                    try:
-                        image = self._getImageForMetadataCsvRow(
-                            dataset, csvRow, originalNameField, isicIdField)
-                        self._applyMetadataCsvRow(image, csvRow, save)
-                    except RowMetadataException as e:
-                        rowErrors.append('on CSV row %d: %s' % (rowNum, str(e)))
-                if rowErrors:
-                    raise FileMetadataException('\n'.join(rowErrors))
-            except csv.Error as e:
-                raise FileMetadataException('parsing CSV: %s' % str(e))
+            rowErrors = list()
+            for rowNum, csvRow in enumerate(csvReader):
+                try:
+                    image = self._getImageForMetadataCsvRow(
+                        dataset, csvRow, originalNameField, isicIdField)
+                    self._applyMetadataCsvRow(image, csvRow, save)
+                except RowMetadataException as e:
+                    rowErrors.append('on CSV row %d: %s' % (rowNum, str(e)))
+            if rowErrors:
+                raise FileMetadataException('\n'.join(rowErrors))
+        except csv.Error as e:
+            raise FileMetadataException('parsing CSV: %s' % str(e))
 
         # TODO: return list of error strings, can be empty
         return ['on CSV row 4: unable to parse age',

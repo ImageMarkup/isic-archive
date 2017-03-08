@@ -16,3 +16,28 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 ###############################################################################
+
+
+def generateLines(stream):
+    """
+    Generate individual lines of text from a stream. Newlines are retained in
+    the output.
+    """
+    lastLine = None
+    keepends = True
+    try:
+        # Read chunk from stream and split into lines. Always process the
+        # last line with the next chunk, or at the end of the stream,
+        # because it may be incomplete.
+        while True:
+            chunk = ''.join(next(stream))
+            if lastLine is not None:
+                chunk = lastLine + chunk
+            lines = chunk.splitlines(keepends)
+            lastLine = lines.pop()
+            for line in lines:
+                yield line
+    except StopIteration:
+        if lastLine is not None:
+            yield lastLine
+        raise StopIteration
