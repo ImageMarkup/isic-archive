@@ -200,7 +200,9 @@ isic.views.ApplyMetadataView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.applyMetadataPage());
+        this.$el.html(isic.templates.applyMetadataPage({
+            dataset: this.dataset
+        }));
 
         this.selectFileView.setElement(
             this.$('#isic-apply-metadata-select-file-container')).render();

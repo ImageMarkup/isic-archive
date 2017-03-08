@@ -1,0 +1,10 @@
+//- Dataset info for use in an .isic-form-container.
+.isic-form-group
+  h3 Dataset
+  table.table.table-condensed.isic-dataset-info-table
+    tr
+      td.isic-dataset-info-table-label Name
+      td= dataset.name()
+    tr
+      td.isic-dataset-info-table-label Description
+      td= dataset.get('description')
