@@ -278,13 +278,13 @@ class UploadTestCase(IsicTestCase):
         self.assertStatus(resp, 401)
         resp = self.request(
             path='/dataset/%s/metadata' % publicDataset['_id'], method='GET',
-            user=reviewerUser)
+            user=uploaderUser)
         self.assertStatus(resp, 403)
 
         # List (empty) registered metadata
         resp = self.request(
             path='/dataset/%s/metadata' % publicDataset['_id'], method='GET',
-            user=uploaderUser)
+            user=reviewerUser)
         self.assertStatusOk(resp)
         self.assertEqual(resp.json, [])
 
@@ -302,7 +302,7 @@ class UploadTestCase(IsicTestCase):
         # List registered metadata
         resp = self.request(
             path='/dataset/%s/metadata' % publicDataset['_id'],
-            user=uploaderUser)
+            user=reviewerUser)
         self.assertStatusOk(resp)
         self.assertIsInstance(resp.json, list)
         self.assertEqual(len(resp.json), 1)

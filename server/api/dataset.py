@@ -262,7 +262,7 @@ class DatasetResource(IsicResource):
         User = self.model('user', 'isic_archive')
 
         user = self.getCurrentUser()
-        User.requireCreateDataset(user)
+        User.requireReviewDataset(user)
 
         output = []
         for registration in dataset['meta']['metadataFiles']:
