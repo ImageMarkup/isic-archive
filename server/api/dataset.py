@@ -296,12 +296,9 @@ class DatasetResource(IsicResource):
         user = self.getCurrentUser()
         User.requireCreateDataset(user)
 
-        metadataFileId = params.get('metadataFileId')
-        if not metadataFileId:
-            raise ValidationException(
-                'No file was uploaded.', 'metadataFileId')
         metadataFile = File.load(
-            metadataFileId, user=user, level=AccessType.READ, exc=False)
+            params['metadataFileId'], user=user, level=AccessType.READ,
+            exc=False)
         if not metadataFile:
             raise ValidationException(
                 'Invalid metadata file ID.', 'metadataFileId')
