@@ -63,7 +63,10 @@ isic.views.ApplyMetadataSelectFileView = isic.View.extend({
         'change': 'fileChanged'
     },
 
-    initialize: function (options) {
+    /**
+     * @param {isic.collections.MetadataFileCollection} settings.collection
+     */
+    initialize: function (settings) {
         this.listenTo(this.collection, 'reset', this.render);
         this.render();
     },
@@ -107,12 +110,13 @@ isic.views.ApplyMetadataValidationView = isic.View.extend({
         }
     },
 
-    // Initialize with:
-    //   errors: MetadataErrorCollection
-    //   file: MetadataFileModel
-    initialize: function (options) {
-        this.errors = options.errors;
-        this.file = options.file;
+    /**
+     * @param {isic.collections.MetadataErrorCollection} settings.errors
+     * @param {isic.models.MetadataFileModel} settings.file
+     */
+    initialize: function (settings) {
+        this.errors = settings.errors;
+        this.file = settings.file;
         this.listenTo(this.errors, 'reset', this.render);
         this.render();
     },
@@ -143,6 +147,9 @@ isic.views.ApplyMetadataView = isic.View.extend({
         }
     },
 
+    /**
+     * @param {isic.models.DatasetModel} settings.dataset
+     */
     initialize: function (settings) {
         this.dataset = settings.dataset;
 
