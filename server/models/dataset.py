@@ -383,7 +383,6 @@ class Dataset(FolderModel):
         return ['on CSV row 4: unable to parse age',
                 'on CSV row 10: unrecognized gender']
 
-
     def _getImageForMetadataCsvRow(self, dataset, csvRow, originalNameField,
                                    isicIdField):
         Image = self.model('image', 'isic_archive')

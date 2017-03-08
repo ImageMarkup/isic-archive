@@ -244,14 +244,16 @@ class BenignMalignantFieldParser(FieldParser):
 
     #     if value is not None:
 
-
+#
 # if 'diagnosis_confirm_type' not in clinical:
 #             # TODO: remove this, it's always going to be there
 #             raise Exception('"diagnosis_confirm_type" must also be set')
-
+#
 #         if value in {'malignant', 'indeterminate/malignant'}:
 #             if clinical['diagnosis_confirm_type'] != 'histopathology':
-#                 raise Exception('if this value is "malignant", "diagnosis_confirm_type" must be "histopathology"')
+#                 raise Exception(
+#                     'if this value is "malignant", "diagnosis_confirm_type" '
+#                     'must be "histopathology"')
 
 
 class DiagnosisFieldParser(FieldParser):
@@ -350,7 +352,9 @@ class NevusTypeFieldParser(FieldParser):
 
 # allowed_diagnoses = {'nevus', 'nevus spilus', 'epidermal nevus'}
 #         if clinical['path_diagnosis'] not in allowed_diagnoses:
-#             raise Exception('if this value is set, "path_diagnosis" must be one of %s' % sorted(allowed_diagnoses))
+#             raise Exception(
+#                 'if this value is set, "path_diagnosis" must be one of %s' %
+#                 sorted(allowed_diagnoses))
 
 
 def addImageClinicalMetadata(image):
