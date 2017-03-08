@@ -352,6 +352,9 @@ class Dataset(FolderModel):
             try:
                 csvReader = csv.DictReader(metadataFileStream)
 
+                if not csvReader.fieldnames:
+                    raise FileMetadataException(
+                        'no field names found on the first line of the CSV')
                 for originalNameField in csvReader.fieldnames:
                     if originalNameField.strip().lower() == 'filename':
                         break
