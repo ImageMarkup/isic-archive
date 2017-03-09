@@ -1,15 +1,25 @@
 isic.views.FeaturesetView = isic.View.extend({
+    /**
+     * @param {isic.models.FeaturesetModel} settings.model
+     */
     initialize: function (settings) {
-        this.featureset = new isic.models.FeaturesetModel({
-            _id: settings.id
-        }).once('g:fetched', function () {
+        // Display loading indicator
+        this.loadingAnimation = new girder.views.LoadingAnimation({
+            el: this.el,
+            parentView: this
+        }).render();
+
+        this.model.once('g:fetched', function () {
+            this.loadingAnimation.destroy();
+            delete this.loadingAnimation;
+
             this.render();
         }, this).fetch();
     },
 
     render: function () {
         this.$el.html(isic.templates.featuresetPage({
-            featureset: this.featureset
+            featureset: this.model
         }));
 
         return this;
