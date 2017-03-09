@@ -2,15 +2,7 @@
   h2.isic-page-title Register metadata
 
   .isic-form-container
-    .isic-form-group
-      h3 Dataset
-      table.table.table-condensed.isic-register-metadata-table
-        tr
-          td.isic-register-metadata-table-label Name
-          td= dataset.name()
-        tr
-          td.isic-register-metadata-table-label Description
-          td= dataset.get('description')
+    include datasetInfoWidget
     .isic-form-group
       h3 Upload metadata
       .isic-upload-description-container

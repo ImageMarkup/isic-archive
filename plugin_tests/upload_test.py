@@ -17,11 +17,13 @@
 #  limitations under the License.
 ###############################################################################
 
+import datetime
 import os
 
 from six import BytesIO
 
 from girder.constants import AccessType
+from girder.utility import parseTimestamp
 from girder.utility.ziputil import ZipGenerator
 from tests import base
 
@@ -52,6 +54,9 @@ class UploadTestCase(IsicTestCase):
             'mongodb://localhost:27017/girder_worker')
         # TODO: change this to 'amqp://guest@127.0.0.1/' for RabbitMQ
 
+        self.testDataDir = os.path.join(
+            os.environ['GIRDER_TEST_DATA_PREFIX'], 'plugins', 'isic_archive')
+
     def _uploadDataset(self, uploaderUser, zipName, zipContentNames,
                        datasetName, datasetDescription):
         Dataset = self.model('dataset', 'isic_archive')
@@ -59,12 +64,11 @@ class UploadTestCase(IsicTestCase):
         Upload = self.model('upload')
 
         # Create a ZIP file of images
-        testDataDir = os.path.join(
-            os.environ['GIRDER_TEST_DATA_PREFIX'], 'plugins', 'isic_archive')
         zipStream = BytesIO()
         zipGen = ZipGenerator(zipName)
         for fileName in zipContentNames:
-            with open(os.path.join(testDataDir, fileName), 'rb') as fileObj:
+            with open(os.path.join(self.testDataDir, fileName), 'rb') as \
+                    fileObj:
                 for data in zipGen.addFile(lambda: fileObj, fileName):
                     zipStream.write(data)
         zipStream.write(zipGen.footer())
@@ -118,7 +122,10 @@ class UploadTestCase(IsicTestCase):
         return dataset
 
     def testUploadDataset(self):
+        File = self.model('file')
+        Folder = self.model('folder')
         Group = self.model('group')
+        Upload = self.model('upload')
         User = self.model('user', 'isic_archive')
 
         # Create a reviewer user that will receive notification emails
@@ -204,3 +211,114 @@ class UploadTestCase(IsicTestCase):
             self.assertDictContainsSubset({
                 'Location': '/uda/gallery#/qc/%s' % reviewId
             }, resp.headers)
+
+        # Test metadata registration
+        resp = self.request(
+            path='/folder', method='POST', user=uploaderUser, params={
+                'parentType': 'user',
+                'parentId': str(uploaderUser['_id']),
+                'name': 'test_1_metadata_folder'
+            })
+        self.assertStatusOk(resp)
+        uploadCsvFolder = Folder.load(resp.json['_id'], force=True)
+
+        # Upload the CSV metadata file
+        csvPath = os.path.join(self.testDataDir, 'test_1_metadata.csv')
+        with open(csvPath, 'rb') as csvStream:
+            metadataFile = Upload.uploadFromFile(
+                obj=csvStream,
+                size=os.path.getsize(csvPath),
+                name='test_1_metadata.csv',
+                parentType='folder',
+                parent=uploadCsvFolder,
+                user=uploaderUser,
+                mimeType='text/csv'
+            )
+
+        # Attempt to register metadata as invalid users
+        resp = self.request(
+            path='/dataset/%s/metadata' % publicDataset['_id'], method='POST',
+            params={
+                'metadataFileId': metadataFile['_id']
+            })
+        self.assertStatus(resp, 401)
+        resp = self.request(
+            path='/dataset/%s/metadata' % publicDataset['_id'], method='POST',
+            user=reviewerUser, params={
+                'metadataFileId': metadataFile['_id']
+            })
+        self.assertStatus(resp, 403)
+
+        # Attempt to register metadata with invalid parameters
+        resp = self.request(
+            path='/dataset/%s/metadata' % publicDataset['_id'], method='POST',
+            user=uploaderUser)
+        self.assertStatus(resp, 400)
+        self.assertIn('required', resp.json['message'].lower())
+        resp = self.request(
+            path='/dataset/%s/metadata' % publicDataset['_id'], method='POST',
+            user=uploaderUser, params={
+                'metadataFileId': 'bad_id'
+            })
+        self.assertStatus(resp, 400)
+        self.assertIn('invalid', resp.json['message'].lower())
+        resp = self.request(
+            path='/dataset/%s/metadata' % publicDataset['_id'], method='POST',
+            user=uploaderUser, params={
+                # TODO: find a cleaner way to pass a file with the wrong format
+                'metadataFileId': File.findOne({
+                    'mimeType': 'application/zip'})['_id'],
+            })
+        self.assertStatus(resp, 400)
+        self.assertIn('format', resp.json['message'].lower())
+
+        # Attempt to list registered metadata as invalid users
+        resp = self.request(
+            path='/dataset/%s/metadata' % publicDataset['_id'], method='GET')
+        self.assertStatus(resp, 401)
+        resp = self.request(
+            path='/dataset/%s/metadata' % publicDataset['_id'], method='GET',
+            user=uploaderUser)
+        self.assertStatus(resp, 403)
+
+        # List (empty) registered metadata
+        resp = self.request(
+            path='/dataset/%s/metadata' % publicDataset['_id'], method='GET',
+            user=reviewerUser)
+        self.assertStatusOk(resp)
+        self.assertEqual(resp.json, [])
+
+        # Register metadata with dataset
+        self.assertNoMail()
+        resp = self.request(
+            path='/dataset/%s/metadata' % publicDataset['_id'], method='POST',
+            user=uploaderUser, params={
+                'metadataFileId': metadataFile['_id']
+            })
+        self.assertStatusOk(resp)
+        # Reviewer user should receive email
+        self.assertMails(count=1)
+
+        # List registered metadata
+        resp = self.request(
+            path='/dataset/%s/metadata' % publicDataset['_id'],
+            user=reviewerUser)
+        self.assertStatusOk(resp)
+        self.assertIsInstance(resp.json, list)
+        self.assertEqual(len(resp.json), 1)
+        # Check the 'time' field separately, as we don't know what it will be
+        self.assertIn('time', resp.json[0])
+        self.assertLess(parseTimestamp(resp.json[0]['time']),
+                        datetime.datetime.utcnow())
+        self.assertDictEqual({
+            'file': {
+                '_id': str(metadataFile['_id']),
+                'name': metadataFile['name']
+            },
+            'user': {
+                '_id': str(uploaderUser['_id']),
+                'name': User.obfuscatedName(uploaderUser)
+            },
+            # This is actually checked above
+            'time': resp.json[0]['time']
+        }, resp.json[0])

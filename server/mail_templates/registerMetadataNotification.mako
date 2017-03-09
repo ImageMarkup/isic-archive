@@ -21,11 +21,11 @@ A user registered a metadata file with a dataset in the ISIC Archive.
 </tr>
 <tr>
 <td style="padding: 5px; font-weight: bold;">Metadata File Name</td>
-<td style="padding: 5px;">${csvFile['name']}</td>
+<td style="padding: 5px;">${metadataFile['name']}</td>
 </tr>
 <tr>
 <td style="padding: 5px; font-weight: bold;">Metadata File ID</td>
-<td style="padding: 5px;">${csvFile['_id']}</td>
+<td style="padding: 5px;">${metadataFile['_id']}</td>
 </tr>
 <tr>
 <td style="padding: 5px; font-weight: bold;">Date</td>

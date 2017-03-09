@@ -17,6 +17,7 @@
 #  limitations under the License.
 ###############################################################################
 
+import csv
 import datetime
 import itertools
 import os
@@ -150,7 +151,8 @@ class Dataset(FolderModel):
             'signature': signature,
             'anonymous': anonymous,
             'attribution': attribution,
-            'license': license
+            'license': license,
+            'metadataFiles': []
         })
 
         prereviewFolder = Folder.createFolder(
@@ -297,18 +299,18 @@ class Dataset(FolderModel):
                 Folder.countFolders(prereviewFolder)) == 0:
             Folder.remove(prereviewFolder)
 
-    def registerMetadata(self, dataset, csvFile, user, sendMail=False):
+    def registerMetadata(self, dataset, metadataFile, user, sendMail=False):
         """Register a .csv file containing metadata about images."""
         # Check if image metadata is already registered
-        if self.findOne({'meta.metadataFiles.fileId': csvFile['_id']}):
+        if self.findOne({'meta.metadataFiles.fileId': metadataFile['_id']}):
             raise ValidationException(
                 'Metadata file is already registered on a dataset.')
 
         # Add image metadata file information to list
         now = datetime.datetime.utcnow()
-        metadataFiles = dataset['meta'].get('metadataFiles', [])
+        metadataFiles = dataset['meta']['metadataFiles']
         metadataFiles.append({
-            'fileId': csvFile['_id'],
+            'fileId': metadataFile['_id'],
             'userId': user['_id'],
             'time': now
         })
@@ -326,9 +328,126 @@ class Dataset(FolderModel):
                     'host': host,
                     'dataset': dataset,
                     'user': user,
-                    'csvFile': csvFile,
+                    'metadataFile': metadataFile,
                     'date': now.replace(microsecond=0)
                 },
                 subject='ISIC Archive: Dataset Metadata Notification')
 
         return dataset
+
+    def applyMetadata(self, dataset, metadataFile, save):
+        """
+        Apply metadata in a .csv file to a dataset.
+        :return: A list of strings describing parsing or validation errors.
+        :rtype: list
+        """
+        Assetstore = self.model('assetstore')
+
+        assetstore = Assetstore.getCurrent()
+        assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(
+            assetstore)
+        metadataFilePath = assetstoreAdapter.fullPath(metadataFile)
+
+        with open(metadataFilePath, 'rU') as metadataFileStream:
+            try:
+                csvReader = csv.DictReader(metadataFileStream)
+
+                if not csvReader.fieldnames:
+                    raise FileMetadataException(
+                        'no field names found on the first line of the CSV')
+                for originalNameField in csvReader.fieldnames:
+                    if originalNameField.strip().lower() == 'filename':
+                        break
+                else:
+                    originalNameField = None
+                for isicIdField in csvReader.fieldnames:
+                    if isicIdField.strip().lower() == 'isic_id':
+                        break
+                else:
+                    isicIdField = None
+                if (not originalNameField) and (not isicIdField):
+                    raise FileMetadataException(
+                        'no "filename" or "isic_id" field found in CSV')
+
+                rowErrors = list()
+                for rowNum, csvRow in enumerate(csvReader):
+                    try:
+                        image = self._getImageForMetadataCsvRow(
+                            dataset, csvRow, originalNameField, isicIdField)
+                        self._applyMetadataCsvRow(image, csvRow, save)
+                    except RowMetadataException as e:
+                        rowErrors.append('on CSV row %d: %s' % (rowNum, str(e)))
+                if rowErrors:
+                    raise FileMetadataException('\n'.join(rowErrors))
+            except csv.Error as e:
+                raise FileMetadataException('parsing CSV: %s' % str(e))
+
+        # TODO: return list of error strings, can be empty
+        return ['on CSV row 4: unable to parse age',
+                'on CSV row 10: unrecognized gender']
+
+    def _getImageForMetadataCsvRow(self, dataset, csvRow, originalNameField,
+                                   isicIdField):
+        Image = self.model('image', 'isic_archive')
+
+        imageQuery = {
+            'folderId': dataset['_id']
+            # TODO: match images in the Pre-review folder too
+            # 'folderId': {'$in': datasetFolderIds}
+        }
+        if originalNameField:
+            originalName = csvRow.pop(originalNameField, None)
+            imageQuery.update({
+                'privateMeta.originalFilename': originalName
+            })
+        else:
+            originalName = None
+        if isicIdField:
+            isicId = csvRow.pop(isicIdField, None)
+            imageQuery.update({
+                'name': isicId
+            })
+        else:
+            isicId = None
+
+        images = Image.find(imageQuery)
+        try:
+            if not images.count():
+                raise RowMetadataException('no images found')
+            if images.count() > 1:
+                raise RowMetadataException('multiple images found')
+        except RowMetadataException as e:
+            if originalNameField and isicIdField:
+                errorStr = 'that match both "%s": "%s" and "%s": "%s"' % (
+                    originalNameField, originalName, isicIdField, isicId)
+            elif originalNameField:
+                errorStr = 'that match "%s": "%s"' % (
+                    originalNameField, originalName)
+            else:  # isicIdField
+                errorStr = 'that match "%s": "%s"' % (
+                    isicIdField, isicId)
+            raise RowMetadataException('%s %s' % (str(e), errorStr))
+        image = next(iter(images))
+        return image
+
+    def _applyMetadataCsvRow(self, image, csvRow, save):
+        pass
+        # TODO: ...
+
+        # unstructuredMetadata = image['meta']['unstructured']
+        # unstructuredMetadata.update(csvRow)
+        # Item.setMetadata(image, {
+        #     'unstructured': unstructuredMetadata
+        # })
+
+
+class FileMetadataException(Exception):
+    pass
+
+
+class RowMetadataException(Exception):
+    pass
+
+
+class FieldMetadataException(Exception):
+    pass

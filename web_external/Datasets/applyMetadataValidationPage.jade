@@ -1,0 +1,28 @@
+if errors.initialized()
+  h3 Results
+  - var hasErrors = !errors.isEmpty()
+  .isic-apply-metadata-validation-result-header(
+    class=hasErrors ?
+      'isic-apply-metadata-validation-result-header-error' :
+      'isic-apply-metadata-validation-result-header-ok')
+    .isic-apply-metadata-validation-result-header-filename
+      = file.name()
+    .isic-apply-metadata-validation-result-header-status
+      if !hasErrors
+        | OK&nbsp;
+        i.icon-ok
+      else
+        = errors.length
+        if errors.length > 1
+          |  Errors&nbsp;
+        else
+          |  Error&nbsp;
+        i.icon-attention
+  if hasErrors
+    .isic-apply-metadata-validation-result-content
+      .isic-apply-metadata-validation-result-error-header
+        | Errors:
+      .isic-apply-metadata-validation-result-error-content
+        ul
+          each error in errors.models
+            li= error.description()

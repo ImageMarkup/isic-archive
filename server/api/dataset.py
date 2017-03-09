@@ -50,7 +50,9 @@ class DatasetResource(IsicResource):
         self.route('POST', (), self.ingestDataset)
         self.route('GET', (':id', 'review'), self.getReviewImages)
         self.route('POST', (':id', 'review'), self.submitReviewImages)
+        self.route('GET', (':id', 'metadata'), self.getRegisteredMetadata)
         self.route('POST', (':id', 'metadata'), self.registerMetadata)
+        self.route('POST', (':id', 'metadata', ':fileId'), self.applyMetadata)
 
     @describeRoute(
         Description('Return a list of lesion image datasets.')
@@ -250,6 +252,37 @@ class DatasetResource(IsicResource):
         return {'status': 'success'}
 
     @describeRoute(
+        Description('Get registered metadata for a dataset.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+    )
+    @access.user
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
+    def getRegisteredMetadata(self, dataset, params):
+        File = self.model('file')
+        User = self.model('user', 'isic_archive')
+
+        user = self.getCurrentUser()
+        User.requireReviewDataset(user)
+
+        output = []
+        for registration in dataset['meta']['metadataFiles']:
+            # TODO: "File.load" can use the "fields" argument and be expressed
+            # as a comprehension, once the fix from upstream Girder is available
+            metadataFile = File.load(
+                registration['fileId'], force=True, exc=True)
+            output.append({
+                'file': {
+                    '_id': metadataFile['_id'],
+                    'name': metadataFile['name']
+                },
+                'user': User.filteredSummary(
+                    User.load(registration['userId'], force=True, exc=True),
+                    user),
+                'time': registration['time']
+            })
+        return output
+
+    @describeRoute(
         Description('Register metadata with a dataset.')
         .param('id', 'The ID of the dataset.', paramType='path')
         .param('metadataFileId', 'The ID of the .csv metadata file.')
@@ -267,12 +300,9 @@ class DatasetResource(IsicResource):
         user = self.getCurrentUser()
         User.requireCreateDataset(user)
 
-        metadataFileId = params.get('metadataFileId')
-        if not metadataFileId:
-            raise ValidationException(
-                'No file was uploaded.', 'metadataFileId')
         metadataFile = File.load(
-            metadataFileId, user=user, level=AccessType.READ, exc=False)
+            params['metadataFileId'], user=user, level=AccessType.READ,
+            exc=False)
         if not metadataFile:
             raise ValidationException(
                 'Invalid metadata file ID.', 'metadataFileId')
@@ -280,8 +310,11 @@ class DatasetResource(IsicResource):
             raise ValidationException(
                 'File must be in .csv format.', 'metadataFileId')
 
-        return Dataset.registerMetadata(dataset=dataset, user=user,
-                                        csvFile=metadataFile, sendMail=True)
+        Dataset.registerMetadata(
+            dataset=dataset, user=user, metadataFile=metadataFile,
+            sendMail=True)
+        # TODO: return value?
+        return {'status': 'success'}
 
     def _checkFileFormat(self, file, formats):
         """
@@ -297,3 +330,31 @@ class DatasetResource(IsicResource):
                 mimetypes.guess_type(file['name'], strict=False)[0] in formats:
             return True
         return False
+
+    @describeRoute(
+        Description('Apply registered metadata to a dataset.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('fileId', 'The ID of the .csv metadata file.', paramType='path')
+        .param('save', 'Whether to save the metadata to the dataset if '
+               'validation succeeds.', dataType='boolean', default=False,
+               paramType='form')
+    )
+    @access.user
+    @loadmodel(model='file', map={'fileId': 'metadataFile'}, force=True)
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
+    def applyMetadata(self, dataset, metadataFile, params):
+        Dataset = self.model('dataset', 'isic_archive')
+        User = self.model('user', 'isic_archive')
+
+        params = self._decodeParams(params)
+        self.requireParams('save', params)
+        save = self.boolParam('save', params)
+
+        user = self.getCurrentUser()
+        User.requireCreateDataset(user)
+
+        errors = Dataset.applyMetadata(
+            dataset=dataset, metadataFile=metadataFile, save=save)
+        return {
+            'errors': [{'description': description} for description in errors]
+        }
