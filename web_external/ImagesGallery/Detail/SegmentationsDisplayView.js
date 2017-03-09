@@ -4,6 +4,9 @@
 
 // View for displaying an image segmentation's properties
 isic.views.SegmentationDisplayView = isic.View.extend({
+    /**
+     * @param {isic.models.SegmentationModel} settings.model
+     */
     initialize: function (settings) {
         this.listenTo(this.model, 'change:_id g:fetched g:error', this.render);
 
@@ -49,6 +52,9 @@ isic.views.SegmentationsDisplayView = isic.View.extend({
         }
     },
 
+    /**
+     * @param {isic.models.ImageModel} settings.image
+     */
     initialize: function (settings) {
         this.image = settings.image;
 

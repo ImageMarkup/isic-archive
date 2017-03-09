@@ -48,10 +48,15 @@ isic.views.StudiesView = isic.View.extend({
 
         // Display loading indicator
         if (!this.loaded) {
-            new girder.views.LoadingAnimation({
+            this.loadingAnimation = new girder.views.LoadingAnimation({
                 el: this.$('.isic-listing-loading-animation-container'),
                 parentView: this
             }).render();
+        } else {
+            if (this.loadingAnimation) {
+                this.loadingAnimation.destroy();
+                delete this.loadingAnimation;
+            }
         }
 
         this.$('.isic-tooltip').tooltip({
@@ -63,17 +68,11 @@ isic.views.StudiesView = isic.View.extend({
 
     renderStudy: function (index, container) {
         if (container.children().length === 0) {
-            var studyId = this.studies.at(index).id;
-
-            // Display loading indicator
-            new girder.views.LoadingAnimation({
-                el: container,
-                parentView: this
-            }).render();
+            var study = this.studies.at(index);
 
             new isic.views.StudyView({ // eslint-disable-line no-new
                 el: container,
-                id: studyId,
+                model: study,
                 studyAdmin: this.studyAdmin,
                 parentView: this
             });

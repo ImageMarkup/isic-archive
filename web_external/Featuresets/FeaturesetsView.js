@@ -43,10 +43,15 @@ isic.views.FeaturesetsView = isic.View.extend({
 
         // Display loading indicator
         if (!this.loaded) {
-            new girder.views.LoadingAnimation({
+            this.loadingAnimation = new girder.views.LoadingAnimation({
                 el: this.$('.isic-listing-loading-animation-container'),
                 parentView: this
             }).render();
+        } else {
+            if (this.loadingAnimation) {
+                this.loadingAnimation.destroy();
+                delete this.loadingAnimation;
+            }
         }
 
         return this;
@@ -54,17 +59,11 @@ isic.views.FeaturesetsView = isic.View.extend({
 
     renderFeatureset: function (index, container) {
         if (container.children().length === 0) {
-            var featuresetId = this.featuresets.at(index).id;
-
-            // Display loading indicator
-            new girder.views.LoadingAnimation({
-                el: container,
-                parentView: this
-            }).render();
+            var featureset = this.featuresets.at(index);
 
             new isic.views.FeaturesetView({ // eslint-disable-line no-new
                 el: container,
-                id: featuresetId,
+                model: featureset,
                 parentView: this
             });
         }

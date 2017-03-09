@@ -1,7 +1,7 @@
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
 isic.views.ImagesView = isic.View.extend({
-    initialize: function () {
+    initialize: function (settings) {
         this.model = new isic.views.ImagesViewSubViews.ImagesViewModel();
         this.image = new isic.models.ImageModel();
 

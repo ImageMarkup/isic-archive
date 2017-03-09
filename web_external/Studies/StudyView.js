@@ -4,10 +4,10 @@ isic.views.StudyView = isic.View.extend({
             if (!this.studyAddUserWidget) {
                 this.studyAddUserWidget = new isic.views.StudyAddUserWidget({
                     el: $('#g-dialog-container'),
-                    study: this.study,
+                    study: this.model,
                     parentView: this
                 }).on('g:saved', function () {
-                    this.study.once('g:fetched', function () {
+                    this.model.once('g:fetched', function () {
                         this.render();
                     }, this).fetch();
                 }, this);
@@ -16,19 +16,30 @@ isic.views.StudyView = isic.View.extend({
         }
     },
 
+    /**
+     * @param {isic.models.StudyModel} settings.model
+     * @param {boolean} settings.studyAdmin - Whether the current user can admin the study.
+     */
     initialize: function (settings) {
         this.studyAdmin = settings.studyAdmin;
 
-        this.study = new isic.models.StudyModel({
-            _id: settings.id
-        }).once('g:fetched', function () {
+        // Display loading indicator
+        this.loadingAnimation = new girder.views.LoadingAnimation({
+            el: this.el,
+            parentView: this
+        }).render();
+
+        this.model.once('g:fetched', function () {
+            this.loadingAnimation.destroy();
+            delete this.loadingAnimation;
+
             this.render();
         }, this).fetch();
     },
 
     render: function () {
         this.$el.html(isic.templates.studyPage({
-            study: this.study,
+            study: this.model,
             studyAdmin: this.studyAdmin
         }));
 

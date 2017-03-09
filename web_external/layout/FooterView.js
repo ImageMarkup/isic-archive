@@ -1,5 +1,5 @@
 isic.views.LayoutFooterView = isic.View.extend({
-    initialize: function () {
+    initialize: function (settings) {
         this.render();
     },
 

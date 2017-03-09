@@ -7,6 +7,9 @@ isic.views.ImagesViewSubViews.ImageDetailsPane = isic.View.extend({
         'click #isic-image-details-close': 'clearSelectedImage'
     },
 
+    /**
+     * @param {isic.models.ImageModel} settings.image
+     */
     initialize: function (settings) {
         this.image = settings.image;
 

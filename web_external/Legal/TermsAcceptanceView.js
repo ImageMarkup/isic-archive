@@ -16,7 +16,7 @@ isic.views.TermsAcceptanceView = isic.View.extend({
         }
     },
 
-    initialize: function () {
+    initialize: function (settings) {
         this.termsOfUseWidget = new isic.views.TermsOfUseWidget({
             parentView: this
         });

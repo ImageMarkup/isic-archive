@@ -43,10 +43,15 @@ isic.views.DatasetsView = isic.View.extend({
 
         // Display loading indicator
         if (!this.loaded) {
-            new girder.views.LoadingAnimation({
+            this.loadingAnimation = new girder.views.LoadingAnimation({
                 el: this.$('.isic-listing-loading-animation-container'),
                 parentView: this
             }).render();
+        } else {
+            if (this.loadingAnimation) {
+                this.loadingAnimation.destroy();
+                delete this.loadingAnimation;
+            }
         }
 
         return this;
@@ -54,17 +59,11 @@ isic.views.DatasetsView = isic.View.extend({
 
     renderDataset: function (index, container) {
         if (container.children().length === 0) {
-            var datasetId = this.datasets.at(index).id;
-
-            // Display loading indicator
-            new girder.views.LoadingAnimation({
-                el: container,
-                parentView: this
-            }).render();
+            var dataset = this.datasets.at(index);
 
             new isic.views.DatasetView({ // eslint-disable-line no-new
                 el: container,
-                id: datasetId,
+                model: dataset,
                 parentView: this
             });
         }

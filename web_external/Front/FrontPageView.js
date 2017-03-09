@@ -1,5 +1,5 @@
 isic.views.FrontPageView = girder.views.FrontPageView.extend({
-    initialize: function () {
+    initialize: function (settings) {
         this.render();
     },
 

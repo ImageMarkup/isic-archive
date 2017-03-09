@@ -30,6 +30,9 @@ isic.views.RegisterMetadataView = isic.View.extend({
         }
     },
 
+    /**
+     * @param {isic.models.DatasetModel} settings.dataset
+     */
     initialize: function (settings) {
         this.dataset = settings.dataset;
 
