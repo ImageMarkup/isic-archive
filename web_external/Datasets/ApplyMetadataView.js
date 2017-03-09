@@ -152,7 +152,7 @@ isic.views.ApplyMetadataView = isic.View.extend({
         this.file = null;
 
         // Errors in the selected metadata file
-        this.metadataErrorCollection = new isic.collections.MetadataErrorCollection();
+        this.errors = new isic.collections.MetadataErrorCollection();
 
         this.selectFileView = new isic.views.ApplyMetadataSelectFileView({
             collection: this.files,
@@ -160,7 +160,7 @@ isic.views.ApplyMetadataView = isic.View.extend({
         });
 
         this.listenTo(this.selectFileView, 'changed', this.fileChanged);
-        this.listenTo(this.metadataErrorCollection, 'reset', this.errorsChanged);
+        this.listenTo(this.errors, 'reset', this.errorsChanged);
 
         this.dataset.getRegisteredMetadata().done(_.bind(function (resp) {
             this.files.reset(resp, {parse: true});
@@ -171,7 +171,7 @@ isic.views.ApplyMetadataView = isic.View.extend({
 
     fileChanged: function (fileId) {
         this.file = this.files.get(fileId);
-        this.metadataErrorCollection.uninitialize();
+        this.errors.uninitialize();
 
         // Enable action buttons
         this.$('#isic-apply-metadata-download-button, #isic-apply-metadata-validate-button').removeAttr('disabled');
@@ -180,8 +180,7 @@ isic.views.ApplyMetadataView = isic.View.extend({
     errorsChanged: function () {
         this.renderValidationContainer();
 
-        var allowSave = this.metadataErrorCollection.initialized() &&
-            this.metadataErrorCollection.isEmpty();
+        var allowSave = this.errors.initialized() && this.errors.isEmpty();
         this.$('#isic-apply-metadata-save').toggleClass('hidden', !allowSave);
     },
 
@@ -201,7 +200,7 @@ isic.views.ApplyMetadataView = isic.View.extend({
     renderValidationContainer: function () {
         this.$('#isic-apply-metadata-validation-container').html(
             isic.templates.applyMetadataValidationPage({
-                errors: this.metadataErrorCollection,
+                errors: this.errors,
                 file: this.file
             }));
 
@@ -210,7 +209,7 @@ isic.views.ApplyMetadataView = isic.View.extend({
 
     validateMetadata: function (save) {
         this.dataset.applyMetadata(this.file.id, save).then(_.bind(function (resp) {
-            this.metadataErrorCollection.reset(resp, {parse: true});
+            this.errors.reset(resp, {parse: true});
 
             if (save) {
                 isic.showAlertDialog({
