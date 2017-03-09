@@ -43,6 +43,9 @@ add_python_test(
 add_python_test(
   segmentation_helper
   PLUGIN isic_archive)
+add_python_test(
+  utility
+  PLUGIN isic_archive)
 
 add_eslint_test(
   isic_archive_external
