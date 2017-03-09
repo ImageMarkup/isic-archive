@@ -123,5 +123,69 @@ isic.views.ImageViewerWidget = isic.View.extend({
 
         isic.View.prototype.destroy.call(this);
     }
+});
 
+isic.views.OverlayImageViewerWidget = isic.views.ImageViewerWidget.extend({
+    State: {
+        ABSENT: 0.0,
+        POSSIBLE: 0.5,
+        DEFINITE: 1.0
+    },
+
+    _createViewer: function () {
+        isic.views.ImageViewerWidget.prototype._createViewer.call(this);
+
+        this.annotationLayer = this.viewer.createLayer('feature', {
+            features: ['pixelmap']
+        });
+        this.pixelmap = this.annotationLayer.createFeature('pixelmap', {
+            selectionAPI: true,
+            url: girder.apiRoot + '/image/' + this.model.id + '/superpixels',
+            position: {
+                ul: {x: 0, y: 0},
+                lr: {x: this.sizeX, y: this.sizeY}
+            },
+            color: _.bind(function (dataValue, index) {
+                var color = {r: 0, g: 0, b: 0, a: 0};
+                var shownAlpha = 0.4;
+
+                if (dataValue === this.State.ABSENT) {
+                    // This could be semi-transparent, to show "definite negative" tiles
+                    color.a = 0.0;
+                } else if (dataValue === this.State.POSSIBLE) {
+                    color = window.geo.util.convertColor('#fafa00');
+                    color.a = shownAlpha;
+                } else if (dataValue === this.State.DEFINITE) {
+                    color = window.geo.util.convertColor('#0000ff');
+                    color.a = shownAlpha;
+                }
+                // TODO: else, log error
+                return color;
+            }, this)
+        });
+        this.annotationLayer.draw();
+        this.clear();
+    },
+
+    /**
+     * Remove all displayed overlays.
+     */
+    clear: function () {
+        this.pixelmap.data([]);
+        this.pixelmap.visible(false);
+        this.pixelmap.draw();
+
+        this.pixelmap.geoOff();
+    },
+
+    /**
+     * Display a single view-only feature on the viewer.
+     */
+    overlay: function (featureValues) {
+        this.clear();
+
+        this.pixelmap.data(featureValues);
+        this.pixelmap.visible(true);
+        this.pixelmap.draw();
+    }
 });

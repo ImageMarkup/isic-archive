@@ -1,0 +1,6 @@
+.isic-study-results-local-features-select-container
+  // For select2, add width in style attribute, see https://select2.github.io/examples.html#responsive
+  select#isic-study-results-local-features-select-box.form-control.input(style='width:100%')
+    option(selected disabled value='')
+    each feature in availableFeatures
+      option(value=feature.id)= feature.name.join(', ')
