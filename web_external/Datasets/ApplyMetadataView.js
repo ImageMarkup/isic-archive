@@ -160,14 +160,7 @@ isic.views.ApplyMetadataView = isic.View.extend({
         });
 
         this.listenTo(this.selectFileView, 'changed', this.fileChanged);
-
-        this.listenTo(this.metadataErrorCollection, 'reset', function () {
-            this.renderValidationContainer();
-
-            var allowSave = this.metadataErrorCollection.initialized() &&
-                this.metadataErrorCollection.isEmpty();
-            this.$('#isic-apply-metadata-save').toggleClass('hidden', !allowSave);
-        });
+        this.listenTo(this.metadataErrorCollection, 'reset', this.errorsChanged);
 
         this.dataset.getRegisteredMetadata().done(_.bind(function (resp) {
             this.files.reset(resp, {parse: true});
@@ -182,6 +175,14 @@ isic.views.ApplyMetadataView = isic.View.extend({
 
         // Enable action buttons
         this.$('#isic-apply-metadata-download-button, #isic-apply-metadata-validate-button').removeAttr('disabled');
+    },
+
+    errorsChanged: function () {
+        this.renderValidationContainer();
+
+        var allowSave = this.metadataErrorCollection.initialized() &&
+            this.metadataErrorCollection.isEmpty();
+        this.$('#isic-apply-metadata-save').toggleClass('hidden', !allowSave);
     },
 
     render: function () {
