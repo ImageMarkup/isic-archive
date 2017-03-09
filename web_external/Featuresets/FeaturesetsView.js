@@ -43,10 +43,15 @@ isic.views.FeaturesetsView = isic.View.extend({
 
         // Display loading indicator
         if (!this.loaded) {
-            new girder.views.LoadingAnimation({
+            this.loadingAnimation = new girder.views.LoadingAnimation({
                 el: this.$('.isic-listing-loading-animation-container'),
                 parentView: this
             }).render();
+        } else {
+            if (this.loadingAnimation) {
+                this.loadingAnimation.destroy();
+                delete this.loadingAnimation;
+            }
         }
 
         return this;
