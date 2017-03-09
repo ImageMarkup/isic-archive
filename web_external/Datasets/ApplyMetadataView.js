@@ -57,7 +57,9 @@ isic.collections.MetadataErrorCollection = Backbone.Collection.extend({
     }
 });
 
-// View for a collection of metadata files in a select tag
+// View for a collection of metadata files in a select tag.
+// When user selects a file, a 'changed' event is triggered
+// with the ID of the selected file as a parameter.
 isic.views.ApplyMetadataSelectFileView = isic.View.extend({
     events: {
         'change': 'fileChanged'
@@ -73,8 +75,7 @@ isic.views.ApplyMetadataSelectFileView = isic.View.extend({
 
     fileChanged: function () {
         var fileId = this.$('select').val();
-        var file = this.collection.get(fileId);
-        this.trigger('changed', file);
+        this.trigger('changed', fileId);
     },
 
     render: function () {
@@ -97,29 +98,6 @@ isic.views.ApplyMetadataSelectFileView = isic.View.extend({
             dropdownParent: this.$el
         });
         select.focus();
-
-        return this;
-    }
-});
-
-// View for metadata validation results
-isic.views.ApplyMetadataValidationView = isic.View.extend({
-    /**
-     * @param {isic.collections.MetadataErrorCollection} settings.errors
-     * @param {isic.models.MetadataFileModel} settings.file
-     */
-    initialize: function (settings) {
-        this.errors = settings.errors;
-        this.file = settings.file;
-        this.listenTo(this.errors, 'reset', this.render);
-        this.render();
-    },
-
-    render: function () {
-        this.$el.html(isic.templates.applyMetadataValidationPage({
-            errors: this.errors,
-            file: this.file
-        }));
 
         return this;
     }
@@ -167,9 +145,13 @@ isic.views.ApplyMetadataView = isic.View.extend({
     initialize: function (settings) {
         this.dataset = settings.dataset;
 
-        this.file = new isic.models.MetadataFileModel();
+        // Registered metadata files
         this.files = new isic.collections.MetadataFileCollection();
 
+        // Selected metadata file
+        this.file = null;
+
+        // Errors in the selected metadata file
         this.metadataErrorCollection = new isic.collections.MetadataErrorCollection();
 
         this.selectFileView = new isic.views.ApplyMetadataSelectFileView({
@@ -177,15 +159,11 @@ isic.views.ApplyMetadataView = isic.View.extend({
             parentView: this
         });
 
-        this.validationView = new isic.views.ApplyMetadataValidationView({
-            errors: this.metadataErrorCollection,
-            file: this.file,
-            parentView: this
-        });
-
         this.listenTo(this.selectFileView, 'changed', this.fileChanged);
 
         this.listenTo(this.metadataErrorCollection, 'reset', function () {
+            this.renderValidationContainer();
+
             var allowSave = this.metadataErrorCollection.initialized() &&
                 this.metadataErrorCollection.isEmpty();
             this.$('#isic-apply-metadata-save').toggleClass('hidden', !allowSave);
@@ -198,8 +176,8 @@ isic.views.ApplyMetadataView = isic.View.extend({
         this.render();
     },
 
-    fileChanged: function (file) {
-        this.file.set(file.attributes);
+    fileChanged: function (fileId) {
+        this.file = this.files.get(fileId);
         this.metadataErrorCollection.uninitialize();
 
         // Enable action buttons
@@ -214,8 +192,17 @@ isic.views.ApplyMetadataView = isic.View.extend({
         this.selectFileView.setElement(
             this.$('#isic-apply-metadata-select-file-container')).render();
 
-        this.validationView.setElement(
-            this.$('#isic-apply-metadata-validation-container')).render();
+        this.renderValidationContainer();
+
+        return this;
+    },
+
+    renderValidationContainer: function () {
+        this.$('#isic-apply-metadata-validation-container').html(
+            isic.templates.applyMetadataValidationPage({
+                errors: this.metadataErrorCollection,
+                file: this.file
+            }));
 
         return this;
     },
