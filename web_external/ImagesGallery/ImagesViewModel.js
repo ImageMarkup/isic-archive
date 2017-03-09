@@ -25,7 +25,7 @@ isic.views.ImagesViewSubViews.ImagesViewModel = Backbone.Model.extend({
             }]
         }
     },
-    initialize: function () {
+    initialize: function (settings) {
         this.datasetCollection = new isic.collections.DatasetCollection();
         this.images = new isic.collections.ImageCollection();
         this.images.pageLimit = 50;

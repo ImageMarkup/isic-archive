@@ -3,6 +3,10 @@
 isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
 
 isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
+    /**
+     * @param {isic.views.ImagesViewSubViews.ImagesViewModel} settings.model
+     * @param {isic.models.ImageModel} settings.image
+     */
     initialize: function (settings) {
         this.image = settings.image;
         // For now we'll hard code this (and probably change it in the future),

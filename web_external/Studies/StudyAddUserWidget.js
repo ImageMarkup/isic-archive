@@ -17,6 +17,9 @@ isic.views.StudyAddUserWidget = isic.View.extend({
         }
     },
 
+    /**
+     * @param {isic.models.StudyModel} settings.study
+     */
     initialize: function (settings) {
         this.study = settings.study;
         this.user = null;

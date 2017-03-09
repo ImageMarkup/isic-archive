@@ -42,8 +42,12 @@ isic.collections.FeatureCollection = Backbone.Collection.extend({
 
 // Header view for collection of images
 isic.views.StudyResultsImageHeaderView = isic.View.extend({
-    initialize: function (options) {
-        this.study = options.study;
+    /**
+     * @param {isic.collections.ImageCollection} settings.collection
+     * @param {isic.models.StudyModel} settings.study
+     */
+    initialize: function (settings) {
+        this.study = settings.study;
 
         this.listenTo(this.collection, 'reset', this.render);
 
@@ -67,7 +71,10 @@ isic.views.StudyResultsSelectStudyView = isic.View.extend({
         'click .isic-study-results-select-study-details-button': 'showDetails'
     },
 
-    initialize: function (options) {
+    /**
+     * @param {isic.collections.StudyCollection} settings.collection
+     */
+    initialize: function (settings) {
         this.listenTo(this.collection, 'reset', this.render);
 
         this.render();
@@ -119,6 +126,12 @@ isic.views.StudyResultsSelectStudyView = isic.View.extend({
 
 // Modal view for study details
 isic.views.StudyResultsStudyDetailsView = isic.View.extend({
+    /**
+     * @param {isic.models.StudyModel} settings.model
+     */
+    initialize: function (settings) {
+    },
+
     render: function () {
         var hasStudy = this.model.has('name');
 
@@ -137,7 +150,10 @@ isic.views.StudyResultsSelectImageView = isic.View.extend({
         'click .isic-study-results-select-image-image-container': 'imageSelected'
     },
 
-    initialize: function (options) {
+    /**
+     * @param {isic.collections.ImageCollection} settings.collection
+     */
+    initialize: function (settings) {
         this.listenTo(this.collection, 'reset', this.render);
 
         this.render();
@@ -171,7 +187,10 @@ isic.views.StudyResultsSelectUsersView = isic.View.extend({
         'change': 'userChanged'
     },
 
-    initialize: function (options) {
+    /**
+     * @param {isic.collections.UserCollection} settings.collection
+     */
+    initialize: function (settings) {
         this.listenTo(this.collection, 'reset', this.render);
 
         this.render();
@@ -210,8 +229,12 @@ isic.views.StudyResultsSelectLocalFeaturesView = isic.View.extend({
         'change': 'featureChanged'
     },
 
-    initialize: function (options) {
-        this.featureAnnotated = options.featureAnnotated;
+    /**
+     * @param {isic.collections.FeatureCollection} settings.collection
+     * @param {function} settings.featureAnnotated - A boolean-returning function, taking a featureId parameter.
+     */
+    initialize: function (settings) {
+        this.featureAnnotated = settings.featureAnnotated;
 
         this.listenTo(this.collection, 'reset', this.render);
 
@@ -279,6 +302,9 @@ isic.collections.GlobalFeatureResultCollection = Backbone.Collection.extend({
 
 // View for a global feature table
 isic.views.StudyResultsGlobalFeaturesTableView = isic.View.extend({
+    /**
+     * @param {isic.collections.GlobalFeatureResultCollection} settings.collection
+     */
     initialize: function (settings) {
         this.listenTo(this.collection, 'reset', this.render);
     },
@@ -294,6 +320,10 @@ isic.views.StudyResultsGlobalFeaturesTableView = isic.View.extend({
 
 // View for the annotation results of global features in a featureset
 isic.views.StudyResultsGlobalFeaturesView = isic.View.extend({
+    /**
+     * @param {isic.models.AnnotationModel} settings.annotation
+     * @param {isic.models.FeaturesetModel} settings.featureset
+     */
     initialize: function (settings) {
         this.annotation = settings.annotation;
         this.featureset = settings.featureset;
@@ -334,6 +364,9 @@ isic.views.StudyResultsGlobalFeaturesView = isic.View.extend({
 
 // View for a local feature image defined by an annotation and local feature
 isic.views.StudyResultsFeatureImageView = isic.View.extend({
+    /**
+     * @param {isic.models.FeatureImageModel} settings.model
+     */
     initialize: function (settings) {
         this.listenTo(this.model, 'change', this.render);
     },
@@ -369,6 +402,11 @@ isic.views.StudyResultsFeatureImageView = isic.View.extend({
 // View to allow selecting a local feature from a featureset and to display an
 // image showing the annotation for the feature
 isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
+    /**
+     * @param {isic.models.AnnotationModel} settings.annotation
+     * @param {isic.models.FeaturesetModel} settings.featureset
+     * @param {isic.models.FeatureImageModel} settings.model
+     */
     initialize: function (settings) {
         this.annotation = settings.annotation;
         this.featureset = settings.featureset;
@@ -439,6 +477,12 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
 
 // View for an image
 isic.views.StudyResultsImageView = isic.View.extend({
+    /**
+     * @param {isic.models.ImageModel} settings.model
+     */
+    initialize: function (settings) {
+    },
+
     setVisible: function (visible) {
         if (visible) {
             this.$el.removeClass('hidden');

@@ -11,7 +11,7 @@ isic.views.LayoutHeaderView = isic.View.extend({
         }
     },
 
-    initialize: function () {
+    initialize: function (settings) {
         this.render();
 
         girder.events.on('g:login', this.render, this);

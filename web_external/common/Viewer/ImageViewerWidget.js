@@ -1,4 +1,8 @@
 isic.views.ImageViewerWidget = isic.View.extend({
+    /**
+     * @param {isic.models.ImageModel} settings.model
+     * @param {HTMLElement} settings.el - The HTML element to attach to, which must be set upon instantiation.
+     */
     initialize: function (settings) {
         /* "model" and "el" must be passed as settings */
 

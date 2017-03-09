@@ -13,6 +13,13 @@ isic.collections.TaskCollection = isic.Collection.extend({
 
 // View for a group of tasks
 isic.views.TasksGroupView = isic.View.extend({
+    /**
+     * @param {string} settings.title - The title of the task type.
+     * @param {string} settings.subtitle - The description of the task type.
+     * @param {string} settings.linkPrefix - The URL prefix of the task type.
+     * @param {string} settings.resourceName - The property name of the resource, within each task model.
+     * @param {isic.collections.TaskCollection} settings.collection
+     */
     initialize: function (settings) {
         this.title = _.has(settings, 'title') ? settings.title : '';
         this.subtitle = _.has(settings, 'subtitle') ? settings.subtitle : '';

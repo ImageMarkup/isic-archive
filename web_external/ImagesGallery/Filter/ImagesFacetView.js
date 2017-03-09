@@ -9,8 +9,12 @@ var ICONS = {
 isic.views.ImagesFacetView = isic.View.extend({
     className: 'isic-images-facet',
 
-    initialize: function (parameters) {
-        this.attrName = parameters.facetName;
+    /**
+     * @param {isic.views.ImagesViewSubViews.ImagesViewModel} settings.model
+     * @param {string} settings.facetName - The facet identifier.
+     */
+    initialize: function (settings) {
+        this.attrName = settings.facetName;
 
         this.attrType = this.model.getAttributeType(this.attrName);
         this.title = isic.ENUMS.SCHEMA[this.attrName].humanName;
@@ -79,8 +83,12 @@ isic.views.ImagesFacetView = isic.View.extend({
 });
 
 isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
-    initialize: function (parameters) {
-        isic.views.ImagesFacetView.prototype.initialize.call(this, parameters);
+    /**
+     * @param {isic.views.ImagesViewSubViews.ImagesViewModel} settings.model
+     * @param {string} settings.facetName - The facet identifier.
+     */
+    initialize: function (settings) {
+        isic.views.ImagesFacetView.prototype.initialize.call(this, settings);
 
         this.scale = new isic.views.ImagesViewSubViews.HistogramScale();
 
@@ -381,8 +389,12 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
         });
     },
 
-    initialize: function (parameters) {
-        isic.views.ImagesFacetView.prototype.initialize.call(this, parameters);
+    /**
+     * @param {isic.views.ImagesViewSubViews.ImagesViewModel} settings.model
+     * @param {string} settings.facetName - The facet identifier.
+     */
+    initialize: function (settings) {
+        isic.views.ImagesFacetView.prototype.initialize.call(this, settings);
 
         this.listenTo(this.model, 'change:overviewHistogram', this.render);
         this.listenTo(this.model, 'change:filteredSetHistogram', this._rerenderCounts);

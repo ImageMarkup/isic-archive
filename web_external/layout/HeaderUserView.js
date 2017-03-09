@@ -1,5 +1,4 @@
 isic.views.LayoutHeaderUserView = isic.View.extend({
-
     events: {
         'click a.g-login': function () {
             girder.events.trigger('g:loginUi');
@@ -37,5 +36,4 @@ isic.views.LayoutHeaderUserView = isic.View.extend({
         }
         return this;
     }
-
 });

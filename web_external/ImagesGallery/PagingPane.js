@@ -8,7 +8,10 @@ isic.views.ImagesViewSubViews.PagingPane = Backbone.View.extend({
         'click #isic-images-seekNext': 'seekNext',
         'click #isic-images-seekLast': 'seekLast'
     },
-    initialize: function () {
+    /**
+     * @param {isic.views.ImagesViewSubViews.ImagesViewModel} settings.model
+     */
+    initialize: function (settings) {
         this.listenTo(this.model.images, 'g:changed', this.render);
         this.listenTo(this.model, 'change:filteredSetHistogram', this.render);
         this.listenTo(this.model, 'change:offset', this.updateControls);

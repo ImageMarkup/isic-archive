@@ -1,4 +1,10 @@
 isic.views.ImagesFacetsPane = isic.View.extend({
+    /**
+     * @param {isic.views.ImagesViewSubViews.ImagesViewModel} settings.model
+     */
+    initialize: function (setting) {
+    },
+
     render: function () {
         if (!this.addedCollapseImage) {
             // little hack to inject the correct expander image path into the
