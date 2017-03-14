@@ -137,7 +137,8 @@ class StudyResource(IsicResource):
                         for annotatorUser in
                         Study.getAnnotators(study)
                     ),
-                    key=lambda annotatorUser: User.obfuscatedName(annotatorUser)
+                    # Sort by the obfuscated name
+                    key=lambda annotatorUser: annotatorUser['name']
                 ),
                 'images': list(
                     Study.getImages(
