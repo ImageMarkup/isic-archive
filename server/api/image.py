@@ -124,7 +124,7 @@ class ImageResource(IsicResource):
                         'Invalid "folderId" ObjectId: %s' % params['datasetId'])
 
         user = self.getCurrentUser()
-        downloadFileName = 'ISIC-images.zip'
+        downloadFileName = 'ISIC-images'
 
         def stream():
             datasetCache = dict()
@@ -143,7 +143,7 @@ class ImageResource(IsicResource):
                 imageFileGenerator = File.download(imageFile, headers=False)
                 for data in zipGenerator.addFile(
                         imageFileGenerator,
-                        path=os.path.join(dataset['name'], image['name'])):
+                        path=os.path.join(dataset['name'], imageFile['name'])):
                     yield data
 
             for dataset in six.viewvalues(datasetCache):
@@ -172,7 +172,7 @@ class ImageResource(IsicResource):
         setResponseHeader('Content-Type', 'application/zip')
         setResponseHeader(
             'Content-Disposition',
-            'attachment; filename="%s"' % downloadFileName)
+            'attachment; filename="%s.zip"' % downloadFileName)
         return stream
 
     @describeRoute(
