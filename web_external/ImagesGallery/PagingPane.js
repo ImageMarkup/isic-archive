@@ -6,7 +6,11 @@ isic.views.ImagesViewSubViews.PagingPane = Backbone.View.extend({
         'click #isic-images-seekFirst': 'seekFirst',
         'click #isic-images-seekPrev': 'seekPrev',
         'click #isic-images-seekNext': 'seekNext',
-        'click #isic-images-seekLast': 'seekLast'
+        'click #isic-images-seekLast': 'seekLast',
+        'click #isic-images-download-zip': function () {
+            window.location.assign(girder.apiRoot + '/image/download?filter=' +
+                JSON.stringify(this.model.getFilterAstTree()));
+        }
     },
     /**
      * @param {isic.views.ImagesViewSubViews.ImagesViewModel} settings.model
@@ -122,7 +126,14 @@ isic.views.ImagesViewSubViews.PagingPane = Backbone.View.extend({
         this.updateControls();
         this.renderBars();
 
+        this.initializeTooltips();
+
         return this;
+    },
+    initializeTooltips: function () {
+        this.$('[data-toggle="tooltip"]').tooltip({
+            trigger: 'hover'
+        });
     },
     seekFirst: function () {
         this.model.set('offset', 0);
