@@ -152,9 +152,11 @@ class DatasetResource(IsicResource):
             raise ValidationException(
                 'Owner must be specified.', 'owner')
         description = params.get('description', '').strip()
-        licenseValue = params.get('license', '').strip()
 
         # Enforce valid licensing metadata only at API level
+        licenseValue = params.get('license', '').strip()
+        if licenseValue not in {'CC-0', 'CC-BY', 'CC-BY-NC'}:
+            raise ValidationException('Unknown license type.', 'license')
         signature = params.get('signature', '').strip()
         if not signature:
             raise ValidationException(
