@@ -29,6 +29,7 @@ from girder.api.rest import RestException, loadmodel, setRawResponse, \
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
 from girder.models.model_base import GirderException
+from girder.utility import ziputil
 
 from .base import IsicResource
 from ..utility import querylang
@@ -40,6 +41,7 @@ class ImageResource(IsicResource):
         self.resourceName = 'image'
 
         self.route('GET', (), self.find)
+        self.route('GET', ('download',), self.downloadMultiple)
         self.route('GET', ('histogram',), self.getHistogram)
         self.route('GET', (':id',), self.getImage)
         self.route('GET', (':id', 'thumbnail'), self.thumbnail)
@@ -92,6 +94,45 @@ class ImageResource(IsicResource):
                 Image.find(query, sort=sort, fields={'meta': 0}),
                 user=user, level=AccessType.READ, limit=limit, offset=offset)
         ]
+
+    @describeRoute(
+        Description('Download multiple images as a ZIP file.')
+        .param('datasetId', 'The ID of the dataset to download.',
+               required=False)
+        .errorResponse()
+    )
+    @access.public
+    def downloadMultiple(self, params):
+        File = self.model('file')
+        Image = self.model('image', 'isic_archive')
+
+        query = {}
+        if 'datasetId' in params:
+            query.update({
+                'folderId': ObjectId(params['datasetId'])
+            })
+
+        user = self.getCurrentUser()
+        downloadFileName = 'ISIC-images.zip'
+
+        def stream():
+            zipGenerator = ziputil.ZipGenerator(downloadFileName)
+            for image in Image.filterResultsByPermission(
+                    # TODO: exclude additional fields from the cursor
+                    Image.find(query, sort=[('name', 1)], fields={'meta': 0}),
+                    user=user, level=AccessType.READ, limit=0, offset=0):
+                imageFile = Image.originalFile(image)
+                imageFileGenerator = File.download(imageFile, headers=False)
+                for data in zipGenerator.addFile(
+                        imageFileGenerator, image['name']):
+                    yield data
+            yield zipGenerator.footer()
+
+        setResponseHeader('Content-Type', 'application/zip')
+        setResponseHeader(
+            'Content-Disposition',
+            'attachment; filename="%s"' % downloadFileName)
+        return stream
 
     @describeRoute(
         Description('Return histograms of image metadata.')
