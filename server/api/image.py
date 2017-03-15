@@ -101,6 +101,9 @@ class ImageResource(IsicResource):
         Description('Download multiple images as a ZIP file.')
         .param('datasetId', 'The ID of the dataset to download.',
                required=False)
+        .param('filter', 'Filter the images by a PegJS-specified grammar '
+                         '(causing "datasetId" to be ignored).',
+               required=False)
         .errorResponse()
     )
     @access.public
@@ -109,11 +112,16 @@ class ImageResource(IsicResource):
         File = self.model('file')
         Image = self.model('image', 'isic_archive')
 
-        query = {}
-        if 'datasetId' in params:
-            query.update({
-                'folderId': ObjectId(params['datasetId'])
-            })
+        if 'filter' in params:
+            query = querylang.astToMongo(json.loads(params['filter']))
+        else:
+            query = {}
+            if 'datasetId' in params:
+                try:
+                    query.update({'folderId': ObjectId(params['datasetId'])})
+                except InvalidId:
+                    raise RestException(
+                        'Invalid "folderId" ObjectId: %s' % params['datasetId'])
 
         user = self.getCurrentUser()
         downloadFileName = 'ISIC-images.zip'
