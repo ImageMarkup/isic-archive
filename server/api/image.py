@@ -17,11 +17,13 @@
 #  limitations under the License.
 ###############################################################################
 
+import os
 import json
 
 from bson import ObjectId
 from bson.errors import InvalidId
 import geojson
+import six
 
 from girder.api import access
 from girder.api.rest import RestException, loadmodel, setRawResponse, \
@@ -29,7 +31,7 @@ from girder.api.rest import RestException, loadmodel, setRawResponse, \
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
 from girder.models.model_base import GirderException
-from girder.utility import ziputil
+from girder.utility import mail_utils, ziputil
 
 from .base import IsicResource
 from ..utility import querylang
@@ -103,6 +105,7 @@ class ImageResource(IsicResource):
     )
     @access.public
     def downloadMultiple(self, params):
+        Dataset = self.model('dataset', 'isic_archive')
         File = self.model('file')
         Image = self.model('image', 'isic_archive')
 
@@ -116,16 +119,46 @@ class ImageResource(IsicResource):
         downloadFileName = 'ISIC-images.zip'
 
         def stream():
+            datasetCache = dict()
             zipGenerator = ziputil.ZipGenerator(downloadFileName)
+
             for image in Image.filterResultsByPermission(
                     # TODO: exclude additional fields from the cursor
                     Image.find(query, sort=[('name', 1)], fields={'meta': 0}),
                     user=user, level=AccessType.READ, limit=0, offset=0):
+                datasetId = image['folderId']
+                if datasetId not in datasetCache:
+                    datasetCache[datasetId] = Dataset.load(
+                        datasetId, force=True, exc=True)
+                dataset = datasetCache[datasetId]
                 imageFile = Image.originalFile(image)
                 imageFileGenerator = File.download(imageFile, headers=False)
                 for data in zipGenerator.addFile(
-                        imageFileGenerator, image['name']):
+                        imageFileGenerator,
+                        path=os.path.join(dataset['name'], image['name'])):
                     yield data
+
+            for dataset in six.viewvalues(datasetCache):
+                licenseText = mail_utils.renderTemplate(
+                    'license_%s.mako' % dataset['meta']['license'])
+                attributionText = mail_utils.renderTemplate(
+                    'attribution_%s.mako' % dataset['meta']['license'],
+                    {
+                        'work': dataset['name'],
+                        'author':
+                            dataset['meta']['attribution']
+                            if not dataset['meta']['anonymous']
+                            else 'Anonymous'
+                    })
+                for data in zipGenerator.addFile(
+                        lambda: [licenseText],
+                        path=os.path.join(dataset['name'], 'license.txt')):
+                    yield data
+                for data in zipGenerator.addFile(
+                        lambda: [attributionText],
+                        path=os.path.join(dataset['name'], 'attribution.txt')):
+                    yield data
+
             yield zipGenerator.footer()
 
         setResponseHeader('Content-Type', 'application/zip')
