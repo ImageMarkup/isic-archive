@@ -13,7 +13,7 @@
         data-toggle='tooltip'
         data-placement='bottom'
         title='Open this image in a new window'
-        href='/api/v1/image/' + image.id + '/download?contentDisposition=inline'
+        href=apiRoot + '/image/' + image.id + '/download?contentDisposition=inline'
         target='_blank'
       )
         i.icon-link-ext
@@ -21,7 +21,7 @@
         data-toggle='tooltip'
         data-placement='bottom'
         title='Download this image'
-        href='/api/v1/image/' + image.id + '/download'
+        href=apiRoot + '/image/' + image.id + '/download'
         download
       )
         i.icon-download
