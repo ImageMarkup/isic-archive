@@ -59,11 +59,11 @@ class ImageResource(IsicResource):
             except ValueError as e:
                 raise ValidationException(
                     'Could not decode JSON: %s' % str(e), 'filter')
-            try:
-                return querylang.astToMongo(filterParam)
-            except (TypeError, ValueError) as e:
-                raise ValidationException(
-                    'Could not parse filter:' % str(e), 'filter')
+        try:
+            return querylang.astToMongo(filterParam)
+        except (TypeError, ValueError) as e:
+            raise ValidationException(
+                'Could not parse filter:' % str(e), 'filter')
 
     @describeRoute(
         Description('Return a list of lesion images.')
