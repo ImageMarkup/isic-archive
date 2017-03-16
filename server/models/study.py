@@ -172,7 +172,7 @@ class Study(FolderModel):
     def childAnnotations(self, study=None, annotatorUser=None,
                          image=None, state=None, **kwargs):
         Annotation = self.model('annotation', 'isic_archive')
-        query = dict()
+        query = {}
         if study:
             query['meta.studyId'] = study['_id']
         if annotatorUser:

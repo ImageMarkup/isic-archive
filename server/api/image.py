@@ -127,7 +127,7 @@ class ImageResource(IsicResource):
         downloadFileName = 'ISIC-images'
 
         def stream():
-            datasetCache = dict()
+            datasetCache = {}
             zipGenerator = ziputil.ZipGenerator(downloadFileName)
 
             for image in Image.filterResultsByPermission(
