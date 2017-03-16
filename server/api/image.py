@@ -30,7 +30,7 @@ from girder.api.rest import RestException, loadmodel, setRawResponse, \
     setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
-from girder.models.model_base import GirderException
+from girder.models.model_base import GirderException, ValidationException
 from girder.utility import mail_utils, ziputil
 
 from .base import IsicResource
@@ -52,6 +52,19 @@ class ImageResource(IsicResource):
 
         self.route('POST', (':id', 'segment'), self.doSegmentation)
 
+    def _parseFilter(self, filterParam):
+        if isinstance(filterParam, six.string_types):
+            try:
+                filterParam = json.loads(filterParam)
+            except ValueError as e:
+                raise ValidationException(
+                    'Could not decode JSON: %s' % str(e), 'filter')
+            try:
+                return querylang.astToMongo(filterParam)
+            except (TypeError, ValueError) as e:
+                raise ValidationException(
+                    'Could not parse filter:' % str(e), 'filter')
+
     @describeRoute(
         Description('Return a list of lesion images.')
         .pagingParams(defaultSort='name')
@@ -72,7 +85,7 @@ class ImageResource(IsicResource):
         limit, offset, sort = self.getPagingParameters(params, 'name')
 
         if 'filter' in params:
-            query = querylang.astToMongo(json.loads(params['filter']))
+            query = self._parseFilter(params['filter'])
         else:
             query = {}
             if 'datasetId' in params:
@@ -113,7 +126,7 @@ class ImageResource(IsicResource):
         Image = self.model('image', 'isic_archive')
 
         if 'filter' in params:
-            query = querylang.astToMongo(json.loads(params['filter']))
+            query = self._parseFilter(params['filter'])
         else:
             query = {}
             if 'datasetId' in params:
@@ -188,11 +201,11 @@ class ImageResource(IsicResource):
     def getHistogram(self, params):
         Image = self.model('image', 'isic_archive')
 
-        filters = params.get('filter')
-        if filters is not None:
-            filters = json.loads(filters)
+        query = self._parseFilter(params['filter']) \
+            if 'filter' in params \
+            else None
         user = self.getCurrentUser()
-        return Image.getHistograms(filters, user)
+        return Image.getHistograms(query, user)
 
     @describeRoute(
         Description('Return an image\'s details.')

@@ -31,7 +31,6 @@ from . import segmentation_helpers
 from .. import constants
 from ..provision_utility import getAdminUser
 from .segmentation_helpers import ScikitSegmentationHelper
-from ..utility import querylang
 
 
 class Image(ItemModel):
@@ -305,7 +304,7 @@ class Image(ItemModel):
         imageQuery = self._findQueryFilter(query)
         return super(Image, self).findOne(imageQuery, **kwargs)
 
-    def getHistograms(self, filters, user):
+    def getHistograms(self, filterQuery, user):
         Dataset = self.model('dataset', 'isic_archive')
 
         # Define facets
@@ -337,11 +336,11 @@ class Image(ItemModel):
             'folderId': {'$in': [
                 dataset['_id'] for dataset in Dataset.list(user=user)]}
         }
-        if filters:
+        if filterQuery:
             query = {
                 '$and': [
                     folderQuery,
-                    querylang.astToMongo(filters)
+                    filterQuery
                 ]
             }
         else:
