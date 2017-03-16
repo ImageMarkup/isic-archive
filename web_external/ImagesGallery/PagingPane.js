@@ -8,8 +8,12 @@ isic.views.ImagesViewSubViews.PagingPane = Backbone.View.extend({
         'click #isic-images-seekNext': 'seekNext',
         'click #isic-images-seekLast': 'seekLast',
         'click #isic-images-download-zip': function () {
-            window.location.assign(girder.apiRoot + '/image/download?filter=' +
-                JSON.stringify(this.model.getFilterAstTree()));
+            var downloadUrl = girder.apiRoot + '/image/download';
+            var filter = this.model.getFilterAstTree();
+            if (filter) {
+                downloadUrl += '?filter=' + JSON.stringify(filter);
+            }
+            window.location.assign(downloadUrl);
         }
     },
     /**
