@@ -119,6 +119,7 @@ class ImageResource(IsicResource):
                required=False)
         .errorResponse()
     )
+    @access.cookie
     @access.public
     def downloadMultiple(self, params):
         Dataset = self.model('dataset', 'isic_archive')
