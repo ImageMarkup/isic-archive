@@ -65,7 +65,7 @@ class ZipFileOpener(object):
         zipFile = zipfile.ZipFile(self.zipFilePath)
 
         # filter out directories and count real files
-        fileList = list()
+        fileList = []
         for originalFile in zipFile.infolist():
             originalFileRelpath = originalFile.filename
             originalFileRelpath.replace('\\', '/')
@@ -109,7 +109,7 @@ class ZipFileOpener(object):
                 self.__exit__(*sys.exc_info())
                 raise
 
-            fileList = list()
+            fileList = []
             for tempDirPath, _, tempFileNames in os.walk(tempDir):
                 for tempFileName in tempFileNames:
                     tempFilePath = os.path.join(tempDirPath, tempFileName)

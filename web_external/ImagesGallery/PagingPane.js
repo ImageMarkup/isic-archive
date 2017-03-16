@@ -6,7 +6,15 @@ isic.views.ImagesViewSubViews.PagingPane = Backbone.View.extend({
         'click #isic-images-seekFirst': 'seekFirst',
         'click #isic-images-seekPrev': 'seekPrev',
         'click #isic-images-seekNext': 'seekNext',
-        'click #isic-images-seekLast': 'seekLast'
+        'click #isic-images-seekLast': 'seekLast',
+        'click #isic-images-download-zip:not(.disabled)': function () {
+            var downloadUrl = girder.apiRoot + '/image/download';
+            var filter = this.model.getFilterAstTree();
+            if (filter) {
+                downloadUrl += '?filter=' + JSON.stringify(filter);
+            }
+            window.location.assign(downloadUrl);
+        }
     },
     /**
      * @param {isic.views.ImagesViewSubViews.ImagesViewModel} settings.model
@@ -103,6 +111,9 @@ isic.views.ImagesViewSubViews.PagingPane = Backbone.View.extend({
             labelElement.find('span.page')
                 .text(pageDetails.filteredSetCount);
         }
+
+        this.$('#isic-images-download-zip').toggleClass(
+            'disabled', pageDetails.filteredSetCount === 0);
     },
     render: function () {
         if (!this.addedImages) {
@@ -122,7 +133,14 @@ isic.views.ImagesViewSubViews.PagingPane = Backbone.View.extend({
         this.updateControls();
         this.renderBars();
 
+        this.initializeTooltips();
+
         return this;
+    },
+    initializeTooltips: function () {
+        this.$('[data-toggle="tooltip"]').tooltip({
+            trigger: 'hover'
+        });
     },
     seekFirst: function () {
         this.model.set('offset', 0);

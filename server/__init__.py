@@ -27,6 +27,7 @@ from girder import events
 from girder.api.v1 import resource
 from girder.constants import SettingKey, PACKAGE_DIR, STATIC_ROOT_DIR
 from girder.models.model_base import ValidationException
+from girder.utility import mail_utils
 from girder.utility.model_importer import ModelImporter
 from girder.utility.server import staticFile
 from girder.utility.webroot import WebrootBase
@@ -170,6 +171,11 @@ def load(info):
         'featureset.isic_archive',
         'study.isic_archive',
     })
+
+    # register licenses for template usage
+    mail_utils.addTemplateDirectory(
+        os.path.join(info['pluginRootDir'], 'server', 'license_templates'),
+        prepend=True)
 
     # create all necessary users, groups, collections, etc
     provisionDatabase()

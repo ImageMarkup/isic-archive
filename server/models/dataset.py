@@ -366,7 +366,7 @@ class Dataset(FolderModel):
                 raise FileMetadataException(
                     'no "filename" or "isic_id" field found in CSV')
 
-            rowErrors = list()
+            rowErrors = []
             for rowNum, csvRow in enumerate(csvReader):
                 try:
                     image = self._getImageForMetadataCsvRow(

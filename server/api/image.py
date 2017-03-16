@@ -17,18 +17,21 @@
 #  limitations under the License.
 ###############################################################################
 
+import os
 import json
 
 from bson import ObjectId
 from bson.errors import InvalidId
 import geojson
+import six
 
 from girder.api import access
 from girder.api.rest import RestException, loadmodel, setRawResponse, \
     setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
-from girder.models.model_base import GirderException
+from girder.models.model_base import GirderException, ValidationException
+from girder.utility import mail_utils, ziputil
 
 from .base import IsicResource
 from ..utility import querylang
@@ -40,6 +43,7 @@ class ImageResource(IsicResource):
         self.resourceName = 'image'
 
         self.route('GET', (), self.find)
+        self.route('GET', ('download',), self.downloadMultiple)
         self.route('GET', ('histogram',), self.getHistogram)
         self.route('GET', (':id',), self.getImage)
         self.route('GET', (':id', 'thumbnail'), self.thumbnail)
@@ -47,6 +51,19 @@ class ImageResource(IsicResource):
         self.route('GET', (':id', 'superpixels'), self.getSuperpixels)
 
         self.route('POST', (':id', 'segment'), self.doSegmentation)
+
+    def _parseFilter(self, filterParam):
+        if isinstance(filterParam, six.string_types):
+            try:
+                filterParam = json.loads(filterParam)
+            except ValueError as e:
+                raise ValidationException(
+                    'Could not decode JSON: %s' % str(e), 'filter')
+        try:
+            return querylang.astToMongo(filterParam)
+        except (TypeError, ValueError) as e:
+            raise ValidationException(
+                'Could not parse filter:' % str(e), 'filter')
 
     @describeRoute(
         Description('Return a list of lesion images.')
@@ -68,7 +85,7 @@ class ImageResource(IsicResource):
         limit, offset, sort = self.getPagingParameters(params, 'name')
 
         if 'filter' in params:
-            query = querylang.astToMongo(json.loads(params['filter']))
+            query = self._parseFilter(params['filter'])
         else:
             query = {}
             if 'datasetId' in params:
@@ -94,6 +111,85 @@ class ImageResource(IsicResource):
         ]
 
     @describeRoute(
+        Description('Download multiple images as a ZIP file.')
+        .param('datasetId', 'The ID of the dataset to download.',
+               required=False)
+        .param('filter', 'Filter the images by a PegJS-specified grammar '
+                         '(causing "datasetId" to be ignored).',
+               required=False)
+        .errorResponse()
+    )
+    @access.cookie
+    @access.public
+    def downloadMultiple(self, params):
+        Dataset = self.model('dataset', 'isic_archive')
+        File = self.model('file')
+        Image = self.model('image', 'isic_archive')
+
+        if 'filter' in params:
+            query = self._parseFilter(params['filter'])
+        else:
+            query = {}
+            if 'datasetId' in params:
+                try:
+                    query.update({'folderId': ObjectId(params['datasetId'])})
+                except InvalidId:
+                    raise RestException(
+                        'Invalid "folderId" ObjectId: %s' % params['datasetId'])
+
+        user = self.getCurrentUser()
+        downloadFileName = 'ISIC-images'
+
+        def stream():
+            datasetCache = {}
+            zipGenerator = ziputil.ZipGenerator(downloadFileName)
+
+            for image in Image.filterResultsByPermission(
+                    # TODO: exclude additional fields from the cursor
+                    Image.find(query, sort=[('name', 1)], fields={'meta': 0}),
+                    user=user, level=AccessType.READ, limit=0, offset=0):
+                datasetId = image['folderId']
+                if datasetId not in datasetCache:
+                    datasetCache[datasetId] = Dataset.load(
+                        datasetId, force=True, exc=True)
+                dataset = datasetCache[datasetId]
+                imageFile = Image.originalFile(image)
+                imageFileGenerator = File.download(imageFile, headers=False)
+                for data in zipGenerator.addFile(
+                        imageFileGenerator,
+                        path=os.path.join(dataset['name'], imageFile['name'])):
+                    yield data
+
+            for dataset in six.viewvalues(datasetCache):
+                licenseText = mail_utils.renderTemplate(
+                    'license_%s.mako' % dataset['meta']['license'])
+                attributionText = mail_utils.renderTemplate(
+                    'attribution_%s.mako' % dataset['meta']['license'],
+                    {
+                        'work': dataset['name'],
+                        'author':
+                            dataset['meta']['attribution']
+                            if not dataset['meta']['anonymous']
+                            else 'Anonymous'
+                    })
+                for data in zipGenerator.addFile(
+                        lambda: [licenseText],
+                        path=os.path.join(dataset['name'], 'LICENSE.txt')):
+                    yield data
+                for data in zipGenerator.addFile(
+                        lambda: [attributionText],
+                        path=os.path.join(dataset['name'], 'ATTRIBUTION.txt')):
+                    yield data
+
+            yield zipGenerator.footer()
+
+        setResponseHeader('Content-Type', 'application/zip')
+        setResponseHeader(
+            'Content-Disposition',
+            'attachment; filename="%s.zip"' % downloadFileName)
+        return stream
+
+    @describeRoute(
         Description('Return histograms of image metadata.')
         .param('filter',
                'Get the histogram after the results of this filter. ' +
@@ -106,11 +202,11 @@ class ImageResource(IsicResource):
     def getHistogram(self, params):
         Image = self.model('image', 'isic_archive')
 
-        filters = params.get('filter')
-        if filters is not None:
-            filters = json.loads(filters)
+        query = self._parseFilter(params['filter']) \
+            if 'filter' in params \
+            else None
         user = self.getCurrentUser()
-        return Image.getHistograms(filters, user)
+        return Image.getHistograms(query, user)
 
     @describeRoute(
         Description('Return an image\'s details.')
