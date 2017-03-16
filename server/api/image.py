@@ -160,11 +160,11 @@ class ImageResource(IsicResource):
                     })
                 for data in zipGenerator.addFile(
                         lambda: [licenseText],
-                        path=os.path.join(dataset['name'], 'license.txt')):
+                        path=os.path.join(dataset['name'], 'LICENSE.txt')):
                     yield data
                 for data in zipGenerator.addFile(
                         lambda: [attributionText],
-                        path=os.path.join(dataset['name'], 'attribution.txt')):
+                        path=os.path.join(dataset['name'], 'ATTRIBUTION.txt')):
                     yield data
 
             yield zipGenerator.footer()
