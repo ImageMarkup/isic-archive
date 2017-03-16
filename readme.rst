@@ -110,7 +110,7 @@ Usage
     # Mongodb's console output
     tail -F /var/log/mongodb/mongod.log
 
-.. |build-status| image:: https://travis-ci.org/ImageMarkup/isic-archive/master.svg
+.. |build-status| image:: https://img.shields.io/travis/ImageMarkup/isic-archive/master.svg
     :target: https://travis-ci.org/ImageMarkup/isic-archive
     :alt: Build Status
 
