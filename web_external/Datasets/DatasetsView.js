@@ -11,6 +11,9 @@ isic.views.DatasetsView = isic.View.extend({
         },
         'hide.bs.collapse .isic-listing-panel-collapse': function (event) {
             $(event.target).parent().find('.icon-down-open').removeClass('icon-down-open').addClass('icon-right-open');
+        },
+        'click .isic-dataset-add-button': function () {
+            isic.router.navigate('uploadDataset', {trigger: true});
         }
     },
 
@@ -33,10 +36,11 @@ isic.views.DatasetsView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.listingPage({
+        this.$el.html(isic.templates.datasetsPage({
             title: 'Datasets',
             models: this.datasets.models,
-            loaded: this.loaded
+            loaded: this.loaded,
+            currentUser: girder.currentUser
         }));
 
         this.paginateWidget.setElement(this.$('.isic-listing-paginate-container')).render();
