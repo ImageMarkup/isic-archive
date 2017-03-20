@@ -88,7 +88,7 @@ class ImageResource(IsicResource):
                 try:
                     query.update({'folderId': ObjectId(params['datasetId'])})
                 except InvalidId:
-                    raise RestException('Invalid "folderId" ObjectId: %s' % params['datasetId'])
+                    raise ValidationException('Invalid ObjectId.', 'datasetId')
             if 'name' in params:
                 query.update({'name': params['name']})
 
@@ -128,7 +128,7 @@ class ImageResource(IsicResource):
                 try:
                     query.update({'folderId': ObjectId(params['datasetId'])})
                 except InvalidId:
-                    raise RestException('Invalid "folderId" ObjectId: %s' % params['datasetId'])
+                    raise ValidationException('Invalid ObjectId.', 'datasetId')
 
         user = self.getCurrentUser()
         downloadFileName = 'ISIC-images'
@@ -268,7 +268,8 @@ class ImageResource(IsicResource):
 
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
-            raise RestException('Unallowed contentDisposition type "%s".' % contentDisp)
+            raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
+                                      'contentDisposition')
 
         originalFile = Image.originalFile(image)
         fileStream = File.download(originalFile, headers=True, contentDisposition=contentDisp)
@@ -310,11 +311,11 @@ class ImageResource(IsicResource):
             len(seedCoord) == 2 and
             all(isinstance(value, int) for value in seedCoord)
         ):
-            raise RestException('Submitted "seed" must be a coordinate pair.')
+            raise ValidationException('Value must be a coordinate pair.', 'seed')
 
         tolerance = params['tolerance']
         if not isinstance(tolerance, int):
-            raise RestException('Submitted "tolerance" must be an integer.')
+            raise ValidationException('Value must be an integer.', 'tolerance')
 
         try:
             contourCoords = Segmentation.doContourSegmentation(image, seedCoord, tolerance)

@@ -74,7 +74,7 @@ class StudyResource(IsicResource):
         if params.get('state'):
             state = params['state']
             if state not in {Study.State.ACTIVE, Study.State.COMPLETE}:
-                raise RestException('Query parameter "state" may only be "active" or "complete".')
+                raise ValidationException('Value may only be "active" or "complete".', 'state')
 
         return [
             {
@@ -263,14 +263,14 @@ class StudyResource(IsicResource):
         featureset = Featureset.load(featuresetId, exc=True)
 
         if len(set(params['userIds'])) != len(params['userIds']):
-            raise RestException('Duplicate user IDs.')
+            raise ValidationException('Duplicate user IDs.', 'userIds')
         annotatorUsers = [
             User.load(annotatorUserId, user=creatorUser, level=AccessType.READ, exc=True)
             for annotatorUserId in params['userIds']
         ]
 
         if len(set(params['imageIds'])) != len(params['imageIds']):
-            raise RestException('Duplicate image IDs.')
+            raise ValidationException('Duplicate image IDs.', 'imageIds')
         images = [
             Image.load(imageId, user=creatorUser, level=AccessType.READ, exc=True)
             for imageId in params['imageIds']
@@ -309,7 +309,7 @@ class StudyResource(IsicResource):
 
         # Load all users before adding any, to ensure all are valid
         if len(set(params['userIds'])) != len(params['userIds']):
-            raise RestException('Duplicate user IDs.')
+            raise ValidationException('Duplicate user IDs.', 'userIds')
         annotatorUsers = [
             User.load(userId, user=creatorUser, level=AccessType.READ, exc=True)
             for userId in params['userIds']
@@ -358,7 +358,7 @@ class StudyResource(IsicResource):
         # Load all images before adding any, to ensure all are valid and
         # accessible
         if len(set(params['imageIds'])) != len(params['imageIds']):
-            raise RestException('Duplicate image IDs.')
+            raise ValidationException('Duplicate image IDs.', 'imageIds')
         images = [
             Image.load(imageId, user=creatorUser, level=AccessType.READ, exc=True)
             for imageId in params['imageIds']

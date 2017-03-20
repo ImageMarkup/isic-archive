@@ -23,6 +23,7 @@ from girder.api import access
 from girder.api.rest import RestException, loadmodel, setRawResponse, setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
+from girder.models.model_base import ValidationException
 
 from .base import IsicResource
 from ..models.segmentation_helpers import ScikitSegmentationHelper
@@ -153,7 +154,8 @@ class AnnotationResource(IsicResource):
         Annotation = self.model('annotation', 'isic_archive')
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
-            raise RestException('Unallowed contentDisposition type "%s".' % contentDisp)
+            raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
+                                      'contentDisposition')
 
         self.requireParams(['featureId'], params)
         featureId = params['featureId']
@@ -162,7 +164,7 @@ class AnnotationResource(IsicResource):
         featureset = Study.getFeatureset(study)
 
         if not any(featureId == feature['id'] for feature in featureset['localFeatures']):
-            raise RestException('Invalid featureId.')
+            raise ValidationException('Invalid featureId.', 'featureId')
         if Annotation.getState(annotation) != Study.State.COMPLETE:
             raise RestException('Only complete annotations can be rendered.')
 

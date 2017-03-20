@@ -27,6 +27,7 @@ from girder.api import access
 from girder.api.rest import RestException, loadmodel, setRawResponse, setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
+from girder.models.model_base import ValidationException
 
 from .base import IsicResource
 from ..models.segmentation_helpers import OpenCVSegmentationHelper, ScikitSegmentationHelper
@@ -147,11 +148,11 @@ class SegmentationResource(IsicResource):
                     len(seedCoord) == 2 and
                     all(isinstance(value, int) for value in seedCoord)
                 ):
-                    raise RestException('Submitted "seed" must be a coordinate pair.')
+                    raise ValidationException('Value must be a coordinate pair.', 'seedPoint')
 
                 tolerance = meta['tolerance']
                 if not isinstance(tolerance, int):
-                    raise RestException('Submitted "tolerance" must be an integer.')
+                    raise ValidationException('Value must be an integer.', 'tolerance')
 
                 mask = Segmentation.doSegmentation(image, seedCoord, tolerance)
             else:
@@ -229,7 +230,8 @@ class SegmentationResource(IsicResource):
         Segmentation = self.model('segmentation', 'isic_archive')
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
-            raise RestException('Unallowed contentDisposition type "%s".' % contentDisp)
+            raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
+                                      'contentDisposition')
 
         # TODO: convert this to make Segmentation use an AccessControlMixin
         Image.load(
@@ -259,7 +261,8 @@ class SegmentationResource(IsicResource):
         Segmentation = self.model('segmentation', 'isic_archive')
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
-            raise RestException('Unallowed contentDisposition type "%s".' % contentDisp)
+            raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
+                                      'contentDisposition')
 
         # TODO: convert this to make Segmentation use an AccessControlMixin
         image = Image.load(
