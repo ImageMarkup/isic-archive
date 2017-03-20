@@ -1,4 +1,4 @@
-isic.models.StudyModel = girder.Model.extend({
+isic.models.StudyModel = isic.Model.extend({
     resourceName: 'study',
 
     creator: function () {

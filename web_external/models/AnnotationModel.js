@@ -1,3 +1,3 @@
-isic.models.AnnotationModel = girder.Model.extend({
+isic.models.AnnotationModel = isic.Model.extend({
     resourceName: 'annotation'
 });

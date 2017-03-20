@@ -1,4 +1,4 @@
-isic.models.SegmentationModel = girder.Model.extend({
+isic.models.SegmentationModel = isic.Model.extend({
     resourceName: 'segmentation',
 
     creator: function () {

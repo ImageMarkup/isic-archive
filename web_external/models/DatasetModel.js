@@ -1,4 +1,4 @@
-isic.models.DatasetModel = girder.Model.extend({
+isic.models.DatasetModel = isic.Model.extend({
     resourceName: 'dataset',
 
     creator: function () {
