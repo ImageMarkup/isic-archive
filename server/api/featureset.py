@@ -156,9 +156,9 @@ class FeaturesetResource(IsicResource):
         Study = self.model('study', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
-        creatorUser = self.getCurrentUser()
+        user = self.getCurrentUser()
         # For now, study admins will be the ones that can delete featuresets
-        User.requireAdminStudy(creatorUser)
+        User.requireAdminStudy(user)
 
         if Study.find({'meta.featuresetId': featureset['_id']}).count():
             raise RestException(
