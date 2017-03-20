@@ -36,18 +36,13 @@ class TaskResource(IsicResource):
         self.resourceName = 'task'
 
         self.route('GET', ('me', 'review'), self.getReviewTasks)
-        self.route('GET', ('me', 'review', 'redirect'),
-                   self.redirectReviewTask)
+        self.route('GET', ('me', 'review', 'redirect'), self.redirectReviewTask)
         self.route('GET', ('me', 'segmentation'), self.getSegmentationTasks)
-        self.route('GET', ('me', 'segmentation', 'next'),
-                   self.nextSegmentationTask)
-        self.route('GET', ('me', 'segmentation', 'redirect'),
-                   self.redirectSegmentationTask)
+        self.route('GET', ('me', 'segmentation', 'next'), self.nextSegmentationTask)
+        self.route('GET', ('me', 'segmentation', 'redirect'), self.redirectSegmentationTask)
         self.route('GET', ('me', 'annotation'), self.getAnnotationTasks)
-        self.route('GET', ('me', 'annotation', 'next'),
-                   self.nextAnnotationTask)
-        self.route('GET', ('me', 'annotation', 'redirect'),
-                   self.redirectAnnotationTask)
+        self.route('GET', ('me', 'annotation', 'next'), self.nextAnnotationTask)
+        self.route('GET', ('me', 'annotation', 'redirect'), self.redirectAnnotationTask)
 
     def _doRedirect(self, url):
         exc = cherrypy.HTTPRedirect(url, status=307)
@@ -77,8 +72,7 @@ class TaskResource(IsicResource):
             'name': 'Pre-review',
             'baseParentId': Collection.findOne({'name': 'Lesion Images'})['_id']
         }):
-            if not Folder.hasAccess(
-                    prereviewFolder, user=user, level=AccessType.READ):
+            if not Folder.hasAccess(prereviewFolder, user=user, level=AccessType.READ):
                 continue
 
             count = Image.find({'folderId': prereviewFolder['_id']}).count()
@@ -86,8 +80,7 @@ class TaskResource(IsicResource):
                 continue
 
             dataset = Dataset.load(
-                prereviewFolder['parentId'],
-                user=user, level=AccessType.READ, exc=False)
+                prereviewFolder['parentId'], user=user, level=AccessType.READ, exc=False)
             if not dataset:
                 # This should not typically occur
                 continue
@@ -105,9 +98,7 @@ class TaskResource(IsicResource):
 
     @describeRoute(
         Description('Redirect to a QC review task.')
-        .param('datasetId',
-               'An ID for the dataset to get a QC review task for.',
-               required=True)
+        .param('datasetId', 'An ID for the dataset to get a QC review task for.', required=True)
     )
     @access.cookie
     @access.user
@@ -122,19 +113,16 @@ class TaskResource(IsicResource):
         user = self.getCurrentUser()
         User.requireReviewDataset(user)
 
-        dataset = Dataset.load(
-            params['datasetId'], user=user, level=AccessType.READ, exc=True)
+        dataset = Dataset.load(params['datasetId'], user=user, level=AccessType.READ, exc=True)
 
         prereviewFolder = Dataset.prereviewFolder(dataset)
-        if not (prereviewFolder and Folder.hasAccess(
-                prereviewFolder, user=user, level=AccessType.READ)):
+        if not (prereviewFolder and
+                Folder.hasAccess(prereviewFolder, user=user, level=AccessType.READ)):
             raise AccessException(
-                'User does not have access to any Pre-review images for this '
-                'dataset.')
+                'User does not have access to any Pre-review images for this dataset.')
 
         if not Image.find({'folderId': prereviewFolder['_id']}).count():
-            raise RestException(
-                'No Pre-review images are available for this dataset.')
+            raise RestException('No Pre-review images are available for this dataset.')
 
         reviewUrl = '/uda/gallery#/qc/%s' % dataset['_id']
         self._doRedirect(reviewUrl)
@@ -262,8 +250,8 @@ class TaskResource(IsicResource):
     @describeRoute(
         Description('Get the current user\'s segmentation tasks.')
         .responseClass('Task')
-        .param('details', 'Whether a full listing of images is returned, or '
-                          'just counts.', dataType='boolean', default=False)
+        .param('details', 'Whether a full listing of images is returned, or just counts.',
+               dataType='boolean', default=False)
     )
     @access.user
     def getSegmentationTasks(self, params):
@@ -276,8 +264,7 @@ class TaskResource(IsicResource):
         user = self.getCurrentUser()
         userSkill = User.getSegmentationSkill(user)
         if userSkill is None:
-            raise AccessException(
-                'You are not authorized to perform segmentations.')
+            raise AccessException('You are not authorized to perform segmentations.')
 
         pipeline = list(itertools.chain(
             self._pipeline1AllImages(user),
@@ -301,10 +288,9 @@ class TaskResource(IsicResource):
 
     @describeRoute(
         Description('Get the next image requiring segmentation.')
-        .notes('The image is selected randomly from all those requiring '
-               'segmentation in the given dataset.')
-        .param('datasetId', 'An ID for the dataset to filter by.',
-               required=True)
+        .notes('The image is selected randomly from all those requiring segmentation in the given '
+               'dataset.')
+        .param('datasetId', 'An ID for the dataset to filter by.', required=True)
     )
     @access.user
     def nextSegmentationTask(self, params):
@@ -316,13 +302,11 @@ class TaskResource(IsicResource):
         self.requireParams(['datasetId'], params)
         user = self.getCurrentUser()
 
-        dataset = Dataset.load(
-            params['datasetId'], user=user, level=AccessType.READ, exc=True)
+        dataset = Dataset.load(params['datasetId'], user=user, level=AccessType.READ, exc=True)
 
         userSkill = User.getSegmentationSkill(user)
         if userSkill is None:
-            raise AccessException(
-                'You are not authorized to perform segmentations.')
+            raise AccessException('You are not authorized to perform segmentations.')
 
         pipeline = list(itertools.chain(
             self._pipeline1ImagesFromDataset(dataset),
@@ -350,9 +334,7 @@ class TaskResource(IsicResource):
 
     @describeRoute(
         Description('Redirect to a random segmentation task.')
-        .param('datasetId',
-               'An ID for the dataset to get a segmentation task for.',
-               required=True)
+        .param('datasetId', 'An ID for the dataset to get a segmentation task for.', required=True)
     )
     @access.cookie
     @access.user
@@ -396,9 +378,7 @@ class TaskResource(IsicResource):
 
     @describeRoute(
         Description('Get the next pending annotation.')
-        .param('studyId',
-               'An ID for the study to get a pending annotation for.',
-               required=True)
+        .param('studyId', 'An ID for the study to get a pending annotation for.', required=True)
     )
     @access.user
     def nextAnnotationTask(self, params):
@@ -407,8 +387,7 @@ class TaskResource(IsicResource):
         self.requireParams(['studyId'], params)
         user = self.getCurrentUser()
 
-        study = Study.load(
-            params['studyId'], user=user, level=AccessType.READ, exc=True)
+        study = Study.load(params['studyId'], user=user, level=AccessType.READ, exc=True)
         try:
             activeAnnotations = Study.childAnnotations(
                 study=study,
@@ -431,9 +410,7 @@ class TaskResource(IsicResource):
 
     @describeRoute(
         Description('Redirect to the next annotation task.')
-        .param('studyId',
-               'An ID for the study to get an annotation task for.',
-               required=True)
+        .param('studyId', 'An ID for the study to get an annotation task for.', required=True)
     )
     @access.cookie
     @access.user

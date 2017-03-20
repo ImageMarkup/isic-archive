@@ -89,9 +89,7 @@ class FeaturesetResource(IsicResource):
         output = Featureset.filter(featureset)
 
         output['creator'] = User.filteredSummary(
-            User.load(
-                output.pop('creatorId'),
-                force=True, exc=True),
+            User.load(output.pop('creatorId'), force=True, exc=True),
             self.getCurrentUser())
 
         return output
@@ -99,13 +97,10 @@ class FeaturesetResource(IsicResource):
     @describeRoute(
         Description('Create a featureset.')
         .param('name', 'The name of the featureset.', paramType='form')
-        .param('version', 'The numeric version of the featureset.',
+        .param('version', 'The numeric version of the featureset.', paramType='form')
+        .param('globalFeatures', 'The global features of the featureset, as a JSON array.',
                paramType='form')
-        .param('globalFeatures',
-               'The global features of the featureset, as a JSON array.',
-               paramType='form')
-        .param('localFeatures',
-               'The local features of the featureset, as a JSON array.',
+        .param('localFeatures', 'The local features of the featureset, as a JSON array.',
                paramType='form')
     )
     @access.user
@@ -118,9 +113,7 @@ class FeaturesetResource(IsicResource):
         User.requireAdminStudy(creatorUser)
 
         params = self._decodeParams(params)
-        self.requireParams(
-            ['name', 'version', 'globalFeatures', 'localFeatures'],
-            params)
+        self.requireParams(['name', 'version', 'globalFeatures', 'localFeatures'], params)
 
         featuresetName = params['name'].strip()
         if not featuresetName:
@@ -161,8 +154,7 @@ class FeaturesetResource(IsicResource):
         User.requireAdminStudy(user)
 
         if Study.find({'meta.featuresetId': featureset['_id']}).count():
-            raise RestException(
-                'Featureset is in use by one or more studies.', 409)
+            raise RestException('Featureset is in use by one or more studies.', 409)
 
         Featureset.remove(featureset)
 

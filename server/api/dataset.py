@@ -90,16 +90,13 @@ class DatasetResource(IsicResource):
         Dataset = self.model('dataset', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
-        output = Dataset.filter(
-            dataset, self.getCurrentUser())
+        output = Dataset.filter(dataset, self.getCurrentUser())
         del output['_accessLevel']
         output['_modelType'] = 'dataset'
         output.update(dataset.get('meta', {}))
 
         output['creator'] = User.filteredSummary(
-            User.load(
-                output.pop('creatorId'),
-                force=True, exc=True),
+            User.load(output.pop('creatorId'), force=True, exc=True),
             self.getCurrentUser())
 
         return output
@@ -109,16 +106,12 @@ class DatasetResource(IsicResource):
         .param('zipFileId', 'The ID of the .zip file of images.')
         .param('name', 'Name of the dataset.')
         .param('owner', 'Owner of the dataset.')
-        .param('description', 'Description of the dataset.', required=False,
-               paramType='form')
-        .param('license', 'License of the dataset.', required=False,
-               paramType='form')
-        .param('signature', 'Signature of license agreement.', required=True,
-               paramType='form')
-        .param('anonymous', 'Whether to use an anonymous attribution for the '
-               'dataset', dataType='boolean', required=False, paramType='form')
-        .param('attribution', 'Attribution of the dataset.', required=False,
-               paramType='form')
+        .param('description', 'Description of the dataset.', required=False, paramType='form')
+        .param('license', 'License of the dataset.', required=False, paramType='form')
+        .param('signature', 'Signature of license agreement.', required=True, paramType='form')
+        .param('anonymous', 'Whether to use an anonymous attribution for the dataset',
+               dataType='boolean', required=False, paramType='form')
+        .param('attribution', 'Attribution of the dataset.', required=False, paramType='form')
     )
     @access.user
     def ingestDataset(self, params):
@@ -134,23 +127,17 @@ class DatasetResource(IsicResource):
 
         zipFileId = params.get('zipFileId')
         if not zipFileId:
-            raise ValidationException(
-                'No file was uploaded.', 'zipFileId')
-        zipFile = File.load(
-            zipFileId, user=user, level=AccessType.WRITE, exc=False)
+            raise ValidationException('No file was uploaded.', 'zipFileId')
+        zipFile = File.load(zipFileId, user=user, level=AccessType.WRITE, exc=False)
         if not zipFile:
-            raise ValidationException(
-                'Invalid upload file ID.', 'zipFileId')
+            raise ValidationException('Invalid upload file ID.', 'zipFileId')
         if not self._checkFileFormat(zipFile, ZIP_FORMATS):
-            print(zipFile)
-            raise ValidationException(
-                'File must be in .zip format.', 'zipFileId')
+            raise ValidationException('File must be in .zip format.', 'zipFileId')
 
         name = params['name'].strip()
         owner = params['owner'].strip()
         if not owner:
-            raise ValidationException(
-                'Owner must be specified.', 'owner')
+            raise ValidationException('Owner must be specified.', 'owner')
         description = params.get('description', '').strip()
 
         # Enforce valid licensing metadata only at API level
@@ -159,14 +146,12 @@ class DatasetResource(IsicResource):
             raise ValidationException('Unknown license type.', 'license')
         signature = params.get('signature', '').strip()
         if not signature:
-            raise ValidationException(
-                'Signature must be specified.', 'signature')
+            raise ValidationException('Signature must be specified.', 'signature')
         anonymous = self.boolParam('anonymous', params, False)
         attribution = params.get('attribution', '').strip()
         if not anonymous and not attribution:
             raise ValidationException(
-                'Attribution must be specified when not contributing '
-                'anonymously.', 'attribution')
+                'Attribution must be specified when not contributing anonymously.', 'attribution')
 
         # TODO: make this return only the dataset fields
         return Dataset.ingestDataset(
@@ -177,8 +162,7 @@ class DatasetResource(IsicResource):
     @describeRoute(
         Description('Get a list of images in this dataset to QC Review.')
         .param('id', 'The ID of the dataset.', paramType='path')
-        .param('limit', 'Result set size limit.',
-               default=50, required=False, dataType='int')
+        .param('limit', 'Result set size limit.', default=50, required=False, dataType='int')
         .errorResponse('ID was invalid.')
     )
     @access.user
@@ -193,11 +177,10 @@ class DatasetResource(IsicResource):
         User.requireReviewDataset(user)
 
         prereviewFolder = Dataset.prereviewFolder(dataset)
-        if not (prereviewFolder and Folder.hasAccess(
-                prereviewFolder, user=user, level=AccessType.READ)):
+        if not (prereviewFolder and
+                Folder.hasAccess(prereviewFolder, user=user, level=AccessType.READ)):
             raise AccessException(
-                'User does not have access to any Pre-review images for this '
-                'dataset.')
+                'User does not have access to any Pre-review images for this dataset.')
 
         limit = int(params.get('limit', 50))
 
@@ -219,10 +202,8 @@ class DatasetResource(IsicResource):
     @describeRoute(
         Description('Do a QC Review of images within a dataset.')
         .param('id', 'The ID of the dataset.', paramType='path')
-        .param('accepted', 'The IDs of accepted images, as a JSON array.',
-               paramType='form')
-        .param('flagged', 'The IDs of flagged images, as a JSON array.',
-               paramType='form')
+        .param('accepted', 'The IDs of accepted images, as a JSON array.', paramType='form')
+        .param('flagged', 'The IDs of flagged images, as a JSON array.', paramType='form')
         .errorResponse('ID was invalid.')
     )
     @access.user
@@ -270,8 +251,7 @@ class DatasetResource(IsicResource):
         for registration in dataset['meta']['metadataFiles']:
             # TODO: "File.load" can use the "fields" argument and be expressed
             # as a comprehension, once the fix from upstream Girder is available
-            metadataFile = File.load(
-                registration['fileId'], force=True, exc=True)
+            metadataFile = File.load(registration['fileId'], force=True, exc=True)
             output.append({
                 'file': {
                     '_id': metadataFile['_id'],
@@ -303,18 +283,14 @@ class DatasetResource(IsicResource):
         User.requireCreateDataset(user)
 
         metadataFile = File.load(
-            params['metadataFileId'], user=user, level=AccessType.READ,
-            exc=False)
+            params['metadataFileId'], user=user, level=AccessType.READ, exc=False)
         if not metadataFile:
-            raise ValidationException(
-                'Invalid metadata file ID.', 'metadataFileId')
+            raise ValidationException('Invalid metadata file ID.', 'metadataFileId')
         if not self._checkFileFormat(metadataFile, CSV_FORMATS):
-            raise ValidationException(
-                'File must be in .csv format.', 'metadataFileId')
+            raise ValidationException('File must be in .csv format.', 'metadataFileId')
 
         Dataset.registerMetadata(
-            dataset=dataset, user=user, metadataFile=metadataFile,
-            sendMail=True)
+            dataset=dataset, user=user, metadataFile=metadataFile, sendMail=True)
         # TODO: return value?
         return {'status': 'success'}
 
@@ -337,9 +313,8 @@ class DatasetResource(IsicResource):
         Description('Apply registered metadata to a dataset.')
         .param('id', 'The ID of the dataset.', paramType='path')
         .param('fileId', 'The ID of the .csv metadata file.', paramType='path')
-        .param('save', 'Whether to save the metadata to the dataset if '
-               'validation succeeds.', dataType='boolean', default=False,
-               paramType='form')
+        .param('save', 'Whether to save the metadata to the dataset if validation succeeds.',
+               dataType='boolean', default=False, paramType='form')
     )
     @access.user
     @loadmodel(model='file', map={'fileId': 'metadataFile'}, force=True)
@@ -355,8 +330,7 @@ class DatasetResource(IsicResource):
         user = self.getCurrentUser()
         User.requireCreateDataset(user)
 
-        errors = Dataset.applyMetadata(
-            dataset=dataset, metadataFile=metadataFile, save=save)
+        errors = Dataset.applyMetadata(dataset=dataset, metadataFile=metadataFile, save=save)
         return {
             'errors': [{'description': description} for description in errors]
         }
