@@ -1,3 +1,3 @@
-isic.models.ImageModel = girder.Model.extend({
+isic.models.ImageModel = isic.Model.extend({
     resourceName: 'image'
 });

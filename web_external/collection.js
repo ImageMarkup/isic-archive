@@ -1,4 +1,7 @@
 isic.Collection = girder.Collection.extend({ // eslint-disable-line backbone/collection-model
+    url: function () {
+        return this.resourceName;
+    },
 
     fetch: function (params, reset) {
         // If "reset" is false, then reuse any unspecified params from the last

@@ -1,4 +1,4 @@
-isic.models.StudyModel = girder.Model.extend({
+isic.models.StudyModel = isic.Model.extend({
     resourceName: 'study',
 
     creator: function () {
@@ -35,7 +35,7 @@ isic.models.StudyModel = girder.Model.extend({
             }
         }).done(_.bind(function (resp) {
             this.trigger('g:addedUser');
-        }, this)).error(_.bind(function (err) {
+        }, this)).fail(_.bind(function (err) {
             this.trigger('g:error', err);
         }, this));
     }

@@ -81,6 +81,7 @@ module.exports = function (grunt) {
             pluginDir + '/web_external/init.js',
             staticDir + '/isic_archive_templates.js',
             pluginDir + '/web_external/view.js',
+            pluginDir + '/web_external/model.js',
             pluginDir + '/web_external/collection.js',
             pluginDir + '/web_external/app.js',
             pluginDir + '/web_external/models/*.js',
@@ -98,6 +99,7 @@ module.exports = function (grunt) {
             files: [
                 pluginDir + '/web_external/init.js',
                 pluginDir + '/web_external/view.js',
+                pluginDir + '/web_external/model.js',
                 pluginDir + '/web_external/collection.js',
                 pluginDir + '/web_external/app.js',
                 pluginDir + '/web_external/models/*.js',

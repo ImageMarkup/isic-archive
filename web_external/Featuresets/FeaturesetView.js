@@ -10,7 +10,7 @@ isic.views.FeaturesetView = isic.View.extend({
         }).render();
 
         this.model.once('g:fetched', function () {
-            this.loadingAnimation.destroy();
+            // Don't "this.loadingAnimation.destroy()", as it will unbind all events on "this.el"
             delete this.loadingAnimation;
 
             this.render();

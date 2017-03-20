@@ -1,4 +1,4 @@
-isic.models.DatasetModel = girder.Model.extend({
+isic.models.DatasetModel = isic.Model.extend({
     resourceName: 'dataset',
 
     creator: function () {
@@ -35,7 +35,7 @@ isic.models.DatasetModel = girder.Model.extend({
         }).done(_.bind(function (resp) {
             this.set(resp);
             this.trigger('isic:ingestImages:success', resp);
-        }, this)).error(_.bind(function (err) {
+        }, this)).fail(_.bind(function (err) {
             this.trigger('isic:ingestImages:error', err);
         }, this));
     },
@@ -54,7 +54,7 @@ isic.models.DatasetModel = girder.Model.extend({
             error: null
         }).done(_.bind(function (resp) {
             this.trigger('isic:registerMetadata:success', resp);
-        }, this)).error(_.bind(function (err) {
+        }, this)).fail(_.bind(function (err) {
             this.trigger('isic:registerMetadata:error', err);
         }, this));
     },
@@ -87,7 +87,7 @@ isic.models.DatasetModel = girder.Model.extend({
             error: null
         }).done(function (resp) {
             deferred.resolve(resp);
-        }).error(function (err) {
+        }).fail(function (err) {
             deferred.reject(err);
         });
         return deferred.promise();

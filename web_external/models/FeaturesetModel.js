@@ -1,4 +1,4 @@
-isic.models.FeaturesetModel = girder.Model.extend({
+isic.models.FeaturesetModel = isic.Model.extend({
     resourceName: 'featureset',
 
     /**
