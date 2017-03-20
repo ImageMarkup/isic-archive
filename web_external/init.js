@@ -21,7 +21,7 @@ girder.models.ItemModel.prototype.getFiles = function () {
     }).done(_.bind(function (resp) {
         var fileCollection = new girder.collections.FileCollection(resp);
         this.trigger('g:files', fileCollection);
-    }, this)).error(_.bind(function (err) {
+    }, this)).fail(_.bind(function (err) {
         this.trigger('g:error', err);
     }, this));
 };
@@ -37,7 +37,7 @@ girder.models.FolderModel = girder.models.FolderModel.extend({
             type: 'DELETE'
         }).done(_.bind(function (resp) {
             this.trigger('g:success');
-        }, this)).error(_.bind(function (err) {
+        }, this)).fail(_.bind(function (err) {
             this.trigger('g:error', err);
         }, this));
     }
