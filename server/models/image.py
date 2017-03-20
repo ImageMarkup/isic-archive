@@ -230,7 +230,11 @@ class Image(ItemModel):
         File = self.model('file')
         superpixelsVersion = float(superpixelsFileNameMatch.group(1))
         superpixelsFile['superpixelVersion'] = superpixelsVersion
-        superpixelsFile = File.save(superpixelsFile)
+        # Work around an upstream Girder bug where "File.validate" sets
+        #   superpixelsFile['exts'] = ['0', 'png']
+        superpixelsFile = File.validate(superpixelsFile)
+        superpixelsFile['exts'] = ['png']
+        superpixelsFile = File.save(superpixelsFile, validate=False)
 
         image['superpixelsId'] = superpixelsFile['_id']
         self.save(image)
