@@ -8,15 +8,15 @@
         Enter the dataset's name, the dataset's owner, and a detailed
         description. The owner may be an individual or an institution.
       .form-group
-        label(for="isic-dataset-name") Name
+        label(for='isic-dataset-name') Name
         input#isic-dataset-name.form-control.input-sm(
-          type="text")
+          type='text')
       .form-group
-        label(for="isic-dataset-owner") Owner
+        label(for='isic-dataset-owner') Owner
         input#isic-dataset-owner.form-control.input-sm(
-          type="text")
+          type='text')
       .form-group
-        label.control-label(for="isic-dataset-description") Description
+        label.control-label(for='isic-dataset-description') Description
         textarea.input-sm#isic-dataset-description.form-control
     .isic-form-group
       h3 Upload images
@@ -33,13 +33,13 @@
         Select the license for the dataset and enter your name to
         electronically sign the contributor license agreement.
       .form-group
-        label.control-label(for="isic-dataset-license") License
+        label.control-label(for='isic-dataset-license') License
         select#isic-dataset-license.form-control.input-sm
-          option(value="CC-0")
+          option(value='CC-0')
             | CC-0 (No restrictions)
-          option(value="CC-BY")
+          option(value='CC-BY')
             | CC-BY (Attribution)
-          option(value="CC-BY-NC")
+          option(value='CC-BY-NC')
             | CC-BY-NC (Attribution-NonCommercial)
         .isic-dataset-agreement-link-container
           a#isic-upload-show-license-info-link.isic-dataset-agreement-link
@@ -49,10 +49,10 @@
           | Contributor license agreement
         #isic-terms-of-use-container
       .form-group
-        label(for="isic-dataset-agreement-signature") Electronic signature
+        label(for='isic-dataset-agreement-signature') Electronic signature
         input#isic-dataset-agreement-signature.form-control.input-sm(
-          type="text"
-          placeholder="Enter your name")
+          type='text'
+          placeholder='Enter your name')
     .isic-form-group
       h3 Attribution
       p.
@@ -62,16 +62,16 @@
         .radio
           label
             input#isic-dataset-attribution-anonymous(
-              type="radio" name="attribution" value="anonymous")
+              type='radio' name='attribution' value='anonymous')
             | Anonymous
         .radio
           label
             input#isic-dataset-attribution-attributed-to(
-              type="radio" name="attribution" value="attributed-to" checked="on")
+              type='radio' name='attribution' value='attributed-to' checked='on')
             | Attributed to:
           input#isic-dataset-attribution-name.form-control.input-sm(
-            type="text")
+            type='text')
 
   p
-    form#isic-dataset-form(role="form")
-      button#isic-dataset-submit.btn.btn-primary.btn-md(type="submit") Submit
+    form#isic-dataset-form(role='form')
+      button#isic-dataset-submit.btn.btn-primary.btn-md(type='submit') Submit

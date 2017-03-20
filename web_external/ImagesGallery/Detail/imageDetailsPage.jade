@@ -47,7 +47,7 @@
           td License
           td
             if license.url
-              a(target='_blank', href=license.url)= license.name
+              a(href=license.url target='_blank')= license.name
             else
               = license.name
 
