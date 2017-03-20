@@ -22,6 +22,7 @@ from cStringIO import StringIO
 import functools
 import itertools
 
+import cherrypy
 import six
 
 from girder.api import access
@@ -43,6 +44,7 @@ class StudyResource(IsicResource):
         self.route('POST', (), self.createStudy)
         self.route('POST', (':id', 'users'), self.addAnnotators)
         self.route('POST', (':id', 'images'), self.addImages)
+        self.route('DELETE', (':id',), self.deleteStudy)
 
     @describeRoute(
         Description('Return a list of annotation studies.')
@@ -402,3 +404,28 @@ class StudyResource(IsicResource):
             Study.addImage(study, image, creatorUser)
 
         return self.getStudy(id=study['_id'], params={})
+
+    @describeRoute(
+        Description('Delete a study.')
+        .param('id', 'The ID of the study.', paramType='path')
+        .errorResponse('ID was invalid.')
+    )
+    @access.user
+    @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
+    def deleteStudy(self, study, params):
+        Study = self.model('study', 'isic_archive')
+        User = self.model('user', 'isic_archive')
+
+        user = self.getCurrentUser()
+        # For now, study admins will be the ones that can delete studies
+        User.requireAdminStudy(user)
+
+        if Study.childAnnotations(
+                study=study, state=Study.State.COMPLETE).count():
+            raise RestException(
+                'Study has completed annotations.', 409)
+
+        Study.remove(study)
+
+        # No Content
+        cherrypy.response.status = 204
