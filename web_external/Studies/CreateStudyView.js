@@ -152,7 +152,7 @@ isic.views.CreateStudyView = isic.View.extend({
             error: null
         }).done(_.bind(function () {
             girder.confirm({
-                text: '<h4>Study <b>"' + name + '"</b> created</h4>',
+                text: '<h4>Study <b>"' + _.escape(name) + '"</b> created</h4>',
                 yesClass: 'hidden',
                 noText: 'OK',
                 escapedHtml: true
@@ -162,7 +162,7 @@ isic.views.CreateStudyView = isic.View.extend({
         }, this)).fail(_.bind(function (resp) {
             // TODO: add custom error dialog instead of using confirm dialog
             girder.confirm({
-                text: '<h4>Error creating study</h4><br>' + resp.responseJSON.message,
+                text: '<h4>Error creating study</h4><br>' + _.escape(resp.responseJSON.message),
                 yesClass: 'hidden',
                 noText: 'OK',
                 escapedHtml: true
