@@ -24,7 +24,7 @@ isic.views.DatasetsView = isic.View.extend({
         this.listenTo(this.datasets, 'g:changed', function () {
             this.loaded = true;
             this.render();
-        }, this);
+        });
         this.datasets.fetch();
 
         this.paginateWidget = new girder.views.PaginateWidget({
