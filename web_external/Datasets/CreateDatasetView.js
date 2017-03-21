@@ -1,9 +1,9 @@
-isic.views.UploadDatasetView = isic.View.extend({
+isic.views.CreateDatasetView = isic.View.extend({
     events: {
         'click #isic-upload-reset': function (event) {
             this.resetUpload();
         },
-        'click #isic-upload-show-license-info-link': 'showLicenseInfo',
+        'click #isic-create-dataset-show-license-info-link': 'showLicenseInfo',
         'change input[name="attribution"]': function (event) {
             // Update attribution name field sensitivity
             var target = $(event.target);
@@ -90,7 +90,7 @@ isic.views.UploadDatasetView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.uploadDataset());
+        this.$el.html(isic.templates.createDataset());
 
         if (!this.uploadWidget) {
             this.initializeUploadWidget();
@@ -263,8 +263,8 @@ isic.router.route('dataset/create', 'createDataset', function () {
         // Registered users must:
         //  (1) Accept the TOS
         //  (2) Request and receive create dataset access
-        // before being able to see the upload dataset view
-        var nextView = isic.views.UploadDatasetView;
+        // before being able to see the create dataset view
+        var nextView = isic.views.CreateDatasetView;
         if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
             nextView = isic.views.TermsAcceptanceView;
         } else if (!girder.currentUser.canCreateDataset()) {
