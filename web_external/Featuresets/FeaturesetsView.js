@@ -21,13 +21,11 @@ isic.views.FeaturesetsView = isic.View.extend({
         this.listenTo(this.featuresets, 'g:changed', function () {
             this.loaded = true;
             this.render();
-        }, this);
+        });
         this.featuresets.fetch();
 
-        // TODO: Use the more general 'update' event, once Backbone is upgraded from Girder
-        this.listenTo(this.featuresets, 'remove', function () {
-            this.render();
-        }, this);
+        // TODO: Use the more general 'update' event, once Girder's version of Backbone is upgraded
+        this.listenTo(this.featuresets, 'remove', this.render);
 
         this.paginateWidget = new girder.views.PaginateWidget({
             collection: this.featuresets,
