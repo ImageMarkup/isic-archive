@@ -47,19 +47,15 @@ isic.views.FeaturesetView = isic.View.extend({
     destroy: function () {
         this.model.destroy({
             success: function (model, resp, options) {
-                girder.confirm({
+                isic.showAlertDialog({
                     text: '<h4>Featureset <b>"' + _.escape(model.name()) + '"</b> deleted</h4>',
-                    escapedHtml: true,
-                    yesClass: 'hidden',
-                    noText: 'OK'
+                    escapedHtml: true
                 });
             },
             error: function (model, resp, options) {
-                girder.confirm({
+                isic.showAlertDialog({
                     text: '<h4>Error deleting featureset</h4><br>' + _.escape(resp.responseJSON.message),
-                    escapedHtml: true,
-                    yesClass: 'hidden',
-                    noText: 'OK'
+                    escapedHtml: true
                 });
             }
         });
