@@ -20,10 +20,10 @@
 import datetime
 
 from girder.api import access
-from girder.api.rest import RestException, loadmodel, setRawResponse, \
-    setResponseHeader
+from girder.api.rest import RestException, loadmodel, setRawResponse, setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
+from girder.models.model_base import ValidationException
 
 from .base import IsicResource
 from ..models.segmentation_helpers import ScikitSegmentationHelper
@@ -41,12 +41,9 @@ class AnnotationResource(IsicResource):
 
     @describeRoute(
         Description('Return a list of annotations.')
-        .param('studyId', 'The ID of the study to filter by.',
-               paramType='query', required=True)
-        .param('userId', 'The ID of the user to filter by.',
-               paramType='query', required=False)
-        .param('imageId', 'The ID of the image to filter by.',
-               paramType='query', required=False)
+        .param('studyId', 'The ID of the study to filter by.', paramType='query', required=True)
+        .param('userId', 'The ID of the user to filter by.', paramType='query', required=False)
+        .param('imageId', 'The ID of the image to filter by.', paramType='query', required=False)
         .errorResponse()
     )
     @access.cookie
@@ -97,8 +94,7 @@ class AnnotationResource(IsicResource):
 
     @describeRoute(
         Description('Get annotation details.')
-        .param('id', 'The ID of the annotation to be fetched.',
-               paramType='path')
+        .param('id', 'The ID of the annotation to be fetched.', paramType='path')
         .errorResponse()
     )
     @access.cookie
@@ -127,9 +123,7 @@ class AnnotationResource(IsicResource):
                 exc=True,
                 fields=Image.summaryFields),
             'user': User.filteredSummary(
-                user=User.load(
-                    annotation['meta']['userId'],
-                    force=True, exc=True),
+                user=User.load(annotation['meta']['userId'], force=True, exc=True),
                 accessorUser=self.getCurrentUser()),
             'state': Annotation.getState(annotation)
         }
@@ -145,14 +139,11 @@ class AnnotationResource(IsicResource):
 
     @describeRoute(
         Description('Render an annotation feature, overlaid on its image.')
-        .param('id', 'The ID of the annotation to be rendered.',
-               paramType='path')
-        .param('featureId', 'The feature ID to be rendered.',
-               paramType='query', required=True)
+        .param('id', 'The ID of the annotation to be rendered.', paramType='path')
+        .param('featureId', 'The feature ID to be rendered.', paramType='query', required=True)
         .param('contentDisposition',
-               'Specify the Content-Disposition response '
-               'header disposition-type value.', required=False,
-               enum=['inline', 'attachment'])
+               'Specify the Content-Disposition response header disposition-type value.',
+               required=False, enum=['inline', 'attachment'])
         .errorResponse()
     )
     @access.cookie
@@ -162,10 +153,9 @@ class AnnotationResource(IsicResource):
         Study = self.model('study', 'isic_archive')
         Annotation = self.model('annotation', 'isic_archive')
         contentDisp = params.get('contentDisposition', None)
-        if contentDisp is not None and \
-                contentDisp not in {'inline', 'attachment'}:
-            raise RestException('Unallowed contentDisposition type "%s".' %
-                                contentDisp)
+        if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
+            raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
+                                      'contentDisposition')
 
         self.requireParams(['featureId'], params)
         featureId = params['featureId']
@@ -173,17 +163,14 @@ class AnnotationResource(IsicResource):
         study = Study.load(annotation['meta']['studyId'], force=True, exc=True)
         featureset = Study.getFeatureset(study)
 
-        if not any(featureId == feature['id']
-                   for feature in
-                   featureset['localFeatures']):
-            raise RestException('Invalid featureId.')
+        if not any(featureId == feature['id'] for feature in featureset['localFeatures']):
+            raise ValidationException('Invalid featureId.', 'featureId')
         if Annotation.getState(annotation) != Study.State.COMPLETE:
             raise RestException('Only complete annotations can be rendered.')
 
         renderData = Annotation.renderAnnotation(annotation, featureId)
 
-        renderEncodedStream = ScikitSegmentationHelper.writeImage(
-            renderData, 'jpeg')
+        renderEncodedStream = ScikitSegmentationHelper.writeImage(renderData, 'jpeg')
         renderEncodedData = renderEncodedStream.getvalue()
 
         # Only setRawResponse now, as this handler may return a JSON error
@@ -208,8 +195,7 @@ class AnnotationResource(IsicResource):
 
     @describeRoute(
         Description('Submit a completed annotation.')
-        .param('id', 'The ID of the annotation to be submitted.',
-               paramType='path')
+        .param('id', 'The ID of the annotation to be submitted.', paramType='path')
         .param('body', 'JSON containing the annotation parameters.',
                paramType='body', required=True)
         .errorResponse()
@@ -221,8 +207,7 @@ class AnnotationResource(IsicResource):
         Study = self.model('study', 'isic_archive')
 
         if annotation['baseParentId'] != Study.loadStudyCollection()['_id']:
-            raise RestException(
-                'Annotation id references a non-annotation item.')
+            raise RestException('Annotation id references a non-annotation item.')
 
         if annotation['meta']['userId'] != self.getCurrentUser()['_id']:
             raise RestException('Current user does not own this annotation.')
@@ -231,14 +216,13 @@ class AnnotationResource(IsicResource):
             raise RestException('Annotation is already complete.')
 
         bodyJson = self.getBodyJson()
-        self.requireParams(['status', 'startTime', 'stopTime', 'annotations'],
-                           bodyJson)
+        self.requireParams(['status', 'startTime', 'stopTime', 'annotations'], bodyJson)
 
         annotation['meta']['status'] = bodyJson['status']
-        annotation['meta']['startTime'] = \
-            datetime.datetime.utcfromtimestamp(bodyJson['startTime'] / 1000.0)
-        annotation['meta']['stopTime'] = \
-            datetime.datetime.utcfromtimestamp(bodyJson['stopTime'] / 1000.0)
+        annotation['meta']['startTime'] = datetime.datetime.utcfromtimestamp(
+            bodyJson['startTime'] / 1000.0)
+        annotation['meta']['stopTime'] = datetime.datetime.utcfromtimestamp(
+            bodyJson['stopTime'] / 1000.0)
         annotation['meta']['annotations'] = bodyJson['annotations']
 
         Annotation.save(annotation)

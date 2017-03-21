@@ -49,10 +49,9 @@ class StudyResource(IsicResource):
     @describeRoute(
         Description('Return a list of annotation studies.')
         .pagingParams(defaultSort='lowerName')
-        .param('state', 'Filter studies to those at a given state',
-               paramType='query', required=False, enum=('active', 'complete'))
-        .param('userId',
-               'Filter studies to those containing a user ID, or "me".',
+        .param('state', 'Filter studies to those at a given state', paramType='query',
+               required=False, enum=('active', 'complete'))
+        .param('userId', 'Filter studies to those containing a user ID, or "me".',
                paramType='query', required=False)
         .errorResponse()
     )
@@ -69,16 +68,13 @@ class StudyResource(IsicResource):
             if params['userId'] == 'me':
                 annotatorUser = self.getCurrentUser()
             else:
-                annotatorUser = User.load(
-                    id=params['userId'],
-                    force=True, exc=True)
+                annotatorUser = User.load(params['userId'], force=True, exc=True)
 
         state = None
         if params.get('state'):
             state = params['state']
             if state not in {Study.State.ACTIVE, Study.State.COMPLETE}:
-                raise RestException('Query parameter "state" may only '
-                                    'be "active" or "complete".')
+                raise ValidationException('Value may only be "active" or "complete".', 'state')
 
         return [
             {
@@ -88,19 +84,16 @@ class StudyResource(IsicResource):
             }
             for study in
             Study.filterResultsByPermission(
-                Study.find(query=None, annotatorUser=annotatorUser,
-                           state=state, sort=sort),
-                user=self.getCurrentUser(),
-                level=AccessType.READ, limit=limit, offset=offset
+                Study.find(query=None, annotatorUser=annotatorUser, state=state, sort=sort),
+                user=self.getCurrentUser(), level=AccessType.READ, limit=limit, offset=offset
             )
         ]
 
     @describeRoute(
         Description('Get a study by ID.')
         .param('id', 'The ID of the study.', paramType='path')
-        .param('format', 'The output format.',
-               paramType='query', required=False, enum=('csv', 'json'),
-               default='json')
+        .param('format', 'The output format.', paramType='query', required=False,
+               enum=('csv', 'json'), default='json')
         .errorResponse()
     )
     @access.cookie
@@ -114,9 +107,8 @@ class StudyResource(IsicResource):
 
         if params.get('format') == 'csv':
             setResponseHeader('Content-Type', 'text/csv')
-            setResponseHeader(
-                'Content-Disposition',
-                'attachment; filename="%s.csv"' % study['name'])
+            setResponseHeader('Content-Disposition',
+                              'attachment; filename="%s.csv"' % study['name'])
             return functools.partial(self._getStudyCSVStream, study)
 
         else:
@@ -129,9 +121,7 @@ class StudyResource(IsicResource):
                     id=study['meta']['featuresetId'],
                     fields=Featureset.summaryFields, exc=True),
                 'creator': User.filteredSummary(
-                    User.load(
-                        output.pop('creatorId'),
-                        force=True, exc=True),
+                    User.load(output.pop('creatorId'), force=True, exc=True),
                     currentUser),
                 'users': sorted(
                     (
@@ -143,9 +133,8 @@ class StudyResource(IsicResource):
                     key=lambda annotatorUser: annotatorUser['name']
                 ),
                 'images': list(
-                    Study.getImages(
-                        study, Image.summaryFields
-                    ).sort('lowerName', SortDir.ASCENDING))
+                    Study.getImages(study, Image.summaryFields).sort('lowerName', SortDir.ASCENDING)
+                )
             })
 
             return output
@@ -196,8 +185,7 @@ class StudyResource(IsicResource):
                     int((annotation['meta']['stopTime'] -
                          annotation['meta']['startTime']).total_seconds())
 
-                filteredAnnotatorUser = User.filteredSummary(
-                    annotatorUser, currentUser)
+                filteredAnnotatorUser = User.filteredSummary(annotatorUser, currentUser)
                 annotatorUserName = filteredAnnotatorUser['name']
                 if 'login' in filteredAnnotatorUser:
                     annotatorUserName += ' [%s %s (%s)]' % (
@@ -220,7 +208,7 @@ class StudyResource(IsicResource):
                 for globalFeature in featureset['globalFeatures']:
                     if globalFeature['id'] in annotation['meta']['annotations']:
                         outDict[globalFeature['id']] = \
-                            annotation['meta']['annotations'][globalFeature['id']]  # noqa: E501
+                            annotation['meta']['annotations'][globalFeature['id']]
                 csvWriter.writerow(outDict)
                 yield responseBody.getvalue()
                 responseBody.seek(0)
@@ -235,7 +223,7 @@ class StudyResource(IsicResource):
                         outDict = outDictBase.copy()
                         outDict['superpixel_id'] = superpixelMum
                         for featureName, featureValue in six.viewitems(
-                                annotation['meta']['annotations']['localFeatures']):  # noqa: E501
+                                annotation['meta']['annotations']['localFeatures']):
                             outDict[featureName] = featureValue[superpixelMum]
 
                         csvWriter.writerow(outDict)
@@ -246,14 +234,10 @@ class StudyResource(IsicResource):
     @describeRoute(
         Description('Create an annotation study.')
         .param('name', 'The name of the study.', paramType='form')
-        .param('featuresetId', 'The featureset ID of the study.',
+        .param('featuresetId', 'The featureset ID of the study.', paramType='form')
+        .param('userIds', 'The annotators user IDs of the study, as a JSON array.',
                paramType='form')
-        .param('userIds',
-               'The annotators user IDs of the study, as a JSON array.',
-               paramType='form')
-        .param('imageIds',
-               'The image IDs of the study, as a JSON array.',
-               paramType='form')
+        .param('imageIds', 'The image IDs of the study, as a JSON array.', paramType='form')
         .errorResponse('Write access was denied on the parent folder.', 403)
     )
     @access.user
@@ -267,9 +251,7 @@ class StudyResource(IsicResource):
         User.requireAdminStudy(creatorUser)
 
         params = self._decodeParams(params)
-        self.requireParams(
-            ['name', 'featuresetId', 'userIds', 'imageIds'],
-            params)
+        self.requireParams(['name', 'featuresetId', 'userIds', 'imageIds'], params)
 
         studyName = params['name'].strip()
         if not studyName:
@@ -281,19 +263,16 @@ class StudyResource(IsicResource):
         featureset = Featureset.load(featuresetId, exc=True)
 
         if len(set(params['userIds'])) != len(params['userIds']):
-            raise RestException('Duplicate user IDs.')
+            raise ValidationException('Duplicate user IDs.', 'userIds')
         annotatorUsers = [
-            User.load(
-                annotatorUserId, user=creatorUser, level=AccessType.READ,
-                exc=True)
+            User.load(annotatorUserId, user=creatorUser, level=AccessType.READ, exc=True)
             for annotatorUserId in params['userIds']
         ]
 
         if len(set(params['imageIds'])) != len(params['imageIds']):
-            raise RestException('Duplicate image IDs.')
+            raise ValidationException('Duplicate image IDs.', 'imageIds')
         images = [
-            Image.load(
-                imageId, user=creatorUser, level=AccessType.READ, exc=True)
+            Image.load(imageId, user=creatorUser, level=AccessType.READ, exc=True)
             for imageId in params['imageIds']
         ]
 
@@ -309,11 +288,9 @@ class StudyResource(IsicResource):
     @describeRoute(
         Description('Add annotator users to a study.')
         .param('id', 'The ID of the study.', paramType='path')
-        .param('userIds', 'The user IDs to add, as a JSON array.',
-               paramType='form')
+        .param('userIds', 'The user IDs to add, as a JSON array.', paramType='form')
         .errorResponse('ID was invalid.')
-        .errorResponse('You don\'t have permission to add a study annotator.',
-                       403)
+        .errorResponse('You don\'t have permission to add a study annotator.', 403)
     )
     @access.user
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
@@ -332,7 +309,7 @@ class StudyResource(IsicResource):
 
         # Load all users before adding any, to ensure all are valid
         if len(set(params['userIds'])) != len(params['userIds']):
-            raise RestException('Duplicate user IDs.')
+            raise ValidationException('Duplicate user IDs.', 'userIds')
         annotatorUsers = [
             User.load(userId, user=creatorUser, level=AccessType.READ, exc=True)
             for userId in params['userIds']
@@ -343,15 +320,13 @@ class StudyResource(IsicResource):
         # inside yet
         duplicateAnnotatorFolders = Folder.find({
             'parentId': study['_id'],
-            'meta.userId': {'$in': [
-                annotatorUser['_id'] for annotatorUser in annotatorUsers]}
+            'meta.userId': {'$in': [annotatorUser['_id'] for annotatorUser in annotatorUsers]}
         })
         if duplicateAnnotatorFolders.count():
             # Just list the first duplicate
             duplicateAnnotatorFolder = next(iter(duplicateAnnotatorFolders))
-            raise ValidationException(
-                'Annotator user "%s" is already part of the study.' %
-                duplicateAnnotatorFolder['meta']['userId'])
+            raise ValidationException('Annotator user "%s" is already part of the study.' %
+                                      duplicateAnnotatorFolder['meta']['userId'])
         # Look up images only once for efficiency
         images = Study.getImages(study)
         for annotatorUser in annotatorUsers:
@@ -362,8 +337,7 @@ class StudyResource(IsicResource):
     @describeRoute(
         Description('Add images to a study.')
         .param('id', 'The ID of the study.', paramType='path')
-        .param('imageIds', 'The image IDs to add, as a JSON array.',
-               paramType='form')
+        .param('imageIds', 'The image IDs to add, as a JSON array.', paramType='form')
         .errorResponse('ID was invalid.')
         .errorResponse('You don\'t have permission to add a study image.', 403)
     )
@@ -384,10 +358,9 @@ class StudyResource(IsicResource):
         # Load all images before adding any, to ensure all are valid and
         # accessible
         if len(set(params['imageIds'])) != len(params['imageIds']):
-            raise RestException('Duplicate image IDs.')
+            raise ValidationException('Duplicate image IDs.', 'imageIds')
         images = [
-            Image.load(
-                imageId, user=creatorUser, level=AccessType.READ, exc=True)
+            Image.load(imageId, user=creatorUser, level=AccessType.READ, exc=True)
             for imageId in params['imageIds']
         ]
         duplicateAnnotations = Annotation.find({
@@ -398,8 +371,7 @@ class StudyResource(IsicResource):
             # Just list the first duplicate
             duplicateAnnotation = next(iter(duplicateAnnotations))
             raise ValidationException(
-                'Image "%s" is already part of the study.' %
-                duplicateAnnotation['meta']['imageId'])
+                'Image "%s" is already part of the study.' % duplicateAnnotation['meta']['imageId'])
         for image in images:
             Study.addImage(study, image, creatorUser)
 
@@ -420,10 +392,8 @@ class StudyResource(IsicResource):
         # For now, study admins will be the ones that can delete studies
         User.requireAdminStudy(user)
 
-        if Study.childAnnotations(
-                study=study, state=Study.State.COMPLETE).count():
-            raise RestException(
-                'Study has completed annotations.', 409)
+        if Study.childAnnotations(study=study, state=Study.State.COMPLETE).count():
+            raise RestException('Study has completed annotations.', 409)
 
         Study.remove(study)
 

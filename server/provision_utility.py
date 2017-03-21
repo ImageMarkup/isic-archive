@@ -20,8 +20,6 @@
 from girder.constants import AccessType, SettingKey
 from girder.utility.model_importer import ModelImporter
 
-from . import constants
-
 
 def getAdminUser():
     User = ModelImporter.model('user', 'isic_archive')
@@ -37,6 +35,9 @@ def getAdminUser():
             admin=True,
             public=False
         )
+        adminUser['status'] = 'disabled'
+        # TODO: subsequent re-saves of this user will re-enable it, until another user is created
+        adminUser = User.save(adminUser, validate=False)
     return adminUser
 
 
@@ -159,9 +160,6 @@ def provisionDatabase():
     Setting = ModelImporter.model('setting')
 
     Setting.set(SettingKey.USER_DEFAULT_FOLDERS, 'none')
-
-    if Setting.get(constants.PluginSettings.DEMO_MODE, None) is None:
-        Setting.set(constants.PluginSettings.DEMO_MODE, False)
 
     _provisionImages()
     _provisionSegmentationGroups()

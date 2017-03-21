@@ -28,7 +28,7 @@ from girder.models.item import Item as ItemModel
 from girder.plugins.worker import utils as workerUtils
 
 from . import segmentation_helpers
-from .. import constants
+from ..settings import PluginSettings
 from ..provision_utility import getAdminUser
 from .segmentation_helpers import ScikitSegmentationHelper
 
@@ -55,16 +55,14 @@ class Image(ItemModel):
         Setting = self.model('setting')
         Upload = self.model('upload')
 
-        newIsicId = Setting.get(
-            constants.PluginSettings.MAX_ISIC_ID, default=-1) + 1
+        newIsicId = Setting.get(PluginSettings.MAX_ISIC_ID) + 1
         image = self.createItem(
             name='ISIC_%07d' % newIsicId,
             creator=creator,
             folder=parentFolder,
             description=''
         )
-        Setting.set(
-            constants.PluginSettings.MAX_ISIC_ID, newIsicId)
+        Setting.set(PluginSettings.MAX_ISIC_ID, newIsicId)
 
         image['privateMeta'] = {
             'originalFilename': originalName
@@ -232,7 +230,11 @@ class Image(ItemModel):
         File = self.model('file')
         superpixelsVersion = float(superpixelsFileNameMatch.group(1))
         superpixelsFile['superpixelVersion'] = superpixelsVersion
-        superpixelsFile = File.save(superpixelsFile)
+        # Work around an upstream Girder bug where "File.validate" sets
+        #   superpixelsFile['exts'] = ['0', 'png']
+        superpixelsFile = File.validate(superpixelsFile)
+        superpixelsFile['exts'] = ['png']
+        superpixelsFile = File.save(superpixelsFile, validate=False)
 
         image['superpixelsId'] = superpixelsFile['_id']
         self.save(image)

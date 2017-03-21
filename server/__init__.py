@@ -26,13 +26,12 @@ from bson import json_util
 from girder import events
 from girder.api.v1 import resource
 from girder.constants import SettingKey, PACKAGE_DIR, STATIC_ROOT_DIR
-from girder.models.model_base import ValidationException
 from girder.utility import mail_utils
 from girder.utility.model_importer import ModelImporter
 from girder.utility.server import staticFile
 from girder.utility.webroot import WebrootBase
 
-from . import constants
+from . import settings
 from . import api
 from .provision_utility import provisionDatabase
 
@@ -69,23 +68,6 @@ class Webroot(WebrootBase):
                 self.vars['pluginJs'].append(plugin)
 
         return super(Webroot, self)._renderHTML()
-
-
-def validateSettings(event):
-    key, val = event.info['key'], event.info['value']
-
-    if key == constants.PluginSettings.DEMO_MODE:
-        if not isinstance(val, bool):
-            raise ValidationException(
-                'Demo mode must be provided as a boolean.', 'value')
-        event.preventDefault().stopPropagation()
-
-    if key == constants.PluginSettings.MAX_ISIC_ID:
-        # TODO: can we disable this from being set via the HTTP API?
-        if not isinstance(val, int):
-            raise ValidationException(
-                'Maximum ISIC ID must be provided as an integer.', 'value')
-        event.preventDefault().stopPropagation()
 
 
 def onDescribeResource(event):
@@ -158,9 +140,10 @@ def load(info):
     # set the title of the HTML pages
     info['serverRoot'].updateHtmlVars({'title': 'ISIC Archive'})
 
+    # initialize plugin settings
+    settings.registerDefaults()
+
     # add event listeners
-    # note, 'model.setting.validate' must be bound before initialSetup is called
-    events.bind('model.setting.validate', 'isic', validateSettings)
     events.bind('rest.get.describe/:resource.after',
                 'onDescribeResource', onDescribeResource)
     events.bind('model.job.save', 'onJobSave', onJobSave)

@@ -17,8 +17,29 @@
 #  limitations under the License.
 ###############################################################################
 
+from girder.constants import SettingDefault
+from girder.models.model_base import ValidationException
+from girder.utility import setting_utilities
+
 
 class PluginSettings(object):
     DEMO_MODE = 'isic.demo_mode'
-
     MAX_ISIC_ID = 'isic.max_isic_id'
+
+
+@setting_utilities.validator(PluginSettings.DEMO_MODE)
+def validateDemoModeSetting(doc):
+    if not isinstance(doc['value'], bool):
+        raise ValidationException('Demo mode must be provided as a boolean.', 'value')
+
+
+@setting_utilities.validator(PluginSettings.MAX_ISIC_ID)
+def validateMaxIsicIdSetting(doc):
+    # TODO: can we disable this from being set via the HTTP API?
+    if not isinstance(doc['value'], int):
+        raise ValidationException('Maximum ISIC ID must be provided as an integer.', 'value')
+
+
+def registerDefaults():
+    SettingDefault.defaults[PluginSettings.DEMO_MODE] = False
+    SettingDefault.defaults[PluginSettings.MAX_ISIC_ID] = -1

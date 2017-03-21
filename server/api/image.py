@@ -26,8 +26,7 @@ import geojson
 import six
 
 from girder.api import access
-from girder.api.rest import RestException, loadmodel, setRawResponse, \
-    setResponseHeader
+from girder.api.rest import RestException, loadmodel, setRawResponse, setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
 from girder.models.model_base import GirderException, ValidationException
@@ -57,22 +56,19 @@ class ImageResource(IsicResource):
             try:
                 filterParam = json.loads(filterParam)
             except ValueError as e:
-                raise ValidationException(
-                    'Could not decode JSON: %s' % str(e), 'filter')
+                raise ValidationException('Could not decode JSON: %s' % str(e), 'filter')
         try:
             return querylang.astToMongo(filterParam)
         except (TypeError, ValueError) as e:
-            raise ValidationException(
-                'Could not parse filter:' % str(e), 'filter')
+            raise ValidationException('Could not parse filter:' % str(e), 'filter')
 
     @describeRoute(
         Description('Return a list of lesion images.')
         .pagingParams(defaultSort='name')
         .param('datasetId', 'The ID of the dataset to use.', required=False)
-        .param('name', 'Find an image with a specific name.',
-               required=False)
-        .param('filter', 'Filter the images by a PegJS-specified grammar '
-                         '(causing "datasetId" and "name" to be ignored).',
+        .param('name', 'Find an image with a specific name.', required=False)
+        .param('filter', 'Filter the images by a PegJS-specified grammar (causing "datasetId" and '
+                         '"name" to be ignored).',
                required=False)
         .errorResponse()
     )
@@ -92,8 +88,7 @@ class ImageResource(IsicResource):
                 try:
                     query.update({'folderId': ObjectId(params['datasetId'])})
                 except InvalidId:
-                    raise RestException(
-                        'Invalid "folderId" ObjectId: %s' % params['datasetId'])
+                    raise ValidationException('Invalid ObjectId.', 'datasetId')
             if 'name' in params:
                 query.update({'name': params['name']})
 
@@ -112,10 +107,9 @@ class ImageResource(IsicResource):
 
     @describeRoute(
         Description('Download multiple images as a ZIP file.')
-        .param('datasetId', 'The ID of the dataset to download.',
-               required=False)
-        .param('filter', 'Filter the images by a PegJS-specified grammar '
-                         '(causing "datasetId" to be ignored).',
+        .param('datasetId', 'The ID of the dataset to download.', required=False)
+        .param('filter', 'Filter the images by a PegJS-specified grammar (causing "datasetId" to '
+                         'be ignored).',
                required=False)
         .errorResponse()
     )
@@ -134,8 +128,7 @@ class ImageResource(IsicResource):
                 try:
                     query.update({'folderId': ObjectId(params['datasetId'])})
                 except InvalidId:
-                    raise RestException(
-                        'Invalid "folderId" ObjectId: %s' % params['datasetId'])
+                    raise ValidationException('Invalid ObjectId.', 'datasetId')
 
         user = self.getCurrentUser()
         downloadFileName = 'ISIC-images'
@@ -150,8 +143,7 @@ class ImageResource(IsicResource):
                     user=user, level=AccessType.READ, limit=0, offset=0):
                 datasetId = image['folderId']
                 if datasetId not in datasetCache:
-                    datasetCache[datasetId] = Dataset.load(
-                        datasetId, force=True, exc=True)
+                    datasetCache[datasetId] = Dataset.load(datasetId, force=True, exc=True)
                 dataset = datasetCache[datasetId]
                 imageFile = Image.originalFile(image)
                 imageFileGenerator = File.download(imageFile, headers=False)
@@ -184,17 +176,12 @@ class ImageResource(IsicResource):
             yield zipGenerator.footer()
 
         setResponseHeader('Content-Type', 'application/zip')
-        setResponseHeader(
-            'Content-Disposition',
-            'attachment; filename="%s.zip"' % downloadFileName)
+        setResponseHeader('Content-Disposition', 'attachment; filename="%s.zip"' % downloadFileName)
         return stream
 
     @describeRoute(
         Description('Return histograms of image metadata.')
-        .param('filter',
-               'Get the histogram after the results of this filter. ' +
-               'TODO: describe our filter grammar (an AST tree).',
-               required=False)
+        .param('filter', 'Filter the images by a PegJS-specified grammar.', required=False)
         .errorResponse()
     )
     @access.cookie
@@ -202,9 +189,7 @@ class ImageResource(IsicResource):
     def getHistogram(self, params):
         Image = self.model('image', 'isic_archive')
 
-        query = self._parseFilter(params['filter']) \
-            if 'filter' in params \
-            else None
+        query = self._parseFilter(params['filter']) if 'filter' in params else None
         user = self.getCurrentUser()
         return Image.getHistograms(query, user)
 
@@ -236,9 +221,7 @@ class ImageResource(IsicResource):
         del output['dataset']['lowerName']
 
         output['creator'] = User.filteredSummary(
-            User.load(
-                output.pop('creatorId'),
-                force=True, exc=True),
+            User.load(output.pop('creatorId'), force=True, exc=True),
             user)
 
         if User.canReviewDataset(user):
@@ -249,8 +232,8 @@ class ImageResource(IsicResource):
     @describeRoute(
         Description('Return an image\'s thumbnail.')
         .param('id', 'The ID of the image.', paramType='path')
-        .param('width', 'The desired width for the thumbnail.',
-               paramType='query', required=False, default=256)
+        .param('width', 'The desired width for the thumbnail.', paramType='query', required=False,
+               default=256)
         .errorResponse('ID was invalid.')
     )
     @access.cookie
@@ -271,9 +254,9 @@ class ImageResource(IsicResource):
     @describeRoute(
         Description('Download an image\'s high-quality original binary data.')
         .param('id', 'The ID of the image.', paramType='path')
-        .param('contentDisposition', 'Specify the Content-Disposition response '
-               'header disposition-type value.', required=False,
-               enum=['inline', 'attachment'])
+        .param('contentDisposition',
+               'Specify the Content-Disposition response header disposition-type value.',
+               required=False, enum=['inline', 'attachment'])
         .errorResponse('ID was invalid.')
     )
     @access.cookie
@@ -284,19 +267,16 @@ class ImageResource(IsicResource):
         Image = self.model('image', 'isic_archive')
 
         contentDisp = params.get('contentDisposition', None)
-        if contentDisp is not None and \
-                contentDisp not in {'inline', 'attachment'}:
-            raise RestException('Unallowed contentDisposition type "%s".' %
-                                contentDisp)
+        if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
+            raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
+                                      'contentDisposition')
 
         originalFile = Image.originalFile(image)
-        fileStream = File.download(
-            originalFile, headers=True, contentDisposition=contentDisp)
+        fileStream = File.download(originalFile, headers=True, contentDisposition=contentDisp)
         return fileStream
 
     @describeRoute(
-        Description('Get the superpixels for this image, as a PNG-encoded '
-                    'label map.')
+        Description('Get the superpixels for this image, as a PNG-encoded label map.')
         .param('id', 'The ID of the image.', paramType='path')
         .errorResponse('ID was invalid.')
     )
@@ -313,11 +293,8 @@ class ImageResource(IsicResource):
     @describeRoute(
         Description('Run and return a new semi-automated segmentation.')
         .param('id', 'The ID of the image.', paramType='path')
-        .param('seed', 'The X, Y coordinates of a segmentation seed point.',
-               paramType='body')
-        .param('tolerance',
-               'The intensity tolerance value for the segmentation.',
-               paramType='body')
+        .param('seed', 'The X, Y coordinates of a segmentation seed point.', paramType='body')
+        .param('tolerance', 'The intensity tolerance value for the segmentation.', paramType='body')
         .errorResponse('ID was invalid.')
     )
     @access.user
@@ -334,15 +311,14 @@ class ImageResource(IsicResource):
             len(seedCoord) == 2 and
             all(isinstance(value, int) for value in seedCoord)
         ):
-            raise RestException('Submitted "seed" must be a coordinate pair.')
+            raise ValidationException('Value must be a coordinate pair.', 'seed')
 
         tolerance = params['tolerance']
         if not isinstance(tolerance, int):
-            raise RestException('Submitted "tolerance" must be an integer.')
+            raise ValidationException('Value must be an integer.', 'tolerance')
 
         try:
-            contourCoords = Segmentation.doContourSegmentation(
-                image, seedCoord, tolerance)
+            contourCoords = Segmentation.doContourSegmentation(image, seedCoord, tolerance)
         except GirderException as e:
             raise RestException(e.message)
 

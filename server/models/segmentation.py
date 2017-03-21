@@ -115,12 +115,14 @@ class Segmentation(Model):
                 obj=maskOutputStream,
                 size=len(maskOutputStream.getvalue()),
                 name='%s_segmentation.png' % (image['name']),
-                parentType=None,
-                parent=None,
+                # TODO: change this once a bug in upstream Girder is fixed
+                parentType='segmentation',
+                parent=segmentation,
+                attachParent=True,
                 user=creator,
-                mimeType='image/png',
+                mimeType='image/png'
             )
-            maskFile['attachedToId'] = segmentation['_id']
+            # TODO: remove this once a bug in upstream Girder is fixed
             maskFile['attachedToType'] = ['segmentation', 'isic_archive']
             maskFile = File.save(maskFile)
 

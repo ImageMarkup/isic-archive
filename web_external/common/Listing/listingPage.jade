@@ -17,12 +17,12 @@
 .isic-listing-paginate-container
 .isic-listing-container
   each model, index in models
-    .isic-listing-panel-group.panel-group(id="#{'panel-group-' + model.cid}")
+    .isic-listing-panel-group.panel-group(id='#{"panel-group-" + model.cid}')
       .isic-listing-panel.panel.panel-default
         .isic-listing-panel-heading.panel-heading(
-          data-toggle="collapse",
-          data-parent="#{'#panel-group-' + model.cid}",
-          data-target="#{'#panel-' + model.cid}"
+          data-toggle='collapse'
+          data-parent='#{"#panel-group-" + model.cid}'
+          data-target='#{"#panel-" + model.cid}'
           )
           a.collapsed
             block heading
@@ -30,8 +30,8 @@
             span.isic-listing-panel-heading-indicator.pull-right
               i.icon-right-open
         .isic-listing-panel-collapse.panel-collapse.collapse(
-          id="#{'panel-' + model.cid}"
-          data-model-index="#{index}"
+          id='#{"panel-" + model.cid}'
+          data-model-index='#{index}'
           )
           .isic-listing-panel-body.panel-body
 

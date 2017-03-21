@@ -80,9 +80,8 @@ def requestCreateDatasetPermission(params):
         group = Group.findOne({'name': groupName})
         if not group:
             raise RestException('Could not load group: %s' % groupName)
-        resp['message'] = 'Dataset Contributor access requested. An ' \
-                          'administrator may contact you via email (at %s) ' \
-                          'to process your request.' % currentUser['email']
+        resp['message'] = 'Dataset Contributor access requested. An administrator may contact ' \
+                          'you via email (at %s) to process your request.' % currentUser['email']
 
         for request in Group.getFullRequestList(group):
             if request['id'] == currentUser['_id']:
@@ -134,13 +133,9 @@ def acceptTerms(params):
 
 
 def attachUserApi(user):
-    events.bind('rest.get.user/authentication.after',
-                'onGetUserAuthentication', onGetUserAuthentication)
-    events.bind('rest.get.user/me.after',
-                'onGetUserMe', onGetUserMe)
-    events.bind('rest.post.user.after',
-                'onPostUser', onPostUser)
-    user.route('POST', ('requestCreateDatasetPermission',),
-               requestCreateDatasetPermission)
-    user.route('POST', ('acceptTerms',),
-               acceptTerms)
+    events.bind('rest.get.user/authentication.after', 'onGetUserAuthentication',
+                onGetUserAuthentication)
+    events.bind('rest.get.user/me.after', 'onGetUserMe', onGetUserMe)
+    events.bind('rest.post.user.after', 'onPostUser', onPostUser)
+    user.route('POST', ('requestCreateDatasetPermission',), requestCreateDatasetPermission)
+    user.route('POST', ('acceptTerms',), acceptTerms)

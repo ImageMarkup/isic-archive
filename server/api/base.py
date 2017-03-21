@@ -35,8 +35,7 @@ class IsicResource(Resource):
         :return: The decoded parameters.
         :rtype: dict
         """
-        if cherrypy.request.headers['Content-Type'].split(';')[0] == \
-                'application/json':
+        if cherrypy.request.headers['Content-Type'].split(';')[0] == 'application/json':
             decodedParams = self.getBodyJson()
         else:
             decodedParams = {}

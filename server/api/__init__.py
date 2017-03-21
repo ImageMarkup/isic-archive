@@ -29,6 +29,5 @@ from .study import StudyResource
 from .task import TaskResource
 from .user import attachUserApi
 
-__all__ = [AnnotationResource, DatasetResource, FeaturesetResource,
-           ImageResource, SegmentationResource, StudyResource, TaskResource,
-           attachUserApi]
+__all__ = [AnnotationResource, DatasetResource, FeaturesetResource, ImageResource,
+           SegmentationResource, StudyResource, TaskResource, attachUserApi]

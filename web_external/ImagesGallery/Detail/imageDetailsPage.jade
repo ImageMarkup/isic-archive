@@ -15,6 +15,7 @@
         title='Open this image in a new window'
         href=apiRoot + '/image/' + image.id + '/download?contentDisposition=inline'
         target='_blank'
+        rel='noopener'
       )
         i.icon-link-ext
       a#isic-image-details-download.isic-image-details-button.btn.btn-xs.btn-default(
@@ -47,7 +48,7 @@
           td License
           td
             if license.url
-              a(target='_blank', href=license.url)= license.name
+              a(href=license.url target='_blank' rel='noopener')= license.name
             else
               = license.name
 

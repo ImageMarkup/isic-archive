@@ -24,14 +24,13 @@ import numpy
 import six
 
 from girder.api import access
-from girder.api.rest import RestException, loadmodel, setRawResponse, \
-    setResponseHeader
+from girder.api.rest import RestException, loadmodel, setRawResponse, setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
+from girder.models.model_base import ValidationException
 
 from .base import IsicResource
-from ..models.segmentation_helpers import OpenCVSegmentationHelper, \
-    ScikitSegmentationHelper
+from ..models.segmentation_helpers import OpenCVSegmentationHelper, ScikitSegmentationHelper
 
 
 class SegmentationResource(IsicResource):
@@ -62,12 +61,10 @@ class SegmentationResource(IsicResource):
 
         self.requireParams(['imageId'], params)
         limit, offset, sort = self.getPagingParameters(
-            params,
-            defaultSortField='created', defaultSortDir=SortDir.DESCENDING)
+            params, defaultSortField='created', defaultSortDir=SortDir.DESCENDING)
 
         image = Image.load(
-            params['imageId'], level=AccessType.READ,
-            user=self.getCurrentUser(), exc=True)
+            params['imageId'], level=AccessType.READ, user=self.getCurrentUser(), exc=True)
 
         filters = {
             'imageId': image['_id']
@@ -101,10 +98,9 @@ class SegmentationResource(IsicResource):
     @describeRoute(
         Description('Add a segmentation to an image.')
         .param('imageId', 'The ID of the image.', paramType='body')
-        .param('mask', 'A Base64-encoded PNG 8-bit image, containing the '
-                       'segmentation mask.', paramType='body')
-        .param('failed',
-               'Whether the segmentation should be marked as a failure.',
+        .param('mask', 'A Base64-encoded PNG 8-bit image, containing the segmentation mask.',
+               paramType='body')
+        .param('failed', 'Whether the segmentation should be marked as a failure.',
                paramType='body', dataType='boolean', required=False)
         .errorResponse('ID was invalid.')
     )
@@ -120,8 +116,7 @@ class SegmentationResource(IsicResource):
         user = self.getCurrentUser()
         User.requireSegmentationSkill(user)
 
-        image = Image.load(
-            params['imageId'], level=AccessType.READ, user=user, exc=True)
+        image = Image.load(params['imageId'], level=AccessType.READ, user=user, exc=True)
 
         failed = self.boolParam('failed', params)
 
@@ -138,10 +133,8 @@ class SegmentationResource(IsicResource):
             lesionBoundary = params['lesionBoundary']
 
             meta = lesionBoundary['properties']
-            meta['startTime'] = datetime.datetime.utcfromtimestamp(
-                meta['startTime'] / 1000.0),
-            meta['stopTime'] = datetime.datetime.utcfromtimestamp(
-                meta['stopTime'] / 1000.0)
+            meta['startTime'] = datetime.datetime.utcfromtimestamp(meta['startTime'] / 1000.0),
+            meta['stopTime'] = datetime.datetime.utcfromtimestamp(meta['stopTime'] / 1000.0)
 
             if meta.get('source') == 'autofill':
                 # Since converting an autofill coordinate list back to a mask
@@ -155,13 +148,11 @@ class SegmentationResource(IsicResource):
                     len(seedCoord) == 2 and
                     all(isinstance(value, int) for value in seedCoord)
                 ):
-                    raise RestException(
-                        'Submitted "seed" must be a coordinate pair.')
+                    raise ValidationException('Value must be a coordinate pair.', 'seedPoint')
 
                 tolerance = meta['tolerance']
                 if not isinstance(tolerance, int):
-                    raise RestException(
-                        'Submitted "tolerance" must be an integer.')
+                    raise ValidationException('Value must be an integer.', 'tolerance')
 
                 mask = Segmentation.doSegmentation(image, seedCoord, tolerance)
             else:
@@ -192,8 +183,7 @@ class SegmentationResource(IsicResource):
                 meta={}
             )
         else:
-            raise RestException(
-                'One of "failed", "lesionBoundary", or "mask" must be present')
+            raise RestException('One of "failed", "lesionBoundary", or "mask" must be present')
 
         # TODO: return 201?
         # TODO: remove maskId from return?
@@ -213,13 +203,10 @@ class SegmentationResource(IsicResource):
 
         # TODO: convert this to make Segmentation use an AccessControlMixin
         Image.load(
-            segmentation['imageId'], level=AccessType.READ,
-            user=self.getCurrentUser(), exc=True)
+            segmentation['imageId'], level=AccessType.READ, user=self.getCurrentUser(), exc=True)
 
         segmentation['creator'] = User.filteredSummary(
-            User.load(
-                segmentation.pop('creatorId'),
-                force=True, exc=True),
+            User.load(segmentation.pop('creatorId'), force=True, exc=True),
             self.getCurrentUser())
 
         segmentation['failed'] = segmentation.pop('maskId') is None
@@ -229,9 +216,9 @@ class SegmentationResource(IsicResource):
     @describeRoute(
         Description('Get a segmentation, rendered as a binary mask.')
         .param('id', 'The ID of the segmentation.', paramType='path')
-        .param('contentDisposition', 'Specify the Content-Disposition response '
-               'header disposition-type value.', required=False,
-               enum=['inline', 'attachment'])
+        .param('contentDisposition',
+               'Specify the Content-Disposition response header disposition-type value.',
+               required=False, enum=['inline', 'attachment'])
         .errorResponse('ID was invalid.')
     )
     @access.cookie
@@ -242,33 +229,28 @@ class SegmentationResource(IsicResource):
         Image = self.model('image', 'isic_archive')
         Segmentation = self.model('segmentation', 'isic_archive')
         contentDisp = params.get('contentDisposition', None)
-        if contentDisp is not None and \
-                contentDisp not in {'inline', 'attachment'}:
-            raise RestException('Unallowed contentDisposition type "%s".' %
-                                contentDisp)
+        if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
+            raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
+                                      'contentDisposition')
 
         # TODO: convert this to make Segmentation use an AccessControlMixin
         Image.load(
-            segmentation['imageId'], level=AccessType.READ,
-            user=self.getCurrentUser(), exc=True)
+            segmentation['imageId'], level=AccessType.READ, user=self.getCurrentUser(), exc=True)
 
         maskFile = Segmentation.maskFile(segmentation)
         if maskFile is None:
-            raise RestException(
-                'This segmentation is failed, and thus has no mask.', code=410)
+            raise RestException('This segmentation is failed, and thus has no mask.', code=410)
 
-        return File.download(
-            maskFile, headers=True, contentDisposition=contentDisp)
+        return File.download(maskFile, headers=True, contentDisposition=contentDisp)
 
     @describeRoute(
-        Description('Get a segmentation, rendered as a thumbnail with a '
-                    'boundary overlay.')
+        Description('Get a segmentation, rendered as a thumbnail with a boundary overlay.')
         .param('id', 'The ID of the segmentation.', paramType='path')
-        .param('width', 'The desired width for the thumbnail.',
-               paramType='query', required=False, default=256)
-        .param('contentDisposition', 'Specify the Content-Disposition response '
-               'header disposition-type value.', required=False,
-               enum=['inline', 'attachment'])
+        .param('width', 'The desired width for the thumbnail.', paramType='query', required=False,
+               default=256)
+        .param('contentDisposition',
+               'Specify the Content-Disposition response header disposition-type value.',
+               required=False, enum=['inline', 'attachment'])
         .errorResponse('ID was invalid.')
     )
     @access.cookie
@@ -278,24 +260,19 @@ class SegmentationResource(IsicResource):
         Image = self.model('image', 'isic_archive')
         Segmentation = self.model('segmentation', 'isic_archive')
         contentDisp = params.get('contentDisposition', None)
-        if contentDisp is not None and \
-                contentDisp not in {'inline', 'attachment'}:
-            raise RestException('Unallowed contentDisposition type "%s".' %
-                                contentDisp)
+        if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
+            raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
+                                      'contentDisposition')
 
         # TODO: convert this to make Segmentation use an AccessControlMixin
         image = Image.load(
-            segmentation['imageId'], level=AccessType.READ,
-            user=self.getCurrentUser(), exc=True)
+            segmentation['imageId'], level=AccessType.READ, user=self.getCurrentUser(), exc=True)
 
         width = int(params.get('width', 256))
 
-        thumbnailImageStream = Segmentation.boundaryThumbnail(
-            segmentation, image, width)
+        thumbnailImageStream = Segmentation.boundaryThumbnail(segmentation, image, width)
         if thumbnailImageStream is None:
-            raise RestException(
-                'This segmentation is failed, and thus has no thumbnail.',
-                code=410)
+            raise RestException('This segmentation is failed, and thus has no thumbnail.', code=410)
         thumbnailImageData = thumbnailImageStream.getvalue()
 
         # Only setRawResponse now, as this handler may return a JSON error
@@ -304,13 +281,9 @@ class SegmentationResource(IsicResource):
         setResponseHeader('Content-Type', 'image/jpeg')
         contentName = '%s_segmentation_thumbnail.jpg' % image['name']
         if contentDisp == 'inline':
-            setResponseHeader(
-                'Content-Disposition',
-                'inline; filename="%s"' % contentName)
+            setResponseHeader('Content-Disposition', 'inline; filename="%s"' % contentName)
         else:
-            setResponseHeader(
-                'Content-Disposition',
-                'attachment; filename="%s"' % contentName)
+            setResponseHeader('Content-Disposition', 'attachment; filename="%s"' % contentName)
         setResponseHeader('Content-Length', len(thumbnailImageData))
 
         return thumbnailImageData
@@ -318,8 +291,8 @@ class SegmentationResource(IsicResource):
     @describeRoute(
         Description('Review a segmentation.')
         .param('id', 'The ID of the segmentation.', paramType='path')
-        .param('approved', 'Whether the segmentation was approved by the user.',
-               paramType='body', dataType='boolean')
+        .param('approved', 'Whether the segmentation was approved by the user.', paramType='body',
+               dataType='boolean')
         .errorResponse('ID was invalid.')
     )
     @access.user

@@ -2,112 +2,112 @@ nav.navbar.navbar-default.navbar-fixed-top.isic-header-wrapper
   .container-fluid
 
     .navbar-header
-      button.navbar-toggle.collapsed(type="button", data-toggle="collapse", data-target="#isic-navbar-collapse", aria-expanded=false)
+      button.navbar-toggle.collapsed(type='button' data-toggle='collapse' data-target='#isic-navbar-collapse' aria-expanded=false)
         span.sr-only Toggle navigation
         i.icon-bar
         i.icon-bar
         i.icon-bar
-      a.navbar-brand.isic-header-title(href="#") ISIC Archive
+      a.navbar-brand.isic-header-title(href='#') ISIC Archive
 
     #isic-navbar-collapse.collapse.navbar-collapse
       ul.nav.navbar-nav
 
         li.dropdown
-          a.dropdown-toggle.isic-header-item(href="#", role="button", aria-haspopup="true" aria-expanded="false")
+          a.dropdown-toggle.isic-header-item(href='#' role='button' aria-haspopup='true' aria-expanded='false')
             | About&nbsp;
             span.caret
           ul.dropdown-menu
-            li(role="presentation")
-              a(title="Home", href="#")
+            li(role='presentation')
+              a(title='Home' href='#')
                 i.icon-home
                 | Home
-            li(role="presentation")
-              a(title="ISIC Project", href="http://isdis.net/isic-project/", target="_blank")
+            li(role='presentation')
+              a(title='ISIC Project' href='http://isdis.net/isic-project/' target='_blank' rel='noopener')
                 i.icon-help
                 | ISIC Project
                 i.icon-link-ext
-            li(role="presentation")
-              a(title="Working Group Members", href="http://isdis.net/isic-project/working-group-members/", target="_blank")
+            li(role='presentation')
+              a(title='Working Group Members' href='http://isdis.net/isic-project/working-group-members/' target='_blank' rel='noopener')
                 i.icon-users
                 | Working Group Members
                 i.icon-link-ext
-            li.divider(role="separator")
+            li.divider(role='separator')
             li.dropdown-header
               | Policies
-            li(role="presentation")
-              a(title="Terms of Use", href="#termsOfUse")
+            li(role='presentation')
+              a(title='Terms of Use' href='#termsOfUse')
                 i.icon-doc-text
                 | Terms of Use
-            li(role="presentation")
-              a(title="Privacy Policy", href="#privacyPolicy")
+            li(role='presentation')
+              a(title='Privacy Policy' href='#privacyPolicy')
                 i.icon-doc-text
                 | Privacy Policy
-            li(role="presentation")
-              a(title="Medical Disclaimer", href="#medicalDisclaimer")
+            li(role='presentation')
+              a(title='Medical Disclaimer' href='#medicalDisclaimer')
                 i.icon-doc-text
                 | Medical Disclaimer
 
         li.dropdown
-          a.dropdown-toggle.isic-header-item(href="#", role="button", aria-haspopup="true" aria-expanded="false")
+          a.dropdown-toggle.isic-header-item(href='#' role='button' aria-haspopup='true' aria-expanded='false')
             | Community&nbsp;
             span.caret
           ul.dropdown-menu
-            li(role="presentation")
-              a(title="Forum", href="#forum")
+            li(role='presentation')
+              a(title='Forum' href='#forum')
                 i.icon-chat
                 | Forum
                 i.icon-link-ext
-            li(role="presentation")
-              a(title="2016 ISBI Grand Challenge", href="http://challenge2016.isic-archive.com", target="_blank")
+            li(role='presentation')
+              a(title='2016 ISBI Grand Challenge' href='http://challenge2016.isic-archive.com' target='_blank' rel='noopener')
                 i.icon-award
                 | 2016 ISBI Grand Challenge
                 i.icon-link-ext
-            li(role="presentation")
-              a(title="2017 ISBI Grand Challenge", href="http://challenge2017.isic-archive.com", target="_blank")
+            li(role='presentation')
+              a(title='2017 ISBI Grand Challenge' href='http://challenge2017.isic-archive.com' target='_blank' rel='noopener')
                 i.icon-award
                 | 2017 ISBI Grand Challenge
                 i.icon-link-ext
 
         li.dropdown
-          a.dropdown-toggle.isic-header-item(href="#images", role="button", aria-haspopup="true" aria-expanded="false")
+          a.dropdown-toggle.isic-header-item(href='#images' role='button' aria-haspopup='true' aria-expanded='false')
             | Lesion Images&nbsp;
             span.caret
           ul.dropdown-menu
-            li(role="presentation")
-              a(title="Datasets", href="#dataset")
+            li(role='presentation')
+              a(title='Datasets' href='#dataset')
                 i.icon-list
                 | Datasets
             if currentUser
-              li(role="presentation")
-                a(title="Upload Dataset", href="#dataset/upload")
+              li(role='presentation')
+                a(title='Upload Dataset' href='#dataset/upload')
                   i.icon-upload
                   | Upload Dataset
-            li(role="presentation")
-              a(title="Lesion Images", href="#images")
+            li(role='presentation')
+              a(title='Lesion Images' href='#images')
                 i.icon-picture
                 | Lesion Images
 
         li.dropdown
-          a.dropdown-toggle.isic-header-item(href="#studyResults", role="button", aria-haspopup="true" aria-expanded="false")
+          a.dropdown-toggle.isic-header-item(href='#studyResults' role='button' aria-haspopup='true' aria-expanded='false')
             | Annotation Study Results&nbsp;
             span.caret
           ul.dropdown-menu
-            li(role="presentation")
-              a(title="Featuresets", href="#featuresets")
+            li(role='presentation')
+              a(title='Featuresets' href='#featuresets')
                 i.icon-list
                 | Featuresets
-            li(role="presentation")
-              a(title="Manage Annotation Studies", href="#studies")
+            li(role='presentation')
+              a(title='Manage Annotation Studies' href='#studies')
                 i.icon-pencil
                 | Manage Annotation Studies
-            li(role="presentation")
-              a(title="Annotation Study Results", href="#studyResults")
+            li(role='presentation')
+              a(title='Annotation Study Results' href='#studyResults')
                 i.icon-eye
                 | Annotation Study Results
 
         if currentUser
-          li(role="presentation")
-            a.isic-header-item(title="Your Tasks", href="#tasks")
+          li(role='presentation')
+            a.isic-header-item(title='Your Tasks' href='#tasks')
               i.icon-check
               | Your Tasks
 
