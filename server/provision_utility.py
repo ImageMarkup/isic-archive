@@ -35,6 +35,9 @@ def getAdminUser():
             admin=True,
             public=False
         )
+        adminUser['status'] = 'disabled'
+        # TODO: subsequent re-saves of this user will re-enable it, until another user is created
+        adminUser = User.save(adminUser, validate=False)
     return adminUser
 
 
