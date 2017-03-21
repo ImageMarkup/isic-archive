@@ -258,7 +258,7 @@ isic.views.CreateDatasetRequestView = isic.View.extend({
     }
 });
 
-isic.router.route('dataset/upload', 'uploadDataset', function () {
+isic.router.route('dataset/create', 'createDataset', function () {
     if (girder.currentUser) {
         // Registered users must:
         //  (1) Accept the TOS

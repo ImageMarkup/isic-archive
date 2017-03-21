@@ -13,7 +13,7 @@ isic.views.DatasetsView = isic.View.extend({
             $(event.target).parent().find('.icon-down-open').removeClass('icon-down-open').addClass('icon-right-open');
         },
         'click .isic-dataset-add-button': function () {
-            isic.router.navigate('uploadDataset', {trigger: true});
+            isic.router.navigate('dataset/create', {trigger: true});
         }
     },
 
