@@ -52,7 +52,7 @@ isic.views.RegisterMetadataView = isic.View.extend({
 
         this.listenTo(this.dataset, 'isic:registerMetadata:error', function (resp) {
             isic.showAlertDialog({
-                text: '<h4>Error registering metadata</h4><br>' + resp.responseJSON.message,
+                text: '<h4>Error registering metadata</h4><br>' + _.escape(resp.responseJSON.message),
                 escapedHtml: true
             });
             this.$('#isic-register-metadata-submit').prop('disabled', false);

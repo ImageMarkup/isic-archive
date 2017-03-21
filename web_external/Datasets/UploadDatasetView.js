@@ -80,7 +80,7 @@ isic.views.UploadDatasetView = isic.View.extend({
 
         this.listenTo(this.dataset, 'isic:ingestImages:error', function (resp) {
             isic.showAlertDialog({
-                text: '<h4>Error submitting dataset</h4><br>' + resp.responseJSON.message,
+                text: '<h4>Error submitting dataset</h4><br>' + _.escape(resp.responseJSON.message),
                 escapedHtml: true
             });
             this.$('#isic-dataset-submit').prop('disabled', false);

@@ -151,20 +151,15 @@ isic.views.CreateStudyView = isic.View.extend({
             },
             error: null
         }).done(_.bind(function () {
-            girder.confirm({
+            isic.showAlertDialog({
                 text: '<h4>Study <b>"' + _.escape(name) + '"</b> created</h4>',
-                yesClass: 'hidden',
-                noText: 'OK',
                 escapedHtml: true
             });
             // TODO route directly to study
             isic.router.navigate('studies', {trigger: true});
         }, this)).fail(_.bind(function (resp) {
-            // TODO: add custom error dialog instead of using confirm dialog
-            girder.confirm({
+            isic.showAlertDialog({
                 text: '<h4>Error creating study</h4><br>' + _.escape(resp.responseJSON.message),
-                yesClass: 'hidden',
-                noText: 'OK',
                 escapedHtml: true
             });
             this.$('#isic-study-submit').prop('disabled', false);
