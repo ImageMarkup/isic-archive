@@ -212,7 +212,7 @@ isic.views.CreateDatasetView = isic.View.extend({
 
     showLicenseInfo: function () {
         if (!this.licenseInfoWidget) {
-            this.licenseInfoWidget = new isic.views.UploadDatasetLicenseInfoWidget({
+            this.licenseInfoWidget = new isic.views.CreateDatasetLicenseInfoWidget({
                 el: $('#g-dialog-container'),
                 parentView: this
             });
