@@ -221,7 +221,7 @@ isic.views.UploadDatasetView = isic.View.extend({
     }
 });
 
-isic.views.UploadDatasetRequestView = isic.View.extend({
+isic.views.CreateDatasetRequestView = isic.View.extend({
     events: {
         'submit #isic-dataset-form': function (event) {
             event.preventDefault();
@@ -268,7 +268,7 @@ isic.router.route('dataset/upload', 'uploadDataset', function () {
         if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
             nextView = isic.views.TermsAcceptanceView;
         } else if (!girder.currentUser.canCreateDataset()) {
-            nextView = isic.views.UploadDatasetRequestView;
+            nextView = isic.views.CreateDatasetRequestView;
         }
         girder.events.trigger('g:navigateTo', nextView);
     } else {
