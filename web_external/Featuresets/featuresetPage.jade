@@ -52,3 +52,12 @@
                               td=valueOption.name
           else
             | None
+  if currentUser && currentUser.canAdminStudy()
+    table.table.table-condensed.isic-featureset-table
+      tr
+        td.isic-featureset-table-section-header Actions
+      tr
+        td
+          button.isic-featureset-destroy-button.btn.btn-default.btn-md
+            i.icon-trash
+            |  Delete featureset

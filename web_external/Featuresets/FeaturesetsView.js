@@ -24,6 +24,11 @@ isic.views.FeaturesetsView = isic.View.extend({
         }, this);
         this.featuresets.fetch();
 
+        // TODO: Use the more general 'update' event, once Backbone is upgraded from Girder
+        this.listenTo(this.featuresets, 'remove', function () {
+            this.render();
+        }, this);
+
         this.paginateWidget = new girder.views.PaginateWidget({
             collection: this.featuresets,
             parentView: this
