@@ -252,7 +252,7 @@ isic.views.CreateDatasetRequestView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.uploadDatasetRequest());
+        this.$el.html(isic.templates.createDatasetRequest());
 
         return this;
     }
