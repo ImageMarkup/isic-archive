@@ -63,7 +63,6 @@ isic.views.RegisterMetadataView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.registerMetadata({
-            user: girder.currentUser,
             dataset: this.dataset
         }));
 

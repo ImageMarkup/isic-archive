@@ -26,7 +26,7 @@ isic.views.LayoutHeaderUserView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.layoutHeaderUser({
-            user: girder.currentUser
+            currentUser: girder.currentUser
         }));
 
         if (girder.currentUser) {

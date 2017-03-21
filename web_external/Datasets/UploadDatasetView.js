@@ -90,9 +90,7 @@ isic.views.UploadDatasetView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.uploadDataset({
-            user: girder.currentUser
-        }));
+        this.$el.html(isic.templates.uploadDataset());
 
         if (!this.uploadWidget) {
             this.initializeUploadWidget();
@@ -254,9 +252,7 @@ isic.views.UploadDatasetRequestView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.uploadDatasetRequest({
-            user: girder.currentUser
-        }));
+        this.$el.html(isic.templates.uploadDatasetRequest());
 
         return this;
     }

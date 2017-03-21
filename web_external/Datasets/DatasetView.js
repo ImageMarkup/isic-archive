@@ -32,7 +32,7 @@ isic.views.DatasetView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.datasetPage({
-            user: girder.currentUser,
+            currentUser: girder.currentUser,
             dataset: this.model,
             formatDate: this.formatDate
         }));
