@@ -63,7 +63,6 @@ isic.views.RegisterMetadataView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.registerMetadata({
-            user: girder.currentUser,
             dataset: this.dataset
         }));
 
@@ -177,7 +176,7 @@ isic.router.route('dataset/:id/metadata/register', 'registerMetadata', function 
         if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
             girder.events.trigger('g:navigateTo', isic.views.TermsAcceptanceView);
         } else if (!girder.currentUser.canCreateDataset()) {
-            girder.events.trigger('g:navigateTo', isic.views.UploadDatasetRequestView);
+            girder.events.trigger('g:navigateTo', isic.views.CreateDatasetRequestView);
         } else {
             // Fetch the dataset, then navigate to the view
             var dataset = new isic.models.DatasetModel({

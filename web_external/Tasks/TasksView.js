@@ -64,7 +64,7 @@ isic.views.TasksView = isic.View.extend({
 
             this.taskReviewView = new isic.views.TasksGroupView({
                 title: 'Dataset Review',
-                subtitle: 'QC review newly uploaded datasets',
+                subtitle: 'QC review newly created datasets',
                 linkPrefix: girder.apiRoot + '/task/me/review/redirect?datasetId=',
                 resourceName: 'dataset',
                 collection: this.reviewTasks,

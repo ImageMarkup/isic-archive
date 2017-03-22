@@ -1,9 +1,9 @@
-isic.views.UploadDatasetView = isic.View.extend({
+isic.views.CreateDatasetView = isic.View.extend({
     events: {
         'click #isic-upload-reset': function (event) {
             this.resetUpload();
         },
-        'click #isic-upload-show-license-info-link': 'showLicenseInfo',
+        'click #isic-create-dataset-show-license-info-link': 'showLicenseInfo',
         'change input[name="attribution"]': function (event) {
             // Update attribution name field sensitivity
             var target = $(event.target);
@@ -90,9 +90,7 @@ isic.views.UploadDatasetView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.uploadDataset({
-            user: girder.currentUser
-        }));
+        this.$el.html(isic.templates.createDataset());
 
         if (!this.uploadWidget) {
             this.initializeUploadWidget();
@@ -214,7 +212,7 @@ isic.views.UploadDatasetView = isic.View.extend({
 
     showLicenseInfo: function () {
         if (!this.licenseInfoWidget) {
-            this.licenseInfoWidget = new isic.views.UploadDatasetLicenseInfoWidget({
+            this.licenseInfoWidget = new isic.views.CreateDatasetLicenseInfoWidget({
                 el: $('#g-dialog-container'),
                 parentView: this
             });
@@ -223,7 +221,7 @@ isic.views.UploadDatasetView = isic.View.extend({
     }
 });
 
-isic.views.UploadDatasetRequestView = isic.View.extend({
+isic.views.CreateDatasetRequestView = isic.View.extend({
     events: {
         'submit #isic-dataset-form': function (event) {
             event.preventDefault();
@@ -254,25 +252,23 @@ isic.views.UploadDatasetRequestView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.uploadDatasetRequest({
-            user: girder.currentUser
-        }));
+        this.$el.html(isic.templates.createDatasetRequest());
 
         return this;
     }
 });
 
-isic.router.route('dataset/upload', 'uploadDataset', function () {
+isic.router.route('dataset/create', 'createDataset', function () {
     if (girder.currentUser) {
         // Registered users must:
         //  (1) Accept the TOS
         //  (2) Request and receive create dataset access
-        // before being able to see the upload dataset view
-        var nextView = isic.views.UploadDatasetView;
+        // before being able to see the create dataset view
+        var nextView = isic.views.CreateDatasetView;
         if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
             nextView = isic.views.TermsAcceptanceView;
         } else if (!girder.currentUser.canCreateDataset()) {
-            nextView = isic.views.UploadDatasetRequestView;
+            nextView = isic.views.CreateDatasetRequestView;
         }
         girder.events.trigger('g:navigateTo', nextView);
     } else {

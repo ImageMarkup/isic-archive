@@ -1,11 +1,11 @@
 //- Use inside a navbar
 .isic-current-user-text
-  if (user)
+  if (currentUser)
     ul.nav.navbar-nav.navbar-right
       li.navbar-brand.hidden-xs.isic-portrait-wrapper
       li.dropdown
         a.dropdown-toggle.isic-header-item(href='#' data-toggle='dropdown' role='button' aria-haspopup='true' aria-expanded='false')
-          | #{user.name()}&nbsp;
+          | #{currentUser.name()}&nbsp;
           span.caret
         ul.dropdown-menu
           li(role='presentation')

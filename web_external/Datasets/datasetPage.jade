@@ -35,7 +35,7 @@
     tr
       td.isic-dataset-table-label Signature
       td= dataset.get('signature')
-  if user && user.canCreateDataset()
+  if currentUser && currentUser.canCreateDataset()
     table.table.table-condensed.isic-dataset-table
       tr
         td.isic-dataset-table-section-header Actions
