@@ -44,7 +44,7 @@
                 td.isic-study-images-content-imageid= image._id
         else
           | (no images)
-  if currentUser && currentUser.canAdminStudy()
+  if studyAdmin
     table.table.table-condensed.isic-listing-item-table
       tr
         td.isic-listing-item-table-section-header Actions
