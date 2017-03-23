@@ -1,37 +1,46 @@
-.isic-study-users-container
-  h4 Unique ID
-  .isic-listing-content
-    code= study.id
-  h4 Users
-    if studyAdmin
-      a.isic-study-add-user-button.btn.btn-default.btn-sm.isic-tooltip(
-        title='Add user')
-        i.icon-plus
-  .isic-listing-content.isic-study-users-content
-    if study.get('users').length
-      ul
-        each user in study.users().models
-          li= user.name()
-    else
-      | (no users)
+.isic-listing-item-container.isic-study-container
+  table.table.table-condensed.isic-listing-item-table
+    tr
+      td.isic-listing-item-table-section-header(colspan=2) Info
+    tr
+      td.isic-listing-item-table-label Unique ID
+      td
+        code= study.id
+    tr
+      td.isic-listing-item-table-label Featureset
+      td= study.featureset().name()
 
-.isic-study-featureset-container
-  h4 Featureset
-  .isic-listing-content.isic-study-featureset-content
-    = study.featureset().name()
+  table.table.table-condensed.isic-listing-item-table
+    tr
+      td.isic-listing-item-table-section-header Users
+        |  (#{study.get('users').length})
+        if studyAdmin
+          a.isic-study-add-user-button.btn.btn-default.btn-xs.isic-tooltip(
+            title='Add user')
+            i.icon-plus
+    tr
+      td.isic-study-users-content
+        if study.get('users').length
+          ul
+            each user in study.users().models
+              li= user.name()
+        else
+          | (no users)
 
-.isic-study-images-container
-  h4 Images
-    |  (#{study.get('images').length})
-  .isic-listing-content.isic-study-images-content
-    if study.get('images').length
-      table
-        tr
-          th.isic-study-images-content-name Image Name
-          th.isic-study-images-content-imageid Image Id
-        each image in study.get('images')
-          tr
-            td.isic-study-images-content-name= image.name
-            td.isic-study-images-content-imageid= image._id
-    else
-      | (no images)
+  table.table.table-condensed.isic-listing-item-table
+    tr
+      td.isic-listing-item-table-section-header Images
+        |  (#{study.get('images').length})
+    tr
+      td.isic-study-images-content
+        if study.get('images').length
+          table
+            tr
+              th.isic-study-images-content-name Image Name
+              th.isic-study-images-content-imageid Image ID
+            each image in study.get('images')
+              tr
+                td.isic-study-images-content-name= image.name
+                td.isic-study-images-content-imageid= image._id
+        else
+          | (no images)

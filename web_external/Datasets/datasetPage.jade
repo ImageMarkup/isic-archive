@@ -1,44 +1,44 @@
-.isic-dataset-container
-  table.table.table-condensed.isic-dataset-table
+.isic-listing-item-container.isic-dataset-container
+  table.table.table-condensed.isic-listing-item-table
     tr
-      td.isic-dataset-table-section-header(colspan=2) Info
+      td.isic-listing-item-table-section-header(colspan=2) Info
     tr
-      td.isic-dataset-table-label Unique ID
+      td.isic-listing-item-table-label Unique ID
       td
         code= dataset.id
     tr
-      td.isic-dataset-table-label Creator
+      td.isic-listing-item-table-label Creator
       td= dataset.creator().name()
     tr
-      td.isic-dataset-table-label Created
+      td.isic-listing-item-table-label Created
       td= formatDate(dataset.get('created'))
 
-  table.table.table-condensed.isic-dataset-table
+  table.table.table-condensed.isic-listing-item-table
     tr
-      td.isic-dataset-table-section-header(colspan=2) Description
+      td.isic-listing-item-table-section-header(colspan=2) Description
     tr
-      td.isic-dataset-table-label Owner
+      td.isic-listing-item-table-label Owner
       td= dataset.get('owner')
     tr
-      td.isic-dataset-table-label Description
+      td.isic-listing-item-table-label Description
       td= dataset.get('description')
     tr
-      td.isic-dataset-table-label License
+      td.isic-listing-item-table-label License
       td= dataset.get('license')
     tr
-      td.isic-dataset-table-label Attribution
+      td.isic-listing-item-table-label Attribution
       td
         if dataset.get('anonymous')
           | Anonymous
         else
           = dataset.get('attribution')
     tr
-      td.isic-dataset-table-label Signature
+      td.isic-listing-item-table-label Signature
       td= dataset.get('signature')
   if currentUser && currentUser.canCreateDataset()
-    table.table.table-condensed.isic-dataset-table
+    table.table.table-condensed.isic-listing-item-table
       tr
-        td.isic-dataset-table-section-header Actions
+        td.isic-listing-item-table-section-header Actions
       tr
         td.btn-toolbar
           button.isic-dataset-register-metadata-button.btn.btn-default.btn-md
