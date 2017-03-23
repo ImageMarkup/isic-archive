@@ -13,7 +13,9 @@ isic.views.StudyView = isic.View.extend({
                 }, this);
             }
             this.studyAddUserWidget.render();
-        }
+        },
+
+        'click .isic-study-destroy-button': 'confirmDestroy'
     },
 
     /**
@@ -48,5 +50,36 @@ isic.views.StudyView = isic.View.extend({
         });
 
         return this;
+    },
+
+    confirmDestroy: function () {
+        girder.confirm({
+            text: '<h4>Permanently delete <b>"' + _.escape(this.model.name()) + '"</b> study?</h4>',
+            escapedHtml: true,
+            confirmCallback: _.bind(function () {
+                // Ensure dialog is hidden before continuing. Otherwise,
+                // when destroy() displays its modal alert dialog,
+                // the Bootstrap-created element with class "modal-backdrop"
+                // is erroneously not removed.
+                $('#g-dialog-container').on('hidden.bs.modal', _.bind(this.destroyModel, this));
+            }, this)
+        });
+    },
+
+    destroyModel: function () {
+        this.model.destroy({
+            success: function (model, resp, options) {
+                isic.showAlertDialog({
+                    text: '<h4>Study <b>"' + _.escape(model.name()) + '"</b> deleted</h4>',
+                    escapedHtml: true
+                });
+            },
+            error: function (model, resp, options) {
+                isic.showAlertDialog({
+                    text: '<h4>Error deleting study</h4><br>' + _.escape(resp.responseJSON.message),
+                    escapedHtml: true
+                });
+            }
+        });
     }
 });

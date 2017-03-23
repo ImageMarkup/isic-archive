@@ -25,8 +25,11 @@ isic.views.StudiesView = isic.View.extend({
         this.listenTo(this.studies, 'g:changed', function () {
             this.loaded = true;
             this.render();
-        }, this);
+        });
         this.studies.fetch();
+
+        // TODO: Use the more general 'update' event, once Girder's version of Backbone is upgraded
+        this.listenTo(this.studies, 'remove', this.render);
 
         this.paginateWidget = new girder.views.PaginateWidget({
             collection: this.studies,
