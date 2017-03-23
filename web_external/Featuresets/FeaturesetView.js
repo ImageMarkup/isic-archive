@@ -39,12 +39,12 @@ isic.views.FeaturesetView = isic.View.extend({
                 // when destroy() displays its modal alert dialog,
                 // the Bootstrap-created element with class "modal-backdrop"
                 // is erroneously not removed.
-                $('#g-dialog-container').on('hidden.bs.modal', _.bind(this.destroy, this));
+                $('#g-dialog-container').on('hidden.bs.modal', _.bind(this.destroyModel, this));
             }, this)
         });
     },
 
-    destroy: function () {
+    destroyModel: function () {
         this.model.destroy({
             success: function (model, resp, options) {
                 isic.showAlertDialog({
