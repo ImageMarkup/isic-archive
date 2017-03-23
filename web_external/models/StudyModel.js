@@ -38,5 +38,14 @@ isic.models.StudyModel = isic.Model.extend({
         }, this)).fail(_.bind(function (err) {
             this.trigger('g:error', err);
         }, this));
+    },
+
+    destroy: function (options) {
+        // Don't modify the "options", but override some properties
+        var params = _.clone(options);
+        // Study deletion may fail if it has completed annotations
+        params.wait = true;
+
+        return isic.Model.prototype.destroy.call(this, params);
     }
 });
