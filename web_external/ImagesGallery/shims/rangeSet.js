@@ -161,11 +161,6 @@
         return list;
     }
 
-    function rangeUnion(list1, list2, comparator) {
-        comparator = comparator || defaultComparator;
-        return cleanRangeList(list1.concat(list2), comparator);
-    }
-
     function rangeIntersection(list1, list2, comparator) {
         comparator = comparator || defaultComparator;
         var result = [];
@@ -191,103 +186,8 @@
         return cleanRangeList(result);
     }
 
-    function rangeSubtract(list1, list2, comparator) {
-        comparator = comparator || defaultComparator;
-        list1 = cleanRangeList(list1);
-        list2 = cleanRangeList(list2);
-
-        var result = [];
-        var i1 = 0;
-        var i2 = 0;
-
-        while (i1 < list1.length) {
-            var l1 = list1[i1];
-            if (i2 >= list2.length) {
-                // Nothing left to subtract
-                result.push(l1);
-                i1 += 1;
-                continue;
-            }
-
-            // Okay, we're going to assume that we're going
-            // to keep l1, with some potential modifications...
-            // including splitting. So construct a temporary
-            // list of the new ranges that we're about to add
-            var newRanges = [{}];
-            if ('lowBound' in l1) {
-                newRanges[0].lowBound = l1.lowBound;
-            }
-            if ('highBound' in l1) {
-                newRanges[0].highBound = l1.highBound;
-            }
-
-            // Now go through the second list that will hack
-            // up the stuff in newRanges
-            _.each(list2, function (l2) {
-                var indicesToTrash = [];
-                _.each(newRanges, function (newRange, index) {
-                    // First, a corner case: if the range to subtract is
-                    // entirely inside the original range, we need to
-                    // split the original range
-                    if ('lowBound' in l2 && 'highBound' in l2 &&
-                    (!('lowBound' in newRange) ||
-                    comparator(l2.lowBound, newRange.lowBound) > 0) &&
-                    (!('highBound' in newRange) ||
-                    comparator(l2.highBound, newRange.highBound) < 0)) {
-                        var temp = {
-                            lowBound: l2.highBound
-                        };
-                        if ('highBound' in newRange) {
-                            temp.highBound = newRange.highBound;
-                        }
-                        newRanges.push(temp);
-                        newRange.highBound = l2.lowBound;
-                    } else {
-                        // Next, the regular case: chop off the ends of newRange
-
-                        // Try to chop off newRange's low bound
-                        if (compareLowBounds(l2, newRange) <= 0) {
-                            // l2's lowBound is below newRange's lowBound.
-                            // What's it going to do specifically?
-                            if (compareHighBounds(l2, newRange) >= 0) {
-                                // l2 kills off newRange entirely
-                                indicesToTrash.push(index);
-                            } else if (!('lowBound' in newRange) ||
-                            comparator(l2.highBound, newRange.lowBound) > 0) {
-                                // l2 just chops off newRange's bottom bound
-                                newRange.lowBound = l2.highBound;
-                            }
-                        }
-
-                        // Try to chop off newRange's high bound
-                        if (compareHighBounds(l2, newRange) >= 0) {
-                            // l2's highBound is above newRange's highBound,
-                            // and we already know that its lowBound is above
-                            // newRange's lowBound... so there's only a chance
-                            // to chop:
-                            if (!('highBound' in newRange) ||
-                            comparator(l2.lowBound, newRange.highBound) < 0) {
-                                newRange.highBound = l2.lowBound;
-                            }
-                        }
-                    }
-                });
-                _.each(indicesToTrash.reverse(), function (i) {
-                    newRanges.splice(i, 1);
-                });
-            });
-
-            result = result.concat(newRanges);
-            i1 += 1;
-        }
-
-        return result;
-    }
-
     isic.shims = isic.shims || {};
     isic.shims.RangeSet = {
-        rangeUnion: rangeUnion,
-        rangeIntersection: rangeIntersection,
-        rangeSubtract: rangeSubtract
+        rangeIntersection: rangeIntersection
     };
 })();

@@ -1,31 +1,28 @@
-//
-// Segmentations display view
-//
-
-// View for displaying an image segmentation's properties
+/**
+ * View for displaying an image segmentation's properties
+ */
 isic.views.SegmentationDisplayView = isic.View.extend({
     /**
      * @param {isic.models.SegmentationModel} settings.model
      */
     initialize: function (settings) {
-        this.listenTo(this.model, 'change:_id g:fetched g:error', this.render);
-
-        this.render();
+        if (this.model.has('meta')) {
+            this.render();
+        } else {
+            // Since this view doesn't own the "model", "listenTo" absolutely must be used
+            this.listenTo(this.model, 'g:fetched', this.render);
+            this.model.fetch();
+        }
     },
 
     render: function () {
-        var created = null;
-        var thumbnailUrl = null;
-
-        if (this.model.id) {
-            created = girder.formatDate(this.model.get('created'), girder.DATE_SECOND);
-            thumbnailUrl = [
-                girder.apiRoot,
-                'segmentation',
-                this.model.id,
-                'thumbnail?width=256'
-            ].join('/');
-        }
+        var created = girder.formatDate(this.model.get('created'), girder.DATE_SECOND);
+        var thumbnailUrl = [
+            girder.apiRoot,
+            'segmentation',
+            this.model.id,
+            'thumbnail?width=256'
+        ].join('/');
 
         this.$el.html(isic.templates.segmentationDisplayPage({
             segmentation: this.model,
@@ -42,13 +39,15 @@ isic.views.SegmentationDisplayView = isic.View.extend({
     }
 });
 
-// View for selecting an image segmentation and displaying its properties
+/**
+ * View for selecting an image segmentation and displaying its properties
+ */
 isic.views.SegmentationsDisplayView = isic.View.extend({
     events: {
         'change select': function (event) {
-            var segmentationId = $(event.currentTarget).val();
-            this.segmentation.set('_id', segmentationId, {silent: true});
-            this.segmentation.fetch();
+            var selectedSegmentationId = $(event.currentTarget).val();
+            var selectedSegmentation = this.segmentations.get(selectedSegmentationId);
+            selectedSegmentation.select();
         }
     },
 
@@ -58,18 +57,16 @@ isic.views.SegmentationsDisplayView = isic.View.extend({
     initialize: function (settings) {
         this.image = settings.image;
 
-        this.segmentations = new isic.collections.SegmentationCollection();
+        this.segmentations = new isic.collections.SelectableSegmentationCollection();
+        this.listenTo(this.segmentations, 'g:changed', this.render);
+        this.listenTo(this.segmentations, 'select:one', this.onSelected);
 
-        this.segmentation = new isic.models.SegmentationModel();
+        this.segmentationDisplayView = null;
 
-        this.segmentationDisplayView = new isic.views.SegmentationDisplayView({
-            model: this.segmentation,
-            parentView: this
+        this.segmentations.fetch({
+            imageId: this.image.id,
+            limit: 0
         });
-
-        this.listenTo(this.image, 'change:_id', this.fetchSegmentations);
-
-        this.render();
     },
 
     render: function () {
@@ -77,25 +74,18 @@ isic.views.SegmentationsDisplayView = isic.View.extend({
             segmentations: this.segmentations.models
         }));
 
-        this.segmentationDisplayView.setElement(
-            this.$('#isic-segmentation-display-container')).render();
-
         return this;
     },
 
-    fetchSegmentations: function () {
-        this.segmentation.clear();
-        this.segmentations.reset();
-
-        this.render();
-
-        if (this.image.id) {
-            this.segmentations.once('g:changed', function () {
-                this.render();
-            }, this).fetch({
-                imageId: this.image.id,
-                limit: 0
-            });
+    onSelected: function (selectedSegmentation) {
+        if (this.segmentationDisplayView) {
+            this.segmentationsDisplayView.destroy();
+            this.segmentationsDisplayView = null;
         }
+        this.segmentationDisplayView = new isic.views.SegmentationDisplayView({
+            model: selectedSegmentation,
+            el: this.$('#isic-segmentation-display-container'),
+            parentView: this
+        });
     }
 });

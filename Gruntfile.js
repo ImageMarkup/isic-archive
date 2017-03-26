@@ -165,7 +165,8 @@ module.exports = function (grunt) {
             pluginDir + '/node_modules/select2/dist/js/select2.min.js',
             pluginDir + '/node_modules/geojs/geo.min.js',
             // TODO: remove upgraded Underscore dep once Girder is upgraded
-            pluginDir + '/node_modules/underscore/underscore-min.js'
+            pluginDir + '/node_modules/underscore/underscore-min.js',
+            pluginDir + '/node_modules/backbone.select/dist/backbone.select.min.js'
         ];
         files[staticDir + '/isic_archive.ext.min.css'] = [
             pluginDir + '/node_modules/select2/dist/css/select2.min.css',
