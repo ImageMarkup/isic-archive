@@ -141,10 +141,14 @@ _.extend(isic.collections.ImagesFilters.prototype, Backbone.Events, {
                 return binIncluded === false;
             })
             .keys()
+            // Each of these must be encoded, as they're user-provided values from the database
             .map(isic.SerializeFilterHelpers._stringToHex)
             .value();
         // TODO: Could use "facetId + ' in ' + includedBinLabels"" if most are excluded
         return '(' +
+            // TODO: This doesn't strictly need to be encoded (provided that we don't use any of the
+            // grammar's forbidden characters for identifiers), but before removing the encoding
+            // step, we should ensure that decoding it (which always happens) will be a safe no-op
             isic.SerializeFilterHelpers._stringToHex(facetId) +
             ' not in ' +
             JSON.stringify(excludedBinLabels) +
