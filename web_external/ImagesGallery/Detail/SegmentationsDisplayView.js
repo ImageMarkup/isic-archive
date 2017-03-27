@@ -79,8 +79,8 @@ isic.views.SegmentationsDisplayView = isic.View.extend({
 
     onSelected: function (selectedSegmentation) {
         if (this.segmentationDisplayView) {
-            this.segmentationsDisplayView.destroy();
-            this.segmentationsDisplayView = null;
+            this.segmentationDisplayView.destroy();
+            this.segmentationDisplayView = null;
         }
         this.segmentationDisplayView = new isic.views.SegmentationDisplayView({
             model: selectedSegmentation,
