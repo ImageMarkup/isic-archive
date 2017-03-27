@@ -30,18 +30,20 @@ isic.views.ImageDetailsPane = isic.View.extend({
 
     render: function () {
         var selectedImage = this.images.selected;
-        if (!selectedImage) {
-            // Guard in case a deselection happened while a fetch was pending
-            return;
-        }
 
         if (!selectedImage.has('meta')) {
             // If the image is only a summary, fetch details, then render
             // TODO: a loading widget could be displayed, instead of an empty div
             this.$el.empty();
-            selectedImage
-                .once('g:fetched', this.render, this)
-                .fetch();
+            // Since this view doesn't own the "selectedImage", "listenTo" absolutely must be used
+            this.listenTo(selectedImage, 'g:fetched', function () {
+                if (this.images.selected === selectedImage) {
+                    // Guard in case a deselection or change in selection happened while a fetch was
+                    // pending
+                    this.render();
+                }
+            });
+            selectedImage.fetch();
             return;
         }
 
