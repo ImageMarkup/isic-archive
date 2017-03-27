@@ -1,6 +1,9 @@
 isic.views.ImagesPagingPane = Backbone.View.extend({
     events: {
         'click #isic-images-seekFirst:not(.disabled)': function () {
+            // TODO: cancel any pending fetches before fetching an additional next page; this is
+            // best implemented inside ImageCollection.fetch; also ensure that the current page is
+            // sync'd with the fetched page, when pages get fetched in rapid sequence
             this.images.fetchFirstPage();
         },
         'click #isic-images-seekPrev:not(.disabled)': function () {

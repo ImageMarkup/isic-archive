@@ -26,24 +26,30 @@ isic.views.ImagesView = isic.View.extend({
             this.filters.initialize(collection);
         });
         this.listenTo(this.filters, 'change', function () {
-            // TODO: Ideally, this should select and cancel only the old set of requests; until
-            // that's fixed, hopefully nobody will click histogram buttons too early in the page
-            // load
-            girder.cancelRestRequests();
+            // Cancel any previous still-pending requests, as this new set of requests will override
+            // them anyway
+            _.each([this.filteredFacets, this.images], function (collection) {
+                if (collection._pendingRequest) {
+                    collection._pendingRequest.abort();
+                }
+            });
 
             var filterQuery = JSON.stringify(this.filters.asAst());
             // TODO: If there's no filterQuery, we could just reset filteredFacets to completeFacets
-            this.filteredFacets.fetch({
+            this.filteredFacets._pendingRequest = this.filteredFacets.fetch({
                 // filteredFacets is a direct subclass of Backbone.Collection, with different
                 // arguments to ".fetch"
                 data: {
                     filter: filterQuery
                 }
             });
-            this.images.fetch({
+            this.images._pendingRequest = this.images.fetch({
                 offset: 0,
                 filter: filterQuery
             });
+
+            // TODO: It would be nice if collections just automatically stored their most recent
+            // fetch XHR as an internal property.
         });
 
         this.render();
