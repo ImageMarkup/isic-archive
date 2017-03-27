@@ -34,8 +34,12 @@ isic.views.ImagesView = isic.View.extend({
                 }
             });
 
+            // TODO: If there's no "filterQuery", we could just always reset "filteredFacets" to
+            // "completeFacets" here; then make "filters.initialize" trigger a "change" event
+            // when called; then remove the calls to "images.fetch" and "filteredFacets.reset"
+            // from the "completeFacets:sync" event handler and let them just run from here only
+
             var filterQuery = JSON.stringify(this.filters.asAst());
-            // TODO: If there's no filterQuery, we could just reset filteredFacets to completeFacets
             this.filteredFacets._pendingRequest = this.filteredFacets.fetch({
                 // filteredFacets is a direct subclass of Backbone.Collection, with different
                 // arguments to ".fetch"
