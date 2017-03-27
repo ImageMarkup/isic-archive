@@ -57,6 +57,8 @@ _.extend(isic.collections.ImagesFilters.prototype, Backbone.Events, {
         _.each(this._filters[facetId], function (oldValue, binLabel, facetBin) {
             facetBin[binLabel] = binsIncluded;
         });
+        this.trigger('change:' + facetId);
+        this.trigger('change');
     },
 
     asAst: function () {
