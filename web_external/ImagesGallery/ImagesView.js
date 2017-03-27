@@ -55,6 +55,9 @@ isic.views.ImagesView = isic.View.extend({
             // TODO: It would be nice if collections just automatically stored their most recent
             // fetch XHR as an internal property.
         });
+        this.listenTo(this.images, 'select:one', this.onImageSelected);
+        // Collection resets do not trigger "deselect" events, so they must be listened for
+        this.listenTo(this.images, 'deselect:one reset', this.onImageDeselected);
 
         this.render();
     },
@@ -109,13 +112,6 @@ isic.views.ImagesView = isic.View.extend({
             parentView: this
         });
 
-        // This will self-render when this.images is selected
-        this.imageDetailsPane = new isic.views.ImageDetailsPane({
-            images: this.images,
-            el: this.$('#isic-images-imageDetailsPane'),
-            parentView: this
-        });
-
         // This kicks off the loading and rendering of all data
         this.filterLoaded.done(_.bind(function () {
             this.completeFacets.fetch();
@@ -126,6 +122,33 @@ isic.views.ImagesView = isic.View.extend({
         // completely loaded before "images" resolves
 
         return this;
+    },
+
+    _clearDetailsPane: function () {
+        if (this.imageDetailsPane) {
+            // Girder's version of "destroy" (unlike Backbone's "remove") will empty, but not
+            // remove "imageDetailsPane.$el"
+            this.imageDetailsPane.destroy();
+            this.imageDetailsPane = null;
+        }
+    },
+
+    onImageSelected: function () {
+        this._clearDetailsPane();
+        // This will self-render when the image details are available
+        this.imageDetailsPane = new isic.views.ImageDetailsPane({
+            image: this.images.selected,
+            el: this.$('#isic-images-imageDetailsPane'),
+            parentView: this
+        });
+    },
+
+    onImageDeselected: function () {
+        if (!this.images.selected) {
+            this._clearDetailsPane();
+        }
+        // If another image is selected, do nothing, as the "select:one" event (which unfortunately
+        // gets triggered before "deselect:one") should have already run
     }
 });
 

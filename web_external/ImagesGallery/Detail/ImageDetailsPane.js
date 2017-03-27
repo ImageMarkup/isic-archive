@@ -1,60 +1,35 @@
 isic.views.ImageDetailsPane = isic.View.extend({
     events: {
         'click #isic-image-details-zoom': 'zoom',
-        'click #isic-image-details-close': 'clearSelectedImage'
+        'click #isic-image-details-close': 'closeDetails'
     },
 
     /**
-     * @param {isic.collections.SelectableImageCollection} settings.images
+     * @param {isic.models.ImageModel} settings.image
      */
     initialize: function (settings) {
-        this.images = settings.images;
-        this.segmentationsDisplayView = null;
+        this.image = settings.image;
 
-        // Collection resets do not trigger "deselect" events, so they must be listened for
-        this.listenTo(this.images, 'select:one', this.render);
-        this.listenTo(this.images, 'deselect:one reset', this.onDeselected);
-    },
-
-    onDeselected: function (model, collection, options) {
-        // If another image is selected, do nothing, as the "select:one" event has already triggered
-        if (!this.images.selected) {
-            this.$el.hide();
-            if (this.segmentationsDisplayView) {
-                this.segmentationsDisplayView.destroy();
-                this.segmentationsDisplayView = null;
-            }
-            this.$el.empty();
+        if (!this.image.has('meta')) {
+            // If the image is only a summary, fetch details, then render
+            // Since this view doesn't own the "image", "listenTo" absolutely must be used
+            this.listenTo(this.image, 'g:fetched', this.render);
+            this.image.fetch();
+            // TODO: a loading widget could be displayed while the fetch runs
+        } else {
+            this.render();
         }
     },
 
     render: function () {
-        var selectedImage = this.images.selected;
-
-        if (!selectedImage.has('meta')) {
-            // If the image is only a summary, fetch details, then render
-            // TODO: a loading widget could be displayed, instead of an empty div
-            this.$el.empty();
-            // Since this view doesn't own the "selectedImage", "listenTo" absolutely must be used
-            this.listenTo(selectedImage, 'g:fetched', function () {
-                if (this.images.selected === selectedImage) {
-                    // Guard in case a deselection or change in selection happened while a fetch was
-                    // pending
-                    this.render();
-                }
-            });
-            selectedImage.fetch();
-            return;
-        }
-
         // Get image data
-        var created = girder.formatDate(selectedImage.get('created'), girder.DATE_SECOND);
+        var created = girder.formatDate(this.image.get('created'), girder.DATE_SECOND);
 
         // Get license, default to CC-0
         var license;
-        if (selectedImage.has('license')) {
+        if (this.image.has('license')) {
             license = {
-                name: selectedImage.get('license'),
+                name: this.image.get('license'),
                 url: null
             };
         } else {
@@ -64,11 +39,11 @@ isic.views.ImageDetailsPane = isic.View.extend({
             };
         }
 
-        var meta = selectedImage.get('meta');
+        var meta = this.image.get('meta');
         var acquisitionMetadata = meta['acquisition'];
         var clinicalMetadata = meta['clinical'];
         var unstructuredMetadata = meta['unstructured'] || {};
-        var privateMetadata = selectedImage.get('privateMeta');
+        var privateMetadata = this.image.get('privateMeta');
 
         // Reformat some acquisition metadata
         acquisitionMetadata = _.clone(acquisitionMetadata);
@@ -80,7 +55,7 @@ isic.views.ImageDetailsPane = isic.View.extend({
         this.$el.html(isic.templates.imageDetailsPage({
             apiRoot: girder.apiRoot,
             imgRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/img',
-            image: selectedImage,
+            image: this.image,
             currentUser: girder.currentUser,
             created: created,
             license: license,
@@ -91,7 +66,7 @@ isic.views.ImageDetailsPane = isic.View.extend({
         }));
 
         this.segmentationsDisplayView = new isic.views.SegmentationsDisplayView({
-            image: selectedImage,
+            image: this.image,
             el: this.$('#isic-image-details-segmentations-display-view-container'),
             parentView: this
         });
@@ -100,8 +75,6 @@ isic.views.ImageDetailsPane = isic.View.extend({
             trigger: 'hover'
         });
 
-        this.$el.show();
-
         return this;
     },
 
@@ -109,13 +82,13 @@ isic.views.ImageDetailsPane = isic.View.extend({
         this.clearTooltips();
         new isic.views.ImageFullscreenWidget({ // eslint-disable-line no-new
             el: $('#g-dialog-container'),
-            model: this.images.selected,
+            model: this.image,
             parentView: this
         }).render();
     },
 
-    clearSelectedImage: function () {
-        this.images.deselect();
+    closeDetails: function () {
+        this.image.deselect();
     },
 
     clearTooltips: function () {
