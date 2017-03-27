@@ -34,6 +34,7 @@ isic.views.ImagesPagingPane = Backbone.View.extend({
 
         // TODO: Use the more general 'update' event, once Girder's version of Backbone is upgraded
         this.listenTo(this.images, 'g:changed', this._rerender);
+        this.listenTo(this.filteredFacets, 'sync', this._rerender);
 
         // TODO: disable controls (things in updateControls) on any of
         // this.completeFacets, this.filteredFacets, this.images fetch,
