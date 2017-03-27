@@ -405,16 +405,12 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
 
         this.$el.html(isic.templates.imagesFacetCategorical({
             title: this.title,
-            bins: completeFacetBins
+            bins: completeFacetBins,
+            getBinLabel: this._getBinLabel
         }));
 
-        var binElems = d3.select(this.el).selectAll('.isic-images-facet-bin')
+        d3.select(this.el).selectAll('.isic-images-facet-bin')
             .data(this._zipFacetBins());
-        binElems.select('.isic-images-facet-bin-name')
-            .text(_.bind(function (d) {
-                return this._getBinLabel(d.completeFacetBin);
-            }, this));
-
         this._rerenderCounts();
         this._rerenderSelections();
     },
