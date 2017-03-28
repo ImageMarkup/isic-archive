@@ -43,6 +43,7 @@ isic.views.StudyView = isic.View.extend({
         this.$el.html(isic.templates.studyPage({
             canAdminStudy: this.canAdminStudy,
             study: this.model,
+            formatDate: this.formatDate
         }));
 
         this.$('.isic-tooltip').tooltip({

@@ -7,6 +7,12 @@
       td
         code= study.id
     tr
+      td.isic-listing-item-table-label Creator
+      td= study.creator().name()
+    tr
+      td.isic-listing-item-table-label Created
+      td= formatDate(study.get('created'))
+    tr
       td.isic-listing-item-table-label Featureset
       td= study.featureset().name()
 
