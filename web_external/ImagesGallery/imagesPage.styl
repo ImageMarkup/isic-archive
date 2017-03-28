@@ -11,139 +11,95 @@ $disabledImageFilter = url(#recolorImageToCCCCCC)
 $dataAxisColor = #333333
 
 #galleryContent
-    position relative
-    min-height 12em
-    height calc(100vh - 8.2em)
+  position relative
+  min-height 12em
+  height calc(100vh - 8.2em)
+  display flex
+  width 100%
+  flex-wrap nowrap
+
+  .flexRow
     display flex
     width 100%
     flex-wrap nowrap
 
-    .flexRow
-        display flex
-        width 100%
-        flex-wrap nowrap
+  .flexColumn
+    display flex
+    flex-direction column
+    height 100%
+    flex-wrap nowrap
 
-    .flexColumn
-        display flex
-        flex-direction column
-        height 100%
-        flex-wrap nowrap
+  .fixedWidth
+    min-width 32em
+    max-width 32em
+    flex-basis 32em
+    overflow-y auto
 
-    .fixedWidth
-        min-width 32em
-        max-width 32em
-        flex-basis 32em
-        overflow-y auto
+  .spacer
+  .growing
+    flex-grow 1
 
-    .spacer
-    .growing
-        flex-grow 1
+  .pane
+    position relative
+    padding 0.5em
+    margin 0.5em
+    border 1px solid #DDDDDD
+    border-radius 3px
 
-    .pane
-        position relative;
-        padding 0.5em;
-        margin 0.5em;
-        border 1px solid #DDDDDD;
-        border-radius 3px;
+  .button
+      margin 0.5em
+      cursor pointer
+      border 1px solid transparent
+      border-radius 3px
+      padding 3px
 
-    .button
-        margin 0.5em
-        cursor pointer
-        border 1px solid transparent
-        border-radius 3px
-        padding 3px
+      img
+        width 1em
+        height 1em
+        opacity 0.7
+
+      &.selected
+        img
+          -webkit-filter $selectedImageFilter
+          filter $selectedImageFilter
+
+      &:hover
+        border 1px solid #E2E2E2
+        background linear-gradient(to bottom, #fff 60%, #f6f6f6 100%)
 
         img
-            width 1em
-            height 1em
-            opacity 0.7
+          opacity 1.0
 
-        &.selected
-            img
-                -webkit-filter $selectedImageFilter
-                filter $selectedImageFilter
+      &.disabled
+      &.disabled:hover
+        border 1px solid transparent
+        background transparent
+        cursor default
 
-        &:hover
-            border 1px solid #E2E2E2
-            background linear-gradient(to bottom, #fff 60%, #f6f6f6 100%)
+        img
+          opacity 0.2
 
-            img
-                opacity 1.0
+  .isic-images-image-container
+    overflow auto
 
-        &.disabled
-        &.disabled:hover
-            border 1px solid transparent
-            background transparent
-            cursor default
-
-            img
-                opacity 0.2
-
-    .isic-images-image-container
-      overflow auto
-
-    /* Image wall */
     #isic-images-imageWall
-        overflow-y auto
-        overflow-x hidden
-        min-width 32em
+      overflow-y auto
+      overflow-x hidden
+      min-width 32em
 
-        image
-            cursor pointer
+      image
+        cursor pointer
 
-        rect#highlightOutline
-            fill none
-            stroke #00ABFF
-            stroke-width 4px
+      rect#highlightOutline
+        fill none
+        stroke #00ABFF
+        stroke-width 4px
 
-        user-select none
-
-    /* Paging pane */
-    #isic-images-pagingPane
-        flex-basis 6em
-        height 6em
-        max-height 6em
-        min-height 6em
-        display flex
-        flex-wrap nowrap
-        align-items center
-        user-select none
-
-        #isic-images-pagingTools
-            align-items: center;
-
-            .overview
-                font-weight bolder
-                color: $overviewColor
-
-            .filteredSet
-                font-weight bolder
-                color: $filteredSetColor
-
-            .page
-                font-weight bolder
-                color: $pageColor
-
-            #isic-images-download-zip
-                margin-left auto
-
-        #isic-images-pagingBars
-            position relative
-
-            .bar
-                position absolute
-                height 1em
-                top 0em
-
-            .filteredSet.bar
-                background-color $filteredSetColor
-
-            .page.bar
-                background-color $pageColor
+      user-select none
 
     .thumb
-        padding 3px
+      padding 3px
 
-    .thumb.selected
-        padding 0px
+      &.selected
+        padding 0
         border solid 3px deepskyblue

@@ -35,7 +35,7 @@ and
   / atom
 
 atom
-  = "not" _ "(" expr:start _ ")" { return makeNode('not', expr); }
+  = "not" _ "(" _ expr:start _ ")" { return makeNode('not', expr); }
   / field:identifier _ op:inclusion _ matches:list { return makeNode(op, [field, matches]); }
   / field:identifier _ op:operator _ value:value { return makeNode(op, [field, value]); }
   / lowValue:value _ op1:operator _ field:identifier _ op2:operator _ highValue:value { return between(lowValue, op1, field, op2, highValue); }

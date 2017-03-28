@@ -1,90 +1,66 @@
-/*globals d3*/
+isic.views.ImageWall = isic.View.extend({
+    events: {
+        'click .thumb': function (event) {
+            var imageId = $(event.currentTarget).data('imageId');
+            var clickedImage = this.images.get(imageId);
 
-isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
+            if (event.shiftKey) {
+                new isic.views.ImageFullscreenWidget({ // eslint-disable-line no-new
+                    el: $('#g-dialog-container'),
+                    model: clickedImage,
+                    parentView: this
+                }).render();
+            } else {
+                clickedImage.toggleSelected();
+            }
+        }
+    },
 
-isic.views.ImagesViewSubViews.ImageWall = isic.View.extend({
     /**
-     * @param {isic.views.ImagesViewSubViews.ImagesViewModel} settings.model
-     * @param {isic.models.ImageModel} settings.image
+     * @param {isic.collections.ImageCollection} settings.images
      */
     initialize: function (settings) {
-        this.image = settings.image;
-        // For now we'll hard code this (and probably change it in the future),
-        // depending on the page size
-        this.imageSize = 128;
+        this.images = settings.images;
+        // For now we'll hard code this (and probably change it in the future), depending on the
+        // page size
+        this.thumbnailSize = 128;
 
-        this.listenTo(this.model.images, 'g:changed', this.render);
+        // TODO: could this event be simply 'update'? (it should not fire when sub-models are directly fetched)
+        this.listenTo(this.images, 'g:changed', this.render);
+        this.listenTo(this.images, 'select:one deselect:one', this._rerenderSelection);
     },
-    render: _.debounce(function () {
-        var self = this;
 
-        // Since tooltip-enabled elements are about to be destroyed, first
-        // remove any active tooltips from them.
+    render: function () {
+        // Since tooltip-enabled elements are about to be destroyed, first remove any active
+        // tooltips from them.
         this.clearTooltips();
-        // Ordinarily, we would use the exit selection to clean up after
-        // ourselves, but deleting all the img elements has the effect of
-        // visually "streaming in" the new data, rather than updating the old
-        // images, which feels error-prone.
-        d3.select(this.el)
-          .selectAll('img')
-          .remove();
 
-        d3.select(this.el)
-            .selectAll('img')
-            .data(this.model.images.map(function (image) {
-                return {
-                    id: image.id,
-                    name: image.get('name')
-                };
-            }))
-            .enter()
-            .append('img')
-            .classed('thumb', true)
-            .attr('src', _.bind(function (d) {
-                return girder.apiRoot + '/image/' + d.id + '/thumbnail?width=' + this.imageSize;
-            }, this))
-            .attr('height', this.imageSize * 0.75)
-            .attr('width', this.imageSize)
-            .on('click', function (d) {
-                self.clearTooltips();
-                if (d3.event.shiftKey) {
-                    new isic.views.ImageFullscreenWidget({ // eslint-disable-line no-new
-                        el: $('#g-dialog-container'),
-                        model: self.model.images.findWhere({_id: d.id}),
-                        parentView: self
-                    }).render();
-                } else {
-                    // Clear 'selected' class from all elements.
-                    d3.select(self.el)
-                        .selectAll('img')
-                        .classed('selected', false);
+        this.$el.html(isic.templates.imageWall({
+            apiRoot: girder.apiRoot,
+            images: this.images.models,
+            thumbnailSize: this.thumbnailSize
+        }));
 
-                    if (d.id === self.image.id) {
-                        self.image.clear();
-                    } else {
-                        d3.select(this)
-                            .classed('selected', true);
+        this.$('[data-toggle="tooltip"]').tooltip({
+            placement: 'auto',
+            viewport: '#isic-images-imageWall',
+            trigger: 'hover'
+        });
+    },
 
-                        self.image.clear({silent: true});
-                        self.image.set('_id', d.id);
-                        self.image.fetch();
-                    }
-                }
-            })
-            .attr('data-toggle', 'tooltip')
-            .each(function (d) {
-                $(this).tooltip({
-                    title: d.name,
-                    placement: 'auto',
-                    viewport: '#isic-images-imageWall',
-                    trigger: 'hover'
-                });
-            });
-    }, 50),
+    _rerenderSelection: function () {
+        this.$('.thumb').removeClass('selected');
+
+        var selectedImage = this.images.selected;
+        if (selectedImage) {
+            this.$('.thumb[data-image-id="' + selectedImage.id + '"]').addClass('selected');
+        }
+    },
+
     clearTooltips: function () {
         this.$('[data-toggle="tooltip"]').tooltip('hide');
-        // For unknown reasons, tooltips sometimes remain after they've been
-        // hidden, so manually destroy the tooltip element.
+        // For unknown reasons, tooltips sometimes remain after they've been hidden, so manually
+        // destroy the tooltip element.
         this.$('.tooltip').remove();
     }
 });

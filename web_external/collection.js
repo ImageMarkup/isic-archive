@@ -58,7 +58,7 @@ isic.Collection = girder.Collection.extend({ // eslint-disable-line backbone/col
         this.fetch(_.extend(params || {}, {offset: 0}), false);
     },
 
-    fetchLastPage: function (params, total) {
+    fetchLastPage: function (total, params) {
         var offset = Math.floor(total / this.pageLimit) * this.pageLimit;
         if (total % this.pageLimit === 0) {
             // there are a "pageLimit" number of elements in the last page, so

@@ -1,0 +1,9 @@
+for image in images
+  img.thumb(
+    src=apiRoot + '/image/' + image.id + '/thumbnail?width=' + thumbnailSize
+    height=thumbnailSize * 0.75
+    width=thumbnailSize
+    data-image-id=image.id
+    data-toggle='tooltip'
+    title=image.name()
+  )

@@ -3,7 +3,7 @@ extends imagesFacet
 block content
   div.isic-images-facet-categorical-content
     for bin in bins
-      a.isic-images-facet-bin
+      a.isic-images-facet-bin(data-bin-label=bin.label)
         i.icon-check
-        span.isic-images-facet-bin-name= bin.label
+        span.isic-images-facet-bin-name= getBinTitle(bin)
         span.isic-images-facet-bin-count

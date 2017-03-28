@@ -146,6 +146,5 @@
         }
     });
 
-    isic.views.ImagesViewSubViews = isic.views.ImagesViewSubViews || {};
-    isic.views.ImagesViewSubViews.HistogramScale = HistogramScale;
+    isic.views.HistogramScale = HistogramScale;
 })();

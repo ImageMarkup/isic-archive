@@ -10,14 +10,17 @@ isic.views.ImagesFacetView = isic.View.extend({
     className: 'isic-images-facet',
 
     /**
-     * @param {isic.views.ImagesViewSubViews.ImagesViewModel} settings.model
-     * @param {string} settings.facetName - The facet identifier.
+     * @param {isic.models.ImagesFacetModel} settings.completeFacet
+     * @param {isic.models.ImagesFacetModel} settings.filteredFacet
+     * @param {isic.collections.ImagesFilters} settings.filters
      */
     initialize: function (settings) {
-        this.attrName = settings.facetName;
+        this.completeFacet = settings.completeFacet;
+        this.filteredFacet = settings.filteredFacet;
+        this.filters = settings.filters;
 
-        this.attrType = this.model.getAttributeType(this.attrName);
-        this.title = isic.ENUMS.SCHEMA[this.attrName].humanName;
+        this.facetId = this.completeFacet.id;
+        this.title = this.completeFacet.schema().title;
     },
 
     events: {
@@ -29,71 +32,68 @@ isic.views.ImagesFacetView = isic.View.extend({
         }
     },
 
-    _getFieldLabel: function (fieldInfo) {
-        if (fieldInfo.label === null) {
+    _zipFacetBins: function () {
+        // TODO: This whole function would be unnecessary if "this.filteredFacet.get('bins')" were
+        // not totally reset on every fetch, but had empty bins just set to 0
+        var filteredBins = this.filteredFacet.get('bins');
+        var filteredBinsIter = 0;
+        return _.map(this.completeFacet.get('bins'), function (completeBin) {
+            // Since both completeBin and filteredBin are sorted by label, we can do this much more
+            // efficiently in O(n), than if we used "_.findWhere" in O(n^2)
+
+            var filteredBin;
+            var possibleFilteredBin = filteredBins[filteredBinsIter];
+            // It's possible for "filteredBinsIter" to overrun "filteredBins" (if the last bins are
+            // excluded), so check that "possibleFilteredBin" exists
+            if (possibleFilteredBin && completeBin.label === possibleFilteredBin.label) {
+                filteredBin = possibleFilteredBin;
+                filteredBinsIter++;
+            } else {
+                filteredBin = {
+                    label: completeBin.label,
+                    count: 0
+                };
+            }
+            return {
+                completeBin: completeBin,
+                filteredBin: filteredBin
+            };
+        }, this);
+    },
+
+    _getBinTitle: function (completeBin) {
+        if (completeBin.label === '__null__') {
             return 'unknown';
-        } else if (_.has(fieldInfo, 'lowBound')) {
+        } else if (_.has(completeBin, 'lowBound')) {
             var formatter = d3.format('0.3s');
-            return fieldInfo.label[0] +
-                formatter(fieldInfo.lowBound) + ' - ' +
-                formatter(fieldInfo.highBound) +
-                fieldInfo.label[fieldInfo.label.length - 1];
+            return completeBin.label[0] +
+                formatter(completeBin.lowBound) + ' - ' +
+                formatter(completeBin.highBound) +
+                completeBin.label[completeBin.label.length - 1];
         } else {
-            return fieldInfo.label;
+            return completeBin.label;
         }
     },
 
-    _toggleBin: function (bin) {
-        var status = this.model.getBinStatus(this.attrName, bin);
-
-        // To add / remove ranges, we might need to provide a comparison
-        // function (undefined will just do default comparisons)
-        var comparator;
-        if (this.attrType === 'string') {
-            comparator = function (a, b) {
-                return a.localeCompare(b);
-            };
-        }
-
-        // TODO: Ideally, this should select and cancel only the old
-        // set of requests (and could be called in
-        // ImagesViewModel.updateFilters); until that's fixed,
-        // hopefully nobody will click histogram buttons too early
-        // in the page load
-        girder.cancelRestRequests();
-
-        if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
-            // Remove this bin
-            if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
-                this.model.removeRange(
-                    this.attrName, bin.lowBound, bin.highBound, comparator);
-            } else {
-                this.model.removeValue(this.attrName, bin.label);
-            }
-        } else {
-            // Add this bin
-            if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
-                this.model.includeRange(
-                    this.attrName, bin.lowBound, bin.highBound, comparator);
-            } else {
-                this.model.includeValue(this.attrName, bin.label);
-            }
-        }
+    _toggleBin: function (binLabel) {
+        var binIncluded = this.filters.isIncluded(this.facetId, binLabel);
+        this.filters.setIncluded(this.facetId, binLabel, !binIncluded);
     }
 });
 
 isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
     /**
-     * @param {isic.views.ImagesViewSubViews.ImagesViewModel} settings.model
-     * @param {string} settings.facetName - The facet identifier.
+     * @param {isic.models.ImagesFacetModel} settings.completeFacet
+     * @param {isic.models.ImagesFacetModel} settings.filteredFacet
+     * @param {isic.collections.ImagesFilters} settings.filters
      */
     initialize: function (settings) {
         isic.views.ImagesFacetView.prototype.initialize.call(this, settings);
 
-        this.scale = new isic.views.ImagesViewSubViews.HistogramScale();
+        this.scale = new isic.views.HistogramScale();
 
-        this.listenTo(this.model, 'change:overviewHistogram', this._renderHistogram);
-        this.listenTo(this.model, 'change:filteredSetHistogram', this._renderHistogram);
+        this.listenTo(this.filteredFacet, 'change', this._renderHistogram);
+        this.listenTo(this.filters, 'change:' + this.facetId, this._renderHistogram);
     },
 
     render: function () {
@@ -114,8 +114,8 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
         var parentWidth = this.el.getBoundingClientRect().width;
         var emSize = parseFloat(svg.style('font-size'));
         this.scale.update(
-            this.model.get('overviewHistogram')[this.attrName],
-            this.model.get('filteredSetHistogram')[this.attrName],
+            this.completeFacet.get('bins'),
+            this.filteredFacet.get('bins'),
             emSize, parentWidth);
 
         var width = this.scale.width;
@@ -143,13 +143,15 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                 (height + emSize) + ')');
         svg.select('.selectAll')
             .on('click', function () {
-                this.model.clearFilters(this.attrName);
+                // TODO: use this
+                this.filters.setAllIncluded(this.facetId, true);
             });
 
         // Draw the bin groups
         var bins = svg.select('.bins').selectAll('.bin')
-            .data(this.scale.overviewHistogram, function (d) {
-                return d.label;
+            .data(this._zipFacetBins(), function (d) {
+                // TODO: is a key function needed?
+                return d.completeBin.label;
             });
         var binsEnter = bins.enter().append('g')
             .attr('class', 'bin');
@@ -157,9 +159,10 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
 
         // Move the bins horizontally
         bins.attr('transform', _.bind(function (d) {
+            // TODO: There should be a better way to do this
             var binNo = _.findIndex(
-                this.model.get('overviewHistogram')[this.attrName],
-                {label: d.label}
+                this.completeFacet.get('bins'),
+                {label: d.completeBin.label}
             );
             return 'translate(' + this.scale.binToPosition(binNo) + ',' + topPadding + ')';
         }, this));
@@ -189,23 +192,17 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                 .each(function (d) {
                     // this refers to the DOM element
                     d3.select(this)
-                        .attr(self.scale.getBinRect(d.label, 'overview'));
+                        .attr(self.scale.getBinRect(d.completeBin.label, 'overview'));
 
                     $(this).tooltip({
                         container: 'body',
                         title: function () {
-                            var overviewCount = d.count;
-
-                            var filteredBin = _.findWhere(
-                                self.model.get('filteredSetHistogram')[self.attrName],
-                                {label: d.label}
-                            );
-                            var filteredCount = filteredBin ? filteredBin.count : 0;
-
-                            if (filteredCount === overviewCount) {
+                            var completeCount = d.completeBin.count;
+                            var filteredCount = d.filteredBin.count;
+                            if (filteredCount === completeCount) {
                                 return String(filteredCount);
                             } else {
-                                return filteredCount + ' (of ' + overviewCount + ')';
+                                return filteredCount + ' (of ' + completeCount + ')';
                             }
                         }
                     });
@@ -214,7 +211,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                 .each(function (d) {
                     // this refers to the DOM element
                     d3.select(this)
-                      .attr(self.scale.getBinRect(d.label, 'filteredSet'));
+                      .attr(self.scale.getBinRect(d.completeBin.label, 'filteredSet'));
                 });
             bins.select('rect.target')
                 .each(function (d) {
@@ -240,7 +237,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
             // bins.select('rect.page')
             //     .each(function (d) {
             //         // this refers to the DOM element
-            //         d3.select(this).attr(self.scale.getBinRect(d.label, 'page'));
+            //         d3.select(this).attr(self.scale.getBinRect(d.completeBin.label, 'page'));
             //     });
         }, this);
         drawBars();
@@ -287,20 +284,20 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
 
         bins.select('image.button')
             .attr('xlink:href', _.bind(function (d) {
-                var status = this.model.getBinStatus(this.attrName, d);
+                var status = this.filters.isIncluded(this.facetId, d.completeBin.label);
 
-                if (status === isic.ENUMS.BIN_STATES.INCLUDED) {
+                if (status === true) {
                     return ICONS.check;
-                } else if (status === isic.ENUMS.BIN_STATES.EXCLUDED) {
+                } else if (status === false) {
                     return ICONS.ex;
                 } else {
+                    // TODO: this should never happen, until we implement continuous filters
+                    // or perhaps if the completeFacetBin.count == 0
                     return ICONS.dash;
                 }
             }, this))
             .on('click', _.bind(function (d) {
-                var bin = d;
-                this._toggleBin(bin);
-                this._renderHistogram();
+                this._toggleBin(d.completeBin.label);
             }, this));
 
         height += 2 * emSize;
@@ -314,7 +311,9 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
             .node().getComputedTextLength();
         binsEnter.append('text');
         bins.select('text')
-            .text(_.bind(this._getFieldLabel, this))
+            .text(_.bind(function (d) {
+                return this._getBinTitle(d.completeBin);
+            }, this))
             .attr('text-anchor', 'end')
             .attr('transform', 'translate(0 ' + transformHeight + ') rotate(' + transformAngle + ')')
             .each(function (d) {
@@ -333,12 +332,12 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                     me.html(text + '&hellip;');
                 }
 
-                // Add a tooltip to shortened labels, containing the full label.
+                // Add a tooltip to shortened labels, containing the full title.
                 if (shortened) {
                     $(this).tooltip({
                         container: 'body',
                         title: function () {
-                            return self._getFieldLabel(d);
+                            return self._getBinTitle(d.completeBin);
                         }
                     });
                 }
@@ -366,10 +365,25 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
 });
 
 isic.views.ImagesFacetHistogramDatasetView = isic.views.ImagesFacetHistogramView.extend({
-    _getFieldLabel: function (fieldInfo) {
-        return this.model.datasetCollection.findWhere({
-            _id: fieldInfo.label
-        }).name();
+    /**
+     * @param {isic.models.ImagesFacetModel} settings.completeFacet
+     * @param {isic.models.ImagesFacetModel} settings.filteredFacet
+     * @param {isic.collections.ImagesFilters} settings.filters
+     */
+    initialize: function (settings) {
+        isic.views.ImagesFacetHistogramView.prototype.initialize.call(this, settings);
+
+        this.datasetCollection = new isic.collections.DatasetCollection();
+        this.datasetCollection.once('g:changed', _.bind(function () {
+            this._renderHistogram();
+        }, this)).fetch({
+            limit: 0
+        });
+    },
+
+    _getBinTitle: function (completeBin) {
+        var datasetModel = this.datasetCollection.get(completeBin.label);
+        return datasetModel ? datasetModel.name() : completeBin.label;
     }
 });
 
@@ -377,67 +391,69 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
     events: function () {
         return _.extend({}, isic.views.ImagesFacetView.prototype.events, {
             'click .isic-images-facet-bin': function (event) {
-                var binElem = event.currentTarget;
-
-                this.$(binElem).find('i')
-                    .toggleClass('icon-check')
-                    .toggleClass('icon-check-empty');
-
-                var bin = d3.select(binElem).datum();
-                this._toggleBin(bin);
+                var binElem = this.$(event.currentTarget);
+                var binLabel = binElem.data('binLabel');
+                this._toggleBin(binLabel);
             }
         });
     },
 
     /**
-     * @param {isic.views.ImagesViewSubViews.ImagesViewModel} settings.model
-     * @param {string} settings.facetName - The facet identifier.
+     * @param {isic.models.ImagesFacetModel} settings.completeFacet
+     * @param {isic.models.ImagesFacetModel} settings.filteredFacet
+     * @param {isic.collections.ImagesFilters} settings.filters
      */
     initialize: function (settings) {
         isic.views.ImagesFacetView.prototype.initialize.call(this, settings);
 
-        this.listenTo(this.model, 'change:overviewHistogram', this.render);
-        this.listenTo(this.model, 'change:filteredSetHistogram', this._rerenderCounts);
+        this.listenTo(this.filteredFacet, 'change', this._rerenderCounts);
+        this.listenTo(this.filters, 'change:' + this.facetId, this._rerenderSelections);
     },
 
     render: function () {
-        var overviewBins = this.model.get('overviewHistogram')[this.attrName];
-
         this.$el.html(isic.templates.imagesFacetCategorical({
             title: this.title,
-            bins: overviewBins || []
+            bins: this.completeFacet.get('bins'),
+            getBinTitle: this._getBinTitle
         }));
-        if (!overviewBins) {
-            return;
-        }
-
-        var binElems = d3.select(this.el).selectAll('.isic-images-facet-bin')
-            .data(overviewBins);
-        binElems.select('.isic-images-facet-bin-name')
-            .text(_.bind(this._getFieldLabel, this));
 
         this._rerenderCounts();
+        this._rerenderSelections();
     },
 
     _rerenderCounts: function () {
-        var binElems = d3.select(this.el).selectAll('.isic-images-facet-bin');
+        // Both countElems and binVals are guaranteed to be in corresponding order, as they are
+        // both created from the same completeBin (and jQuery returns elements in the order on the
+        // DOM)
+        var countElems = this.$('.isic-images-facet-bin>.isic-images-facet-bin-count');
+        var binVals = this._zipFacetBins();
+        _.each(_.zip(countElems, binVals), _.bind(function (arg) {
+            var countElem = this.$(arg[0]);
+            var binVal = arg[1];
 
-        var filteredBins = this.model.get('filteredSetHistogram')[this.attrName];
-        // Don't selectAll to 'isic-images-facet-bin-count' directly, so data is propagated
-        binElems.select('.isic-images-facet-bin-count')
-            .text(_.bind(function (d) {
-                var overviewCount = d.count;
+            var completeCount = binVal.completeBin.count;
+            var filteredCount = binVal.filteredBin.count;
+            var label;
+            if (filteredCount === completeCount) {
+                label = completeCount;
+            } else {
+                label = filteredCount + ' / ' + completeCount;
+            }
+            label = '(' + label + ')';
 
-                var filteredSetBin = _.findWhere(filteredBins, {label: d.label});
-                var filteredSetCount = filteredSetBin ? filteredSetBin.count : 0;
+            countElem.text(label);
+        }, this));
+    },
 
-                var label;
-                if (overviewCount === filteredSetCount) {
-                    label = overviewCount;
-                } else {
-                    label = filteredSetCount + ' / ' + overviewCount;
-                }
-                return '(' + label + ')';
-            }, this));
+    _rerenderSelections: function () {
+        this.$('.isic-images-facet-bin').each(_.bind(function (index, binElem) {
+            var jqBinElem = this.$(binElem);
+            var checkElem = jqBinElem.find('i');
+            var binLabel = jqBinElem.data('binLabel');
+            var binIncluded = this.filters.isIncluded(this.facetId, binLabel);
+            checkElem
+                .toggleClass('icon-check', binIncluded)
+                .toggleClass('icon-check-empty', !binIncluded);
+        }, this));
     }
 });

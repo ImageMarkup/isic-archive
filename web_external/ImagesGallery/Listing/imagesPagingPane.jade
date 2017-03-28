@@ -1,0 +1,45 @@
+.growing.flexColumn
+  #isic-images-pagingTools.flexRow
+    #isic-images-seekFirst.button
+      img(src=staticImageRoot + '/seekFirst.svg')
+    #isic-images-seekPrev.button
+      img(src=staticImageRoot + '/seekPrev.svg')
+    #isic-images-seekNext.button
+      img(src=staticImageRoot + '/seekNext.svg')
+    #isic-images-seekLast.button
+      img(src=staticImageRoot + '/seekLast.svg')
+    #isic-images-loading.detailLabel Loading images...
+    #isic-images-noPagingOrFilters.detailLabel
+      | Showing all&nbsp;
+      span.page 0
+      |  images in the archive.
+    #isic-images-hasPaging.detailLabel
+      | Showing images&nbsp;
+      span.page 0 - 0
+      |  of&nbsp;
+      span.filteredSet 0
+      |  total images.
+    #isic-images-hasFilters.detailLabel
+      | Showing&nbsp;
+      span.filteredSet 0
+      |  of the&nbsp;
+      span.overview 0
+      |  total number of images in the archive.
+    #isic-images-hasFiltersAndPaging.detailLabel
+      | Showing images&nbsp;
+      span.page 0 - 0
+      |  of&nbsp;
+      span.filteredSet 0
+      |  filtered images. There are&nbsp;
+      span.overview 0
+      |  total images in the archive (ignoring filters).
+    button#isic-images-download-zip.btn.btn-sm.btn-default(
+      data-toggle='tooltip'
+      data-placement='bottom'
+      title='Download all filtered images as a ZIP'
+    )
+      i.icon-file-archive
+      span Download as ZIP
+  #isic-images-pagingBars.flexRow
+    .bar.filteredSet
+    .bar.page
