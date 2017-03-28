@@ -19,7 +19,7 @@ isic.views.StudiesView = isic.View.extend({
 
     initialize: function (settings) {
         this.loaded = false;
-        this.studyAdmin = girder.currentUser && girder.currentUser.canAdminStudy();
+        this.canAdminStudy = girder.currentUser && girder.currentUser.canAdminStudy();
         this.studies = new isic.collections.StudyCollection();
 
         this.listenTo(this.studies, 'g:changed', function () {
@@ -44,7 +44,7 @@ isic.views.StudiesView = isic.View.extend({
             title: 'Manage Annotation Studies',
             models: this.studies.models,
             loaded: this.loaded,
-            studyAdmin: this.studyAdmin
+            canAdminStudy: this.canAdminStudy
         }));
 
         this.paginateWidget.setElement(this.$('.isic-listing-paginate-container')).render();
@@ -76,7 +76,7 @@ isic.views.StudiesView = isic.View.extend({
             new isic.views.StudyView({ // eslint-disable-line no-new
                 el: container,
                 model: study,
-                studyAdmin: this.studyAdmin,
+                canAdminStudy: this.canAdminStudy,
                 parentView: this
             });
         }

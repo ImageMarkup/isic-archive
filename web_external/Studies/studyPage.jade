@@ -14,7 +14,7 @@
     tr
       td.isic-listing-item-table-section-header Users
         |  (#{study.get('users').length})
-        if studyAdmin
+        if canAdminStudy
           a.isic-study-add-user-button.btn.btn-default.btn-xs.isic-tooltip(
             title='Add user')
             i.icon-plus
@@ -44,7 +44,7 @@
                 td.isic-study-images-content-imageid= image._id
         else
           | (no images)
-  if studyAdmin
+  if canAdminStudy
     table.table.table-condensed.isic-listing-item-table
       tr
         td.isic-listing-item-table-section-header Actions
