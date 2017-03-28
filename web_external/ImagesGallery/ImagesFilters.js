@@ -32,6 +32,9 @@ _.extend(isic.collections.ImagesFilters.prototype, Backbone.Events, {
                         var binLabel = facetBin.label;
                         // Default to all bins included
                         var binIncluded = true;
+                        // TODO: It's risky to index this by the binLabel, as a null object value
+                        // will be coerced to the the string "null" (when used as an object
+                        // property), which collide with an actual categorical facet bin
                         return [binLabel, binIncluded];
                     })
                     .object()
@@ -83,6 +86,7 @@ _.extend(isic.collections.ImagesFilters.prototype, Backbone.Events, {
         if (fullExpression) {
             var ast = isic.SerializeFilterHelpers.astParser.parse(fullExpression);
             ast = isic.SerializeFilterHelpers._dehexify(ast);
+            // TODO: "__null__" values in range facets get their type set as "number" here
             return isic.SerializeFilterHelpers._specifyAttrTypes(ast);
         } else {
             return undefined;
@@ -90,9 +94,10 @@ _.extend(isic.collections.ImagesFilters.prototype, Backbone.Events, {
     },
 
     _rangeFacetFilterExpression: function (facetId, facetFilters) {
-        var filterExpression = _.chain(facetFilters)
+        var filterExpressions = _.chain(facetFilters)
             .pick(function (binIncluded, binLabel) {
-                return binIncluded === false;
+                // Because 'null' has no high or low bound, it must be handled specially
+                return binIncluded === false && binLabel !== 'null';
             })
             .map(function (binIncluded, binLabel) {
                 // Parse range labels, to yield an array of numeric range arrays
@@ -101,6 +106,7 @@ _.extend(isic.collections.ImagesFilters.prototype, Backbone.Events, {
                 var highBound = parseFloat(rangeMatches[2]);
                 return [lowBound, highBound];
             })
+            .sortBy(_.identity)
             .reduce(function (allRanges, curRange) {
                 // Combine adjacent ranges
                 var prevRange = _.last(allRanges);
@@ -131,10 +137,14 @@ _.extend(isic.collections.ImagesFilters.prototype, Backbone.Events, {
                     ')';
                 return '(' + lowBoundExpression + ' or ' + highBoundExpression + ')';
             })
-            .value()
-            // Combine all expressions
-            .join(' and ');
-        return '(' + filterExpression + ')';
+            .value();
+        if (facetFilters['null'] === false) {
+            // This conditional will also intentionally fail if 'null' is undefined
+            filterExpressions.push(this._categoricalFacetFilterExpression(
+                facetId, _.pick(facetFilters, 'null')));
+        }
+        // Combine all expressions
+        return '(' + filterExpressions.join(' and ') + ')';
     },
 
     _categoricalFacetFilterExpression: function (facetId, facetFilters) {
@@ -143,6 +153,17 @@ _.extend(isic.collections.ImagesFilters.prototype, Backbone.Events, {
                 return binIncluded === false;
             })
             .keys()
+            .map(function (binLabel) {
+                // TODO: Per the comment in "ImagesFilters.initialize", a null bin gets expressed
+                // here stored with a string-valued label
+                if (binLabel === 'null') {
+                    // The server is expecting "__null__", since a null object cannot be serialized
+                    // as a query string
+                    return '__null__';
+                } else {
+                    return binLabel;
+                }
+            })
             // Each of these must be encoded, as they're user-provided values from the database
             .map(isic.SerializeFilterHelpers._stringToHex)
             .value();
@@ -171,9 +192,6 @@ isic.SerializeFilterHelpers = {
     },
 
     _stringToHex: function (value) {
-        if (value === null) {
-            value = '__null__';
-        }
         var result = '';
         for (var i = 0; i < value.length; i += 1) {
             result += '%' + value.charCodeAt(i).toString(16);
