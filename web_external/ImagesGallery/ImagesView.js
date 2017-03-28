@@ -83,6 +83,11 @@ isic.views.ImagesView = isic.View.extend({
     },
 
     onCompleteFacetsFetched: function (collection, resp, options) {
+        // "ImagesFilters.initialize" doesn't trigger any events, so run it first, to ensure
+        // this.filters is populated before "this.filteredFacets" is populated (as does have
+        // multiple event handlers attached to it)
+        this.filters.initialize(collection);
+
         // Rather than issue a second fetch request for this.filteredFacets,
         // copy the response of the first request for this.completeFacets
         // TODO: ideally, this.filteredFacets would only be reset when
@@ -93,8 +98,6 @@ isic.views.ImagesView = isic.View.extend({
         this.filteredFacets.reset(resp, {parse: true});
 
         this.images.fetch();
-
-        this.filters.initialize(collection);
     },
 
     onFiltersChanged: function () {

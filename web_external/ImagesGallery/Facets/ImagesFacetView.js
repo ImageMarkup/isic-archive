@@ -115,7 +115,6 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
         var emSize = parseFloat(svg.style('font-size'));
         this.scale.update(
             this.completeFacet.get('bins'),
-            // TODO: this.filteredFacet might not be ready?
             this.filteredFacet.get('bins'),
             emSize, parentWidth);
 
