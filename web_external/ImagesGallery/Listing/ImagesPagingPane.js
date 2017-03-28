@@ -16,8 +16,12 @@ isic.views.ImagesPagingPane = Backbone.View.extend({
             this.images.fetchLastPage(this.filteredFacets.total);
         },
         'click #isic-images-download-zip:not(.disabled)': function () {
+            var downloadUrl = girder.apiRoot + '/image/download';
             var filterQuery = JSON.stringify(this.filters.asAst());
-            window.location.assign(girder.apiRoot + '/image/download?filter=' + filterQuery);
+            if (filterQuery) {
+                downloadUrl += '?filter=' + filterQuery;
+            }
+            window.location.assign(downloadUrl);
         }
     },
     /**
