@@ -17,7 +17,7 @@ isic.collections.ImagesFacetCollection = Backbone.Collection.extend({
             .map(function (facetBins, facetId) {
                 return {
                     id: facetId,
-                    bins: _.map(facetBins, function(facetBin) {
+                    bins: _.map(facetBins, function (facetBin) {
                         // Map a label of a null object to a "__null__" string because:
                         // * The null object cannot be stored on DOM elements as a data property
                         // * The null object will be coerced to a string of "null" in any places
