@@ -23,8 +23,9 @@ isic.views.FeaturesetView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.featuresetPage({
+            currentUser: girder.currentUser,
             featureset: this.model,
-            currentUser: girder.currentUser
+            formatDate: this.formatDate
         }));
 
         return this;

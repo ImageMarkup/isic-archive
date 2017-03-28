@@ -1,7 +1,7 @@
 extends ../common/Listing/listingPage.jade
 
 block title
-  if studyAdmin
+  if canAdminStudy
     = title
     a.isic-study-add-button.btn.btn-default.btn-sm.isic-tooltip(
       title='Create new study')

@@ -12,6 +12,9 @@
     tr
       td.isic-listing-item-table-label Creator
       td= featureset.creator().name()
+    tr
+      td.isic-listing-item-table-label Created
+      td= formatDate(featureset.get('created'))
 
   each featureType in [{id: 'globalFeatures', name: 'Global Features'}, {id: 'localFeatures', name: 'Local Features'}]
     table.table.table-condensed.isic-listing-item-table

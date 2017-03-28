@@ -20,10 +20,10 @@ isic.views.StudyView = isic.View.extend({
 
     /**
      * @param {isic.models.StudyModel} settings.model
-     * @param {boolean} settings.studyAdmin - Whether the current user can admin the study.
+     * @param {boolean} settings.canAdminStudy - Whether the current user can admin the study.
      */
     initialize: function (settings) {
-        this.studyAdmin = settings.studyAdmin;
+        this.canAdminStudy = settings.canAdminStudy;
 
         // Display loading indicator
         this.loadingAnimation = new girder.views.LoadingAnimation({
@@ -41,8 +41,9 @@ isic.views.StudyView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.studyPage({
+            canAdminStudy: this.canAdminStudy,
             study: this.model,
-            studyAdmin: this.studyAdmin
+            formatDate: this.formatDate
         }));
 
         this.$('.isic-tooltip').tooltip({

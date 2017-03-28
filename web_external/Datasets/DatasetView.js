@@ -38,9 +38,5 @@ isic.views.DatasetView = isic.View.extend({
         }));
 
         return this;
-    },
-
-    formatDate: function (date) {
-        return girder.formatDate(date, girder.DATE_SECOND);
     }
 });
