@@ -19,7 +19,7 @@ isic.views.ImagesFacetView = isic.View.extend({
         this.filteredFacet = settings.filteredFacet;
         this.filters = settings.filters;
 
-        this.attrName = this.completeFacet.id;
+        this.facetId = this.completeFacet.id;
         this.title = this.completeFacet.schema().title;
     },
 
@@ -33,35 +33,51 @@ isic.views.ImagesFacetView = isic.View.extend({
     },
 
     _zipFacetBins: function () {
-        return _.map(this.completeFacet.get('bins'), function (completeFacetBin) {
-            // TODO: this takes O(n^2); can it be done faster with "_.zip"?
-            var filteredFacetBin = _.findWhere(
-                this.filteredFacet.get('bins'),
-                {label: completeFacetBin.label});
+        // TODO: This whole function would be unnecessary if "this.filteredFacet.get('bins')" were
+        // not totally reset on every fetch, but had empty bins just set to 0
+        var filteredBins = this.filteredFacet.get('bins');
+        var filteredBinsIter = 0;
+        return _.map(this.completeFacet.get('bins'), function (completeBin) {
+            // Since both completeBin and filteredBin are sorted by label, we can do this much more
+            // efficiently in O(n), than if we used "_.findWhere" in O(n^2)
+
+            var filteredBin;
+            var possibleFilteredBin = filteredBins[filteredBinsIter];
+            // It's possible for "filteredBinsIter" to overrun "filteredBins" (if the last bins are
+            // excluded), so check that "possibleFilteredBin" exists
+            if (possibleFilteredBin && completeBin.label === possibleFilteredBin.label) {
+                filteredBin = possibleFilteredBin;
+                filteredBinsIter++;
+            } else {
+                filteredBin = {
+                    label: completeBin.label,
+                    count: 0
+                };
+            }
             return {
-                completeFacetBin: completeFacetBin,
-                filteredFacetBin: filteredFacetBin
+                completeBin: completeBin,
+                filteredBin: filteredBin
             };
         }, this);
     },
 
-    _getBinLabel: function (bin) {
-        if (bin.label === null) {
+    _getBinTitle: function (completeBin) {
+        if (completeBin.label === null) {
             return 'unknown';
-        } else if (_.has(bin, 'lowBound')) {
+        } else if (_.has(completeBin, 'lowBound')) {
             var formatter = d3.format('0.3s');
-            return bin.label[0] +
-                formatter(bin.lowBound) + ' - ' +
-                formatter(bin.highBound) +
-                bin.label[bin.label.length - 1];
+            return completeBin.label[0] +
+                formatter(completeBin.lowBound) + ' - ' +
+                formatter(completeBin.highBound) +
+                completeBin.label[completeBin.label.length - 1];
         } else {
-            return bin.label;
+            return completeBin.label;
         }
     },
 
     _toggleBin: function (binLabel) {
-        var binIncluded = this.filters.isIncluded(this.attrName, binLabel);
-        this.filters.setIncluded(this.attrName, binLabel, !binIncluded);
+        var binIncluded = this.filters.isIncluded(this.facetId, binLabel);
+        this.filters.setIncluded(this.facetId, binLabel, !binIncluded);
     }
 });
 
@@ -77,7 +93,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
         this.scale = new isic.views.HistogramScale();
 
         this.listenTo(this.filteredFacet, 'change', this._renderHistogram);
-        this.listenTo(this.filters, 'change:' + this.attrName, this._renderHistogram);
+        this.listenTo(this.filters, 'change:' + this.facetId, this._renderHistogram);
     },
 
     render: function () {
@@ -129,14 +145,14 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
         svg.select('.selectAll')
             .on('click', function () {
                 // TODO: use this
-                this.filters.setAllIncluded(this.attrName, true);
+                this.filters.setAllIncluded(this.facetId, true);
             });
 
         // Draw the bin groups
         var bins = svg.select('.bins').selectAll('.bin')
             .data(this._zipFacetBins(), function (d) {
                 // TODO: is a key function needed?
-                return d.completeFacetBin.label;
+                return d.completeBin.label;
             });
         var binsEnter = bins.enter().append('g')
             .attr('class', 'bin');
@@ -147,7 +163,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
             // TODO: There should be a better way to do this
             var binNo = _.findIndex(
                 this.completeFacet.get('bins'),
-                {label: d.completeFacetBin.label}
+                {label: d.completeBin.label}
             );
             return 'translate(' + this.scale.binToPosition(binNo) + ',' + topPadding + ')';
         }, this));
@@ -177,16 +193,13 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                 .each(function (d) {
                     // this refers to the DOM element
                     d3.select(this)
-                        .attr(self.scale.getBinRect(d.completeFacetBin.label, 'overview'));
+                        .attr(self.scale.getBinRect(d.completeBin.label, 'overview'));
 
                     $(this).tooltip({
                         container: 'body',
                         title: function () {
-                            var completeCount = d.completeFacetBin.count;
-
-                            // TODO: The API should always send this value
-                            var filteredCount = d.filteredFacetBin ? d.filteredFacetBin.count : 0;
-
+                            var completeCount = d.completeBin.count;
+                            var filteredCount = d.filteredBin.count;
                             if (filteredCount === completeCount) {
                                 return String(filteredCount);
                             } else {
@@ -199,7 +212,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                 .each(function (d) {
                     // this refers to the DOM element
                     d3.select(this)
-                      .attr(self.scale.getBinRect(d.completeFacetBin.label, 'filteredSet'));
+                      .attr(self.scale.getBinRect(d.completeBin.label, 'filteredSet'));
                 });
             bins.select('rect.target')
                 .each(function (d) {
@@ -225,7 +238,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
             // bins.select('rect.page')
             //     .each(function (d) {
             //         // this refers to the DOM element
-            //         d3.select(this).attr(self.scale.getBinRect(d.label, 'page'));
+            //         d3.select(this).attr(self.scale.getBinRect(d.completeBin.label, 'page'));
             //     });
         }, this);
         drawBars();
@@ -272,7 +285,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
 
         bins.select('image.button')
             .attr('xlink:href', _.bind(function (d) {
-                var status = this.filters.isIncluded(this.attrName, d.completeFacetBin.label);
+                var status = this.filters.isIncluded(this.facetId, d.completeBin.label);
 
                 if (status === true) {
                     return ICONS.check;
@@ -285,7 +298,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                 }
             }, this))
             .on('click', _.bind(function (d) {
-                this._toggleBin(d.completeFacetBin.label);
+                this._toggleBin(d.completeBin.label);
             }, this));
 
         height += 2 * emSize;
@@ -300,7 +313,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
         binsEnter.append('text');
         bins.select('text')
             .text(_.bind(function (d) {
-                return this._getBinLabel(d.completeFacetBin);
+                return this._getBinTitle(d.completeBin);
             }, this))
             .attr('text-anchor', 'end')
             .attr('transform', 'translate(0 ' + transformHeight + ') rotate(' + transformAngle + ')')
@@ -320,12 +333,12 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                     me.html(text + '&hellip;');
                 }
 
-                // Add a tooltip to shortened labels, containing the full label.
+                // Add a tooltip to shortened labels, containing the full title.
                 if (shortened) {
                     $(this).tooltip({
                         container: 'body',
                         title: function () {
-                            return self._getBinLabel(d.completeFacetBin);
+                            return self._getBinTitle(d.completeBin);
                         }
                     });
                 }
@@ -369,11 +382,9 @@ isic.views.ImagesFacetHistogramDatasetView = isic.views.ImagesFacetHistogramView
         });
     },
 
-    _getBinLabel: function (facetBin) {
-        var datasetModel = this.datasetCollection.findWhere({
-            _id: facetBin.label
-        });
-        return datasetModel ? datasetModel.name() : facetBin.label;
+    _getBinTitle: function (completeBin) {
+        var datasetModel = this.datasetCollection.get(completeBin.label);
+        return datasetModel ? datasetModel.name() : completeBin.label;
     }
 });
 
@@ -381,8 +392,8 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
     events: function () {
         return _.extend({}, isic.views.ImagesFacetView.prototype.events, {
             'click .isic-images-facet-bin': function (event) {
-                var binElem = event.currentTarget;
-                var binLabel = d3.select(binElem).datum().completeFacetBin.label;
+                var binElem = this.$(event.currentTarget);
+                var binLabel = binElem.data('binLabel');
                 this._toggleBin(binLabel);
             }
         });
@@ -397,56 +408,53 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
         isic.views.ImagesFacetView.prototype.initialize.call(this, settings);
 
         this.listenTo(this.filteredFacet, 'change', this._rerenderCounts);
-        this.listenTo(this.filters, 'change:' + this.attrName, this._rerenderSelections);
+        this.listenTo(this.filters, 'change:' + this.facetId, this._rerenderSelections);
     },
 
     render: function () {
-        var completeFacetBins = this.completeFacet.get('bins');
-
         this.$el.html(isic.templates.imagesFacetCategorical({
             title: this.title,
-            bins: completeFacetBins,
-            getBinLabel: this._getBinLabel
+            bins: this.completeFacet.get('bins'),
+            getBinTitle: this._getBinTitle
         }));
 
-        d3.select(this.el).selectAll('.isic-images-facet-bin')
-            .data(this._zipFacetBins());
         this._rerenderCounts();
         this._rerenderSelections();
     },
 
     _rerenderCounts: function () {
-        var binElems = d3.select(this.el).selectAll('.isic-images-facet-bin');
+        // Both countElems and binVals are guaranteed to be in corresponding order, as they are
+        // both created from the same completeBin (and jQuery returns elements in the order on the
+        // DOM)
+        var countElems = this.$('.isic-images-facet-bin>.isic-images-facet-bin-count');
+        var binVals = this._zipFacetBins();
+        _.each(_.zip(countElems, binVals), _.bind(function (arg) {
+            var countElem = this.$(arg[0]);
+            var binVal = arg[1];
 
-        // Don't selectAll to 'isic-images-facet-bin-count' directly, so data is propagated
-        binElems.select('.isic-images-facet-bin-count')
-            .text(_.bind(function (d) {
-                var completeCount = d.completeFacetBin.count;
+            var completeCount = binVal.completeBin.count;
+            var filteredCount = binVal.filteredBin.count;
+            var label;
+            if (filteredCount === completeCount) {
+                label = completeCount;
+            } else {
+                label = filteredCount + ' / ' + completeCount;
+            }
+            label = '(' + label + ')';
 
-                // TODO: The API should always send this value
-                var filteredCount = d.filteredFacetBin ? d.filteredFacetBin.count : 0;
-
-                var label;
-                if (completeCount === filteredCount) {
-                    label = completeCount;
-                } else {
-                    label = filteredCount + ' / ' + completeCount;
-                }
-                return '(' + label + ')';
-            }, this));
+            countElem.text(label);
+        }, this));
     },
 
     _rerenderSelections: function () {
-        var binElems = d3.select(this.el).selectAll('.isic-images-facet-bin');
-
-        // Don't selectAll to 'isic-images-facet-bin-count' directly, so data is propagated
-        // TODO: can this be done in a single pass?
-        binElems.select('i')
-            .classed('icon-check', _.bind(function (d) {
-                return this.filters.isIncluded(this.attrName, d.completeFacetBin.label);
-            }, this))
-            .classed('icon-check-empty', _.bind(function (d) {
-                return !this.filters.isIncluded(this.attrName, d.completeFacetBin.label);
-            }, this));
+        this.$('.isic-images-facet-bin').each(_.bind(function (index, binElem) {
+            var jqBinElem = this.$(binElem);
+            var checkElem = jqBinElem.find('i');
+            var binLabel = jqBinElem.data('binLabel');
+            var binIncluded = this.filters.isIncluded(this.facetId, binLabel);
+            checkElem
+                .toggleClass('icon-check', binIncluded)
+                .toggleClass('icon-check-empty', !binIncluded);
+        }, this));
     }
 });
