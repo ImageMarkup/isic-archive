@@ -62,7 +62,7 @@ isic.views.ImagesFacetView = isic.View.extend({
     },
 
     _getBinTitle: function (completeBin) {
-        if (completeBin.label === null) {
+        if (completeBin.label === '__null__') {
             return 'unknown';
         } else if (_.has(completeBin, 'lowBound')) {
             var formatter = d3.format('0.3s');
