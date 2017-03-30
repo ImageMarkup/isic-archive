@@ -1,21 +1,21 @@
 isic.views.ImagesPagingPane = Backbone.View.extend({
     events: {
-        'click #isic-images-paging-seek-first:not(.disabled)': function () {
+        'click #isic-images-paging-seek-first': function () {
             // TODO: cancel any pending fetches before fetching an additional next page; this is
             // best implemented inside ImageCollection.fetch; also ensure that the current page is
             // sync'd with the fetched page, when pages get fetched in rapid sequence
             this.images.fetchFirstPage();
         },
-        'click #isic-images-paging-seek-prev:not(.disabled)': function () {
+        'click #isic-images-paging-seek-prev': function () {
             this.images.fetchPreviousPage();
         },
-        'click #isic-images-paging-seek-next:not(.disabled)': function () {
+        'click #isic-images-paging-seek-next': function () {
             this.images.fetchNextPage();
         },
-        'click #isic-images-paging-seek-last:not(.disabled)': function () {
+        'click #isic-images-paging-seek-last': function () {
             this.images.fetchLastPage(this.filteredFacets.total);
         },
-        'click #isic-images-paging-downloadZip:not(.disabled)': function () {
+        'click #isic-images-paging-downloadZip': function () {
             var downloadUrl = girder.apiRoot + '/image/download';
             var filterQuery = JSON.stringify(this.filters.asAst());
             if (filterQuery) {
@@ -70,10 +70,9 @@ isic.views.ImagesPagingPane = Backbone.View.extend({
 
         // Disable / enable the appropriate paging buttons
         this.$('#isic-images-paging-seek-prev, #isic-images-paging-seek-first')
-            .toggleClass('disabled', !this.images.hasPreviousPage());
-
+            .prop('disabled', !this.images.hasPreviousPage());
         this.$('#isic-images-paging-seek-next, #isic-images-paging-seek-last')
-            .toggleClass('disabled', !this.images.hasNextPage());
+            .prop('disabled', !this.images.hasNextPage());
 
         // Show the relevant explanatory label
         this.$('#isic-images-paging-label>*').hide();
@@ -114,7 +113,7 @@ isic.views.ImagesPagingPane = Backbone.View.extend({
                 return (this.images.length / this.filteredFacets.total) * 100 + '%';
             }, this));
 
-        this.$('#isic-images-paging-downloadZip').toggleClass(
+        this.$('#isic-images-paging-downloadZip').prop(
             'disabled', this.filteredFacets.total === 0);
     }
 });
