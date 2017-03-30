@@ -8,38 +8,38 @@
       i.icon-fast-fw
     #isic-images-seekLast.button
       i.icon-to-end-alt
-    #isic-images-loading.detailLabel Loading images...
-    #isic-images-noPagingOrFilters.detailLabel
+    #isic-images-loading.isic-images-paging-detailLabel Loading images...
+    #isic-images-noPagingOrFilters.isic-images-paging-detailLabel
       | Showing all&nbsp;
-      span.page 0
+      span.isic-images-paging-detailLabel-page 0
       |  images in the archive.
-    #isic-images-hasPaging.detailLabel
+    #isic-images-hasPaging.isic-images-paging-detailLabel
       | Showing images&nbsp;
-      span.page 0 - 0
+      span.isic-images-paging-detailLabel-page 0 - 0
       |  of&nbsp;
-      span.filteredSet 0
+      span.isic-images-paging-detailLabel-filteredSet 0
       |  total images.
-    #isic-images-hasFilters.detailLabel
+    #isic-images-hasFilters.isic-images-paging-detailLabel
       | Showing&nbsp;
-      span.filteredSet 0
+      span.isic-images-paging-detailLabel-filteredSet 0
       |  of the&nbsp;
-      span.overview 0
+      span.isic-images-paging-detailLabel-overview 0
       |  total number of images in the archive.
-    #isic-images-hasFiltersAndPaging.detailLabel
+    #isic-images-hasFiltersAndPaging.isic-images-paging-detailLabel
       | Showing images&nbsp;
-      span.page 0 - 0
+      span.isic-images-paging-detailLabel-page 0 - 0
       |  of&nbsp;
-      span.filteredSet 0
+      span.isic-images-paging-detailLabel-filteredSet 0
       |  filtered images. There are&nbsp;
-      span.overview 0
+      span.isic-images-paging-detailLabel-overview 0
       |  total images in the archive (ignoring filters).
-    button#isic-images-download-zip.btn.btn-sm.btn-default(
+    button#isic-images-paging-downloadZip.btn.btn-sm.btn-default(
       data-toggle='tooltip'
       data-placement='bottom'
       title='Download all filtered images as a ZIP'
     )
       i.icon-file-archive
       span Download as ZIP
-  #isic-images-pagingBars.flexRow
-    .bar.filteredSet
-    .bar.page
+  #isic-images-paging-bars.flexRow
+    #isic-images-paging-bar-filteredTotal.isic-images-paging-bar
+    #isic-images-paging-bar-pageTotal.isic-images-paging-bar

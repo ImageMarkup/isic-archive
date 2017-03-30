@@ -13,42 +13,43 @@
   #isic-images-pagingTools
     align-items center
 
-    .overview
-      font-weight bolder
-      color $overviewColor
+  .isic-images-paging-detailLabel
+    &:not(#isic-images-loading)
+      // This will be updated dynamically
+      display none
 
-    .filteredSet
-      font-weight bolder
-      color $filteredSetColor
-
-    .page
+    .isic-images-paging-detailLabel-page
       font-weight bolder
       color $pageColor
 
-    .detailLabel
-      // These will be updated dynamically
-      display none
-      &#isic-images-loading
-        display block
+    .isic-images-paging-detailLabel-filteredSet
+      font-weight bolder
+      color $filteredSetColor
 
-    #isic-images-download-zip
-      margin-left auto
+    .isic-images-paging-detailLabel-overview
+      font-weight bolder
+      color $overviewColor
 
-  #isic-images-pagingBars
+  #isic-images-paging-downloadZip
+    margin-left auto
+
+  #isic-images-paging-bars
     position relative
 
-    .bar
+    .isic-images-paging-bar
       position absolute
       height 1em
       top 0
 
-      &.filteredSet
-        background-color $filteredSetColor
-        left 0
-        width 100%
+    #isic-images-paging-bar-filteredTotal
+      z-index 1
+      background-color $filteredSetColor
+      left 0
+      width 100%
 
-      &.page
-        background-color $pageColor
-        // This will be updated dynamically
-        left 0
-        width 0
+    #isic-images-paging-bar-pageTotal
+      z-index 2
+      background-color $pageColor
+      // This will be updated dynamically
+      left 0
+      width 0
