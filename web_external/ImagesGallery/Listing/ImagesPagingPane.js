@@ -1,18 +1,18 @@
 isic.views.ImagesPagingPane = Backbone.View.extend({
     events: {
-        'click #isic-images-seekFirst:not(.disabled)': function () {
+        'click #isic-images-paging-seek-first:not(.disabled)': function () {
             // TODO: cancel any pending fetches before fetching an additional next page; this is
             // best implemented inside ImageCollection.fetch; also ensure that the current page is
             // sync'd with the fetched page, when pages get fetched in rapid sequence
             this.images.fetchFirstPage();
         },
-        'click #isic-images-seekPrev:not(.disabled)': function () {
+        'click #isic-images-paging-seek-prev:not(.disabled)': function () {
             this.images.fetchPreviousPage();
         },
-        'click #isic-images-seekNext:not(.disabled)': function () {
+        'click #isic-images-paging-seek-next:not(.disabled)': function () {
             this.images.fetchNextPage();
         },
-        'click #isic-images-seekLast:not(.disabled)': function () {
+        'click #isic-images-paging-seek-last:not(.disabled)': function () {
             this.images.fetchLastPage(this.filteredFacets.total);
         },
         'click #isic-images-paging-downloadZip:not(.disabled)': function () {
@@ -53,6 +53,10 @@ isic.views.ImagesPagingPane = Backbone.View.extend({
             staticImageRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/img/'
         }));
 
+        this.$('.btn-group>[data-toggle="tooltip"]').tooltip({
+            trigger: 'hover',
+            container: 'body'
+        });
         this.$('[data-toggle="tooltip"]').tooltip({
             trigger: 'hover'
         });
@@ -65,10 +69,10 @@ isic.views.ImagesPagingPane = Backbone.View.extend({
         var hasPaging = this.images.hasPreviousPage() || this.images.hasNextPage();
 
         // Disable / enable the appropriate paging buttons
-        this.$('#isic-images-seekPrev, #isic-images-seekFirst')
+        this.$('#isic-images-paging-seek-prev, #isic-images-paging-seek-first')
             .toggleClass('disabled', !this.images.hasPreviousPage());
 
-        this.$('#isic-images-seekNext, #isic-images-seekLast')
+        this.$('#isic-images-paging-seek-next, #isic-images-paging-seek-last')
             .toggleClass('disabled', !this.images.hasNextPage());
 
         // Show the relevant explanatory label

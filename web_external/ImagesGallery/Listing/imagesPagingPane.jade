@@ -1,13 +1,30 @@
 .growing.flexColumn
   #isic-images-pagingTools.flexRow
-    #isic-images-seekFirst.button
-      i.icon-to-start-alt
-    #isic-images-seekPrev.button
-      i.icon-fast-bw
-    #isic-images-seekNext.button
-      i.icon-fast-fw
-    #isic-images-seekLast.button
-      i.icon-to-end-alt
+    #isic-images-paging-seek.btn-group
+      button#isic-images-paging-seek-first.btn.btn-xs.btn-default(
+        data-toggle='tooltip'
+        data-placement='bottom'
+        title='First page'
+      )
+        i.icon-to-start-alt
+      button#isic-images-paging-seek-prev.btn.btn-xs.btn-default(
+        data-toggle='tooltip'
+        data-placement='bottom'
+        title='Previous page'
+      )
+        i.icon-fast-bw
+      button#isic-images-paging-seek-next.btn.btn-xs.btn-default(
+        data-toggle='tooltip'
+        data-placement='bottom'
+        title='Next page'
+      )
+        i.icon-fast-fw
+      button#isic-images-paging-seek-last.btn.btn-xs.btn-default(
+        data-toggle='tooltip'
+        data-placement='bottom'
+        title='Last page'
+      )
+        i.icon-to-end-alt
     #isic-images-loading.isic-images-paging-detailLabel Loading images...
     #isic-images-noPagingOrFilters.isic-images-paging-detailLabel
       | Showing all&nbsp;
