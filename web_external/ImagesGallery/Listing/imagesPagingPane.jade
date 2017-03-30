@@ -25,31 +25,32 @@
         title='Last page'
       )
         i.icon-to-end-alt
-    #isic-images-loading.isic-images-paging-detailLabel Loading images...
-    #isic-images-noPagingOrFilters.isic-images-paging-detailLabel
-      | Showing all&nbsp;
-      span.isic-images-paging-detailLabel-page 0
-      |  images in the archive.
-    #isic-images-hasPaging.isic-images-paging-detailLabel
-      | Showing images&nbsp;
-      span.isic-images-paging-detailLabel-page 0 - 0
-      |  of&nbsp;
-      span.isic-images-paging-detailLabel-filteredSet 0
-      |  total images.
-    #isic-images-hasFilters.isic-images-paging-detailLabel
-      | Showing&nbsp;
-      span.isic-images-paging-detailLabel-filteredSet 0
-      |  of the&nbsp;
-      span.isic-images-paging-detailLabel-overview 0
-      |  total number of images in the archive.
-    #isic-images-hasFiltersAndPaging.isic-images-paging-detailLabel
-      | Showing images&nbsp;
-      span.isic-images-paging-detailLabel-page 0 - 0
-      |  of&nbsp;
-      span.isic-images-paging-detailLabel-filteredSet 0
-      |  filtered images. There are&nbsp;
-      span.isic-images-paging-detailLabel-overview 0
-      |  total images in the archive (ignoring filters).
+    #isic-images-paging-label
+      span#isic-images-paging-label-loading Loading images...
+      span#isic-images-paging-label-noPagingOrFilters
+        | Showing all&nbsp;
+        span.isic-images-paging-label-page 0
+        |  images in the archive.
+      span#isic-images-paging-label-hasPaging
+        | Showing images&nbsp;
+        span.isic-images-paging-label-page 0 - 0
+        |  of&nbsp;
+        span.isic-images-paging-label-filtered 0
+        |  total images.
+      span#isic-images-paging-label-hasFilters
+        | Showing&nbsp;
+        span.isic-images-paging-label-filtered 0
+        |  of the&nbsp;
+        span.isic-images-paging-label-total 0
+        |  total number of images in the archive.
+      span#isic-images-paging-label-hasFiltersAndPaging
+        | Showing images&nbsp;
+        span.isic-images-paging-label-page 0 - 0
+        |  of&nbsp;
+        span.isic-images-paging-label-filtered 0
+        |  filtered images. There are&nbsp;
+        span.isic-images-paging-label-total 0
+        |  total images in the archive (ignoring filters).
     button#isic-images-paging-downloadZip.btn.btn-sm.btn-default(
       data-toggle='tooltip'
       data-placement='bottom'

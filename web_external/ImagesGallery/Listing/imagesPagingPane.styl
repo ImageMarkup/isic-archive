@@ -13,20 +13,20 @@
   #isic-images-pagingTools
     align-items center
 
-  .isic-images-paging-detailLabel
-    &:not(#isic-images-loading)
+  #isic-images-paging-label
+    &>*:not(#isic-images-paging-label-loading)
       // This will be updated dynamically
       display none
 
-    .isic-images-paging-detailLabel-page
+    .isic-images-paging-label-page
       font-weight bolder
       color $pageColor
 
-    .isic-images-paging-detailLabel-filteredSet
+    .isic-images-paging-label-filtered
       font-weight bolder
       color $filteredSetColor
 
-    .isic-images-paging-detailLabel-overview
+    .isic-images-paging-label-total
       font-weight bolder
       color $overviewColor
 

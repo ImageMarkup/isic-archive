@@ -76,32 +76,32 @@ isic.views.ImagesPagingPane = Backbone.View.extend({
             .toggleClass('disabled', !this.images.hasNextPage());
 
         // Show the relevant explanatory label
-        this.$('.isic-images-paging-detailLabel').hide();
+        this.$('#isic-images-paging-label>*').hide();
         var labelElement;
         if (hasFilters && hasPaging) {
-            labelElement = this.$('#isic-images-hasFiltersAndPaging');
+            labelElement = this.$('#isic-images-paging-label-hasFiltersAndPaging');
         } else if (hasFilters) {
-            labelElement = this.$('#isic-images-hasFilters');
+            labelElement = this.$('#isic-images-paging-label-hasFilters');
         } else if (hasPaging) {
-            labelElement = this.$('#isic-images-hasPaging');
+            labelElement = this.$('#isic-images-paging-label-hasPaging');
         } else {
-            labelElement = this.$('#isic-images-noPagingOrFilters');
+            labelElement = this.$('#isic-images-paging-label-noPagingOrFilters');
         }
         labelElement.show();
 
         // Update the values in the label
-        labelElement.find('.isic-images-paging-detailLabel-overview')
+        labelElement.find('.isic-images-paging-label-total')
           .text(this.completeFacets.total);
-        labelElement.find('.isic-images-paging-detailLabel-filteredSet')
+        labelElement.find('.isic-images-paging-label-filtered')
           .text(this.filteredFacets.total);
         if (hasPaging) {
             // Use base 1 for the page text labels
             var startImageNum = this.images._currentOffset() + 1;
             var endImageNum = startImageNum + this.images.length - 1;
-            labelElement.find('.isic-images-paging-detailLabel-page')
+            labelElement.find('.isic-images-paging-label-page')
                 .text(startImageNum + ' - ' + endImageNum);
         } else {
-            labelElement.find('.isic-images-paging-detailLabel-page')
+            labelElement.find('.isic-images-paging-label-page')
                 .text(this.images.length);
         }
 
