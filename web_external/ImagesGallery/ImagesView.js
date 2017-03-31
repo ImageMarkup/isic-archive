@@ -27,7 +27,9 @@ isic.views.ImagesView = isic.View.extend({
             isic.shims.recolorImageFilters([
                 '#00ABFF', // $rolloverImageFilter, for hover on check buttons
                 '#444499', // $selectedImageFilter, possibly not used
-                '#CCCCCC'  // $disabledImageFilter, for buttons with ".disabled" (possibly not used)
+                '#CCCCCC', // $disabledImageFilter, for buttons with ".disabled" (possibly not used)
+                '#FF7258', // $excludeImageFilter
+                '#4DE07F'  // $includeImageFilter
             ]);
         }
 

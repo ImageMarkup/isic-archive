@@ -76,6 +76,17 @@ isic.views.ImagesFacetView = isic.View.extend({
 });
 
 isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
+    events: function () {
+        return _.extend({}, isic.views.ImagesFacetView.prototype.events, {
+            'click .isic-images-facet-all-exclude': function (event) {
+                this.filters.setAllIncluded(this.facetId, false);
+            },
+            'click .isic-images-facet-all-include': function (event) {
+                this.filters.setAllIncluded(this.facetId, true);
+            }
+        });
+    },
+
     /**
      * @param {isic.models.ImagesFacetModel} settings.completeFacet
      * @param {isic.models.ImagesFacetModel} settings.filteredFacet
@@ -130,16 +141,10 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
             .call(yAxis);
 
         // Move the special buttons into place and attach their events
-        this.$('.selectAllBins').hide();
-        svg.select('.selectAllBins')
+        svg.select('.isic-images-facet-all')
             .attr('transform', 'translate(' +
                 (this.scale.leftAxisPadding - 0.5 * emSize) + ',' +
                 (height + emSize) + ')');
-        svg.select('.selectAll')
-            .on('click', function () {
-                // TODO: use this
-                this.filters.setAllIncluded(this.facetId, true);
-            });
 
         // Draw the bin groups
         var bins = svg.select('.bins').selectAll('.bin')
@@ -302,8 +307,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
         var transformHeight = height + offsetY;
         var transformAngle = -45;
         var transformAngleRadians = transformAngle * (Math.PI / 180);
-        var maxBoxHeight = svg.select('.selectAllBins').select('text')
-            .node().getComputedTextLength();
+        var maxBoxHeight = 0;
         binsEnter.append('text');
         bins.select('text')
             .text(_.bind(function (d) {
