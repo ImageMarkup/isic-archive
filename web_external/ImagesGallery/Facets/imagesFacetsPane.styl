@@ -87,11 +87,17 @@
         fill $dataAxisColor
         stroke none
 
+      .isic-images-facet-all
+        .isic-images-facet-all-include
+          filter $includeImageFilter
+        .isic-images-facet-all-exclude
+          filter $excludeImageFilter
+
     .isic-images-facet-categorical-content
       margin-left 25px
       user-select none
 
-      .isic-images-facet-bin
+      a
         display block
         margin-bottom 2px
         color #333333

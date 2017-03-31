@@ -1,11 +1,5 @@
 /*globals d3*/
 
-var ICONS = {
-    check: girder.staticRoot + '/built/plugins/isic_archive/extra/img/check.svg',
-    ex: girder.staticRoot + '/built/plugins/isic_archive/extra/img/ex.svg',
-    dash: girder.staticRoot + '/built/plugins/isic_archive/extra/img/dash.svg'
-};
-
 isic.views.ImagesFacetView = isic.View.extend({
     className: 'isic-images-facet',
 
@@ -82,6 +76,17 @@ isic.views.ImagesFacetView = isic.View.extend({
 });
 
 isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
+    events: function () {
+        return _.extend({}, isic.views.ImagesFacetView.prototype.events, {
+            'click .isic-images-facet-all-exclude': function (event) {
+                this.filters.setAllIncluded(this.facetId, false);
+            },
+            'click .isic-images-facet-all-include': function (event) {
+                this.filters.setAllIncluded(this.facetId, true);
+            }
+        });
+    },
+
     /**
      * @param {isic.models.ImagesFacetModel} settings.completeFacet
      * @param {isic.models.ImagesFacetModel} settings.filteredFacet
@@ -99,7 +104,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
     render: function () {
         this.$el.html(isic.templates.imagesFacetHistogram({
             title: this.title,
-            staticRoot: girder.staticRoot
+            staticImageRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/img'
         }));
         this._renderHistogram();
     },
@@ -136,16 +141,10 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
             .call(yAxis);
 
         // Move the special buttons into place and attach their events
-        this.$('.selectAllBins').hide();
-        svg.select('.selectAllBins')
+        svg.select('.isic-images-facet-all')
             .attr('transform', 'translate(' +
                 (this.scale.leftAxisPadding - 0.5 * emSize) + ',' +
                 (height + emSize) + ')');
-        svg.select('.selectAll')
-            .on('click', function () {
-                // TODO: use this
-                this.filters.setAllIncluded(this.facetId, true);
-            });
 
         // Draw the bin groups
         var bins = svg.select('.bins').selectAll('.bin')
@@ -286,14 +285,15 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
             .attr('xlink:href', _.bind(function (d) {
                 var status = this.filters.isIncluded(this.facetId, d.completeBin.label);
 
+                var staticImageRoot = girder.staticRoot + '/built/plugins/isic_archive/extra/img';
                 if (status === true) {
-                    return ICONS.check;
+                    return staticImageRoot + '/check.svg';
                 } else if (status === false) {
-                    return ICONS.ex;
+                    return staticImageRoot + '/ex.svg';
                 } else {
                     // TODO: this should never happen, until we implement continuous filters
                     // or perhaps if the completeFacetBin.count == 0
-                    return ICONS.dash;
+                    return staticImageRoot + '/dash.svg';
                 }
             }, this))
             .on('click', _.bind(function (d) {
@@ -307,8 +307,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
         var transformHeight = height + offsetY;
         var transformAngle = -45;
         var transformAngleRadians = transformAngle * (Math.PI / 180);
-        var maxBoxHeight = svg.select('.selectAllBins').select('text')
-            .node().getComputedTextLength();
+        var maxBoxHeight = 0;
         binsEnter.append('text');
         bins.select('text')
             .text(_.bind(function (d) {
@@ -394,6 +393,12 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
                 var binElem = this.$(event.currentTarget);
                 var binLabel = binElem.data('binLabel');
                 this._toggleBin(binLabel);
+            },
+            'click .isic-images-facet-all-exclude': function (event) {
+                this.filters.setAllIncluded(this.facetId, false);
+            },
+            'click .isic-images-facet-all-include': function (event) {
+                this.filters.setAllIncluded(this.facetId, true);
             }
         });
     },

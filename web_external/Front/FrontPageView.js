@@ -5,9 +5,7 @@ isic.views.FrontPageView = girder.views.FrontPageView.extend({
 
     render: function () {
         this.$el.html(isic.templates.frontPage({
-            apiRoot: girder.apiRoot,
-            staticRoot: girder.staticRoot,
-            versionInfo: girder.versionInfo
+            staticImageRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/img'
         }));
 
         return this;
