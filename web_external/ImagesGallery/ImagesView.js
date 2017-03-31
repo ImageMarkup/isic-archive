@@ -26,22 +26,6 @@ isic.views.ImagesView = isic.View.extend({
         if (!$('#recolorImageFilters').length) {
             isic.shims.recolorImageFilters(['#00ABFF', '#444499', '#CCCCCC']);
         }
-        if (!this.addedCollapseImage) {
-            // little hack to inject the correct expander image path into the
-            // stylesheet (afaik, we can't access girder.staticRoot from the
-            // stylus files)
-            var isicStylesheet = Array.from(document.styleSheets)
-                .filter(function (sheet) {
-                    return sheet.href &&
-                        sheet.href.indexOf('isic_archive.app.min.css') !== -1;
-                })[0];
-            isicStylesheet.insertRule('#isic-images-histogramPane ' +
-                '.attributeSection .header input.expander:before ' +
-                '{background-image: url(' + girder.staticRoot +
-                    '/built/plugins/isic_archive/extra/img/collapse.svg);}',
-                0);
-            this.addedCollapseImage = true;
-        }
 
         // This will self-render when this.completeFacets updates
         this.facetsPane = new isic.views.ImagesFacetsPane({
