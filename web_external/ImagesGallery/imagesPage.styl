@@ -37,37 +37,37 @@
     border-radius 3px
 
   .button
-      margin 0.5em
-      cursor pointer
-      border 1px solid transparent
-      border-radius 3px
-      padding 3px
+    margin 0.5em
+    cursor pointer
+    border 1px solid transparent
+    border-radius 3px
+    padding 3px
+
+    img
+      width 1em
+      height 1em
+      opacity 0.7
+
+    &.selected
+      img
+        -webkit-filter $selectedImageFilter
+        filter $selectedImageFilter
+
+    &:hover
+      border 1px solid #E2E2E2
+      background linear-gradient(to bottom, #fff 60%, #f6f6f6 100%)
 
       img
-        width 1em
-        height 1em
-        opacity 0.7
+        opacity 1.0
 
-      &.selected
-        img
-          -webkit-filter $selectedImageFilter
-          filter $selectedImageFilter
+    &.disabled
+    &.disabled:hover
+      border 1px solid transparent
+      background transparent
+      cursor default
 
-      &:hover
-        border 1px solid #E2E2E2
-        background linear-gradient(to bottom, #fff 60%, #f6f6f6 100%)
-
-        img
-          opacity 1.0
-
-      &.disabled
-      &.disabled:hover
-        border 1px solid transparent
-        background transparent
-        cursor default
-
-        img
-          opacity 0.2
+      img
+        opacity 0.2
 
   .isic-images-image-container
     overflow auto
