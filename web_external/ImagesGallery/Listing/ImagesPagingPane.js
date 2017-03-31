@@ -53,9 +53,11 @@ isic.views.ImagesPagingPane = Backbone.View.extend({
             staticImageRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/img/'
         }));
 
+        // Tooltips for buttons inside a "btn-group" must be attached to another element, or else
+        // the "btn-group" size will be disrupted when they appear
         this.$('.btn-group>[data-toggle="tooltip"]').tooltip({
             trigger: 'hover',
-            container: 'body'
+            container: this.$el
         });
         this.$('[data-toggle="tooltip"]').tooltip({
             trigger: 'hover'
@@ -115,5 +117,9 @@ isic.views.ImagesPagingPane = Backbone.View.extend({
 
         this.$('#isic-images-paging-downloadZip').prop(
             'disabled', this.filteredFacets.total === 0);
+
+        // Any just-disabled buttons will no longer trigger 'mouseleave' or 'focusout' events, so
+        // any still-active tooltips on those buttons must be manually hidden
+        this.$('[data-toggle="tooltip"][disabled]').tooltip('hide');
     }
 });
