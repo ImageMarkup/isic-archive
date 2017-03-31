@@ -1,11 +1,5 @@
 /*globals d3*/
 
-var ICONS = {
-    check: girder.staticRoot + '/built/plugins/isic_archive/extra/img/check.svg',
-    ex: girder.staticRoot + '/built/plugins/isic_archive/extra/img/ex.svg',
-    dash: girder.staticRoot + '/built/plugins/isic_archive/extra/img/dash.svg'
-};
-
 isic.views.ImagesFacetView = isic.View.extend({
     className: 'isic-images-facet',
 
@@ -99,7 +93,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
     render: function () {
         this.$el.html(isic.templates.imagesFacetHistogram({
             title: this.title,
-            staticRoot: girder.staticRoot
+            staticImageRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/img'
         }));
         this._renderHistogram();
     },
@@ -286,14 +280,15 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
             .attr('xlink:href', _.bind(function (d) {
                 var status = this.filters.isIncluded(this.facetId, d.completeBin.label);
 
+                var staticImageRoot = girder.staticRoot + '/built/plugins/isic_archive/extra/img';
                 if (status === true) {
-                    return ICONS.check;
+                    return staticImageRoot + '/check.svg';
                 } else if (status === false) {
-                    return ICONS.ex;
+                    return staticImageRoot + '/ex.svg';
                 } else {
                     // TODO: this should never happen, until we implement continuous filters
                     // or perhaps if the completeFacetBin.count == 0
-                    return ICONS.dash;
+                    return staticImageRoot + '/dash.svg';
                 }
             }, this))
             .on('click', _.bind(function (d) {
