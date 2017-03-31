@@ -55,6 +55,8 @@ isic.views.ImagesPagingPane = Backbone.View.extend({
 
         // Tooltips for buttons inside a "btn-group" must be attached to another element, or else
         // the "btn-group" size will be disrupted when they appear
+        // Although these elements will be re-initialized with tooltip behavior in the next
+        // statement, this first "container" binding will stay in effect
         this.$('.btn-group>[data-toggle="tooltip"]').tooltip({
             trigger: 'hover',
             container: this.$el
