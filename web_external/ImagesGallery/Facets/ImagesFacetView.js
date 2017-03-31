@@ -389,6 +389,12 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
                 var binElem = this.$(event.currentTarget);
                 var binLabel = binElem.data('binLabel');
                 this._toggleBin(binLabel);
+            },
+            'click .isic-images-facet-all-exclude': function (event) {
+                this.filters.setAllIncluded(this.facetId, false);
+            },
+            'click .isic-images-facet-all-include': function (event) {
+                this.filters.setAllIncluded(this.facetId, true);
             }
         });
     },
