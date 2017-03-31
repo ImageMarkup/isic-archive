@@ -167,6 +167,9 @@ _.extend(isic.collections.ImagesFilters.prototype, Backbone.Events, {
 
 isic.SerializeFilterHelpers = {
     loadFilterGrammar: function () {
+        if (isic.SerializeFilterHelpers.astParser) {
+            return $.Deferred().resolve().promise();
+        }
         // TODO: inline this as a string literal
         return $.ajax({
             url: girder.staticRoot + '/built/plugins/isic_archive/extra/query.pegjs',

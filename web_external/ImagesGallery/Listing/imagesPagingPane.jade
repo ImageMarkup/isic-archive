@@ -1,45 +1,63 @@
 .growing.flexColumn
-  #isic-images-pagingTools.flexRow
-    #isic-images-seekFirst.button
-      img(src=staticImageRoot + '/seekFirst.svg')
-    #isic-images-seekPrev.button
-      img(src=staticImageRoot + '/seekPrev.svg')
-    #isic-images-seekNext.button
-      img(src=staticImageRoot + '/seekNext.svg')
-    #isic-images-seekLast.button
-      img(src=staticImageRoot + '/seekLast.svg')
-    #isic-images-loading.detailLabel Loading images...
-    #isic-images-noPagingOrFilters.detailLabel
-      | Showing all&nbsp;
-      span.page 0
-      |  images in the archive.
-    #isic-images-hasPaging.detailLabel
-      | Showing images&nbsp;
-      span.page 0 - 0
-      |  of&nbsp;
-      span.filteredSet 0
-      |  total images.
-    #isic-images-hasFilters.detailLabel
-      | Showing&nbsp;
-      span.filteredSet 0
-      |  of the&nbsp;
-      span.overview 0
-      |  total number of images in the archive.
-    #isic-images-hasFiltersAndPaging.detailLabel
-      | Showing images&nbsp;
-      span.page 0 - 0
-      |  of&nbsp;
-      span.filteredSet 0
-      |  filtered images. There are&nbsp;
-      span.overview 0
-      |  total images in the archive (ignoring filters).
-    button#isic-images-download-zip.btn.btn-sm.btn-default(
+  #isic-images-paging-tools.flexRow
+    #isic-images-paging-seek.btn-group
+      button#isic-images-paging-seek-first.btn.btn-sm.btn-default(
+        data-toggle='tooltip'
+        data-placement='bottom'
+        title='First page'
+      )
+        i.icon-to-start-alt
+      button#isic-images-paging-seek-prev.btn.btn-sm.btn-default(
+        data-toggle='tooltip'
+        data-placement='bottom'
+        title='Previous page'
+      )
+        i.icon-fast-bw
+      button#isic-images-paging-seek-next.btn.btn-sm.btn-default(
+        data-toggle='tooltip'
+        data-placement='bottom'
+        title='Next page'
+      )
+        i.icon-fast-fw
+      button#isic-images-paging-seek-last.btn.btn-sm.btn-default(
+        data-toggle='tooltip'
+        data-placement='bottom'
+        title='Last page'
+      )
+        i.icon-to-end-alt
+    #isic-images-paging-label
+      span#isic-images-paging-label-loading Loading images...
+      span#isic-images-paging-label-noPagingOrFilters
+        | Showing all&nbsp;
+        span.isic-images-paging-label-page 0
+        |  images.
+      span#isic-images-paging-label-hasPaging
+        | Showing images&nbsp;
+        span.isic-images-paging-label-page 0 - 0
+        |  of&nbsp;
+        span.isic-images-paging-label-filtered 0
+        |  total images.
+      span#isic-images-paging-label-hasFilters
+        | Showing&nbsp;
+        span.isic-images-paging-label-filtered 0
+        |  of the&nbsp;
+        span.isic-images-paging-label-total 0
+        |  total number of images.
+      span#isic-images-paging-label-hasFiltersAndPaging
+        | Showing images&nbsp;
+        span.isic-images-paging-label-page 0 - 0
+        |  of&nbsp;
+        span.isic-images-paging-label-filtered 0
+        |  filtered images. There are&nbsp;
+        span.isic-images-paging-label-total 0
+        |  total images (ignoring filters).
+    button#isic-images-paging-downloadZip.btn.btn-sm.btn-default(
       data-toggle='tooltip'
       data-placement='bottom'
       title='Download all filtered images as a ZIP'
     )
       i.icon-file-archive
       span Download as ZIP
-  #isic-images-pagingBars.flexRow
-    .bar.filteredSet
-    .bar.page
+  #isic-images-paging-bars.flexRow
+    #isic-images-paging-bar-filteredTotal.isic-images-paging-bar
+    #isic-images-paging-bar-pageTotal.isic-images-paging-bar
