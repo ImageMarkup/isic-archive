@@ -23,9 +23,8 @@ isic.views.ImagesView = isic.View.extend({
     render: function () {
         this.$el.html(isic.templates.imagesPage());
 
-        if (!(this.addedTemplate)) {
+        if (!$('#recolorImageFilters').length) {
             isic.shims.recolorImageFilters(['#00ABFF', '#444499', '#CCCCCC']);
-            this.addedTemplate = true;
         }
         if (!this.addedCollapseImage) {
             // little hack to inject the correct expander image path into the
