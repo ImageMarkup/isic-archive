@@ -20,10 +20,12 @@
 from girder import events
 from girder.api import access
 from girder.api.describe import Description, describeRoute
-from girder.api.rest import getCurrentUser, RestException
+from girder.api.rest import RestException, boundHandler
 from girder.constants import AccessType
 from girder.utility import mail_utils
 from girder.utility.model_importer import ModelImporter
+
+from .base import IsicResource
 
 
 def attachUserPermissions(userResponse):
@@ -63,13 +65,17 @@ def getUserEmail(user):
     return user['email']
 
 
+_sharedContext = IsicResource()
+
+
 @access.user
 @describeRoute(
     Description('Request permission to create datasets.'))
-def requestCreateDatasetPermission(params):
-    User = ModelImporter.model('user', 'isic_archive')
-    Group = ModelImporter.model('group')
-    currentUser = getCurrentUser()
+@boundHandler(_sharedContext)
+def requestCreateDatasetPermission(self, params):
+    User = self.model('user', 'isic_archive')
+    Group = self.model('group')
+    currentUser = self.getCurrentUser()
     resp = {}
     if User.canCreateDataset(currentUser):
         resp['message'] = 'Dataset Contributor access granted.',
@@ -117,10 +123,11 @@ def requestCreateDatasetPermission(params):
 @access.user
 @describeRoute(
     Description('Accept Terms of Use.'))
-def acceptTerms(params):
-    User = ModelImporter.model('user', 'isic_archive')
+@boundHandler(_sharedContext)
+def acceptTerms(self, params):
+    User = self.model('user', 'isic_archive')
 
-    currentUser = getCurrentUser()
+    currentUser = self.getCurrentUser()
     if not User.canAcceptTerms(currentUser):
         User.acceptTerms(currentUser)
         User.save(currentUser)
