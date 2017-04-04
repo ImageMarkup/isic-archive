@@ -19,6 +19,7 @@
 
 from girder.constants import AccessType
 from girder.models.folder import Folder as FolderModel
+from girder.models.model_base import ValidationException
 
 
 class Study(FolderModel):
@@ -142,6 +143,16 @@ class Study(FolderModel):
 
         # Since parent study could theoretically have changed, return it
         return study
+
+    def removeAnnotator(self, study, annotatorUser):
+        Folder = self.model('folder')
+        annotatorFolder = Folder.findOne({
+            'parentId': study['_id'],
+            'meta.userId': annotatorUser['_id']
+        })
+        if not annotatorFolder:
+            raise ValidationException('Annotator user is not in study.')
+        Folder.remove(annotatorFolder)
 
     def addImage(self, study, image, creatorUser):
         Folder = self.model('folder')
