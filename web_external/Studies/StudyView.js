@@ -15,6 +15,14 @@ isic.views.StudyView = isic.View.extend({
             this.studyAddUserWidget.render();
         },
 
+        'click .isic-study-remove-user-button': function (event) {
+            var target = $(event.currentTarget);
+            var userId = target.parent().data('userId');
+            // TODO: StudyModel.users() should be cached instead of re-created
+            var user = this.model.users().get(userId);
+            this.confirmRemoveUser(user);
+        },
+
         'click .isic-study-destroy-button': 'confirmDestroy'
     },
 
@@ -51,6 +59,41 @@ isic.views.StudyView = isic.View.extend({
         });
 
         return this;
+    },
+
+    confirmRemoveUser: function (user) {
+        girder.confirm({
+            text: '<h4>Permanently remove <b>"' + _.escape(user.name()) + '"</b> from study?</h4>',
+            escapedHtml: true,
+            confirmCallback: _.bind(function () {
+                // Ensure dialog is hidden before continuing. Otherwise,
+                // when destroy() displays its modal alert dialog,
+                // the Bootstrap-created element with class "modal-backdrop"
+                // is erroneously not removed.
+                $('#g-dialog-container').on('hidden.bs.modal', _.bind(this.removeUser, this, user));
+            }, this)
+        });
+    },
+
+    removeUser: function (user) {
+        this.model
+            .removeUser(user)
+            .done(_.bind(function () {
+                this.model.once('g:fetched', function () {
+                    // TODO: re-render this via model events instead
+                    this.render();
+                }, this).fetch();
+                isic.showAlertDialog({
+                    text: '<h4>Annotator <b>"' + _.escape(user.name()) + '"</b> deleted</h4>',
+                    escapedHtml: true
+                });
+            }, this))
+            .fail(function (resp) {
+                isic.showAlertDialog({
+                    text: '<h4>Error deleting annotator</h4><br>' + _.escape(resp.responseJSON.message),
+                    escapedHtml: true
+                });
+            });
     },
 
     confirmDestroy: function () {

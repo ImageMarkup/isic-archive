@@ -29,7 +29,13 @@
         if study.get('users').length
           ul
             each user in study.users().models
-              li= user.name()
+              li(data-user-id=user.id)
+                span= user.name()
+                if canAdminStudy
+                  a.isic-study-remove-user-button.btn.btn-default.btn-xs.isic-tooltip(
+                  title='Delete annotator')
+                    i.icon-trash
+
         else
           | (no users)
 
