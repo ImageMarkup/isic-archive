@@ -212,7 +212,7 @@ isic.views.StudyResultsSelectUsersView = isic.View.extend({
         // Set up select box
         var placeholder = 'No users available';
         if (!this.collection.isEmpty()) {
-            placeholder = 'Select a user... (' + this.collection.length + ' available)';
+            placeholder = 'Select an annotator... (' + this.collection.length + ' available)';
         }
         select = this.$('#isic-study-results-select-users-select');
         select.select2({
