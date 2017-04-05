@@ -17,6 +17,7 @@
 #  limitations under the License.
 ###############################################################################
 
+import itertools
 import mimetypes
 import os
 import re
@@ -71,6 +72,7 @@ class Image(ItemModel):
             'acquisition': {},
             'clinical': {},
             'unstructured': {},
+            'tags': []
         })
 
         originalFile = Upload.uploadFromFile(
@@ -317,7 +319,10 @@ class Image(ItemModel):
             'meta.clinical.diagnosis_confirm_type',
             'meta.clinical.diagnosis',
             'meta.clinical.personal_hx_mm',
-            'meta.clinical.family_hx_mm',
+            'meta.clinical.family_hx_mm'
+        ]
+        tagFacets = [
+            'meta.tags'
         ]
         ordinalFacets = [
             (
@@ -356,6 +361,15 @@ class Image(ItemModel):
             facetStages[facetId] = [
                 {'$sortByCount': '$' + facetName}
             ]
+        for facetName in tagFacets:
+            facetId = facetName.replace('.', '__')
+            facetStages[facetId] = [
+                {'$unwind': {
+                    'path': '$' + facetName,
+                    'preserveNullAndEmptyArrays': True
+                }},
+                {'$sortByCount': '$' + facetName}
+            ]
         for facetName, boundaries in ordinalFacets:
             facetId = facetName.replace('.', '__')
             facetStages[facetId] = [
@@ -375,15 +389,17 @@ class Image(ItemModel):
             # If the set of filtered images is empty, add a count manually
             histogram['__passedFilters__'] = [{'count': 0}]
         histogram['__passedFilters__'][0]['label'] = 'count'
-        for facetName in \
-                categorialFacets + \
-                [facetName for facetName, boundaries in ordinalFacets]:
+        for facetName in itertools.chain(
+                categorialFacets,
+                tagFacets,
+                [facetName for facetName, boundaries in ordinalFacets]
+        ):
             facetId = facetName.replace('.', '__')
             histogram[facetName] = histogram.pop(facetId, [])
             histogram[facetName].sort(
                 # Sort facet bins, placing "None" at the end
                 key=lambda facetBin: (facetBin['_id'] is None, facetBin['_id']))
-        for facetName in categorialFacets:
+        for facetName in itertools.chain(categorialFacets, tagFacets):
             for facetBin in histogram[facetName]:
                 facetBin['label'] = facetBin.pop('_id')
         for facetName, boundaries in ordinalFacets:

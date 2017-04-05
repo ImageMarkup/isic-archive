@@ -229,7 +229,8 @@ class ImageResource(IsicResource):
                 'unstructured': image['meta']['unstructured']
             },
             'notes': {
-                'reviewed': image['meta'].get('reviewed', None)
+                'reviewed': image['meta'].get('reviewed', None),
+                'tags': image['meta']['tags']
             }
         }
         if User.canReviewDataset(user):
