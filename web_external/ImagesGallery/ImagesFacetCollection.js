@@ -21,7 +21,7 @@ isic.collections.ImagesFacetCollection = Backbone.Collection.extend({
                         // Map a label of a null object to a "__null__" string because:
                         // * The null object cannot be stored on DOM elements as a data property
                         // * The null object will be coerced to a string of "null" in any places
-                        //   it's used as the key to an object (e.g. ImagesFilters)
+                        //   it's used as the key to an object (e.g. ImagesFilter)
                         // * The server is eventually expecting "__null__" in filters, since a null
                         //   object cannot be serialized as a query string
                         // For all these reasons, it's best to just convert to "__null__" now for
