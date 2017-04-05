@@ -122,6 +122,37 @@ isic.collections.CategoricalFacetFilter = isic.collections.FacetFilter.extend({
     }
 });
 
+isic.collections.TagsCategoricalFacetFilter = isic.collections.CategoricalFacetFilter.extend({
+    asExpression: function () {
+        var includedBinLabels = _.chain(this._filters)
+            // Choose only included bins
+            .pick(function (binIncluded, binLabel) {
+                return binIncluded === true;
+            })
+            // Take the bin labels as an array
+            .keys()
+            // Encode each, as they're user-provided values from the database
+            .map(function (binLabel) {
+                if (binLabel === '__null__') {
+                    // The null bin matches an empty array (with no tags) in the database
+                    // Non-strings can't be encoded, so don't encode this value
+                    return [];
+                }
+                return isic.SerializeFilterHelpers._stringToHex(binLabel);
+            })
+            .value();
+        if (includedBinLabels.length) {
+            return '(' +
+                isic.SerializeFilterHelpers._stringToHex(this.facetId) +
+                ' in ' +
+                JSON.stringify(includedBinLabels) +
+                ')';
+        } else {
+            return '';
+        }
+    }
+});
+
 isic.collections.IntervalFacetFilter = isic.collections.FacetFilter.extend({
     asExpression: function () {
         var filterExpressions = _.chain(this._filters)
