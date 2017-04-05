@@ -39,29 +39,13 @@ isic.views.ImageDetailsPane = isic.View.extend({
             };
         }
 
-        var meta = this.image.get('meta');
-        var acquisitionMetadata = meta['acquisition'];
-        var clinicalMetadata = meta['clinical'];
-        var unstructuredMetadata = meta['unstructured'] || {};
-        var privateMetadata = this.image.get('privateMeta');
-
-        // Reformat some acquisition metadata
-        acquisitionMetadata = _.clone(acquisitionMetadata);
-        acquisitionMetadata['Dimensions (pixels)'] =
-            acquisitionMetadata['pixelsX'] + ' &times; ' + acquisitionMetadata['pixelsY'];
-        delete acquisitionMetadata['pixelsX'];
-        delete acquisitionMetadata['pixelsY'];
-
         this.$el.html(isic.templates.imageDetailsPage({
             apiRoot: girder.apiRoot,
             image: this.image,
             currentUser: girder.currentUser,
             created: created,
             license: license,
-            acquisitionMetadata: acquisitionMetadata,
-            clinicalMetadata: clinicalMetadata,
-            unstructuredMetadata: unstructuredMetadata,
-            privateMetadata: privateMetadata
+            _: _
         }));
 
         this.segmentationsDisplayView = new isic.views.SegmentationsDisplayView({

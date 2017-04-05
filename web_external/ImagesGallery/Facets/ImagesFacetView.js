@@ -193,18 +193,21 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                     d3.select(this)
                         .attr(self.scale.getBinRect(d.completeBin.label, 'overview'));
 
+                    function getTooltipTitle() {
+                        var completeCount = d.completeBin.count;
+                        var filteredCount = d.filteredBin.count;
+                        if (filteredCount === completeCount) {
+                            return String(filteredCount);
+                        } else {
+                            return filteredCount + ' (of ' + completeCount + ')';
+                        }
+                    }
                     $(this).tooltip({
                         container: 'body',
-                        title: function () {
-                            var completeCount = d.completeBin.count;
-                            var filteredCount = d.filteredBin.count;
-                            if (filteredCount === completeCount) {
-                                return String(filteredCount);
-                            } else {
-                                return filteredCount + ' (of ' + completeCount + ')';
-                            }
-                        }
+                        title: getTooltipTitle
                     });
+                    // The title function does not get re-bound if a tooltip already exists
+                    $(this).data('bs.tooltip').options.title = getTooltipTitle;
                 });
             bins.select('rect.filteredSet')
                 .each(function (d) {
