@@ -18,18 +18,24 @@
 
   table.table.table-condensed.isic-listing-item-table
     tr
-      td.isic-listing-item-table-section-header Users
+      td.isic-listing-item-table-section-header Annotators
         |  (#{study.get('users').length})
         if canAdminStudy
           a.isic-study-add-user-button.btn.btn-default.btn-xs.isic-tooltip(
-            title='Add user')
+            title='Add annotator')
             i.icon-plus
     tr
       td.isic-study-users-content
         if study.get('users').length
-          ul
+          table(class=canAdminStudy ? 'table-hover' : undefined)
             each user in study.users().models
-              li= user.name()
+              tr(data-user-id=user.id)
+                td.isic-study-user-name= user.name()
+                td
+                  if canAdminStudy
+                    a.isic-study-remove-user-button.isic-tooltip(
+                      title='Delete annotator')
+                        i.icon-cancel
         else
           | (no users)
 

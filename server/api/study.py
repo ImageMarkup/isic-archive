@@ -45,6 +45,7 @@ class StudyResource(IsicResource):
         self.route('POST', (':id', 'users'), self.addAnnotators)
         self.route('POST', (':id', 'images'), self.addImages)
         self.route('DELETE', (':id',), self.deleteStudy)
+        self.route('DELETE', (':id', 'users', ':userId',), self.deleteAnnotator)
 
     @describeRoute(
         Description('Return a list of annotation studies.')
@@ -396,6 +397,36 @@ class StudyResource(IsicResource):
             raise RestException('Study has completed annotations.', 409)
 
         Study.remove(study)
+
+        # No Content
+        cherrypy.response.status = 204
+
+    @describeRoute(
+        Description('Delete an annotator from a study.')
+        .param('id', 'The ID of the study.', paramType='path')
+        .param('userId', 'The ID of the annotator.', paramType='path')
+        .errorResponse('ID was invalid.')
+    )
+    @access.user
+    @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
+    @loadmodel(model='user', plugin='isic_archive', map={'userId': 'annotatorUser'},
+               level=AccessType.READ)
+    def deleteAnnotator(self, study, annotatorUser, params):
+        Study = self.model('study', 'isic_archive')
+        User = self.model('user', 'isic_archive')
+
+        user = self.getCurrentUser()
+        # For now, study admins will be the ones that can delete annotators
+        User.requireAdminStudy(user)
+
+        if Study.childAnnotations(
+                study=study, annotatorUser=annotatorUser, state=Study.State.COMPLETE).count():
+            raise RestException('Annotator user has completed annotations.', 409)
+
+        try:
+            Study.removeAnnotator(study, annotatorUser)
+        except ValidationException as e:
+            raise ValidationException(str(e), 'userId')
 
         # No Content
         cherrypy.response.status = 204

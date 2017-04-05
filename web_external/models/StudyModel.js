@@ -27,8 +27,9 @@ isic.models.StudyModel = isic.Model.extend({
      * Add a user to the study.
      */
     addUser: function (userId) {
+        // TODO: return a promise here, and use it (rather than events)
         girder.restRequest({
-            path: this.resourceName + '/' + this.get('_id') + '/users',
+            path: this.resourceName + '/' + this.id + '/users',
             type: 'POST',
             data: {
                 userIds: JSON.stringify([userId])
@@ -38,6 +39,16 @@ isic.models.StudyModel = isic.Model.extend({
         }, this)).fail(_.bind(function (err) {
             this.trigger('g:error', err);
         }, this));
+    },
+
+    removeUser: function (user) {
+        return girder.restRequest({
+            path: this.resourceName + '/' + this.id + '/users/' + user.id,
+            type: 'DELETE',
+            error: null
+        });
+        // TODO: update the model in-place here, with the new list of annotators,
+        // then trigger a changed event
     },
 
     destroy: function (options) {
