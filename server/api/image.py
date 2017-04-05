@@ -203,29 +203,37 @@ class ImageResource(IsicResource):
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def getImage(self, image, params):
         Dataset = self.model('dataset', 'isic_archive')
-        Image = self.model('image', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
         user = self.getCurrentUser()
 
-        output = Image.filter(image, user)
-        output['_modelType'] = 'image'
-
-        output['dataset'] = Dataset.load(
-            output.pop('folderId'),
-            force=True, exc=True,
-            # Work around a bug in upstream Girder
-            fields=Dataset.summaryFields + ['baseParentType', 'lowerName']
-        )
-        del output['dataset']['baseParentType']
-        del output['dataset']['lowerName']
-
-        output['creator'] = User.filteredSummary(
-            User.load(output.pop('creatorId'), force=True, exc=True),
-            user)
-
+        output = {
+            '_id': image['_id'],
+            '_modelType': 'image',
+            'name': image['name'],
+            'created': image['created'],
+            'creator': User.filteredSummary(
+                User.load(image['creatorId'], force=True, exc=True),
+                user),
+            # TODO: verify that "updated" is set correctly
+            'updated': image['updated'],
+            'dataset': Dataset.load(
+                image['folderId'],
+                force=True, exc=True,
+                # Work around a bug in upstream Girder
+                fields=Dataset.summaryFields + ['baseParentType', 'lowerName']
+            ),
+            'meta': {
+                'acquisition': image['meta']['acquisition'],
+                'clinical': image['meta']['clinical'],
+                'unstructured': image['meta']['unstructured']
+            },
+            'notes': {
+                'reviewed': image['meta'].get('reviewed', None)
+            }
+        }
         if User.canReviewDataset(user):
-            output['privateMeta'] = image['privateMeta']
+            output['meta']['private'] = image['privateMeta']
 
         return output
 

@@ -43,7 +43,7 @@ isic.views.ImageDetailsPane = isic.View.extend({
         var acquisitionMetadata = meta['acquisition'];
         var clinicalMetadata = meta['clinical'];
         var unstructuredMetadata = meta['unstructured'] || {};
-        var privateMetadata = this.image.get('privateMeta');
+        var privateMetadata = meta['private'] || null;
 
         // Reformat some acquisition metadata
         acquisitionMetadata = _.clone(acquisitionMetadata);
