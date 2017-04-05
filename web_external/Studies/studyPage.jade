@@ -27,7 +27,7 @@
     tr
       td.isic-study-users-content
         if study.get('users').length
-          table.table-hover
+          table(class=canAdminStudy ? 'table-hover' : undefined)
             each user in study.users().models
               tr
                 td.isic-study-user-name= user.name()
