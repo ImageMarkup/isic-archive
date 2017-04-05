@@ -29,9 +29,9 @@
         if study.get('users').length
           table(class=canAdminStudy ? 'table-hover' : undefined)
             each user in study.users().models
-              tr
+              tr(data-user-id=user.id)
                 td.isic-study-user-name= user.name()
-                td(data-user-id=user.id)
+                td
                   if canAdminStudy
                     a.isic-study-remove-user-button.isic-tooltip(
                       title='Delete annotator')
