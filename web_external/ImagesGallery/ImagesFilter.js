@@ -1,85 +1,47 @@
 /*globals peg*/
 
-isic.collections.ImagesFilters = function (completeFacets) {
+isic.collections.ImagesFilter = function (completeFacets) {
     if (completeFacets) {
         this.initialize(completeFacets);
     }
 };
-_.extend(isic.collections.ImagesFilters.prototype, Backbone.Events, {
+_.extend(isic.collections.ImagesFilter.prototype, Backbone.Events, {
     initialize: function (completeFacets) {
         /* Creates an internal structure of:
             this._filters = {
-                facetId1: {
-                    binLabel1: true,
-                    binLabel2: false,
-                    ...
-                },
-                facetId2: {
-                    binLabel1: true,
-                    binLabel2: false,
-                    ...
-                },
+                facetId1: FacetFilter,
+                facetId2: FacetFilter,
                 ...
             }
         */
-        this._filters = completeFacets.chain()
-            .map(function (completeFacet) {
-                var facetId = completeFacet.id;
-                var facetBins = completeFacet.get('bins');
-
-                var facetFilters = _.chain(facetBins)
-                    .map(function (facetBin) {
-                        var binLabel = facetBin.label;
-                        // Default to all bins included
-                        var binIncluded = true;
-                        return [binLabel, binIncluded];
-                    })
-                    .object()
-                    .value();
-
-                return [facetId, facetFilters];
-            })
-            .object()
-            .value();
+        this._filters = {};
+        completeFacets.forEach(_.bind(function (completeFacet) {
+            var facetId = completeFacet.id;
+            var FacetFilter = isic.FACET_SCHEMA[facetId].FacetFilter;
+            var facetFilter = new FacetFilter(facetId, completeFacet.get('bins'));
+            facetFilter.on('change', function () {
+                // Trigger a change on the parent whenever a child changes
+                this.trigger('change');
+            }, this);
+            this._filters[facetId] = facetFilter;
+        }, this));
     },
 
-    isIncluded: function (facetId, binLabel) {
-        return this._filters[facetId][binLabel];
+    facetFilter: function (facetId) {
+        return this._filters[facetId];
     },
 
-    setIncluded: function (facetId, binLabel, binIncluded) {
-        this._filters[facetId][binLabel] = binIncluded;
-        this.trigger('change:' + facetId);
-        this.trigger('change');
-    },
-
-    setAllIncluded: function (facetId, binsIncluded) {
-        _.each(this._filters[facetId], function (oldValue, binLabel, facetBin) {
-            facetBin[binLabel] = binsIncluded;
-        });
-        this.trigger('change:' + facetId);
-        this.trigger('change');
+    asExpression: function () {
+        return _.chain(this._filters)
+            .invoke('asExpression')
+            // Remove empty expressions
+            .compact()
+            .value()
+            .join(' and ');
     },
 
     asAst: function () {
-        var fullExpression = _.chain(this._filters)
-            .pick(function (facetFilters, facetId) {
-                // Keep (facetId: facetFilter) elements that have at least one excluded bin
-                return _.chain(facetFilters)
-                    .values()
-                    .contains(false)
-                    .value();
-            })
-            .map(function (facetFilters, facetId) {
-                // Convert each facet into a string filter expression
-                if (_.has(isic.FACET_SCHEMA[facetId], 'lowBound')) {
-                    return this._rangeFacetFilterExpression(facetId, facetFilters);
-                } else {
-                    return this._categoricalFacetFilterExpression(facetId, facetFilters);
-                }
-            }, this)
-            .value()
-            .join(' and ');
+        var fullExpression = this.asExpression();
         if (fullExpression) {
             var ast = isic.SerializeFilterHelpers.astParser.parse(fullExpression);
             ast = isic.SerializeFilterHelpers._dehexify(ast);
@@ -88,24 +50,95 @@ _.extend(isic.collections.ImagesFilters.prototype, Backbone.Events, {
         } else {
             return undefined;
         }
+    }
+});
+
+isic.collections.FacetFilter = function (facetId, facetBins) {
+    this.facetId = facetId;
+
+    /* Creates an internal structure of:
+        this._filters = {
+            binLabel1: true,
+            binLabel2: true,
+            ...
+        }
+    */
+    this._filters = {};
+    _.each(facetBins, _.bind(function (facetBin) {
+        // Default to all bins included
+        this._filters[facetBin.label] = true;
+    }, this));
+};
+
+// Make it easy to inherit from FacetFilter, using a utility function from Backbone
+isic.collections.FacetFilter.extend = Backbone.View.extend;
+
+_.extend(isic.collections.FacetFilter.prototype, Backbone.Events, {
+    isIncluded: function (binLabel) {
+        return this._filters[binLabel];
     },
 
-    _rangeFacetFilterExpression: function (facetId, facetFilters) {
-        var filterExpressions = _.chain(facetFilters)
+    setIncluded: function (binLabel, binIncluded) {
+        this._filters[binLabel] = binIncluded;
+        this.trigger('change');
+    },
+
+    setAllIncluded: function (binsIncluded) {
+        _.each(this._filters, _.bind(function (oldValue, binLabel) {
+            this._filters[binLabel] = binsIncluded;
+        }, this));
+        this.trigger('change');
+    },
+
+    asExpression: null
+});
+
+isic.collections.CategoricalFacetFilter = isic.collections.FacetFilter.extend({
+    asExpression: function () {
+        var excludedBinLabels = _.chain(this._filters)
+            // Choose only excluded bins
             .pick(function (binIncluded, binLabel) {
-                // Because '__null__' has no high or low bound, it must be handled specially
+                return binIncluded === false;
+            })
+            // Take the bin labels as an array
+            .keys()
+            // Encode each, as they're user-provided values from the database
+            .map(isic.SerializeFilterHelpers._stringToHex)
+            .value();
+        // TODO: Could use "facetId + ' in ' + includedBinLabels"" if most are excluded
+        if (excludedBinLabels.length) {
+            return '(' +
+                // TODO: This doesn't strictly need to be encoded (provided that we don't use any of
+                // the grammar's forbidden characters for identifiers), but before removing the
+                // encoding step, we should ensure that decoding it (which always happens) will be a
+                // safe no-op
+                isic.SerializeFilterHelpers._stringToHex(this.facetId) +
+                ' not in ' +
+                JSON.stringify(excludedBinLabels) +
+                ')';
+        } else {
+            return '';
+        }
+    }
+});
+
+isic.collections.IntervalFacetFilter = isic.collections.FacetFilter.extend({
+    asExpression: function () {
+        var filterExpressions = _.chain(this._filters)
+            // Because '__null__' has no high or low bound, it must be handled specially
+            .pick(function (binIncluded, binLabel) {
                 return binIncluded === false && binLabel !== '__null__';
             })
+            // Parse range labels, to yield an array of numeric range arrays
             .map(function (binIncluded, binLabel) {
-                // Parse range labels, to yield an array of numeric range arrays
                 var rangeMatches = binLabel.match(/\[([\d.]+) - ([\d.]+)\)/);
                 var lowBound = parseFloat(rangeMatches[1]);
                 var highBound = parseFloat(rangeMatches[2]);
                 return [lowBound, highBound];
             })
             .sortBy(_.identity)
+            // Combine adjacent ranges
             .reduce(function (allRanges, curRange) {
-                // Combine adjacent ranges
                 var prevRange = _.last(allRanges);
                 // Compare the previous high bound and the current low bound, checking for
                 // the special case of the first element where there's no "prevRange"
@@ -120,48 +153,37 @@ _.extend(isic.collections.ImagesFilters.prototype, Backbone.Events, {
                     return allRanges.concat([curRange]);
                 }
             }, [])
-            .map(function (range) {
-                // Convert each range into a string expression
+            // Convert each range into a string expression
+            .map(_.bind(function (range) {
                 var lowBoundExpression = 'not (' +
-                    isic.SerializeFilterHelpers._stringToHex(facetId) +
+                    isic.SerializeFilterHelpers._stringToHex(this.facetId) +
                     ' >= ' +
                     range[0] +
                     ')';
                 var highBoundExpression = 'not (' +
-                    isic.SerializeFilterHelpers._stringToHex(facetId) +
+                    isic.SerializeFilterHelpers._stringToHex(this.facetId) +
                     ' < ' +
                     range[1] +
                     ')';
                 return '(' + lowBoundExpression + ' or ' + highBoundExpression + ')';
-            })
+            }, this))
             .value();
-        if (facetFilters['__null__'] === false) {
+        if (this._filters['__null__'] === false) {
             // This conditional will also intentionally fail if '__null__' is undefined
-            filterExpressions.push(this._categoricalFacetFilterExpression(
-                facetId, _.pick(facetFilters, '__null__')));
+            filterExpressions.push(
+                '(' +
+                isic.SerializeFilterHelpers._stringToHex(this.facetId) +
+                ' not in ' +
+                JSON.stringify([isic.SerializeFilterHelpers._stringToHex('__null__')]) +
+                ')'
+            );
         }
-        // Combine all expressions
-        return '(' + filterExpressions.join(' and ') + ')';
-    },
-
-    _categoricalFacetFilterExpression: function (facetId, facetFilters) {
-        var excludedBinLabels = _.chain(facetFilters)
-            .pick(function (binIncluded, binLabel) {
-                return binIncluded === false;
-            })
-            .keys()
-            // Each of these must be encoded, as they're user-provided values from the database
-            .map(isic.SerializeFilterHelpers._stringToHex)
-            .value();
-        // TODO: Could use "facetId + ' in ' + includedBinLabels"" if most are excluded
-        return '(' +
-            // TODO: This doesn't strictly need to be encoded (provided that we don't use any of the
-            // grammar's forbidden characters for identifiers), but before removing the encoding
-            // step, we should ensure that decoding it (which always happens) will be a safe no-op
-            isic.SerializeFilterHelpers._stringToHex(facetId) +
-            ' not in ' +
-            JSON.stringify(excludedBinLabels) +
-            ')';
+        if (filterExpressions.length) {
+            // Combine all expressions
+            return '(' + filterExpressions.join(' and ') + ')';
+        } else {
+            return '';
+        }
     }
 });
 

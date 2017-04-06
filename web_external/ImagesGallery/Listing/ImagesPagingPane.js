@@ -28,7 +28,7 @@ isic.views.ImagesPagingPane = Backbone.View.extend({
      * @param {isic.collections.ImagesFacetCollection} settings.completeFacets
      * @param {isic.collections.ImagesFacetCollection} settings.filteredFacets
      * @param {isic.collections.SelectableImageCollection} settings.images
-     * @param {isic.collections.ImagesFilters} settings.filters
+     * @param {isic.collections.ImagesFilter} settings.filters
      */
     initialize: function (settings) {
         this.completeFacets = settings.completeFacets;

@@ -6,12 +6,12 @@ isic.views.ImagesFacetView = isic.View.extend({
     /**
      * @param {isic.models.ImagesFacetModel} settings.completeFacet
      * @param {isic.models.ImagesFacetModel} settings.filteredFacet
-     * @param {isic.collections.ImagesFilters} settings.filters
+     * @param {isic.collections.ImagesFilter} settings.filter
      */
     initialize: function (settings) {
         this.completeFacet = settings.completeFacet;
         this.filteredFacet = settings.filteredFacet;
-        this.filters = settings.filters;
+        this.filter = settings.filter;
 
         this.facetId = this.completeFacet.id;
         this.title = this.completeFacet.schema().title;
@@ -70,8 +70,8 @@ isic.views.ImagesFacetView = isic.View.extend({
     },
 
     _toggleBin: function (binLabel) {
-        var binIncluded = this.filters.isIncluded(this.facetId, binLabel);
-        this.filters.setIncluded(this.facetId, binLabel, !binIncluded);
+        var binIncluded = this.filter.isIncluded(binLabel);
+        this.filter.setIncluded(binLabel, !binIncluded);
     }
 });
 
@@ -79,10 +79,10 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
     events: function () {
         return _.extend({}, isic.views.ImagesFacetView.prototype.events, {
             'click .isic-images-facet-all-exclude': function (event) {
-                this.filters.setAllIncluded(this.facetId, false);
+                this.filter.setAllIncluded(false);
             },
             'click .isic-images-facet-all-include': function (event) {
-                this.filters.setAllIncluded(this.facetId, true);
+                this.filter.setAllIncluded(true);
             }
         });
     },
@@ -90,7 +90,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
     /**
      * @param {isic.models.ImagesFacetModel} settings.completeFacet
      * @param {isic.models.ImagesFacetModel} settings.filteredFacet
-     * @param {isic.collections.ImagesFilters} settings.filters
+     * @param {isic.collections.ImagesFilter} settings.filter
      */
     initialize: function (settings) {
         isic.views.ImagesFacetView.prototype.initialize.call(this, settings);
@@ -98,7 +98,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
         this.scale = new isic.views.HistogramScale();
 
         this.listenTo(this.filteredFacet, 'change', this._renderHistogram);
-        this.listenTo(this.filters, 'change:' + this.facetId, this._renderHistogram);
+        this.listenTo(this.filter, 'change', this._renderHistogram);
     },
 
     render: function () {
@@ -286,7 +286,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
 
         bins.select('image.button')
             .attr('xlink:href', _.bind(function (d) {
-                var status = this.filters.isIncluded(this.facetId, d.completeBin.label);
+                var status = this.filter.isIncluded(d.completeBin.label);
 
                 var staticImageRoot = girder.staticRoot + '/built/plugins/isic_archive/extra/img';
                 if (status === true) {
@@ -370,7 +370,7 @@ isic.views.ImagesFacetHistogramDatasetView = isic.views.ImagesFacetHistogramView
     /**
      * @param {isic.models.ImagesFacetModel} settings.completeFacet
      * @param {isic.models.ImagesFacetModel} settings.filteredFacet
-     * @param {isic.collections.ImagesFilters} settings.filters
+     * @param {isic.collections.ImagesFilter} settings.filter
      */
     initialize: function (settings) {
         isic.views.ImagesFacetHistogramView.prototype.initialize.call(this, settings);
@@ -398,10 +398,10 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
                 this._toggleBin(binLabel);
             },
             'click .isic-images-facet-all-exclude': function (event) {
-                this.filters.setAllIncluded(this.facetId, false);
+                this.filter.setAllIncluded(false);
             },
             'click .isic-images-facet-all-include': function (event) {
-                this.filters.setAllIncluded(this.facetId, true);
+                this.filter.setAllIncluded(true);
             }
         });
     },
@@ -409,13 +409,13 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
     /**
      * @param {isic.models.ImagesFacetModel} settings.completeFacet
      * @param {isic.models.ImagesFacetModel} settings.filteredFacet
-     * @param {isic.collections.ImagesFilters} settings.filters
+     * @param {isic.collections.ImagesFilter} settings.filter
      */
     initialize: function (settings) {
         isic.views.ImagesFacetView.prototype.initialize.call(this, settings);
 
         this.listenTo(this.filteredFacet, 'change', this._rerenderCounts);
-        this.listenTo(this.filters, 'change:' + this.facetId, this._rerenderSelections);
+        this.listenTo(this.filter, 'change', this._rerenderSelections);
     },
 
     render: function () {
@@ -458,7 +458,7 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
             var jqBinElem = this.$(binElem);
             var checkElem = jqBinElem.find('i');
             var binLabel = jqBinElem.data('binLabel');
-            var binIncluded = this.filters.isIncluded(this.facetId, binLabel);
+            var binIncluded = this.filter.isIncluded(binLabel);
             checkElem
                 .toggleClass('icon-check', binIncluded)
                 .toggleClass('icon-check-empty', !binIncluded);

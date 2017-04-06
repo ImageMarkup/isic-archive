@@ -3,7 +3,7 @@ isic.views.ImagesView = isic.View.extend({
         this.completeFacets = new isic.collections.ImagesFacetCollection();
         // TODO: when filteredFacets fetch returns no images, all models are gone / removed
         this.filteredFacets = new isic.collections.ImagesFacetCollection();
-        this.filters = new isic.collections.ImagesFilters();
+        this.filters = new isic.collections.ImagesFilter();
 
         // TODO: replace this with an inline grammar
         this.filterLoaded = isic.SerializeFilterHelpers.loadFilterGrammar();
@@ -72,8 +72,8 @@ isic.views.ImagesView = isic.View.extend({
     },
 
     onCompleteFacetsFetched: function (collection, resp, options) {
-        // "ImagesFilters.initialize" doesn't trigger any events, so run it first, to ensure
-        // this.filters is populated before "this.filteredFacets" is populated (as does have
+        // "ImagesFilter.initialize" doesn't trigger any events, so run it first, to ensure
+        // this.filters is populated before "this.filteredFacets" is populated (as that does have
         // multiple event handlers attached to it)
         this.filters.initialize(collection);
 

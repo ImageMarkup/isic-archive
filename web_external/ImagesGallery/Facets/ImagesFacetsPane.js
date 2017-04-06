@@ -2,7 +2,7 @@ isic.views.ImagesFacetsPane = isic.View.extend({
     /**
      * @param {isic.collections.ImagesFacetCollection} settings.completeFacets
      * @param {isic.collections.ImagesFacetCollection} settings.filteredFacets
-     * @param {isic.collections.ImagesFilters} settings.filters
+     * @param {isic.collections.ImagesFilter} settings.filters
      */
     initialize: function (settings) {
         this.completeFacets = settings.completeFacets;
@@ -22,13 +22,15 @@ isic.views.ImagesFacetsPane = isic.View.extend({
         delete this.facetViews;
 
         this.facetViews = this.completeFacets.map(function (completeFacet) {
-            var filteredFacet = this.filteredFacets.get(completeFacet.id);
+            var facetId = completeFacet.id;
+            var filteredFacet = this.filteredFacets.get(facetId);
+            var facetFilter = this.filters.facetFilter(facetId);
 
             var FacetView = completeFacet.schema().FacetView;
             var facetView = new FacetView({
                 completeFacet: completeFacet,
                 filteredFacet: filteredFacet,
-                filters: this.filters,
+                filter: facetFilter,
                 parentView: this
             });
 
