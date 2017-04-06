@@ -70,6 +70,7 @@ type
 
 value
   = number
+  / empty_list
   / string
   / boolean
 
@@ -81,6 +82,9 @@ number
 
     return negate * parseFloat(intpart + frac);
   }
+
+empty_list
+  = "[]" { return []; }
 
 string
   = '"' chars:([^\r\n"]*) '"' { return chars.join(''); }

@@ -465,3 +465,13 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
         }, this));
     }
 });
+
+isic.views.ImagesFacetCategoricalTagsView = isic.views.ImagesFacetCategoricalView.extend({
+    _getBinTitle: function (completeBin) {
+        if (completeBin.label === '__null__') {
+            return 'untagged';
+        } else {
+            return completeBin.label;
+        }
+    }
+});

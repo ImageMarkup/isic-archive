@@ -60,5 +60,11 @@ isic.FACET_SCHEMA = {
         FacetFilter: isic.collections.CategoricalFacetFilter,
         coerceToType: 'string',
         title: 'Family History of Melanoma'
+    },
+    'meta.tags': {
+        FacetView: isic.views.ImagesFacetCategoricalTagsView,
+        FacetFilter: isic.collections.TagsCategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Tags'
     }
 };
