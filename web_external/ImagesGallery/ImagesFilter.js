@@ -106,7 +106,10 @@ isic.collections.CategoricalFacetFilter = isic.collections.FacetFilter.extend({
             .map(isic.SerializeFilterHelpers._stringToHex)
             .value();
         // TODO: Could use "facetId + ' in ' + includedBinLabels"" if most are excluded
-        if (excludedBinLabels.length) {
+        if (_.size(excludedBinLabels) === 0) {
+            // If none are excluded, return no filter
+            return '';
+        } else {
             return '(' +
                 // TODO: This doesn't strictly need to be encoded (provided that we don't use any of
                 // the grammar's forbidden characters for identifiers), but before removing the
@@ -116,8 +119,6 @@ isic.collections.CategoricalFacetFilter = isic.collections.FacetFilter.extend({
                 ' not in ' +
                 JSON.stringify(excludedBinLabels) +
                 ')';
-        } else {
-            return '';
         }
     }
 });
@@ -141,14 +142,15 @@ isic.collections.TagsCategoricalFacetFilter = isic.collections.CategoricalFacetF
                 return isic.SerializeFilterHelpers._stringToHex(binLabel);
             })
             .value();
-        if (includedBinLabels.length) {
+        if (_.size(includedBinLabels) === _.size(this._filters)) {
+            // If all are included, return no filter
+            return '';
+        } else {
             return '(' +
                 isic.SerializeFilterHelpers._stringToHex(this.facetId) +
                 ' in ' +
                 JSON.stringify(includedBinLabels) +
                 ')';
-        } else {
-            return '';
         }
     }
 });
@@ -209,11 +211,12 @@ isic.collections.IntervalFacetFilter = isic.collections.FacetFilter.extend({
                 ')'
             );
         }
-        if (filterExpressions.length) {
+        if (_.size(filterExpressions) === 0) {
+            // If none are excluded, return no filter
+            return '';
+        } else {
             // Combine all expressions
             return '(' + filterExpressions.join(' and ') + ')';
-        } else {
-            return '';
         }
     }
 });
