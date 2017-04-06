@@ -1,6 +1,6 @@
 isic.FACET_SCHEMA = {
     'folderId': {
-        FacetView: isic.views.ImagesFacetHistogramDatasetView,
+        FacetView: isic.views.ImagesFacetCategoricalDatasetView,
         FacetFilter: isic.collections.CategoricalFacetFilter,
         coerceToType: 'objectid',
         title: 'Dataset'
