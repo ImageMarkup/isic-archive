@@ -64,9 +64,47 @@ isic.models.UserModel = girder.models.UserModel.extend({
     },
     canAdminStudy: function () {
         return this.get('permissions').adminStudy;
+    },
+
+    // Patch upstream changePassword to return a promise
+    // TODO: Remove this once Girder is updated
+    changePassword: function (oldPassword, newPassword) {
+        return girder
+            .restRequest({
+                path: this.resourceName + '/password',
+                data: {
+                    old: oldPassword,
+                    new: newPassword
+                },
+                type: 'PUT',
+                error: null
+            })
+            .done(_.bind(function () {
+                this.trigger('g:passwordChanged');
+            }, this))
+            .fail(_.bind(function (err) {
+                this.trigger('g:error', err);
+            }, this));
     }
 }, {
     // Static methods
+    temporaryTokenLogin: function (userId, token) {
+        return girder
+            .restRequest({
+                path: 'user/password/temporary/' + userId,
+                type: 'GET',
+                data: {token: token},
+                error: null
+            })
+            .done(_.bind(function (resp) {
+                resp.user.token = resp.authToken.token;
+                girder.eventStream.close();
+                girder.currentUser = new isic.models.UserModel(resp.user);
+                girder.eventStream.open();
+                girder.events.trigger('g:login-changed');
+            }, this));
+    },
+
     currentUserCanAcceptTerms: function () {
         if (girder.currentUser) {
             return girder.currentUser.canAcceptTerms();

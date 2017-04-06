@@ -21,7 +21,8 @@ from girder import events
 from girder.api import access
 from girder.api.describe import Description, describeRoute
 from girder.api.rest import RestException, boundHandler
-from girder.constants import AccessType
+from girder.constants import AccessType, TokenScope
+from girder.models.model_base import ValidationException
 from girder.utility import mail_utils
 from girder.utility.model_importer import ModelImporter
 
@@ -139,6 +140,71 @@ def acceptTerms(self, params):
     return resp
 
 
+@access.user
+@describeRoute(
+    Description('Pre-create a new user and issue them an invite.')
+    .param('login', 'The user\'s requested login.')
+    .param('email', 'The user\'s email address.')
+    .param('firstName', 'The user\'s first name.')
+    .param('lastName', 'The user\'s last name.')
+    .param('validityPeriod', 'The number of days that the invite will remain valid.',
+           required=False, dataType='float', default=30.0)
+)
+@boundHandler(_sharedContext)
+def inviteUser(self, params):
+    Token = self.model('token')
+    User = self.model('user', 'isic_archive')
+
+    params = self._decodeParams(params)
+    self.requireParams(['login', 'email', 'firstName', 'lastName'], params)
+    if 'validityPeriod' in params:
+        try:
+            validityPeriod = params['validityPeriod']
+        except ValueError:
+            raise ValidationException('Validity period must be a number.', 'validityPeriod')
+    else:
+        validityPeriod = 30.0
+
+    currentUser = self.getCurrentUser()
+    User.requireAdminStudy(currentUser)
+
+    newUser = User.createUser(
+        login=params['login'],
+        password=None,
+        email=params['email'],
+        firstName=params['firstName'],
+        lastName=params['lastName']
+        # TODO: suppress sending emails, in case email verification setting is enabled, as
+        # email verification will also be done when the temporary password is exchanged
+    )
+
+    # TODO: disable user
+
+    token = Token.createToken(
+        newUser, days=validityPeriod,
+        scope=[TokenScope.TEMPORARY_USER_AUTH, TokenScope.EMAIL_VERIFICATION])
+
+    # TODO: Ensure getEmailUrlPrefix points to ISIC root, not Girder root
+    inviteUrl = '%s#user/%s/rsvp/%s' % (
+        mail_utils.getEmailUrlPrefix(), newUser['_id'], token['_id'])
+
+    html = mail_utils.renderTemplate(
+        'inviteUser.mako',
+        {
+            'newUser': newUser,
+            'inviteUrl': inviteUrl,
+        })
+    mail_utils.sendEmail(
+        to=newUser['email'],
+        subject='ISIC Archive: Dataset Contributor Request',
+        text=html)
+
+    return {
+        'newUser': User.filteredSummary(newUser, currentUser),
+        'inviteUrl': inviteUrl
+    }
+
+
 def attachUserApi(user):
     events.bind('rest.get.user/authentication.after', 'onGetUserAuthentication',
                 onGetUserAuthentication)
@@ -146,3 +212,4 @@ def attachUserApi(user):
     events.bind('rest.post.user.after', 'onPostUser', onPostUser)
     user.route('POST', ('requestCreateDatasetPermission',), requestCreateDatasetPermission)
     user.route('POST', ('acceptTerms',), acceptTerms)
+    user.route('POST', ('invite',), inviteUser)

@@ -1,0 +1,32 @@
+.isic-form-page.isic-user-rsvp-container
+  h2.isic-page-title Finalize new account
+  p.
+    Welcome to the ISIC Archive. To complete your registration and gain access to your content and
+    tasks, please select a password for your account:
+
+  .isic-form-container
+    .isic-form-group
+      .form-group
+        label Your login name
+        input.imput-sm.form-control(type="text" value=user.login disabled)
+      .form-group
+        label Your email address
+        input.imput-sm.form-control(type="text" value=user.email disabled)
+      .form-group
+        label Your first name
+        input.imput-sm.form-control(type="text" value=user.firstName disabled)
+      .form-group
+        label Your last name
+        input.imput-sm.form-control(type="text" value=user.lastName disabled)
+      .form-group
+        label(for="isic-user-rsvp-password") New password
+        input#isic-user-rsvp-password.input-sm.form-control(type="password", placeholder="Enter new password")
+      .form-group
+        label(for="isic-user-rsvp-password2") Retype new password
+        input#isic-user-rsvp-password2.input-sm.form-control(type="password", placeholder="Retype new password")
+
+  p
+    form#isic-user-rsvp-form(role='form')
+      button#isic-user-rsvp-submit.btn.btn-primary.btn-md(type='submit') Submit
+
+    #g-password-change-error-msg.g-validation-failed-message
