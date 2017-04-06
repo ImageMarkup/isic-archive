@@ -366,29 +366,6 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
     }
 });
 
-isic.views.ImagesFacetHistogramDatasetView = isic.views.ImagesFacetHistogramView.extend({
-    /**
-     * @param {isic.models.ImagesFacetModel} settings.completeFacet
-     * @param {isic.models.ImagesFacetModel} settings.filteredFacet
-     * @param {isic.collections.ImagesFilter} settings.filter
-     */
-    initialize: function (settings) {
-        isic.views.ImagesFacetHistogramView.prototype.initialize.call(this, settings);
-
-        this.datasetCollection = new isic.collections.DatasetCollection();
-        this.datasetCollection.once('g:changed', _.bind(function () {
-            this._renderHistogram();
-        }, this)).fetch({
-            limit: 0
-        });
-    },
-
-    _getBinTitle: function (completeBin) {
-        var datasetModel = this.datasetCollection.get(completeBin.label);
-        return datasetModel ? datasetModel.name() : completeBin.label;
-    }
-});
-
 isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
     events: function () {
         return _.extend({}, isic.views.ImagesFacetView.prototype.events, {
@@ -422,7 +399,7 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
         this.$el.html(isic.templates.imagesFacetCategorical({
             title: this.title,
             bins: this.completeFacet.get('bins'),
-            getBinTitle: this._getBinTitle
+            getBinTitle: _.bind(this._getBinTitle, this)
         }));
 
         this._rerenderCounts();
@@ -463,6 +440,29 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
                 .toggleClass('icon-check', binIncluded)
                 .toggleClass('icon-check-empty', !binIncluded);
         }, this));
+    }
+});
+
+isic.views.ImagesFacetCategoricalDatasetView = isic.views.ImagesFacetCategoricalView.extend({
+    /**
+     * @param {isic.models.ImagesFacetModel} settings.completeFacet
+     * @param {isic.models.ImagesFacetModel} settings.filteredFacet
+     * @param {isic.collections.ImagesFilter} settings.filter
+     */
+    initialize: function (settings) {
+        isic.views.ImagesFacetCategoricalView.prototype.initialize.call(this, settings);
+
+        this.datasetCollection = new isic.collections.DatasetCollection();
+        this.datasetCollection.once('g:changed', _.bind(function () {
+            this.render();
+        }, this)).fetch({
+            limit: 0
+        });
+    },
+
+    _getBinTitle: function (completeBin) {
+        var datasetModel = this.datasetCollection.get(completeBin.label);
+        return datasetModel ? datasetModel.name() : completeBin.label;
     }
 });
 
