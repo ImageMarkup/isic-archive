@@ -1,0 +1,32 @@
+#isic-app-footer-container
+  border-top 1px solid #eee
+  background-image linear-gradient(to bottom, #f6f6f6 0%, #fff 5px)
+  padding-top 5px
+  white-space nowrap
+
+  ul
+    list-style none
+    padding 0
+
+  li
+    //- Lay out horizontally
+    display inline-block
+
+  //- Add vertical line separator before list items, except the first
+  li + li
+    &:before
+      content '\2502'
+      padding 0 0.5em
+
+  //- Default section alignment
+  .isic-footer-legal
+    text-align center
+  .isic-footer-links
+    text-align right
+
+  //- 'sm' grid tier and below section alignment
+  @media (max-width: 991px)
+    .isic-footer-legal
+      text-align left
+    .isic-footer-links
+      text-align left

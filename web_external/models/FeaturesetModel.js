@@ -1,4 +1,11 @@
-isic.models.FeaturesetModel = isic.Model.extend({
+import _ from 'underscore';
+
+import {getCurrentUser} from 'girder/auth';
+
+import Model from './Model';
+import UserModel from './UserModel';
+
+var FeaturesetModel = Model.extend({
     resourceName: 'featureset',
 
     /**
@@ -9,7 +16,7 @@ isic.models.FeaturesetModel = isic.Model.extend({
     },
 
     creator: function () {
-        return new isic.models.UserModel(this.get('creator'));
+        return new UserModel(this.get('creator'));
     },
 
     destroy: function (options) {
@@ -18,6 +25,13 @@ isic.models.FeaturesetModel = isic.Model.extend({
         // Featureset deletion may fail if it's being used by a study
         params.wait = true;
 
-        return isic.Model.prototype.destroy.call(this, params);
+        return Model.prototype.destroy.call(this, params);
+    },
+
+    canAdmin: function () {
+        var user = getCurrentUser();
+        return user && user.canAdminStudy();
     }
 });
+
+export default FeaturesetModel;

@@ -1,11 +1,18 @@
-isic.views.ImageWall = isic.View.extend({
+import $ from 'jquery';
+
+import ImageFullscreenWidget from '../../common/Viewer/ImageFullscreenWidget';
+import View from '../../view';
+
+import ImageWallTemplate from './imageWall.jade';
+
+var ImageWall = View.extend({
     events: {
         'click .thumb': function (event) {
             var imageId = $(event.currentTarget).data('imageId');
             var clickedImage = this.images.get(imageId);
 
             if (event.shiftKey) {
-                new isic.views.ImageFullscreenWidget({ // eslint-disable-line no-new
+                new ImageFullscreenWidget({ // eslint-disable-line no-new
                     el: $('#g-dialog-container'),
                     model: clickedImage,
                     parentView: this
@@ -17,7 +24,7 @@ isic.views.ImageWall = isic.View.extend({
     },
 
     /**
-     * @param {isic.collections.ImageCollection} settings.images
+     * @param {SelectableImageCollection} settings.images
      */
     initialize: function (settings) {
         this.images = settings.images;
@@ -35,8 +42,8 @@ isic.views.ImageWall = isic.View.extend({
         // tooltips from them.
         this.clearTooltips();
 
-        this.$el.html(isic.templates.imageWall({
-            apiRoot: girder.apiRoot,
+        this.$el.html(ImageWallTemplate({
+            apiRoot: this.apiRoot,
             images: this.images.models,
             thumbnailSize: this.thumbnailSize
         }));
@@ -64,3 +71,5 @@ isic.views.ImageWall = isic.View.extend({
         this.$('.tooltip').remove();
     }
 });
+
+export default ImageWall;

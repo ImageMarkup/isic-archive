@@ -1,9 +1,19 @@
+import $ from 'jquery';
+
+import {SelectableSegmentationCollection} from '../../collections/SegmentationCollection';
+import View from '../../view';
+
+import SegmentationDisplayPageTemplate from './segmentationDisplayPage.jade';
+import './segmentationDisplayPage.styl';
+import SegmentationsDisplayPageTemplate from './segmentationsDisplayPage.jade';
+import './segmentationsDisplayPage.styl';
+
 /**
  * View for displaying an image segmentation's properties
  */
-isic.views.SegmentationDisplayView = isic.View.extend({
+var SegmentationDisplayView = View.extend({
     /**
-     * @param {isic.models.SegmentationModel} settings.model
+     * @param {SegmentationModel} settings.model
      */
     initialize: function (settings) {
         if (this.model.has('meta')) {
@@ -16,15 +26,15 @@ isic.views.SegmentationDisplayView = isic.View.extend({
     },
 
     render: function () {
-        var created = girder.formatDate(this.model.get('created'), girder.DATE_SECOND);
+        var created = this.formatDate(this.model.get('created'));
         var thumbnailUrl = [
-            girder.apiRoot,
+            this.apiRoot,
             'segmentation',
             this.model.id,
             'thumbnail?width=256'
         ].join('/');
 
-        this.$el.html(isic.templates.segmentationDisplayPage({
+        this.$el.html(SegmentationDisplayPageTemplate({
             segmentation: this.model,
             created: created,
             thumbnailUrl: thumbnailUrl,
@@ -42,7 +52,7 @@ isic.views.SegmentationDisplayView = isic.View.extend({
 /**
  * View for selecting an image segmentation and displaying its properties
  */
-isic.views.SegmentationsDisplayView = isic.View.extend({
+var SegmentationsDisplayView = View.extend({
     events: {
         'change select': function (event) {
             var selectedSegmentationId = $(event.currentTarget).val();
@@ -52,12 +62,12 @@ isic.views.SegmentationsDisplayView = isic.View.extend({
     },
 
     /**
-     * @param {isic.models.ImageModel} settings.image
+     * @param {ImageModel} settings.image
      */
     initialize: function (settings) {
         this.image = settings.image;
 
-        this.segmentations = new isic.collections.SelectableSegmentationCollection();
+        this.segmentations = new SelectableSegmentationCollection();
         this.listenTo(this.segmentations, 'g:changed', this.render);
         this.listenTo(this.segmentations, 'select:one', this.onSelected);
 
@@ -70,7 +80,7 @@ isic.views.SegmentationsDisplayView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.segmentationsDisplayPage({
+        this.$el.html(SegmentationsDisplayPageTemplate({
             segmentations: this.segmentations.models
         }));
 
@@ -82,10 +92,12 @@ isic.views.SegmentationsDisplayView = isic.View.extend({
             this.segmentationDisplayView.destroy();
             this.segmentationDisplayView = null;
         }
-        this.segmentationDisplayView = new isic.views.SegmentationDisplayView({
+        this.segmentationDisplayView = new SegmentationDisplayView({
             model: selectedSegmentation,
             el: this.$('#isic-segmentation-display-container'),
             parentView: this
         });
     }
 });
+
+export default SegmentationsDisplayView;

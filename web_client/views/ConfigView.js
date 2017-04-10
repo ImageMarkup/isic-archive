@@ -1,7 +1,13 @@
-girder.views.isic_ConfigView = girder.View.extend({
+import events from 'girder/events';
+import PluginConfigBreadcrumbWidget from 'girder/views/widgets/PluginConfigBreadcrumbWidget';
+import {restRequest} from 'girder/rest';
+import View from 'girder/views/View';
+
+import ConfigViewTemplate from '../templates/configView.jade';
+
+var ConfigView = View.extend({
     events: {
         'submit #isic-config-form': function (event) {
-            'use strict';
             event.preventDefault();
             this.$('#isic-config-error-message').empty();
             this._saveSettings([{
@@ -11,8 +17,7 @@ girder.views.isic_ConfigView = girder.View.extend({
         }
     },
     initialize: function () {
-        'use strict';
-        girder.restRequest({
+        restRequest({
             type: 'GET',
             path: 'system/setting',
             data: {
@@ -30,10 +35,9 @@ girder.views.isic_ConfigView = girder.View.extend({
     },
 
     render: function () {
-        'use strict';
-        this.$el.html(girder.templates.isicConfig());
+        this.$el.html(ConfigViewTemplate());
         if (!this.breadcrumb) {
-            this.breadcrumb = new girder.views.PluginConfigBreadcrumbWidget({
+            this.breadcrumb = new PluginConfigBreadcrumbWidget({
                 pluginName: 'ISIC Archive',
                 el: this.$('.g-config-breadcrumb-container'),
                 parentView: this
@@ -43,8 +47,7 @@ girder.views.isic_ConfigView = girder.View.extend({
     },
 
     _saveSettings: function (settings) {
-        'use strict';
-        girder.restRequest({
+        restRequest({
             type: 'PUT',
             path: 'system/setting',
             data: {
@@ -52,7 +55,7 @@ girder.views.isic_ConfigView = girder.View.extend({
             },
             error: null
         }).done(_.bind(function () {
-            girder.events.trigger('g:alert', {
+            events.trigger('g:alert', {
                 icon: 'ok',
                 text: 'Settings saved.',
                 type: 'success',
@@ -66,9 +69,4 @@ girder.views.isic_ConfigView = girder.View.extend({
     }
 });
 
-girder.router.route('plugins/isic/config', 'isicConfig', function () {
-    'use strict';
-    girder.events.trigger('g:navigateTo', girder.views.isic_ConfigView);
-});
-
-girder.exposePluginConfig('isic_archive', 'plugins/isic/config');
+export default ConfigView;

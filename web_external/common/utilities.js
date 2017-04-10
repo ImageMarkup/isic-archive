@@ -1,3 +1,8 @@
+import $ from 'jquery';
+import _ from 'underscore';
+
+import AlertDialogTemplate from './alertDialog.jade';
+
 /**
  * Miscellaneous utility functions.
  */
@@ -12,7 +17,7 @@
  *        user-created data within the text to prevent XSS exploits.
  * @param callback Callback function called when the user clicks the button.
  */
-isic.showAlertDialog = function (params) {
+var showAlertDialog = function (params) {
     params = _.extend({
         text: '',
         buttonText: 'OK',
@@ -21,7 +26,7 @@ isic.showAlertDialog = function (params) {
     }, params);
 
     var container = $('#g-dialog-container');
-    container.html(isic.templates.alertDialog({
+    container.html(AlertDialogTemplate({
         params: params
     })).girderModal(false).on('hidden.bs.modal', function () {
         if (params.callback) {
@@ -40,3 +45,5 @@ isic.showAlertDialog = function (params) {
         container.modal('hide');
     });
 };
+
+export {showAlertDialog};

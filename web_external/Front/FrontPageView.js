@@ -1,17 +1,18 @@
-isic.views.FrontPageView = girder.views.FrontPageView.extend({
+import View from '../view';
+
+import FrontPageTemplate from './frontPage.jade';
+import './frontPage.styl';
+
+var FrontPageView = View.extend({
     initialize: function (settings) {
         this.render();
     },
 
     render: function () {
-        this.$el.html(isic.templates.frontPage({
-            staticImageRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/img'
-        }));
+        this.$el.html(FrontPageTemplate());
 
         return this;
     }
 });
 
-isic.router.route('', 'index', function () {
-    girder.events.trigger('g:navigateTo', isic.views.FrontPageView);
-});
+export default FrontPageView;

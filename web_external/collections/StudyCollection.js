@@ -1,4 +1,16 @@
-isic.collections.StudyCollection = isic.Collection.extend({
+import {getCurrentUser} from 'girder/auth';
+
+import Collection from './Collection';
+import StudyModel from '../models/StudyModel';
+
+var StudyCollection = Collection.extend({
     resourceName: 'study',
-    model: isic.models.StudyModel
+    model: StudyModel
+}, {
+    canCreate: function () {
+        var user = getCurrentUser();
+        return user && user.canAdminStudy();
+    }
 });
+
+export default StudyCollection;

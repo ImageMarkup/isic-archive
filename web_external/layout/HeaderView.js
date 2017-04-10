@@ -1,4 +1,15 @@
-isic.views.LayoutHeaderView = isic.View.extend({
+import $ from 'jquery';
+
+import {getCurrentUser} from 'girder/auth';
+import events from 'girder/events';
+
+import LayoutHeaderUserView from './HeaderUserView';
+import View from '../view';
+
+import LayoutHeaderTemplate from './layoutHeader.jade';
+import './layoutHeader.styl';
+
+var LayoutHeaderView = View.extend({
     events: {
         'mouseenter .dropdown': function (event) {
             $(event.currentTarget).addClass('open');
@@ -14,13 +25,12 @@ isic.views.LayoutHeaderView = isic.View.extend({
     initialize: function (settings) {
         this.render();
 
-        girder.events.on('g:login', this.render, this);
-        girder.events.on('g:login-changed', this.render, this);
+        this.listenTo(events, 'g:login g:login-changed', this.render);
     },
 
     render: function () {
-        this.$el.html(isic.templates.layoutHeader({
-            currentUser: girder.currentUser
+        this.$el.html(LayoutHeaderTemplate({
+            currentUser: getCurrentUser()
         }));
 
         // Specify trigger for tooltip to ensure that tooltip hides when button
@@ -31,9 +41,11 @@ isic.views.LayoutHeaderView = isic.View.extend({
             delay: {show: 300}
         });
 
-        new isic.views.LayoutHeaderUserView({
+        new LayoutHeaderUserView({
             el: this.$('.isic-current-user-wrapper'),
             parentView: this
         }).render();
     }
 });
+
+export default LayoutHeaderView;

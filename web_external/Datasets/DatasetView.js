@@ -1,23 +1,31 @@
-isic.views.DatasetView = isic.View.extend({
+import LoadingAnimation from 'girder/views/widgets/LoadingAnimation';
+
+import View from '../view';
+import router from '../router';
+
+import DatasetPageTemplate from './datasetPage.jade';
+import './datasetPage.styl';
+
+var DatasetView = View.extend({
     events: {
         'click .isic-dataset-register-metadata-button': function () {
-            isic.router.navigate(
+            router.navigate(
                 'dataset/' + this.model.id + '/metadata/register',
                 {trigger: true});
         },
         'click .isic-dataset-apply-metadata-button': function () {
-            isic.router.navigate(
+            router.navigate(
                 'dataset/' + this.model.id + '/metadata/apply',
                 {trigger: true});
         }
     },
 
     /**
-     * @param {isic.models.DatasetModel} settings.model
+     * @param {DatasetModel} settings.model
      */
     initialize: function (settings) {
         // Display loading indicator
-        this.loadingAnimation = new girder.views.LoadingAnimation({
+        this.loadingAnimation = new LoadingAnimation({
             el: this.el,
             parentView: this
         }).render();
@@ -31,8 +39,7 @@ isic.views.DatasetView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.datasetPage({
-            currentUser: girder.currentUser,
+        this.$el.html(DatasetPageTemplate({
             dataset: this.model,
             formatDate: this.formatDate
         }));
@@ -40,3 +47,5 @@ isic.views.DatasetView = isic.View.extend({
         return this;
     }
 });
+
+export default DatasetView;

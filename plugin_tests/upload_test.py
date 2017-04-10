@@ -209,7 +209,7 @@ class UploadTestCase(IsicTestCase):
                 params={'datasetId': reviewId}, user=reviewerUser, isJson=False)
             self.assertStatus(resp, 307)
             self.assertDictContainsSubset({
-                'Location': '/uda/gallery#/qc/%s' % reviewId
+                'Location': '/markup/gallery#/qc/%s' % reviewId
             }, resp.headers)
 
         # Test metadata registration

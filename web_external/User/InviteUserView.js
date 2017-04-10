@@ -1,4 +1,17 @@
-isic.views.InviteUserView = isic.View.extend({
+import _ from 'underscore';
+
+import {restRequest} from 'girder/rest';
+
+import View from '../view';
+import router from '../router';
+import {showAlertDialog} from '../common/utilities';
+
+import InvitationConfirmationPageTemplate from './invitationConfirmationPage.jade';
+import './invitationConfirmationPage.styl';
+import InviteUserPageTemplate from './inviteUserPage.jade';
+import './inviteUserPage.styl';
+
+var InviteUserView = View.extend({
     events: {
         'submit #isic-user-invite-form': function (event) {
             event.preventDefault();
@@ -16,7 +29,7 @@ isic.views.InviteUserView = isic.View.extend({
                 data.validityPeriod = validityPeriod;
             }
 
-            girder.restRequest({
+            restRequest({
                 path: 'user/invite',
                 data: data,
                 type: 'POST',
@@ -26,10 +39,10 @@ isic.views.InviteUserView = isic.View.extend({
                 this.confirmation = resp;
                 this.confirmation.newUser.email = data.email;
                 this.render();
-                isic.router.navigate('user/invite?confirmation=true', {replace: true});
+                router.navigate('user/invite?confirmation=true', {replace: true});
             }, this))
             .fail(_.bind(function (resp) {
-                isic.showAlertDialog({
+                showAlertDialog({
                     text: '<h4>Error sending invite</h4><br>' + _.escape(resp.responseJSON.message),
                     escapedHtml: true
                 });
@@ -39,7 +52,7 @@ isic.views.InviteUserView = isic.View.extend({
         'click #isic-invitation-confirmation-invite-user': function (event) {
             this.confirmation = null;
             this.render();
-            isic.router.navigate('user/invite', {replace: true});
+            router.navigate('user/invite', {replace: true});
         }
     },
 
@@ -52,12 +65,12 @@ isic.views.InviteUserView = isic.View.extend({
 
     render: function () {
         if (this.confirmation) {
-            this.$el.html(isic.templates.invitationConfirmationPage({
+            this.$el.html(InvitationConfirmationPageTemplate({
                 newUser: this.confirmation.newUser,
                 inviteUrl: this.confirmation.inviteUrl
             }));
         } else {
-            this.$el.html(isic.templates.inviteUserPage());
+            this.$el.html(InviteUserPageTemplate());
             this.$('#isic-user-invite-new-login').focus();
         }
 
@@ -65,11 +78,4 @@ isic.views.InviteUserView = isic.View.extend({
     }
 });
 
-isic.router.route('user/invite', 'inviteUser', function () {
-    // Route to index if user isn't a study administrator
-    if (girder.currentUser && girder.currentUser.canAdminStudy()) {
-        girder.events.trigger('g:navigateTo', isic.views.InviteUserView);
-    } else {
-        isic.router.navigate('', {trigger: true});
-    }
-});
+export default InviteUserView;

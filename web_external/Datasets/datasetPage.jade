@@ -35,7 +35,7 @@
     tr
       td.isic-listing-item-table-label Signature
       td= dataset.get('signature')
-  if currentUser && currentUser.canCreateDataset()
+  if dataset.canAdmin()
     table.table.table-condensed.isic-listing-item-table
       tr
         td.isic-listing-item-table-section-header Actions

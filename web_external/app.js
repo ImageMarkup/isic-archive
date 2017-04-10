@@ -1,71 +1,58 @@
-isic.App = girder.App.extend({
+import Backbone from 'backbone';
+import $ from 'jquery';
+// Import select2 for side effects, registering it as a jQuery plugin
+import 'select2';
+import 'select2/dist/css/select2.css';
+import 'select2-bootstrap-theme/dist/select2-bootstrap.css';
+import _ from 'underscore';
 
-    initialize: function (settings) {
-        // Call the parent "initialize", but don't let that call "start()",
-        // since we want to pass custom parameters
-        girder.App.prototype.initialize.call(this, {
-            start: false
-        });
+import GirderApp from 'girder/views/App';
+import { getCurrentUser } from 'girder/auth';
+import eventStream from 'girder/utilities/EventStream';
+import FileCollection from 'girder/collections/FileCollection';
+import FolderModel from 'girder/models/FolderModel';
+import ItemModel from 'girder/models/ItemModel';
+import {restRequest} from 'girder/rest';
+import { splitRoute } from 'girder/misc';
 
-        // Start the app (and fetch the user)
-        this.start({
-            // Don't render automatically, to ensure currentUser is updated
-            // before the first rendering
-            render: false,
-            // Don't start the history, to delay starting navigation until
-            // rendering has occurred
-            history: false
-        }).done(_.bind(function () {
-            // Then update currentUser if necessary
-            this._updateCurrentUser();
-            // Do the things that would normally be done within "start()"
-            this.render();
-            Backbone.history.start({
-                pushState: false
-            });
+import './global.styl';
+import LayoutFooterView from './layout/FooterView';
+import LayoutHeaderView from './layout/HeaderView';
+import router from './router';
+import './routes';
+import LayoutTemplate from './layout/layout.jade';
+import './layout/layout.styl';
 
-            // Set select2 default options
-            $.fn.select2.defaults.set('theme', 'bootstrap');
-        }, this));
+const IsicApp = GirderApp.extend({
+    start: function () {
+        // Set select2 default options
+        $.fn.select2.defaults.set('theme', 'bootstrap');
+
+        return GirderApp.prototype.start.apply(this, arguments);
     },
 
     bindGirderEvents: function () {
-        girder.App.prototype.bindGirderEvents.call(this);
-
-        // It would be better to listen for "g:login.success", as it's triggered
-        // before "g:login", but "g:login.success" isn't triggered after a new
-        // user registers (which is probably a bug)
-
-        // "currentUser" must be updated before all rendering, so unbind the
-        // default binding of "g:login" to "this.login", and ensure that
-        // updating "currentUser" is the event bound to "g:login"; however,
-        // it's an undocumented property of Backbone that events get called in
-        // the order they were bound, so this isn't a great solution
-        girder.events.off('g:login', this.login);
-        girder.events.on('g:login', this._updateCurrentUser, this);
-        // "g:login-changed" is triggered when users change passwords
-        girder.events.on('g:login-changed', this._updateCurrentUser, this);
-        girder.events.on('g:login', this.login, this);
+        // This might be overridden in the near future
+        GirderApp.prototype.bindGirderEvents.apply(this, arguments);
     },
 
-    _updateCurrentUser: function () {
-        // Replace the girder.currentUser object with its subclass, which
-        // exposes additional methods
-        if (girder.currentUser) {
-            girder.currentUser =
-                new isic.models.UserModel(girder.currentUser.attributes);
-        }
+    _createLayout: function () {
+        // Prevent the default behavior
     },
 
     render: function () {
-        this.$el.html(isic.templates.layout());
+        if (!this._started) {
+            return;
+        }
 
-        new isic.views.LayoutHeaderView({ // eslint-disable-line no-new
+        this.$el.html(LayoutTemplate());
+
+        this.headerView = new LayoutHeaderView({
             el: this.$('#isic-app-header-container'),
             parentView: this
         });
 
-        new isic.views.LayoutFooterView({ // eslint-disable-line no-new
+        this.footerView = new LayoutFooterView({
             el: this.$('#isic-app-footer-container'),
             parentView: this
         });
@@ -73,25 +60,123 @@ isic.App = girder.App.extend({
         return this;
     },
 
-    navigateTo: function () {
+    navigateTo: function (View, settings, opts) {
+        // TODO: Do we need this?
         this.$('#g-app-body-container').removeClass('isic-body-nopad');
-        return girder.App.prototype.navigateTo.apply(this, arguments);
+
+        settings = settings || {};
+        opts = opts || {};
+
+        if (View) {
+            if (this.bodyView) {
+                this.bodyView.destroy();
+            }
+
+            settings = _.extend(settings, {
+                el: this.$('#g-app-body-container'),
+                parentView: this
+            });
+
+            /* We let the view be created in this way even though it is
+             * normally against convention.
+             */
+            this.bodyView = new View(settings);
+
+            if (opts.renderNow) {
+                this.bodyView.render();
+            }
+        } else {
+            console.error('Undefined page.');
+        }
+        return this;
     },
 
-    /**
-     * On login we re-render the current body view; whereas on
-     * logout, we redirect to the front page.
-     */
     login: function () {
-        var route = girder.dialogs.splitRoute(Backbone.history.fragment).base;
+        // Re-implement this, to use ISIC's instance of the router
+        // TODO: if the router were stored as an App instance property, this wouldn't be necessary
+        var route = splitRoute(Backbone.history.fragment).base;
         Backbone.history.fragment = null;
-        girder.eventStream.close();
+        eventStream.close();
 
-        if (girder.currentUser) {
-            girder.eventStream.open();
-            isic.router.navigate(route, {trigger: true});
+        if (getCurrentUser()) {
+            eventStream.open();
+            router.navigate(route, {trigger: true});
         } else {
-            isic.router.navigate('/', {trigger: true});
+            router.navigate('/', {trigger: true});
         }
     }
 });
+
+Backbone.sync = function (method, model, options) {
+    // In order to use the native "Backbone.Model.destroy" method (which triggers the correct
+    // collection-level events, unlike the Girder version), a working "Backbone.sync" method is
+    // required. Since all Ajax calls must be made via "restRequest" (to add auth headers)
+    // and since "Backbone.ajax" cannot be directly changed to use "restRequest" (since
+    // "restRequest actually calls "Backbone.ajax"), "Backbone.sync" must be reimplemented to
+    // use "restRequest" directly.
+    // In this reimplementation, the only important changes are:
+    //   * Use "restRequest" instead of "Backbone.ajax"
+    //   * Set "params.path" instead of "params.url"
+    var methodMap = {
+        'create': 'POST',
+        'update': 'PUT',
+        'patch': 'PATCH',
+        'delete': 'DELETE',
+        'read': 'GET'
+    };
+    var type = methodMap[method];
+
+    options = options || {};
+
+    var params = {type: type, dataType: 'json'};
+
+    if (!options.url) {
+        // params.url = _.result(model, 'url') || urlError();
+        // restRequest expects a "path" option, and will set "url" internally
+        params.path = _.result(model, 'url');
+    }
+
+    if (options.data == null && model && (method === 'create' || method === 'update' || method === 'patch')) {
+        params.contentType = 'application/json';
+        params.data = JSON.stringify(options.attrs || model.toJSON(options));
+    }
+
+    if (params.type !== 'GET') {
+        params.processData = false;
+    }
+
+    var xhr = options.xhr = restRequest(_.extend(params, options));
+    model.trigger('request', model, xhr, options);
+    return xhr;
+};
+
+/**
+ * Patch ItemModel with a method to get the files within the item.
+ */
+ItemModel.prototype.getFiles = function () {
+    restRequest({
+        path: this.resourceName + '/' + this.id + '/files'
+    }).done(_.bind(function (resp) {
+        var fileCollection = new FileCollection(resp);
+        this.trigger('g:files', fileCollection);
+    }, this)).fail(_.bind(function (err) {
+        this.trigger('g:error', err);
+    }, this));
+};
+
+/**
+ * Patch FolderModel with a method to remove the contents of the
+ * folder.
+ */
+FolderModel.prototype.removeContents = function () {
+    restRequest({
+        path: this.resourceName + '/' + this.id + '/contents',
+        type: 'DELETE'
+    }).done(_.bind(function (resp) {
+        this.trigger('g:success');
+    }, this)).fail(_.bind(function (err) {
+        this.trigger('g:error', err);
+    }, this));
+};
+
+export default IsicApp;

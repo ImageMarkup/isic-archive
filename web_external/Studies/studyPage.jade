@@ -20,19 +20,19 @@
     tr
       td.isic-listing-item-table-section-header Annotators
         |  (#{study.get('users').length})
-        if canAdminStudy
+        if study.canAdmin()
           a.isic-study-add-user-button.btn.btn-default.btn-xs.isic-tooltip(
             title='Add annotator')
             i.icon-plus
     tr
       td.isic-study-users-content
         if study.get('users').length
-          table(class=canAdminStudy ? 'table-hover' : undefined)
+          table(class=study.canAdmin() ? 'table-hover' : undefined)
             each user in study.users().models
               tr(data-user-id=user.id)
                 td.isic-study-user-name= user.name()
                 td
-                  if canAdminStudy
+                  if study.canAdmin()
                     a.isic-study-remove-user-button.isic-tooltip(
                       title='Delete annotator')
                         i.icon-cancel
@@ -56,7 +56,7 @@
                 td.isic-study-images-content-imageid= image._id
         else
           | (no images)
-  if canAdminStudy
+  if study.canAdmin()
     table.table.table-condensed.isic-listing-item-table
       tr
         td.isic-listing-item-table-section-header Actions

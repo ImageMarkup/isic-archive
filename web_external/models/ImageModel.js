@@ -1,3 +1,7 @@
-isic.models.ImageModel = isic.Model.extend({
+import Model from './Model';
+
+var ImageModel = Model.extend({
     resourceName: 'image'
 });
+
+export default ImageModel;

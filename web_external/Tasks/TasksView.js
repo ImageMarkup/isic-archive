@@ -1,24 +1,33 @@
-//
-// Tasks view
-//
+import _ from 'underscore';
+
+import {getCurrentUser} from 'girder/auth';
+
+import Collection from '../collections/Collection';
+import Model from '../models/Model';
+import View from '../view';
+
+import TasksPageTemplate from './tasksPage.jade';
+import './tasksPage.styl';
+import TaskPageTemplate from './taskPage.jade';
+import './taskPage.styl';
 
 // Model for a task
-isic.models.TaskModel = girder.Model.extend({
+var TaskModel = Model.extend({
 });
 
 // Collection of tasks
-isic.collections.TaskCollection = isic.Collection.extend({
-    model: isic.models.TaskModel
+var TaskCollection = Collection.extend({
+    model: TaskModel
 });
 
 // View for a group of tasks
-isic.views.TasksGroupView = isic.View.extend({
+var TasksGroupView = View.extend({
     /**
      * @param {string} settings.title - The title of the task type.
      * @param {string} settings.subtitle - The description of the task type.
      * @param {string} settings.linkPrefix - The URL prefix of the task type.
      * @param {string} settings.resourceName - The property name of the resource, within each task model.
-     * @param {isic.collections.TaskCollection} settings.collection
+     * @param {TaskCollection} settings.collection
      */
     initialize: function (settings) {
         this.title = _.has(settings, 'title') ? settings.title : '';
@@ -30,7 +39,7 @@ isic.views.TasksGroupView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.taskPage({
+        this.$el.html(TaskPageTemplate({
             title: this.title,
             subtitle: this.subtitle,
             linkPrefix: this.linkPrefix,
@@ -51,50 +60,52 @@ isic.views.TasksGroupView = isic.View.extend({
 });
 
 // View for the task dashboard
-isic.views.TasksView = isic.View.extend({
+var TasksView = View.extend({
     events: {
         'click .isic-tasks-refresh-button': 'fetchTasks'
     },
 
     initialize: function (settings) {
-        if (girder.currentUser.canReviewDataset()) {
-            this.reviewTasks = new isic.collections.TaskCollection();
+        var currentUser = getCurrentUser();
+
+        if (currentUser.canReviewDataset()) {
+            this.reviewTasks = new TaskCollection();
             this.reviewTasks.altUrl = 'task/me/review';
             this.reviewTasks.pageLimit = Number.MAX_SAFE_INTEGER;
 
-            this.taskReviewView = new isic.views.TasksGroupView({
+            this.taskReviewView = new TasksGroupView({
                 title: 'Dataset Review',
                 subtitle: 'QC review newly created datasets',
-                linkPrefix: girder.apiRoot + '/task/me/review/redirect?datasetId=',
+                linkPrefix: this.apiRoot + '/task/me/review/redirect?datasetId=',
                 resourceName: 'dataset',
                 collection: this.reviewTasks,
                 parentView: this
             });
         }
 
-        if (girder.currentUser.getSegmentationSkill() !== null) {
-            this.segmentationTasks = new isic.collections.TaskCollection();
+        if (currentUser.getSegmentationSkill() !== null) {
+            this.segmentationTasks = new TaskCollection();
             this.segmentationTasks.altUrl = 'task/me/segmentation';
             this.segmentationTasks.pageLimit = Number.MAX_SAFE_INTEGER;
 
-            this.taskSegmentationView = new isic.views.TasksGroupView({
+            this.taskSegmentationView = new TasksGroupView({
                 title: 'Lesion Segmentation',
                 subtitle: 'Segment boundaries between lesion and normal skin',
-                linkPrefix: girder.apiRoot + '/task/me/segmentation/redirect?datasetId=',
+                linkPrefix: this.apiRoot + '/task/me/segmentation/redirect?datasetId=',
                 resourceName: 'dataset',
                 collection: this.segmentationTasks,
                 parentView: this
             });
         }
 
-        this.annotationTasks = new isic.collections.TaskCollection();
+        this.annotationTasks = new TaskCollection();
         this.annotationTasks.altUrl = 'task/me/annotation';
         this.annotationTasks.pageLimit = Number.MAX_SAFE_INTEGER;
 
-        this.taskAnnotationView = new isic.views.TasksGroupView({
+        this.taskAnnotationView = new TasksGroupView({
             title: 'Annotation Studies',
             subtitle: 'Clinical feature annotation studies',
-            linkPrefix: girder.apiRoot + '/task/me/annotation/redirect?studyId=',
+            linkPrefix: this.apiRoot + '/task/me/annotation/redirect?studyId=',
             resourceName: 'study',
             collection: this.annotationTasks,
             parentView: this
@@ -106,7 +117,7 @@ isic.views.TasksView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.tasksPage({
+        this.$el.html(TasksPageTemplate({
             title: 'Task Dashboard'
         }));
 
@@ -141,10 +152,4 @@ isic.views.TasksView = isic.View.extend({
     }
 });
 
-isic.router.route('tasks', 'tasks', function () {
-    var nextView = isic.views.TasksView;
-    if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
-        nextView = isic.views.TermsAcceptanceView;
-    }
-    girder.events.trigger('g:navigateTo', nextView);
-});
+export default TasksView;

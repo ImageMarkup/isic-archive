@@ -1,11 +1,20 @@
-isic.collections.ImageCollection = isic.Collection.extend({
+import Backbone from 'backbone';
+import 'backbone.select';
+
+import Collection from './Collection';
+import ImageModel from '../models/ImageModel';
+
+var ImageCollection = Collection.extend({
     resourceName: 'image',
-    model: isic.models.ImageModel
+    model: ImageModel
 });
 
-isic.collections.SelectableImageCollection = isic.collections.ImageCollection.extend({
+var SelectableImageCollection = ImageCollection.extend({
     initialize: function (models) {
         Backbone.Select.One.applyTo(this, models);
-        isic.collections.ImageCollection.prototype.initialize.apply(this, arguments);
+        ImageCollection.prototype.initialize.apply(this, arguments);
     }
 });
+
+export default ImageCollection;
+export {SelectableImageCollection};

@@ -1,4 +1,10 @@
-isic.Collection = girder.Collection.extend({ // eslint-disable-line backbone/collection-model
+import _ from 'underscore';
+
+import GirderCollection from 'girder/collections/Collection';
+
+var Collection = GirderCollection.extend({
+    model: null,
+
     url: function () {
         return this.resourceName;
     },
@@ -18,7 +24,7 @@ isic.Collection = girder.Collection.extend({ // eslint-disable-line backbone/col
         // Doing a non-reset fetch causes the collection to not be emptied on
         // an empty fetch, and does non-intuitive things with the "this.offset"
         // property.
-        girder.Collection.prototype.fetch.call(this, null, true);
+        GirderCollection.prototype.fetch.call(this, null, true);
     },
 
     _currentOffset: function (params) {
@@ -73,3 +79,5 @@ isic.Collection = girder.Collection.extend({ // eslint-disable-line backbone/col
         return Math.floor(this._currentOffset() / this.pageLimit);
     }
 });
+
+export default Collection;

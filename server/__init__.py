@@ -25,9 +25,9 @@ from bson import json_util
 
 from girder import events
 from girder.api.v1 import resource
-from girder.constants import SettingKey, PACKAGE_DIR, STATIC_ROOT_DIR
+from girder.constants import PACKAGE_DIR
 from girder.utility import mail_utils
-from girder.utility.model_importer import ModelImporter
+from girder.utility.plugin_utilities import registerPluginWebroot
 from girder.utility.server import staticFile
 from girder.utility.webroot import WebrootBase
 
@@ -43,31 +43,14 @@ class Webroot(WebrootBase):
     def __init__(self, templatePath=None):
         if not templatePath:
             templatePath = os.path.join(
-                PACKAGE_DIR, os.pardir, 'plugins', 'isic_archive', 'server',
-                'webroot.mako')
+                PACKAGE_DIR, os.pardir, 'plugins', 'isic_archive', 'server', 'webroot.mako')
         super(Webroot, self).__init__(templatePath)
 
         self.vars = {
             'apiRoot': '/api/v1',
             'staticRoot': '/static',
             'title': 'ISIC Archive'
-            }
-
-    def _renderHTML(self):
-        Setting = ModelImporter.model('setting')
-
-        self.vars['pluginCss'] = []
-        self.vars['pluginJs'] = []
-        builtDir = os.path.join(
-            STATIC_ROOT_DIR, 'clients', 'web', 'static', 'built', 'plugins')
-        self.vars['plugins'] = Setting.get(SettingKey.PLUGINS_ENABLED, ())
-        for plugin in self.vars['plugins']:
-            if os.path.exists(os.path.join(builtDir, plugin, 'plugin.min.css')):
-                self.vars['pluginCss'].append(plugin)
-            if os.path.exists(os.path.join(builtDir, plugin, 'plugin.min.js')):
-                self.vars['pluginJs'].append(plugin)
-
-        return super(Webroot, self)._renderHTML()
+        }
 
 
 def onDescribeResource(event):
@@ -160,38 +143,29 @@ def load(info):
         os.path.join(info['pluginRootDir'], 'server', 'license_templates'),
         prepend=True)
 
-    # create all necessary users, groups, collections, etc
-    provisionDatabase()
+    registerPluginWebroot(Webroot(), info['name'])
 
     # add static file serving
-    app_base = os.path.join(os.curdir, os.pardir)
-    app_path = os.path.join(
-        app_base, 'girder', 'plugins', 'isic_archive', 'custom')
-
     info['config']['/uda'] = {
         'tools.staticdir.on': 'True',
-        'tools.staticdir.dir': app_path
+        'tools.staticdir.dir': os.path.join(info['pluginRootDir'], 'custom')
     }
-
-    # Move girder app to /girder, serve isic_archive app from /
-    info['serverRoot'], info['serverRoot'].girder = (
-        Webroot(), info['serverRoot'])
-    info['serverRoot'].api = info['serverRoot'].girder.api
 
     # add dynamic root routes
     # root endpoints -> where a user may go and expect a UI
     class Root(object):
         pass
-    info['serverRoot'].uda = Root()
-
-    info['serverRoot'].uda.gallery = staticFile(
+    legacyWebroot = Root()
+    legacyWebroot.gallery = staticFile(
         os.path.join(info['pluginRootDir'], 'custom', 'gallery.html'))
-
-    info['serverRoot'].uda.segment = staticFile(
+    legacyWebroot.segment = staticFile(
         os.path.join(info['pluginRootDir'], 'custom', 'phase1.html'))
-
-    info['serverRoot'].uda.annotate = staticFile(
+    legacyWebroot.annotate = staticFile(
         os.path.join(info['pluginRootDir'], 'custom', 'phase2.html'))
+    registerPluginWebroot(legacyWebroot, 'markup')
+
+    # create all necessary users, groups, collections, etc
+    provisionDatabase()
 
     # add api routes
     # remove docs for default Girder API, to simplify page

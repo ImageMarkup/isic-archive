@@ -1,0 +1,21 @@
+@require '~nib/index'
+@require 'layoutHeaderCommon'
+
+.isic-header-wrapper
+  min-height $headerHeight
+  background-color rgba(255, 255, 255, 0.88)
+  transition background-color 0.4s ease-in-out
+  font-size 16px
+
+  &:hover
+    background-color white
+
+  .isic-header-title
+    font-size 24px
+    color $textColor
+
+  .isic-header-item
+    color $textColor !important
+
+  i.icon-link-ext
+    margin-left 3px

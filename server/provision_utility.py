@@ -17,7 +17,7 @@
 #  limitations under the License.
 ###############################################################################
 
-from girder.constants import AccessType, SettingKey
+from girder.constants import AccessType, SettingKey, GIRDER_ROUTE_ID
 from girder.utility.model_importer import ModelImporter
 
 
@@ -160,6 +160,11 @@ def provisionDatabase():
     Setting = ModelImporter.model('setting')
 
     Setting.set(SettingKey.USER_DEFAULT_FOLDERS, 'none')
+
+    routeTable = Setting.get(SettingKey.ROUTE_TABLE)
+    routeTable[GIRDER_ROUTE_ID] = '/girder'
+    routeTable['isic_archive'] = '/'
+    Setting.set(SettingKey.ROUTE_TABLE, routeTable)
 
     _provisionImages()
     _provisionSegmentationGroups()

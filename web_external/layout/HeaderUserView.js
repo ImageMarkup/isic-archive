@@ -1,39 +1,45 @@
-isic.views.LayoutHeaderUserView = isic.View.extend({
+import {getCurrentUser, logout} from 'girder/auth';
+import events from 'girder/events';
+
+import 'girder_plugins/gravatar/models/UserModel';
+
+import router from '../router';
+import View from '../view';
+
+import LayoutHeaderUserTemplate from './layoutHeaderUser.jade';
+import './layoutHeaderUser.styl';
+import './layoutHeader.styl';
+
+var LayoutHeaderUserView = View.extend({
     events: {
         'click a.g-login': function () {
-            girder.events.trigger('g:loginUi');
+            events.trigger('g:loginUi');
         },
 
         'click a.g-register': function () {
-            girder.events.trigger('g:registerUi');
+            events.trigger('g:registerUi');
         },
 
-        'click a.g-logout': function () {
-            girder.restRequest({
-                path: 'user/authentication',
-                type: 'DELETE'
-            }).done(_.bind(function () {
-                girder.currentUser = null;
-                girder.events.trigger('g:login');
-            }, this));
-        },
+        'click a.g-logout': logout,
 
         'click a.g-my-settings': function () {
-            isic.router.navigate('useraccount/' + girder.currentUser.id +
-                                    '/info', {trigger: true});
+            router.navigate('useraccount/' + getCurrentUser().id + '/info', {trigger: true});
         }
     },
 
     render: function () {
-        this.$el.html(isic.templates.layoutHeaderUser({
-            currentUser: girder.currentUser
+        var currentUser = getCurrentUser();
+        this.$el.html(LayoutHeaderUserTemplate({
+            currentUser: currentUser
         }));
 
-        if (girder.currentUser) {
+        if (currentUser) {
             this.$('.isic-portrait-wrapper').css(
-                'background-image', 'url(' +
-                girder.currentUser.getGravatarUrl(36) + ')');
+                'background-image', '' +
+                'url(' + currentUser.getGravatarUrl(36) + ')');
         }
         return this;
     }
 });
+
+export default LayoutHeaderUserView;

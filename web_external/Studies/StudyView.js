@@ -1,8 +1,21 @@
-isic.views.StudyView = isic.View.extend({
+import $ from 'jquery';
+import _ from 'underscore';
+
+import LoadingAnimation from 'girder/views/widgets/LoadingAnimation';
+import {confirm} from 'girder/dialog';
+
+import StudyAddUserWidget from './StudyAddUserWidget';
+import View from '../view';
+import {showAlertDialog} from '../common/utilities';
+
+import StudyPageTemplate from './studyPage.jade';
+import './studyPage.styl';
+
+var StudyView = View.extend({
     events: {
         'click .isic-study-add-user-button': function () {
             if (!this.studyAddUserWidget) {
-                this.studyAddUserWidget = new isic.views.StudyAddUserWidget({
+                this.studyAddUserWidget = new StudyAddUserWidget({
                     el: $('#g-dialog-container'),
                     study: this.model,
                     parentView: this
@@ -27,14 +40,11 @@ isic.views.StudyView = isic.View.extend({
     },
 
     /**
-     * @param {isic.models.StudyModel} settings.model
-     * @param {boolean} settings.canAdminStudy - Whether the current user can admin the study.
+     * @param {StudyModel} settings.model
      */
     initialize: function (settings) {
-        this.canAdminStudy = settings.canAdminStudy;
-
         // Display loading indicator
-        this.loadingAnimation = new girder.views.LoadingAnimation({
+        this.loadingAnimation = new LoadingAnimation({
             el: this.el,
             parentView: this
         }).render();
@@ -48,8 +58,7 @@ isic.views.StudyView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.studyPage({
-            canAdminStudy: this.canAdminStudy,
+        this.$el.html(StudyPageTemplate({
             study: this.model,
             formatDate: this.formatDate
         }));
@@ -62,7 +71,7 @@ isic.views.StudyView = isic.View.extend({
     },
 
     confirmRemoveUser: function (user) {
-        girder.confirm({
+        confirm({
             text: '<h4>Permanently remove <b>"' + _.escape(user.name()) + '"</b> from study?</h4>',
             escapedHtml: true,
             confirmCallback: _.bind(function () {
@@ -83,13 +92,13 @@ isic.views.StudyView = isic.View.extend({
                     // TODO: re-render this via model events instead
                     this.render();
                 }, this).fetch();
-                isic.showAlertDialog({
+                showAlertDialog({
                     text: '<h4>Annotator <b>"' + _.escape(user.name()) + '"</b> deleted</h4>',
                     escapedHtml: true
                 });
             }, this))
             .fail(function (resp) {
-                isic.showAlertDialog({
+                showAlertDialog({
                     text: '<h4>Error deleting annotator</h4><br>' + _.escape(resp.responseJSON.message),
                     escapedHtml: true
                 });
@@ -97,7 +106,7 @@ isic.views.StudyView = isic.View.extend({
     },
 
     confirmDestroy: function () {
-        girder.confirm({
+        confirm({
             text: '<h4>Permanently delete <b>"' + _.escape(this.model.name()) + '"</b> study?</h4>',
             escapedHtml: true,
             confirmCallback: _.bind(function () {
@@ -113,13 +122,13 @@ isic.views.StudyView = isic.View.extend({
     destroyModel: function () {
         this.model.destroy({
             success: function (model, resp, options) {
-                isic.showAlertDialog({
+                showAlertDialog({
                     text: '<h4>Study <b>"' + _.escape(model.name()) + '"</b> deleted</h4>',
                     escapedHtml: true
                 });
             },
             error: function (model, resp, options) {
-                isic.showAlertDialog({
+                showAlertDialog({
                     text: '<h4>Error deleting study</h4><br>' + _.escape(resp.responseJSON.message),
                     escapedHtml: true
                 });
@@ -127,3 +136,5 @@ isic.views.StudyView = isic.View.extend({
         });
     }
 });
+
+export default StudyView;

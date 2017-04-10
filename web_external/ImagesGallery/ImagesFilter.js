@@ -1,11 +1,18 @@
-/*globals peg*/
+import Backbone from 'backbone';
+import peg from 'pegjs';
+import _ from 'underscore';
 
-isic.collections.ImagesFilter = function (completeFacets) {
+import {FACET_SCHEMA} from './Facets/ImagesFacetView';
+import queryGrammar from 'raw-loader!./query.pegjs';
+
+var ImagesFilter = function (completeFacets) {
+    this.astParser = peg.generate(queryGrammar);
+
     if (completeFacets) {
         this.initialize(completeFacets);
     }
 };
-_.extend(isic.collections.ImagesFilter.prototype, Backbone.Events, {
+_.extend(ImagesFilter.prototype, Backbone.Events, {
     initialize: function (completeFacets) {
         /* Creates an internal structure of:
             this._filters = {
@@ -17,7 +24,7 @@ _.extend(isic.collections.ImagesFilter.prototype, Backbone.Events, {
         this._filters = {};
         completeFacets.forEach(_.bind(function (completeFacet) {
             var facetId = completeFacet.id;
-            var FacetFilter = isic.FACET_SCHEMA[facetId].FacetFilter;
+            var FacetFilter = FACET_SCHEMA[facetId].FacetFilter;
             var facetFilter = new FacetFilter(facetId, completeFacet.get('bins'));
             facetFilter.on('change', function () {
                 // Trigger a change on the parent whenever a child changes
@@ -43,17 +50,17 @@ _.extend(isic.collections.ImagesFilter.prototype, Backbone.Events, {
     asAst: function () {
         var fullExpression = this.asExpression();
         if (fullExpression) {
-            var ast = isic.SerializeFilterHelpers.astParser.parse(fullExpression);
-            ast = isic.SerializeFilterHelpers._dehexify(ast);
+            var ast = this.astParser.parse(fullExpression);
+            ast = SerializeFilterHelpers._dehexify(ast);
             // TODO: "__null__" values in range facets get their type set as "number" here
-            return isic.SerializeFilterHelpers._specifyAttrTypes(ast);
+            return SerializeFilterHelpers._specifyAttrTypes(ast);
         } else {
             return undefined;
         }
     }
 });
 
-isic.collections.FacetFilter = function (facetId, facetBins) {
+var FacetFilter = function (facetId, facetBins) {
     this.facetId = facetId;
 
     /* Creates an internal structure of:
@@ -71,9 +78,9 @@ isic.collections.FacetFilter = function (facetId, facetBins) {
 };
 
 // Make it easy to inherit from FacetFilter, using a utility function from Backbone
-isic.collections.FacetFilter.extend = Backbone.View.extend;
+FacetFilter.extend = Backbone.View.extend;
 
-_.extend(isic.collections.FacetFilter.prototype, Backbone.Events, {
+_.extend(FacetFilter.prototype, Backbone.Events, {
     isIncluded: function (binLabel) {
         return this._filters[binLabel];
     },
@@ -93,7 +100,7 @@ _.extend(isic.collections.FacetFilter.prototype, Backbone.Events, {
     asExpression: null
 });
 
-isic.collections.CategoricalFacetFilter = isic.collections.FacetFilter.extend({
+var CategoricalFacetFilter = FacetFilter.extend({
     asExpression: function () {
         var excludedBinLabels = _.chain(this._filters)
             // Choose only excluded bins
@@ -103,7 +110,7 @@ isic.collections.CategoricalFacetFilter = isic.collections.FacetFilter.extend({
             // Take the bin labels as an array
             .keys()
             // Encode each, as they're user-provided values from the database
-            .map(isic.SerializeFilterHelpers._stringToHex)
+            .map(SerializeFilterHelpers._stringToHex)
             .value();
         // TODO: Could use "facetId + ' in ' + includedBinLabels"" if most are excluded
         if (_.size(excludedBinLabels) === 0) {
@@ -115,7 +122,7 @@ isic.collections.CategoricalFacetFilter = isic.collections.FacetFilter.extend({
                 // the grammar's forbidden characters for identifiers), but before removing the
                 // encoding step, we should ensure that decoding it (which always happens) will be a
                 // safe no-op
-                isic.SerializeFilterHelpers._stringToHex(this.facetId) +
+                SerializeFilterHelpers._stringToHex(this.facetId) +
                 ' not in ' +
                 JSON.stringify(excludedBinLabels) +
                 ')';
@@ -123,7 +130,7 @@ isic.collections.CategoricalFacetFilter = isic.collections.FacetFilter.extend({
     }
 });
 
-isic.collections.TagsCategoricalFacetFilter = isic.collections.CategoricalFacetFilter.extend({
+var TagsCategoricalFacetFilter = CategoricalFacetFilter.extend({
     asExpression: function () {
         var includedBinLabels = _.chain(this._filters)
             // Choose only included bins
@@ -139,7 +146,7 @@ isic.collections.TagsCategoricalFacetFilter = isic.collections.CategoricalFacetF
                     // Non-strings can't be encoded, so don't encode this value
                     return [];
                 }
-                return isic.SerializeFilterHelpers._stringToHex(binLabel);
+                return SerializeFilterHelpers._stringToHex(binLabel);
             })
             .value();
         if (_.size(includedBinLabels) === _.size(this._filters)) {
@@ -147,7 +154,7 @@ isic.collections.TagsCategoricalFacetFilter = isic.collections.CategoricalFacetF
             return '';
         } else {
             return '(' +
-                isic.SerializeFilterHelpers._stringToHex(this.facetId) +
+                SerializeFilterHelpers._stringToHex(this.facetId) +
                 ' in ' +
                 JSON.stringify(includedBinLabels) +
                 ')';
@@ -155,7 +162,7 @@ isic.collections.TagsCategoricalFacetFilter = isic.collections.CategoricalFacetF
     }
 });
 
-isic.collections.IntervalFacetFilter = isic.collections.FacetFilter.extend({
+var IntervalFacetFilter = FacetFilter.extend({
     asExpression: function () {
         var filterExpressions = _.chain(this._filters)
             // Because '__null__' has no high or low bound, it must be handled specially
@@ -189,12 +196,12 @@ isic.collections.IntervalFacetFilter = isic.collections.FacetFilter.extend({
             // Convert each range into a string expression
             .map(_.bind(function (range) {
                 var lowBoundExpression = 'not (' +
-                    isic.SerializeFilterHelpers._stringToHex(this.facetId) +
+                    SerializeFilterHelpers._stringToHex(this.facetId) +
                     ' >= ' +
                     range[0] +
                     ')';
                 var highBoundExpression = 'not (' +
-                    isic.SerializeFilterHelpers._stringToHex(this.facetId) +
+                    SerializeFilterHelpers._stringToHex(this.facetId) +
                     ' < ' +
                     range[1] +
                     ')';
@@ -205,9 +212,9 @@ isic.collections.IntervalFacetFilter = isic.collections.FacetFilter.extend({
             // This conditional will also intentionally fail if '__null__' is undefined
             filterExpressions.push(
                 '(' +
-                isic.SerializeFilterHelpers._stringToHex(this.facetId) +
+                SerializeFilterHelpers._stringToHex(this.facetId) +
                 ' not in ' +
-                JSON.stringify([isic.SerializeFilterHelpers._stringToHex('__null__')]) +
+                JSON.stringify([SerializeFilterHelpers._stringToHex('__null__')]) +
                 ')'
             );
         }
@@ -221,21 +228,7 @@ isic.collections.IntervalFacetFilter = isic.collections.FacetFilter.extend({
     }
 });
 
-isic.SerializeFilterHelpers = {
-    loadFilterGrammar: function () {
-        if (isic.SerializeFilterHelpers.astParser) {
-            return $.Deferred().resolve().promise();
-        }
-        // TODO: inline this as a string literal
-        return $.ajax({
-            url: girder.staticRoot + '/built/plugins/isic_archive/extra/query.pegjs',
-            dataType: 'text',
-            success: _.bind(function (data) {
-                isic.SerializeFilterHelpers.astParser = peg.generate(data);
-            }, this)
-        });
-    },
-
+var SerializeFilterHelpers = {
     _stringToHex: function (value) {
         var result = '';
         for (var i = 0; i < value.length; i += 1) {
@@ -251,11 +244,11 @@ isic.SerializeFilterHelpers = {
         if (_.isObject(obj)) {
             if (_.isArray(obj)) {
                 _.each(obj, function (d, i) {
-                    obj[i] = isic.SerializeFilterHelpers._dehexify(d);
+                    obj[i] = SerializeFilterHelpers._dehexify(d);
                 });
             } else {
                 _.each(Object.keys(obj), function (k) {
-                    obj[k] = isic.SerializeFilterHelpers._dehexify(obj[k]);
+                    obj[k] = SerializeFilterHelpers._dehexify(obj[k]);
                 });
             }
         } else if (_.isString(obj)) {
@@ -268,7 +261,7 @@ isic.SerializeFilterHelpers = {
         if (!_.isObject(obj)) {
             return obj;
         } else if ('identifier' in obj && 'type' in obj && obj.type === null) {
-            var attrType = isic.FACET_SCHEMA[obj.identifier].coerceToType;
+            var attrType = FACET_SCHEMA[obj.identifier].coerceToType;
             if (attrType !== 'object') {
                 // 'object' is really a passthrough; don't attempt
                 // any coercion while performing the filter
@@ -276,13 +269,16 @@ isic.SerializeFilterHelpers = {
             }
         } else if (_.isArray(obj)) {
             _.each(obj, function (d, i) {
-                obj[i] = isic.SerializeFilterHelpers._specifyAttrTypes(d);
+                obj[i] = SerializeFilterHelpers._specifyAttrTypes(d);
             });
         } else {
             _.each(Object.keys(obj), function (k) {
-                obj[k] = isic.SerializeFilterHelpers._specifyAttrTypes(obj[k]);
+                obj[k] = SerializeFilterHelpers._specifyAttrTypes(obj[k]);
             });
         }
         return obj;
     }
 };
+
+export default ImagesFilter;
+export {CategoricalFacetFilter, IntervalFacetFilter, TagsCategoricalFacetFilter};

@@ -1,4 +1,22 @@
-isic.views.CreateDatasetView = isic.View.extend({
+import $ from 'jquery';
+import _ from 'underscore';
+
+import FolderModel from 'girder/models/FolderModel';
+import ItemCollection from 'girder/collections/ItemCollection';
+import UploadWidget from 'girder/views/widgets/UploadWidget';
+import {getCurrentUser} from 'girder/auth';
+
+import DatasetModel from '../models/DatasetModel';
+import TermsOfUseWidget from '../common/TermsOfUse/TermsOfUseWidget';
+import CreateDatasetLicenseInfoWidget from './CreateDatasetLicenseInfoWidget';
+import View from '../view';
+import {showAlertDialog} from '../common/utilities';
+import router from '../router';
+
+import CreateDatasetTemplate from './createDataset.jade';
+import './createDataset.styl';
+
+var CreateDatasetView = View.extend({
     events: {
         'click #isic-upload-reset': function (event) {
             this.resetUpload();
@@ -38,7 +56,7 @@ isic.views.CreateDatasetView = isic.View.extend({
             }
 
             // Get file ID of uploaded file, then submit dataset
-            var items = new girder.collections.ItemCollection();
+            var items = new ItemCollection();
             items.once('g:changed', function () {
                 if (!items.isEmpty()) {
                     var item = items.first();
@@ -59,19 +77,19 @@ isic.views.CreateDatasetView = isic.View.extend({
         this.uploadedZipFiles = [];
         this.uploadFolder = null;
 
-        this.termsOfUseWidget = new isic.views.TermsOfUseWidget({
+        this.termsOfUseWidget = new TermsOfUseWidget({
             parentView: this
         });
 
-        this.dataset = new isic.models.DatasetModel();
+        this.dataset = new DatasetModel();
 
         this.listenTo(this.dataset, 'isic:ingestImages:success', function () {
-            isic.showAlertDialog({
+            showAlertDialog({
                 text: '<h4>Dataset successfully submitted.</h4>',
                 escapedHtml: true,
                 callback: _.bind(function () {
                     // Navigate to register metadata view
-                    isic.router.navigate(
+                    router.navigate(
                         'dataset/' + this.dataset.id + '/metadata/register',
                         {trigger: true});
                 }, this)
@@ -79,7 +97,7 @@ isic.views.CreateDatasetView = isic.View.extend({
         });
 
         this.listenTo(this.dataset, 'isic:ingestImages:error', function (resp) {
-            isic.showAlertDialog({
+            showAlertDialog({
                 text: '<h4>Error submitting dataset</h4><br>' + _.escape(resp.responseJSON.message),
                 escapedHtml: true
             });
@@ -90,7 +108,7 @@ isic.views.CreateDatasetView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.createDataset());
+        this.$el.html(CreateDatasetTemplate());
 
         if (!this.uploadWidget) {
             this.initializeUploadWidget();
@@ -110,7 +128,7 @@ isic.views.CreateDatasetView = isic.View.extend({
             this.stopListening(this.uploadWidget);
             this.uploadWidget.destroy();
         }
-        this.uploadWidget = new girder.views.UploadWidget({
+        this.uploadWidget = new UploadWidget({
             parentView: this,
             modal: false,
             noParent: true,
@@ -135,21 +153,18 @@ isic.views.CreateDatasetView = isic.View.extend({
             this.startUpload(this.uploadFolder);
         } else {
             // Create new upload folder with unique name
-            this.uploadFolder = new girder.models.FolderModel({
+            this.uploadFolder = new FolderModel({
                 name: 'isic_dataset_' + Date.now(),
                 parentType: 'user',
-                parentId: girder.currentUser.id,
+                parentId: getCurrentUser().id,
                 description: 'ISIC dataset upload'
             });
 
             this.uploadFolder.once('g:saved', function () {
                 this.startUpload(this.uploadFolder);
             }, this).once('g:error', function () {
-                girder.events.trigger('g:alert', {
-                    icon: 'cancel',
-                    text: 'Could not create upload folder.',
-                    type: 'error',
-                    timeout: 4000
+                showAlertDialog({
+                    text: 'Could not create upload folder.'
                 });
             }, this).save();
         }
@@ -212,7 +227,7 @@ isic.views.CreateDatasetView = isic.View.extend({
 
     showLicenseInfo: function () {
         if (!this.licenseInfoWidget) {
-            this.licenseInfoWidget = new isic.views.CreateDatasetLicenseInfoWidget({
+            this.licenseInfoWidget = new CreateDatasetLicenseInfoWidget({
                 el: $('#g-dialog-container'),
                 parentView: this
             });
@@ -221,58 +236,4 @@ isic.views.CreateDatasetView = isic.View.extend({
     }
 });
 
-isic.views.CreateDatasetRequestView = isic.View.extend({
-    events: {
-        'submit #isic-dataset-form': function (event) {
-            event.preventDefault();
-            this.$('#isic-dataset-submit').prop('disabled', true);
-
-            girder.currentUser.setCanCreateDataset(
-                // Success callback
-                function (resp) {
-                    // Refresh page
-                    Backbone.history.loadUrl();
-                },
-                // Failure (or request pending) callback
-                function (resp) {
-                    // Display notification and route to index
-                    isic.showAlertDialog({
-                        text: resp.message,
-                        callback: function () {
-                            isic.router.navigate('', {trigger: true});
-                        }
-                    });
-                }
-            );
-        }
-    },
-
-    initialize: function (settings) {
-        this.render();
-    },
-
-    render: function () {
-        this.$el.html(isic.templates.createDatasetRequest());
-
-        return this;
-    }
-});
-
-isic.router.route('dataset/create', 'createDataset', function () {
-    if (girder.currentUser) {
-        // Registered users must:
-        //  (1) Accept the TOS
-        //  (2) Request and receive create dataset access
-        // before being able to see the create dataset view
-        var nextView = isic.views.CreateDatasetView;
-        if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
-            nextView = isic.views.TermsAcceptanceView;
-        } else if (!girder.currentUser.canCreateDataset()) {
-            nextView = isic.views.CreateDatasetRequestView;
-        }
-        girder.events.trigger('g:navigateTo', nextView);
-    } else {
-        // Anonymous users should not be here, so route to home page
-        isic.router.navigate('', {trigger: true});
-    }
-});
+export default CreateDatasetView;

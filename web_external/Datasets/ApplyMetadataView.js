@@ -1,7 +1,29 @@
+import Backbone from 'backbone';
+import $ from 'jquery';
+import _ from 'underscore';
+
+import {SORT_DESC} from 'girder/constants';
+import {DATE_SECOND, formatDate} from 'girder/misc';
+import FileModel from 'girder/models/FileModel';
+import {confirm} from 'girder/dialog';
+
+import Collection from '../collections/Collection';
+import Model from '../models/Model';
+import UserModel from '../models/UserModel';
+import View from '../view';
+import {showAlertDialog} from '../common/utilities';
+import router from '../router';
+
+import ApplyMetadataSelectFilePageTemplate from './applyMetadataSelectFilePage.jade';
+import ApplyMetadataPageTemplate from './applyMetadataPage.jade';
+import './applyMetadataPage.styl';
+import ApplyMetadataValidationPageTemplate from './applyMetadataValidationPage.jade';
+import './applyMetadataValidationPage.styl';
+
 // Model for a metadata file
-isic.models.MetadataFileModel = girder.Model.extend({
+var MetadataFileModel = Model.extend({
     name: function () {
-        var time = girder.formatDate(this.get('time'), girder.DATE_SECOND);
+        var time = formatDate(this.get('time'), DATE_SECOND);
         var fileName = this.get('file').name();
         var userName = this.get('user').name();
         return time + ' \u2014 ' + fileName + ' \u2014 ' + userName;
@@ -9,17 +31,17 @@ isic.models.MetadataFileModel = girder.Model.extend({
 });
 
 // Collection of metadata files as returned by of DatasetModel.getRegisteredMetadata()
-isic.collections.MetadataFileCollection = girder.Collection.extend({
-    model: isic.models.MetadataFileModel,
+var MetadataFileCollection = Collection.extend({
+    model: MetadataFileModel,
 
     // Sort in reverse chronological order
     sortField: 'time',
-    sortDir: girder.SORT_DESC,
+    sortDir: SORT_DESC,
 
     parse: function (data) {
         _.each(data, function (item) {
-            item.file = new girder.models.FileModel(item.file);
-            item.user = new isic.models.UserModel(item.user);
+            item.file = new FileModel(item.file);
+            item.user = new UserModel(item.user);
 
             // Use file ID as item ID
             item._id = item.file.id;
@@ -29,7 +51,7 @@ isic.collections.MetadataFileCollection = girder.Collection.extend({
 });
 
 // Model for a single metadata error
-isic.models.MetadataErrorModel = Backbone.Model.extend({
+var MetadataErrorModel = Backbone.Model.extend({
     description: function () {
         return this.get('description');
     }
@@ -37,8 +59,8 @@ isic.models.MetadataErrorModel = Backbone.Model.extend({
 
 // Collection of metadata errors. The list of items in the collection is
 // meaningful only when initialized() is true.
-isic.collections.MetadataErrorCollection = Backbone.Collection.extend({
-    model: isic.models.MetadataErrorModel,
+var MetadataErrorCollection = Backbone.Collection.extend({
+    model: MetadataErrorModel,
 
     _initialized: false,
 
@@ -60,13 +82,13 @@ isic.collections.MetadataErrorCollection = Backbone.Collection.extend({
 // View for a collection of metadata files in a select tag.
 // When user selects a file, a 'changed' event is triggered
 // with the ID of the selected file as a parameter.
-isic.views.ApplyMetadataSelectFileView = isic.View.extend({
+var ApplyMetadataSelectFileView = View.extend({
     events: {
         'change': 'fileChanged'
     },
 
     /**
-     * @param {isic.collections.MetadataFileCollection} settings.collection
+     * @param {MetadataFileCollection} settings.collection
      */
     initialize: function (settings) {
         this.listenTo(this.collection, 'reset', this.render);
@@ -83,7 +105,7 @@ isic.views.ApplyMetadataSelectFileView = isic.View.extend({
         var select = this.$('#isic-apply-metadata-file-select');
         select.select2('destroy');
 
-        this.$el.html(isic.templates.applyMetadataSelectFilePage({
+        this.$el.html(ApplyMetadataSelectFilePageTemplate({
             models: this.collection.models
         }));
 
@@ -105,11 +127,11 @@ isic.views.ApplyMetadataSelectFileView = isic.View.extend({
 
 // View to select a registered metadata file, validate the metadata, and save
 // the metadata to the dataset if validation is successful.
-isic.views.ApplyMetadataView = isic.View.extend({
+var ApplyMetadataView = View.extend({
     events: {
         'click #isic-apply-metadata-download-button': function () {
             // Download selected metadata file
-            var fileModel = new girder.models.FileModel({_id: this.file.id});
+            var fileModel = new FileModel({_id: this.file.id});
             fileModel.download();
         },
 
@@ -120,7 +142,7 @@ isic.views.ApplyMetadataView = isic.View.extend({
 
         'click #isic-apply-metadata-save': function () {
             // Show confirmation dialog
-            girder.confirm({
+            confirm({
                 text: '<h4>Really save metadata?</h4>',
                 escapedHtml: true,
                 yesText: 'Save',
@@ -140,21 +162,21 @@ isic.views.ApplyMetadataView = isic.View.extend({
     },
 
     /**
-     * @param {isic.models.DatasetModel} settings.dataset
+     * @param {DatasetModel} settings.dataset
      */
     initialize: function (settings) {
         this.dataset = settings.dataset;
 
         // Registered metadata files
-        this.files = new isic.collections.MetadataFileCollection();
+        this.files = new MetadataFileCollection();
 
         // Selected metadata file
         this.file = null;
 
         // Errors in the selected metadata file
-        this.errors = new isic.collections.MetadataErrorCollection();
+        this.errors = new MetadataErrorCollection();
 
-        this.selectFileView = new isic.views.ApplyMetadataSelectFileView({
+        this.selectFileView = new ApplyMetadataSelectFileView({
             collection: this.files,
             parentView: this
         });
@@ -185,7 +207,7 @@ isic.views.ApplyMetadataView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.applyMetadataPage({
+        this.$el.html(ApplyMetadataPageTemplate({
             dataset: this.dataset
         }));
 
@@ -199,7 +221,7 @@ isic.views.ApplyMetadataView = isic.View.extend({
 
     renderValidationContainer: function () {
         this.$('#isic-apply-metadata-validation-container').html(
-            isic.templates.applyMetadataValidationPage({
+            ApplyMetadataValidationPageTemplate({
                 errors: this.errors,
                 file: this.file
             }));
@@ -212,44 +234,18 @@ isic.views.ApplyMetadataView = isic.View.extend({
             this.errors.reset(resp, {parse: true});
 
             if (save) {
-                isic.showAlertDialog({
+                showAlertDialog({
                     text: '<h4>Metadata saved.</h4>',
                     escapedHtml: true,
                     callback: function () {
-                        isic.router.navigate('', {trigger: true});
+                        router.navigate('', {trigger: true});
                     }
                 });
             }
         }, this), function (err) {
-            isic.showAlertDialog({text: 'Error: ' + err.responseJSON.message});
+            showAlertDialog({text: 'Error: ' + err.responseJSON.message});
         });
     }
 });
 
-isic.router.route('dataset/:id/metadata/apply', 'applyMetadata', function (id) {
-    if (girder.currentUser) {
-        // Registered users must:
-        //  (1) Accept the TOS
-        //  (2) Request and receive create dataset access
-        // before being able to see the apply metadata view
-        if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
-            girder.events.trigger('g:navigateTo', isic.views.TermsAcceptanceView);
-        } else if (!girder.currentUser.canCreateDataset()) {
-            girder.events.trigger('g:navigateTo', isic.views.CreateDatasetRequestView);
-        } else {
-            // Fetch the dataset, then navigate to the view
-            var dataset = new isic.models.DatasetModel({
-                _id: id
-            }).once('g:fetched', function () {
-                girder.events.trigger('g:navigateTo', isic.views.ApplyMetadataView, {
-                    dataset: dataset
-                });
-            }, this).once('g:error', function () {
-                isic.router.navigate('', {trigger: true});
-            }, this).fetch();
-        }
-    } else {
-        // Anonymous users should not be here, so route to home page
-        isic.router.navigate('', {trigger: true});
-    }
-});
+export default ApplyMetadataView;

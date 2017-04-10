@@ -1,7 +1,14 @@
+import View from '../view';
+
+import CreateDatasetLicenseInfoPageTemplate from './createDatasetLicenseInfoPage.jade';
+import './createDatasetLicenseInfoPage.styl';
+
 // Modal view for dataset license information
-isic.views.CreateDatasetLicenseInfoWidget = isic.View.extend({
+var CreateDatasetLicenseInfoWidget = View.extend({
     render: function () {
-        this.$el.html(isic.templates.createDatasetLicenseInfoPage()).girderModal(this);
+        this.$el.html(CreateDatasetLicenseInfoPageTemplate()).girderModal(this);
         return this;
     }
 });
+
+export default CreateDatasetLicenseInfoWidget;

@@ -1,11 +1,21 @@
-isic.views.ImageDetailsPane = isic.View.extend({
+import $ from 'jquery';
+import _ from 'underscore';
+
+import SegmentationsDisplayView from './SegmentationsDisplayView';
+import ImageFullscreenWidget from '../../common/Viewer/ImageFullscreenWidget';
+import View from '../../view';
+
+import ImageDetailsPageTemplate from './imageDetailsPage.jade';
+import './imageDetailsPage.styl';
+
+var ImageDetailsPane = View.extend({
     events: {
         'click #isic-image-details-zoom': 'zoom',
         'click #isic-image-details-close': 'closeDetails'
     },
 
     /**
-     * @param {isic.models.ImageModel} settings.image
+     * @param {ImageModel} settings.image
      */
     initialize: function (settings) {
         this.image = settings.image;
@@ -23,7 +33,7 @@ isic.views.ImageDetailsPane = isic.View.extend({
 
     render: function () {
         // Get image data
-        var created = girder.formatDate(this.image.get('created'), girder.DATE_SECOND);
+        var created = this.formatDate(this.image.get('created'));
 
         // Get license, default to CC-0
         var license;
@@ -39,16 +49,15 @@ isic.views.ImageDetailsPane = isic.View.extend({
             };
         }
 
-        this.$el.html(isic.templates.imageDetailsPage({
-            apiRoot: girder.apiRoot,
+        this.$el.html(ImageDetailsPageTemplate({
+            _: _,
+            apiRoot: this.apiRoot,
             image: this.image,
-            currentUser: girder.currentUser,
             created: created,
-            license: license,
-            _: _
+            license: license
         }));
 
-        this.segmentationsDisplayView = new isic.views.SegmentationsDisplayView({
+        this.segmentationsDisplayView = new SegmentationsDisplayView({
             image: this.image,
             el: this.$('#isic-image-details-segmentations-display-view-container'),
             parentView: this
@@ -63,7 +72,7 @@ isic.views.ImageDetailsPane = isic.View.extend({
 
     zoom: function () {
         this.clearTooltips();
-        new isic.views.ImageFullscreenWidget({ // eslint-disable-line no-new
+        new ImageFullscreenWidget({ // eslint-disable-line no-new
             el: $('#g-dialog-container'),
             model: this.image,
             parentView: this
@@ -78,3 +87,5 @@ isic.views.ImageDetailsPane = isic.View.extend({
         $('[data-toggle="tooltip"]').tooltip('hide');
     }
 });
+
+export default ImageDetailsPane;

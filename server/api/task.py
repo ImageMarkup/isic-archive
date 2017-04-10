@@ -125,7 +125,7 @@ class TaskResource(IsicResource):
         if not Image.find({'folderId': prereviewFolder['_id']}).count():
             raise RestException('No Pre-review images are available for this dataset.')
 
-        reviewUrl = '/uda/gallery#/qc/%s' % dataset['_id']
+        reviewUrl = '/markup/gallery#/qc/%s' % dataset['_id']
         self._doRedirect(reviewUrl)
 
     def _pipeline1AllImages(self, user):
@@ -339,7 +339,7 @@ class TaskResource(IsicResource):
         nextResp = self.nextSegmentationTask(params)
         imageId = nextResp['_id']
 
-        segmentUrl = '/uda/segment#/%s' % imageId
+        segmentUrl = '/markup/segment#/%s' % imageId
         self._doRedirect(segmentUrl)
 
     @describeRoute(
@@ -424,5 +424,5 @@ class TaskResource(IsicResource):
         nextResp = self.nextAnnotationTask(params)
         annotationId = nextResp['_id']
 
-        annotationUrl = '/uda/annotate#/%s' % annotationId
+        annotationUrl = '/markup/annotate#/%s' % annotationId
         self._doRedirect(annotationUrl)
