@@ -184,8 +184,7 @@ def inviteUser(self, params):
         newUser, days=validityPeriod,
         scope=[TokenScope.TEMPORARY_USER_AUTH, TokenScope.EMAIL_VERIFICATION])
 
-    # TODO: Ensure getEmailUrlPrefix points to ISIC root, not Girder root
-    inviteUrl = '%s#user/%s/rsvp/%s' % (
+    inviteUrl = '%s/#user/%s/rsvp/%s' % (
         mail_utils.getEmailUrlPrefix(), newUser['_id'], token['_id'])
 
     html = mail_utils.renderTemplate(
@@ -196,7 +195,7 @@ def inviteUser(self, params):
         })
     mail_utils.sendEmail(
         to=newUser['email'],
-        subject='ISIC Archive: Dataset Contributor Request',
+        subject='ISIC Archive: Invitation',
         text=html)
 
     return {
