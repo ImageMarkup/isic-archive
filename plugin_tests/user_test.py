@@ -225,3 +225,80 @@ class UserTestCase(IsicTestCase):
         resp = self.request(path='/user/me', method='GET', user=studyAdminUser)
         self.assertStatusOk(resp)
         self.assertEqual(resp.json['permissions']['adminStudy'], True)
+
+    def testInviteNewUser(self):
+        Group = self.model('group')
+        User = self.model('user', 'isic_archive')
+
+        # Create a study admin user
+        resp = self.request(path='/user', method='POST', params={
+            'email': 'study-admin-user@isic-archive.com',
+            'login': 'study-admin-user',
+            'firstName': 'study admin',
+            'lastName': 'user',
+            'password': 'password'
+        })
+        self.assertStatusOk(resp)
+        studyAdminUser = User.findOne({'login': 'study-admin-user'})
+        self.assertIsNotNone(studyAdminUser)
+
+        # Ensure that user doesn't have permission to invite a new user, yet
+        resp = self.request(path='/user/invite', method='POST', params={
+            'login': 'invited-user',
+            'email': 'invited-user@isic-archive.com',
+            'firstName': 'invited',
+            'lastName': 'user'
+        }, user=studyAdminUser)
+        self.assertStatus(resp, 403)
+
+        # Add the user to the study admins group
+        studyAdminsGroup = Group.findOne({'name': 'Study Administrators'})
+        self.assertIsNotNone(studyAdminsGroup)
+        Group.addUser(studyAdminsGroup, studyAdminUser, level=AccessType.READ)
+
+        # Ensure that user can invite a new user
+        resp = self.request(path='/user/invite', method='POST', params={
+            'login': 'invited-user',
+            'email': 'invited-user@isic-archive.com',
+            'firstName': 'invited',
+            'lastName': 'user'
+        }, user=studyAdminUser)
+        self.assertStatusOk(resp)
+        self.assertHasKeys(resp.json, ('newUser', 'inviteUrl'))
+        self.assertHasKeys(resp.json['newUser'], ('login', 'firstName', 'lastName', 'name'))
+        self.assertEqual(resp.json['newUser']['login'], 'invited-user')
+        self.assertEqual(resp.json['newUser']['firstName'], 'invited')
+        self.assertEqual(resp.json['newUser']['lastName'], 'user')
+        self.assertTrue(resp.json['newUser']['name'])
+        self.assertTrue(resp.json['inviteUrl'])
+
+        self.assertMails(count=1)
+
+        # Ensure that user can invite a new user and specify the validity period
+        resp = self.request(path='/user/invite', method='POST', params={
+            'login': 'invited-user2',
+            'email': 'invited-user2@isic-archive.com',
+            'firstName': 'invited',
+            'lastName': 'user2',
+            'validityPeriod': 15.0
+        }, user=studyAdminUser)
+        self.assertStatusOk(resp)
+        self.assertHasKeys(resp.json, ('newUser', 'inviteUrl'))
+        self.assertHasKeys(resp.json['newUser'], ('login', 'firstName', 'lastName', 'name'))
+        self.assertEqual(resp.json['newUser']['login'], 'invited-user2')
+        self.assertEqual(resp.json['newUser']['firstName'], 'invited')
+        self.assertEqual(resp.json['newUser']['lastName'], 'user2')
+        self.assertTrue(resp.json['newUser']['name'])
+        self.assertTrue(resp.json['inviteUrl'])
+
+        self.assertMails(count=1)
+
+        # Test sending an invalid value for the validity period
+        resp = self.request(path='/user/invite', method='POST', params={
+            'login': 'invited-user3',
+            'email': 'invited-user3@isic-archive.com',
+            'firstName': 'invited',
+            'lastName': 'user3',
+            'validityPeriod': 'invalid'
+        }, user=studyAdminUser)
+        self.assertValidationError(resp, field='validityPeriod')
