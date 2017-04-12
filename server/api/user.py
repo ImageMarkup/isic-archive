@@ -174,15 +174,11 @@ def inviteUser(self, params):
         email=params['email'],
         firstName=params['firstName'],
         lastName=params['lastName']
-        # TODO: suppress sending emails, in case email verification setting is enabled, as
-        # email verification will also be done when the temporary password is exchanged
     )
-
-    # TODO: disable user
 
     token = Token.createToken(
         newUser, days=validityPeriod,
-        scope=[TokenScope.TEMPORARY_USER_AUTH, TokenScope.EMAIL_VERIFICATION])
+        scope=[TokenScope.TEMPORARY_USER_AUTH])
 
     inviteUrl = '%s/#user/%s/rsvp/%s' % (
         mail_utils.getEmailUrlPrefix(), newUser['_id'], token['_id'])
