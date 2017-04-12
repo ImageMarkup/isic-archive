@@ -4,14 +4,21 @@ isic.views.InviteUserView = isic.View.extend({
             event.preventDefault();
             // this.$('#isic-user-invite-submit').prop('disabled', true);
 
+            var data = {
+                login: this.$('#isic-user-invite-new-login').val(),
+                email: this.$('#isic-user-invite-new-email').val(),
+                firstName: this.$('#isic-user-invite-new-firstname').val(),
+                lastName: this.$('#isic-user-invite-new-lastname').val()
+            };
+
+            var validityPeriod = this.$('#isic-user-invite-period').val();
+            if ($.trim(validityPeriod).length > 0) {
+                data.validityPeriod = validityPeriod;
+            }
+
             girder.restRequest({
                 path: 'user/invite',
-                data: {
-                    login: this.$('#isic-user-invite-new-login').val(),
-                    email: this.$('#isic-user-invite-new-email').val(),
-                    firstName: this.$('#isic-user-invite-new-firstname').val(),
-                    lastName: this.$('#isic-user-invite-new-lastname').val()
-                },
+                data: data,
                 type: 'POST',
                 error: null
             })
