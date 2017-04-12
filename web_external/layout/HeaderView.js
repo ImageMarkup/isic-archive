@@ -15,6 +15,7 @@ isic.views.LayoutHeaderView = isic.View.extend({
         this.render();
 
         girder.events.on('g:login', this.render, this);
+        girder.events.on('g:login-changed', this.render, this);
     },
 
     render: function () {
