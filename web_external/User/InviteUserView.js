@@ -2,7 +2,7 @@ isic.views.InviteUserView = isic.View.extend({
     events: {
         'submit #isic-user-invite-form': function (event) {
             event.preventDefault();
-            // this.$('#isic-user-invite-submit').prop('disabled', true);
+            this.$('#isic-user-invite-submit').prop('disabled', true);
 
             var data = {
                 login: this.$('#isic-user-invite-new-login').val(),
@@ -22,15 +22,20 @@ isic.views.InviteUserView = isic.View.extend({
                 type: 'POST',
                 error: null
             })
-                .done(function (resp) {
-                    console.log('success', resp);
-                })
-                .fail(function (resp) {
-                    isic.showAlertDialog({
-                        text: '<h4>Error sending invite</h4><br>' + _.escape(resp.responseJSON.message),
-                        escapedHtml: true
-                    });
+            .done(function (resp) {
+                resp.newUser.email = data.email;
+                girder.events.trigger('g:navigateTo', isic.views.InvitationConfirmationView, {
+                    newUser: resp.newUser,
+                    inviteUrl: resp.inviteUrl
                 });
+            })
+            .fail(_.bind(function (resp) {
+                isic.showAlertDialog({
+                    text: '<h4>Error sending invite</h4><br>' + _.escape(resp.responseJSON.message),
+                    escapedHtml: true
+                });
+                this.$('#isic-user-invite-submit').prop('disabled', false);
+            }, this));
         }
     },
 
@@ -42,6 +47,8 @@ isic.views.InviteUserView = isic.View.extend({
 
     render: function () {
         this.$el.html(isic.templates.inviteUserPage());
+
+        this.$('#isic-user-invite-new-login').focus();
 
         return this;
     }
