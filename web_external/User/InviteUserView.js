@@ -12,7 +12,7 @@ isic.views.InviteUserView = isic.View.extend({
             };
 
             var validityPeriod = this.$('#isic-user-invite-period').val();
-            if ($.trim(validityPeriod).length > 0) {
+            if (validityPeriod.trim().length > 0) {
                 data.validityPeriod = validityPeriod;
             }
 
