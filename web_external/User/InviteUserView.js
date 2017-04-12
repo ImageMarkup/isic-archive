@@ -22,13 +22,12 @@ isic.views.InviteUserView = isic.View.extend({
                 type: 'POST',
                 error: null
             })
-            .done(function (resp) {
-                resp.newUser.email = data.email;
-                girder.events.trigger('g:navigateTo', isic.views.InvitationConfirmationView, {
-                    newUser: resp.newUser,
-                    inviteUrl: resp.inviteUrl
-                });
-            })
+            .done(_.bind(function (resp) {
+                this.confirmation = _.clone(resp);
+                this.confirmation.newUser.email = data.email;
+                this.render();
+                isic.router.navigate('user/invite?confirmation=true', {replace: true});
+            }, this))
             .fail(_.bind(function (resp) {
                 isic.showAlertDialog({
                     text: '<h4>Error sending invite</h4><br>' + _.escape(resp.responseJSON.message),
@@ -36,19 +35,31 @@ isic.views.InviteUserView = isic.View.extend({
                 });
                 this.$('#isic-user-invite-submit').prop('disabled', false);
             }, this));
+        },
+        'click #isic-invitation-confirmation-invite-user': function (event) {
+            this.confirmation = null;
+            this.render();
+            isic.router.navigate('user/invite', {replace: true});
         }
     },
 
     /**
      */
     initialize: function (settings) {
+        this.confirmation = null;
         this.render();
     },
 
     render: function () {
-        this.$el.html(isic.templates.inviteUserPage());
-
-        this.$('#isic-user-invite-new-login').focus();
+        if (this.confirmation) {
+            this.$el.html(isic.templates.invitationConfirmationPage({
+                newUser: this.confirmation.newUser,
+                inviteUrl: this.confirmation.inviteUrl
+            }));
+        } else {
+            this.$el.html(isic.templates.inviteUserPage());
+            this.$('#isic-user-invite-new-login').focus();
+        }
 
         return this;
     }
