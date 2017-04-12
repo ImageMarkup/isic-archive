@@ -60,6 +60,11 @@ def onPostUser(event):
     attachUserPermissions(userResponse)
 
 
+def onGetPasswordTemporaryId(event):
+    userResponse = event.info['returnVal']['user']
+    attachUserPermissions(userResponse)
+
+
 def getUserEmail(user):
     User = ModelImporter.model('user', 'isic_archive')
     user = User.load(user['id'], force=True, exc=True)
@@ -205,6 +210,8 @@ def attachUserApi(user):
                 onGetUserAuthentication)
     events.bind('rest.get.user/me.after', 'onGetUserMe', onGetUserMe)
     events.bind('rest.post.user.after', 'onPostUser', onPostUser)
+    events.bind('rest.get.user/password/temporary/:id.after', 'onGetPasswordTemporaryId',
+                onGetPasswordTemporaryId)
     user.route('POST', ('requestCreateDatasetPermission',), requestCreateDatasetPermission)
     user.route('POST', ('acceptTerms',), acceptTerms)
     user.route('POST', ('invite',), inviteUser)
