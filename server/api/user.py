@@ -159,7 +159,7 @@ def inviteUser(self, params):
     self.requireParams(['login', 'email', 'firstName', 'lastName'], params)
     if 'validityPeriod' in params:
         try:
-            validityPeriod = params['validityPeriod']
+            validityPeriod = float(params['validityPeriod'])
         except ValueError:
             raise ValidationException('Validity period must be a number.', 'validityPeriod')
     else:
