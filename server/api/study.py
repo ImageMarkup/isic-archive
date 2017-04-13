@@ -134,7 +134,7 @@ class StudyResource(IsicResource):
                     key=lambda annotatorUser: annotatorUser['name']
                 ),
                 'images': list(
-                    Study.getImages(study, Image.summaryFields).sort('lowerName', SortDir.ASCENDING)
+                    Study.getImages(study, Image.summaryFields).sort('name', SortDir.ASCENDING)
                 )
             })
 

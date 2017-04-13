@@ -309,6 +309,12 @@ class Image(ItemModel):
         imageQuery = self._findQueryFilter(query)
         return super(Image, self).findOne(imageQuery, **kwargs)
 
+    def filteredSummary(self, image, accessorUser):
+        return {
+            field: image[field]
+            for field in self.summaryFields
+        }
+
     def load(self, id, level=AccessType.ADMIN, user=None, objectId=True, force=False, fields=None,
              exc=False):
         # Allow annotators assigned to an image to always have read access to that image.
