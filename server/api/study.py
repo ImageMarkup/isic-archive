@@ -273,6 +273,8 @@ class StudyResource(IsicResource):
         if len(set(params['imageIds'])) != len(params['imageIds']):
             raise ValidationException('Duplicate image IDs.', 'imageIds')
         images = [
+            # TODO: This should probably not allow images that the user only as access to via an
+            # annotation
             Image.load(imageId, user=creatorUser, level=AccessType.READ, exc=True)
             for imageId in params['imageIds']
         ]
@@ -361,6 +363,8 @@ class StudyResource(IsicResource):
         if len(set(params['imageIds'])) != len(params['imageIds']):
             raise ValidationException('Duplicate image IDs.', 'imageIds')
         images = [
+            # TODO: This should probably not allow images that the user only as access to via an
+            # annotation
             Image.load(imageId, user=creatorUser, level=AccessType.READ, exc=True)
             for imageId in params['imageIds']
         ]
