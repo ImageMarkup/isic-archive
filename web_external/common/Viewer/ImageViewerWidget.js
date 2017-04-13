@@ -19,7 +19,7 @@ isic.views.ImageViewerWidget = isic.View.extend({
 
         girder.restRequest({
             type: 'GET',
-            path: 'item/' + this.model.id + '/tiles'
+            path: 'image/' + this.model.id + '/tiles'
         }).done(_.bind(function (resp) {
             this.destroyViewer();
 
@@ -72,8 +72,7 @@ isic.views.ImageViewerWidget = isic.View.extend({
 
         _.extend(params.layer, {
             useCredentials: true,
-            url: girder.apiRoot + '/item/' + this.model.id +
-                '/tiles/zxy/{z}/{x}/{y}'
+            url: girder.apiRoot + '/image/' + this.model.id + '/tiles/{z}/{x}/{y}'
         });
         this.imageLayer = this.viewer.createLayer('osm', params.layer);
     },

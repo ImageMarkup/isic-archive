@@ -344,7 +344,7 @@ var olViewer = derm_app.factory('olViewer',
                 var self = this;
 
                 self.current_image_id = image_id;
-                var tiles_url = '/api/v1/item/' + image_id + '/tiles';
+                var tiles_url = '/api/v1/image/' + image_id + '/tiles';
 
                 $http.get(tiles_url).success(function (metadata) {
                     self.image_metadata = metadata;
@@ -372,7 +372,7 @@ var olViewer = derm_app.factory('olViewer',
                     self.image_layer = new ol.layer.Tile({
                         source: new ol.source.XYZ({
                             tileSize: [metadata.tileWidth, metadata.tileHeight],
-                            url: tiles_url + '/zxy/{z}/{x}/{y}',
+                            url: tiles_url + '/{z}/{x}/{y}',
                             crossOrigin: 'use-credentials',
                             maxZoom: metadata.levels,
                             wrapX: false,

@@ -125,6 +125,12 @@ class Dataset(FolderModel):
         datasetQuery = self._findQueryFilter(query)
         return super(Dataset, self).findOne(datasetQuery, **kwargs)
 
+    def filteredSummary(self, image, accessorUser):
+        return {
+            field: image[field]
+            for field in self.summaryFields
+        }
+
     def validate(self, doc, **kwargs):
         # TODO: implement
         # Validate name. This is redundant, because Folder also validates the

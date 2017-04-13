@@ -65,17 +65,12 @@ class DatasetResource(IsicResource):
         Dataset = self.model('dataset', 'isic_archive')
 
         limit, offset, sort = self.getPagingParameters(params, 'name')
+        user = self.getCurrentUser()
 
         return [
-            {
-                field: dataset[field]
-                for field in
-                Dataset.summaryFields
-            }
+            Dataset.filteredSummary(dataset, user)
             for dataset in
-            Dataset.list(
-                user=self.getCurrentUser(),
-                limit=limit, offset=offset, sort=sort)
+            Dataset.list(user=user, limit=limit, offset=offset, sort=sort)
         ]
 
     @describeRoute(

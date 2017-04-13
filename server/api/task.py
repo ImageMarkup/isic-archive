@@ -326,11 +326,7 @@ class TaskResource(IsicResource):
             raise RestException('No segmentations are needed for this dataset.')
         nextImage = results[0]
 
-        return {
-            field: nextImage[field]
-            for field in
-            Image.summaryFields
-        }
+        return Image.filteredSummary(nextImage, user)
 
     @describeRoute(
         Description('Redirect to a random segmentation task.')

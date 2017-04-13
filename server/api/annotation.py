@@ -106,25 +106,18 @@ class AnnotationResource(IsicResource):
         Study = self.model('study', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
-        # TODO: change this once AccessControlMixin.load is fixed upstream
-        from girder.models.model_base import Model
-        # output['image'] = Image.load(
-        #     output.pop('imageId'),
-        #     force=True, exc=True,
-        #     fields=Image.summaryFields)
+        currentUser = self.getCurrentUser()
 
         output = {
             '_id': annotation['_id'],
             '_modelType': 'annotation',
             'studyId': annotation['meta']['studyId'],
-            'image': Model.load(
-                Image,
-                annotation['meta']['imageId'],
-                exc=True,
-                fields=Image.summaryFields),
+            'image': Image.filteredSummary(
+                Image.load(annotation['meta']['imageId'], force=True, exc=True),
+                currentUser),
             'user': User.filteredSummary(
                 user=User.load(annotation['meta']['userId'], force=True, exc=True),
-                accessorUser=self.getCurrentUser()),
+                accessorUser=currentUser),
             'state': Annotation.getState(annotation)
         }
         if Annotation.getState(annotation) == Study.State.COMPLETE:

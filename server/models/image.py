@@ -26,6 +26,7 @@ import six
 from girder import events
 from girder.constants import AccessType, TokenScope
 from girder.models.item import Item as ItemModel
+from girder.models.model_base import AccessException
 from girder.plugins.worker import utils as workerUtils
 
 from . import segmentation_helpers
@@ -307,6 +308,34 @@ class Image(ItemModel):
     def findOne(self, query=None, **kwargs):
         imageQuery = self._findQueryFilter(query)
         return super(Image, self).findOne(imageQuery, **kwargs)
+
+    def filteredSummary(self, image, accessorUser):
+        return {
+            field: image[field]
+            for field in self.summaryFields
+        }
+
+    def load(self, id, level=AccessType.ADMIN, user=None, objectId=True, force=False, fields=None,
+             exc=False):
+        # Allow annotators assigned to an image to always have read access to that image.
+
+        # TODO: Ideally, this might set Image.resourceColl to Dataset, then add the special case
+        # checks in Dataset.hasAccess. However, since AccessControlMixin.resourceColl doesn't work
+        # properly (yet) with plugin types, and since we really only care about the cases where an
+        # image is loaded directly (rather than when all images or datasets are iterated over);
+        # adding the special case logic here works fine for now.
+
+        Study = self.model('study', 'isic_archive')
+
+        try:
+            return super(Image, self).load(
+                id, level=level, user=user, objectId=objectId, force=force, fields=fields, exc=exc)
+        except AccessException:
+            image = self.load(id, objectId=objectId, force=True, fields=fields, exc=exc)
+            if Study.childAnnotations(annotatorUser=user, image=image).count():
+                return image
+            else:
+                raise
 
     def getHistograms(self, filterQuery, user):
         Dataset = self.model('dataset', 'isic_archive')
