@@ -31,6 +31,7 @@ from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
 from girder.models.model_base import GirderException, ValidationException
 from girder.utility import mail_utils, ziputil
+from girder.plugins.large_image.models import TileGeneralException
 
 from .base import IsicResource
 from ..utility import querylang
@@ -46,6 +47,8 @@ class ImageResource(IsicResource):
         self.route('GET', ('histogram',), self.getHistogram)
         self.route('GET', (':id',), self.getImage)
         self.route('GET', (':id', 'thumbnail'), self.thumbnail)
+        self.route('GET', (':id', 'tiles'), self.getTileInfo)
+        self.route('GET', (':id', 'tiles', ':z', ':x', ':y'), self.getTile)
         self.route('GET', (':id', 'download'), self.download)
         self.route('GET', (':id', 'superpixels'), self.getSuperpixels)
 
@@ -252,6 +255,48 @@ class ImageResource(IsicResource):
         setRawResponse()
         setResponseHeader('Content-Type', thumbMime)
         return thumbData
+
+    @describeRoute(
+        Description('Return an image\'s multiresolution tile information.')
+        .param('id', 'The ID of the image.', paramType='path')
+        .errorResponse('ID was invalid.')
+    )
+    @access.cookie
+    @access.public
+    @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
+    def getTileInfo(self, image, params):
+        ImageItem = self.model('image_item', 'large_image')
+        # These endpoints should guarantee that large_image functionality works, so a
+        # TileGeneralException can be treated as an internal server error and not get caught
+        return ImageItem.getMetadata(image)
+
+    @describeRoute(
+        Description('Return a multiresolution tile for an image.')
+        .param('id', 'The ID of the image.', paramType='path')
+        .param('z', 'The layer number of the tile (0 is the most zoomed-out layer).',
+               paramType='path')
+        .param('x', 'The X coordinate of the tile (0 is the left side).', paramType='path')
+        .param('y', 'The Y coordinate of the tile (0 is the top).', paramType='path')
+        .errorResponse('ID was invalid.')
+    )
+    @access.cookie
+    @access.public
+    @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
+    def getTile(self, image, z, x, y, params):
+        ImageItem = self.model('image_item', 'large_image')
+        try:
+            x, y, z = int(x), int(y), int(z)
+        except ValueError:
+            raise RestException('x, y, and z must be integers')
+        if x < 0 or y < 0 or z < 0:
+            raise RestException('x, y, and z must be positive integers')
+        try:
+            tileData, tileMime = ImageItem.getTile(image, x, y, z)
+        except TileGeneralException as e:
+            raise RestException(e.message, code=404)
+        setResponseHeader('Content-Type', tileMime)
+        setRawResponse()
+        return tileData
 
     @describeRoute(
         Description('Download an image\'s high-quality original binary data.')

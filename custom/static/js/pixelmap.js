@@ -42,7 +42,7 @@ Pixelmap.prototype.loadImage = function (imageId) {
         return '';
     }
     $.ajax({
-        url: '/api/v1/item/' + imageId + '/tiles',
+        url: '/api/v1/image/' + imageId + '/tiles',
         headers: {'Girder-Token': getCookie('girderToken')}
     }).done(_.bind(function (resp) {
         var params = window.geo.util.pixelCoordinateParams(
@@ -78,7 +78,7 @@ Pixelmap.prototype.loadImage = function (imageId) {
 
         _.extend(params.layer, {
             useCredentials: true,
-            url: '/api/v1/item/' + imageId + '/tiles/zxy/{z}/{x}/{y}'
+            url: '/api/v1/image/' + imageId + '/tiles/{z}/{x}/{y}'
         });
         this.imageLayer = this.viewer.createLayer('osm', params.layer);
 
