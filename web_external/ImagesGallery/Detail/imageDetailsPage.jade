@@ -83,4 +83,13 @@
             td= key
             td= value
 
+      tr
+        td.isic-image-details-table-section-header(colspan=2) Tags
+      tr
+        td(colspan=2)
+          each value in image.get('notes').tags
+            //- Labels separated by a space
+            span.label.label-default.isic-image-details-tag= value
+            | &#x20;
+
   #isic-image-details-segmentations-display-view-container
