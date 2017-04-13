@@ -3,7 +3,8 @@ isic.FACET_SCHEMA = {
         FacetView: isic.views.ImagesFacetCategoricalDatasetView,
         FacetFilter: isic.collections.CategoricalFacetFilter,
         coerceToType: 'objectid',
-        title: 'Dataset'
+        title: 'Dataset',
+        collapsed: false
     },
     'meta.clinical.benign_malignant': {
         FacetView: isic.views.ImagesFacetHistogramView,
@@ -37,7 +38,8 @@ isic.FACET_SCHEMA = {
         FacetView: isic.views.ImagesFacetCategoricalView,
         FacetFilter: isic.collections.CategoricalFacetFilter,
         coerceToType: 'string',
-        title: 'Lesion Diagnosis'
+        title: 'Lesion Diagnosis',
+        collapsed: false
     },
     'meta.clinical.clin_size_long_diam_mm': {
         FacetView: isic.views.ImagesFacetHistogramView,
@@ -65,6 +67,7 @@ isic.FACET_SCHEMA = {
         FacetView: isic.views.ImagesFacetCategoricalTagsView,
         FacetFilter: isic.collections.TagsCategoricalFacetFilter,
         coerceToType: 'string',
-        title: 'Tags'
+        title: 'Tags',
+        collapsed: false
     }
 };

@@ -14,15 +14,29 @@ isic.views.ImagesFacetView = isic.View.extend({
         this.filter = settings.filter;
 
         this.facetId = this.completeFacet.id;
+        this.facetContentId = this.className + '-' + this.completeFacet.id.replace(/\./g, '-');
         this.title = this.completeFacet.schema().title;
     },
 
     events: {
-        'click .toggle': function (evt) {
-            this.$('.toggle').toggleClass('icon-down-open')
-                .toggleClass('icon-right-open');
+        'show.bs.collapse .isic-images-facet-content': '_toggleCollapseIndicator',
+        'hide.bs.collapse .isic-images-facet-content': '_toggleCollapseIndicator'
+    },
 
-            this.$('.isic-images-facet-content').toggle();
+    _toggleCollapseIndicator: function () {
+        this.$('.isic-images-facet-indicator')
+            .toggleClass('icon-down-open')
+            .toggleClass('icon-right-open');
+    },
+
+    /**
+     * Apply initial collapse state defined in schema.
+     * If 'collapse' is unspecified, default to true.
+     */
+    _applyInitialCollapseState: function () {
+        var schema = this.completeFacet.schema();
+        if (!_.has(schema, 'collapsed') || schema.collapsed) {
+            this.$('.isic-images-facet-content.collapse').collapse('hide');
         }
     },
 
@@ -104,9 +118,11 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
     render: function () {
         this.$el.html(isic.templates.imagesFacetHistogram({
             title: this.title,
-            staticImageRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/img'
+            staticImageRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/img',
+            facetId: this.facetContentId
         }));
         this._renderHistogram();
+        this._applyInitialCollapseState();
     },
 
     _renderHistogram: function () {
@@ -399,9 +415,11 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
         this.$el.html(isic.templates.imagesFacetCategorical({
             title: this.title,
             bins: this.completeFacet.get('bins'),
+            facetId: this.facetContentId,
             getBinTitle: _.bind(this._getBinTitle, this)
         }));
 
+        this._applyInitialCollapseState();
         this._rerenderCounts();
         this._rerenderSelections();
     },
