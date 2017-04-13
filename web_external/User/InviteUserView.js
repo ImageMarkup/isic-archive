@@ -23,7 +23,7 @@ isic.views.InviteUserView = isic.View.extend({
                 error: null
             })
             .done(_.bind(function (resp) {
-                this.confirmation = _.clone(resp);
+                this.confirmation = resp;
                 this.confirmation.newUser.email = data.email;
                 this.render();
                 isic.router.navigate('user/invite?confirmation=true', {replace: true});
