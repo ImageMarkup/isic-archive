@@ -139,5 +139,4 @@ class User(UserModel):
     def requireAdminStudy(self, user):
         if not self.canAdminStudy(user):
             raise AccessException(
-                'Only members of the Study Administrators group can create or '
-                'modify studies.')
+                'Only members of the Study Administrators group can perform this action.')

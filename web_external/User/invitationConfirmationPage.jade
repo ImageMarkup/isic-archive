@@ -1,0 +1,22 @@
+.isic-form-page.isic-invitation-confirmation-container
+  h2.isic-page-title Invitation sent
+
+  .isic-form-container
+    .isic-form-group
+      p.
+        An invitation with the following information has been sent:
+      table.table
+        tr
+          th Login name
+          td= newUser.login
+        tr
+          th Email address
+          td= newUser.email
+        tr
+          th Name
+          td #{newUser.firstName} #{newUser.lastName} (#{newUser.name})
+        tr
+          th Invitation URL
+          td.isic-invitation-confirmation-url= inviteUrl
+      .isic-invitation-confirmation-invite-user-container
+        button#isic-invitation-confirmation-invite-user.btn.btn-primary.btn-md Invite another user

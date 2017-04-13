@@ -20,10 +20,13 @@
 from girder import events
 from girder.api import access
 from girder.api.describe import Description, describeRoute
-from girder.api.rest import getCurrentUser, RestException
-from girder.constants import AccessType
+from girder.api.rest import RestException, boundHandler
+from girder.constants import AccessType, TokenScope
+from girder.models.model_base import ValidationException
 from girder.utility import mail_utils
 from girder.utility.model_importer import ModelImporter
+
+from .base import IsicResource
 
 
 def attachUserPermissions(userResponse):
@@ -57,19 +60,28 @@ def onPostUser(event):
     attachUserPermissions(userResponse)
 
 
+def onGetPasswordTemporaryId(event):
+    userResponse = event.info['returnVal']['user']
+    attachUserPermissions(userResponse)
+
+
 def getUserEmail(user):
     User = ModelImporter.model('user', 'isic_archive')
     user = User.load(user['id'], force=True, exc=True)
     return user['email']
 
 
+_sharedContext = IsicResource()
+
+
 @access.user
 @describeRoute(
     Description('Request permission to create datasets.'))
-def requestCreateDatasetPermission(params):
-    User = ModelImporter.model('user', 'isic_archive')
-    Group = ModelImporter.model('group')
-    currentUser = getCurrentUser()
+@boundHandler(_sharedContext)
+def requestCreateDatasetPermission(self, params):
+    User = self.model('user', 'isic_archive')
+    Group = self.model('group')
+    currentUser = self.getCurrentUser()
     resp = {}
     if User.canCreateDataset(currentUser):
         resp['message'] = 'Dataset Contributor access granted.',
@@ -117,10 +129,11 @@ def requestCreateDatasetPermission(params):
 @access.user
 @describeRoute(
     Description('Accept Terms of Use.'))
-def acceptTerms(params):
-    User = ModelImporter.model('user', 'isic_archive')
+@boundHandler(_sharedContext)
+def acceptTerms(self, params):
+    User = self.model('user', 'isic_archive')
 
-    currentUser = getCurrentUser()
+    currentUser = self.getCurrentUser()
     if not User.canAcceptTerms(currentUser):
         User.acceptTerms(currentUser)
         User.save(currentUser)
@@ -132,10 +145,73 @@ def acceptTerms(params):
     return resp
 
 
+@access.user
+@describeRoute(
+    Description('Pre-create a new user and issue them an invite.')
+    .param('login', 'The user\'s requested login.')
+    .param('email', 'The user\'s email address.')
+    .param('firstName', 'The user\'s first name.')
+    .param('lastName', 'The user\'s last name.')
+    .param('validityPeriod', 'The number of days that the invite will remain valid.',
+           required=False, dataType='float', default=30.0)
+)
+@boundHandler(_sharedContext)
+def inviteUser(self, params):
+    Token = self.model('token')
+    User = self.model('user', 'isic_archive')
+
+    params = self._decodeParams(params)
+    self.requireParams(['login', 'email', 'firstName', 'lastName'], params)
+    if 'validityPeriod' in params:
+        try:
+            validityPeriod = float(params['validityPeriod'])
+        except ValueError:
+            raise ValidationException('Validity period must be a number.', 'validityPeriod')
+    else:
+        validityPeriod = 30.0
+
+    currentUser = self.getCurrentUser()
+    User.requireAdminStudy(currentUser)
+
+    newUser = User.createUser(
+        login=params['login'],
+        password=None,
+        email=params['email'],
+        firstName=params['firstName'],
+        lastName=params['lastName']
+    )
+
+    token = Token.createToken(
+        newUser, days=validityPeriod,
+        scope=[TokenScope.TEMPORARY_USER_AUTH])
+
+    inviteUrl = '%s/#user/%s/rsvp/%s' % (
+        mail_utils.getEmailUrlPrefix(), newUser['_id'], token['_id'])
+
+    html = mail_utils.renderTemplate(
+        'inviteUser.mako',
+        {
+            'newUser': newUser,
+            'inviteUrl': inviteUrl,
+        })
+    mail_utils.sendEmail(
+        to=newUser['email'],
+        subject='ISIC Archive: Invitation',
+        text=html)
+
+    return {
+        'newUser': User.filteredSummary(newUser, currentUser),
+        'inviteUrl': inviteUrl
+    }
+
+
 def attachUserApi(user):
     events.bind('rest.get.user/authentication.after', 'onGetUserAuthentication',
                 onGetUserAuthentication)
     events.bind('rest.get.user/me.after', 'onGetUserMe', onGetUserMe)
     events.bind('rest.post.user.after', 'onPostUser', onPostUser)
+    events.bind('rest.get.user/password/temporary/:id.after', 'onGetPasswordTemporaryId',
+                onGetPasswordTemporaryId)
     user.route('POST', ('requestCreateDatasetPermission',), requestCreateDatasetPermission)
     user.route('POST', ('acceptTerms',), acceptTerms)
+    user.route('POST', ('invite',), inviteUser)

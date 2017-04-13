@@ -104,6 +104,11 @@ nav.navbar.navbar-default.navbar-fixed-top.isic-header-wrapper
               a(title='Annotation Study Results' href='#studyResults')
                 i.icon-eye
                 | Annotation Study Results
+            if currentUser && currentUser.canAdminStudy()
+              li(role='presentation')
+                a(title='Invite New User' href='#user/invite')
+                  i.icon-mail-alt
+                  | Invite New User
 
         if currentUser
           li(role='presentation')
