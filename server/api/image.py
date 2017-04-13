@@ -213,12 +213,9 @@ class ImageResource(IsicResource):
                 user),
             # TODO: verify that "updated" is set correctly
             'updated': image['updated'],
-            'dataset': Dataset.load(
-                image['folderId'],
-                force=True, exc=True,
-                # Work around a bug in upstream Girder
-                fields=Dataset.summaryFields + ['baseParentType', 'lowerName']
-            ),
+            'dataset': Dataset.filteredSummary(
+                Dataset.load(image['folderId'], force=True, exc=True),
+                user),
             'meta': {
                 'acquisition': image['meta']['acquisition'],
                 'clinical': image['meta']['clinical'],
