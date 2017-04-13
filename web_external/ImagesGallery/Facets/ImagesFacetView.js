@@ -460,6 +460,43 @@ isic.views.ImagesFacetCategoricalDatasetView = isic.views.ImagesFacetCategorical
         });
     },
 
+    render: function () {
+        isic.views.ImagesFacetCategoricalView.prototype.render.call(this);
+
+        var self = this;
+
+        this.$('.isic-images-facet-bin').popover({
+            trigger: 'hover',
+            title: function () {
+                // Context is the element that the popover is attached to
+                var datasetId = $(this).data('bin-label');
+                var datasetModel = self.datasetCollection.get(datasetId);
+                return datasetModel.name();
+            },
+            content: function () {
+                // Context is the element that the popover is attached to
+                var datasetId = $(this).data('bin-label');
+                var datasetModel = self.datasetCollection.get(datasetId);
+
+                // Use dataset description if available
+                if (datasetModel.has('description')) {
+                    return datasetModel.get('description');
+                }
+
+                // Fetch dataset details then update content
+                self.listenTo(datasetModel, 'g:fetched', function () {
+                    var description = datasetModel.get('description');
+                    this.$('.popover-content').html(_.escape(description));
+                });
+                datasetModel.fetch();
+                return 'Loading...';
+            },
+            delay: {
+                'show': 100
+            }
+        });
+    },
+
     _getBinTitle: function (completeBin) {
         var datasetModel = this.datasetCollection.get(completeBin.label);
         return datasetModel ? datasetModel.name() : completeBin.label;
