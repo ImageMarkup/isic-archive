@@ -14,7 +14,7 @@ isic.views.ImagesFacetView = isic.View.extend({
         this.filter = settings.filter;
 
         this.facetId = this.completeFacet.id;
-        this.facetContentId = this.className + '-' + this.completeFacet.id.replace(/\./g, '-');
+        this.facetContentId = this.className + '-' + this.facetId.replace(/\./g, '-');
         this.title = this.completeFacet.schema().title;
     },
 
