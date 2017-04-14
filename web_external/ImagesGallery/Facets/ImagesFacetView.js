@@ -119,7 +119,7 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
         this.$el.html(isic.templates.imagesFacetHistogram({
             title: this.title,
             staticImageRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/img',
-            facetId: this.facetContentId
+            facetContentId: this.facetContentId
         }));
         this._renderHistogram();
         this._applyInitialCollapseState();
@@ -415,7 +415,7 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
         this.$el.html(isic.templates.imagesFacetCategorical({
             title: this.title,
             bins: this.completeFacet.get('bins'),
-            facetId: this.facetContentId,
+            facetContentId: this.facetContentId,
             getBinTitle: _.bind(this._getBinTitle, this)
         }));
 
