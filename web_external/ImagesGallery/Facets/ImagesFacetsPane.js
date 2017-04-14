@@ -21,7 +21,7 @@ isic.views.ImagesFacetsPane = isic.View.extend({
         this.$el.empty();
         delete this.facetViews;
 
-        this.$el.append(isic.templates.imagesFacetsPaneHelp());
+        this.$el.html(isic.templates.imagesFacetsPane());
 
         this.facetViews = this.completeFacets.map(function (completeFacet) {
             var facetId = completeFacet.id;
