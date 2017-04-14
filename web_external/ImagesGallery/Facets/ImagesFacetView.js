@@ -111,6 +111,17 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
 
         this.scale = new isic.views.HistogramScale();
 
+        // Cached properties from initial render. The initial render is expected
+        // to have the full expected space available for the element so that
+        // valid values can be cached. Subsequent renders may occur while the
+        // element is hidden, which can lead to incorrect size computations when
+        // getComputedTextLength() is called.
+        this.renderCache = {
+            maxBoxHeight: 0,
+            // Shortened bin labels
+            shortenedLabels: []
+        };
+
         this.listenTo(this.filteredFacet, 'change', this._renderHistogram);
         this.listenTo(this.filter, 'change', this._renderHistogram);
     },
@@ -334,20 +345,28 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
             }, this))
             .attr('text-anchor', 'end')
             .attr('transform', 'translate(0 ' + transformHeight + ') rotate(' + transformAngle + ')')
-            .each(function (d) {
+            .each(function (d, i) {
                 // "this" refers to the DOM element
 
-                // Shorten any labels that are too long. Remove letters from the
-                // end of the string one by one, and replace with an HTML
-                // ellipsis, until the string is a manageable length.
+                // Compute shortened labels and cache for the next render
                 var me = d3.select(this);
-                var text = me.text();
-                var shortened = false;
-                while (this.getComputedTextLength() > 95) {
-                    shortened = true;
+                var shortenedLabel = self.renderCache.shortenedLabels[i];
+                if (!_.isUndefined(shortenedLabel)) {
+                    me.html(shortenedLabel);
+                } else {
+                    // Shorten any labels that are too long. Remove letters from the
+                    // end of the string one by one, and replace with an HTML
+                    // ellipsis, until the string is a manageable length.
+                    var text = me.text();
+                    var shortened = false;
+                    while (this.getComputedTextLength() > 95) {
+                        shortened = true;
 
-                    text = text.slice(0, -1);
-                    me.html(text + '&hellip;');
+                        text = text.slice(0, -1);
+                        me.html(text + '&hellip;');
+                    }
+
+                    self.renderCache.shortenedLabels[i] = me.text();
                 }
 
                 // Add a tooltip to shortened labels, containing the full title.
@@ -363,6 +382,11 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                 var boxHeight = Math.abs(this.getComputedTextLength() * Math.sin(transformAngleRadians));
                 maxBoxHeight = Math.max(boxHeight, maxBoxHeight);
             });
+
+        // Use maximum box height from current render or cache and update cached value
+        maxBoxHeight = Math.max(this.renderCache.maxBoxHeight, maxBoxHeight);
+        this.renderCache.maxBoxHeight = maxBoxHeight;
+
         height += maxBoxHeight + topPadding + offsetY;
 
         svg.attr({
