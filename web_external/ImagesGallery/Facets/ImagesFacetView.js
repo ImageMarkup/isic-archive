@@ -14,15 +14,28 @@ isic.views.ImagesFacetView = isic.View.extend({
         this.filter = settings.filter;
 
         this.facetId = this.completeFacet.id;
+        this.facetContentId = this.className + '-' + this.facetId.replace(/\./g, '-');
         this.title = this.completeFacet.schema().title;
     },
 
     events: {
-        'click .toggle': function (evt) {
-            this.$('.toggle').toggleClass('icon-down-open')
-                .toggleClass('icon-right-open');
+        'show.bs.collapse .isic-images-facet-content': '_toggleCollapseIndicator',
+        'hide.bs.collapse .isic-images-facet-content': '_toggleCollapseIndicator'
+    },
 
-            this.$('.isic-images-facet-content').toggle();
+    _toggleCollapseIndicator: function () {
+        this.$('.isic-images-facet-indicator')
+            .toggleClass('icon-down-open')
+            .toggleClass('icon-right-open');
+    },
+
+    /**
+     * Apply initial collapse state defined in schema.
+     */
+    _applyInitialCollapseState: function () {
+        var schema = this.completeFacet.schema();
+        if (schema.collapsed) {
+            this.$('.isic-images-facet-content.collapse').collapse('hide');
         }
     },
 
@@ -97,6 +110,17 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
 
         this.scale = new isic.views.HistogramScale();
 
+        // Cached properties from initial render. The initial render is expected
+        // to have the full expected space available for the element so that
+        // valid values can be cached. Subsequent renders may occur while the
+        // element is hidden, which can lead to incorrect size computations when
+        // getComputedTextLength() is called.
+        this.renderCache = {
+            maxBoxHeight: 0,
+            // Shortened bin labels
+            shortenedLabels: []
+        };
+
         this.listenTo(this.filteredFacet, 'change', this._renderHistogram);
         this.listenTo(this.filter, 'change', this._renderHistogram);
     },
@@ -104,9 +128,11 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
     render: function () {
         this.$el.html(isic.templates.imagesFacetHistogram({
             title: this.title,
-            staticImageRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/img'
+            staticImageRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/img',
+            facetContentId: this.facetContentId
         }));
         this._renderHistogram();
+        this._applyInitialCollapseState();
     },
 
     _renderHistogram: function () {
@@ -318,20 +344,28 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
             }, this))
             .attr('text-anchor', 'end')
             .attr('transform', 'translate(0 ' + transformHeight + ') rotate(' + transformAngle + ')')
-            .each(function (d) {
+            .each(function (d, i) {
                 // "this" refers to the DOM element
 
-                // Shorten any labels that are too long. Remove letters from the
-                // end of the string one by one, and replace with an HTML
-                // ellipsis, until the string is a manageable length.
+                // Compute shortened labels and cache for the next render
                 var me = d3.select(this);
-                var text = me.text();
-                var shortened = false;
-                while (this.getComputedTextLength() > 95) {
-                    shortened = true;
+                var shortenedLabel = self.renderCache.shortenedLabels[i];
+                if (!_.isUndefined(shortenedLabel)) {
+                    me.html(shortenedLabel);
+                } else {
+                    // Shorten any labels that are too long. Remove letters from the
+                    // end of the string one by one, and replace with an HTML
+                    // ellipsis, until the string is a manageable length.
+                    var text = me.text();
+                    var shortened = false;
+                    while (this.getComputedTextLength() > 95) {
+                        shortened = true;
 
-                    text = text.slice(0, -1);
-                    me.html(text + '&hellip;');
+                        text = text.slice(0, -1);
+                        me.html(text + '&hellip;');
+                    }
+
+                    self.renderCache.shortenedLabels[i] = me.text();
                 }
 
                 // Add a tooltip to shortened labels, containing the full title.
@@ -347,6 +381,11 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
                 var boxHeight = Math.abs(this.getComputedTextLength() * Math.sin(transformAngleRadians));
                 maxBoxHeight = Math.max(boxHeight, maxBoxHeight);
             });
+
+        // Use maximum box height from current render or cache and update cached value
+        maxBoxHeight = Math.max(this.renderCache.maxBoxHeight, maxBoxHeight);
+        this.renderCache.maxBoxHeight = maxBoxHeight;
+
         height += maxBoxHeight + topPadding + offsetY;
 
         svg.attr({
@@ -399,9 +438,11 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
         this.$el.html(isic.templates.imagesFacetCategorical({
             title: this.title,
             bins: this.completeFacet.get('bins'),
+            facetContentId: this.facetContentId,
             getBinTitle: _.bind(this._getBinTitle, this)
         }));
 
+        this._applyInitialCollapseState();
         this._rerenderCounts();
         this._rerenderSelections();
     },
