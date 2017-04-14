@@ -31,11 +31,10 @@ isic.views.ImagesFacetView = isic.View.extend({
 
     /**
      * Apply initial collapse state defined in schema.
-     * If 'collapse' is unspecified, default to true.
      */
     _applyInitialCollapseState: function () {
         var schema = this.completeFacet.schema();
-        if (!_.has(schema, 'collapsed') || schema.collapsed) {
+        if (schema.collapsed) {
             this.$('.isic-images-facet-content.collapse').collapse('hide');
         }
     },
