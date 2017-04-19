@@ -23,16 +23,6 @@ isic.views.ImagesView = isic.View.extend({
     render: function () {
         this.$el.html(isic.templates.imagesPage());
 
-        if (!$('#recolorImageFilters').length) {
-            isic.shims.recolorImageFilters([
-                '#00ABFF', // $rolloverImageFilter, for hover on check buttons
-                '#444499', // $selectedImageFilter, possibly not used
-                '#CCCCCC', // $disabledImageFilter, for buttons with ".disabled" (possibly not used)
-                '#FF7258', // $excludeImageFilter
-                '#4DE07F'  // $includeImageFilter
-            ]);
-        }
-
         // This will self-render when this.completeFacets updates
         this.facetsPane = new isic.views.ImagesFacetsPane({
             completeFacets: this.completeFacets,
