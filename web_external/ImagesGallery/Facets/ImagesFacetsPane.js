@@ -21,7 +21,15 @@ isic.views.ImagesFacetsPane = isic.View.extend({
         this.$el.empty();
         delete this.facetViews;
 
-        this.$el.html(isic.templates.imagesFacetsPane());
+        this.$el.html(isic.templates.imagesFacetsPane({
+            filterHexColors: [
+                '00ABFF', // $rolloverImageFilter, for hover on check buttons
+                '444499', // $selectedImageFilter, possibly not used
+                'CCCCCC', // $disabledImageFilter, for buttons with ".disabled" (possibly not used)
+                'FF7258', // $excludeImageFilter
+                '4DE07F'  // $includeImageFilter
+            ]
+        }));
 
         this.facetViews = this.completeFacets.map(function (completeFacet) {
             var facetId = completeFacet.id;
