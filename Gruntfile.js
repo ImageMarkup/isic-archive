@@ -17,6 +17,8 @@
 module.exports = function (grunt) {
     var path = require('path');
 
+    var pluginDir = path.resolve(
+        grunt.config.get('pluginDir'), 'isic_archive');
     var staticLibPath = path.resolve(
         grunt.config.get('staticDir'), 'built', 'plugins', 'isic_archive', 'libs');
 
@@ -43,7 +45,8 @@ module.exports = function (grunt) {
     });
     grunt.config.set('copy.isic_archive-legacy-libs-bower', {
         expand: true,
-        cwd: 'bower_components',
+        nonull: true,
+        cwd: path.join(pluginDir, 'bower_components'),
         src: [
             'jquery/dist/jquery.min.js',
             'underscore/underscore-min.js',
@@ -62,7 +65,8 @@ module.exports = function (grunt) {
     });
     grunt.config.set('copy.isic_archive-legacy-libs-npm', {
         expand: true,
-        cwd: 'node_modules',
+        nonull: true,
+        cwd: path.join(pluginDir, 'node_modules'),
         src: [
             'geojs/geo.min.js'
         ],
