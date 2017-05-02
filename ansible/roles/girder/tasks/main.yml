@@ -37,7 +37,7 @@
 
 - name: Install Python package
   pip:
-    requirements: "{{ girder_path }}"
+    name: "{{ girder_path }}"
     editable: true
     virtualenv: "{{ python_dist_path }}"
   sudo: yes if python_dist == "system" else no
