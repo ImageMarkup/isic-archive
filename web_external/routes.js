@@ -147,8 +147,8 @@ router.route('dataset/:id/metadata/apply', 'applyMetadata', function (id) {
         }, this)
         .once('g:error', function () {
             router.navigate('', {trigger: true});
-        }, this)
-        .fetch();
+        }, this);
+    dataset.fetch();
 });
 import RegisterMetadataView from './Datasets/RegisterMetadataView';
 router.route('dataset/:id/metadata/register', 'registerMetadata', function (id) {
@@ -161,8 +161,8 @@ router.route('dataset/:id/metadata/register', 'registerMetadata', function (id) 
         }, this)
         .once('g:error', function () {
             router.navigate('', {trigger: true});
-        }, this)
-        .fetch();
+        }, this);
+    dataset.fetch();
 });
 
 // Image
