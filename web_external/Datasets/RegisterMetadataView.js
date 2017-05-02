@@ -11,6 +11,8 @@ import router from '../router';
 
 import RegisterMetadataTemplate from './registerMetadata.jade';
 import './registerMetadata.styl';
+import './datasetInfoWidget.styl';
+import './uploadWidget.styl';
 
 var RegisterMetadataView = View.extend({
     events: {

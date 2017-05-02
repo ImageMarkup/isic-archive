@@ -5,6 +5,7 @@ import router from '../router';
 
 import DatasetPageTemplate from './datasetPage.jade';
 import './datasetPage.styl';
+import '../common/Listing/listingItemPage.styl';
 
 var DatasetView = View.extend({
     events: {

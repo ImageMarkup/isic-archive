@@ -9,6 +9,7 @@ import {showAlertDialog} from '../common/utilities';
 
 import FeaturesetPageTemplate from './featuresetPage.jade';
 import './featuresetPage.styl';
+import '../common/Listing/listingItemPage.styl';
 
 var FeaturesetView = View.extend({
     events: {

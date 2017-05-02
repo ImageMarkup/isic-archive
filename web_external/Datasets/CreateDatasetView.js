@@ -15,6 +15,7 @@ import router from '../router';
 
 import CreateDatasetTemplate from './createDataset.jade';
 import './createDataset.styl';
+import './uploadWidget.styl';
 
 var CreateDatasetView = View.extend({
     events: {

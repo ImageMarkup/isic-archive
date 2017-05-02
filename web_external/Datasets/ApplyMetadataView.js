@@ -17,6 +17,7 @@ import router from '../router';
 import ApplyMetadataSelectFilePageTemplate from './applyMetadataSelectFilePage.jade';
 import ApplyMetadataPageTemplate from './applyMetadataPage.jade';
 import './applyMetadataPage.styl';
+import './datasetInfoWidget.styl';
 import ApplyMetadataValidationPageTemplate from './applyMetadataValidationPage.jade';
 import './applyMetadataValidationPage.styl';
 

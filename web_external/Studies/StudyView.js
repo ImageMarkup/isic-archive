@@ -10,6 +10,7 @@ import {showAlertDialog} from '../common/utilities';
 
 import StudyPageTemplate from './studyPage.jade';
 import './studyPage.styl';
+import '../common/Listing/listingItemPage.styl';
 
 var StudyView = View.extend({
     events: {
