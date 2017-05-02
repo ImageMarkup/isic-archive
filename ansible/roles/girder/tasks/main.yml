@@ -8,6 +8,9 @@
     - git
 #    - build-essential
 #    - python-dev
+    - python-tk
+    - tcl8.6-dev
+    - tk8.6-dev
     - libffi-dev
     - libssl-dev
 
