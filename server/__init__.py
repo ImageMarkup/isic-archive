@@ -25,9 +25,8 @@ from bson import json_util
 
 from girder import events
 from girder.api.v1 import resource
-from girder.constants import PACKAGE_DIR
 from girder.utility import mail_utils
-from girder.utility.plugin_utilities import registerPluginWebroot
+from girder.utility.plugin_utilities import getPluginDir, registerPluginWebroot
 from girder.utility.server import staticFile
 from girder.utility.webroot import WebrootBase
 
@@ -42,8 +41,7 @@ class Webroot(WebrootBase):
     """
     def __init__(self, templatePath=None):
         if not templatePath:
-            templatePath = os.path.join(
-                PACKAGE_DIR, os.pardir, 'plugins', 'isic_archive', 'server', 'webroot.mako')
+            templatePath = os.path.join(getPluginDir(), 'isic_archive', 'server', 'webroot.mako')
         super(Webroot, self).__init__(templatePath)
 
         self.vars = {
