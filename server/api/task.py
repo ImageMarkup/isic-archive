@@ -18,6 +18,7 @@
 ###############################################################################
 
 import itertools
+import random
 
 import cherrypy
 
@@ -389,10 +390,19 @@ class TaskResource(IsicResource):
                 study=study,
                 annotatorUser=user,
                 state=Study.State.ACTIVE,
-                limit=1,
                 sort=[('lowerName', SortDir.ASCENDING)]
             )
-            nextAnnotation = next(iter(activeAnnotations))
+            # Skip to a deterministic random element
+            studyIdInt = int(str(study['_id']), 16)
+            activeAnnotationsCount = activeAnnotations.count()
+            # We can't persist the state of the PRNG across requests, so ensure that for a given
+            # study, each amount of remaining annotations returns a deterministic random offset
+            random.seed(studyIdInt + activeAnnotationsCount)
+            nextAnnotationIndex = random.randint(0, activeAnnotationsCount - 1)
+            # Reset the PRNG for other possible uses
+            random.seed()
+            nextAnnotation = activeAnnotations[nextAnnotationIndex]
+
         except StopIteration:
             raise RestException('No annotations are needed for this study.')
 
