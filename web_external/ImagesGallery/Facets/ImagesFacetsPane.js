@@ -30,8 +30,8 @@ var ImagesFacetsPane = View.extend({
 
         this.$el.html(ImagesFacetsPaneTemplate({
             filterHexColors: [
-                '00ABFF', // $rolloverImageFilter, for hover on check buttons
-                'CCCCCC' // $disabledImageFilter, for buttons with ".disabled" (possibly not used)
+                '00ABFF', // for hover on check buttons
+                'CCCCCC' // for buttons with ".disabled" (possibly not used)
             ]
         }));
 
