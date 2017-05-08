@@ -48,16 +48,16 @@ module.exports = function (grunt) {
         src: [
             'jquery/dist/jquery.min.js',
             'underscore/underscore-min.js',
-            'flatstrap/dist/js/bootstrap.min.js',
-            'flatstrap/dist/css/bootstrap.min.css',
-            'flatstrap/dist/fonts/glyphicons-halflings-regular.woff',
-            'flatstrap/dist/fonts/glyphicons-halflings-regular.ttf',
+            'bootstrap/dist/js/bootstrap.min.js',
+            'bootstrap/dist/css/bootstrap.min.css',
+            'bootstrap/dist/fonts/glyphicons-halflings-regular.woff',
+            'bootstrap/dist/fonts/glyphicons-halflings-regular.ttf',
             'font-awesome/css/font-awesome.min.css',
             'font-awesome/fonts/fontawesome-webfont.ttf',
             'font-awesome/fonts/fontawesome-webfont.woff',
             'angular/angular.min.js',
             'angular-resource/angular-resource.min.js',
-            'angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js'
+            'angular-bootstrap/ui-bootstrap-tpls.min.js'
         ],
         dest: staticLibPath
     });
