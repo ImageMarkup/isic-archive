@@ -50,9 +50,6 @@ Setup
   (and optionally the ``OAuth2 login`` plugin), then use the button at the top
   of the page to restart the server.
 
-* Visit ``http://127.0.0.1:8080/girder`` in your web browser, as this is where
-  the Girder administrative interface is exposed when the plugin is enabled.
-
 * Go to ``Admin console`` -> ``Plugins`` and open the configuration page (gear
   icon) for ``Remote worker``. Set the value
   ``mongodb://localhost:27017/girder_worker`` for both ``Celery broker URL``
@@ -62,6 +59,13 @@ Setup
   ``Create new Filesystem assetstore``, enter ``default`` as the
   ``Assetstore name``, ``/home/vagrant/assetstores/default`` as the
   ``Root directory``, then click ``Create``.
+
+* Go to ``Admin console`` -> ``Server configuration`` -> ``Routing``, and change the setting values:
+
+  * for ``core_girder`` to ``/girder``
+  * for ``isic_archive`` to ``/``
+
+  then click ``Save`` and visit ``http://127.0.0.1:8080/``.
 
 Usage
 ~~~~~
@@ -82,8 +86,7 @@ Usage
 
     # from within the "isic-archive" sub-directory
     vagrant ssh
-    cd ~/girder
-    npm install --production
+    ~/env/bin/girder-install web
 
 * To automatically rebuild the front-end code as changed client files are saved,
   start and leave running:
@@ -91,8 +94,7 @@ Usage
 
     # from within the "isic-archive" sub-directory
     vagrant ssh
-    cd ~/girder
-    ./node_modules/.bin/grunt watch
+    ~/env/bin/girder-install web --watch-plugin isic_archive --plugin-prefix app
 
 * To restart the Girder server after changed server files are saved:
   ::
