@@ -1,5 +1,6 @@
 import Backbone from 'backbone';
 import $ from 'jquery';
+import 'bootstrap/js/transition';
 // Import select2 for side effects, registering it as a jQuery plugin
 import 'select2';
 import 'select2/dist/css/select2.css';
