@@ -104,6 +104,10 @@ module.exports = function (grunt) {
                             ]
                         }
                     ]
+                },
+                output: {
+                    // TODO: Add "publicPath: `/static/built/plugins/${plugin}/`" to upstream Girder
+                    publicPath: '/static/built/plugins/isic_archive/'
                 }
             }
         }
