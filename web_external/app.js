@@ -1,5 +1,13 @@
 import Backbone from 'backbone';
 import $ from 'jquery';
+import 'bootstrap/dist/css/bootstrap.css';
+// TODO: Move these bootstrap JS plugins to where they're actually used
+import 'bootstrap/js/collapse';
+import 'bootstrap/js/dropdown';
+import 'bootstrap/js/modal';
+import 'bootstrap/js/popover';
+import 'bootstrap/js/tab';
+import 'bootstrap/js/tooltip';
 import 'bootstrap/js/transition';
 // Import select2 for side effects, registering it as a jQuery plugin
 import 'select2';
