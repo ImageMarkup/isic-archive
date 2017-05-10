@@ -22,6 +22,10 @@
     version: 1.10.2
     executable: "{{ python_dist_path }}/bin/conda"
 
+- name: Install Large Image
+  command: "{{ python_dist_path }}/bin/girder-install plugin -s {{ large_image_path }}"
+  notify: Build Girder
+
 - name: Install Python dependencies
   pip:
     requirements: "{{ large_image_path }}/requirements.txt"

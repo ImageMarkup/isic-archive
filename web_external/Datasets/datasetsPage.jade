@@ -1,7 +1,7 @@
 extends ../common/Listing/listingPage.jade
 
 block title
-  if currentUser
+  if canCreateDataset
     = title
     a.isic-dataset-add-button.btn.btn-default.btn-sm.isic-tooltip(
       title="Create new dataset")

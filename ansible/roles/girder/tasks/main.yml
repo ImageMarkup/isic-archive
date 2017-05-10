@@ -8,7 +8,11 @@
     - git
 #    - build-essential
 #    - python-dev
+    - python-tk
+    - tcl8.6-dev
+    - tk8.6-dev
     - libffi-dev
+    - libssl-dev
 
 - name: Download
   git:
@@ -22,12 +26,19 @@
 - name: Install Pillow
   conda:
     name: Pillow
-    version: 3.2.0
+    version: 3.4.2
     executable: "{{ python_dist_path }}/bin/conda"
 
 - name: Install Python dependencies
   pip:
     requirements: "{{ girder_path }}/requirements.txt"
+    virtualenv: "{{ python_dist_path }}"
+  sudo: yes if python_dist == "system" else no
+
+- name: Install Python package
+  pip:
+    name: "{{ girder_path }}"
+    editable: true
     virtualenv: "{{ python_dist_path }}"
   sudo: yes if python_dist == "system" else no
 

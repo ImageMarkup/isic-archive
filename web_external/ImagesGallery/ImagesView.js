@@ -1,14 +1,23 @@
-isic.views.ImagesView = isic.View.extend({
+import ImageDetailsPane from './Detail/ImageDetailsPane';
+import ImagesFacetsPane from './Facets/ImagesFacetsPane';
+import ImagesPagingPane from './Listing/ImagesPagingPane';
+import ImageWall from './Listing/ImageWall';
+import ImagesFacetCollection from './ImagesFacetCollection';
+import ImagesFilter from './ImagesFilter';
+import {SelectableImageCollection} from '../collections/ImageCollection';
+import View from '../view';
+
+import ImagesPageTemplate from './imagesPage.jade';
+import './imagesPage.styl';
+
+var ImagesView = View.extend({
     initialize: function (settings) {
-        this.completeFacets = new isic.collections.ImagesFacetCollection();
+        this.completeFacets = new ImagesFacetCollection();
         // TODO: when filteredFacets fetch returns no images, all models are gone / removed
-        this.filteredFacets = new isic.collections.ImagesFacetCollection();
-        this.filters = new isic.collections.ImagesFilter();
+        this.filteredFacets = new ImagesFacetCollection();
+        this.filters = new ImagesFilter();
 
-        // TODO: replace this with an inline grammar
-        this.filterLoaded = isic.SerializeFilterHelpers.loadFilterGrammar();
-
-        this.images = new isic.collections.SelectableImageCollection();
+        this.images = new SelectableImageCollection();
         this.images.pageLimit = 50;
 
         this.listenTo(this.completeFacets, 'sync', this.onCompleteFacetsFetched);
@@ -21,10 +30,10 @@ isic.views.ImagesView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.imagesPage());
+        this.$el.html(ImagesPageTemplate());
 
         // This will self-render when this.completeFacets updates
-        this.facetsPane = new isic.views.ImagesFacetsPane({
+        this.facetsPane = new ImagesFacetsPane({
             completeFacets: this.completeFacets,
             filteredFacets: this.filteredFacets,
             filters: this.filters,
@@ -33,14 +42,14 @@ isic.views.ImagesView = isic.View.extend({
         });
 
         // This will self-render when this.images updates
-        this.imageWall = new isic.views.ImageWall({
+        this.imageWall = new ImageWall({
             images: this.images,
             el: this.$('#isic-images-imageWall'),
             parentView: this
         });
 
         // This will self-render immediately
-        this.pagingPane = new isic.views.ImagesPagingPane({
+        this.pagingPane = new ImagesPagingPane({
             completeFacets: this.completeFacets,
             filteredFacets: this.filteredFacets,
             images: this.images,
@@ -50,9 +59,7 @@ isic.views.ImagesView = isic.View.extend({
         });
 
         // This kicks off the loading and rendering of all data
-        this.filterLoaded.done(_.bind(function () {
-            this.completeFacets.fetch();
-        }, this));
+        this.completeFacets.fetch();
 
         // TODO: Issue an "images.fetch()" here too, so it can run in parallel with
         // "completeFacets.fetch()"; unfortunately, ImageWall depends on completeFacets being
@@ -82,11 +89,12 @@ isic.views.ImagesView = isic.View.extend({
     onFiltersChanged: function () {
         // Cancel any previous still-pending requests, as this new set of requests will override
         // them anyway
-        _.each([this.filteredFacets, this.images], function (collection) {
-            if (collection._pendingRequest) {
-                collection._pendingRequest.abort();
-            }
-        });
+        if (this.filteredFacets._pendingRequest) {
+            this.filteredFacets._pendingRequest.abort();
+        }
+        if (this.images._pendingRequest) {
+            this.images._pendingRequest.abort();
+        }
 
         // TODO: If there's no "filterQuery", we could just always reset "filteredFacets" to
         // "completeFacets" here; then make "filters.initialize" trigger a "change" event
@@ -122,7 +130,7 @@ isic.views.ImagesView = isic.View.extend({
     onImageSelected: function () {
         this._clearDetailsPane();
         // This will self-render when the image details are available
-        this.imageDetailsPane = new isic.views.ImageDetailsPane({
+        this.imageDetailsPane = new ImageDetailsPane({
             image: this.images.selected,
             el: this.$('#isic-images-imageDetailsPane'),
             parentView: this
@@ -138,10 +146,4 @@ isic.views.ImagesView = isic.View.extend({
     }
 });
 
-isic.router.route('images', 'images', function () {
-    var nextView = isic.views.ImagesView;
-    if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
-        nextView = isic.views.TermsAcceptanceView;
-    }
-    girder.events.trigger('g:navigateTo', nextView);
-});
+export default ImagesView;

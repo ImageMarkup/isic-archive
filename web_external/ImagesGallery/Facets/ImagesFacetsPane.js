@@ -1,8 +1,15 @@
-isic.views.ImagesFacetsPane = isic.View.extend({
+import _ from 'underscore';
+
+import View from '../../view';
+
+import ImagesFacetsPaneTemplate from './imagesFacetsPane.jade';
+import './imagesFacetsPane.styl';
+
+var ImagesFacetsPane = View.extend({
     /**
-     * @param {isic.collections.ImagesFacetCollection} settings.completeFacets
-     * @param {isic.collections.ImagesFacetCollection} settings.filteredFacets
-     * @param {isic.collections.ImagesFilter} settings.filters
+     * @param {ImagesFacetCollection} settings.completeFacets
+     * @param {ImagesFacetCollection} settings.filteredFacets
+     * @param {ImagesFilter} settings.filters
      */
     initialize: function (settings) {
         this.completeFacets = settings.completeFacets;
@@ -21,13 +28,10 @@ isic.views.ImagesFacetsPane = isic.View.extend({
         this.$el.empty();
         delete this.facetViews;
 
-        this.$el.html(isic.templates.imagesFacetsPane({
+        this.$el.html(ImagesFacetsPaneTemplate({
             filterHexColors: [
-                '00ABFF', // $rolloverImageFilter, for hover on check buttons
-                '444499', // $selectedImageFilter, possibly not used
-                'CCCCCC', // $disabledImageFilter, for buttons with ".disabled" (possibly not used)
-                'FF7258', // $excludeImageFilter
-                '4DE07F'  // $includeImageFilter
+                '00ABFF', // for hover on check buttons
+                'CCCCCC' // for buttons with ".disabled" (possibly not used)
             ]
         }));
 
@@ -54,3 +58,5 @@ isic.views.ImagesFacetsPane = isic.View.extend({
         return this;
     }
 });
+
+export default ImagesFacetsPane;

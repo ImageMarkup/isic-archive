@@ -1,4 +1,20 @@
-isic.views.RegisterMetadataView = isic.View.extend({
+import _ from 'underscore';
+
+import FolderModel from 'girder/models/FolderModel';
+import ItemCollection from 'girder/collections/ItemCollection';
+import UploadWidget from 'girder/views/widgets/UploadWidget';
+import {getCurrentUser} from 'girder/auth';
+
+import View from '../view';
+import {showAlertDialog} from '../common/utilities';
+import router from '../router';
+
+import RegisterMetadataTemplate from './registerMetadata.jade';
+import './registerMetadata.styl';
+import './datasetInfoWidget.styl';
+import './uploadWidget.styl';
+
+var RegisterMetadataView = View.extend({
     events: {
         'click #isic-upload-reset': function (event) {
             this.resetUpload();
@@ -6,14 +22,14 @@ isic.views.RegisterMetadataView = isic.View.extend({
         'click #isic-register-metadata-submit': function (event) {
             // Require CSV file to be uploaded
             if (_.isEmpty(this.uploadedCsvFiles) || !this.uploadFolder) {
-                isic.showAlertDialog({ text: 'Please upload a CSV file.' });
+                showAlertDialog({ text: 'Please upload a CSV file.' });
                 return;
             }
 
             this.$('#isic-register-metadata-submit').prop('disabled', true);
 
             // Get file ID of uploaded file, then register metadata
-            var items = new girder.collections.ItemCollection();
+            var items = new ItemCollection();
             items.once('g:changed', function () {
                 if (!items.isEmpty()) {
                     var item = items.first();
@@ -31,7 +47,7 @@ isic.views.RegisterMetadataView = isic.View.extend({
     },
 
     /**
-     * @param {isic.models.DatasetModel} settings.dataset
+     * @param {DatasetModel} settings.dataset
      */
     initialize: function (settings) {
         this.dataset = settings.dataset;
@@ -40,18 +56,18 @@ isic.views.RegisterMetadataView = isic.View.extend({
         this.uploadFolder = null;
 
         this.listenTo(this.dataset, 'isic:registerMetadata:success', function () {
-            isic.showAlertDialog({
+            showAlertDialog({
                 text: '<h4>Metadata successfully registered.</h4><br>' +
                       'An administrator may contact you via email.',
                 escapedHtml: true,
                 callback: function () {
-                    isic.router.navigate('', {trigger: true});
+                    router.navigate('', {trigger: true});
                 }
             });
         });
 
         this.listenTo(this.dataset, 'isic:registerMetadata:error', function (resp) {
-            isic.showAlertDialog({
+            showAlertDialog({
                 text: '<h4>Error registering metadata</h4><br>' + _.escape(resp.responseJSON.message),
                 escapedHtml: true
             });
@@ -62,7 +78,7 @@ isic.views.RegisterMetadataView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.registerMetadata({
+        this.$el.html(RegisterMetadataTemplate({
             dataset: this.dataset
         }));
 
@@ -79,7 +95,7 @@ isic.views.RegisterMetadataView = isic.View.extend({
             this.stopListening(this.uploadWidget);
             this.uploadWidget.destroy();
         }
-        this.uploadWidget = new girder.views.UploadWidget({
+        this.uploadWidget = new UploadWidget({
             parentView: this,
             modal: false,
             noParent: true,
@@ -104,21 +120,18 @@ isic.views.RegisterMetadataView = isic.View.extend({
             this.startUpload(this.uploadFolder);
         } else {
             // Create new upload folder with unique name
-            this.uploadFolder = new girder.models.FolderModel({
+            this.uploadFolder = new FolderModel({
                 name: 'isic_metadata_' + Date.now(),
                 parentType: 'user',
-                parentId: girder.currentUser.id,
+                parentId: getCurrentUser().id,
                 description: 'ISIC metadata upload'
             });
 
             this.uploadFolder.once('g:saved', function () {
                 this.startUpload(this.uploadFolder);
             }, this).once('g:error', function () {
-                girder.events.trigger('g:alert', {
-                    icon: 'cancel',
-                    text: 'Could not create upload folder.',
-                    type: 'error',
-                    timeout: 4000
+                showAlertDialog({
+                    text: 'Could not create upload folder.'
                 });
             }, this).save();
         }
@@ -167,30 +180,4 @@ isic.views.RegisterMetadataView = isic.View.extend({
     }
 });
 
-isic.router.route('dataset/:id/metadata/register', 'registerMetadata', function (id) {
-    if (girder.currentUser) {
-        // Registered users must:
-        //  (1) Accept the TOS
-        //  (2) Request and receive create dataset access
-        // before being able to see the register metadata view
-        if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
-            girder.events.trigger('g:navigateTo', isic.views.TermsAcceptanceView);
-        } else if (!girder.currentUser.canCreateDataset()) {
-            girder.events.trigger('g:navigateTo', isic.views.CreateDatasetRequestView);
-        } else {
-            // Fetch the dataset, then navigate to the view
-            var dataset = new isic.models.DatasetModel({
-                _id: id
-            }).once('g:fetched', function () {
-                girder.events.trigger('g:navigateTo', isic.views.RegisterMetadataView, {
-                    dataset: dataset
-                });
-            }, this).once('g:error', function () {
-                isic.router.navigate('', {trigger: true});
-            }, this).fetch();
-        }
-    } else {
-        // Anonymous users should not be here, so route to home page
-        isic.router.navigate('', {trigger: true});
-    }
-});
+export default RegisterMetadataView;

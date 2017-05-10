@@ -9,13 +9,6 @@
 #    force: yes
 #  notify: Build Girder
 
-- name: Symlink
-  file:
-    src: "{{ isic_archive_path }}"
-    dest: "{{ girder_path }}/plugins/isic_archive"
-    state: link
-  notify: Build Girder
-
 - name: Install package dependencies
   apt:
     name: "{{ item }}"
@@ -34,6 +27,10 @@
     - { name: scipy, version: 0.16.0 }
     - { name: scikit-image, version: 0.12.3 }
     - { name: opencv, version: 2.4.10 }
+
+- name: Install ISIC Archive
+  command: "{{ python_dist_path }}/bin/girder-install plugin -s {{ isic_archive_path }}"
+  notify: Build Girder
 
 - name: Install Python dependencies
   pip:

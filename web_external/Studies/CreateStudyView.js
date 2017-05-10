@@ -1,4 +1,21 @@
-isic.views.CreateStudyView = isic.View.extend({
+import $ from 'jquery';
+import _ from 'underscore';
+
+import SearchFieldWidget from 'girder/views/widgets/SearchFieldWidget';
+import {restRequest} from 'girder/rest';
+
+import FeaturesetModel from '../models/FeaturesetModel';
+import View from '../view';
+import {showAlertDialog} from '../common/utilities';
+import router from '../router';
+
+import CreateStudyPageTemplate from './createStudyPage.jade';
+import './createStudyPage.styl';
+import FeaturesetListEntryTemplate from './featuresetListEntry.jade';
+import UserListEntryTemplate from './userListEntry.jade';
+import '../common/Listing/listingPage.styl';
+
+var CreateStudyView = View.extend({
     events: {
         'submit #isic-study-form': function (event) {
             event.preventDefault();
@@ -32,20 +49,20 @@ isic.views.CreateStudyView = isic.View.extend({
         this.userIds = [];
         this.featuresetId = null;
 
-        this.userSearchWidget = new girder.views.SearchFieldWidget({
+        this.userSearchWidget = new SearchFieldWidget({
             placeholder: 'Search users...',
             modes: ['prefix', 'text'],
             types: ['user'],
             parentView: this
         }).on('g:resultClicked', this._addUser, this);
 
-        this.featuresetSearchWidget = new girder.views.SearchFieldWidget({
+        this.featuresetSearchWidget = new SearchFieldWidget({
             placeholder: 'Search featuresets...',
             modes: ['prefix', 'text'],
             types: ['featureset.isic_archive'],
             getInfoCallback: function (type, obj) {
                 if (type === 'featureset.isic_archive') {
-                    var featureset = new isic.models.FeaturesetModel(obj);
+                    var featureset = new FeaturesetModel(obj);
                     return {
                         text: featureset.name(),
                         icon: 'th'
@@ -59,8 +76,7 @@ isic.views.CreateStudyView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.createStudyPage({
-        }));
+        this.$el.html(CreateStudyPageTemplate());
 
         this._makeTooltips();
 
@@ -94,7 +110,7 @@ isic.views.CreateStudyView = isic.View.extend({
         this.userIds.push(user.id);
 
         var userList = this.$('#isic-study-user-list');
-        userList.append(isic.templates.userListEntry({
+        userList.append(UserListEntryTemplate({
             user: user
         }));
 
@@ -120,7 +136,7 @@ isic.views.CreateStudyView = isic.View.extend({
 
         // Add new entry
         // TODO show or link to featureset details
-        this.$('#isic-study-featureset-list').append(isic.templates.featuresetListEntry({
+        this.$('#isic-study-featureset-list').append(FeaturesetListEntryTemplate({
             featureset: featureset
         }));
 
@@ -140,7 +156,7 @@ isic.views.CreateStudyView = isic.View.extend({
         var imageIds = JSON.stringify([]);
 
         // TODO: move this into the StudyModel
-        girder.restRequest({
+        restRequest({
             type: 'POST',
             path: 'study',
             data: {
@@ -151,14 +167,14 @@ isic.views.CreateStudyView = isic.View.extend({
             },
             error: null
         }).done(_.bind(function () {
-            isic.showAlertDialog({
+            showAlertDialog({
                 text: '<h4>Study <b>"' + _.escape(name) + '"</b> created</h4>',
                 escapedHtml: true
             });
             // TODO route directly to study
-            isic.router.navigate('studies', {trigger: true});
+            router.navigate('studies', {trigger: true});
         }, this)).fail(_.bind(function (resp) {
-            isic.showAlertDialog({
+            showAlertDialog({
                 text: '<h4>Error creating study</h4><br>' + _.escape(resp.responseJSON.message),
                 escapedHtml: true
             });
@@ -167,11 +183,4 @@ isic.views.CreateStudyView = isic.View.extend({
     }
 });
 
-isic.router.route('createStudy', 'createStudy', function () {
-    // Route to index if user isn't a study administrator
-    if (girder.currentUser && girder.currentUser.canAdminStudy()) {
-        girder.events.trigger('g:navigateTo', isic.views.CreateStudyView);
-    } else {
-        isic.router.navigate('', {trigger: true});
-    }
-});
+export default CreateStudyView;

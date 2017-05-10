@@ -1,13 +1,24 @@
-isic.collections.SegmentationCollection = isic.Collection.extend({
+import Backbone from 'backbone';
+import 'backbone.select';
+
+import {SORT_DESC} from 'girder/constants';
+
+import Collection from './Collection';
+import SegmentationModel from '../models/SegmentationModel';
+
+var SegmentationCollection = Collection.extend({
     resourceName: 'segmentation',
-    model: isic.models.SegmentationModel,
+    model: SegmentationModel,
     sortField: 'created',
-    sortDir: girder.SORT_DESC
+    sortDir: SORT_DESC
 });
 
-isic.collections.SelectableSegmentationCollection = isic.collections.SegmentationCollection.extend({
+var SelectableSegmentationCollection = SegmentationCollection.extend({
     initialize: function (models) {
         Backbone.Select.One.applyTo(this, models);
-        isic.collections.SegmentationCollection.prototype.initialize.apply(this, arguments);
+        SegmentationCollection.prototype.initialize.apply(this, arguments);
     }
 });
+
+export default SegmentationCollection;
+export {SelectableSegmentationCollection};

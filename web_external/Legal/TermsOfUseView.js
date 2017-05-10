@@ -1,15 +1,18 @@
-isic.views.TermsOfUseView = isic.View.extend({
+import View from '../view';
+
+import TermsOfUsePageTemplate from './termsOfUsePage.jade';
+import './legal.styl';
+
+var TermsOfUseView = View.extend({
     initialize: function (settings) {
         this.render();
     },
 
     render: function () {
-        this.$el.html(isic.templates.termsOfUsePage());
+        this.$el.html(TermsOfUsePageTemplate());
 
         return this;
     }
 });
 
-isic.router.route('termsOfUse', 'termsOfUse', function () {
-    girder.events.trigger('g:navigateTo', isic.views.TermsOfUseView);
-});
+export default TermsOfUseView;

@@ -55,7 +55,7 @@
                               td=valueOption.name
           else
             | None
-  if currentUser && currentUser.canAdminStudy()
+  if featureset.canAdmin()
     table.table.table-condensed.isic-listing-item-table
       tr
         td.isic-listing-item-table-section-header Actions

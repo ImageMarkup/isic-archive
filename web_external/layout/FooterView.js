@@ -1,11 +1,18 @@
-isic.views.LayoutFooterView = isic.View.extend({
+import $ from 'jquery';
+
+import View from '../view';
+
+import LayoutFooterTemplate from './layoutFooter.jade';
+import './layoutFooter.styl';
+
+var LayoutFooterView = View.extend({
     initialize: function (settings) {
         this.render();
     },
 
     render: function () {
-        this.$el.html(isic.templates.layoutFooter({
-            apiRoot: girder.apiRoot
+        this.$el.html(LayoutFooterTemplate({
+            apiRoot: this.apiRoot
         }));
 
         this.$('.isic-footer-disclaimer').popover({
@@ -19,3 +26,5 @@ isic.views.LayoutFooterView = isic.View.extend({
         return this;
     }
 });
+
+export default LayoutFooterView;

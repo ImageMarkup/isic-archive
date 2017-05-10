@@ -66,20 +66,20 @@
           |  dermoscopic images, as these are most diagnostic for melanoma.
           |  An example of lesion segmentation is shown here:
         img(
-          src='#{staticImageRoot}/segmentation.png'
+          src=require('./segmentation.png')
           alt='ISIC Archive segmentation interface'
           width='555')
         p
           | An example of lesion annotation is shown below:
         img(
-          src='#{staticImageRoot}/annotation.png'
+          src=require('./annotation.png')
           alt='ISIC Archive annotation interface'
           width='555')
       .col-lg-6
         h3 Gallery of Current Images
         a(href='#images')
           img(
-            src='#{staticImageRoot}/lesiondatasets.png'
+            src=require('./lesiondatasets.png')
             alt='ISIC Archive lesion dataset thumbnails'
             width='555'
             title='Image Gallery')

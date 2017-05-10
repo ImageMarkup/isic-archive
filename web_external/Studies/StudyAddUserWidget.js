@@ -1,11 +1,25 @@
-isic.views.StudyAddUserWidget = isic.View.extend({
+import $ from 'jquery';
+import _ from 'underscore';
+
+import SearchFieldWidget from 'girder/views/widgets/SearchFieldWidget';
+import {handleClose, handleOpen} from 'girder/dialog';
+
+import StudyModel from '../models/StudyModel';
+import View from '../view';
+
+import StudyAddUserWidgetTemplate from './studyAddUserWidget.jade';
+import './studyAddUserWidget.styl';
+import UserInfoTemplate from './userInfo.jade';
+import './userInfo.styl';
+
+var StudyAddUserWidget = View.extend({
     events: {
         'click .isic-add-user-ok-button': function (event) {
             if (!this.user) {
                 return;
             }
 
-            var study = new isic.models.StudyModel({
+            var study = new StudyModel({
                 _id: this.study.id
             }).once('g:addedUser', function () {
                 this.trigger('g:saved');
@@ -18,13 +32,13 @@ isic.views.StudyAddUserWidget = isic.View.extend({
     },
 
     /**
-     * @param {isic.models.StudyModel} settings.study
+     * @param {StudyModel} settings.study
      */
     initialize: function (settings) {
         this.study = settings.study;
         this.user = null;
 
-        this.searchWidget = new girder.views.SearchFieldWidget({
+        this.searchWidget = new SearchFieldWidget({
             placeholder: 'Start typing a name...',
             modes: ['prefix', 'text'],
             types: ['user'],
@@ -33,11 +47,11 @@ isic.views.StudyAddUserWidget = isic.View.extend({
     },
 
     render: function () {
-        var modal = this.$el.html(isic.templates.studyAddUserWidget({
+        var modal = this.$el.html(StudyAddUserWidgetTemplate({
             study: this.study
         })).girderModal(this).on('shown.bs.modal', function () {
         }).on('hidden.bs.modal', function () {
-            girder.dialogs.handleClose('addUser');
+            handleClose('addUser');
         }).on('ready.girder.modal', function () {
         });
 
@@ -50,7 +64,7 @@ isic.views.StudyAddUserWidget = isic.View.extend({
         // Disable OK button
         this.$('.isic-add-user-ok-button').prop('disabled', true);
 
-        girder.dialogs.handleOpen('addUser');
+        handleOpen('addUser');
 
         return this;
     },
@@ -67,7 +81,7 @@ isic.views.StudyAddUserWidget = isic.View.extend({
 
         this.user = user;
 
-        this.$('.isic-user-container').html(isic.templates.userInfo({
+        this.$('.isic-user-container').html(UserInfoTemplate({
             user: this.user
         }));
 
@@ -75,3 +89,5 @@ isic.views.StudyAddUserWidget = isic.View.extend({
         this.$('.isic-add-user-ok-button').prop('disabled', false);
     }
 });
+
+export default StudyAddUserWidget;

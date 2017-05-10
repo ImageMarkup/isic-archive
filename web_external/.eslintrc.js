@@ -39,8 +39,5 @@ for (var i = 0, len = possibleConfigPaths.length; i < len; ++i) {
 }
 
 module.exports = {
-    'extends': configPath,
-    'globals': {
-        'isic': true
-    }
+    'extends': configPath
 };

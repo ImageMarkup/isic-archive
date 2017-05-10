@@ -1,4 +1,11 @@
-isic.views.ImagesPagingPane = Backbone.View.extend({
+import _ from 'underscore';
+
+import View from '../../view';
+
+import ImagesPagingPaneTemplate from './imagesPagingPane.jade';
+import './imagesPagingPane.styl';
+
+var ImagesPagingPane = View.extend({
     events: {
         'click #isic-images-paging-seek-first': function () {
             // TODO: cancel any pending fetches before fetching an additional next page; this is
@@ -16,7 +23,7 @@ isic.views.ImagesPagingPane = Backbone.View.extend({
             this.images.fetchLastPage(this.filteredFacets.total);
         },
         'click #isic-images-paging-downloadZip': function () {
-            var downloadUrl = girder.apiRoot + '/image/download';
+            var downloadUrl = this.apiRoot + '/image/download';
             var filterQuery = JSON.stringify(this.filters.asAst());
             if (filterQuery) {
                 downloadUrl += '?filter=' + filterQuery;
@@ -24,11 +31,12 @@ isic.views.ImagesPagingPane = Backbone.View.extend({
             window.location.assign(downloadUrl);
         }
     },
+
     /**
-     * @param {isic.collections.ImagesFacetCollection} settings.completeFacets
-     * @param {isic.collections.ImagesFacetCollection} settings.filteredFacets
-     * @param {isic.collections.SelectableImageCollection} settings.images
-     * @param {isic.collections.ImagesFilter} settings.filters
+     * @param {ImagesFacetCollection} settings.completeFacets
+     * @param {ImagesFacetCollection} settings.filteredFacets
+     * @param {SelectableImageCollection} settings.images
+     * @param {ImagesFilter} settings.filters
      */
     initialize: function (settings) {
         this.completeFacets = settings.completeFacets;
@@ -48,10 +56,7 @@ isic.views.ImagesPagingPane = Backbone.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.imagesPagingPane({
-            // TODO: this path should be available in a global
-            staticImageRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/img/'
-        }));
+        this.$el.html(ImagesPagingPaneTemplate());
 
         // Tooltips for buttons inside a "btn-group" must be attached to another element, or else
         // the "btn-group" size will be disrupted when they appear
@@ -125,3 +130,5 @@ isic.views.ImagesPagingPane = Backbone.View.extend({
         this.$('[data-toggle="tooltip"][disabled]').tooltip('hide');
     }
 });
+
+export default ImagesPagingPane;

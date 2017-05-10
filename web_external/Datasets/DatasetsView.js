@@ -1,4 +1,17 @@
-isic.views.DatasetsView = isic.View.extend({
+import $ from 'jquery';
+
+import LoadingAnimation from 'girder/views/widgets/LoadingAnimation';
+import PaginateWidget from 'girder/views/widgets/PaginateWidget';
+
+import DatasetView from './DatasetView';
+import DatasetCollection from '../collections/DatasetCollection';
+import View from '../view';
+import router from '../router';
+
+import DatasetsPageTemplate from './datasetsPage.jade';
+import './datasetsPage.styl';
+
+var DatasetsView = View.extend({
     // TODO refactor
     events: {
         'show.bs.collapse .isic-listing-panel-collapse': function (event) {
@@ -13,21 +26,21 @@ isic.views.DatasetsView = isic.View.extend({
             $(event.target).parent().find('.icon-down-open').removeClass('icon-down-open').addClass('icon-right-open');
         },
         'click .isic-dataset-add-button': function () {
-            isic.router.navigate('dataset/create', {trigger: true});
+            router.navigate('dataset/create', {trigger: true});
         }
     },
 
     initialize: function (settings) {
         this.loaded = false;
 
-        this.datasets = new isic.collections.DatasetCollection();
+        this.datasets = new DatasetCollection();
         this.listenTo(this.datasets, 'g:changed', function () {
             this.loaded = true;
             this.render();
         });
         this.datasets.fetch();
 
-        this.paginateWidget = new girder.views.PaginateWidget({
+        this.paginateWidget = new PaginateWidget({
             collection: this.datasets,
             parentView: this
         });
@@ -36,18 +49,18 @@ isic.views.DatasetsView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.datasetsPage({
+        this.$el.html(DatasetsPageTemplate({
             title: 'Datasets',
             models: this.datasets.models,
             loaded: this.loaded,
-            currentUser: girder.currentUser
+            canCreateDataset: DatasetCollection.canCreate()
         }));
 
         this.paginateWidget.setElement(this.$('.isic-listing-paginate-container')).render();
 
         // Display loading indicator
         if (!this.loaded) {
-            this.loadingAnimation = new girder.views.LoadingAnimation({
+            this.loadingAnimation = new LoadingAnimation({
                 el: this.$('.isic-listing-loading-animation-container'),
                 parentView: this
             }).render();
@@ -65,7 +78,7 @@ isic.views.DatasetsView = isic.View.extend({
         if (container.children().length === 0) {
             var dataset = this.datasets.at(index);
 
-            new isic.views.DatasetView({ // eslint-disable-line no-new
+            new DatasetView({ // eslint-disable-line no-new
                 el: container,
                 model: dataset,
                 parentView: this
@@ -74,10 +87,4 @@ isic.views.DatasetsView = isic.View.extend({
     }
 });
 
-isic.router.route('dataset', 'dataset', function () {
-    var nextView = isic.views.DatasetsView;
-    if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
-        nextView = isic.views.TermsAcceptanceView;
-    }
-    girder.events.trigger('g:navigateTo', nextView);
-});
+export default DatasetsView;

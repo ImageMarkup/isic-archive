@@ -1,28 +1,63 @@
-//
-// Annotation study results view
-//
+import Backbone from 'backbone';
+import $ from 'jquery';
+import _ from 'underscore';
+
+import AnnotationCollection from '../collections/AnnotationCollection';
+import ImageCollection from '../collections/ImageCollection';
+import StudyCollection from '../collections/StudyCollection';
+import UserCollection from '../collections/UserCollection';
+import AnnotationModel from '../models/AnnotationModel';
+import FeaturesetModel from '../models/FeaturesetModel';
+import ImageModel from '../models/ImageModel';
+import StudyModel from '../models/StudyModel';
+import UserModel from '../models/UserModel';
+import ImageViewerWidget from '../common/Viewer/ImageViewerWidget';
+import View from '../view';
+
+import StudyResultsImageHeaderPageTemplate from './studyResultsImageHeaderPage.jade';
+import './studyResultsImageHeaderPage.styl';
+import StudyResultsSelectStudyPageTemplate from './studyResultsSelectStudyPage.jade';
+import './studyResultsSelectStudyPage.styl';
+import StudyResultsStudyDetailPageTemplate from './studyResultsStudyDetailPage.jade';
+import './studyResultsStudyDetailPage.styl';
+import StudyResultsSelectImagePageTemplate from './studyResultsSelectImagePage.jade';
+import './studyResultsSelectImagePage.styl';
+import StudyResultsSelectUsersPageTemplate from './studyResultsSelectUsersPage.jade';
+import './studyResultsSelectUsersPage.styl';
+import StudyResultsSelectLocalFeaturesPageTemplate from './studyResultsSelectLocalFeaturesPage.jade';
+import './studyResultsSelectLocalFeaturesPage.styl';
+import StudyResultsGlobalFeaturesTableTemplate from './studyResultsGlobalFeaturesTable.jade';
+import StudyResultsGlobalFeaturesPageTemplate from './studyResultsGlobalFeaturesPage.jade';
+import './studyResultsGlobalFeaturesPage.styl';
+import StudyResultsFeatureImagePageTemplate from './studyResultsFeatureImagePage.jade';
+import StudyResultsLocalFeaturesPageTemplate from './studyResultsLocalFeaturesPage.jade';
+import './studyResultsLocalFeaturesPage.styl';
+import StudyResultsImagePageTemplate from './studyResultsImagePage.jade';
+import './studyResultsImagePage.styl';
+import StudyResultsPageTemplate from './studyResultsPage.jade';
+import './studyResultsPage.styl';
 
 // Model for a feature
-isic.models.FeatureModel = Backbone.Model.extend({
+var FeatureModel = Backbone.Model.extend({
     name: function () {
         return this.get('name');
     }
 });
 
 // Model for a feature image
-isic.models.FeatureImageModel = Backbone.Model.extend({
+var FeatureImageModel = Backbone.Model.extend({
 });
 
 // Model for a global feature result
-isic.models.GlobalFeatureResultModel = Backbone.Model.extend({
+var GlobalFeatureResultModel = Backbone.Model.extend({
     name: function () {
         return this.get('name');
     }
 });
 
 // Collection of feature models
-isic.collections.FeatureCollection = Backbone.Collection.extend({
-    model: isic.models.FeatureModel,
+var FeatureCollection = Backbone.Collection.extend({
+    model: FeatureModel,
 
     // Update collection from an array of features of the form:
     // { 'id': id, 'name': [name1, name2, ...] }
@@ -30,7 +65,7 @@ isic.collections.FeatureCollection = Backbone.Collection.extend({
         var models = _.map(features, function (feature) {
             var featureId = feature['id'];
             var featureNames = feature['name'];
-            var model = new isic.models.FeatureModel({
+            var model = new FeatureModel({
                 id: featureId,
                 name: featureNames.join(', ')
             });
@@ -41,10 +76,10 @@ isic.collections.FeatureCollection = Backbone.Collection.extend({
 });
 
 // Header view for collection of images
-isic.views.StudyResultsImageHeaderView = isic.View.extend({
+var StudyResultsImageHeaderView = View.extend({
     /**
-     * @param {isic.collections.ImageCollection} settings.collection
-     * @param {isic.models.StudyModel} settings.study
+     * @param {ImageCollection} settings.collection
+     * @param {StudyModel} settings.study
      */
     initialize: function (settings) {
         this.study = settings.study;
@@ -55,7 +90,7 @@ isic.views.StudyResultsImageHeaderView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.studyResultsImageHeaderPage({
+        this.$el.html(StudyResultsImageHeaderPageTemplate({
             hasStudy: !_.isUndefined(this.study.id),
             numImages: this.collection.models.length
         }));
@@ -65,14 +100,14 @@ isic.views.StudyResultsImageHeaderView = isic.View.extend({
 });
 
 // View for a collection of studies in a select tag
-isic.views.StudyResultsSelectStudyView = isic.View.extend({
+var StudyResultsSelectStudyView = View.extend({
     events: {
         'change': 'studyChanged',
         'click .isic-study-results-select-study-details-button': 'showDetails'
     },
 
     /**
-     * @param {isic.collections.StudyCollection} settings.collection
+     * @param {StudyCollection} settings.collection
      */
     initialize: function (settings) {
         this.listenTo(this.collection, 'reset', this.render);
@@ -101,7 +136,7 @@ isic.views.StudyResultsSelectStudyView = isic.View.extend({
         var select = this.$('#isic-study-results-select-study-select');
         select.select2('destroy');
 
-        this.$el.html(isic.templates.studyResultsSelectStudyPage({
+        this.$el.html(StudyResultsSelectStudyPageTemplate({
             models: this.collection.models
         }));
 
@@ -125,9 +160,9 @@ isic.views.StudyResultsSelectStudyView = isic.View.extend({
 });
 
 // Modal view for study details
-isic.views.StudyResultsStudyDetailsView = isic.View.extend({
+var StudyResultsStudyDetailsView = View.extend({
     /**
-     * @param {isic.models.StudyModel} settings.model
+     * @param {StudyModel} settings.model
      */
     initialize: function (settings) {
     },
@@ -135,7 +170,7 @@ isic.views.StudyResultsStudyDetailsView = isic.View.extend({
     render: function () {
         var hasStudy = this.model.has('name');
 
-        this.$el.html(isic.templates.studyResultsStudyDetailPage({
+        this.$el.html(StudyResultsStudyDetailPageTemplate({
             model: this.model,
             hasStudy: hasStudy
         })).girderModal(this);
@@ -145,13 +180,13 @@ isic.views.StudyResultsStudyDetailsView = isic.View.extend({
 });
 
 // View for a collection of images
-isic.views.StudyResultsSelectImageView = isic.View.extend({
+var StudyResultsSelectImageView = View.extend({
     events: {
         'click .isic-study-results-select-image-image-container': 'imageSelected'
     },
 
     /**
-     * @param {isic.collections.ImageCollection} settings.collection
+     * @param {ImageCollection} settings.collection
      */
     initialize: function (settings) {
         this.listenTo(this.collection, 'reset', this.render);
@@ -172,9 +207,9 @@ isic.views.StudyResultsSelectImageView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.studyResultsSelectImagePage({
+        this.$el.html(StudyResultsSelectImagePageTemplate({
             models: this.collection.models,
-            apiRoot: girder.apiRoot
+            apiRoot: this.apiRoot
         }));
 
         return this;
@@ -182,13 +217,13 @@ isic.views.StudyResultsSelectImageView = isic.View.extend({
 });
 
 // View for a collection of users in a select tag
-isic.views.StudyResultsSelectUsersView = isic.View.extend({
+var StudyResultsSelectUsersView = View.extend({
     events: {
         'change': 'userChanged'
     },
 
     /**
-     * @param {isic.collections.UserCollection} settings.collection
+     * @param {UserCollection} settings.collection
      */
     initialize: function (settings) {
         this.listenTo(this.collection, 'reset', this.render);
@@ -205,7 +240,7 @@ isic.views.StudyResultsSelectUsersView = isic.View.extend({
         var select = this.$('#isic-study-results-select-users-select');
         select.select2('destroy');
 
-        this.$el.html(isic.templates.studyResultsSelectUsersPage({
+        this.$el.html(StudyResultsSelectUsersPageTemplate({
             models: this.collection.models
         }));
 
@@ -224,13 +259,13 @@ isic.views.StudyResultsSelectUsersView = isic.View.extend({
 });
 
 // View for a collection of local features in a select tag
-isic.views.StudyResultsSelectLocalFeaturesView = isic.View.extend({
+var StudyResultsSelectLocalFeaturesView = View.extend({
     events: {
         'change': 'featureChanged'
     },
 
     /**
-     * @param {isic.collections.FeatureCollection} settings.collection
+     * @param {FeatureCollection} settings.collection
      * @param {function} settings.featureAnnotated - A boolean-returning function, taking a featureId parameter.
      */
     initialize: function (settings) {
@@ -256,7 +291,7 @@ isic.views.StudyResultsSelectLocalFeaturesView = isic.View.extend({
             return this.featureAnnotated(model.id);
         }, this)));
 
-        this.$el.html(isic.templates.studyResultsSelectLocalFeaturesPage({
+        this.$el.html(StudyResultsSelectLocalFeaturesPageTemplate({
             models: collection.models
         }));
 
@@ -275,15 +310,15 @@ isic.views.StudyResultsSelectLocalFeaturesView = isic.View.extend({
 });
 
 // Collection of global feature result models
-isic.collections.GlobalFeatureResultCollection = Backbone.Collection.extend({
-    model: isic.models.GlobalFeatureResultModel,
+var GlobalFeatureResultCollection = Backbone.Collection.extend({
+    model: GlobalFeatureResultModel,
 
     // Update collection from annotation object and feature list
     update: function (annotations, features) {
         var models = _.map(features, function (feature) {
             var featureId = feature['id'];
             var featureNames = feature['name'];
-            var model = new isic.models.GlobalFeatureResultModel({
+            var model = new GlobalFeatureResultModel({
                 id: featureId,
                 name: featureNames.join(', ')
             });
@@ -301,16 +336,16 @@ isic.collections.GlobalFeatureResultCollection = Backbone.Collection.extend({
 });
 
 // View for a global feature table
-isic.views.StudyResultsGlobalFeaturesTableView = isic.View.extend({
+var StudyResultsGlobalFeaturesTableView = View.extend({
     /**
-     * @param {isic.collections.GlobalFeatureResultCollection} settings.collection
+     * @param {GlobalFeatureResultCollection} settings.collection
      */
     initialize: function (settings) {
         this.listenTo(this.collection, 'reset', this.render);
     },
 
     render: function () {
-        this.$el.html(isic.templates.studyResultsGlobalFeaturesTable({
+        this.$el.html(StudyResultsGlobalFeaturesTableTemplate({
             features: this.collection.models
         }));
 
@@ -319,21 +354,21 @@ isic.views.StudyResultsGlobalFeaturesTableView = isic.View.extend({
 });
 
 // View for the annotation results of global features in a featureset
-isic.views.StudyResultsGlobalFeaturesView = isic.View.extend({
+var StudyResultsGlobalFeaturesView = View.extend({
     /**
-     * @param {isic.models.AnnotationModel} settings.annotation
-     * @param {isic.models.FeaturesetModel} settings.featureset
+     * @param {AnnotationModel} settings.annotation
+     * @param {FeaturesetModel} settings.featureset
      */
     initialize: function (settings) {
         this.annotation = settings.annotation;
         this.featureset = settings.featureset;
 
-        this.results = new isic.collections.GlobalFeatureResultCollection();
+        this.results = new GlobalFeatureResultCollection();
         this.listenTo(this.featureset, 'change', this.render);
         this.listenTo(this.featureset, 'change', this.updateResults);
         this.listenTo(this.annotation, 'change', this.updateResults);
 
-        this.tableView = new isic.views.StudyResultsGlobalFeaturesTableView({
+        this.tableView = new StudyResultsGlobalFeaturesTableView({
             collection: this.results,
             parentView: this
         });
@@ -343,7 +378,7 @@ isic.views.StudyResultsGlobalFeaturesView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.studyResultsGlobalFeaturesPage({
+        this.$el.html(StudyResultsGlobalFeaturesPageTemplate({
             hasGlobalFeatures: !_.isEmpty(this.featureset.get('globalFeatures')),
             featureset: this.featureset
         }));
@@ -363,9 +398,9 @@ isic.views.StudyResultsGlobalFeaturesView = isic.View.extend({
 });
 
 // View for a local feature image defined by an annotation and local feature
-isic.views.StudyResultsFeatureImageView = isic.View.extend({
+var StudyResultsFeatureImageView = View.extend({
     /**
-     * @param {isic.models.FeatureImageModel} settings.model
+     * @param {FeatureImageModel} settings.model
      */
     initialize: function (settings) {
         this.listenTo(this.model, 'change', this.render);
@@ -385,13 +420,13 @@ isic.views.StudyResultsFeatureImageView = isic.View.extend({
         var imageUrl = null;
         if (featureId && annotationId) {
             imageUrl = [
-                girder.apiRoot,
+                this.apiRoot,
                 'annotation', annotationId,
                 'render?contentDisposition=inline&featureId='
             ].join('/') + encodeURIComponent(featureId);
         }
 
-        this.$el.html(isic.templates.studyResultsFeatureImagePage({
+        this.$el.html(StudyResultsFeatureImagePageTemplate({
             imageUrl: imageUrl
         }));
 
@@ -401,22 +436,22 @@ isic.views.StudyResultsFeatureImageView = isic.View.extend({
 
 // View to allow selecting a local feature from a featureset and to display an
 // image showing the annotation for the feature
-isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
+var StudyResultsLocalFeaturesView = View.extend({
     /**
-     * @param {isic.models.AnnotationModel} settings.annotation
-     * @param {isic.models.FeaturesetModel} settings.featureset
-     * @param {isic.models.FeatureImageModel} settings.model
+     * @param {AnnotationModel} settings.annotation
+     * @param {FeaturesetModel} settings.featureset
+     * @param {FeatureImageModel} settings.model
      */
     initialize: function (settings) {
         this.annotation = settings.annotation;
         this.featureset = settings.featureset;
         this.featureImageModel = settings.featureImageModel;
-        this.features = new isic.collections.FeatureCollection();
+        this.features = new FeatureCollection();
 
         this.listenTo(this.featureset, 'change', this.featuresetChanged);
         this.listenTo(this.annotation, 'change', this.annotationChanged);
 
-        this.selectFeatureView = new isic.views.StudyResultsSelectLocalFeaturesView({
+        this.selectFeatureView = new StudyResultsSelectLocalFeaturesView({
             collection: this.features,
             featureAnnotated: _.bind(this.featureAnnotated, this),
             parentView: this
@@ -438,7 +473,7 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.studyResultsLocalFeaturesPage({
+        this.$el.html(StudyResultsLocalFeaturesPageTemplate({
             hasLocalFeatures: !_.isEmpty(this.featureset.get('localFeatures')),
             featureset: this.featureset
         }));
@@ -476,9 +511,9 @@ isic.views.StudyResultsLocalFeaturesView = isic.View.extend({
 });
 
 // View for an image
-isic.views.StudyResultsImageView = isic.View.extend({
+var StudyResultsImageView = View.extend({
     /**
-     * @param {isic.models.ImageModel} settings.model
+     * @param {ImageModel} settings.model
      */
     initialize: function (settings) {
     },
@@ -494,10 +529,10 @@ isic.views.StudyResultsImageView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.studyResultsImagePage({
+        this.$el.html(StudyResultsImagePageTemplate({
         }));
 
-        this.imageViewerWidget = new isic.views.ImageViewerWidget({
+        this.imageViewerWidget = new ImageViewerWidget({
             el: this.$('.isic-study-results-image-preview-container'),
             model: this.model,
             parentView: this
@@ -508,7 +543,7 @@ isic.views.StudyResultsImageView = isic.View.extend({
 });
 
 // View for the results of an annotation study
-isic.views.StudyResultsView = isic.View.extend({
+var StudyResultsView = View.extend({
     events: {
         // Update image visibility when image preview tab is activated
         'shown.bs.tab #isic-study-results-image-preview-tab': function (event) {
@@ -530,67 +565,67 @@ isic.views.StudyResultsView = isic.View.extend({
     },
 
     initialize: function (settings) {
-        this.studies = new isic.collections.StudyCollection();
+        this.studies = new StudyCollection();
         this.studies.pageLimit = Number.MAX_SAFE_INTEGER;
 
-        this.images = new isic.collections.ImageCollection();
+        this.images = new ImageCollection();
         this.images.pageLimit = Number.MAX_SAFE_INTEGER;
 
-        this.users = new isic.collections.UserCollection();
+        this.users = new UserCollection();
         this.users.pageLimit = Number.MAX_SAFE_INTEGER;
 
-        this.study = new isic.models.StudyModel();
-        this.image = new isic.models.ImageModel();
-        this.user = new girder.models.UserModel();
-        this.featureset = new isic.models.FeaturesetModel();
-        this.annotation = new isic.models.AnnotationModel();
-        this.featureImageModel = new isic.models.FeatureImageModel();
+        this.study = new StudyModel();
+        this.image = new ImageModel();
+        this.user = new UserModel();
+        this.featureset = new FeaturesetModel();
+        this.annotation = new AnnotationModel();
+        this.featureImageModel = new FeatureImageModel();
 
-        this.selectStudyView = new isic.views.StudyResultsSelectStudyView({
+        this.selectStudyView = new StudyResultsSelectStudyView({
             collection: this.studies,
             parentView: this
         });
 
-        this.studyDetailsView = new isic.views.StudyResultsStudyDetailsView({
+        this.studyDetailsView = new StudyResultsStudyDetailsView({
             model: this.study,
             parentView: this
         });
 
-        this.imageHeaderView = new isic.views.StudyResultsImageHeaderView({
+        this.imageHeaderView = new StudyResultsImageHeaderView({
             collection: this.images,
             study: this.study,
             parentView: this
         });
 
-        this.selectImageView = new isic.views.StudyResultsSelectImageView({
+        this.selectImageView = new StudyResultsSelectImageView({
             collection: this.images,
             parentView: this
         });
 
-        this.selectUserView = new isic.views.StudyResultsSelectUsersView({
+        this.selectUserView = new StudyResultsSelectUsersView({
             collection: this.users,
             parentView: this
         });
 
-        this.globalFeaturesView = new isic.views.StudyResultsGlobalFeaturesView({
+        this.globalFeaturesView = new StudyResultsGlobalFeaturesView({
             annotation: this.annotation,
             featureset: this.featureset,
             parentView: this
         });
 
-        this.localFeaturesView = new isic.views.StudyResultsLocalFeaturesView({
+        this.localFeaturesView = new StudyResultsLocalFeaturesView({
             annotation: this.annotation,
             featureset: this.featureset,
             featureImageModel: this.featureImageModel,
             parentView: this
         });
 
-        this.imageView = new isic.views.StudyResultsImageView({
+        this.imageView = new StudyResultsImageView({
             model: this.image,
             parentView: this
         });
 
-        this.localFeaturesImageView = new isic.views.StudyResultsFeatureImageView({
+        this.localFeaturesImageView = new StudyResultsFeatureImageView({
             model: this.featureImageModel,
             parentView: this
         });
@@ -626,7 +661,7 @@ isic.views.StudyResultsView = isic.View.extend({
         this.study.set({'_id': studyId}).once('g:fetched', function () {
             // Populate images collection
             var imageModels = _.map(this.study.get('images'), function (image) {
-                return new isic.models.ImageModel(image);
+                return new ImageModel(image);
             });
             this.images.reset(imageModels);
 
@@ -669,7 +704,7 @@ isic.views.StudyResultsView = isic.View.extend({
             return;
         }
 
-        var annotations = new isic.collections.AnnotationCollection();
+        var annotations = new AnnotationCollection();
         annotations.once('g:changed', function () {
             if (!annotations.isEmpty()) {
                 // Fetch annotation detail
@@ -683,7 +718,7 @@ isic.views.StudyResultsView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.studyResultsPage());
+        this.$el.html(StudyResultsPageTemplate());
 
         this.selectStudyView.setElement(
             this.$('#isic-study-results-select-study-container')).render();
@@ -727,10 +762,4 @@ isic.views.StudyResultsView = isic.View.extend({
 
 });
 
-isic.router.route('studyResults', 'studyResults', function () {
-    var nextView = isic.views.StudyResultsView;
-    if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
-        nextView = isic.views.TermsAcceptanceView;
-    }
-    girder.events.trigger('g:navigateTo', nextView);
-});
+export default StudyResultsView;

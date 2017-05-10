@@ -1,15 +1,18 @@
-isic.views.MedicalDisclaimerView = isic.View.extend({
+import View from '../view';
+
+import MedicalDisclaimerPageTemplate from './medicalDisclaimerPage.jade';
+import './legal.styl';
+
+var MedicalDisclaimerView = View.extend({
     initialize: function (settings) {
         this.render();
     },
 
     render: function () {
-        this.$el.html(isic.templates.medicalDisclaimerPage());
+        this.$el.html(MedicalDisclaimerPageTemplate());
 
         return this;
     }
 });
 
-isic.router.route('medicalDisclaimer', 'medicalDisclaimer', function () {
-    girder.events.trigger('g:navigateTo', isic.views.MedicalDisclaimerView);
-});
+export default MedicalDisclaimerView;

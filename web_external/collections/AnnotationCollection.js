@@ -1,4 +1,9 @@
-isic.collections.AnnotationCollection = isic.Collection.extend({
+import Collection from './Collection';
+import AnnotationModel from '../models/AnnotationModel';
+
+var AnnotationCollection = Collection.extend({
     resourceName: 'annotation',
-    model: isic.models.AnnotationModel
+    model: AnnotationModel
 });
+
+export default AnnotationCollection;

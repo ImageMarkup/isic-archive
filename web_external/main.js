@@ -1,8 +1,14 @@
+import $ from 'jquery';
+
+import events from 'girder/events';
+
+import IsicApp from './app.js';
+
 $(function () {
-    isic.events.trigger('g:appload.before');
-    isic.mainApp = new isic.App({
+    events.trigger('g:appload.before');
+    var app = new IsicApp({
         el: 'body',
         parentView: null
     });
-    isic.events.trigger('g:appload.after');
+    events.trigger('g:appload.after', app);
 });

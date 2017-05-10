@@ -1,4 +1,16 @@
-isic.views.FeaturesetsView = isic.View.extend({
+import $ from 'jquery';
+
+import LoadingAnimation from 'girder/views/widgets/LoadingAnimation';
+import PaginateWidget from 'girder/views/widgets/PaginateWidget';
+
+import FeaturesetCollection from '../collections/FeaturesetCollection';
+import FeaturesetView from './FeaturesetView';
+import View from '../view';
+
+import ListingPageTemplate from '../common/Listing/listingPage.jade';
+import '../common/Listing/listingPage.styl';
+
+var FeaturesetsView = View.extend({
     // TODO refactor
     events: {
         'show.bs.collapse .isic-listing-panel-collapse': function (event) {
@@ -17,7 +29,7 @@ isic.views.FeaturesetsView = isic.View.extend({
     initialize: function (settings) {
         this.loaded = false;
 
-        this.featuresets = new isic.collections.FeaturesetCollection();
+        this.featuresets = new FeaturesetCollection();
         this.listenTo(this.featuresets, 'g:changed', function () {
             this.loaded = true;
             this.render();
@@ -27,7 +39,7 @@ isic.views.FeaturesetsView = isic.View.extend({
         // TODO: Use the more general 'update' event, once Girder's version of Backbone is upgraded
         this.listenTo(this.featuresets, 'remove', this.render);
 
-        this.paginateWidget = new girder.views.PaginateWidget({
+        this.paginateWidget = new PaginateWidget({
             collection: this.featuresets,
             parentView: this
         });
@@ -36,7 +48,7 @@ isic.views.FeaturesetsView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.listingPage({
+        this.$el.html(ListingPageTemplate({
             title: 'Featuresets',
             models: this.featuresets.models,
             loaded: this.loaded
@@ -46,7 +58,7 @@ isic.views.FeaturesetsView = isic.View.extend({
 
         // Display loading indicator
         if (!this.loaded) {
-            this.loadingAnimation = new girder.views.LoadingAnimation({
+            this.loadingAnimation = new LoadingAnimation({
                 el: this.$('.isic-listing-loading-animation-container'),
                 parentView: this
             }).render();
@@ -64,7 +76,7 @@ isic.views.FeaturesetsView = isic.View.extend({
         if (container.children().length === 0) {
             var featureset = this.featuresets.at(index);
 
-            new isic.views.FeaturesetView({ // eslint-disable-line no-new
+            new FeaturesetView({ // eslint-disable-line no-new
                 el: container,
                 model: featureset,
                 parentView: this
@@ -73,10 +85,4 @@ isic.views.FeaturesetsView = isic.View.extend({
     }
 });
 
-isic.router.route('featuresets', 'featuresets', function () {
-    var nextView = isic.views.FeaturesetsView;
-    if (!isic.models.UserModel.currentUserCanAcceptTerms()) {
-        nextView = isic.views.TermsAcceptanceView;
-    }
-    girder.events.trigger('g:navigateTo', nextView);
-});
+export default FeaturesetsView;

@@ -1,8 +1,17 @@
-isic.models.DatasetModel = isic.Model.extend({
+import $ from 'jquery';
+import _ from 'underscore';
+
+import {getCurrentUser} from 'girder/auth';
+import {restRequest} from 'girder/rest';
+
+import Model from './Model';
+import UserModel from './UserModel';
+
+var DatasetModel = Model.extend({
     resourceName: 'dataset',
 
     creator: function () {
-        return new isic.models.UserModel(this.get('creator'));
+        return new UserModel(this.get('creator'));
     },
 
      /**
@@ -18,7 +27,7 @@ isic.models.DatasetModel = isic.Model.extend({
      */
     ingestImages: function (zipFileId, name, owner, description, license,
         signature, anonymous, attribution) {
-        girder.restRequest({
+        restRequest({
             path: this.resourceName,
             type: 'POST',
             data: {
@@ -45,7 +54,7 @@ isic.models.DatasetModel = isic.Model.extend({
      * @param [metadataFileId] The ID of the metadata file.
      */
     registerMetadata: function (metadataFileId) {
-        girder.restRequest({
+        restRequest({
             path: this.resourceName + '/' + this.id + '/metadata',
             type: 'POST',
             data: {
@@ -64,7 +73,7 @@ isic.models.DatasetModel = isic.Model.extend({
      */
     getRegisteredMetadata: function () {
         var deferred = $.Deferred();
-        girder.restRequest({
+        restRequest({
             path: this.resourceName + '/' + this.id + '/metadata'
         }).done(function (resp) {
             deferred.resolve(resp);
@@ -78,7 +87,7 @@ isic.models.DatasetModel = isic.Model.extend({
      */
     applyMetadata: function (metadataFileId, save) {
         var deferred = $.Deferred();
-        girder.restRequest({
+        restRequest({
             path: this.resourceName + '/' + this.id + '/metadata/' + metadataFileId,
             type: 'POST',
             data: {
@@ -91,5 +100,12 @@ isic.models.DatasetModel = isic.Model.extend({
             deferred.reject(err);
         });
         return deferred.promise();
+    },
+
+    canAdmin: function () {
+        var user = getCurrentUser();
+        return user && user.canAdminStudy();
     }
 });
+
+export default DatasetModel;

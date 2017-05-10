@@ -1,14 +1,27 @@
-isic.views.FeaturesetView = isic.View.extend({
+import $ from 'jquery';
+import _ from 'underscore';
+
+import LoadingAnimation from 'girder/views/widgets/LoadingAnimation';
+import {confirm} from 'girder/dialog';
+
+import View from '../view';
+import {showAlertDialog} from '../common/utilities';
+
+import FeaturesetPageTemplate from './featuresetPage.jade';
+import './featuresetPage.styl';
+import '../common/Listing/listingItemPage.styl';
+
+var FeaturesetView = View.extend({
     events: {
         'click .isic-featureset-destroy-button': 'confirmDestroy'
     },
 
     /**
-     * @param {isic.models.FeaturesetModel} settings.model
+     * @param {FeaturesetModel} settings.model
      */
     initialize: function (settings) {
         // Display loading indicator
-        this.loadingAnimation = new girder.views.LoadingAnimation({
+        this.loadingAnimation = new LoadingAnimation({
             el: this.el,
             parentView: this
         }).render();
@@ -22,8 +35,7 @@ isic.views.FeaturesetView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.featuresetPage({
-            currentUser: girder.currentUser,
+        this.$el.html(FeaturesetPageTemplate({
             featureset: this.model,
             formatDate: this.formatDate
         }));
@@ -32,7 +44,7 @@ isic.views.FeaturesetView = isic.View.extend({
     },
 
     confirmDestroy: function () {
-        girder.confirm({
+        confirm({
             text: '<h4>Permanently delete <b>"' + _.escape(this.model.name()) + '"</b> featureset?</h4>',
             escapedHtml: true,
             confirmCallback: _.bind(function () {
@@ -48,13 +60,13 @@ isic.views.FeaturesetView = isic.View.extend({
     destroyModel: function () {
         this.model.destroy({
             success: function (model, resp, options) {
-                isic.showAlertDialog({
+                showAlertDialog({
                     text: '<h4>Featureset <b>"' + _.escape(model.name()) + '"</b> deleted</h4>',
                     escapedHtml: true
                 });
             },
             error: function (model, resp, options) {
-                isic.showAlertDialog({
+                showAlertDialog({
                     text: '<h4>Error deleting featureset</h4><br>' + _.escape(resp.responseJSON.message),
                     escapedHtml: true
                 });
@@ -62,3 +74,5 @@ isic.views.FeaturesetView = isic.View.extend({
         });
     }
 });
+
+export default FeaturesetView;

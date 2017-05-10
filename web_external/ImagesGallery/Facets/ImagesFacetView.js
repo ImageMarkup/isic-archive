@@ -1,12 +1,25 @@
-/*globals d3*/
+import d3 from 'd3';
+import $ from 'jquery';
+import _ from 'underscore';
 
-isic.views.ImagesFacetView = isic.View.extend({
+import {CategoricalFacetFilter, IntervalFacetFilter, TagsCategoricalFacetFilter} from '../ImagesFilter';
+import DatasetCollection from '../../collections/DatasetCollection';
+import View from '../../view';
+import HistogramScale from './HistogramScale';
+
+import ImagesFacetHistogramTemplate from './imagesFacetHistogram.jade';
+import ImagesFacetCategoricalTemplate from './imagesFacetCategorical.jade';
+import checkImageUrl from '!url-loader!svg-fill-loader!./check.svg?fill=#999999';
+import dashImageUrl from '!url-loader!svg-fill-loader!./dash.svg?fill=#999999';
+import exImageUrl from '!url-loader!svg-fill-loader!./ex.svg?fill=#999999';
+
+var ImagesFacetView = View.extend({
     className: 'isic-images-facet',
 
     /**
-     * @param {isic.models.ImagesFacetModel} settings.completeFacet
-     * @param {isic.models.ImagesFacetModel} settings.filteredFacet
-     * @param {isic.collections.ImagesFilter} settings.filter
+     * @param {ImagesFacetModel} settings.completeFacet
+     * @param {ImagesFacetModel} settings.filteredFacet
+     * @param {ImagesFilter} settings.filter
      */
     initialize: function (settings) {
         this.completeFacet = settings.completeFacet;
@@ -88,9 +101,9 @@ isic.views.ImagesFacetView = isic.View.extend({
     }
 });
 
-isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
+var ImagesFacetHistogramView = ImagesFacetView.extend({
     events: function () {
-        return _.extend({}, isic.views.ImagesFacetView.prototype.events, {
+        return _.extend({}, ImagesFacetView.prototype.events, {
             'click .isic-images-facet-all-exclude': function (event) {
                 this.filter.setAllIncluded(false);
             },
@@ -101,14 +114,14 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
     },
 
     /**
-     * @param {isic.models.ImagesFacetModel} settings.completeFacet
-     * @param {isic.models.ImagesFacetModel} settings.filteredFacet
-     * @param {isic.collections.ImagesFilter} settings.filter
+     * @param {ImagesFacetModel} settings.completeFacet
+     * @param {ImagesFacetModel} settings.filteredFacet
+     * @param {ImagesFilter} settings.filter
      */
     initialize: function (settings) {
-        isic.views.ImagesFacetView.prototype.initialize.call(this, settings);
+        ImagesFacetView.prototype.initialize.call(this, settings);
 
-        this.scale = new isic.views.HistogramScale();
+        this.scale = new HistogramScale();
 
         // Cached properties from initial render. The initial render is expected
         // to have the full expected space available for the element so that
@@ -126,9 +139,8 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.imagesFacetHistogram({
+        this.$el.html(ImagesFacetHistogramTemplate({
             title: this.title,
-            staticImageRoot: girder.staticRoot + '/built/plugins/isic_archive/extra/img',
             facetContentId: this.facetContentId
         }));
         this._renderHistogram();
@@ -313,16 +325,14 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
         bins.select('image.button')
             .attr('xlink:href', _.bind(function (d) {
                 var status = this.filter.isIncluded(d.completeBin.label);
-
-                var staticImageRoot = girder.staticRoot + '/built/plugins/isic_archive/extra/img';
                 if (status === true) {
-                    return staticImageRoot + '/check.svg';
+                    return checkImageUrl;
                 } else if (status === false) {
-                    return staticImageRoot + '/ex.svg';
+                    return exImageUrl;
                 } else {
                     // TODO: this should never happen, until we implement continuous filters
                     // or perhaps if the completeFacetBin.count == 0
-                    return staticImageRoot + '/dash.svg';
+                    return dashImageUrl;
                 }
             }, this))
             .on('click', _.bind(function (d) {
@@ -401,13 +411,13 @@ isic.views.ImagesFacetHistogramView = isic.views.ImagesFacetView.extend({
         // globally; this is overkill, but can be fixed in a future refactor
         $('.tooltip').remove();
 
-        isic.views.ImagesFacetView.prototype.destroy.call(this);
+        ImagesFacetView.prototype.destroy.call(this);
     }
 });
 
-isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
+var ImagesFacetCategoricalView = ImagesFacetView.extend({
     events: function () {
-        return _.extend({}, isic.views.ImagesFacetView.prototype.events, {
+        return _.extend({}, ImagesFacetView.prototype.events, {
             'click .isic-images-facet-bin': function (event) {
                 var binElem = this.$(event.currentTarget);
                 var binLabel = binElem.data('binLabel');
@@ -423,19 +433,19 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
     },
 
     /**
-     * @param {isic.models.ImagesFacetModel} settings.completeFacet
-     * @param {isic.models.ImagesFacetModel} settings.filteredFacet
-     * @param {isic.collections.ImagesFilter} settings.filter
+     * @param {ImagesFacetModel} settings.completeFacet
+     * @param {ImagesFacetModel} settings.filteredFacet
+     * @param {ImagesFilter} settings.filterfilters
      */
     initialize: function (settings) {
-        isic.views.ImagesFacetView.prototype.initialize.call(this, settings);
+        ImagesFacetView.prototype.initialize.call(this, settings);
 
         this.listenTo(this.filteredFacet, 'change', this._rerenderCounts);
         this.listenTo(this.filter, 'change', this._rerenderSelections);
     },
 
     render: function () {
-        this.$el.html(isic.templates.imagesFacetCategorical({
+        this.$el.html(ImagesFacetCategoricalTemplate({
             title: this.title,
             bins: this.completeFacet.get('bins'),
             facetContentId: this.facetContentId,
@@ -484,16 +494,16 @@ isic.views.ImagesFacetCategoricalView = isic.views.ImagesFacetView.extend({
     }
 });
 
-isic.views.ImagesFacetCategoricalDatasetView = isic.views.ImagesFacetCategoricalView.extend({
+var ImagesFacetCategoricalDatasetView = ImagesFacetCategoricalView.extend({
     /**
-     * @param {isic.models.ImagesFacetModel} settings.completeFacet
-     * @param {isic.models.ImagesFacetModel} settings.filteredFacet
-     * @param {isic.collections.ImagesFilter} settings.filter
+     * @param {ImagesFacetModel} settings.completeFacet
+     * @param {ImagesFacetModel} settings.filteredFacet
+     * @param {ImagesFilter} settings.filter
      */
     initialize: function (settings) {
-        isic.views.ImagesFacetCategoricalView.prototype.initialize.call(this, settings);
+        ImagesFacetCategoricalView.prototype.initialize.call(this, settings);
 
-        this.datasetCollection = new isic.collections.DatasetCollection();
+        this.datasetCollection = new DatasetCollection();
         this.datasetCollection.once('g:changed', _.bind(function () {
             this.render();
         }, this)).fetch({
@@ -502,7 +512,7 @@ isic.views.ImagesFacetCategoricalDatasetView = isic.views.ImagesFacetCategorical
     },
 
     render: function () {
-        isic.views.ImagesFacetCategoricalView.prototype.render.call(this);
+        ImagesFacetCategoricalView.prototype.render.call(this);
 
         var self = this;
 
@@ -544,7 +554,7 @@ isic.views.ImagesFacetCategoricalDatasetView = isic.views.ImagesFacetCategorical
     }
 });
 
-isic.views.ImagesFacetCategoricalTagsView = isic.views.ImagesFacetCategoricalView.extend({
+var ImagesFacetCategoricalTagsView = ImagesFacetCategoricalView.extend({
     _getBinTitle: function (completeBin) {
         if (completeBin.label === '__null__') {
             return 'untagged';
@@ -553,3 +563,92 @@ isic.views.ImagesFacetCategoricalTagsView = isic.views.ImagesFacetCategoricalVie
         }
     }
 });
+
+var FACET_SCHEMA = {
+    'folderId': {
+        FacetView: ImagesFacetCategoricalDatasetView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'objectid',
+        title: 'Dataset',
+        collapsed: true
+    },
+    'meta.clinical.benign_malignant': {
+        FacetView: ImagesFacetHistogramView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Benign or Malignant',
+        collapsed: true
+    },
+    'meta.clinical.age_approx': {
+        FacetView: ImagesFacetHistogramView,
+        FacetFilter: IntervalFacetFilter,
+        coerceToType: 'number',
+        interpretation: 'ordinal',
+        title: 'Approximate Age',
+        lowBound: 0,
+        highBound: 90,
+        numBins: 9,
+        collapsed: true
+    },
+    'meta.clinical.sex': {
+        FacetView: ImagesFacetHistogramView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Sex',
+        collapsed: true
+    },
+    'meta.clinical.diagnosis_confirm_type': {
+        FacetView: ImagesFacetHistogramView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Type of Diagnosis',
+        collapsed: true
+    },
+    'meta.clinical.diagnosis': {
+        FacetView: ImagesFacetCategoricalView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Lesion Diagnosis',
+        collapsed: true
+    },
+    'meta.clinical.clin_size_long_diam_mm': {
+        FacetView: ImagesFacetHistogramView,
+        FacetFilter: IntervalFacetFilter,
+        coerceToType: 'number',
+        interpretation: 'ordinal',
+        title: 'Clinical Size - Longest Diameter (mm)',
+        lowBound: 0,
+        highBound: 110,
+        numBins: 11,
+        collapsed: true
+    },
+    'meta.clinical.personal_hx_mm': {
+        FacetView: ImagesFacetHistogramView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Personal History of Melanoma',
+        collapsed: true
+    },
+    'meta.clinical.family_hx_mm': {
+        FacetView: ImagesFacetHistogramView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Family History of Melanoma',
+        collapsed: true
+    },
+    'meta.tags': {
+        FacetView: ImagesFacetCategoricalTagsView,
+        FacetFilter: TagsCategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Tags',
+        collapsed: true
+    }
+};
+
+export {
+    ImagesFacetHistogramView,
+    ImagesFacetCategoricalView,
+    ImagesFacetCategoricalDatasetView,
+    ImagesFacetCategoricalTagsView,
+    FACET_SCHEMA
+};

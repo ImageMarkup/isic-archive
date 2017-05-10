@@ -1,0 +1,28 @@
+@require '~nib/index'
+@require 'layoutHeaderCommon'
+
+.isic-current-user-text
+
+  .isic-portrait-wrapper
+    border-radius 50%
+    display inline-block
+    background-color #d6d6d6
+    height $portraitHeight
+    width $portraitHeight
+    background-size $portraitHeight $portraitHeight
+    margin-top (($headerHeight - $portraitHeight)/2)
+
+  .isic-user-link-wrapper
+    display inline-block
+
+    .isic-user-link
+      color $textColor !important
+
+      &:hover
+        color #66a
+
+  .isic-login-link-wrapper
+    font-size 16px
+
+    .isic-login-link
+      color $textColor !important

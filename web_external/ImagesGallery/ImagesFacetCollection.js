@@ -1,11 +1,16 @@
-isic.models.ImagesFacetModel = Backbone.Model.extend({
+import Backbone from 'backbone';
+import _ from 'underscore';
+
+import {FACET_SCHEMA} from './Facets/ImagesFacetView';
+
+var ImagesFacetModel = Backbone.Model.extend({
     schema: function () {
-        return isic.FACET_SCHEMA[this.id];
+        return FACET_SCHEMA[this.id];
     }
 });
 
-isic.collections.ImagesFacetCollection = Backbone.Collection.extend({
-    model: isic.models.ImagesFacetModel,
+var ImagesFacetCollection = Backbone.Collection.extend({
+    model: ImagesFacetModel,
     url: 'image/histogram',
 
     parse: function (resp, options) {
@@ -38,3 +43,6 @@ isic.collections.ImagesFacetCollection = Backbone.Collection.extend({
             .value();
     }
 });
+
+export default ImagesFacetCollection;
+export {ImagesFacetModel};

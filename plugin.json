@@ -3,8 +3,32 @@
     "description": "The ISIC dermoscopy image archive.",
     "version": "1.0.0",
     "dependencies": ["gravatar", "large_image", "worker"],
+    "npm": {
+        "dependencies": {
+            "backbone.select": "~2.1.0",
+            "d3": "~3.5.17",
+            "geojs": "0.11.1",
+            "pegjs": "0.10.0",
+            "raw-loader": "0.5.1",
+            "select2": "~4.0.3",
+            "select2-bootstrap-theme": ">=0.1.0-beta",
+            "svg-fill-loader": "0.0.7",
+            "underscore": "~1.8.3"
+        }
+    },
     "grunt": {
+        "autobuild": true,
+        "dependencies": {
+            "bower": "^1.8.0"
+        },
         "file": "Gruntfile.js",
         "defaultTargets": ["isic_archive-web"]
+    },
+    "webpack": {
+        "main": {
+            "plugin": "web_client/main.js",
+            "app": "web_external/main.js"
+        },
+        "defaultLoaders": true
     }
 }

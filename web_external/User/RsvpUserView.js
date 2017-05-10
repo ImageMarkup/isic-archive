@@ -1,11 +1,20 @@
-isic.views.RsvpUserView = isic.View.extend({
+import _ from 'underscore';
+
+import View from '../view';
+import router from '../router';
+import {showAlertDialog} from '../common/utilities';
+
+import RsvpUserPageTemplate from './rsvpUserPage.jade';
+import './rsvpUserPage.styl';
+
+var RsvpUserView = View.extend({
     events: {
         'submit #isic-user-rsvp-form': function (event) {
             event.preventDefault();
             this.$('#isic-user-rsvp-submit').prop('disabled', true);
 
             if (this.$('#isic-user-rsvp-password').val() !== this.$('#isic-user-rsvp-password2').val()) {
-                isic.showAlertDialog({
+                showAlertDialog({
                     text: 'Passwords do not match, try again.',
                     callback: _.bind(function () {
                         this.$('#isic-user-rsvp-password2').val('').focus();
@@ -21,10 +30,10 @@ isic.views.RsvpUserView = isic.View.extend({
                     this.$('#isic-user-rsvp-password').val()
                 )
                 .done(function () {
-                    isic.router.navigate('tasks', {trigger: true});
+                    router.navigate('tasks', {trigger: true});
                 })
                 .fail(_.bind(function (resp) {
-                    isic.showAlertDialog({
+                    showAlertDialog({
                         text: '<h4>Error changing password</h4><br>' + _.escape(resp.responseJSON.message),
                         escapedHtml: true
                     });
@@ -34,7 +43,7 @@ isic.views.RsvpUserView = isic.View.extend({
     },
 
     /**
-     * @param {isic.models.UserModel} settings.user - The user to complete registration for.
+     * @param {UserModel} settings.user - The user to complete registration for.
      * @param {string} settings.token - The TEMPORARY_USER_AUTH token.
      */
     initialize: function (settings) {
@@ -45,7 +54,7 @@ isic.views.RsvpUserView = isic.View.extend({
     },
 
     render: function () {
-        this.$el.html(isic.templates.rsvpUserPage({
+        this.$el.html(RsvpUserPageTemplate({
             user: this.user
         }));
 
@@ -55,20 +64,4 @@ isic.views.RsvpUserView = isic.View.extend({
     }
 });
 
-isic.router.route('user/:id/rsvp/:token', 'rsvpUser', function (id, token) {
-    isic.models.UserModel
-        .temporaryTokenLogin(id, token)
-        .done(function (resp) {
-            girder.events.trigger('g:navigateTo', isic.views.RsvpUserView, {
-                user: girder.currentUser,
-                token: token
-            });
-        })
-        .fail(function (resp) {
-            isic.showAlertDialog({
-                text: '<h4>Error loading user from token</h4><br>' + _.escape(resp.responseJSON.message),
-                escapedHtml: true
-            });
-            isic.router.navigate('', {trigger: true});
-        });
-});
+export default RsvpUserView;

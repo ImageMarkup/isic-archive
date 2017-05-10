@@ -1,55 +1,5 @@
-@import 'nib'
-
+// TODO: Don't duplicate this with "layoutHeader.styl"
 $headerHeight = 54px
-$portraitHeight = 36px
-$textColor = #444
-
-.isic-header-wrapper
-  min-height $headerHeight
-  background-color rgba(255, 255, 255, 0.88)
-  transition background-color 0.4s ease-in-out
-  font-size 16px
-
-  &:hover
-    background-color white
-
-  .isic-header-title
-    font-size 24px
-    color $textColor
-
-  .isic-header-item
-    color $textColor !important
-
-  i.icon-link-ext
-    margin-left 3px
-
-  .isic-current-user-wrapper
-
-    .isic-current-user-text
-
-      .isic-portrait-wrapper
-        border-radius 50%
-        display inline-block
-        background-color #d6d6d6
-        height $portraitHeight
-        width $portraitHeight
-        background-size $portraitHeight $portraitHeight
-        margin-top (($headerHeight - $portraitHeight)/2)
-
-      .isic-user-link-wrapper
-        display inline-block
-
-        .isic-user-link
-          color $textColor !important
-
-          &:hover
-            color #66a
-
-      .isic-login-link-wrapper
-        font-size 16px
-
-        .isic-login-link
-          color $textColor !important
 
 #g-app-body-container
   margin 0
@@ -59,36 +9,3 @@ $textColor = #444
 
 .isic-body-nopad
   padding 0 !important
-
-#isic-app-footer-container
-  border-top 1px solid #eee
-  background-image linear-gradient(to bottom, #f6f6f6 0%, #fff 5px)
-  padding-top 5px
-  white-space nowrap
-
-  ul
-    list-style none
-    padding 0px
-
-  li
-    //- Lay out horizontally
-    display inline-block
-
-  //- Add vertical line separator before list items, except the first
-  li + li
-    &:before
-      content '\2502'
-      padding 0em 0.5em
-
-  //- Default section alignment
-  .isic-footer-legal
-    text-align center
-  .isic-footer-links
-    text-align right
-
-  //- 'sm' grid tier and below section alignment
-  @media (max-width: 991px)
-    .isic-footer-legal
-      text-align left
-    .isic-footer-links
-      text-align left

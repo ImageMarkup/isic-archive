@@ -24,3 +24,12 @@ svg#recolorImageFilters(width=0 height=0)
             slope=0
             intercept=Math.pow(parseInt(hexColor.slice(4, 6), 16) / 255, 2)
           )
+//- Girder's Webpack configuration causes these "url" functions to be erroneously expanded if
+//- they're defined within a ".css" or ".styl" file
+style.
+  .isic-images-facet image.button:hover {
+    filter: url(#recolorImageTo00ABFF);
+  }
+  .isic-images-facet image.button:disabled {
+    filter: url(#recolorImageToCCCCCC);
+  }

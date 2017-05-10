@@ -15,9 +15,3 @@
   conda:
     name: pip
     executable: "{{ python_dist_path }}/bin/conda"
-
-- name: Install stable version of Python
-  conda:
-    name: python
-    version: 2.7.12
-    executable: "{{ python_dist_path }}/bin/conda"

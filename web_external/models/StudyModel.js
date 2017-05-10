@@ -1,8 +1,18 @@
-isic.models.StudyModel = isic.Model.extend({
+import _ from 'underscore';
+
+import {getCurrentUser} from 'girder/auth';
+import {restRequest} from 'girder/rest';
+
+import Model from './Model';
+import FeaturesetModel from './FeaturesetModel';
+import UserCollection from '../collections/UserCollection';
+import UserModel from './UserModel';
+
+var StudyModel = Model.extend({
     resourceName: 'study',
 
     creator: function () {
-        return new isic.models.UserModel(this.get('creator'));
+        return new UserModel(this.get('creator'));
     },
 
     /**
@@ -13,14 +23,14 @@ isic.models.StudyModel = isic.Model.extend({
      * ".fetch()" on the FeaturesetModel.
      */
     featureset: function () {
-        return new isic.models.FeaturesetModel(this.get('featureset'));
+        return new FeaturesetModel(this.get('featureset'));
     },
 
     users: function () {
         var userModels = this.get('users').map(function (user) {
-            return new isic.models.UserModel(user);
+            return new UserModel(user);
         });
-        return new isic.collections.UserCollection(userModels);
+        return new UserCollection(userModels);
     },
 
     /**
@@ -28,7 +38,7 @@ isic.models.StudyModel = isic.Model.extend({
      */
     addUser: function (userId) {
         // TODO: return a promise here, and use it (rather than events)
-        girder.restRequest({
+        restRequest({
             path: this.resourceName + '/' + this.id + '/users',
             type: 'POST',
             data: {
@@ -42,7 +52,7 @@ isic.models.StudyModel = isic.Model.extend({
     },
 
     removeUser: function (user) {
-        return girder.restRequest({
+        return restRequest({
             path: this.resourceName + '/' + this.id + '/users/' + user.id,
             type: 'DELETE',
             error: null
@@ -57,6 +67,13 @@ isic.models.StudyModel = isic.Model.extend({
         // Study deletion may fail if it has completed annotations
         params.wait = true;
 
-        return isic.Model.prototype.destroy.call(this, params);
+        return Model.prototype.destroy.call(this, params);
+    },
+
+    canAdmin: function () {
+        var user = getCurrentUser();
+        return user && user.canAdminStudy();
     }
 });
+
+export default StudyModel;

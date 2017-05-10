@@ -1,4 +1,11 @@
-isic.Collection = girder.Collection.extend({ // eslint-disable-line backbone/collection-model
+import _ from 'underscore';
+
+import { restRequest } from 'girder/rest';
+import GirderCollection from 'girder/collections/Collection';
+
+var Collection = GirderCollection.extend({
+    model: null,
+
     url: function () {
         return this.resourceName;
     },
@@ -18,7 +25,34 @@ isic.Collection = girder.Collection.extend({ // eslint-disable-line backbone/col
         // Doing a non-reset fetch causes the collection to not be emptied on
         // an empty fetch, and does non-intuitive things with the "this.offset"
         // property.
-        girder.Collection.prototype.fetch.call(this, null, true);
+        // GirderCollection.prototype.fetch.call(this, null, true);
+
+        // Re-implement GirderCollection.prototype.fetch until Girder fix #1974 is included
+        this.offset = 0;
+        var limit = this.pageLimit > 0 ? this.pageLimit + 1 : 0;
+        var xhr = restRequest({
+            path: this.altUrl || this.resourceName,
+            data: _.extend({
+                limit: limit,
+                offset: this.offset,
+                sort: this.sortField,
+                sortdir: this.sortDir
+            }, this.params)
+        }).done(_.bind(function (list) {
+            if (this.pageLimit > 0 && list.length > this.pageLimit) {
+                // This means we have more pages to display still. Pop off
+                // the extra that we fetched.
+                list.pop();
+                this._hasMorePages = true;
+            } else {
+                this._hasMorePages = false;
+            }
+            this.offset += list.length;
+            this.reset(list);
+            this.trigger('g:changed');
+        }, this));
+        xhr.girder = {fetch: true};
+        return xhr;
     },
 
     _currentOffset: function (params) {
@@ -73,3 +107,5 @@ isic.Collection = girder.Collection.extend({ // eslint-disable-line backbone/col
         return Math.floor(this._currentOffset() / this.pageLimit);
     }
 });
+
+export default Collection;

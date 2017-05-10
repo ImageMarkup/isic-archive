@@ -1,6 +1,6 @@
 ---
 
-girder_version: "v1.7.0"
+girder_version: "v2.1.1"
 worker_version: "2cfb739c096c2373f8bbe00853e3709f433192a6"
 python_dist: "conda"
 python_dist_path: "{{ ansible_user_dir }}/env"

@@ -9,16 +9,8 @@
           href="${staticRoot}/built/fontello/css/fontello.css">
     <link rel="stylesheet"
           href="${staticRoot}/built/fontello/css/animation.css">
-    <link rel="stylesheet" href="${staticRoot}/built/girder.ext.min.css">
-    <link rel="stylesheet" href="${staticRoot}/built/girder.app.min.css">
     <link rel="stylesheet"
-          href="${staticRoot}/built/plugins/isic_archive/isic_archive.ext.min.css">
-    <link rel="stylesheet"
-          href="${staticRoot}/built/plugins/isic_archive/isic_archive.app.min.css">
-    % for plugin in pluginCss:
-        <link rel="stylesheet"
-              href="${staticRoot}/built/plugins/${plugin}/plugin.min.css">
-    % endfor
+          href="${staticRoot}/built/plugins/isic_archive/app.min.css">
     <link rel="icon"
           type="image/png"
           href="${staticRoot}/img/Girder_Favicon.png">
@@ -26,14 +18,6 @@
   <body>
     <div id="g-global-info-apiroot" class="hide">${apiRoot}</div>
     <div id="g-global-info-staticroot" class="hide">${staticRoot}</div>
-    <script src="${staticRoot}/built/girder.ext.min.js"></script>
-    <script src="${staticRoot}/built/girder.app.min.js"></script>
-    % for plugin in pluginJs:
-      <script src="${staticRoot}/built/plugins/${plugin}/plugin.min.js">
-      </script>
-    % endfor
-    <script src="${staticRoot}/built/plugins/isic_archive/isic_archive.ext.min.js"></script>
-    <script src="${staticRoot}/built/plugins/isic_archive/isic_archive.app.min.js"></script>
-    <script src="${staticRoot}/built/plugins/isic_archive/main.min.js"></script>
+    <script src="${staticRoot}/built/plugins/isic_archive/app.min.js"></script>
   </body>
 </html>

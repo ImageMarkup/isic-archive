@@ -1,9 +1,17 @@
-isic.views.ImageFullscreenWidget = isic.View.extend({
+import _ from 'underscore';
+
+import ImageViewerWidget from './ImageViewerWidget';
+import View from '../../view';
+
+import ImageFullscreenWidgetTemplate from './imageFullscreenWidget.jade';
+import './imageFullscreenWidget.styl';
+
+var ImageFullscreenWidget = View.extend({
     render: function () {
-        this.$el.html(isic.templates.imageFullscreenWidget({
+        this.$el.html(ImageFullscreenWidgetTemplate({
             model: this.model
         })).girderModal(this).on('shown.bs.modal', _.bind(function () {
-            this.imageViewerWidget = new isic.views.ImageViewerWidget({
+            this.imageViewerWidget = new ImageViewerWidget({
                 el: this.$('.isic-image-fullscreen-container'),
                 model: this.model,
                 parentView: this
@@ -16,3 +24,5 @@ isic.views.ImageFullscreenWidget = isic.View.extend({
         }, this));
     }
 });
+
+export default ImageFullscreenWidget;

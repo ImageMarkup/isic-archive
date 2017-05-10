@@ -1,15 +1,18 @@
-isic.views.PrivacyPolicyView = isic.View.extend({
+import View from '../view';
+
+import PrivacyPolicyPageTemplate from './privacyPolicyPage.jade';
+import './legal.styl';
+
+var PrivacyPolicyView = View.extend({
     initialize: function (settings) {
         this.render();
     },
 
     render: function () {
-        this.$el.html(isic.templates.privacyPolicyPage());
+        this.$el.html(PrivacyPolicyPageTemplate());
 
         return this;
     }
 });
 
-isic.router.route('privacyPolicy', 'privacyPolicy', function () {
-    girder.events.trigger('g:navigateTo', isic.views.PrivacyPolicyView);
-});
+export default PrivacyPolicyView;

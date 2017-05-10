@@ -1,6 +1,16 @@
-isic.views.ImageViewerWidget = isic.View.extend({
+import _ from 'underscore';
+
+import geo from 'geojs';
+
+import {restRequest} from 'girder/rest';
+
+import View from '../../view';
+
+import './imageViewerWidget.styl';
+
+var ImageViewerWidget = View.extend({
     /**
-     * @param {isic.models.ImageModel} settings.model
+     * @param {ImageModel} settings.model
      * @param {HTMLElement} settings.el - The HTML element to attach to, which must be set upon instantiation.
      */
     initialize: function (settings) {
@@ -17,7 +27,7 @@ isic.views.ImageViewerWidget = isic.View.extend({
             return;
         }
 
-        girder.restRequest({
+        restRequest({
             type: 'GET',
             path: 'image/' + this.model.id + '/tiles'
         }).done(_.bind(function (resp) {
@@ -34,27 +44,27 @@ isic.views.ImageViewerWidget = isic.View.extend({
     },
 
     _createViewer: function () {
-        var params = window.geo.util.pixelCoordinateParams(
+        var params = geo.util.pixelCoordinateParams(
             this.$el, this.sizeX, this.sizeY, this.tileWidth, this.tileHeight);
 
         _.extend(params.map, {
             // TODO: allow rotation? (add actions to interactor and set allowRotation)
             allowRotation: false,
-            interactor: window.geo.mapInteractor({
+            interactor: geo.mapInteractor({
                 actions: [{
-                    action: window.geo.geo_action.pan,
+                    action: geo.geo_action.pan,
                     input: 'left',
                     modifiers: {shift: false, ctrl: false},
                     owner: 'geo.mapInteractor',
                     name: 'button pan'
                 }, {
-                    action: window.geo.geo_action.zoom,
+                    action: geo.geo_action.zoom,
                     input: 'right',
                     modifiers: {shift: false, ctrl: false},
                     owner: 'geo.mapInteractor',
                     name: 'button zoom'
                 }, {
-                    action: window.geo.geo_action.zoom,
+                    action: geo.geo_action.zoom,
                     input: 'wheel',
                     modifiers: {shift: false, ctrl: false},
                     owner: 'geo.mapInteractor',
@@ -68,11 +78,11 @@ isic.views.ImageViewerWidget = isic.View.extend({
             })
         });
         params.map.max += 2;
-        this.viewer = window.geo.map(params.map);
+        this.viewer = geo.map(params.map);
 
         _.extend(params.layer, {
             useCredentials: true,
-            url: girder.apiRoot + '/image/' + this.model.id + '/tiles/{z}/{x}/{y}'
+            url: this.apiRoot + '/image/' + this.model.id + '/tiles/{z}/{x}/{y}'
         });
         this.imageLayer = this.viewer.createLayer('osm', params.layer);
     },
@@ -124,7 +134,8 @@ isic.views.ImageViewerWidget = isic.View.extend({
     destroy: function () {
         this.destroyViewer();
 
-        isic.View.prototype.destroy.call(this);
+        View.prototype.destroy.call(this);
     }
-
 });
+
+export default ImageViewerWidget;
