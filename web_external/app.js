@@ -5,9 +5,10 @@ import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/js/collapse';
 import 'bootstrap/js/dropdown';
 import 'bootstrap/js/modal';
+// Bootstrap tooltip is a requirement of popover
+import 'bootstrap/js/tooltip';
 import 'bootstrap/js/popover';
 import 'bootstrap/js/tab';
-import 'bootstrap/js/tooltip';
 import 'bootstrap/js/transition';
 // Import select2 for side effects, registering it as a jQuery plugin
 import 'select2';
