@@ -6,7 +6,7 @@ table.table.table-condensed.isic-study-results-global-features-table
   tbody
     each feature in features
       tr
-        td.isic-study-results-annotation-feature-id(title=feature.name() class={disabled: !feature.has('resultName')})
+        td.isic-study-results-annotation-feature-id(title=feature.name(), class={disabled: !feature.has('resultName')})
           code= feature.id
         td.isic-study-results-annotation-feature-value(title=feature.get("resultId"))
           = feature.get('resultName')

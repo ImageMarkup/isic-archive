@@ -1,6 +1,6 @@
 .isic-study-results-select-users-container
   label.control-label.isic-study-results-header(for='isic-study-results-select-users-select') Annotator:
   select#isic-study-results-select-users-select.form-control.input
-    option(selected disabled value='')
+    option(selected, disabled, value='')
     each model in models
       option(value=model.id)= model.name()

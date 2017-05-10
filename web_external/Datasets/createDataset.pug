@@ -51,7 +51,7 @@
       .form-group
         label(for='isic-dataset-agreement-signature') Electronic signature
         input#isic-dataset-agreement-signature.form-control.input-sm(
-          type='text'
+          type='text',
           placeholder='Enter your name')
     .isic-form-group
       h3 Attribution
@@ -62,12 +62,12 @@
         .radio
           label
             input#isic-dataset-attribution-anonymous(
-              type='radio' name='attribution' value='anonymous')
+              type='radio', name='attribution', value='anonymous')
             | Anonymous
         .radio
           label
             input#isic-dataset-attribution-attributed-to(
-              type='radio' name='attribution' value='attributed-to' checked='on')
+              type='radio', name='attribution', value='attributed-to', checked='on')
             | Attributed to:
           input#isic-dataset-attribution-name.form-control.input-sm(
             type='text')

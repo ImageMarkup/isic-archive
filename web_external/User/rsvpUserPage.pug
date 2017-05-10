@@ -8,16 +8,16 @@
     .isic-form-group
       .form-group
         label Your login name
-        input.input-sm.form-control(type="text" value=user.get('login') readonly)
+        input.input-sm.form-control(type="text", value=user.get('login'), readonly)
       .form-group
         label Your email address
-        input.input-sm.form-control(type="text" value=user.get('email') readonly)
+        input.input-sm.form-control(type="text", value=user.get('email'), readonly)
       .form-group
         label Your first name
-        input.input-sm.form-control(type="text" value=user.get('firstName') readonly)
+        input.input-sm.form-control(type="text", value=user.get('firstName'), readonly)
       .form-group
         label Your last name
-        input.input-sm.form-control(type="text" value=user.get('lastName') readonly)
+        input.input-sm.form-control(type="text", value=user.get('lastName'), readonly)
       .form-group
         label(for="isic-user-rsvp-password") New password
         input#isic-user-rsvp-password.input-sm.form-control(type="password", placeholder="Enter new password")

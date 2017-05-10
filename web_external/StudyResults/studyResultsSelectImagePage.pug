@@ -4,7 +4,6 @@
     .isic-study-results-select-image-image-container(data-image-id=model.id)
       span= model.name()
       img(
-        src=apiRoot + '/image/' + model.id + '/thumbnail?width=' + thumbnailSize
-        width=thumbnailSize
-        height=thumbnailSize
-      )
+        src=apiRoot + '/image/' + model.id + '/thumbnail?width=' + thumbnailSize,
+        width=thumbnailSize,
+        height=thumbnailSize)

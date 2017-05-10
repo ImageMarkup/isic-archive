@@ -2,7 +2,7 @@
   .isic-segmentations-display-title Segmentations
 
   select.form-control.input-sm
-    option(selected disabled value=null)
+    option(selected, disabled, value=null)
       | Select...
     each segmentation in segmentations
       option(value=segmentation.id) #{segmentation.get('created')} #{segmentation.get('skill')}
