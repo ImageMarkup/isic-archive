@@ -12,7 +12,7 @@ var FeaturesetModel = Model.extend({
      * Get the name of the featureset.
      */
     name: function () {
-        return this.get('name') + ' (version ' + this.get('version') + ')';
+        return `${this.get('name')} (version ${this.get('version')})`;
     },
 
     creator: function () {

@@ -143,7 +143,7 @@ var StudyResultsSelectStudyView = View.extend({
         // Set up select box
         var placeholder = 'Select a study...';
         if (!this.collection.isEmpty()) {
-            placeholder += ' (' + this.collection.length + ' available)';
+            placeholder += ` (${this.collection.length} available)`;
         }
         select = this.$('#isic-study-results-select-study-select');
         select.select2({
@@ -247,7 +247,7 @@ var StudyResultsSelectUsersView = View.extend({
         // Set up select box
         var placeholder = 'No users available';
         if (!this.collection.isEmpty()) {
-            placeholder = 'Select an annotator... (' + this.collection.length + ' available)';
+            placeholder = `Select an annotator... (${this.collection.length} available)`;
         }
         select = this.$('#isic-study-results-select-users-select');
         select.select2({
@@ -298,7 +298,7 @@ var StudyResultsSelectLocalFeaturesView = View.extend({
         // Set up select box
         var placeholder = 'No features available';
         if (!collection.isEmpty()) {
-            placeholder = 'Select a feature... (' + collection.length + ' available)';
+            placeholder = `Select a feature... (${collection.length} available)`;
         }
         select = this.$('#isic-study-results-select-local-features-select');
         select.select2({

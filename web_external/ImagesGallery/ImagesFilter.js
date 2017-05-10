@@ -112,20 +112,18 @@ var CategoricalFacetFilter = FacetFilter.extend({
             // Encode each, as they're user-provided values from the database
             .map(SerializeFilterHelpers._stringToHex)
             .value();
-        // TODO: Could use "facetId + ' in ' + includedBinLabels"" if most are excluded
+        // TODO: Could use `(${hexFacetId} not in ${jsonIncludedBinLabels})` if most are excluded
         if (_.size(excludedBinLabels) === 0) {
             // If none are excluded, return no filter
             return '';
         } else {
-            return '(' +
-                // TODO: This doesn't strictly need to be encoded (provided that we don't use any of
-                // the grammar's forbidden characters for identifiers), but before removing the
-                // encoding step, we should ensure that decoding it (which always happens) will be a
-                // safe no-op
-                SerializeFilterHelpers._stringToHex(this.facetId) +
-                ' not in ' +
-                JSON.stringify(excludedBinLabels) +
-                ')';
+            // TODO: hexFacetId doesn't strictly need to be encoded (provided that we don't use any
+            // of the grammar's forbidden characters for identifiers), but before removing the
+            // encoding step, we should ensure that decoding it (which always happens) will be a
+            // safe no-op
+            var hexFacetId = SerializeFilterHelpers._stringToHex(this.facetId);
+            var jsonExcludedBinLabels = JSON.stringify(excludedBinLabels);
+            return `(${hexFacetId} not in ${jsonExcludedBinLabels})`;
         }
     }
 });
@@ -153,11 +151,9 @@ var TagsCategoricalFacetFilter = CategoricalFacetFilter.extend({
             // If all are included, return no filter
             return '';
         } else {
-            return '(' +
-                SerializeFilterHelpers._stringToHex(this.facetId) +
-                ' in ' +
-                JSON.stringify(includedBinLabels) +
-                ')';
+            var hexFacetId = SerializeFilterHelpers._stringToHex(this.facetId);
+            var jsonIncludedBinLabels = JSON.stringify(includedBinLabels);
+            return `(${hexFacetId} in ${jsonIncludedBinLabels})`;
         }
     }
 });
@@ -195,35 +191,24 @@ var IntervalFacetFilter = FacetFilter.extend({
             }, [])
             // Convert each range into a string expression
             .map((range) => {
-                var lowBoundExpression = 'not (' +
-                    SerializeFilterHelpers._stringToHex(this.facetId) +
-                    ' >= ' +
-                    range[0] +
-                    ')';
-                var highBoundExpression = 'not (' +
-                    SerializeFilterHelpers._stringToHex(this.facetId) +
-                    ' < ' +
-                    range[1] +
-                    ')';
-                return '(' + lowBoundExpression + ' or ' + highBoundExpression + ')';
+                var hexFacetId = SerializeFilterHelpers._stringToHex(this.facetId);
+                var lowBoundExpression = `not (${hexFacetId} >= ${range[0]}')'`;
+                var highBoundExpression = `not (${hexFacetId} < ${range[1]})`;
+                return `(${lowBoundExpression} or ${highBoundExpression})`;
             })
             .value();
         if (this._filters['__null__'] === false) {
             // This conditional will also intentionally fail if '__null__' is undefined
-            filterExpressions.push(
-                '(' +
-                SerializeFilterHelpers._stringToHex(this.facetId) +
-                ' not in ' +
-                JSON.stringify([SerializeFilterHelpers._stringToHex('__null__')]) +
-                ')'
-            );
+            var hexFacetId = SerializeFilterHelpers._stringToHex(this.facetId);
+            var jsonNullArray = JSON.stringify([SerializeFilterHelpers._stringToHex('__null__')]);
+            filterExpressions.push(`(${hexFacetId} not in ${jsonNullArray})`);
         }
         if (_.size(filterExpressions) === 0) {
             // If none are excluded, return no filter
             return '';
         } else {
             // Combine all expressions
-            return '(' + filterExpressions.join(' and ') + ')';
+            return `(${filterExpressions.join(' and ')})`;
         }
     }
 });
@@ -232,7 +217,7 @@ var SerializeFilterHelpers = {
     _stringToHex: function (value) {
         var result = '';
         for (var i = 0; i < value.length; i += 1) {
-            result += '%' + value.charCodeAt(i).toString(16);
+            result += `%${value.charCodeAt(i).toString(16)}`;
         }
         return result;
     },

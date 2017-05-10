@@ -13,17 +13,14 @@ var acceptTerms = null;
 UserModel.prototype.name = function () {
     var realName;
     if (this.has('login')) {
-        realName =
-            this.get('firstName') +
-            ' ' + this.get('lastName') +
-            ' (' + this.get('login') + ')';
+        realName = `${this.get('firstName')} ${this.get('lastName')} (${this.get('login')})`;
     }
 
     var displayName;
     if (this.has('name')) {
         displayName = this.get('name');
         if (realName) {
-            displayName += ' [' + realName + ']';
+            displayName += ` [${realName}]`;
         }
     } else {
         // The user should always have either a 'login' or a 'name'
@@ -87,7 +84,7 @@ UserModel.prototype.canAdminStudy = function () {
 // TODO: Remove this once Girder is updated
 UserModel.prototype.changePassword = function (oldPassword, newPassword) {
     return restRequest({
-        path: this.resourceName + '/password',
+        path: `${this.resourceName}/password`,
         data: {
             old: oldPassword,
             new: newPassword
@@ -107,7 +104,7 @@ UserModel.prototype.changePassword = function (oldPassword, newPassword) {
 // TODO: Push temporaryTokenLogin to upstream Girder
 UserModel.temporaryTokenLogin = function (userId, token) {
     return restRequest({
-        path: 'user/password/temporary/' + userId,
+        path: `user/password/temporary/${userId}`,
         type: 'GET',
         data: {token: token},
         error: null

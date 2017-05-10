@@ -78,7 +78,7 @@ var StudyView = View.extend({
 
     confirmRemoveUser: function (user) {
         confirm({
-            text: '<h4>Permanently remove <b>"' + _.escape(user.name()) + '"</b> from study?</h4>',
+            text: `<h4>Permanently remove <b>"${_.escape(user.name())}"</b> from study?</h4>`,
             escapedHtml: true,
             confirmCallback: () => {
                 // Ensure dialog is hidden before continuing. Otherwise,
@@ -101,13 +101,13 @@ var StudyView = View.extend({
                     })
                     .fetch();
                 showAlertDialog({
-                    text: '<h4>Annotator <b>"' + _.escape(user.name()) + '"</b> deleted</h4>',
+                    text: `<h4>Annotator <b>"${_.escape(user.name())}"</b> deleted</h4>'`,
                     escapedHtml: true
                 });
             })
             .fail((resp) => {
                 showAlertDialog({
-                    text: '<h4>Error deleting annotator</h4><br>' + _.escape(resp.responseJSON.message),
+                    text: `<h4>Error deleting annotator</h4><br>'${_.escape(resp.responseJSON.message)}`,
                     escapedHtml: true
                 });
             });
@@ -115,7 +115,7 @@ var StudyView = View.extend({
 
     confirmDestroy: function () {
         confirm({
-            text: '<h4>Permanently delete <b>"' + _.escape(this.model.name()) + '"</b> study?</h4>',
+            text: `<h4>Permanently delete <b>"${_.escape(this.model.name())}"</b> study?</h4>`,
             escapedHtml: true,
             confirmCallback: () => {
                 // Ensure dialog is hidden before continuing. Otherwise,
@@ -131,13 +131,13 @@ var StudyView = View.extend({
         this.model.destroy({
             success: function (model, resp, options) {
                 showAlertDialog({
-                    text: '<h4>Study <b>"' + _.escape(model.name()) + '"</b> deleted</h4>',
+                    text: `<h4>Study <b>"${_.escape(model.name())}"</b> deleted</h4>`,
                     escapedHtml: true
                 });
             },
             error: function (model, resp, options) {
                 showAlertDialog({
-                    text: '<h4>Error deleting study</h4><br>' + _.escape(resp.responseJSON.message),
+                    text: `<h4>Error deleting study</h4><br>'${_.escape(resp.responseJSON.message)}`,
                     escapedHtml: true
                 });
             }

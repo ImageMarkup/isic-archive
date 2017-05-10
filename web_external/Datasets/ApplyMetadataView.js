@@ -27,7 +27,7 @@ var MetadataFileModel = Model.extend({
         var time = formatDate(this.get('time'), DATE_SECOND);
         var fileName = this.get('file').name();
         var userName = this.get('user').name();
-        return time + ' \u2014 ' + fileName + ' \u2014 ' + userName;
+        return `${time} \u2014 ${fileName} \u2014 ${userName}`;
     }
 });
 
@@ -113,7 +113,7 @@ var ApplyMetadataSelectFileView = View.extend({
         // Set up select box
         var placeholder = 'Select a file...';
         if (!this.collection.isEmpty()) {
-            placeholder += ' (' + this.collection.length + ' available)';
+            placeholder += ` (${this.collection.length} available)`;
         }
         select = this.$('#isic-apply-metadata-file-select');
         select.select2({
@@ -249,7 +249,7 @@ var ApplyMetadataView = View.extend({
                 }
             })
             .fail((err) => {
-                showAlertDialog({text: 'Error: ' + err.responseJSON.message});
+                showAlertDialog({text: `Error: ${err.responseJSON.message}`});
             });
     }
 });

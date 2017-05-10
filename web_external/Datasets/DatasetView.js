@@ -11,12 +11,12 @@ var DatasetView = View.extend({
     events: {
         'click .isic-dataset-register-metadata-button': function () {
             router.navigate(
-                'dataset/' + this.model.id + '/metadata/register',
+                `dataset/${this.model.id}/metadata/register`,
                 {trigger: true});
         },
         'click .isic-dataset-apply-metadata-button': function () {
             router.navigate(
-                'dataset/' + this.model.id + '/metadata/apply',
+                `dataset/${this.model.id}/metadata/apply`,
                 {trigger: true});
         }
     },

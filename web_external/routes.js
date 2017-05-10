@@ -65,7 +65,7 @@ router.route('useraccount/:id/token/:token', 'accountToken', (id, token) => {
     // This allows reset password links to work
     // TODO: push this logic into the user model in upstream Girder
     restRequest({
-        path: 'user/password/temporary/' + id,
+        path: `user/password/temporary/${id}`,
         type: 'GET',
         data: {token: token},
         error: null
@@ -106,7 +106,7 @@ router.route('user/:id/rsvp/:token', 'rsvpUser', (id, token) => {
         })
         .fail((resp) => {
             showAlertDialog({
-                text: '<h4>Error loading user from token</h4><br>' + _.escape(resp.responseJSON.message),
+                text: `<h4>Error loading user from token</h4><br>${_.escape(resp.responseJSON.message)}`,
                 escapedHtml: true
             });
             router.navigate('', {trigger: true});

@@ -72,7 +72,7 @@ var RegisterMetadataView = View.extend({
 
         this.listenTo(this.dataset, 'isic:registerMetadata:error', (resp) => {
             showAlertDialog({
-                text: '<h4>Error registering metadata</h4><br>' + _.escape(resp.responseJSON.message),
+                text: `<h4>Error registering metadata</h4><br>${_.escape(resp.responseJSON.message)}`,
                 escapedHtml: true
             });
             this.$('#isic-register-metadata-submit').prop('disabled', false);
@@ -125,7 +125,7 @@ var RegisterMetadataView = View.extend({
         } else {
             // Create new upload folder with unique name
             this.uploadFolder = new FolderModel({
-                name: 'isic_metadata_' + Date.now(),
+                name: `isic_metadata_${Date.now()}`,
                 parentType: 'user',
                 parentId: getCurrentUser().id,
                 description: 'ISIC metadata upload'
@@ -170,8 +170,7 @@ var RegisterMetadataView = View.extend({
         this.$('.isic-upload-reset-container').toggle(!visible);
 
         this.uploadWidget.render();
-        this.$('.isic-upload-list').text(
-            'Uploaded: ' + uploadList.join(', '));
+        this.$('.isic-upload-list').text(`Uploaded: ${uploadList.join(', ')}`);
     },
 
     resetUpload: function () {

@@ -54,7 +54,7 @@ var DatasetModel = Model.extend({
      */
     registerMetadata: function (metadataFileId) {
         restRequest({
-            path: this.resourceName + '/' + this.id + '/metadata',
+            path: `${this.resourceName}/${this.id}/metadata`,
             type: 'POST',
             data: {
                 metadataFileId: metadataFileId
@@ -73,7 +73,7 @@ var DatasetModel = Model.extend({
     getRegisteredMetadata: function () {
         var deferred = $.Deferred();
         restRequest({
-            path: this.resourceName + '/' + this.id + '/metadata'
+            path: `${this.resourceName}/${this.id}/metadata`
         }).done((resp) => {
             deferred.resolve(resp);
         });
@@ -87,7 +87,7 @@ var DatasetModel = Model.extend({
     applyMetadata: function (metadataFileId, save) {
         var deferred = $.Deferred();
         restRequest({
-            path: this.resourceName + '/' + this.id + '/metadata/' + metadataFileId,
+            path: `${this.resourceName}/${this.id}/metadata/${metadataFileId}`,
             type: 'POST',
             data: {
                 save: save

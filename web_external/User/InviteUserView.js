@@ -43,7 +43,7 @@ var InviteUserView = View.extend({
             })
             .fail((resp) => {
                 showAlertDialog({
-                    text: '<h4>Error sending invite</h4><br>' + _.escape(resp.responseJSON.message),
+                    text: `<h4>Error sending invite</h4><br>${_.escape(resp.responseJSON.message)}`,
                     escapedHtml: true
                 });
                 this.$('#isic-user-invite-submit').prop('disabled', false);

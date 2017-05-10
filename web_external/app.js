@@ -165,7 +165,7 @@ Backbone.sync = function (method, model, options) {
  */
 ItemModel.prototype.getFiles = function () {
     restRequest({
-        path: this.resourceName + '/' + this.id + '/files'
+        path: `${this.resourceName}/${this.id}/files`
     }).done((resp) => {
         var fileCollection = new FileCollection(resp);
         this.trigger('g:files', fileCollection);
@@ -180,7 +180,7 @@ ItemModel.prototype.getFiles = function () {
  */
 FolderModel.prototype.removeContents = function () {
     restRequest({
-        path: this.resourceName + '/' + this.id + '/contents',
+        path: `${this.resourceName}/${this.id}/contents`,
         type: 'DELETE'
     }).done((resp) => {
         this.trigger('g:success');

@@ -21,10 +21,10 @@ var ImagesPagingPane = View.extend({
             this.images.fetchLastPage(this.filteredFacets.total);
         },
         'click #isic-images-paging-downloadZip': function () {
-            var downloadUrl = this.apiRoot + '/image/download';
+            var downloadUrl = `${this.apiRoot}/image/download`;
             var filterQuery = JSON.stringify(this.filters.asAst());
             if (filterQuery) {
-                downloadUrl += '?filter=' + filterQuery;
+                downloadUrl += `?filter=${filterQuery}`;
             }
             window.location.assign(downloadUrl);
         }
@@ -105,7 +105,7 @@ var ImagesPagingPane = View.extend({
             var startImageNum = this.images._currentOffset() + 1;
             var endImageNum = startImageNum + this.images.length - 1;
             labelElement.find('.isic-images-paging-label-page')
-                .text(startImageNum + ' - ' + endImageNum);
+                .text(`${startImageNum} - ${endImageNum}`);
         } else {
             labelElement.find('.isic-images-paging-label-page')
                 .text(this.images.length);
@@ -113,8 +113,8 @@ var ImagesPagingPane = View.extend({
 
         // Move the paging bar
         this.$('#isic-images-paging-bar-pageTotal')
-            .css('left', () => (this.images._currentOffset() / this.filteredFacets.total) * 100 + '%')
-            .width(() => (this.images.length / this.filteredFacets.total) * 100 + '%');
+            .css('left', () => `${(this.images._currentOffset() / this.filteredFacets.total) * 100}%`)
+            .width(() => `${(this.images.length / this.filteredFacets.total) * 100}%`);
 
         this.$('#isic-images-paging-downloadZip').prop(
             'disabled', this.filteredFacets.total === 0);

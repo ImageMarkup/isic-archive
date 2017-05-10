@@ -29,7 +29,7 @@ var ImageViewerWidget = View.extend({
 
         restRequest({
             type: 'GET',
-            path: 'image/' + this.model.id + '/tiles'
+            path: `image/${this.model.id}/tiles`
         }).done((resp) => {
             this.destroyViewer();
 
@@ -82,7 +82,7 @@ var ImageViewerWidget = View.extend({
 
         _.extend(params.layer, {
             useCredentials: true,
-            url: this.apiRoot + '/image/' + this.model.id + '/tiles/{z}/{x}/{y}'
+            url: `${this.apiRoot}/image/${this.model.id}/tiles/{z}/{x}/{y}`
         });
         this.imageLayer = this.viewer.createLayer('osm', params.layer);
     },

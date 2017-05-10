@@ -34,7 +34,7 @@ var RsvpUserView = View.extend({
                 })
                 .fail((resp) => {
                     showAlertDialog({
-                        text: '<h4>Error changing password</h4><br>' + _.escape(resp.responseJSON.message),
+                        text: `<h4>Error changing password</h4><br>${_.escape(resp.responseJSON.message)}`,
                         escapedHtml: true
                     });
                     this.$('#isic-user-rsvp-submit').prop('disabled', false);

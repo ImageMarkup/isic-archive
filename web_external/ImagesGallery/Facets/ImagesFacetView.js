@@ -32,7 +32,7 @@ var ImagesFacetView = View.extend({
         this.filter = settings.filter;
 
         this.facetId = this.completeFacet.id;
-        this.facetContentId = this.className + '-' + this.facetId.replace(/\./g, '-');
+        this.facetContentId = `${this.className}-${this.facetId.replace(/\./g, '-')}`;
         this.title = this.completeFacet.schema().title;
     },
 
@@ -86,10 +86,11 @@ var ImagesFacetView = View.extend({
             return 'unknown';
         } else if (_.has(completeBin, 'lowBound')) {
             var formatter = d3.format('0.3s');
-            return completeBin.label[0] +
-                formatter(completeBin.lowBound) + ' - ' +
-                formatter(completeBin.highBound) +
-                completeBin.label[completeBin.label.length - 1];
+            var lowBracket = completeBin.label[0];
+            var highBracket = completeBin.label[completeBin.label.length - 1];
+            var lowBound = formatter(completeBin.lowBound);
+            var highBound = formatter(completeBin.highBound);
+            return `${lowBracket}${lowBound} - ${highBound}${highBracket}`;
         } else {
             return completeBin.label;
         }
@@ -175,14 +176,13 @@ var ImagesFacetHistogramView = ImagesFacetView.extend({
             .ticks(Math.min(4, this.scale.yMax))
             .tickFormat(d3.format('s'));
         var yAxisObj = svg.select('.yAxis')
-            .attr('transform', 'translate(' + this.scale.leftAxisPadding + ',0)')
+            .attr('transform', `translate(${this.scale.leftAxisPadding},0)`)
             .call(yAxis);
 
         // Move the special buttons into place and attach their events
         svg.select('.isic-images-facet-all')
-            .attr('transform', 'translate(' +
-                (this.scale.leftAxisPadding - 0.5 * emSize) + ',' +
-                (height + emSize) + ')');
+            .attr('transform',
+                `translate(${this.scale.leftAxisPadding - 0.5 * emSize},${height + emSize})`);
 
         // Draw the bin groups
         var bins = svg.select('.bins').selectAll('.bin')
@@ -202,7 +202,7 @@ var ImagesFacetHistogramView = ImagesFacetView.extend({
                 this.completeFacet.get('bins'),
                 {label: d.completeBin.label}
             );
-            return 'translate(' + this.scale.binToPosition(binNo) + ',' + topPadding + ')';
+            return `translate(${this.scale.binToPosition(binNo)},${topPadding})`;
         });
 
         // Draw one bar for each bin
@@ -238,7 +238,7 @@ var ImagesFacetHistogramView = ImagesFacetView.extend({
                         if (filteredCount === completeCount) {
                             return String(filteredCount);
                         } else {
-                            return filteredCount + ' (of ' + completeCount + ')';
+                            return `${filteredCount} (of ${completeCount})`;
                         }
                     };
                     $(this).tooltip({
@@ -286,9 +286,8 @@ var ImagesFacetHistogramView = ImagesFacetView.extend({
         // Add the scale adjustment knob (needs a distinct scale instance)
         var knobScale = yScale.copy();
         var knob = svg.select('.yAxisKnob')
-            .attr('transform', 'translate(' +
-                this.scale.leftAxisPadding + ',' +
-                knobScale(this.scale.yMax) + ')');
+            .attr('transform',
+                `translate(${this.scale.leftAxisPadding},${knobScale(this.scale.yMax)})`);
         knob.call(d3.behavior.drag()
             .origin(() => {
                 return { x: 0, y: knobScale(this.scale.yMax) };
@@ -298,9 +297,8 @@ var ImagesFacetHistogramView = ImagesFacetView.extend({
 
                 // update everything that cares about the y this.scale:
                 // the knob
-                knob.attr('transform', 'translate(' +
-                    this.scale.leftAxisPadding + ',' +
-                    knobScale(this.scale.yMax) + ')');
+                knob.attr('transform',
+                    `translate(${this.scale.leftAxisPadding},${knobScale(this.scale.yMax)})`);
                 // the axis
                 yScale.domain([0, this.scale.yMax]);
                 yAxis.scale(yScale).ticks(Math.min(4, this.scale.yMax));
@@ -354,7 +352,7 @@ var ImagesFacetHistogramView = ImagesFacetView.extend({
                 return this._getBinTitle(d.completeBin);
             })
             .attr('text-anchor', 'end')
-            .attr('transform', 'translate(0 ' + transformHeight + ') rotate(' + transformAngle + ')')
+            .attr('transform', `translate(0 ${transformHeight}) rotate(${transformAngle})`)
             .each(function (d, i) {
                 // "this" refers to the DOM element
 
@@ -373,7 +371,7 @@ var ImagesFacetHistogramView = ImagesFacetView.extend({
                         shortened = true;
 
                         text = text.slice(0, -1);
-                        me.html(text + '&hellip;');
+                        me.html(`${text}&hellip;`);
                     }
 
                     self.renderCache.shortenedLabels[i] = me.text();
@@ -400,8 +398,8 @@ var ImagesFacetHistogramView = ImagesFacetView.extend({
         height += maxBoxHeight + topPadding + offsetY;
 
         svg.attr({
-            width: width + 'px',
-            height: height + 'px'
+            width: `${width}px`,
+            height: `${height}px`
         });
         return this;
     },
@@ -474,9 +472,9 @@ var ImagesFacetCategoricalView = ImagesFacetView.extend({
             if (filteredCount === completeCount) {
                 label = completeCount;
             } else {
-                label = filteredCount + ' / ' + completeCount;
+                label = `${filteredCount} / ${completeCount}`;
             }
-            label = '(' + label + ')';
+            label = `(${label})`;
 
             countElem.text(label);
         });

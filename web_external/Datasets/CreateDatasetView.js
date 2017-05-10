@@ -95,7 +95,7 @@ var CreateDatasetView = View.extend({
                 callback: () => {
                     // Navigate to register metadata view
                     router.navigate(
-                        'dataset/' + this.dataset.id + '/metadata/register',
+                        `dataset/${this.dataset.id}/metadata/register`,
                         {trigger: true});
                 }
             });
@@ -103,7 +103,7 @@ var CreateDatasetView = View.extend({
 
         this.listenTo(this.dataset, 'isic:ingestImages:error', (resp) => {
             showAlertDialog({
-                text: '<h4>Error submitting dataset</h4><br>' + _.escape(resp.responseJSON.message),
+                text: `<h4>Error submitting dataset</h4><br>${_.escape(resp.responseJSON.message)}`,
                 escapedHtml: true
             });
             this.$('#isic-dataset-submit').prop('disabled', false);
@@ -159,7 +159,7 @@ var CreateDatasetView = View.extend({
         } else {
             // Create new upload folder with unique name
             this.uploadFolder = new FolderModel({
-                name: 'isic_dataset_' + Date.now(),
+                name: `isic_dataset_${Date.now()}`,
                 parentType: 'user',
                 parentId: getCurrentUser().id,
                 description: 'ISIC dataset upload'
@@ -221,8 +221,7 @@ var CreateDatasetView = View.extend({
         this.$('.isic-upload-reset-container').toggle(!visible);
 
         this.uploadWidget.render();
-        this.$('.isic-upload-list').text(
-            'Uploaded: ' + uploadList.join(', '));
+        this.$('.isic-upload-list').text(`Uploaded: ${uploadList.join(', ')}`);
     },
 
     resetUpload: function () {

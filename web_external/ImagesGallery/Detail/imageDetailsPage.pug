@@ -11,7 +11,7 @@
       data-toggle='tooltip',
       data-placement='bottom',
       title='Open this image in a new window',
-      href=apiRoot + '/image/' + image.id + '/download?contentDisposition=inline',
+      href=`${apiRoot}/image/${image.id}/download?contentDisposition=inline`,
       target='_blank',
       rel='noopener')
       i.icon-link-ext
@@ -19,7 +19,7 @@
       data-toggle='tooltip',
       data-placement='bottom',
       title='Download this image',
-      href=apiRoot + '/image/' + image.id + '/download',
+      href=`${apiRoot}/image/${image.id}/download`,
       download)
       i.icon-download
     button#isic-image-details-close.close
