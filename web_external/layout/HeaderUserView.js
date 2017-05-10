@@ -6,7 +6,7 @@ import 'girder_plugins/gravatar/models/UserModel';
 import router from '../router';
 import View from '../view';
 
-import LayoutHeaderUserTemplate from './layoutHeaderUser.jade';
+import LayoutHeaderUserTemplate from './layoutHeaderUser.pug';
 import './layoutHeaderUser.styl';
 import './layoutHeader.styl';
 

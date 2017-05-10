@@ -7,9 +7,9 @@ import {handleClose, handleOpen} from 'girder/dialog';
 import StudyModel from '../models/StudyModel';
 import View from '../view';
 
-import StudyAddUserWidgetTemplate from './studyAddUserWidget.jade';
+import StudyAddUserWidgetTemplate from './studyAddUserWidget.pug';
 import './studyAddUserWidget.styl';
-import UserInfoTemplate from './userInfo.jade';
+import UserInfoTemplate from './userInfo.pug';
 import './userInfo.styl';
 
 var StudyAddUserWidget = View.extend({

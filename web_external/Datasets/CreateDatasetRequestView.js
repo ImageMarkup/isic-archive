@@ -6,7 +6,7 @@ import View from '../view';
 import {showAlertDialog} from '../common/utilities';
 import router from '../router';
 
-import CreateDatasetRequestTemplate from './createDatasetRequest.jade';
+import CreateDatasetRequestTemplate from './createDatasetRequest.pug';
 
 var CreateDatasetRequestView = View.extend({
     events: {

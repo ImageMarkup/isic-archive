@@ -30,7 +30,7 @@ import LayoutFooterView from './layout/FooterView';
 import LayoutHeaderView from './layout/HeaderView';
 import router from './router';
 import './routes';
-import LayoutTemplate from './layout/layout.jade';
+import LayoutTemplate from './layout/layout.pug';
 import './layout/layout.styl';
 
 const IsicApp = GirderApp.extend({

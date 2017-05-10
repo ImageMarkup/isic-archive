@@ -3,7 +3,7 @@ import _ from 'underscore';
 import ImageViewerWidget from './ImageViewerWidget';
 import View from '../../view';
 
-import ImageFullscreenWidgetTemplate from './imageFullscreenWidget.jade';
+import ImageFullscreenWidgetTemplate from './imageFullscreenWidget.pug';
 import './imageFullscreenWidget.styl';
 
 var ImageFullscreenWidget = View.extend({

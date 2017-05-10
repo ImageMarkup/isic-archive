@@ -9,7 +9,7 @@ import View from '../view';
 import {showAlertDialog} from '../common/utilities';
 import router from '../router';
 
-import RegisterMetadataTemplate from './registerMetadata.jade';
+import RegisterMetadataTemplate from './registerMetadata.pug';
 import './registerMetadata.styl';
 import './datasetInfoWidget.styl';
 import './uploadWidget.styl';

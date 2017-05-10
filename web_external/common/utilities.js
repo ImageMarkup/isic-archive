@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import _ from 'underscore';
 
-import AlertDialogTemplate from './alertDialog.jade';
+import AlertDialogTemplate from './alertDialog.pug';
 
 /**
  * Miscellaneous utility functions.

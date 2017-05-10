@@ -8,7 +8,7 @@ import DatasetCollection from '../collections/DatasetCollection';
 import View from '../view';
 import router from '../router';
 
-import DatasetsPageTemplate from './datasetsPage.jade';
+import DatasetsPageTemplate from './datasetsPage.pug';
 import './datasetsPage.styl';
 
 var DatasetsView = View.extend({

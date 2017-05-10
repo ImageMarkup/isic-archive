@@ -7,8 +7,8 @@ import DatasetCollection from '../../collections/DatasetCollection';
 import View from '../../view';
 import HistogramScale from './HistogramScale';
 
-import ImagesFacetHistogramTemplate from './imagesFacetHistogram.jade';
-import ImagesFacetCategoricalTemplate from './imagesFacetCategorical.jade';
+import ImagesFacetHistogramTemplate from './imagesFacetHistogram.pug';
+import ImagesFacetCategoricalTemplate from './imagesFacetCategorical.pug';
 import checkImageUrl from '!url-loader!svg-fill-loader!./check.svg?fill=#999999';
 import dashImageUrl from '!url-loader!svg-fill-loader!./dash.svg?fill=#999999';
 import exImageUrl from '!url-loader!svg-fill-loader!./ex.svg?fill=#999999';

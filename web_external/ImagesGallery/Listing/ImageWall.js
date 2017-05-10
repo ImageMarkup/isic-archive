@@ -3,7 +3,7 @@ import $ from 'jquery';
 import ImageFullscreenWidget from '../../common/Viewer/ImageFullscreenWidget';
 import View from '../../view';
 
-import ImageWallTemplate from './imageWall.jade';
+import ImageWallTemplate from './imageWall.pug';
 
 var ImageWall = View.extend({
     events: {

@@ -7,7 +7,7 @@ import ImagesFilter from './ImagesFilter';
 import {SelectableImageCollection} from '../collections/ImageCollection';
 import View from '../view';
 
-import ImagesPageTemplate from './imagesPage.jade';
+import ImagesPageTemplate from './imagesPage.pug';
 import './imagesPage.styl';
 
 var ImagesView = View.extend({

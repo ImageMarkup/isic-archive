@@ -2,7 +2,7 @@ import $ from 'jquery';
 
 import View from '../view';
 
-import LayoutFooterTemplate from './layoutFooter.jade';
+import LayoutFooterTemplate from './layoutFooter.pug';
 import './layoutFooter.styl';
 
 var LayoutFooterView = View.extend({

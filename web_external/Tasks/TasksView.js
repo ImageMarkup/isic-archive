@@ -6,9 +6,9 @@ import Collection from '../collections/Collection';
 import Model from '../models/Model';
 import View from '../view';
 
-import TasksPageTemplate from './tasksPage.jade';
+import TasksPageTemplate from './tasksPage.pug';
 import './tasksPage.styl';
-import TaskPageTemplate from './taskPage.jade';
+import TaskPageTemplate from './taskPage.pug';
 import './taskPage.styl';
 
 // Model for a task

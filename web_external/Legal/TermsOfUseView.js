@@ -1,6 +1,6 @@
 import View from '../view';
 
-import TermsOfUsePageTemplate from './termsOfUsePage.jade';
+import TermsOfUsePageTemplate from './termsOfUsePage.pug';
 import './legal.styl';
 
 var TermsOfUseView = View.extend({

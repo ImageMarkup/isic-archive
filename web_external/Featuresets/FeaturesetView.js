@@ -7,7 +7,7 @@ import {confirm} from 'girder/dialog';
 import View from '../view';
 import {showAlertDialog} from '../common/utilities';
 
-import FeaturesetPageTemplate from './featuresetPage.jade';
+import FeaturesetPageTemplate from './featuresetPage.pug';
 import './featuresetPage.styl';
 import '../common/Listing/listingItemPage.styl';
 

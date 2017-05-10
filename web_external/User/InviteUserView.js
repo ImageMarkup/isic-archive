@@ -6,9 +6,9 @@ import View from '../view';
 import router from '../router';
 import {showAlertDialog} from '../common/utilities';
 
-import InvitationConfirmationPageTemplate from './invitationConfirmationPage.jade';
+import InvitationConfirmationPageTemplate from './invitationConfirmationPage.pug';
 import './invitationConfirmationPage.styl';
-import InviteUserPageTemplate from './inviteUserPage.jade';
+import InviteUserPageTemplate from './inviteUserPage.pug';
 import './inviteUserPage.styl';
 
 var InviteUserView = View.extend({

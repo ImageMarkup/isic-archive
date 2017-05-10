@@ -5,7 +5,7 @@ import TermsOfUseWidget from '../common/TermsOfUse/TermsOfUseWidget';
 import View from '../view';
 import router from '../router';
 
-import TermsAcceptancePageTemplate from './termsAcceptancePage.jade';
+import TermsAcceptancePageTemplate from './termsAcceptancePage.pug';
 import './termsAcceptancePage.styl';
 
 var TermsAcceptanceView = View.extend({

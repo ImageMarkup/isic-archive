@@ -3,7 +3,7 @@ import PluginConfigBreadcrumbWidget from 'girder/views/widgets/PluginConfigBread
 import {restRequest} from 'girder/rest';
 import View from 'girder/views/View';
 
-import ConfigViewTemplate from '../templates/configView.jade';
+import ConfigViewTemplate from '../templates/configView.pug';
 
 var ConfigView = View.extend({
     events: {

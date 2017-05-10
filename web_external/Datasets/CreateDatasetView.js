@@ -13,7 +13,7 @@ import View from '../view';
 import {showAlertDialog} from '../common/utilities';
 import router from '../router';
 
-import CreateDatasetTemplate from './createDataset.jade';
+import CreateDatasetTemplate from './createDataset.pug';
 import './createDataset.styl';
 import './uploadWidget.styl';
 

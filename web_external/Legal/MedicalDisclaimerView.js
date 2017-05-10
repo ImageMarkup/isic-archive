@@ -1,6 +1,6 @@
 import View from '../view';
 
-import MedicalDisclaimerPageTemplate from './medicalDisclaimerPage.jade';
+import MedicalDisclaimerPageTemplate from './medicalDisclaimerPage.pug';
 import './legal.styl';
 
 var MedicalDisclaimerView = View.extend({
