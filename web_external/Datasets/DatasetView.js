@@ -31,12 +31,14 @@ var DatasetView = View.extend({
             parentView: this
         }).render();
 
-        this.model.once('g:fetched', function () {
-            // Don't "this.loadingAnimation.destroy()", as it will unbind all events on "this.el"
-            delete this.loadingAnimation;
+        this.model
+            .once('g:fetched', () => {
+                // Don't "this.loadingAnimation.destroy()", as it will unbind all events on "this.el"
+                delete this.loadingAnimation;
 
-            this.render();
-        }, this).fetch();
+                this.render();
+            })
+            .fetch();
     },
 
     render: function () {

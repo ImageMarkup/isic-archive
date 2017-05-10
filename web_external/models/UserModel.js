@@ -40,7 +40,7 @@ UserModel.prototype.setAcceptTerms = function (successCallback) {
     restRequest({
         path: 'user/acceptTerms',
         type: 'POST'
-    }).done(_.bind(function (resp) {
+    }).done((resp) => {
         if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
             // Directly update user permissions
             this.get('permissions').acceptTerms = true;
@@ -48,7 +48,7 @@ UserModel.prototype.setAcceptTerms = function (successCallback) {
             successCallback(resp);
         }
         // This should not fail
-    }, this));
+    });
 };
 
 UserModel.prototype.canCreateDataset = function () {
@@ -59,7 +59,7 @@ UserModel.prototype.setCanCreateDataset = function (successCallback, failureCall
     restRequest({
         path: 'user/requestCreateDatasetPermission',
         type: 'POST'
-    }).done(_.bind(function (resp) {
+    }).done((resp) => {
         if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
             // Directly update user permissions
             this.get('permissions').createDataset = true;
@@ -68,7 +68,7 @@ UserModel.prototype.setCanCreateDataset = function (successCallback, failureCall
         } else {
             failureCallback(resp);
         }
-    }, this));
+    });
 };
 
 UserModel.prototype.canReviewDataset = function () {
@@ -95,12 +95,12 @@ UserModel.prototype.changePassword = function (oldPassword, newPassword) {
         type: 'PUT',
         error: null
     })
-    .done(_.bind(function () {
+    .done(() => {
         this.trigger('g:passwordChanged');
-    }, this))
-    .fail(_.bind(function (err) {
+    })
+    .fail((err) => {
         this.trigger('g:error', err);
-    }, this));
+    });
 };
 
 // Add additional static methods
@@ -112,13 +112,13 @@ UserModel.temporaryTokenLogin = function (userId, token) {
         data: {token: token},
         error: null
     })
-    .done(_.bind(function (resp) {
+    .done((resp) => {
         resp.user.token = resp.authToken.token;
         eventStream.close();
         setCurrentUser(new UserModel(resp.user));
         eventStream.open();
         events.trigger('g:login-changed');
-    }, this));
+    });
 };
 
 UserModel.currentUserCanAcceptTerms = function () {

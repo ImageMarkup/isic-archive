@@ -27,7 +27,7 @@ var StudyModel = Model.extend({
     },
 
     users: function () {
-        var userModels = this.get('users').map(function (user) {
+        var userModels = this.get('users').map((user) => {
             return new UserModel(user);
         });
         return new UserCollection(userModels);
@@ -44,11 +44,11 @@ var StudyModel = Model.extend({
             data: {
                 userIds: JSON.stringify([userId])
             }
-        }).done(_.bind(function (resp) {
+        }).done((resp) => {
             this.trigger('g:addedUser');
-        }, this)).fail(_.bind(function (err) {
+        }).fail((err) => {
             this.trigger('g:error', err);
-        }, this));
+        });
     },
 
     removeUser: function (user) {

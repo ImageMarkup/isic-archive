@@ -1,5 +1,3 @@
-import _ from 'underscore';
-
 import View from '../../view';
 
 import ImagesPagingPaneTemplate from './imagesPagingPane.pug';
@@ -115,12 +113,8 @@ var ImagesPagingPane = View.extend({
 
         // Move the paging bar
         this.$('#isic-images-paging-bar-pageTotal')
-            .css('left', _.bind(function () {
-                return (this.images._currentOffset() / this.filteredFacets.total) * 100 + '%';
-            }, this))
-            .width(_.bind(function () {
-                return (this.images.length / this.filteredFacets.total) * 100 + '%';
-            }, this));
+            .css('left', () => (this.images._currentOffset() / this.filteredFacets.total) * 100 + '%')
+            .width(() => (this.images.length / this.filteredFacets.total) * 100 + '%');
 
         this.$('#isic-images-paging-downloadZip').prop(
             'disabled', this.filteredFacets.total === 0);

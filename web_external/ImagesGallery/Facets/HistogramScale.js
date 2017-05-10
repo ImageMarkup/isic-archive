@@ -42,7 +42,7 @@ HistogramScale.prototype.update = function (overviewHistogram, filteredSetHistog
     // the first categorical value? While we're at it, determine the
     // real max vertical count, and construct bin lookup tables for
     // each histogram.
-    _.each(this.overviewHistogram, function (bin, index) {
+    _.each(this.overviewHistogram, (bin, index) => {
         if (_.has(bin, 'lowBound') && _.has(bin, 'highBound')) {
             this.ordinalBinCount += 1;
             if (this.lowBound === undefined || bin.lowBound < this.lowBound) {
@@ -60,7 +60,7 @@ HistogramScale.prototype.update = function (overviewHistogram, filteredSetHistog
             this.categoricalLookup[bin.label] = index;
         }
         this.realYmax = Math.max(this.realYmax, bin.count);
-    }, this);
+    });
 
     // If the new data is shorter than the previous custom
     // customYmax, just clear the custom customYmax

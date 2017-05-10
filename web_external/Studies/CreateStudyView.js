@@ -166,20 +166,20 @@ var CreateStudyView = View.extend({
                 imageIds: imageIds
             },
             error: null
-        }).done(_.bind(function () {
+        }).done(() => {
             showAlertDialog({
                 text: '<h4>Study <b>"' + _.escape(name) + '"</b> created</h4>',
                 escapedHtml: true
             });
             // TODO route directly to study
             router.navigate('studies', {trigger: true});
-        }, this)).fail(_.bind(function (resp) {
+        }).fail((resp) => {
             showAlertDialog({
                 text: '<h4>Error creating study</h4><br>' + _.escape(resp.responseJSON.message),
                 escapedHtml: true
             });
             this.$('#isic-study-submit').prop('disabled', false);
-        }, this));
+        });
     }
 });
 

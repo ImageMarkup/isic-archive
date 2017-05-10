@@ -1,5 +1,4 @@
 import $ from 'jquery';
-import _ from 'underscore';
 
 import {getCurrentUser} from 'girder/auth';
 import {restRequest} from 'girder/rest';
@@ -41,12 +40,12 @@ var DatasetModel = Model.extend({
                 attribution: attribution
             },
             error: null
-        }).done(_.bind(function (resp) {
+        }).done((resp) => {
             this.set(resp);
             this.trigger('isic:ingestImages:success', resp);
-        }, this)).fail(_.bind(function (err) {
+        }).fail((err) => {
             this.trigger('isic:ingestImages:error', err);
-        }, this));
+        });
     },
 
      /**
@@ -61,11 +60,11 @@ var DatasetModel = Model.extend({
                 metadataFileId: metadataFileId
             },
             error: null
-        }).done(_.bind(function (resp) {
+        }).done((resp) => {
             this.trigger('isic:registerMetadata:success', resp);
-        }, this)).fail(_.bind(function (err) {
+        }).fail((err) => {
             this.trigger('isic:registerMetadata:error', err);
-        }, this));
+        });
     },
 
      /**
@@ -75,7 +74,7 @@ var DatasetModel = Model.extend({
         var deferred = $.Deferred();
         restRequest({
             path: this.resourceName + '/' + this.id + '/metadata'
-        }).done(function (resp) {
+        }).done((resp) => {
             deferred.resolve(resp);
         });
         return deferred.promise();
@@ -94,9 +93,9 @@ var DatasetModel = Model.extend({
                 save: save
             },
             error: null
-        }).done(function (resp) {
+        }).done((resp) => {
             deferred.resolve(resp);
-        }).fail(function (err) {
+        }).fail((err) => {
             deferred.reject(err);
         });
         return deferred.promise();

@@ -34,7 +34,7 @@ var DatasetsView = View.extend({
         this.loaded = false;
 
         this.datasets = new DatasetCollection();
-        this.listenTo(this.datasets, 'g:changed', function () {
+        this.listenTo(this.datasets, 'g:changed', () => {
             this.loaded = true;
             this.render();
         });

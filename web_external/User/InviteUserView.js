@@ -35,19 +35,19 @@ var InviteUserView = View.extend({
                 type: 'POST',
                 error: null
             })
-            .done(_.bind(function (resp) {
+            .done((resp) => {
                 this.confirmation = resp;
                 this.confirmation.newUser.email = data.email;
                 this.render();
                 router.navigate('user/invite?confirmation=true', {replace: true});
-            }, this))
-            .fail(_.bind(function (resp) {
+            })
+            .fail((resp) => {
                 showAlertDialog({
                     text: '<h4>Error sending invite</h4><br>' + _.escape(resp.responseJSON.message),
                     escapedHtml: true
                 });
                 this.$('#isic-user-invite-submit').prop('disabled', false);
-            }, this));
+            });
         },
         'click #isic-invitation-confirmation-invite-user': function (event) {
             this.confirmation = null;

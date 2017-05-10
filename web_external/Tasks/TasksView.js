@@ -53,9 +53,10 @@ var TasksGroupView = View.extend({
 
     // Return total number of tasks in collection
     numTasks: function () {
-        return this.collection.reduce(function (total, model) {
-            return total + model.get('count');
-        }, 0);
+        return this.collection.reduce(
+            (total, model) => total + model.get('count'),
+            0
+        );
     }
 });
 

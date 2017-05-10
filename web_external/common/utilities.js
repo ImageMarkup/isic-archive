@@ -26,13 +26,16 @@ var showAlertDialog = function (params) {
     }, params);
 
     var container = $('#g-dialog-container');
-    container.html(AlertDialogTemplate({
-        params: params
-    })).girderModal(false).on('hidden.bs.modal', function () {
-        if (params.callback) {
-            params.callback();
-        }
-    });
+    container
+        .html(AlertDialogTemplate({
+            params: params
+        }))
+        .girderModal(false)
+        .on('hidden.bs.modal', () => {
+            if (params.callback) {
+                params.callback();
+            }
+        });
 
     var el = container.find('.modal-body>p');
     if (params.escapedHtml) {
@@ -41,9 +44,11 @@ var showAlertDialog = function (params) {
         el.text(params.text);
     }
 
-    $('#isic-alert-dialog-button').unbind('click').click(function () {
-        container.modal('hide');
-    });
+    $('#isic-alert-dialog-button')
+        .unbind('click')
+        .click(() => {
+            container.modal('hide');
+        });
 };
 
 export {showAlertDialog};

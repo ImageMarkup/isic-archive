@@ -40,7 +40,7 @@ var MetadataFileCollection = Collection.extend({
     sortDir: SORT_DESC,
 
     parse: function (data) {
-        _.each(data, function (item) {
+        _.each(data, (item) => {
             item.file = new FileModel(item.file);
             item.user = new UserModel(item.user);
 
@@ -148,16 +148,16 @@ var ApplyMetadataView = View.extend({
                 escapedHtml: true,
                 yesText: 'Save',
                 yesClass: 'btn-primary',
-                confirmCallback: _.bind(function () {
+                confirmCallback: () => {
                     // Ensure dialog is hidden before continuing. Otherwise,
                     // when validateMetadata() displays its modal alert dialog,
                     // the Bootstrap-created element with class "modal-backdrop"
                     // is erroneously not removed.
-                    $('#g-dialog-container').on('hidden.bs.modal', _.bind(function () {
+                    $('#g-dialog-container').on('hidden.bs.modal', () => {
                         var save = true;
                         this.validateMetadata(save);
-                    }, this));
-                }, this)
+                    });
+                }
             });
         }
     },
@@ -185,9 +185,11 @@ var ApplyMetadataView = View.extend({
         this.listenTo(this.selectFileView, 'changed', this.fileChanged);
         this.listenTo(this.errors, 'reset', this.errorsChanged);
 
-        this.dataset.getRegisteredMetadata().done(_.bind(function (resp) {
-            this.files.reset(resp, {parse: true});
-        }, this));
+        this.dataset
+            .getRegisteredMetadata()
+            .done((resp) => {
+                this.files.reset(resp, {parse: true});
+            });
 
         this.render();
     },
@@ -231,21 +233,24 @@ var ApplyMetadataView = View.extend({
     },
 
     validateMetadata: function (save) {
-        this.dataset.applyMetadata(this.file.id, save).then(_.bind(function (resp) {
-            this.errors.reset(resp, {parse: true});
+        this.dataset
+            .applyMetadata(this.file.id, save)
+            .done((resp) => {
+                this.errors.reset(resp, {parse: true});
 
-            if (save) {
-                showAlertDialog({
-                    text: '<h4>Metadata saved.</h4>',
-                    escapedHtml: true,
-                    callback: function () {
-                        router.navigate('', {trigger: true});
-                    }
-                });
-            }
-        }, this), function (err) {
-            showAlertDialog({text: 'Error: ' + err.responseJSON.message});
-        });
+                if (save) {
+                    showAlertDialog({
+                        text: '<h4>Metadata saved.</h4>',
+                        escapedHtml: true,
+                        callback: function () {
+                            router.navigate('', {trigger: true});
+                        }
+                    });
+                }
+            })
+            .fail((err) => {
+                showAlertDialog({text: 'Error: ' + err.responseJSON.message});
+            });
     }
 });
 

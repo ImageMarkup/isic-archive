@@ -30,7 +30,7 @@ var ImageViewerWidget = View.extend({
         restRequest({
             type: 'GET',
             path: 'image/' + this.model.id + '/tiles'
-        }).done(_.bind(function (resp) {
+        }).done((resp) => {
             this.destroyViewer();
 
             this.levels = resp.levels;
@@ -40,7 +40,7 @@ var ImageViewerWidget = View.extend({
             this.sizeY = resp.sizeY;
 
             this.render();
-        }, this));
+        });
     },
 
     _createViewer: function () {

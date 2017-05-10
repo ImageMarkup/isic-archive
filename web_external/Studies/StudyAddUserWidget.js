@@ -21,13 +21,16 @@ var StudyAddUserWidget = View.extend({
 
             var study = new StudyModel({
                 _id: this.study.id
-            }).once('g:addedUser', function () {
-                this.trigger('g:saved');
-                $('.modal').modal('hide');
-            }, this).once('g:error', function () {
-                $('.modal').modal('hide');
             });
-            study.addUser(this.user.id);
+            study
+                .once('g:addedUser', () => {
+                    this.trigger('g:saved');
+                    $('.modal').modal('hide');
+                })
+                .once('g:error', () => {
+                    $('.modal').modal('hide');
+                })
+                .addUser(this.user.id);
         }
     },
 
@@ -49,15 +52,19 @@ var StudyAddUserWidget = View.extend({
     render: function () {
         var modal = this.$el.html(StudyAddUserWidgetTemplate({
             study: this.study
-        })).girderModal(this).on('shown.bs.modal', function () {
-        }).on('hidden.bs.modal', function () {
-            handleClose('addUser');
-        }).on('ready.girder.modal', function () {
-        });
-
-        modal.trigger($.Event('ready.girder.modal', {
-            relatedTarget: modal
         }));
+        modal
+            .girderModal(this)
+            .on('shown.bs.modal', () => {
+            })
+            .on('hidden.bs.modal', () => {
+                handleClose('addUser');
+            })
+            .on('ready.girder.modal', () => {
+            })
+            .trigger($.Event('ready.girder.modal', {
+                relatedTarget: modal
+            }));
 
         this.searchWidget.setElement(this.$('.isic-search-field-container')).render();
 

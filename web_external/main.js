@@ -4,7 +4,7 @@ import events from 'girder/events';
 
 import IsicApp from './app.js';
 
-$(function () {
+$(() => {
     events.trigger('g:appload.before');
     var app = new IsicApp({
         el: 'body',
