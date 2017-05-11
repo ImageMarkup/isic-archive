@@ -101,9 +101,10 @@ class StudyResource(IsicResource):
     @access.public
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
     def getStudy(self, study, params):
-        Study = self.model('study', 'isic_archive')
+        Annotation = self.model('annotation', 'isic_archive')
         Featureset = self.model('featureset', 'isic_archive')
         Image = self.model('image', 'isic_archive')
+        Study = self.model('study', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
         if params.get('format') == 'csv':
@@ -135,7 +136,24 @@ class StudyResource(IsicResource):
                 ),
                 'images': list(
                     Study.getImages(study, Image.summaryFields).sort('name', SortDir.ASCENDING)
-                )
+                ),
+                'userCompletion': {
+                    str(annotatorComplete['_id']): annotatorComplete['count']
+                    for annotatorComplete in
+                    Annotation.collection.aggregate([
+                        {'$match': {
+                            'meta.studyId': study['_id'],
+                        }},
+                        {'$group': {
+                            '_id': '$meta.userId',
+                            'count': {'$sum': {'$cond': {
+                                'if': '$meta.stopTime',
+                                'then': 1,
+                                'else': 0
+                            }}}
+                        }}
+                    ])
+                }
             })
 
             return output
