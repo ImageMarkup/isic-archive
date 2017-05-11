@@ -1,4 +1,4 @@
-ISIC Archive |build-status| |license-badge|
+ISIC Archive |build-status| |coverage-badge| |license-badge|
 ===========================================
 International Skin Imaging Collaboration: Melanoma Project
 ----------------------------------------------------------
@@ -115,6 +115,10 @@ Usage
 .. |build-status| image:: https://img.shields.io/travis/ImageMarkup/isic-archive/master.svg
     :target: https://travis-ci.org/ImageMarkup/isic-archive
     :alt: Build Status
+
+.. |coverage-badge| image:: https://codecov.io/gh/ImageMarkup/isic-archive/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/ImageMarkup/isic-archive
+    :alt: Code Coverage
 
 .. |license-badge| image:: https://img.shields.io/github/license/ImageMarkup/isic-archive.svg
     :target: https://raw.githubusercontent.com/ImageMarkup/isic-archive/master/LICENSE
