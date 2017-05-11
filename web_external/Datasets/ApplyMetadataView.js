@@ -107,7 +107,7 @@ var ApplyMetadataSelectFileView = View.extend({
         select.select2('destroy');
 
         this.$el.html(ApplyMetadataSelectFilePageTemplate({
-            models: this.collection.models
+            models: this.collection.toArray()
         }));
 
         // Set up select box

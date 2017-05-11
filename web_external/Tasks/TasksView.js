@@ -45,7 +45,7 @@ var TasksGroupView = View.extend({
             linkPrefix: this.linkPrefix,
             resourceName: this.resourceName,
             total: this.numTasks(),
-            tasks: this.collection.models
+            tasks: this.collection.toArray()
         }));
 
         return this;
@@ -53,7 +53,7 @@ var TasksGroupView = View.extend({
 
     // Return total number of tasks in collection
     numTasks: function () {
-        return this.collection.models.reduce(function (total, model) {
+        return this.collection.reduce(function (total, model) {
             return total + model.get('count');
         }, 0);
     }

@@ -16,6 +16,11 @@ import exImageUrl from '!url-loader!svg-fill-loader!./ex.svg?fill=#999999';
 var ImagesFacetView = View.extend({
     className: 'isic-images-facet',
 
+    events: {
+        'show.bs.collapse .isic-images-facet-content': '_toggleCollapseIndicator',
+        'hide.bs.collapse .isic-images-facet-content': '_toggleCollapseIndicator'
+    },
+
     /**
      * @param {ImagesFacetModel} settings.completeFacet
      * @param {ImagesFacetModel} settings.filteredFacet
@@ -29,11 +34,6 @@ var ImagesFacetView = View.extend({
         this.facetId = this.completeFacet.id;
         this.facetContentId = this.className + '-' + this.facetId.replace(/\./g, '-');
         this.title = this.completeFacet.schema().title;
-    },
-
-    events: {
-        'show.bs.collapse .isic-images-facet-content': '_toggleCollapseIndicator',
-        'hide.bs.collapse .isic-images-facet-content': '_toggleCollapseIndicator'
     },
 
     _toggleCollapseIndicator: function () {
