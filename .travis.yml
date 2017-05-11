@@ -64,7 +64,7 @@ before_install:
     - pip install --no-cache-dir -U pip virtualenv
 
     - unset PREFIX
-    - nvm install v4.8.2
+    - nvm install v6.10.3
     - npm install -g npm
     - node --version
     - npm --version
