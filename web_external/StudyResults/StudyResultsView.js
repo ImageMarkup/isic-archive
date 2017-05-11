@@ -92,7 +92,7 @@ var StudyResultsImageHeaderView = View.extend({
     render: function () {
         this.$el.html(StudyResultsImageHeaderPageTemplate({
             hasStudy: !_.isUndefined(this.study.id),
-            numImages: this.collection.models.length
+            numImages: this.collection.size()
         }));
 
         return this;
@@ -137,7 +137,7 @@ var StudyResultsSelectStudyView = View.extend({
         select.select2('destroy');
 
         this.$el.html(StudyResultsSelectStudyPageTemplate({
-            models: this.collection.models
+            models: this.collection.toArray()
         }));
 
         // Set up select box
@@ -208,7 +208,7 @@ var StudyResultsSelectImageView = View.extend({
 
     render: function () {
         this.$el.html(StudyResultsSelectImagePageTemplate({
-            models: this.collection.models,
+            models: this.collection.toArray(),
             apiRoot: this.apiRoot
         }));
 
@@ -241,7 +241,7 @@ var StudyResultsSelectUsersView = View.extend({
         select.select2('destroy');
 
         this.$el.html(StudyResultsSelectUsersPageTemplate({
-            models: this.collection.models
+            models: this.collection.toArray()
         }));
 
         // Set up select box
@@ -292,7 +292,7 @@ var StudyResultsSelectLocalFeaturesView = View.extend({
         }, this)));
 
         this.$el.html(StudyResultsSelectLocalFeaturesPageTemplate({
-            models: collection.models
+            models: collection.toArray()
         }));
 
         // Set up select box
@@ -346,7 +346,7 @@ var StudyResultsGlobalFeaturesTableView = View.extend({
 
     render: function () {
         this.$el.html(StudyResultsGlobalFeaturesTableTemplate({
-            features: this.collection.models
+            features: this.collection.toArray()
         }));
 
         return this;
@@ -666,7 +666,7 @@ var StudyResultsView = View.extend({
             this.images.reset(imageModels);
 
             // Populate users collection
-            this.users.reset(this.study.users().models);
+            this.users.reset(this.study.users().models);  // eslint-disable-line backbone/no-view-collection-models
 
             // Fetch featureset
             var featureset = this.study.featureset();

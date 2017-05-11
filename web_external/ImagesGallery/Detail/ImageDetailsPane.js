@@ -84,7 +84,7 @@ var ImageDetailsPane = View.extend({
     },
 
     clearTooltips: function () {
-        $('[data-toggle="tooltip"]').tooltip('hide');
+        this.$('[data-toggle="tooltip"]').tooltip('hide');
     }
 });
 
