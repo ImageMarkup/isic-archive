@@ -8,7 +8,7 @@ import StudyView from './StudyView';
 import View from '../view';
 import router from '../router';
 
-import StudiesPageTemplate from './studiesPage.jade';
+import StudiesPageTemplate from './studiesPage.pug';
 import './studiesPage.styl';
 
 var StudiesView = View.extend({

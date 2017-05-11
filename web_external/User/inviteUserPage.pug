@@ -1,0 +1,32 @@
+.isic-form-page.isic-user-invite-container
+  h2.isic-page-title Invite a new user
+
+  .isic-form-container
+    .isic-form-group
+      h3 New user information
+      p.
+        Enter the registration information on behalf of the user to be invited. The new user will
+        only have to choose their own password.
+      .form-group
+        label(for='isic-user-invite-new-login') Login name
+        input#isic-user-invite-new-login.form-control.input-sm(type='text')
+      .form-group
+        label(for='isic-user-invite-new-email') Email address
+        input#isic-user-invite-new-email.form-control.input-sm(type='text')
+      .form-group
+        label(for='isic-user-invite-new-firstname') First name
+        input#isic-user-invite-new-firstname.form-control.input-sm(type='text')
+      .form-group
+        label(for='isic-user-invite-new-lastname') Last name
+        input#isic-user-invite-new-lastname.form-control.input-sm(type='text')
+
+    .isic-form-group
+      h3 Invitation settings
+      .form-group
+        label(for='isic-user-invite-period') Time until expiration (optional)
+        input#isic-user-invite-period.form-control.input-sm(
+          type='text', placeholder='Enter number of days (default is 30)')
+
+  p
+    form#isic-user-invite-form(role='form')
+      button#isic-user-invite-submit.btn.btn-primary.btn-md(type='submit') Send invitation

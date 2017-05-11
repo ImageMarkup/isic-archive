@@ -9,10 +9,10 @@ import View from '../view';
 import {showAlertDialog} from '../common/utilities';
 import router from '../router';
 
-import CreateStudyPageTemplate from './createStudyPage.jade';
+import CreateStudyPageTemplate from './createStudyPage.pug';
 import './createStudyPage.styl';
-import FeaturesetListEntryTemplate from './featuresetListEntry.jade';
-import UserListEntryTemplate from './userListEntry.jade';
+import FeaturesetListEntryTemplate from './featuresetListEntry.pug';
+import UserListEntryTemplate from './userListEntry.pug';
 import '../common/Listing/listingPage.styl';
 
 var CreateStudyView = View.extend({

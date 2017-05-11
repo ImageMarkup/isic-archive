@@ -8,7 +8,7 @@ import StudyAddUserWidget from './StudyAddUserWidget';
 import View from '../view';
 import {showAlertDialog} from '../common/utilities';
 
-import StudyPageTemplate from './studyPage.jade';
+import StudyPageTemplate from './studyPage.pug';
 import './studyPage.styl';
 import '../common/Listing/listingItemPage.styl';
 

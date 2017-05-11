@@ -7,7 +7,7 @@ import FeaturesetCollection from '../collections/FeaturesetCollection';
 import FeaturesetView from './FeaturesetView';
 import View from '../view';
 
-import ListingPageTemplate from '../common/Listing/listingPage.jade';
+import ListingPageTemplate from '../common/Listing/listingPage.pug';
 import '../common/Listing/listingPage.styl';
 
 var FeaturesetsView = View.extend({

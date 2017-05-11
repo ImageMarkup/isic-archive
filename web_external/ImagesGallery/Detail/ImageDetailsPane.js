@@ -5,7 +5,7 @@ import SegmentationsDisplayView from './SegmentationsDisplayView';
 import ImageFullscreenWidget from '../../common/Viewer/ImageFullscreenWidget';
 import View from '../../view';
 
-import ImageDetailsPageTemplate from './imageDetailsPage.jade';
+import ImageDetailsPageTemplate from './imageDetailsPage.pug';
 import './imageDetailsPage.styl';
 
 var ImageDetailsPane = View.extend({

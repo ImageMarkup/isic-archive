@@ -1,0 +1,32 @@
+.alert.alert-warning.isic-images-facets-pane-help(role='alert')
+  | To filter images, click below to open a category, then select metadata fields.
+
+//- Create recolor SVG filters.
+//- To use, CSS styles should do something like:
+//-   filter: url(#recolorImageToFFFFFF)
+svg#recolorImageFilters(width=0, height=0)
+  defs
+    for hexColor in filterHexColors
+      filter.recolor(id='recolorImageTo' + hexColor)
+        feComponentTransfer(in='SourceAlpha', result='color')
+          feFuncR(
+            type='linear',
+            slope=0,
+            intercept=Math.pow(parseInt(hexColor.slice(0, 2), 16) / 255, 2))
+          feFuncG(
+            type='linear',
+            slope=0,
+            intercept=Math.pow(parseInt(hexColor.slice(2, 4), 16) / 255, 2))
+          feFuncB(
+            type='linear',
+            slope=0,
+            intercept=Math.pow(parseInt(hexColor.slice(4, 6), 16) / 255, 2))
+//- Girder's Webpack configuration causes these "url" functions to be erroneously expanded if
+//- they're defined within a ".css" or ".styl" file
+style.
+  .isic-images-facet image.button:hover {
+    filter: url(#recolorImageTo00ABFF);
+  }
+  .isic-images-facet image.button:disabled {
+    filter: url(#recolorImageToCCCCCC);
+  }

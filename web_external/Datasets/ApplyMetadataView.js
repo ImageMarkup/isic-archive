@@ -14,11 +14,11 @@ import View from '../view';
 import {showAlertDialog} from '../common/utilities';
 import router from '../router';
 
-import ApplyMetadataSelectFilePageTemplate from './applyMetadataSelectFilePage.jade';
-import ApplyMetadataPageTemplate from './applyMetadataPage.jade';
+import ApplyMetadataSelectFilePageTemplate from './applyMetadataSelectFilePage.pug';
+import ApplyMetadataPageTemplate from './applyMetadataPage.pug';
 import './applyMetadataPage.styl';
 import './datasetInfoWidget.styl';
-import ApplyMetadataValidationPageTemplate from './applyMetadataValidationPage.jade';
+import ApplyMetadataValidationPageTemplate from './applyMetadataValidationPage.pug';
 import './applyMetadataValidationPage.styl';
 
 // Model for a metadata file

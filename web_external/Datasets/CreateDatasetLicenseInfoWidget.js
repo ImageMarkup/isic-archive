@@ -1,6 +1,6 @@
 import View from '../view';
 
-import CreateDatasetLicenseInfoPageTemplate from './createDatasetLicenseInfoPage.jade';
+import CreateDatasetLicenseInfoPageTemplate from './createDatasetLicenseInfoPage.pug';
 import './createDatasetLicenseInfoPage.styl';
 
 // Modal view for dataset license information

@@ -1,0 +1,58 @@
+.growing.flexColumn
+  #isic-images-paging-tools.flexRow
+    #isic-images-paging-seek.btn-group
+      button#isic-images-paging-seek-first.btn.btn-sm.btn-default(
+        data-toggle='tooltip',
+        data-placement='bottom',
+        title='First page')
+        i.icon-to-start-alt
+      button#isic-images-paging-seek-prev.btn.btn-sm.btn-default(
+        data-toggle='tooltip',
+        data-placement='bottom',
+        title='Previous page')
+        i.icon-fast-bw
+      button#isic-images-paging-seek-next.btn.btn-sm.btn-default(
+        data-toggle='tooltip',
+        data-placement='bottom',
+        title='Next page')
+        i.icon-fast-fw
+      button#isic-images-paging-seek-last.btn.btn-sm.btn-default(
+        data-toggle='tooltip',
+        data-placement='bottom',
+        title='Last page')
+        i.icon-to-end-alt
+    #isic-images-paging-label
+      span#isic-images-paging-label-loading Loading images...
+      span#isic-images-paging-label-noPagingOrFilters
+        | Showing all&nbsp;
+        span.isic-images-paging-label-page 0
+        |  images.
+      span#isic-images-paging-label-hasPaging
+        | Showing images&nbsp;
+        span.isic-images-paging-label-page 0 - 0
+        |  of&nbsp;
+        span.isic-images-paging-label-filtered 0
+        |  total images.
+      span#isic-images-paging-label-hasFilters
+        | Showing&nbsp;
+        span.isic-images-paging-label-filtered 0
+        |  of the&nbsp;
+        span.isic-images-paging-label-total 0
+        |  total number of images.
+      span#isic-images-paging-label-hasFiltersAndPaging
+        | Showing images&nbsp;
+        span.isic-images-paging-label-page 0 - 0
+        |  of&nbsp;
+        span.isic-images-paging-label-filtered 0
+        |  filtered images. There are&nbsp;
+        span.isic-images-paging-label-total 0
+        |  total images (ignoring filters).
+    button#isic-images-paging-downloadZip.btn.btn-sm.btn-default(
+      data-toggle='tooltip',
+      data-placement='bottom',
+      title='Download all filtered images as a ZIP')
+      i.icon-file-archive
+      span Download as ZIP
+  #isic-images-paging-bars.flexRow
+    #isic-images-paging-bar-filteredTotal.isic-images-paging-bar
+    #isic-images-paging-bar-pageTotal.isic-images-paging-bar

@@ -1,6 +1,6 @@
 import View from '../view';
 
-import FrontPageTemplate from './frontPage.jade';
+import FrontPageTemplate from './frontPage.pug';
 import './frontPage.styl';
 
 var FrontPageView = View.extend({

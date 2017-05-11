@@ -4,7 +4,7 @@ import View from '../view';
 import router from '../router';
 import {showAlertDialog} from '../common/utilities';
 
-import RsvpUserPageTemplate from './rsvpUserPage.jade';
+import RsvpUserPageTemplate from './rsvpUserPage.pug';
 import './rsvpUserPage.styl';
 
 var RsvpUserView = View.extend({

@@ -3,7 +3,7 @@ import LoadingAnimation from 'girder/views/widgets/LoadingAnimation';
 import View from '../view';
 import router from '../router';
 
-import DatasetPageTemplate from './datasetPage.jade';
+import DatasetPageTemplate from './datasetPage.pug';
 import './datasetPage.styl';
 import '../common/Listing/listingItemPage.styl';
 

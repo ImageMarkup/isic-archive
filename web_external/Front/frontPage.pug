@@ -1,0 +1,121 @@
+.isic-body-nopad.isic-frontpage
+  .isic-frontpage-header
+    .container
+      h1 ISIC Archive
+      h2 International Skin Imaging Collaboration: Melanoma Project
+  .isic-frontpage-body.container
+    .row.alert.alert-warning(style='margin-top: 20px; margin-bottom: 0;')
+      p
+        i.icon-info
+        span.
+          The ISIC is now sponsoring a Grand Challenge for the 2017 International
+          Symposium on Biomedical Imaging
+          (ISBI): #[a(href='http://biomedicalimaging.org/2017/challenges/', target='_blank', rel='noopener') "ISIC 2017: Skin Lesion Analysis towards Melanoma Detection"].
+        br
+        span(style='margin-left: 19.6px;').
+          For more details, or to register and download the
+          datasets, #[a(href='http://challenge.isic-archive.com', target='_blank', rel='noopener') click here].
+    .row
+      .col-lg-6
+        h3 Introduction
+        p
+          | The International Skin Imaging Collaboration is
+          |  an academia-industry partnership designed to facilitate digital
+          |  skin imaging technologies to help reduce melanoma
+          |  mortality. The current era of smart-phone technology
+          |  presents an exciting opportunity for digital
+          |  photography as an aid to early diagnosis of melanoma. However,
+          |  the promise of digitally assisted melanoma diagnosis is currently
+          |  hampered by:
+          ul
+            li
+              | A lack of standards for dermatologic imaging, and
+            li
+              | Limited access of educators and developers to large numbers of
+              |  high quality clinically annotated skin lesion images.
+        h4 Goals
+        p
+          |  ISIC aims to address these challenges by proposing
+          |  international standards for dermatologic imaging and creating a
+          |  large open source public archive of annotated high quality skin
+          |  images.
+        p
+          | Current efforts in melanoma education and diagnosis typically rely
+          |  on small convenience samples of images which vary in both image
+          |  quality and quality of annotation. The ISIC Archive has been
+          |  developed to provide a large public repository of expertly
+          |  annotated high quality skin images for use by:
+          ul
+            li
+              | Clinicians and educators to improve diagnostic skills and
+              |  provide clinical support in the identification of skin cancer
+            li
+              | The general public for self-education about melanoma and the
+              |  benefits of early detection
+            li
+              | Developers to develop and test algorithms for skin cancer triage
+              |  and diagnosis
+        h4 Annotation
+        p
+          | To enhance the usefulness of the ISIC Archive images, the
+          |  individual lesion images are annotated with clinical (e.g.,
+          |  pathology diagnosis) information, lesion-level attributes (e.g.,
+          |  symmetry) and sub-lesion level features (e.g., the presence of
+          |  pigment network in a specific region within a lesion). The
+          |  initial focus of the Archive and annotations has been on
+          |  dermoscopic images, as these are most diagnostic for melanoma.
+          |  An example of lesion segmentation is shown here:
+        img(
+          src=require('./segmentation.png'),
+          alt='ISIC Archive segmentation interface',
+          width='555')
+        p
+          | An example of lesion annotation is shown below:
+        img(
+          src=require('./annotation.png'),
+          alt='ISIC Archive annotation interface',
+          width='555')
+      .col-lg-6
+        h3 Gallery of Current Images
+        a(href='#images')
+          img(
+            src=require('./lesiondatasets.png'),
+            alt='ISIC Archive lesion dataset thumbnails',
+            width='555',
+            title='Image Gallery')
+        h3 Current Datasets
+          h4 ISIC_UDA-1:
+          p
+            | Twelve pigmented lesion clinics from Europe, the United States and
+            |  Australia contributed lesions to this dataset. The dataset
+            |  includes 557 cutaneous melanoctic lesions from adults (&gt;=18 years
+            |  of age) with either a definitive histopathologic diagnosis (for
+            |  excised lesions), or a documented history of being clinically
+            |  benign through review of serial clinical images acquired at least
+            |  6 months apart. Lesions were excluded from the dataset if there
+            |  was equivocal histopathology, unacceptable image quality, or if
+            |  the lesions were located on the face, acral or mucosal sites.
+          h4 ISIC_UDA-2:
+          p
+            | This dataset contains 44 high quality lesion images of melanomas
+            |  and benign lesions. Along with the image data, metadata is
+            |  available related to patient age, diagnosis, gender, and anatomic
+            |  location. For this dataset, four expert dermoscopists independently
+            |  reviewed and annotated all the lesions images for dermoscopic
+            |  patterns and structures.
+          h4 ISIC_MSK-1:
+          p
+            | The lesions included in this dataset were acquired from a single
+            |  pigmented lesion clinic. This dataset only includes lesions that
+            |  were excised. Relevant clinical metadata such as diagnosis,
+            |  anatomic location, gender age and clinical impression of the
+            |  lesion are included with each lesion image.
+          h4 ISIC_MSK-2:
+          p
+            | Benign and malignant skin lesions. Biopsy-confirmed melanocytic
+            |  and non-melanocytic lesions.
+          h4 ISIC_SONIC-1:
+          p
+            | Moles in children. Benign melanocytic lesions from a pediatric
+            |  population. The benign nature of the lesions is based on clinical
+            |  assessment and/or no change on serial imaging.

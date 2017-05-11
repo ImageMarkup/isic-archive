@@ -2,7 +2,7 @@ import _ from 'underscore';
 
 import View from '../../view';
 
-import ImagesPagingPaneTemplate from './imagesPagingPane.jade';
+import ImagesPagingPaneTemplate from './imagesPagingPane.pug';
 import './imagesPagingPane.styl';
 
 var ImagesPagingPane = View.extend({

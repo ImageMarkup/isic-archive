@@ -6,7 +6,7 @@ import events from 'girder/events';
 import LayoutHeaderUserView from './HeaderUserView';
 import View from '../view';
 
-import LayoutHeaderTemplate from './layoutHeader.jade';
+import LayoutHeaderTemplate from './layoutHeader.pug';
 import './layoutHeader.styl';
 
 var LayoutHeaderView = View.extend({

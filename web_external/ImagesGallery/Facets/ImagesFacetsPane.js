@@ -2,7 +2,7 @@ import _ from 'underscore';
 
 import View from '../../view';
 
-import ImagesFacetsPaneTemplate from './imagesFacetsPane.jade';
+import ImagesFacetsPaneTemplate from './imagesFacetsPane.pug';
 import './imagesFacetsPane.styl';
 
 var ImagesFacetsPane = View.extend({

@@ -1,6 +1,6 @@
 import View from '../../view';
 
-import TermsOfUseWidgetTemplate from './termsOfUseWidget.jade';
+import TermsOfUseWidgetTemplate from './termsOfUseWidget.pug';
 import './termsOfUseWidget.styl';
 
 var TermsOfUseWidget = View.extend({

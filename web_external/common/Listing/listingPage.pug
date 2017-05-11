@@ -1,0 +1,34 @@
+.isic-listing-header
+  .isic-listing-title
+    h2
+      block title
+        = title
+    h4
+      if loaded
+        if models.length === 0
+          | (no items)
+        else if models.length === 1
+          | 1 item
+        else
+          = models.length + ' items'
+      else
+        .isic-listing-loading-animation-container
+
+.isic-listing-paginate-container
+.isic-listing-container
+  each model, index in models
+    .isic-listing-panel-group.panel-group(id='panel-group-' + model.cid)
+      .isic-listing-panel.panel.panel-default
+        .isic-listing-panel-heading.panel-heading(
+          data-toggle='collapse',
+          data-parent='#panel-group-' + model.cid,
+          data-target='#panel-' + model.cid)
+          a.collapsed
+            block heading
+              = model.name()
+            span.isic-listing-panel-heading-indicator.pull-right
+              i.icon-right-open
+        .isic-listing-panel-collapse.panel-collapse.collapse(
+          id='panel-' + model.cid,
+          data-model-index=index)
+          .isic-listing-panel-body.panel-body

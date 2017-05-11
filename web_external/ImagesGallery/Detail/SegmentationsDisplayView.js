@@ -3,9 +3,9 @@ import $ from 'jquery';
 import {SelectableSegmentationCollection} from '../../collections/SegmentationCollection';
 import View from '../../view';
 
-import SegmentationDisplayPageTemplate from './segmentationDisplayPage.jade';
+import SegmentationDisplayPageTemplate from './segmentationDisplayPage.pug';
 import './segmentationDisplayPage.styl';
-import SegmentationsDisplayPageTemplate from './segmentationsDisplayPage.jade';
+import SegmentationsDisplayPageTemplate from './segmentationsDisplayPage.pug';
 import './segmentationsDisplayPage.styl';
 
 /**

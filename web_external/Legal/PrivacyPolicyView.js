@@ -1,6 +1,6 @@
 import View from '../view';
 
-import PrivacyPolicyPageTemplate from './privacyPolicyPage.jade';
+import PrivacyPolicyPageTemplate from './privacyPolicyPage.pug';
 import './legal.styl';
 
 var PrivacyPolicyView = View.extend({

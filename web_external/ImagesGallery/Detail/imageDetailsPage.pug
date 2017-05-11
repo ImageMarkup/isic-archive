@@ -1,0 +1,92 @@
+.isic-image-details-container
+
+  .isic-image-details-heading
+    span.isic-image-details-name= image.name()
+    button#isic-image-details-zoom.isic-image-details-button.btn.btn-xs.btn-default(
+      data-toggle='tooltip',
+      data-placement='bottom',
+      title='View this image in full resolution')
+      i.icon-zoom-in
+    a#isic-image-details-openwindow.isic-image-details-button.btn.btn-xs.btn-default(
+      data-toggle='tooltip',
+      data-placement='bottom',
+      title='Open this image in a new window',
+      href=apiRoot + '/image/' + image.id + '/download?contentDisposition=inline',
+      target='_blank',
+      rel='noopener')
+      i.icon-link-ext
+    a#isic-image-details-download.isic-image-details-button.btn.btn-xs.btn-default(
+      data-toggle='tooltip',
+      data-placement='bottom',
+      title='Download this image',
+      href=apiRoot + '/image/' + image.id + '/download',
+      download)
+      i.icon-download
+    button#isic-image-details-close.close
+      i.icon-cancel
+
+  table.table.table-condensed.isic-image-details-table
+    tbody
+      tr
+        td.isic-image-details-table-section-header(colspan=2) Info
+      tr
+        td Unique ID
+        td
+          code= image.id
+      tr
+        td Dataset
+        td= image.get('dataset')['name']
+      tr
+        td Created
+        td= created
+      tr
+        td License
+        td
+          if license.url
+            a(href=license.url, target='_blank', rel='noopener')= license.name
+          else
+            = license.name
+
+      - var meta = image.get('meta');
+      tr
+        td.isic-image-details-table-section-header(colspan=2) Clinical Metadata
+      each value, key in meta.clinical
+        tr
+          td= key
+          td= value
+
+      tr
+        td.isic-image-details-table-section-header(colspan=2) Acquisition Metadata
+      tr
+        td Dimensions (pixels)
+        td #{meta.acquisition.pixelsX} &times; #{meta.acquisition.pixelsX}
+      each value, key in _.omit(meta.acquisition, 'pixelsX', 'pixelsY')
+        tr
+          td= key
+          td= value
+
+      tr
+        td.isic-image-details-table-section-header(colspan=2) Unstructured Metadata
+      each value, key in meta.unstructured
+        tr
+          td= key
+          td= value
+
+      if _.has(meta, 'private')
+        tr
+          td.isic-image-details-table-section-header(colspan=2) Private Metadata
+        each value, key in meta.private
+          tr
+            td= key
+            td= value
+
+      tr
+        td.isic-image-details-table-section-header(colspan=2) Tags
+      tr
+        td(colspan=2)
+          each value in image.get('notes').tags
+            //- Labels separated by a space
+            span.label.label-default.isic-image-details-tag= value
+            | &#x20;
+
+  #isic-image-details-segmentations-display-view-container
