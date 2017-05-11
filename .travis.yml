@@ -88,9 +88,11 @@ install:
     - conda install --yes scikit-image==0.12.3
     - conda install --yes opencv==2.4.10
 
-    - pip install --no-cache-dir -r $girder_path/plugins/large_image/requirements.txt
+    # This version of large_image has some conflicts in its requirements.txt, so install manually
+    - pip install enum34==1.1.6 jsonschema==2.5.1 repoze.lru==0.6 libtiff==0.4.0
+#    - pip install --no-cache-dir -r $girder_path/plugins/large_image/requirements.txt
     # We won't have all the system requirements for openslide
-    - pip uninstall --yes openslide-python
+#    - pip uninstall --yes openslide-python
 
     - npm install
 
