@@ -52,15 +52,23 @@ add_eslint_test(
   "${CMAKE_CURRENT_LIST_DIR}/web_external"
   ESLINT_CONFIG_FILE "${CMAKE_CURRENT_LIST_DIR}/web_external/.eslintrc.js"
   ESLINT_IGNORE_FILE "${CMAKE_CURRENT_LIST_DIR}/web_external/.eslintignore")
-add_puglint_test(
-  isic_archive_external
-  "${CMAKE_CURRENT_LIST_DIR}/web_external")
+#add_puglint_test(
+#  isic_archive_external
+#  "${CMAKE_CURRENT_LIST_DIR}/web_external")
+add_test(
+  NAME puglint_isic_archive_external
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+  COMMAND "${PUGLINT_EXECUTABLE}" -c "${CMAKE_CURRENT_LIST_DIR}/.pug-lintrc" "${CMAKE_CURRENT_LIST_DIR}/web_external")
 add_eslint_test(
   isic_archive
   "${CMAKE_CURRENT_LIST_DIR}/web_client/js")
-add_puglint_test(
-  isic_archive
-  "${CMAKE_CURRENT_LIST_DIR}/web_client/templates")
+#add_puglint_test(
+#  isic_archive
+#  "${CMAKE_CURRENT_LIST_DIR}/web_client/templates")
+add_test(
+  NAME puglint_isic_archive
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+  COMMAND "${PUGLINT_EXECUTABLE}" -c "${CMAKE_CURRENT_LIST_DIR}/.pug-lintrc" "${CMAKE_CURRENT_LIST_DIR}/web_client/templates")
 add_eslint_test(
   isic_archive_grunt
   "${CMAKE_CURRENT_LIST_DIR}/Gruntfile.js")
