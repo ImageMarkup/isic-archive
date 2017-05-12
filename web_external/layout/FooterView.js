@@ -15,13 +15,15 @@ var LayoutFooterView = View.extend({
             apiRoot: this.apiRoot
         }));
 
-        this.$('.isic-footer-disclaimer').popover({
-            trigger: 'hover',
-            placement: 'auto top',
-            container: this.$('.isic-footer-legal')
-        }).click(function () {
-            $(this).popover('toggle');
-        });
+        this.$('.isic-footer-disclaimer')
+            .popover({
+                trigger: 'hover',
+                placement: 'auto top',
+                container: this.$('.isic-footer-legal')
+            })
+            .click(function () {
+                $(this).popover('toggle');
+            });
 
         return this;
     }

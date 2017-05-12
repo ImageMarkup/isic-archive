@@ -58,19 +58,23 @@ var CreateDatasetView = View.extend({
 
             // Get file ID of uploaded file, then submit dataset
             var items = new ItemCollection();
-            items.once('g:changed', function () {
-                if (!items.isEmpty()) {
-                    var item = items.first();
-                    item.once('g:files', function (fileCollection) {
-                        var fileId = fileCollection.first().id;
-                        this.submitDataset(fileId);
-                    }, this).getFiles();
-                } else {
-                    this.submitDataset(null);
-                }
-            }, this).fetch({
-                folderId: this.uploadFolder.id
-            });
+            items
+                .once('g:changed', () => {
+                    if (!items.isEmpty()) {
+                        var item = items.first();
+                        item
+                            .once('g:files', (fileCollection) => {
+                                var fileId = fileCollection.first().id;
+                                this.submitDataset(fileId);
+                            })
+                            .getFiles();
+                    } else {
+                        this.submitDataset(null);
+                    }
+                })
+                .fetch({
+                    folderId: this.uploadFolder.id
+                });
         }
     },
 
@@ -84,22 +88,22 @@ var CreateDatasetView = View.extend({
 
         this.dataset = new DatasetModel();
 
-        this.listenTo(this.dataset, 'isic:ingestImages:success', function () {
+        this.listenTo(this.dataset, 'isic:ingestImages:success', () => {
             showAlertDialog({
                 text: '<h4>Dataset successfully submitted.</h4>',
                 escapedHtml: true,
-                callback: _.bind(function () {
+                callback: () => {
                     // Navigate to register metadata view
                     router.navigate(
-                        'dataset/' + this.dataset.id + '/metadata/register',
+                        `dataset/${this.dataset.id}/metadata/register`,
                         {trigger: true});
-                }, this)
+                }
             });
         });
 
-        this.listenTo(this.dataset, 'isic:ingestImages:error', function (resp) {
+        this.listenTo(this.dataset, 'isic:ingestImages:error', (resp) => {
             showAlertDialog({
-                text: '<h4>Error submitting dataset</h4><br>' + _.escape(resp.responseJSON.message),
+                text: `<h4>Error submitting dataset</h4><br>${_.escape(resp.responseJSON.message)}`,
                 escapedHtml: true
             });
             this.$('#isic-dataset-submit').prop('disabled', false);
@@ -155,19 +159,22 @@ var CreateDatasetView = View.extend({
         } else {
             // Create new upload folder with unique name
             this.uploadFolder = new FolderModel({
-                name: 'isic_dataset_' + Date.now(),
+                name: `isic_dataset_${Date.now()}`,
                 parentType: 'user',
                 parentId: getCurrentUser().id,
                 description: 'ISIC dataset upload'
             });
 
-            this.uploadFolder.once('g:saved', function () {
-                this.startUpload(this.uploadFolder);
-            }, this).once('g:error', function () {
-                showAlertDialog({
-                    text: 'Could not create upload folder.'
-                });
-            }, this).save();
+            this.uploadFolder
+                .once('g:saved', () => {
+                    this.startUpload(this.uploadFolder);
+                })
+                .once('g:error', () => {
+                    showAlertDialog({
+                        text: 'Could not create upload folder.'
+                    });
+                })
+                .save();
         }
     },
 
@@ -214,16 +221,17 @@ var CreateDatasetView = View.extend({
         this.$('.isic-upload-reset-container').toggle(!visible);
 
         this.uploadWidget.render();
-        this.$('.isic-upload-list').text(
-            'Uploaded: ' + uploadList.join(', '));
+        this.$('.isic-upload-list').text(`Uploaded: ${uploadList.join(', ')}`);
     },
 
     resetUpload: function () {
         // Delete uploaded files
-        this.uploadFolder.once('g:success', function () {
-            this.uploadedZipFiles = [];
-            this.updateUploadWidget();
-        }, this).removeContents();
+        this.uploadFolder
+            .once('g:success', () => {
+                this.uploadedZipFiles = [];
+                this.updateUploadWidget();
+            })
+            .removeContents();
     },
 
     showLicenseInfo: function () {

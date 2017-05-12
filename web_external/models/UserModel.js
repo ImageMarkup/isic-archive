@@ -13,17 +13,14 @@ var acceptTerms = null;
 UserModel.prototype.name = function () {
     var realName;
     if (this.has('login')) {
-        realName =
-            this.get('firstName') +
-            ' ' + this.get('lastName') +
-            ' (' + this.get('login') + ')';
+        realName = `${this.get('firstName')} ${this.get('lastName')} (${this.get('login')})`;
     }
 
     var displayName;
     if (this.has('name')) {
         displayName = this.get('name');
         if (realName) {
-            displayName += ' [' + realName + ']';
+            displayName += ` [${realName}]`;
         }
     } else {
         // The user should always have either a 'login' or a 'name'
@@ -40,7 +37,7 @@ UserModel.prototype.setAcceptTerms = function (successCallback) {
     restRequest({
         path: 'user/acceptTerms',
         type: 'POST'
-    }).done(_.bind(function (resp) {
+    }).done((resp) => {
         if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
             // Directly update user permissions
             this.get('permissions').acceptTerms = true;
@@ -48,7 +45,7 @@ UserModel.prototype.setAcceptTerms = function (successCallback) {
             successCallback(resp);
         }
         // This should not fail
-    }, this));
+    });
 };
 
 UserModel.prototype.canCreateDataset = function () {
@@ -59,7 +56,7 @@ UserModel.prototype.setCanCreateDataset = function (successCallback, failureCall
     restRequest({
         path: 'user/requestCreateDatasetPermission',
         type: 'POST'
-    }).done(_.bind(function (resp) {
+    }).done((resp) => {
         if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
             // Directly update user permissions
             this.get('permissions').createDataset = true;
@@ -68,7 +65,7 @@ UserModel.prototype.setCanCreateDataset = function (successCallback, failureCall
         } else {
             failureCallback(resp);
         }
-    }, this));
+    });
 };
 
 UserModel.prototype.canReviewDataset = function () {
@@ -87,7 +84,7 @@ UserModel.prototype.canAdminStudy = function () {
 // TODO: Remove this once Girder is updated
 UserModel.prototype.changePassword = function (oldPassword, newPassword) {
     return restRequest({
-        path: this.resourceName + '/password',
+        path: `${this.resourceName}/password`,
         data: {
             old: oldPassword,
             new: newPassword
@@ -95,30 +92,30 @@ UserModel.prototype.changePassword = function (oldPassword, newPassword) {
         type: 'PUT',
         error: null
     })
-    .done(_.bind(function () {
+    .done(() => {
         this.trigger('g:passwordChanged');
-    }, this))
-    .fail(_.bind(function (err) {
+    })
+    .fail((err) => {
         this.trigger('g:error', err);
-    }, this));
+    });
 };
 
 // Add additional static methods
 // TODO: Push temporaryTokenLogin to upstream Girder
 UserModel.temporaryTokenLogin = function (userId, token) {
     return restRequest({
-        path: 'user/password/temporary/' + userId,
+        path: `user/password/temporary/${userId}`,
         type: 'GET',
         data: {token: token},
         error: null
     })
-    .done(_.bind(function (resp) {
+    .done((resp) => {
         resp.user.token = resp.authToken.token;
         eventStream.close();
         setCurrentUser(new UserModel(resp.user));
         eventStream.open();
         events.trigger('g:login-changed');
-    }, this));
+    });
 };
 
 UserModel.currentUserCanAcceptTerms = function () {

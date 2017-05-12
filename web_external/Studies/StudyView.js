@@ -20,11 +20,14 @@ var StudyView = View.extend({
                     el: $('#g-dialog-container'),
                     study: this.model,
                     parentView: this
-                }).on('g:saved', function () {
-                    this.model.once('g:fetched', function () {
-                        this.render();
-                    }, this).fetch();
-                }, this);
+                })
+                .on('g:saved', () => {
+                    this.model
+                        .once('g:fetched', () => {
+                            this.render();
+                        })
+                        .fetch();
+                });
             }
             this.studyAddUserWidget.render();
         },
@@ -50,12 +53,14 @@ var StudyView = View.extend({
             parentView: this
         }).render();
 
-        this.model.once('g:fetched', function () {
-            // Don't "this.loadingAnimation.destroy()", as it will unbind all events on "this.el"
-            delete this.loadingAnimation;
+        this.model
+            .once('g:fetched', () => {
+                // Don't "this.loadingAnimation.destroy()", as it will unbind all events on "this.el"
+                delete this.loadingAnimation;
 
-            this.render();
-        }, this).fetch();
+                this.render();
+            })
+            .fetch();
     },
 
     render: function () {
@@ -73,34 +78,36 @@ var StudyView = View.extend({
 
     confirmRemoveUser: function (user) {
         confirm({
-            text: '<h4>Permanently remove <b>"' + _.escape(user.name()) + '"</b> from study?</h4>',
+            text: `<h4>Permanently remove <b>"${_.escape(user.name())}"</b> from study?</h4>`,
             escapedHtml: true,
-            confirmCallback: _.bind(function () {
+            confirmCallback: () => {
                 // Ensure dialog is hidden before continuing. Otherwise,
                 // when destroy() displays its modal alert dialog,
                 // the Bootstrap-created element with class "modal-backdrop"
                 // is erroneously not removed.
                 $('#g-dialog-container').on('hidden.bs.modal', _.bind(this.removeUser, this, user));
-            }, this)
+            }
         });
     },
 
     removeUser: function (user) {
         this.model
             .removeUser(user)
-            .done(_.bind(function () {
-                this.model.once('g:fetched', function () {
-                    // TODO: re-render this via model events instead
-                    this.render();
-                }, this).fetch();
+            .done(() => {
+                this.model
+                    .once('g:fetched', () => {
+                        // TODO: re-render this via model events instead
+                        this.render();
+                    })
+                    .fetch();
                 showAlertDialog({
-                    text: '<h4>Annotator <b>"' + _.escape(user.name()) + '"</b> deleted</h4>',
+                    text: `<h4>Annotator <b>"${_.escape(user.name())}"</b> deleted</h4>'`,
                     escapedHtml: true
                 });
-            }, this))
-            .fail(function (resp) {
+            })
+            .fail((resp) => {
                 showAlertDialog({
-                    text: '<h4>Error deleting annotator</h4><br>' + _.escape(resp.responseJSON.message),
+                    text: `<h4>Error deleting annotator</h4><br>'${_.escape(resp.responseJSON.message)}`,
                     escapedHtml: true
                 });
             });
@@ -108,15 +115,15 @@ var StudyView = View.extend({
 
     confirmDestroy: function () {
         confirm({
-            text: '<h4>Permanently delete <b>"' + _.escape(this.model.name()) + '"</b> study?</h4>',
+            text: `<h4>Permanently delete <b>"${_.escape(this.model.name())}"</b> study?</h4>`,
             escapedHtml: true,
-            confirmCallback: _.bind(function () {
+            confirmCallback: () => {
                 // Ensure dialog is hidden before continuing. Otherwise,
                 // when destroy() displays its modal alert dialog,
                 // the Bootstrap-created element with class "modal-backdrop"
                 // is erroneously not removed.
                 $('#g-dialog-container').on('hidden.bs.modal', _.bind(this.destroyModel, this));
-            }, this)
+            }
         });
     },
 
@@ -124,13 +131,13 @@ var StudyView = View.extend({
         this.model.destroy({
             success: function (model, resp, options) {
                 showAlertDialog({
-                    text: '<h4>Study <b>"' + _.escape(model.name()) + '"</b> deleted</h4>',
+                    text: `<h4>Study <b>"${_.escape(model.name())}"</b> deleted</h4>`,
                     escapedHtml: true
                 });
             },
             error: function (model, resp, options) {
                 showAlertDialog({
-                    text: '<h4>Error deleting study</h4><br>' + _.escape(resp.responseJSON.message),
+                    text: `<h4>Error deleting study</h4><br>'${_.escape(resp.responseJSON.message)}`,
                     escapedHtml: true
                 });
             }

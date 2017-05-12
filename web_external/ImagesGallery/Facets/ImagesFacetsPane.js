@@ -22,9 +22,9 @@ var ImagesFacetsPane = View.extend({
     },
 
     render: function () {
-        _.each(this.facetViews, function (facetView) {
+        _.each(this.facetViews, (facetView) => {
             facetView.destroy();
-        }, this);
+        });
         this.$el.empty();
         delete this.facetViews;
 
@@ -35,7 +35,7 @@ var ImagesFacetsPane = View.extend({
             ]
         }));
 
-        this.facetViews = this.completeFacets.map(function (completeFacet) {
+        this.facetViews = this.completeFacets.map((completeFacet) => {
             var facetId = completeFacet.id;
             var filteredFacet = this.filteredFacets.get(facetId);
             var facetFilter = this.filters.facetFilter(facetId);
@@ -53,7 +53,7 @@ var ImagesFacetsPane = View.extend({
             facetView.render();
 
             return facetView;
-        }, this);
+        });
 
         return this;
     }

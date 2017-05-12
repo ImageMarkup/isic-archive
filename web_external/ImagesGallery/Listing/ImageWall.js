@@ -60,7 +60,7 @@ var ImageWall = View.extend({
 
         var selectedImage = this.images.selected;
         if (selectedImage) {
-            this.$('.thumb[data-image-id="' + selectedImage.id + '"]').addClass('selected');
+            this.$(`.thumb[data-image-id="${selectedImage.id}"]`).addClass('selected');
         }
     },
 

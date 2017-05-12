@@ -62,7 +62,7 @@ var FeatureCollection = Backbone.Collection.extend({
     // Update collection from an array of features of the form:
     // { 'id': id, 'name': [name1, name2, ...] }
     update: function (features) {
-        var models = _.map(features, function (feature) {
+        var models = _.map(features, (feature) => {
             var featureId = feature['id'];
             var featureNames = feature['name'];
             var model = new FeatureModel({
@@ -143,7 +143,7 @@ var StudyResultsSelectStudyView = View.extend({
         // Set up select box
         var placeholder = 'Select a study...';
         if (!this.collection.isEmpty()) {
-            placeholder += ' (' + this.collection.length + ' available)';
+            placeholder += ` (${this.collection.length} available)`;
         }
         select = this.$('#isic-study-results-select-study-select');
         select.select2({
@@ -247,7 +247,7 @@ var StudyResultsSelectUsersView = View.extend({
         // Set up select box
         var placeholder = 'No users available';
         if (!this.collection.isEmpty()) {
-            placeholder = 'Select an annotator... (' + this.collection.length + ' available)';
+            placeholder = `Select an annotator... (${this.collection.length} available)`;
         }
         select = this.$('#isic-study-results-select-users-select');
         select.select2({
@@ -287,9 +287,9 @@ var StudyResultsSelectLocalFeaturesView = View.extend({
 
         // Create local collection of those features that are annotated
         var collection = this.collection.clone();
-        collection.reset(collection.filter(_.bind(function (model) {
+        collection.reset(collection.filter((model) => {
             return this.featureAnnotated(model.id);
-        }, this)));
+        }));
 
         this.$el.html(StudyResultsSelectLocalFeaturesPageTemplate({
             models: collection.toArray()
@@ -298,7 +298,7 @@ var StudyResultsSelectLocalFeaturesView = View.extend({
         // Set up select box
         var placeholder = 'No features available';
         if (!collection.isEmpty()) {
-            placeholder = 'Select a feature... (' + collection.length + ' available)';
+            placeholder = `Select a feature... (${collection.length} available)`;
         }
         select = this.$('#isic-study-results-select-local-features-select');
         select.select2({
@@ -315,7 +315,7 @@ var GlobalFeatureResultCollection = Backbone.Collection.extend({
 
     // Update collection from annotation object and feature list
     update: function (annotations, features) {
-        var models = _.map(features, function (feature) {
+        var models = _.map(features, (feature) => {
             var featureId = feature['id'];
             var featureNames = feature['name'];
             var model = new GlobalFeatureResultModel({
@@ -658,25 +658,30 @@ var StudyResultsView = View.extend({
         this.setContentContainerVisible(false);
 
         // Fetch selected study
-        this.study.set({'_id': studyId}).once('g:fetched', function () {
-            // Populate images collection
-            var imageModels = _.map(this.study.get('images'), function (image) {
-                return new ImageModel(image);
-            });
-            this.images.reset(imageModels);
+        this.study
+            .set({'_id': studyId})
+            .once('g:fetched', () => {
+                // Populate images collection
+                var imageModels = _.map(this.study.get('images'), (image) => {
+                    return new ImageModel(image);
+                });
+                this.images.reset(imageModels);
 
-            // Populate users collection
-            this.users.reset(this.study.users().models);  // eslint-disable-line backbone/no-view-collection-models
+                // Populate users collection
+                this.users.reset(this.study.users().models);  // eslint-disable-line backbone/no-view-collection-models
 
-            // Fetch featureset
-            var featureset = this.study.featureset();
-            featureset.once('g:fetched', function () {
-                this.featureset.set(featureset.attributes);
-            }, this).fetch();
+                // Fetch featureset
+                var featureset = this.study.featureset();
+                featureset
+                    .once('g:fetched', () => {
+                        this.featureset.set(featureset.attributes);
+                    })
+                    .fetch();
 
-            // Show main container
-            this.setMainContainerVisible(true);
-        }, this).fetch();
+                // Show main container
+                this.setMainContainerVisible(true);
+            })
+            .fetch();
     },
 
     imageChanged: function (imageId) {
@@ -705,16 +710,18 @@ var StudyResultsView = View.extend({
         }
 
         var annotations = new AnnotationCollection();
-        annotations.once('g:changed', function () {
-            if (!annotations.isEmpty()) {
-                // Fetch annotation detail
-                this.annotation.set(annotations.first().attributes).fetch();
-            }
-        }, this).fetch({
-            studyId: this.study.id,
-            userId: this.user.id,
-            imageId: this.image.id
-        });
+        annotations
+            .once('g:changed', () => {
+                if (!annotations.isEmpty()) {
+                    // Fetch annotation detail
+                    this.annotation.set(annotations.first().attributes).fetch();
+                }
+            })
+            .fetch({
+                studyId: this.study.id,
+                userId: this.user.id,
+                imageId: this.image.id
+            });
     },
 
     render: function () {

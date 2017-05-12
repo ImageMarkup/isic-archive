@@ -16,9 +16,9 @@ var RsvpUserView = View.extend({
             if (this.$('#isic-user-rsvp-password').val() !== this.$('#isic-user-rsvp-password2').val()) {
                 showAlertDialog({
                     text: 'Passwords do not match, try again.',
-                    callback: _.bind(function () {
+                    callback: () => {
                         this.$('#isic-user-rsvp-password2').val('').focus();
-                    }, this)
+                    }
                 });
                 this.$('#isic-user-rsvp-submit').prop('disabled', false);
                 return;
@@ -29,16 +29,16 @@ var RsvpUserView = View.extend({
                     this.token,
                     this.$('#isic-user-rsvp-password').val()
                 )
-                .done(function () {
+                .done(() => {
                     router.navigate('tasks', {trigger: true});
                 })
-                .fail(_.bind(function (resp) {
+                .fail((resp) => {
                     showAlertDialog({
-                        text: '<h4>Error changing password</h4><br>' + _.escape(resp.responseJSON.message),
+                        text: `<h4>Error changing password</h4><br>${_.escape(resp.responseJSON.message)}`,
                         escapedHtml: true
                     });
                     this.$('#isic-user-rsvp-submit').prop('disabled', false);
-                }, this));
+                });
         }
     },
 

@@ -38,7 +38,7 @@ var Collection = GirderCollection.extend({
                 sort: this.sortField,
                 sortdir: this.sortDir
             }, this.params)
-        }).done(_.bind(function (list) {
+        }).done((list) => {
             if (this.pageLimit > 0 && list.length > this.pageLimit) {
                 // This means we have more pages to display still. Pop off
                 // the extra that we fetched.
@@ -50,7 +50,7 @@ var Collection = GirderCollection.extend({
             this.offset += list.length;
             this.reset(list);
             this.trigger('g:changed');
-        }, this));
+        });
         xhr.girder = {fetch: true};
         return xhr;
     },

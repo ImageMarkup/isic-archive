@@ -30,7 +30,7 @@ var FeaturesetsView = View.extend({
         this.loaded = false;
 
         this.featuresets = new FeaturesetCollection();
-        this.listenTo(this.featuresets, 'g:changed', function () {
+        this.listenTo(this.featuresets, 'g:changed', () => {
             this.loaded = true;
             this.render();
         });

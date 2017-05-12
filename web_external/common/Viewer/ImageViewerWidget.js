@@ -29,8 +29,8 @@ var ImageViewerWidget = View.extend({
 
         restRequest({
             type: 'GET',
-            path: 'image/' + this.model.id + '/tiles'
-        }).done(_.bind(function (resp) {
+            path: `image/${this.model.id}/tiles`
+        }).done((resp) => {
             this.destroyViewer();
 
             this.levels = resp.levels;
@@ -40,7 +40,7 @@ var ImageViewerWidget = View.extend({
             this.sizeY = resp.sizeY;
 
             this.render();
-        }, this));
+        });
     },
 
     _createViewer: function () {
@@ -82,7 +82,7 @@ var ImageViewerWidget = View.extend({
 
         _.extend(params.layer, {
             useCredentials: true,
-            url: this.apiRoot + '/image/' + this.model.id + '/tiles/{z}/{x}/{y}'
+            url: `${this.apiRoot}/image/${this.model.id}/tiles/{z}/{x}/{y}`
         });
         this.imageLayer = this.viewer.createLayer('osm', params.layer);
     },

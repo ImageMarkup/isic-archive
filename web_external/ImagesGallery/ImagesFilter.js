@@ -22,16 +22,16 @@ _.extend(ImagesFilter.prototype, Backbone.Events, {
             }
         */
         this._filters = {};
-        completeFacets.forEach(_.bind(function (completeFacet) {
+        completeFacets.forEach((completeFacet) => {
             var facetId = completeFacet.id;
             var FacetFilter = FACET_SCHEMA[facetId].FacetFilter;
             var facetFilter = new FacetFilter(facetId, completeFacet.get('bins'));
-            facetFilter.on('change', function () {
+            facetFilter.on('change', () => {
                 // Trigger a change on the parent whenever a child changes
                 this.trigger('change');
-            }, this);
+            });
             this._filters[facetId] = facetFilter;
-        }, this));
+        });
     },
 
     facetFilter: function (facetId) {
@@ -71,10 +71,10 @@ var FacetFilter = function (facetId, facetBins) {
         }
     */
     this._filters = {};
-    _.each(facetBins, _.bind(function (facetBin) {
+    _.each(facetBins, (facetBin) => {
         // Default to all bins included
         this._filters[facetBin.label] = true;
-    }, this));
+    });
 };
 
 // Make it easy to inherit from FacetFilter, using a utility function from Backbone
@@ -91,9 +91,9 @@ _.extend(FacetFilter.prototype, Backbone.Events, {
     },
 
     setAllIncluded: function (binsIncluded) {
-        _.each(this._filters, _.bind(function (oldValue, binLabel) {
+        _.each(this._filters, (oldValue, binLabel) => {
             this._filters[binLabel] = binsIncluded;
-        }, this));
+        });
         this.trigger('change');
     },
 
@@ -104,7 +104,7 @@ var CategoricalFacetFilter = FacetFilter.extend({
     asExpression: function () {
         var excludedBinLabels = _.chain(this._filters)
             // Choose only excluded bins
-            .pick(function (binIncluded, binLabel) {
+            .pick((binIncluded, binLabel) => {
                 return binIncluded === false;
             })
             // Take the bin labels as an array
@@ -112,20 +112,18 @@ var CategoricalFacetFilter = FacetFilter.extend({
             // Encode each, as they're user-provided values from the database
             .map(SerializeFilterHelpers._stringToHex)
             .value();
-        // TODO: Could use "facetId + ' in ' + includedBinLabels"" if most are excluded
+        // TODO: Could use `(${hexFacetId} not in ${jsonIncludedBinLabels})` if most are excluded
         if (_.size(excludedBinLabels) === 0) {
             // If none are excluded, return no filter
             return '';
         } else {
-            return '(' +
-                // TODO: This doesn't strictly need to be encoded (provided that we don't use any of
-                // the grammar's forbidden characters for identifiers), but before removing the
-                // encoding step, we should ensure that decoding it (which always happens) will be a
-                // safe no-op
-                SerializeFilterHelpers._stringToHex(this.facetId) +
-                ' not in ' +
-                JSON.stringify(excludedBinLabels) +
-                ')';
+            // TODO: hexFacetId doesn't strictly need to be encoded (provided that we don't use any
+            // of the grammar's forbidden characters for identifiers), but before removing the
+            // encoding step, we should ensure that decoding it (which always happens) will be a
+            // safe no-op
+            var hexFacetId = SerializeFilterHelpers._stringToHex(this.facetId);
+            var jsonExcludedBinLabels = JSON.stringify(excludedBinLabels);
+            return `(${hexFacetId} not in ${jsonExcludedBinLabels})`;
         }
     }
 });
@@ -134,13 +132,13 @@ var TagsCategoricalFacetFilter = CategoricalFacetFilter.extend({
     asExpression: function () {
         var includedBinLabels = _.chain(this._filters)
             // Choose only included bins
-            .pick(function (binIncluded, binLabel) {
+            .pick((binIncluded, binLabel) => {
                 return binIncluded === true;
             })
             // Take the bin labels as an array
             .keys()
             // Encode each, as they're user-provided values from the database
-            .map(function (binLabel) {
+            .map((binLabel) => {
                 if (binLabel === '__null__') {
                     // The null bin matches an empty array (with no tags) in the database
                     // Non-strings can't be encoded, so don't encode this value
@@ -153,11 +151,9 @@ var TagsCategoricalFacetFilter = CategoricalFacetFilter.extend({
             // If all are included, return no filter
             return '';
         } else {
-            return '(' +
-                SerializeFilterHelpers._stringToHex(this.facetId) +
-                ' in ' +
-                JSON.stringify(includedBinLabels) +
-                ')';
+            var hexFacetId = SerializeFilterHelpers._stringToHex(this.facetId);
+            var jsonIncludedBinLabels = JSON.stringify(includedBinLabels);
+            return `(${hexFacetId} in ${jsonIncludedBinLabels})`;
         }
     }
 });
@@ -166,11 +162,11 @@ var IntervalFacetFilter = FacetFilter.extend({
     asExpression: function () {
         var filterExpressions = _.chain(this._filters)
             // Because '__null__' has no high or low bound, it must be handled specially
-            .pick(function (binIncluded, binLabel) {
+            .pick((binIncluded, binLabel) => {
                 return binIncluded === false && binLabel !== '__null__';
             })
             // Parse range labels, to yield an array of numeric range arrays
-            .map(function (binIncluded, binLabel) {
+            .map((binIncluded, binLabel) => {
                 var rangeMatches = binLabel.match(/\[([\d.]+) - ([\d.]+)\)/);
                 var lowBound = parseFloat(rangeMatches[1]);
                 var highBound = parseFloat(rangeMatches[2]);
@@ -178,7 +174,7 @@ var IntervalFacetFilter = FacetFilter.extend({
             })
             .sortBy(_.identity)
             // Combine adjacent ranges
-            .reduce(function (allRanges, curRange) {
+            .reduce((allRanges, curRange) => {
                 var prevRange = _.last(allRanges);
                 // Compare the previous high bound and the current low bound, checking for
                 // the special case of the first element where there's no "prevRange"
@@ -194,36 +190,25 @@ var IntervalFacetFilter = FacetFilter.extend({
                 }
             }, [])
             // Convert each range into a string expression
-            .map(_.bind(function (range) {
-                var lowBoundExpression = 'not (' +
-                    SerializeFilterHelpers._stringToHex(this.facetId) +
-                    ' >= ' +
-                    range[0] +
-                    ')';
-                var highBoundExpression = 'not (' +
-                    SerializeFilterHelpers._stringToHex(this.facetId) +
-                    ' < ' +
-                    range[1] +
-                    ')';
-                return '(' + lowBoundExpression + ' or ' + highBoundExpression + ')';
-            }, this))
+            .map((range) => {
+                var hexFacetId = SerializeFilterHelpers._stringToHex(this.facetId);
+                var lowBoundExpression = `not (${hexFacetId} >= ${range[0]}')'`;
+                var highBoundExpression = `not (${hexFacetId} < ${range[1]})`;
+                return `(${lowBoundExpression} or ${highBoundExpression})`;
+            })
             .value();
         if (this._filters['__null__'] === false) {
             // This conditional will also intentionally fail if '__null__' is undefined
-            filterExpressions.push(
-                '(' +
-                SerializeFilterHelpers._stringToHex(this.facetId) +
-                ' not in ' +
-                JSON.stringify([SerializeFilterHelpers._stringToHex('__null__')]) +
-                ')'
-            );
+            var hexFacetId = SerializeFilterHelpers._stringToHex(this.facetId);
+            var jsonNullArray = JSON.stringify([SerializeFilterHelpers._stringToHex('__null__')]);
+            filterExpressions.push(`(${hexFacetId} not in ${jsonNullArray})`);
         }
         if (_.size(filterExpressions) === 0) {
             // If none are excluded, return no filter
             return '';
         } else {
             // Combine all expressions
-            return '(' + filterExpressions.join(' and ') + ')';
+            return `(${filterExpressions.join(' and ')})`;
         }
     }
 });
@@ -232,7 +217,7 @@ var SerializeFilterHelpers = {
     _stringToHex: function (value) {
         var result = '';
         for (var i = 0; i < value.length; i += 1) {
-            result += '%' + value.charCodeAt(i).toString(16);
+            result += `%${value.charCodeAt(i).toString(16)}`;
         }
         return result;
     },
@@ -243,11 +228,11 @@ var SerializeFilterHelpers = {
         }
         if (_.isObject(obj)) {
             if (_.isArray(obj)) {
-                _.each(obj, function (d, i) {
+                _.each(obj, (d, i) => {
                     obj[i] = SerializeFilterHelpers._dehexify(d);
                 });
             } else {
-                _.each(Object.keys(obj), function (k) {
+                _.each(Object.keys(obj), (k) => {
                     obj[k] = SerializeFilterHelpers._dehexify(obj[k]);
                 });
             }
@@ -268,11 +253,11 @@ var SerializeFilterHelpers = {
                 obj.type = attrType;
             }
         } else if (_.isArray(obj)) {
-            _.each(obj, function (d, i) {
+            _.each(obj, (d, i) => {
                 obj[i] = SerializeFilterHelpers._specifyAttrTypes(d);
             });
         } else {
-            _.each(Object.keys(obj), function (k) {
+            _.each(Object.keys(obj), (k) => {
                 obj[k] = SerializeFilterHelpers._specifyAttrTypes(obj[k]);
             });
         }

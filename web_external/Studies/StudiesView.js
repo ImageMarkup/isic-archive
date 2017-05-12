@@ -34,7 +34,7 @@ var StudiesView = View.extend({
         this.loaded = false;
         this.studies = new StudyCollection();
 
-        this.listenTo(this.studies, 'g:changed', function () {
+        this.listenTo(this.studies, 'g:changed', () => {
             this.loaded = true;
             this.render();
         });

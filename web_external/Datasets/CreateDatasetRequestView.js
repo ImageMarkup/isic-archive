@@ -16,12 +16,12 @@ var CreateDatasetRequestView = View.extend({
 
             getCurrentUser().setCanCreateDataset(
                 // Success callback
-                function (resp) {
+                (resp) => {
                     // Refresh page
                     Backbone.history.loadUrl();
                 },
                 // Failure (or request pending) callback
-                function (resp) {
+                (resp) => {
                     // Display notification and route to index
                     showAlertDialog({
                         text: resp.message,

@@ -27,7 +27,7 @@ var StudyModel = Model.extend({
     },
 
     users: function () {
-        var userModels = this.get('users').map(function (user) {
+        var userModels = this.get('users').map((user) => {
             return new UserModel(user);
         });
         return new UserCollection(userModels);
@@ -39,21 +39,21 @@ var StudyModel = Model.extend({
     addUser: function (userId) {
         // TODO: return a promise here, and use it (rather than events)
         restRequest({
-            path: this.resourceName + '/' + this.id + '/users',
+            path: `${this.resourceName}/${this.id}/users`,
             type: 'POST',
             data: {
                 userIds: JSON.stringify([userId])
             }
-        }).done(_.bind(function (resp) {
+        }).done((resp) => {
             this.trigger('g:addedUser');
-        }, this)).fail(_.bind(function (err) {
+        }).fail((err) => {
             this.trigger('g:error', err);
-        }, this));
+        });
     },
 
     removeUser: function (user) {
         return restRequest({
-            path: this.resourceName + '/' + this.id + '/users/' + user.id,
+            path: `${this.resourceName}/${this.id}/users/${user.id}`,
             type: 'DELETE',
             error: null
         });

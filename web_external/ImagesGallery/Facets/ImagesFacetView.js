@@ -32,7 +32,7 @@ var ImagesFacetView = View.extend({
         this.filter = settings.filter;
 
         this.facetId = this.completeFacet.id;
-        this.facetContentId = this.className + '-' + this.facetId.replace(/\./g, '-');
+        this.facetContentId = `${this.className}-${this.facetId.replace(/\./g, '-')}`;
         this.title = this.completeFacet.schema().title;
     },
 
@@ -57,7 +57,7 @@ var ImagesFacetView = View.extend({
         // not totally reset on every fetch, but had empty bins just set to 0
         var filteredBins = this.filteredFacet.get('bins');
         var filteredBinsIter = 0;
-        return _.map(this.completeFacet.get('bins'), function (completeBin) {
+        return _.map(this.completeFacet.get('bins'), (completeBin) => {
             // Since both completeBin and filteredBin are sorted by label, we can do this much more
             // efficiently in O(n), than if we used "_.findWhere" in O(n^2)
 
@@ -78,7 +78,7 @@ var ImagesFacetView = View.extend({
                 completeBin: completeBin,
                 filteredBin: filteredBin
             };
-        }, this);
+        });
     },
 
     _getBinTitle: function (completeBin) {
@@ -86,10 +86,11 @@ var ImagesFacetView = View.extend({
             return 'unknown';
         } else if (_.has(completeBin, 'lowBound')) {
             var formatter = d3.format('0.3s');
-            return completeBin.label[0] +
-                formatter(completeBin.lowBound) + ' - ' +
-                formatter(completeBin.highBound) +
-                completeBin.label[completeBin.label.length - 1];
+            var lowBracket = completeBin.label[0];
+            var highBracket = completeBin.label[completeBin.label.length - 1];
+            var lowBound = formatter(completeBin.lowBound);
+            var highBound = formatter(completeBin.highBound);
+            return `${lowBracket}${lowBound} - ${highBound}${highBracket}`;
         } else {
             return completeBin.label;
         }
@@ -175,34 +176,34 @@ var ImagesFacetHistogramView = ImagesFacetView.extend({
             .ticks(Math.min(4, this.scale.yMax))
             .tickFormat(d3.format('s'));
         var yAxisObj = svg.select('.yAxis')
-            .attr('transform', 'translate(' + this.scale.leftAxisPadding + ',0)')
+            .attr('transform', `translate(${this.scale.leftAxisPadding},0)`)
             .call(yAxis);
 
         // Move the special buttons into place and attach their events
         svg.select('.isic-images-facet-all')
-            .attr('transform', 'translate(' +
-                (this.scale.leftAxisPadding - 0.5 * emSize) + ',' +
-                (height + emSize) + ')');
+            .attr('transform',
+                `translate(${this.scale.leftAxisPadding - 0.5 * emSize},${height + emSize})`);
 
         // Draw the bin groups
         var bins = svg.select('.bins').selectAll('.bin')
-            .data(this._zipFacetBins(), function (d) {
+            .data(
+                this._zipFacetBins(),
                 // TODO: is a key function needed?
-                return d.completeBin.label;
-            });
+                (d) => d.completeBin.label
+            );
         var binsEnter = bins.enter().append('g')
             .attr('class', 'bin');
         bins.exit().remove();
 
         // Move the bins horizontally
-        bins.attr('transform', _.bind(function (d) {
+        bins.attr('transform', (d) => {
             // TODO: There should be a better way to do this
             var binNo = _.findIndex(
                 this.completeFacet.get('bins'),
                 {label: d.completeBin.label}
             );
-            return 'translate(' + this.scale.binToPosition(binNo) + ',' + topPadding + ')';
-        }, this));
+            return `translate(${this.scale.binToPosition(binNo)},${topPadding})`;
+        });
 
         // Draw one bar for each bin
         binsEnter.append('rect')
@@ -224,22 +225,22 @@ var ImagesFacetHistogramView = ImagesFacetView.extend({
         var self = this;
 
         // Update each bar
-        var drawBars = _.bind(function () {
+        var drawBars = () => {
             bins.select('rect.overview')
                 .each(function (d) {
                     // this refers to the DOM element
                     d3.select(this)
                         .attr(self.scale.getBinRect(d.completeBin.label, 'overview'));
 
-                    function getTooltipTitle() {
+                    var getTooltipTitle = () => {
                         var completeCount = d.completeBin.count;
                         var filteredCount = d.filteredBin.count;
                         if (filteredCount === completeCount) {
                             return String(filteredCount);
                         } else {
-                            return filteredCount + ' (of ' + completeCount + ')';
+                            return `${filteredCount} (of ${completeCount})`;
                         }
-                    }
+                    };
                     $(this).tooltip({
                         container: 'body',
                         title: getTooltipTitle
@@ -266,10 +267,10 @@ var ImagesFacetHistogramView = ImagesFacetView.extend({
                     // itself, not at the top of the bar space).
                     d3.select(this)
                       .attr(self.scale.getFullRect())
-                      .on('mouseenter', function () {
+                      .on('mouseenter', () => {
                           $(el).tooltip('show');
                       })
-                      .on('mouseleave', function () {
+                      .on('mouseleave', () => {
                           $(el).tooltip('hide');
                       });
                 });
@@ -279,36 +280,34 @@ var ImagesFacetHistogramView = ImagesFacetView.extend({
             //         // this refers to the DOM element
             //         d3.select(this).attr(self.scale.getBinRect(d.completeBin.label, 'page'));
             //     });
-        }, this);
+        };
         drawBars();
 
         // Add the scale adjustment knob (needs a distinct scale instance)
         var knobScale = yScale.copy();
         var knob = svg.select('.yAxisKnob')
-            .attr('transform', 'translate(' +
-                this.scale.leftAxisPadding + ',' +
-                knobScale(this.scale.yMax) + ')');
+            .attr('transform',
+                `translate(${this.scale.leftAxisPadding},${knobScale(this.scale.yMax)})`);
         knob.call(d3.behavior.drag()
-            .origin(_.bind(function () {
+            .origin(() => {
                 return { x: 0, y: knobScale(this.scale.yMax) };
-            }, this)).on('drag', _.bind(function () {
+            }).on('drag', () => {
                 // the yMax setter automagically prevents bad values...
                 this.scale.yMax = knobScale.invert(d3.event.y);
 
                 // update everything that cares about the y this.scale:
                 // the knob
-                knob.attr('transform', 'translate(' +
-                    this.scale.leftAxisPadding + ',' +
-                    knobScale(this.scale.yMax) + ')');
+                knob.attr('transform',
+                    `translate(${this.scale.leftAxisPadding},${knobScale(this.scale.yMax)})`);
                 // the axis
                 yScale.domain([0, this.scale.yMax]);
                 yAxis.scale(yScale).ticks(Math.min(4, this.scale.yMax));
                 yAxisObj.call(yAxis);
                 // and the bars
                 drawBars();
-            }, this)).on('dragstart', function () {
+            }).on('dragstart', () => {
                 svg.style('cursor', 'ns-resize');
-            }).on('dragend', function () {
+            }).on('dragend', () => {
                 svg.style('cursor', null);
             }));
 
@@ -323,7 +322,7 @@ var ImagesFacetHistogramView = ImagesFacetView.extend({
             });
 
         bins.select('image.button')
-            .attr('xlink:href', _.bind(function (d) {
+            .attr('xlink:href', (d) => {
                 var status = this.filter.isIncluded(d.completeBin.label);
                 if (status === true) {
                     return checkImageUrl;
@@ -334,10 +333,10 @@ var ImagesFacetHistogramView = ImagesFacetView.extend({
                     // or perhaps if the completeFacetBin.count == 0
                     return dashImageUrl;
                 }
-            }, this))
-            .on('click', _.bind(function (d) {
+            })
+            .on('click', (d) => {
                 this._toggleBin(d.completeBin.label);
-            }, this));
+            });
 
         height += 2 * emSize;
 
@@ -349,11 +348,11 @@ var ImagesFacetHistogramView = ImagesFacetView.extend({
         var maxBoxHeight = 0;
         binsEnter.append('text');
         bins.select('text')
-            .text(_.bind(function (d) {
+            .text((d) => {
                 return this._getBinTitle(d.completeBin);
-            }, this))
+            })
             .attr('text-anchor', 'end')
-            .attr('transform', 'translate(0 ' + transformHeight + ') rotate(' + transformAngle + ')')
+            .attr('transform', `translate(0 ${transformHeight}) rotate(${transformAngle})`)
             .each(function (d, i) {
                 // "this" refers to the DOM element
 
@@ -372,7 +371,7 @@ var ImagesFacetHistogramView = ImagesFacetView.extend({
                         shortened = true;
 
                         text = text.slice(0, -1);
-                        me.html(text + '&hellip;');
+                        me.html(`${text}&hellip;`);
                     }
 
                     self.renderCache.shortenedLabels[i] = me.text();
@@ -399,8 +398,8 @@ var ImagesFacetHistogramView = ImagesFacetView.extend({
         height += maxBoxHeight + topPadding + offsetY;
 
         svg.attr({
-            width: width + 'px',
-            height: height + 'px'
+            width: `${width}px`,
+            height: `${height}px`
         });
         return this;
     },
@@ -463,7 +462,7 @@ var ImagesFacetCategoricalView = ImagesFacetView.extend({
         // DOM)
         var countElems = this.$('.isic-images-facet-bin>.isic-images-facet-bin-count');
         var binVals = this._zipFacetBins();
-        _.each(_.zip(countElems, binVals), _.bind(function (arg) {
+        _.each(_.zip(countElems, binVals), (arg) => {
             var countElem = this.$(arg[0]);
             var binVal = arg[1];
 
@@ -473,16 +472,16 @@ var ImagesFacetCategoricalView = ImagesFacetView.extend({
             if (filteredCount === completeCount) {
                 label = completeCount;
             } else {
-                label = filteredCount + ' / ' + completeCount;
+                label = `${filteredCount} / ${completeCount}`;
             }
-            label = '(' + label + ')';
+            label = `(${label})`;
 
             countElem.text(label);
-        }, this));
+        });
     },
 
     _rerenderSelections: function () {
-        this.$('.isic-images-facet-bin').each(_.bind(function (index, binElem) {
+        this.$('.isic-images-facet-bin').each((index, binElem) => {
             var jqBinElem = this.$(binElem);
             var checkElem = jqBinElem.find('i');
             var binLabel = jqBinElem.data('binLabel');
@@ -490,7 +489,7 @@ var ImagesFacetCategoricalView = ImagesFacetView.extend({
             checkElem
                 .toggleClass('icon-check', binIncluded)
                 .toggleClass('icon-check-empty', !binIncluded);
-        }, this));
+        });
     }
 });
 
@@ -504,11 +503,13 @@ var ImagesFacetCategoricalDatasetView = ImagesFacetCategoricalView.extend({
         ImagesFacetCategoricalView.prototype.initialize.call(this, settings);
 
         this.datasetCollection = new DatasetCollection();
-        this.datasetCollection.once('g:changed', _.bind(function () {
-            this.render();
-        }, this)).fetch({
-            limit: 0
-        });
+        this.datasetCollection
+            .once('g:changed', () => {
+                this.render();
+            })
+            .fetch({
+                limit: 0
+            });
     },
 
     render: function () {
@@ -535,9 +536,9 @@ var ImagesFacetCategoricalDatasetView = ImagesFacetCategoricalView.extend({
                 }
 
                 // Fetch dataset details then update content
-                self.listenTo(datasetModel, 'g:fetched', function () {
+                self.listenTo(datasetModel, 'g:fetched', () => {
                     var description = datasetModel.get('description');
-                    this.$('.popover-content').html(_.escape(description));
+                    self.$('.popover-content').html(_.escape(description));
                 });
                 datasetModel.fetch();
                 return 'Loading...';

@@ -53,9 +53,10 @@ var TasksGroupView = View.extend({
 
     // Return total number of tasks in collection
     numTasks: function () {
-        return this.collection.reduce(function (total, model) {
-            return total + model.get('count');
-        }, 0);
+        return this.collection.reduce(
+            (total, model) => total + model.get('count'),
+            0
+        );
     }
 });
 
@@ -76,7 +77,7 @@ var TasksView = View.extend({
             this.taskReviewView = new TasksGroupView({
                 title: 'Dataset Review',
                 subtitle: 'QC review newly created datasets',
-                linkPrefix: this.apiRoot + '/task/me/review/redirect?datasetId=',
+                linkPrefix: `${this.apiRoot}/task/me/review/redirect?datasetId=`,
                 resourceName: 'dataset',
                 collection: this.reviewTasks,
                 parentView: this
@@ -91,7 +92,7 @@ var TasksView = View.extend({
             this.taskSegmentationView = new TasksGroupView({
                 title: 'Lesion Segmentation',
                 subtitle: 'Segment boundaries between lesion and normal skin',
-                linkPrefix: this.apiRoot + '/task/me/segmentation/redirect?datasetId=',
+                linkPrefix: `${this.apiRoot}/task/me/segmentation/redirect?datasetId=`,
                 resourceName: 'dataset',
                 collection: this.segmentationTasks,
                 parentView: this
@@ -105,7 +106,7 @@ var TasksView = View.extend({
         this.taskAnnotationView = new TasksGroupView({
             title: 'Annotation Studies',
             subtitle: 'Clinical feature annotation studies',
-            linkPrefix: this.apiRoot + '/task/me/annotation/redirect?studyId=',
+            linkPrefix: `${this.apiRoot}/task/me/annotation/redirect?studyId=`,
             resourceName: 'study',
             collection: this.annotationTasks,
             parentView: this

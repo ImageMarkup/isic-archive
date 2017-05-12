@@ -25,13 +25,13 @@ var ConfigView = View.extend({
                     'isic.demo_mode'
                 ])
             }
-        }).done(_.bind(function (resp) {
+        }).done((resp) => {
             this.render();
             this.$('#isic-config-demo-mode').prop(
                 'checked',
                 resp['isic.demo_mode']
             );
-        }, this));
+        });
     },
 
     render: function () {
@@ -54,18 +54,16 @@ var ConfigView = View.extend({
                 list: JSON.stringify(settings)
             },
             error: null
-        }).done(_.bind(function () {
+        }).done(() => {
             events.trigger('g:alert', {
                 icon: 'ok',
                 text: 'Settings saved.',
                 type: 'success',
                 timeout: 4000
             });
-        }, this)).error(_.bind(function (resp) {
-            this.$('#isic-config-error-message').text(
-                resp.responseJSON.message
-            );
-        }, this));
+        }).fail((resp) => {
+            this.$('#isic-config-error-message').text(resp.responseJSON.message);
+        });
     }
 });
 

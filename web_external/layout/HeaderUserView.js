@@ -23,7 +23,7 @@ var LayoutHeaderUserView = View.extend({
         'click a.g-logout': logout,
 
         'click a.g-my-settings': function () {
-            router.navigate('useraccount/' + getCurrentUser().id + '/info', {trigger: true});
+            router.navigate(`useraccount/${getCurrentUser().id}/info`, {trigger: true});
         }
     },
 
@@ -35,8 +35,7 @@ var LayoutHeaderUserView = View.extend({
 
         if (currentUser) {
             this.$('.isic-portrait-wrapper').css(
-                'background-image', '' +
-                'url(' + currentUser.getGravatarUrl(36) + ')');
+                'background-image', `url(${currentUser.getGravatarUrl(36)})`);
         }
         return this;
     }

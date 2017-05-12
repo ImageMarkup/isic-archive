@@ -43,10 +43,10 @@ function navigateToIfCanCreateDataset(View, settings) {
 
 // Front page
 import FrontPageView from './Front/FrontPageView';
-router.route('', 'index', function () {
+router.route('', 'index', () => {
     navigateTo(FrontPageView);
 });
-router.route('forum', 'forum', function () {
+router.route('forum', 'forum', () => {
     window.location.replace('http://forum.isic-archive.com');
 });
 
@@ -54,22 +54,22 @@ router.route('forum', 'forum', function () {
 import UserAccountView from 'girder/views/body/UserAccountView';
 import eventStream from 'girder/utilities/EventStream';
 import { restRequest } from 'girder/rest';
-router.route('useraccount/:id/:tab', 'accountTab', function (id, tab) {
+router.route('useraccount/:id/:tab', 'accountTab', (id, tab) => {
     UserAccountView.fetchAndInit(id, tab);
 });
-router.route('users', 'users', function (id, tab) {
+router.route('users', 'users', (id, tab) => {
     // This is routed to when UserAccountView wants to return, so redirect home
     router.navigate('', {trigger: true});
 });
-router.route('useraccount/:id/token/:token', 'accountToken', function (id, token) {
+router.route('useraccount/:id/token/:token', 'accountToken', (id, token) => {
     // This allows reset password links to work
     // TODO: push this logic into the user model in upstream Girder
     restRequest({
-        path: 'user/password/temporary/' + id,
+        path: `user/password/temporary/${id}`,
         type: 'GET',
         data: {token: token},
         error: null
-    }).done(_.bind(function (resp) {
+    }).done((resp) => {
         resp.user.token = resp.authToken.token;
         eventStream.close();
         setCurrentUser(new UserModel(resp.user));
@@ -80,12 +80,12 @@ router.route('useraccount/:id/token/:token', 'accountToken', function (id, token
             tab: 'password',
             temporary: token
         });
-    }, this)).error(_.bind(function () {
+    }).error(() => {
         router.navigate('', {trigger: true});
-    }, this));
+    });
 });
 import InviteUserView from './User/InviteUserView';
-router.route('user/invite', 'inviteUser', function () {
+router.route('user/invite', 'inviteUser', () => {
     var currentUser = getCurrentUser();
     if (currentUser && currentUser.canAdminStudy()) {
         navigateTo(InviteUserView);
@@ -95,18 +95,18 @@ router.route('user/invite', 'inviteUser', function () {
 });
 import RsvpUserView from './User/RsvpUserView';
 import {showAlertDialog} from './common/utilities';
-router.route('user/:id/rsvp/:token', 'rsvpUser', function (id, token) {
+router.route('user/:id/rsvp/:token', 'rsvpUser', (id, token) => {
     UserModel
         .temporaryTokenLogin(id, token)
-        .done(function (resp) {
+        .done((resp) => {
             events.trigger('g:navigateTo', RsvpUserView, {
                 user: getCurrentUser(),
                 token: token
             });
         })
-        .fail(function (resp) {
+        .fail((resp) => {
             showAlertDialog({
-                text: '<h4>Error loading user from token</h4><br>' + _.escape(resp.responseJSON.message),
+                text: `<h4>Error loading user from token</h4><br>${_.escape(resp.responseJSON.message)}`,
                 escapedHtml: true
             });
             router.navigate('', {trigger: true});
@@ -115,76 +115,76 @@ router.route('user/:id/rsvp/:token', 'rsvpUser', function (id, token) {
 
 // Legal
 import MedicalDisclaimerView from './Legal/MedicalDisclaimerView';
-router.route('medicalDisclaimer', 'medicalDisclaimer', function () {
+router.route('medicalDisclaimer', 'medicalDisclaimer', () => {
     navigateTo(MedicalDisclaimerView);
 });
 import PrivacyPolicyView from './Legal/PrivacyPolicyView';
-router.route('privacyPolicy', 'privacyPolicy', function () {
+router.route('privacyPolicy', 'privacyPolicy', () => {
     navigateTo(PrivacyPolicyView);
 });
 import TermsOfUseView from './Legal/TermsOfUseView';
-router.route('termsOfUse', 'termsOfUse', function () {
+router.route('termsOfUse', 'termsOfUse', () => {
     navigateTo(TermsOfUseView);
 });
 
 // Dataset
 import DatasetsView from './Datasets/DatasetsView';
-router.route('dataset', 'dataset', function () {
+router.route('dataset', 'dataset', () => {
     navigateToIfTermsAccepted(DatasetsView);
 });
 import CreateDatasetView from './Datasets/CreateDatasetView';
-router.route('dataset/create', 'createDataset', function () {
+router.route('dataset/create', 'createDataset', () => {
     navigateToIfCanCreateDataset(CreateDatasetView);
 });
 import ApplyMetadataView from './Datasets/ApplyMetadataView';
-router.route('dataset/:id/metadata/apply', 'applyMetadata', function (id) {
+router.route('dataset/:id/metadata/apply', 'applyMetadata', (id) => {
     // Fetch the dataset, then navigate to the view
     var dataset = new DatasetModel({_id: id})
-        .once('g:fetched', function () {
+        .once('g:fetched', () => {
             navigateToIfCanCreateDataset(ApplyMetadataView, {
                 dataset: dataset
             });
-        }, this)
-        .once('g:error', function () {
+        })
+        .once('g:error', () => {
             router.navigate('', {trigger: true});
-        }, this);
+        });
     dataset.fetch();
 });
 import RegisterMetadataView from './Datasets/RegisterMetadataView';
-router.route('dataset/:id/metadata/register', 'registerMetadata', function (id) {
+router.route('dataset/:id/metadata/register', 'registerMetadata', (id) => {
     // Fetch the dataset, then navigate to the view
     var dataset = new DatasetModel({_id: id})
-        .once('g:fetched', function () {
+        .once('g:fetched', () => {
             navigateToIfCanCreateDataset(RegisterMetadataView, {
                 dataset: dataset
             });
-        }, this)
-        .once('g:error', function () {
+        })
+        .once('g:error', () => {
             router.navigate('', {trigger: true});
-        }, this);
+        });
     dataset.fetch();
 });
 
 // Image
 import ImagesView from './ImagesGallery/ImagesView';
-router.route('images', 'images', function () {
+router.route('images', 'images', () => {
     navigateToIfTermsAccepted(ImagesView);
 });
 
 // Featureset
 import FeaturesetsView from './Featuresets/FeaturesetsView';
-router.route('featuresets', 'featuresets', function () {
+router.route('featuresets', 'featuresets', () => {
     navigateToIfTermsAccepted(FeaturesetsView);
 });
 
 // Study
 import StudiesView from './Studies/StudiesView';
-router.route('studies', 'studies', function () {
+router.route('studies', 'studies', () => {
     navigateToIfTermsAccepted(StudiesView);
 });
 import CreateStudyView from './Studies/CreateStudyView';
 import StudyCollection from './collections/StudyCollection';
-router.route('createStudy', 'createStudy', function () {
+router.route('createStudy', 'createStudy', () => {
     // Route to index if user isn't a study administrator
     if (StudyCollection.canCreate()) {
         navigateTo(CreateStudyView);
@@ -193,12 +193,12 @@ router.route('createStudy', 'createStudy', function () {
     }
 });
 import StudyResultsView from './StudyResults/StudyResultsView';
-router.route('studyResults', 'studyResults', function () {
+router.route('studyResults', 'studyResults', () => {
     navigateToIfTermsAccepted(StudyResultsView);
 });
 
 // Task
 import TasksView from './Tasks/TasksView';
-router.route('tasks', 'tasks', function () {
+router.route('tasks', 'tasks', () => {
     navigateToIfTermsAccepted(TasksView);
 });

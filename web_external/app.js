@@ -165,13 +165,13 @@ Backbone.sync = function (method, model, options) {
  */
 ItemModel.prototype.getFiles = function () {
     restRequest({
-        path: this.resourceName + '/' + this.id + '/files'
-    }).done(_.bind(function (resp) {
+        path: `${this.resourceName}/${this.id}/files`
+    }).done((resp) => {
         var fileCollection = new FileCollection(resp);
         this.trigger('g:files', fileCollection);
-    }, this)).fail(_.bind(function (err) {
+    }).fail((err) => {
         this.trigger('g:error', err);
-    }, this));
+    });
 };
 
 /**
@@ -180,13 +180,13 @@ ItemModel.prototype.getFiles = function () {
  */
 FolderModel.prototype.removeContents = function () {
     restRequest({
-        path: this.resourceName + '/' + this.id + '/contents',
+        path: `${this.resourceName}/${this.id}/contents`,
         type: 'DELETE'
-    }).done(_.bind(function (resp) {
+    }).done((resp) => {
         this.trigger('g:success');
-    }, this)).fail(_.bind(function (err) {
+    }).fail((err) => {
         this.trigger('g:error', err);
-    }, this));
+    });
 };
 
 export default IsicApp;

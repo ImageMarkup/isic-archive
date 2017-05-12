@@ -7,7 +7,7 @@
 svg#recolorImageFilters(width=0, height=0)
   defs
     for hexColor in filterHexColors
-      filter.recolor(id='recolorImageTo' + hexColor)
+      filter.recolor(id=`recolorImageTo${hexColor}`)
         feComponentTransfer(in='SourceAlpha', result='color')
           feFuncR(
             type='linear',
