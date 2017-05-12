@@ -36,7 +36,6 @@ before_install:
     - WORKER_VERSION=2cfb739c096c2373f8bbe00853e3709f433192a6
     - LARGE_IMAGE_VERSION=60c32b11abb4d5f0d1696221a7e81ab21c611980
     - export MONGO_VERSION=3.4.2
-    - export PY_COVG="ON"
 
     - main_path=$PWD
     - build_path=$PWD/build
@@ -62,9 +61,10 @@ before_install:
     - source $build_path/miniconda/bin/activate $build_path/miniconda
     - conda update --yes --all
     - pip install --no-cache-dir -U pip virtualenv
+    - pip install codecov
 
     - unset PREFIX
-    - nvm install v4.8.2
+    - nvm install v6.10.3
     - npm install -g npm
     - node --version
     - npm --version
@@ -88,9 +88,11 @@ install:
     - conda install --yes scikit-image==0.12.3
     - conda install --yes opencv==2.4.10
 
-    - pip install --no-cache-dir -r $girder_path/plugins/large_image/requirements.txt
+    # This version of large_image has some conflicts in its requirements.txt, so install manually
+    - pip install enum34==1.1.6 jsonschema==2.5.1 repoze.lru==0.6 libtiff==0.4.0
+#    - pip install --no-cache-dir -r $girder_path/plugins/large_image/requirements.txt
     # We won't have all the system requirements for openslide
-    - pip uninstall --yes openslide-python
+#    - pip uninstall --yes openslide-python
 
     - npm install
 
@@ -99,7 +101,10 @@ script:
 #    - python -m girder_worker &
     - mkdir -p $build_path/girder_testing_build
     - cd $build_path/girder_testing_build
-    - cmake -DPYTHON_COVERAGE:BOOL=${PY_COVG} -DPYTHON_VERSION:STRING=${TRAVIS_PYTHON_VERSION} -DRUN_CORE_TESTS:BOOL=OFF -DTEST_PLUGINS:STRING="isic_archive" $girder_path
+    - cmake -DPYTHON_COVERAGE:BOOL=ON -DCOVERAGE_MINIMUM_PASS:STRING=40 -DPYTHON_VERSION:STRING=${TRAVIS_PYTHON_VERSION} -DRUN_CORE_TESTS:BOOL=OFF -DTEST_PLUGINS:STRING="isic_archive" $girder_path
     - make
-    # js_coverage_combine_report and py_coverage* fail due to an upstream bug
-    - JASMINE_TIMEOUT=15000 ctest -VV -E '(py|js)_coverage'
+    # js_coverage_combine_report may fail due to an upstream bug
+    - JASMINE_TIMEOUT=15000 ctest -VV -E 'js_coverage'
+
+after_success:
+    - codecov --root $main_path --disable search pycov --file $build_path/girder_testing_build/coverage.xml
