@@ -63,7 +63,7 @@ var FeaturesetView = View.extend({
         this.model.destroy({
             success: function (model, resp, options) {
                 showAlertDialog({
-                    text: `<h4>Featureset <b>#${_.escape(model.name())}"</b> deleted</h4>`,
+                    text: `<h4>Featureset <b>"${_.escape(model.name())}"</b> deleted</h4>`,
                     escapedHtml: true
                 });
             },

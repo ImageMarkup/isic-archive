@@ -107,7 +107,7 @@ var StudyView = View.extend({
             })
             .fail((resp) => {
                 showAlertDialog({
-                    text: `<h4>Error deleting annotator</h4><br>'${_.escape(resp.responseJSON.message)}`,
+                    text: `<h4>Error deleting annotator</h4><br>${_.escape(resp.responseJSON.message)}`,
                     escapedHtml: true
                 });
             });
@@ -137,7 +137,7 @@ var StudyView = View.extend({
             },
             error: function (model, resp, options) {
                 showAlertDialog({
-                    text: `<h4>Error deleting study</h4><br>'${_.escape(resp.responseJSON.message)}`,
+                    text: `<h4>Error deleting study</h4><br>${_.escape(resp.responseJSON.message)}`,
                     escapedHtml: true
                 });
             }
