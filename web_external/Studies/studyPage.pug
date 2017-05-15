@@ -1,3 +1,4 @@
+- let numImages = study.get('images').length
 .isic-listing-item-container.isic-study-container
   table.table.table-condensed.isic-listing-item-table
     tr
@@ -28,7 +29,15 @@
       td.isic-study-users-content
         if study.get('users').length
           table(class=study.canAdmin() ? 'table-hover' : undefined)
+            th(colspan=2)
+            th(colspan=2) Completion
             each user in study.users().models
+              - let numCompleted = 'N/A'
+              - let percentCompleted = 'N/A'
+              if numImages > 0
+                - numCompleted = study.get('userCompletion')[user.id]
+                - percentCompleted = `${(numCompleted / numImages * 100).toFixed().toString()}%`
+                - numCompleted = `${numCompleted} / ${numImages}`
               tr(data-user-id=user.id)
                 td.isic-study-user-name= user.name()
                 td
@@ -36,16 +45,18 @@
                     a.isic-study-remove-user-button.isic-tooltip(
                       title='Delete annotator')
                         i.icon-cancel
+                td.isic-study-user-completion-count= numCompleted
+                td.isic-study-user-completion-percent= percentCompleted
         else
           | (no users)
 
   table.table.table-condensed.isic-listing-item-table
     tr
       td.isic-listing-item-table-section-header Images
-        |  (#{study.get('images').length})
+        |  (#{numImages})
     tr
       td.isic-study-images-content
-        if study.get('images').length
+        if numImages > 0
           table
             tr
               th.isic-study-images-content-name Image Name
