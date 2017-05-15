@@ -385,26 +385,24 @@ class TaskResource(IsicResource):
         user = self.getCurrentUser()
 
         study = Study.load(params['studyId'], user=user, level=AccessType.READ, exc=True)
-        try:
-            activeAnnotations = Study.childAnnotations(
-                study=study,
-                annotatorUser=user,
-                state=Study.State.ACTIVE,
-                sort=[('lowerName', SortDir.ASCENDING)]
-            )
-            # Skip to a deterministic random element
-            studyIdInt = int(str(study['_id']), 16)
-            activeAnnotationsCount = activeAnnotations.count()
-            # We can't persist the state of the PRNG across requests, so ensure that for a given
-            # study, each amount of remaining annotations returns a deterministic random offset
-            random.seed(studyIdInt + activeAnnotationsCount)
-            nextAnnotationIndex = random.randint(0, activeAnnotationsCount - 1)
-            # Reset the PRNG for other possible uses
-            random.seed()
-            nextAnnotation = activeAnnotations[nextAnnotationIndex]
-
-        except StopIteration:
+        activeAnnotations = Study.childAnnotations(
+            study=study,
+            annotatorUser=user,
+            state=Study.State.ACTIVE,
+            sort=[('lowerName', SortDir.ASCENDING)]
+        )
+        # Skip to a deterministic random element
+        studyIdInt = int(str(study['_id']), 16)
+        activeAnnotationsCount = activeAnnotations.count()
+        if activeAnnotationsCount == 0:
             raise RestException('No annotations are needed for this study.')
+        # We can't persist the state of the PRNG across requests, so ensure that for a given
+        # study, each amount of remaining annotations returns a deterministic random offset
+        random.seed(studyIdInt + activeAnnotationsCount)
+        nextAnnotationIndex = random.randint(0, activeAnnotationsCount - 1)
+        # Reset the PRNG for other possible uses
+        random.seed()
+        nextAnnotation = activeAnnotations[nextAnnotationIndex]
 
         return {
             '_id': nextAnnotation['_id'],
