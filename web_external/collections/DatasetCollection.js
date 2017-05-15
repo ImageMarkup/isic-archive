@@ -8,7 +8,7 @@ const DatasetCollection = Collection.extend({
     model: DatasetModel
 }, {
     canCreate: function () {
-        var user = getCurrentUser();
+        let user = getCurrentUser();
         return user && user.canCreateDataset();
     }
 });

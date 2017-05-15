@@ -109,11 +109,11 @@ HistogramScale.prototype.getBinRect = function (binLabel, histogram) {
     } else {  // default: return the overview count
         histogram = this.overviewHistogram;
     }
-    var bin = _.findWhere(histogram, {label: binLabel});
-    var binCount = bin ? bin.count : 0;
+    let bin = _.findWhere(histogram, {label: binLabel});
+    let binCount = bin ? bin.count : 0;
 
-    var barHeight = this.y(binCount);
-    var cap = this.y(this.yMax);
+    let barHeight = this.y(binCount);
+    let cap = this.y(this.yMax);
 
     if (barHeight > cap) {
         barHeight = cap;
@@ -127,7 +127,7 @@ HistogramScale.prototype.getBinRect = function (binLabel, histogram) {
     };
 };
 HistogramScale.prototype.getFullRect = function () {
-    var barHeight = this.y(this.yMax);
+    let barHeight = this.y(this.yMax);
     return {
         x: -this.barSize / 2,
         y: this.height - barHeight,

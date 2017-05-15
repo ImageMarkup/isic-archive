@@ -15,11 +15,11 @@ const DatasetsView = View.extend({
     // TODO refactor
     events: {
         'show.bs.collapse .isic-listing-panel-collapse': function (event) {
-            var target = $(event.target);
+            let target = $(event.target);
             target.parent().find('.icon-right-open').removeClass('icon-right-open').addClass('icon-down-open');
 
-            var viewIndex = parseInt(target.attr('data-model-index'), 10);
-            var viewContainer = target.find('.isic-listing-panel-body');
+            let viewIndex = parseInt(target.attr('data-model-index'), 10);
+            let viewContainer = target.find('.isic-listing-panel-body');
             this.renderDataset(viewIndex, viewContainer);
         },
         'hide.bs.collapse .isic-listing-panel-collapse': function (event) {
@@ -76,7 +76,7 @@ const DatasetsView = View.extend({
 
     renderDataset: function (index, container) {
         if (container.children().length === 0) {
-            var dataset = this.datasets.at(index);
+            let dataset = this.datasets.at(index);
 
             new DatasetView({ // eslint-disable-line no-new
                 el: container,

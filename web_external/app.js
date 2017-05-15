@@ -104,7 +104,7 @@ const IsicApp = GirderApp.extend({
     login: function () {
         // Re-implement this, to use ISIC's instance of the router
         // TODO: if the router were stored as an App instance property, this wouldn't be necessary
-        var route = splitRoute(Backbone.history.fragment).base;
+        let route = splitRoute(Backbone.history.fragment).base;
         Backbone.history.fragment = null;
         eventStream.close();
 
@@ -127,18 +127,18 @@ Backbone.sync = function (method, model, options) {
     // In this reimplementation, the only important changes are:
     //   * Use "restRequest" instead of "Backbone.ajax"
     //   * Set "params.path" instead of "params.url"
-    var methodMap = {
+    let methodMap = {
         'create': 'POST',
         'update': 'PUT',
         'patch': 'PATCH',
         'delete': 'DELETE',
         'read': 'GET'
     };
-    var type = methodMap[method];
+    let type = methodMap[method];
 
     options = options || {};
 
-    var params = {type: type, dataType: 'json'};
+    let params = {type: type, dataType: 'json'};
 
     if (!options.url) {
         // params.url = _.result(model, 'url') || urlError();
@@ -155,7 +155,7 @@ Backbone.sync = function (method, model, options) {
         params.processData = false;
     }
 
-    var xhr = options.xhr = restRequest(_.extend(params, options));
+    let xhr = options.xhr = restRequest(_.extend(params, options));
     model.trigger('request', model, xhr, options);
     return xhr;
 };
@@ -167,7 +167,7 @@ ItemModel.prototype.getFiles = function () {
     restRequest({
         path: `${this.resourceName}/${this.id}/files`
     }).done((resp) => {
-        var fileCollection = new FileCollection(resp);
+        let fileCollection = new FileCollection(resp);
         this.trigger('g:files', fileCollection);
     }).fail((err) => {
         this.trigger('g:error', err);

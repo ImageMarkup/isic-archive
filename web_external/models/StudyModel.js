@@ -27,7 +27,7 @@ const StudyModel = Model.extend({
     },
 
     users: function () {
-        var userModels = this.get('users').map((user) => {
+        let userModels = this.get('users').map((user) => {
             return new UserModel(user);
         });
         return new UserCollection(userModels);
@@ -63,7 +63,7 @@ const StudyModel = Model.extend({
 
     destroy: function (options) {
         // Don't modify the "options", but override some properties
-        var params = _.clone(options);
+        let params = _.clone(options);
         // Study deletion may fail if it has completed annotations
         params.wait = true;
 
@@ -71,7 +71,7 @@ const StudyModel = Model.extend({
     },
 
     canAdmin: function () {
-        var user = getCurrentUser();
+        let user = getCurrentUser();
         return user && user.canAdminStudy();
     }
 });

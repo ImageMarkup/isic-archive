@@ -8,7 +8,7 @@ const StudyCollection = Collection.extend({
     model: StudyModel
 }, {
     canCreate: function () {
-        var user = getCurrentUser();
+        let user = getCurrentUser();
         return user && user.canAdminStudy();
     }
 });

@@ -21,8 +21,8 @@ const ImagesPagingPane = View.extend({
             this.images.fetchLastPage(this.filteredFacets.total);
         },
         'click #isic-images-paging-downloadZip': function () {
-            var downloadUrl = `${this.apiRoot}/image/download`;
-            var filterQuery = JSON.stringify(this.filters.asAst());
+            let downloadUrl = `${this.apiRoot}/image/download`;
+            let filterQuery = JSON.stringify(this.filters.asAst());
             if (filterQuery) {
                 downloadUrl += `?filter=${filterQuery}`;
             }
@@ -72,8 +72,8 @@ const ImagesPagingPane = View.extend({
     },
 
     _rerender: function () {
-        var hasFilters = this.filteredFacets.total < this.completeFacets.total;
-        var hasPaging = this.images.hasPreviousPage() || this.images.hasNextPage();
+        let hasFilters = this.filteredFacets.total < this.completeFacets.total;
+        let hasPaging = this.images.hasPreviousPage() || this.images.hasNextPage();
 
         // Disable / enable the appropriate paging buttons
         this.$('#isic-images-paging-seek-prev, #isic-images-paging-seek-first')
@@ -83,7 +83,7 @@ const ImagesPagingPane = View.extend({
 
         // Show the relevant explanatory label
         this.$('#isic-images-paging-label>*').hide();
-        var labelElement;
+        let labelElement;
         if (hasFilters && hasPaging) {
             labelElement = this.$('#isic-images-paging-label-hasFiltersAndPaging');
         } else if (hasFilters) {
@@ -102,8 +102,8 @@ const ImagesPagingPane = View.extend({
           .text(this.filteredFacets.total);
         if (hasPaging) {
             // Use base 1 for the page text labels
-            var startImageNum = this.images._currentOffset() + 1;
-            var endImageNum = startImageNum + this.images.length - 1;
+            let startImageNum = this.images._currentOffset() + 1;
+            let endImageNum = startImageNum + this.images.length - 1;
             labelElement.find('.isic-images-paging-label-page')
                 .text(`${startImageNum} - ${endImageNum}`);
         } else {

@@ -44,7 +44,7 @@ const ImageViewerWidget = View.extend({
     },
 
     _createViewer: function () {
-        var params = geo.util.pixelCoordinateParams(
+        let params = geo.util.pixelCoordinateParams(
             this.$el, this.sizeX, this.sizeY, this.tileWidth, this.tileHeight);
 
         _.extend(params.map, {

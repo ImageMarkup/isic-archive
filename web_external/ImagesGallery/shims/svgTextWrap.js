@@ -10,14 +10,14 @@ nested elements across lines).
 */
 
 function newTspan(textElement) {
-    var newTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+    let newTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
     newTspan.setAttribute('class', 'rewrappedTspan');
     textElement.appendChild(newTspan);
     return newTspan;
 }
 
 function extractWords(element) {
-    var words = [];
+    let words = [];
     // Pull out all the childNodes and split them into words
     _.each(Array.from(element.childNodes), function (chunk) {
         if (chunk.nodeType === Node.TEXT_NODE) {
@@ -42,24 +42,24 @@ function extractWords(element) {
 function rewrapSvgText(textElement, pxWidth, emLeading) {
     emLeading = emLeading || 1.1;
 
-    var textAnchor = textElement.getAttribute('text-anchor') || 'start';
-    var words = extractWords(textElement);
+    let textAnchor = textElement.getAttribute('text-anchor') || 'start';
+    let words = extractWords(textElement);
     if (words.length === 0) {
         return;
     }
     textElement.textContent = '';
 
-    var lineLengths = [0];
+    let lineLengths = [0];
 
     // First pass: figure out which words go on which lines
 
     // Start with the first word
-    var currentTspan = newTspan(textElement);
+    let currentTspan = newTspan(textElement);
     currentTspan.appendChild(words[0]);
 
     _.each(words, function (word, index) {
         // Make a temporary copy of the line
-        var tempCopy = currentTspan.cloneNode(true);
+        let tempCopy = currentTspan.cloneNode(true);
 
         // Add a space if it's not the first word
         if (index > 0) {
@@ -69,7 +69,7 @@ function rewrapSvgText(textElement, pxWidth, emLeading) {
         currentTspan.appendChild(word);
 
         // How wide is the line now?
-        var length = currentTspan.getComputedTextLength();
+        let length = currentTspan.getComputedTextLength();
 
         // Has it exceeded the space that we allow?
         if (length > pxWidth && index > 0) {
@@ -96,7 +96,7 @@ function rewrapSvgText(textElement, pxWidth, emLeading) {
             tspan.setAttribute('dy', '0em');
         } else {
             tspan.setAttribute('dy', emLeading + 'em');
-            var dx = 0;
+            let dx = 0;
             if (textAnchor === 'start') {
                 // scoot the line back the
                 // length of the previous line

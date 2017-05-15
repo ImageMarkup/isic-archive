@@ -71,7 +71,7 @@ const DatasetModel = Model.extend({
      * Get the registered metadata for the dataset. Returns a promise.
      */
     getRegisteredMetadata: function () {
-        var deferred = $.Deferred();
+        let deferred = $.Deferred();
         restRequest({
             path: `${this.resourceName}/${this.id}/metadata`
         }).done((resp) => {
@@ -85,7 +85,7 @@ const DatasetModel = Model.extend({
      * @param [metadataFileId] The ID of the metadata file.
      */
     applyMetadata: function (metadataFileId, save) {
-        var deferred = $.Deferred();
+        let deferred = $.Deferred();
         restRequest({
             path: `${this.resourceName}/${this.id}/metadata/${metadataFileId}`,
             type: 'POST',
@@ -102,7 +102,7 @@ const DatasetModel = Model.extend({
     },
 
     canAdmin: function () {
-        var user = getCurrentUser();
+        let user = getCurrentUser();
         return user && user.canAdminStudy();
     }
 });

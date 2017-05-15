@@ -24,9 +24,9 @@ import './applyMetadataValidationPage.styl';
 // Model for a metadata file
 const MetadataFileModel = Model.extend({
     name: function () {
-        var time = formatDate(this.get('time'), DATE_SECOND);
-        var fileName = this.get('file').name();
-        var userName = this.get('user').name();
+        let time = formatDate(this.get('time'), DATE_SECOND);
+        let fileName = this.get('file').name();
+        let userName = this.get('user').name();
         return `${time} \u2014 ${fileName} \u2014 ${userName}`;
     }
 });
@@ -97,13 +97,13 @@ const ApplyMetadataSelectFileView = View.extend({
     },
 
     fileChanged: function () {
-        var fileId = this.$('select').val();
+        let fileId = this.$('select').val();
         this.trigger('changed', fileId);
     },
 
     render: function () {
         // Destroy previous select2
-        var select = this.$('#isic-apply-metadata-file-select');
+        let select = this.$('#isic-apply-metadata-file-select');
         select.select2('destroy');
 
         this.$el.html(ApplyMetadataSelectFilePageTemplate({
@@ -111,7 +111,7 @@ const ApplyMetadataSelectFileView = View.extend({
         }));
 
         // Set up select box
-        var placeholder = 'Select a file...';
+        let placeholder = 'Select a file...';
         if (!this.collection.isEmpty()) {
             placeholder += ` (${this.collection.length} available)`;
         }
@@ -132,12 +132,12 @@ const ApplyMetadataView = View.extend({
     events: {
         'click #isic-apply-metadata-download-button': function () {
             // Download selected metadata file
-            var fileModel = new FileModel({_id: this.file.id});
+            let fileModel = new FileModel({_id: this.file.id});
             fileModel.download();
         },
 
         'click #isic-apply-metadata-validate-button': function () {
-            var save = false;
+            let save = false;
             this.validateMetadata(save);
         },
 
@@ -154,7 +154,7 @@ const ApplyMetadataView = View.extend({
                     // the Bootstrap-created element with class "modal-backdrop"
                     // is erroneously not removed.
                     $('#g-dialog-container').on('hidden.bs.modal', () => {
-                        var save = true;
+                        let save = true;
                         this.validateMetadata(save);
                     });
                 }
@@ -205,7 +205,7 @@ const ApplyMetadataView = View.extend({
     errorsChanged: function () {
         this.renderValidationContainer();
 
-        var allowSave = this.errors.initialized() && this.errors.isEmpty();
+        let allowSave = this.errors.initialized() && this.errors.isEmpty();
         this.$('#isic-apply-metadata-save').toggleClass('hidden', !allowSave);
     },
 

@@ -36,12 +36,12 @@ const ImagesFacetsPane = View.extend({
         }));
 
         this.facetViews = this.completeFacets.map((completeFacet) => {
-            var facetId = completeFacet.id;
-            var filteredFacet = this.filteredFacets.get(facetId);
-            var facetFilter = this.filters.facetFilter(facetId);
+            let facetId = completeFacet.id;
+            let filteredFacet = this.filteredFacets.get(facetId);
+            let facetFilter = this.filters.facetFilter(facetId);
 
-            var FacetView = completeFacet.schema().FacetView;
-            var facetView = new FacetView({
+            let FacetView = completeFacet.schema().FacetView;
+            let facetView = new FacetView({
                 completeFacet: completeFacet,
                 filteredFacet: filteredFacet,
                 filter: facetFilter,

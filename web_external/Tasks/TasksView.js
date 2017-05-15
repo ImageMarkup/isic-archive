@@ -67,7 +67,7 @@ const TasksView = View.extend({
     },
 
     initialize: function (settings) {
-        var currentUser = getCurrentUser();
+        let currentUser = getCurrentUser();
 
         if (currentUser.canReviewDataset()) {
             this.reviewTasks = new TaskCollection();

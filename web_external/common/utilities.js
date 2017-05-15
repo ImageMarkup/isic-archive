@@ -25,7 +25,7 @@ const showAlertDialog = function (params) {
         escapedHtml: false
     }, params);
 
-    var container = $('#g-dialog-container');
+    let container = $('#g-dialog-container');
     container
         .html(AlertDialogTemplate({
             params: params
@@ -37,7 +37,7 @@ const showAlertDialog = function (params) {
             }
         });
 
-    var el = container.find('.modal-body>p');
+    let el = container.find('.modal-body>p');
     if (params.escapedHtml) {
         el.html(params.text);
     } else {

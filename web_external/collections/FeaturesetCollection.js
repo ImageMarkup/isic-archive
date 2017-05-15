@@ -8,7 +8,7 @@ const FeaturesetCollection = Collection.extend({
     model: FeaturesetModel
 }, {
     canCreate: function () {
-        var user = getCurrentUser();
+        let user = getCurrentUser();
         return user && user.canAdminStudy();
     }
 });

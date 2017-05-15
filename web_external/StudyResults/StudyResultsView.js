@@ -62,10 +62,10 @@ const FeatureCollection = Backbone.Collection.extend({
     // Update collection from an array of features of the form:
     // { 'id': id, 'name': [name1, name2, ...] }
     update: function (features) {
-        var models = _.map(features, (feature) => {
-            var featureId = feature['id'];
-            var featureNames = feature['name'];
-            var model = new FeatureModel({
+        let models = _.map(features, (feature) => {
+            let featureId = feature['id'];
+            let featureNames = feature['name'];
+            let model = new FeatureModel({
                 id: featureId,
                 name: featureNames.join(', ')
             });
@@ -123,7 +123,7 @@ const StudyResultsSelectStudyView = View.extend({
     },
 
     showDetails: function () {
-        var studyId = this.$('select').val();
+        let studyId = this.$('select').val();
         if (!studyId) {
             return;
         }
@@ -133,7 +133,7 @@ const StudyResultsSelectStudyView = View.extend({
 
     render: function () {
         // Destroy previous select2
-        var select = this.$('#isic-study-results-select-study-select');
+        let select = this.$('#isic-study-results-select-study-select');
         select.select2('destroy');
 
         this.$el.html(StudyResultsSelectStudyPageTemplate({
@@ -141,7 +141,7 @@ const StudyResultsSelectStudyView = View.extend({
         }));
 
         // Set up select box
-        var placeholder = 'Select a study...';
+        let placeholder = 'Select a study...';
         if (!this.collection.isEmpty()) {
             placeholder += ` (${this.collection.length} available)`;
         }
@@ -168,7 +168,7 @@ const StudyResultsStudyDetailsView = View.extend({
     },
 
     render: function () {
-        var hasStudy = this.model.has('name');
+        let hasStudy = this.model.has('name');
 
         this.$el.html(StudyResultsStudyDetailPageTemplate({
             model: this.model,
@@ -198,7 +198,7 @@ const StudyResultsSelectImageView = View.extend({
         event.preventDefault();
 
         // currentTarget is the element that the event has bubbled up to
-        var target = $(event.currentTarget);
+        let target = $(event.currentTarget);
 
         this.$('.isic-study-results-select-image-image-container').removeClass('active');
         target.addClass('active');
@@ -237,7 +237,7 @@ const StudyResultsSelectUsersView = View.extend({
 
     render: function () {
         // Destroy previous select2
-        var select = this.$('#isic-study-results-select-users-select');
+        let select = this.$('#isic-study-results-select-users-select');
         select.select2('destroy');
 
         this.$el.html(StudyResultsSelectUsersPageTemplate({
@@ -245,7 +245,7 @@ const StudyResultsSelectUsersView = View.extend({
         }));
 
         // Set up select box
-        var placeholder = 'No users available';
+        let placeholder = 'No users available';
         if (!this.collection.isEmpty()) {
             placeholder = `Select an annotator... (${this.collection.length} available)`;
         }
@@ -282,11 +282,11 @@ const StudyResultsSelectLocalFeaturesView = View.extend({
 
     render: function () {
         // Destroy previous select2
-        var select = this.$('#isic-study-results-select-local-features-select');
+        let select = this.$('#isic-study-results-select-local-features-select');
         select.select2('destroy');
 
         // Create local collection of those features that are annotated
-        var collection = this.collection.clone();
+        let collection = this.collection.clone();
         collection.reset(collection.filter((model) => {
             return this.featureAnnotated(model.id);
         }));
@@ -296,7 +296,7 @@ const StudyResultsSelectLocalFeaturesView = View.extend({
         }));
 
         // Set up select box
-        var placeholder = 'No features available';
+        let placeholder = 'No features available';
         if (!collection.isEmpty()) {
             placeholder = `Select a feature... (${collection.length} available)`;
         }
@@ -315,17 +315,17 @@ const GlobalFeatureResultCollection = Backbone.Collection.extend({
 
     // Update collection from annotation object and feature list
     update: function (annotations, features) {
-        var models = _.map(features, (feature) => {
-            var featureId = feature['id'];
-            var featureNames = feature['name'];
-            var model = new GlobalFeatureResultModel({
+        let models = _.map(features, (feature) => {
+            let featureId = feature['id'];
+            let featureNames = feature['name'];
+            let model = new GlobalFeatureResultModel({
                 id: featureId,
                 name: featureNames.join(', ')
             });
             if (annotations && _.has(annotations, featureId)) {
-                var featureOptions = _.indexBy(feature['options'], 'id');
-                var resultId = annotations[featureId];
-                var resultName = featureOptions[resultId]['name'];
+                let featureOptions = _.indexBy(feature['options'], 'id');
+                let resultId = annotations[featureId];
+                let resultName = featureOptions[resultId]['name'];
                 model.set('resultId', resultId);
                 model.set('resultName', resultName);
             }
@@ -415,9 +415,9 @@ const StudyResultsFeatureImageView = View.extend({
     },
 
     render: function () {
-        var featureId = this.model.get('featureId');
-        var annotationId = this.model.get('annotationId');
-        var imageUrl = null;
+        let featureId = this.model.get('featureId');
+        let annotationId = this.model.get('annotationId');
+        let imageUrl = null;
         if (featureId && annotationId) {
             imageUrl = [
                 this.apiRoot,
@@ -505,7 +505,7 @@ const StudyResultsLocalFeaturesView = View.extend({
         if (!featureId || !this.annotation.has('annotations')) {
             return false;
         }
-        var annotations = this.annotation.get('annotations');
+        let annotations = this.annotation.get('annotations');
         return _.has(annotations, featureId);
     }
 });
@@ -662,7 +662,7 @@ const StudyResultsView = View.extend({
             .set({'_id': studyId})
             .once('g:fetched', () => {
                 // Populate images collection
-                var imageModels = _.map(this.study.get('images'), (image) => {
+                let imageModels = _.map(this.study.get('images'), (image) => {
                     return new ImageModel(image);
                 });
                 this.images.reset(imageModels);
@@ -671,7 +671,7 @@ const StudyResultsView = View.extend({
                 this.users.reset(this.study.users().models);  // eslint-disable-line backbone/no-view-collection-models
 
                 // Fetch featureset
-                var featureset = this.study.featureset();
+                let featureset = this.study.featureset();
                 featureset
                     .once('g:fetched', () => {
                         this.featureset.set(featureset.attributes);
@@ -709,7 +709,7 @@ const StudyResultsView = View.extend({
             return;
         }
 
-        var annotations = new AnnotationCollection();
+        let annotations = new AnnotationCollection();
         annotations
             .once('g:changed', () => {
                 if (!annotations.isEmpty()) {
@@ -758,7 +758,7 @@ const StudyResultsView = View.extend({
     },
 
     setMainContainerVisible: function (visible) {
-        var element = this.$('#isic-study-results-main-container');
+        let element = this.$('#isic-study-results-main-container');
         this.setElementVisible(element, visible);
     },
 

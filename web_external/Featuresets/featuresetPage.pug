@@ -25,7 +25,7 @@
           if featureset.get(featureType.id).length
             table.table.table-condensed.isic-featureset-table-features-table
               each feature in featureset.get(featureType.id)
-                - var hasOptions = (feature.type === 'radio');
+                - let hasOptions = (feature.type === 'radio');
                 tr
                   td.isic-featureset-table-feature-header(colspan=3)
                     each nameComponent, index in feature.name

@@ -26,8 +26,8 @@ const SegmentationDisplayView = View.extend({
     },
 
     render: function () {
-        var created = this.formatDate(this.model.get('created'));
-        var thumbnailUrl = [
+        let created = this.formatDate(this.model.get('created'));
+        let thumbnailUrl = [
             this.apiRoot,
             'segmentation',
             this.model.id,
@@ -55,8 +55,8 @@ const SegmentationDisplayView = View.extend({
 const SegmentationsDisplayView = View.extend({
     events: {
         'change select': function (event) {
-            var selectedSegmentationId = $(event.currentTarget).val();
-            var selectedSegmentation = this.segmentations.get(selectedSegmentationId);
+            let selectedSegmentationId = $(event.currentTarget).val();
+            let selectedSegmentation = this.segmentations.get(selectedSegmentationId);
             selectedSegmentation.select();
         }
     },

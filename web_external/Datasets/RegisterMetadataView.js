@@ -29,14 +29,14 @@ const RegisterMetadataView = View.extend({
             this.$('#isic-register-metadata-submit').prop('disabled', true);
 
             // Get file ID of uploaded file, then register metadata
-            var items = new ItemCollection();
+            let items = new ItemCollection();
             items
                 .once('g:changed', () => {
                     if (!items.isEmpty()) {
-                        var item = items.first();
+                        let item = items.first();
                         item
                             .once('g:files', (fileCollection) => {
-                                var fileId = fileCollection.first().id;
+                                let fileId = fileCollection.first().id;
                                 this.registerMetadata(fileId);
                             })
                             .getFiles();
@@ -157,8 +157,8 @@ const RegisterMetadataView = View.extend({
     },
 
     updateUploadWidget: function () {
-        var visible = false;
-        var uploadList = [];
+        let visible = false;
+        let uploadList = [];
         if (this.uploadedCsvFiles.length) {
             visible = false;
             uploadList = this.uploadedCsvFiles;

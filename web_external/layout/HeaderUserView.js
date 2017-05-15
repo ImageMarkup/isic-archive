@@ -28,7 +28,7 @@ const LayoutHeaderUserView = View.extend({
     },
 
     render: function () {
-        var currentUser = getCurrentUser();
+        let currentUser = getCurrentUser();
         this.$el.html(LayoutHeaderUserTemplate({
             currentUser: currentUser
         }));

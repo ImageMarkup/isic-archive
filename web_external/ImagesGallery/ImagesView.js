@@ -101,7 +101,7 @@ const ImagesView = View.extend({
         // when called; then remove the calls to "images.fetch" and "filteredFacets.reset"
         // from the "onCompleteFacetsFetched" handler and let them just run from here only
 
-        var filterQuery = JSON.stringify(this.filters.asAst());
+        let filterQuery = JSON.stringify(this.filters.asAst());
         this.filteredFacets._pendingRequest = this.filteredFacets.fetch({
             // filteredFacets is a direct subclass of Backbone.Collection, with different
             // arguments to ".fetch"

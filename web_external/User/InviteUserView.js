@@ -17,14 +17,14 @@ const InviteUserView = View.extend({
             event.preventDefault();
             this.$('#isic-user-invite-submit').prop('disabled', true);
 
-            var data = {
+            let data = {
                 login: this.$('#isic-user-invite-new-login').val(),
                 email: this.$('#isic-user-invite-new-email').val(),
                 firstName: this.$('#isic-user-invite-new-firstname').val(),
                 lastName: this.$('#isic-user-invite-new-lastname').val()
             };
 
-            var validityPeriod = this.$('#isic-user-invite-period').val();
+            let validityPeriod = this.$('#isic-user-invite-period').val();
             if (validityPeriod.trim().length > 0) {
                 data.validityPeriod = validityPeriod;
             }
