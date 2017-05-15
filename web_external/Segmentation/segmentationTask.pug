@@ -1,0 +1,24 @@
+.container-fluid
+  .row
+    .col-sm-3
+      .isic-listing-container
+        each segmentation, index in segmentations
+          .isic-listing-panel-group.panel-group(id=`panel-group-${segmentation.id}`)
+            .isic-listing-panel.panel.panel-default
+              .isic-listing-panel-heading.panel-heading(
+                data-toggle='collapse',
+                data-parent=`panel-group-${segmentation.id}`,
+                data-target=`panel-${segmentation.id}`)
+                a.collapsed
+                  block heading
+                    = segmentation.id
+                  span.isic-listing-panel-heading-indicator.pull-right
+                    i.icon-right-open
+              .isic-listing-panel-collapse.panel-collapse.collapse(
+                id=`panel-${segmentation.id}`,
+                data-model-index=index)
+                .isic-listing-panel-body.panel-body
+                  span Created: #{formatDate(segmentation.get('created'))}
+
+    .col-sm-9
+      .isic-segmentation-task-viewer

@@ -202,3 +202,9 @@ import TasksView from './Tasks/TasksView';
 router.route('tasks', 'tasks', () => {
     navigateToIfTermsAccepted(TasksView);
 });
+
+// Segmentation
+import SegmentationTaskView from './Segmentation/SegmentationTaskView';
+router.route('tasks/segmentation/:id', 'segmentationTask', (id) => {
+    navigateToIfTermsAccepted(SegmentationTaskView);
+});

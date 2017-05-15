@@ -112,6 +112,7 @@ const ImageViewerWidget = View.extend({
         this.renderedModelId = this.model.id;
 
         this._createViewer();
+        this.trigger('loaded');
 
         return this;
     },
@@ -138,4 +139,44 @@ const ImageViewerWidget = View.extend({
     }
 });
 
+const SegmentationImageViewerWidget = ImageViewerWidget.extend({
+    addSegmentation: function (segmentation) {
+        if (this.segmentationLayer) {
+            this.removeSegmentation();
+        }
+
+        this.segmentationLayer = this.viewer.createLayer('feature', {
+            features: ['quad']
+        });
+        this.segmentationLayer.opacity(0.2);
+        this.segmentationLayer.moveToTop();
+
+        this.segmentationFeature = this.segmentationLayer.createFeature('quad', {
+            selectionAPI: false
+        }).data([{
+            ul: {x: 0, y: 0},
+            lr: {x: this.sizeX, y: this.sizeY},
+            // TODO: fetch this with Girder auth headers
+            image: `${girder.apiRoot}/segmentation/${segmentation.id}/mask`
+        }]).draw();
+    },
+
+    removeSegmentation: function () {
+        this.viewer.deleteLayer(this.segmentationLayer);
+        this.segmentationLayer = null;
+        this.segmentationFeature = null;
+    },
+
+    showSegmentation: function () {
+        this.segmentationFeature.visible(false);
+        this.segmentationFeature.draw();
+    },
+
+    hideSegmentation: function () {
+        this.segmentationFeature.visible(true);
+        this.segmentationFeature.draw();
+    }
+});
+
 export default ImageViewerWidget;
+export {SegmentationImageViewerWidget};

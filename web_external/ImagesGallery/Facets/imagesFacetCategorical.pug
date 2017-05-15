@@ -10,7 +10,7 @@ block content
       a.isic-images-facet-all-include
         i.icon-plus-squared
         span.isic-images-facet-bin-name Select all
-    for bin in bins
+    each bin in bins
       div
         a.isic-images-facet-bin(data-bin-label=bin.label, data-toggle=popover)
           i.icon-check
