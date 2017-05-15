@@ -7,7 +7,7 @@ import UserModel from 'girder/models/UserModel';
 import {restRequest} from 'girder/rest';
 
 // Fallback variable for anonymous user with no local storage
-var acceptTerms = null;
+let acceptTerms = null;
 
 // Add additional instance methods
 UserModel.prototype.name = function () {
