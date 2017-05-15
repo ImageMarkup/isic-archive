@@ -3,13 +3,13 @@ import _ from 'underscore';
 
 import {FACET_SCHEMA} from './Facets/ImagesFacetView';
 
-var ImagesFacetModel = Backbone.Model.extend({
+const ImagesFacetModel = Backbone.Model.extend({
     schema: function () {
         return FACET_SCHEMA[this.id];
     }
 });
 
-var ImagesFacetCollection = Backbone.Collection.extend({
+const ImagesFacetCollection = Backbone.Collection.extend({
     model: ImagesFacetModel,
     url: 'image/histogram',
 

@@ -8,7 +8,7 @@ import router from '../router';
 
 import CreateDatasetRequestTemplate from './createDatasetRequest.pug';
 
-var CreateDatasetRequestView = View.extend({
+const CreateDatasetRequestView = View.extend({
     events: {
         'submit #isic-dataset-form': function (event) {
             event.preventDefault();

@@ -15,7 +15,7 @@ import FeaturesetListEntryTemplate from './featuresetListEntry.pug';
 import UserListEntryTemplate from './userListEntry.pug';
 import '../common/Listing/listingPage.styl';
 
-var CreateStudyView = View.extend({
+const CreateStudyView = View.extend({
     events: {
         'submit #isic-study-form': function (event) {
             event.preventDefault();

@@ -11,7 +11,7 @@ import FeaturesetPageTemplate from './featuresetPage.pug';
 import './featuresetPage.styl';
 import '../common/Listing/listingItemPage.styl';
 
-var FeaturesetView = View.extend({
+const FeaturesetView = View.extend({
     events: {
         'click .isic-featureset-destroy-button': 'confirmDestroy'
     },

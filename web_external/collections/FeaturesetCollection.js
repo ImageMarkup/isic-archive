@@ -3,7 +3,7 @@ import {getCurrentUser} from 'girder/auth';
 import Collection from './Collection';
 import FeaturesetModel from '../models/FeaturesetModel';
 
-var FeaturesetCollection = Collection.extend({
+const FeaturesetCollection = Collection.extend({
     resourceName: 'featureset',
     model: FeaturesetModel
 }, {

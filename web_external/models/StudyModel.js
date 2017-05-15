@@ -8,7 +8,7 @@ import FeaturesetModel from './FeaturesetModel';
 import UserCollection from '../collections/UserCollection';
 import UserModel from './UserModel';
 
-var StudyModel = Model.extend({
+const StudyModel = Model.extend({
     resourceName: 'study',
 
     creator: function () {

@@ -12,7 +12,7 @@ import './studyAddUserWidget.styl';
 import UserInfoTemplate from './userInfo.pug';
 import './userInfo.styl';
 
-var StudyAddUserWidget = View.extend({
+const StudyAddUserWidget = View.extend({
     events: {
         'click .isic-add-user-ok-button': function (event) {
             if (!this.user) {

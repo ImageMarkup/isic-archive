@@ -3,7 +3,7 @@ import View from '../../view';
 import ImagesPagingPaneTemplate from './imagesPagingPane.pug';
 import './imagesPagingPane.styl';
 
-var ImagesPagingPane = View.extend({
+const ImagesPagingPane = View.extend({
     events: {
         'click #isic-images-paging-seek-first': function () {
             // TODO: cancel any pending fetches before fetching an additional next page; this is

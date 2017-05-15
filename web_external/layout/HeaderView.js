@@ -9,7 +9,7 @@ import View from '../view';
 import LayoutHeaderTemplate from './layoutHeader.pug';
 import './layoutHeader.styl';
 
-var LayoutHeaderView = View.extend({
+const LayoutHeaderView = View.extend({
     events: {
         'mouseenter .dropdown': function (event) {
             $(event.currentTarget).addClass('open');

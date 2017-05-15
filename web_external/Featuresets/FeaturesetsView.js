@@ -10,7 +10,7 @@ import View from '../view';
 import ListingPageTemplate from '../common/Listing/listingPage.pug';
 import '../common/Listing/listingPage.styl';
 
-var FeaturesetsView = View.extend({
+const FeaturesetsView = View.extend({
     // TODO refactor
     events: {
         'show.bs.collapse .isic-listing-panel-collapse': function (event) {

@@ -5,7 +5,7 @@ import _ from 'underscore';
 import {FACET_SCHEMA} from './Facets/ImagesFacetView';
 import queryGrammar from 'raw-loader!./query.pegjs';
 
-var ImagesFilter = function (completeFacets) {
+const ImagesFilter = function (completeFacets) {
     this.astParser = peg.generate(queryGrammar);
 
     if (completeFacets) {
@@ -60,7 +60,7 @@ _.extend(ImagesFilter.prototype, Backbone.Events, {
     }
 });
 
-var FacetFilter = function (facetId, facetBins) {
+const FacetFilter = function (facetId, facetBins) {
     this.facetId = facetId;
 
     /* Creates an internal structure of:
@@ -100,7 +100,7 @@ _.extend(FacetFilter.prototype, Backbone.Events, {
     asExpression: null
 });
 
-var CategoricalFacetFilter = FacetFilter.extend({
+const CategoricalFacetFilter = FacetFilter.extend({
     asExpression: function () {
         var excludedBinLabels = _.chain(this._filters)
             // Choose only excluded bins
@@ -128,7 +128,7 @@ var CategoricalFacetFilter = FacetFilter.extend({
     }
 });
 
-var TagsCategoricalFacetFilter = CategoricalFacetFilter.extend({
+const TagsCategoricalFacetFilter = CategoricalFacetFilter.extend({
     asExpression: function () {
         var includedBinLabels = _.chain(this._filters)
             // Choose only included bins
@@ -158,7 +158,7 @@ var TagsCategoricalFacetFilter = CategoricalFacetFilter.extend({
     }
 });
 
-var IntervalFacetFilter = FacetFilter.extend({
+const IntervalFacetFilter = FacetFilter.extend({
     asExpression: function () {
         var filterExpressions = _.chain(this._filters)
             // Because '__null__' has no high or low bound, it must be handled specially
@@ -213,7 +213,7 @@ var IntervalFacetFilter = FacetFilter.extend({
     }
 });
 
-var SerializeFilterHelpers = {
+const SerializeFilterHelpers = {
     _stringToHex: function (value) {
         var result = '';
         for (var i = 0; i < value.length; i += 1) {

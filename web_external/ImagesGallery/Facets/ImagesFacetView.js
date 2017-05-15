@@ -13,7 +13,7 @@ import checkImageUrl from '!url-loader!svg-fill-loader!./check.svg?fill=#999999'
 import dashImageUrl from '!url-loader!svg-fill-loader!./dash.svg?fill=#999999';
 import exImageUrl from '!url-loader!svg-fill-loader!./ex.svg?fill=#999999';
 
-var ImagesFacetView = View.extend({
+const ImagesFacetView = View.extend({
     className: 'isic-images-facet',
 
     events: {
@@ -102,7 +102,7 @@ var ImagesFacetView = View.extend({
     }
 });
 
-var ImagesFacetHistogramView = ImagesFacetView.extend({
+const ImagesFacetHistogramView = ImagesFacetView.extend({
     events: function () {
         return _.extend({}, ImagesFacetView.prototype.events, {
             'click .isic-images-facet-all-exclude': function (event) {
@@ -414,7 +414,7 @@ var ImagesFacetHistogramView = ImagesFacetView.extend({
     }
 });
 
-var ImagesFacetCategoricalView = ImagesFacetView.extend({
+const ImagesFacetCategoricalView = ImagesFacetView.extend({
     events: function () {
         return _.extend({}, ImagesFacetView.prototype.events, {
             'click .isic-images-facet-bin': function (event) {
@@ -493,7 +493,7 @@ var ImagesFacetCategoricalView = ImagesFacetView.extend({
     }
 });
 
-var ImagesFacetCategoricalDatasetView = ImagesFacetCategoricalView.extend({
+const ImagesFacetCategoricalDatasetView = ImagesFacetCategoricalView.extend({
     /**
      * @param {ImagesFacetModel} settings.completeFacet
      * @param {ImagesFacetModel} settings.filteredFacet
@@ -555,7 +555,7 @@ var ImagesFacetCategoricalDatasetView = ImagesFacetCategoricalView.extend({
     }
 });
 
-var ImagesFacetCategoricalTagsView = ImagesFacetCategoricalView.extend({
+const ImagesFacetCategoricalTagsView = ImagesFacetCategoricalView.extend({
     _getBinTitle: function (completeBin) {
         if (completeBin.label === '__null__') {
             return 'untagged';
@@ -565,7 +565,7 @@ var ImagesFacetCategoricalTagsView = ImagesFacetCategoricalView.extend({
     }
 });
 
-var FACET_SCHEMA = {
+const FACET_SCHEMA = {
     'folderId': {
         FacetView: ImagesFacetCategoricalDatasetView,
         FacetFilter: CategoricalFacetFilter,

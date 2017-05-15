@@ -5,7 +5,7 @@ import View from '../../view';
 
 import ImageWallTemplate from './imageWall.pug';
 
-var ImageWall = View.extend({
+const ImageWall = View.extend({
     events: {
         'click .thumb': function (event) {
             var imageId = $(event.currentTarget).data('imageId');

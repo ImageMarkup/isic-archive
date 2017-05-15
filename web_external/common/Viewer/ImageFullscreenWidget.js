@@ -4,7 +4,7 @@ import View from '../../view';
 import ImageFullscreenWidgetTemplate from './imageFullscreenWidget.pug';
 import './imageFullscreenWidget.styl';
 
-var ImageFullscreenWidget = View.extend({
+const ImageFullscreenWidget = View.extend({
     render: function () {
         this.$el.html(ImageFullscreenWidgetTemplate({
             model: this.model

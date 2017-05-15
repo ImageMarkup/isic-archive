@@ -2,7 +2,7 @@ import GirderView from 'girder/views/View';
 import {formatDate, DATE_SECOND} from 'girder/misc';
 import {apiRoot} from 'girder/rest';
 
-var View = GirderView.extend({
+const View = GirderView.extend({
     formatDate: function (date) {
         return formatDate(date, DATE_SECOND);
     },

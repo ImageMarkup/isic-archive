@@ -38,25 +38,25 @@ import StudyResultsPageTemplate from './studyResultsPage.pug';
 import './studyResultsPage.styl';
 
 // Model for a feature
-var FeatureModel = Backbone.Model.extend({
+const FeatureModel = Backbone.Model.extend({
     name: function () {
         return this.get('name');
     }
 });
 
 // Model for a feature image
-var FeatureImageModel = Backbone.Model.extend({
+const FeatureImageModel = Backbone.Model.extend({
 });
 
 // Model for a global feature result
-var GlobalFeatureResultModel = Backbone.Model.extend({
+const GlobalFeatureResultModel = Backbone.Model.extend({
     name: function () {
         return this.get('name');
     }
 });
 
 // Collection of feature models
-var FeatureCollection = Backbone.Collection.extend({
+const FeatureCollection = Backbone.Collection.extend({
     model: FeatureModel,
 
     // Update collection from an array of features of the form:
@@ -76,7 +76,7 @@ var FeatureCollection = Backbone.Collection.extend({
 });
 
 // Header view for collection of images
-var StudyResultsImageHeaderView = View.extend({
+const StudyResultsImageHeaderView = View.extend({
     /**
      * @param {ImageCollection} settings.collection
      * @param {StudyModel} settings.study
@@ -100,7 +100,7 @@ var StudyResultsImageHeaderView = View.extend({
 });
 
 // View for a collection of studies in a select tag
-var StudyResultsSelectStudyView = View.extend({
+const StudyResultsSelectStudyView = View.extend({
     events: {
         'change': 'studyChanged',
         'click .isic-study-results-select-study-details-button': 'showDetails'
@@ -160,7 +160,7 @@ var StudyResultsSelectStudyView = View.extend({
 });
 
 // Modal view for study details
-var StudyResultsStudyDetailsView = View.extend({
+const StudyResultsStudyDetailsView = View.extend({
     /**
      * @param {StudyModel} settings.model
      */
@@ -180,7 +180,7 @@ var StudyResultsStudyDetailsView = View.extend({
 });
 
 // View for a collection of images
-var StudyResultsSelectImageView = View.extend({
+const StudyResultsSelectImageView = View.extend({
     events: {
         'click .isic-study-results-select-image-image-container': 'imageSelected'
     },
@@ -217,7 +217,7 @@ var StudyResultsSelectImageView = View.extend({
 });
 
 // View for a collection of users in a select tag
-var StudyResultsSelectUsersView = View.extend({
+const StudyResultsSelectUsersView = View.extend({
     events: {
         'change': 'userChanged'
     },
@@ -259,7 +259,7 @@ var StudyResultsSelectUsersView = View.extend({
 });
 
 // View for a collection of local features in a select tag
-var StudyResultsSelectLocalFeaturesView = View.extend({
+const StudyResultsSelectLocalFeaturesView = View.extend({
     events: {
         'change': 'featureChanged'
     },
@@ -310,7 +310,7 @@ var StudyResultsSelectLocalFeaturesView = View.extend({
 });
 
 // Collection of global feature result models
-var GlobalFeatureResultCollection = Backbone.Collection.extend({
+const GlobalFeatureResultCollection = Backbone.Collection.extend({
     model: GlobalFeatureResultModel,
 
     // Update collection from annotation object and feature list
@@ -336,7 +336,7 @@ var GlobalFeatureResultCollection = Backbone.Collection.extend({
 });
 
 // View for a global feature table
-var StudyResultsGlobalFeaturesTableView = View.extend({
+const StudyResultsGlobalFeaturesTableView = View.extend({
     /**
      * @param {GlobalFeatureResultCollection} settings.collection
      */
@@ -354,7 +354,7 @@ var StudyResultsGlobalFeaturesTableView = View.extend({
 });
 
 // View for the annotation results of global features in a featureset
-var StudyResultsGlobalFeaturesView = View.extend({
+const StudyResultsGlobalFeaturesView = View.extend({
     /**
      * @param {AnnotationModel} settings.annotation
      * @param {FeaturesetModel} settings.featureset
@@ -398,7 +398,7 @@ var StudyResultsGlobalFeaturesView = View.extend({
 });
 
 // View for a local feature image defined by an annotation and local feature
-var StudyResultsFeatureImageView = View.extend({
+const StudyResultsFeatureImageView = View.extend({
     /**
      * @param {FeatureImageModel} settings.model
      */
@@ -436,7 +436,7 @@ var StudyResultsFeatureImageView = View.extend({
 
 // View to allow selecting a local feature from a featureset and to display an
 // image showing the annotation for the feature
-var StudyResultsLocalFeaturesView = View.extend({
+const StudyResultsLocalFeaturesView = View.extend({
     /**
      * @param {AnnotationModel} settings.annotation
      * @param {FeaturesetModel} settings.featureset
@@ -511,7 +511,7 @@ var StudyResultsLocalFeaturesView = View.extend({
 });
 
 // View for an image
-var StudyResultsImageView = View.extend({
+const StudyResultsImageView = View.extend({
     /**
      * @param {ImageModel} settings.model
      */
@@ -543,7 +543,7 @@ var StudyResultsImageView = View.extend({
 });
 
 // View for the results of an annotation study
-var StudyResultsView = View.extend({
+const StudyResultsView = View.extend({
     events: {
         // Update image visibility when image preview tab is activated
         'shown.bs.tab #isic-study-results-image-preview-tab': function (event) {

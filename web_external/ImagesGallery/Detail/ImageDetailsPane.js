@@ -8,7 +8,7 @@ import View from '../../view';
 import ImageDetailsPageTemplate from './imageDetailsPage.pug';
 import './imageDetailsPage.styl';
 
-var ImageDetailsPane = View.extend({
+const ImageDetailsPane = View.extend({
     events: {
         'click #isic-image-details-zoom': 'zoom',
         'click #isic-image-details-close': 'closeDetails'

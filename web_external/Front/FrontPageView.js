@@ -3,7 +3,7 @@ import View from '../view';
 import FrontPageTemplate from './frontPage.pug';
 import './frontPage.styl';
 
-var FrontPageView = View.extend({
+const FrontPageView = View.extend({
     initialize: function (settings) {
         this.render();
     },

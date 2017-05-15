@@ -1,6 +1,6 @@
 import Model from './Model';
 
-var ImageModel = Model.extend({
+const ImageModel = Model.extend({
     resourceName: 'image'
 });
 

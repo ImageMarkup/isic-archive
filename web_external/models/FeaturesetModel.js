@@ -5,7 +5,7 @@ import {getCurrentUser} from 'girder/auth';
 import Model from './Model';
 import UserModel from './UserModel';
 
-var FeaturesetModel = Model.extend({
+const FeaturesetModel = Model.extend({
     resourceName: 'featureset',
 
     /**

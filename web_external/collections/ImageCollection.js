@@ -4,12 +4,12 @@ import 'backbone.select';
 import Collection from './Collection';
 import ImageModel from '../models/ImageModel';
 
-var ImageCollection = Collection.extend({
+const ImageCollection = Collection.extend({
     resourceName: 'image',
     model: ImageModel
 });
 
-var SelectableImageCollection = ImageCollection.extend({
+const SelectableImageCollection = ImageCollection.extend({
     initialize: function (models) {
         Backbone.Select.One.applyTo(this, models);
         ImageCollection.prototype.initialize.apply(this, arguments);

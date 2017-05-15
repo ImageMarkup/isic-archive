@@ -5,7 +5,7 @@ import View from '../../view';
 import ImagesFacetsPaneTemplate from './imagesFacetsPane.pug';
 import './imagesFacetsPane.styl';
 
-var ImagesFacetsPane = View.extend({
+const ImagesFacetsPane = View.extend({
     /**
      * @param {ImagesFacetCollection} settings.completeFacets
      * @param {ImagesFacetCollection} settings.filteredFacets

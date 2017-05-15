@@ -8,7 +8,7 @@ import View from '../../view';
 
 import './imageViewerWidget.styl';
 
-var ImageViewerWidget = View.extend({
+const ImageViewerWidget = View.extend({
     /**
      * @param {ImageModel} settings.model
      * @param {HTMLElement} settings.el - The HTML element to attach to, which must be set upon instantiation.

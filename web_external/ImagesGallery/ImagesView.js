@@ -10,7 +10,7 @@ import View from '../view';
 import ImagesPageTemplate from './imagesPage.pug';
 import './imagesPage.styl';
 
-var ImagesView = View.extend({
+const ImagesView = View.extend({
     initialize: function (settings) {
         this.completeFacets = new ImagesFacetCollection();
         // TODO: when filteredFacets fetch returns no images, all models are gone / removed

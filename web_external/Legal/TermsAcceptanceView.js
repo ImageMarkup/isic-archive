@@ -8,7 +8,7 @@ import router from '../router';
 import TermsAcceptancePageTemplate from './termsAcceptancePage.pug';
 import './termsAcceptancePage.styl';
 
-var TermsAcceptanceView = View.extend({
+const TermsAcceptanceView = View.extend({
     events: {
         'click #isic-terms-accept': function (event) {
             // Disable buttons while request is pending

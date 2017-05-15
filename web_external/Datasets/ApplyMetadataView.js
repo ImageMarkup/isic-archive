@@ -22,7 +22,7 @@ import ApplyMetadataValidationPageTemplate from './applyMetadataValidationPage.p
 import './applyMetadataValidationPage.styl';
 
 // Model for a metadata file
-var MetadataFileModel = Model.extend({
+const MetadataFileModel = Model.extend({
     name: function () {
         var time = formatDate(this.get('time'), DATE_SECOND);
         var fileName = this.get('file').name();
@@ -32,7 +32,7 @@ var MetadataFileModel = Model.extend({
 });
 
 // Collection of metadata files as returned by of DatasetModel.getRegisteredMetadata()
-var MetadataFileCollection = Collection.extend({
+const MetadataFileCollection = Collection.extend({
     model: MetadataFileModel,
 
     // Sort in reverse chronological order
@@ -52,7 +52,7 @@ var MetadataFileCollection = Collection.extend({
 });
 
 // Model for a single metadata error
-var MetadataErrorModel = Backbone.Model.extend({
+const MetadataErrorModel = Backbone.Model.extend({
     description: function () {
         return this.get('description');
     }
@@ -60,7 +60,7 @@ var MetadataErrorModel = Backbone.Model.extend({
 
 // Collection of metadata errors. The list of items in the collection is
 // meaningful only when initialized() is true.
-var MetadataErrorCollection = Backbone.Collection.extend({
+const MetadataErrorCollection = Backbone.Collection.extend({
     model: MetadataErrorModel,
 
     _initialized: false,
@@ -83,7 +83,7 @@ var MetadataErrorCollection = Backbone.Collection.extend({
 // View for a collection of metadata files in a select tag.
 // When user selects a file, a 'changed' event is triggered
 // with the ID of the selected file as a parameter.
-var ApplyMetadataSelectFileView = View.extend({
+const ApplyMetadataSelectFileView = View.extend({
     events: {
         'change': 'fileChanged'
     },
@@ -128,7 +128,7 @@ var ApplyMetadataSelectFileView = View.extend({
 
 // View to select a registered metadata file, validate the metadata, and save
 // the metadata to the dataset if validation is successful.
-var ApplyMetadataView = View.extend({
+const ApplyMetadataView = View.extend({
     events: {
         'click #isic-apply-metadata-download-button': function () {
             // Download selected metadata file

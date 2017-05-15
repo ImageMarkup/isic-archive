@@ -1,6 +1,6 @@
 import Model from './Model';
 
-var AnnotationModel = Model.extend({
+const AnnotationModel = Model.extend({
     resourceName: 'annotation'
 });
 

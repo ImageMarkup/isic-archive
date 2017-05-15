@@ -12,7 +12,7 @@ import StudyPageTemplate from './studyPage.pug';
 import './studyPage.styl';
 import '../common/Listing/listingItemPage.styl';
 
-var StudyView = View.extend({
+const StudyView = View.extend({
     events: {
         'click .isic-study-add-user-button': function () {
             if (!this.studyAddUserWidget) {

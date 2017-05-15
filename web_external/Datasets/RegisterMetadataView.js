@@ -14,7 +14,7 @@ import './registerMetadata.styl';
 import './datasetInfoWidget.styl';
 import './uploadWidget.styl';
 
-var RegisterMetadataView = View.extend({
+const RegisterMetadataView = View.extend({
     events: {
         'click #isic-upload-reset': function (event) {
             this.resetUpload();

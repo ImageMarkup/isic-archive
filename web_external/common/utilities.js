@@ -17,7 +17,7 @@ import AlertDialogTemplate from './alertDialog.pug';
  *        user-created data within the text to prevent XSS exploits.
  * @param callback Callback function called when the user clicks the button.
  */
-var showAlertDialog = function (params) {
+const showAlertDialog = function (params) {
     params = _.extend({
         text: '',
         buttonText: 'OK',

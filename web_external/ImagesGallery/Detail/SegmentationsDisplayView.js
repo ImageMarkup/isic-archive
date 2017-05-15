@@ -11,7 +11,7 @@ import './segmentationsDisplayPage.styl';
 /**
  * View for displaying an image segmentation's properties
  */
-var SegmentationDisplayView = View.extend({
+const SegmentationDisplayView = View.extend({
     /**
      * @param {SegmentationModel} settings.model
      */
@@ -52,7 +52,7 @@ var SegmentationDisplayView = View.extend({
 /**
  * View for selecting an image segmentation and displaying its properties
  */
-var SegmentationsDisplayView = View.extend({
+const SegmentationsDisplayView = View.extend({
     events: {
         'change select': function (event) {
             var selectedSegmentationId = $(event.currentTarget).val();

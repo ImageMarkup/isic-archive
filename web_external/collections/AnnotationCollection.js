@@ -1,7 +1,7 @@
 import Collection from './Collection';
 import AnnotationModel from '../models/AnnotationModel';
 
-var AnnotationCollection = Collection.extend({
+const AnnotationCollection = Collection.extend({
     resourceName: 'annotation',
     model: AnnotationModel
 });

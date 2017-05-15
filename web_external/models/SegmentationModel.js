@@ -1,7 +1,7 @@
 import Model from './Model';
 import UserModel from './UserModel';
 
-var SegmentationModel = Model.extend({
+const SegmentationModel = Model.extend({
     resourceName: 'segmentation',
 
     creator: function () {

@@ -11,7 +11,7 @@ import router from '../router';
 import DatasetsPageTemplate from './datasetsPage.pug';
 import './datasetsPage.styl';
 
-var DatasetsView = View.extend({
+const DatasetsView = View.extend({
     // TODO refactor
     events: {
         'show.bs.collapse .isic-listing-panel-collapse': function (event) {

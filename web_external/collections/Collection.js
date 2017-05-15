@@ -3,7 +3,7 @@ import _ from 'underscore';
 import { restRequest } from 'girder/rest';
 import GirderCollection from 'girder/collections/Collection';
 
-var Collection = GirderCollection.extend({
+const Collection = GirderCollection.extend({
     model: null,
 
     url: function () {

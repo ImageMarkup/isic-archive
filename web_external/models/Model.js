@@ -2,7 +2,7 @@ import Backbone from 'backbone';
 
 import GirderModel from 'girder/models/Model';
 
-var Model = GirderModel.extend({
+const Model = GirderModel.extend({
     urlRoot: function () {
         return this.resourceName;
     },

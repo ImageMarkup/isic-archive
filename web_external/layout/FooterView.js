@@ -5,7 +5,7 @@ import View from '../view';
 import LayoutFooterTemplate from './layoutFooter.pug';
 import './layoutFooter.styl';
 
-var LayoutFooterView = View.extend({
+const LayoutFooterView = View.extend({
     initialize: function (settings) {
         this.render();
     },

@@ -10,7 +10,7 @@ import LayoutHeaderUserTemplate from './layoutHeaderUser.pug';
 import './layoutHeaderUser.styl';
 import './layoutHeader.styl';
 
-var LayoutHeaderUserView = View.extend({
+const LayoutHeaderUserView = View.extend({
     events: {
         'click a.g-login': function () {
             events.trigger('g:loginUi');

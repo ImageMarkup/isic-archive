@@ -11,7 +11,7 @@ import router from '../router';
 import StudiesPageTemplate from './studiesPage.pug';
 import './studiesPage.styl';
 
-var StudiesView = View.extend({
+const StudiesView = View.extend({
     // TODO refactor
     events: {
         'show.bs.collapse .isic-listing-panel-collapse': function (event) {

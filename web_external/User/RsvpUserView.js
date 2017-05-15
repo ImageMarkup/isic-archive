@@ -7,7 +7,7 @@ import {showAlertDialog} from '../common/utilities';
 import RsvpUserPageTemplate from './rsvpUserPage.pug';
 import './rsvpUserPage.styl';
 
-var RsvpUserView = View.extend({
+const RsvpUserView = View.extend({
     events: {
         'submit #isic-user-rsvp-form': function (event) {
             event.preventDefault();

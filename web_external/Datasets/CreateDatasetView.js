@@ -17,7 +17,7 @@ import CreateDatasetTemplate from './createDataset.pug';
 import './createDataset.styl';
 import './uploadWidget.styl';
 
-var CreateDatasetView = View.extend({
+const CreateDatasetView = View.extend({
     events: {
         'click #isic-upload-reset': function (event) {
             this.resetUpload();

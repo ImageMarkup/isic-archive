@@ -3,7 +3,7 @@ import View from '../view';
 import MedicalDisclaimerPageTemplate from './medicalDisclaimerPage.pug';
 import './legal.styl';
 
-var MedicalDisclaimerView = View.extend({
+const MedicalDisclaimerView = View.extend({
     initialize: function (settings) {
         this.render();
     },

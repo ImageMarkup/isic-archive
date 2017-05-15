@@ -11,7 +11,7 @@ import './invitationConfirmationPage.styl';
 import InviteUserPageTemplate from './inviteUserPage.pug';
 import './inviteUserPage.styl';
 
-var InviteUserView = View.extend({
+const InviteUserView = View.extend({
     events: {
         'submit #isic-user-invite-form': function (event) {
             event.preventDefault();

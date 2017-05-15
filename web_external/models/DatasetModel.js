@@ -6,7 +6,7 @@ import {restRequest} from 'girder/rest';
 import Model from './Model';
 import UserModel from './UserModel';
 
-var DatasetModel = Model.extend({
+const DatasetModel = Model.extend({
     resourceName: 'dataset',
 
     creator: function () {
