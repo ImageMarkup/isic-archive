@@ -1,3 +1,4 @@
+- let numImages = study.get('images').length
 .isic-listing-item-container.isic-study-container
   table.table.table-condensed.isic-listing-item-table
     tr
@@ -32,12 +33,12 @@
             th Num. Completed
             th Percent Completed
             each user in study.users().models
-              - var numCompleted = 'N/A'
-              - var percentCompleted = 'N/A'
-              if study.get('images').length
+              - let numCompleted = 'N/A'
+              - let percentCompleted = 'N/A'
+              if numImages > 0
                 - numCompleted = study.get('userCompletion')[user.id]
-                - percentCompleted = `${(numCompleted / study.get('images').length * 100).toFixed().toString()}%`
-                - numCompleted = `${numCompleted} / ${study.get('images').length}`
+                - percentCompleted = `${(numCompleted / numImages * 100).toFixed().toString()}%`
+                - numCompleted = `${numCompleted} / ${numImages}`
               tr(data-user-id=user.id)
                 td.isic-study-user-name= user.name()
                 td
@@ -53,10 +54,10 @@
   table.table.table-condensed.isic-listing-item-table
     tr
       td.isic-listing-item-table-section-header Images
-        |  (#{study.get('images').length})
+        |  (#{numImages})
     tr
       td.isic-study-images-content
-        if study.get('images').length
+        if numImages > 0
           table
             tr
               th.isic-study-images-content-name Image Name
