@@ -192,7 +192,7 @@ const IntervalFacetFilter = FacetFilter.extend({
             // Convert each range into a string expression
             .map((range) => {
                 let hexFacetId = SerializeFilterHelpers._stringToHex(this.facetId);
-                let lowBoundExpression = `not (${hexFacetId} >= ${range[0]}')'`;
+                let lowBoundExpression = `not (${hexFacetId} >= ${range[0]})`;
                 let highBoundExpression = `not (${hexFacetId} < ${range[1]})`;
                 return `(${lowBoundExpression} or ${highBoundExpression})`;
             })
