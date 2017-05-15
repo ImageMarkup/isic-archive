@@ -17,7 +17,7 @@ import CreateDatasetTemplate from './createDataset.pug';
 import './createDataset.styl';
 import './uploadWidget.styl';
 
-var CreateDatasetView = View.extend({
+const CreateDatasetView = View.extend({
     events: {
         'click #isic-upload-reset': function (event) {
             this.resetUpload();
@@ -25,7 +25,7 @@ var CreateDatasetView = View.extend({
         'click #isic-create-dataset-show-license-info-link': 'showLicenseInfo',
         'change input[name="attribution"]': function (event) {
             // Update attribution name field sensitivity
-            var target = $(event.target);
+            let target = $(event.target);
             if (target.val() === 'anonymous') {
                 this.$('#isic-dataset-attribution-name').prop('disabled', true);
             } else {
@@ -34,8 +34,8 @@ var CreateDatasetView = View.extend({
         },
         'change #isic-dataset-license': function (event) {
             // Disable anonymous attribution unless CC-0 license is selected
-            var target = $(event.target);
-            var anonymous = this.$('#isic-dataset-attribution-anonymous');
+            let target = $(event.target);
+            let anonymous = this.$('#isic-dataset-attribution-anonymous');
             if (target.val() === 'CC-0') {
                 anonymous.prop('disabled', false);
             } else {
@@ -57,14 +57,14 @@ var CreateDatasetView = View.extend({
             }
 
             // Get file ID of uploaded file, then submit dataset
-            var items = new ItemCollection();
+            let items = new ItemCollection();
             items
                 .once('g:changed', () => {
                     if (!items.isEmpty()) {
-                        var item = items.first();
+                        let item = items.first();
                         item
                             .once('g:files', (fileCollection) => {
-                                var fileId = fileCollection.first().id;
+                                let fileId = fileCollection.first().id;
                                 this.submitDataset(fileId);
                             })
                             .getFiles();
@@ -195,21 +195,21 @@ var CreateDatasetView = View.extend({
      * @param [zipFileId] The ID of the .zip file, or null.
      */
     submitDataset: function (zipFileId) {
-        var name = this.$('#isic-dataset-name').val();
-        var owner = this.$('#isic-dataset-owner').val();
-        var description = this.$('#isic-dataset-description').val();
-        var license = this.$('#isic-dataset-license').val();
-        var signature = this.$('#isic-dataset-agreement-signature').val();
-        var anonymous = this.$('#isic-dataset-attribution-anonymous').prop('checked');
-        var attribution = this.$('#isic-dataset-attribution-name').val();
+        let name = this.$('#isic-dataset-name').val();
+        let owner = this.$('#isic-dataset-owner').val();
+        let description = this.$('#isic-dataset-description').val();
+        let license = this.$('#isic-dataset-license').val();
+        let signature = this.$('#isic-dataset-agreement-signature').val();
+        let anonymous = this.$('#isic-dataset-attribution-anonymous').prop('checked');
+        let attribution = this.$('#isic-dataset-attribution-name').val();
 
         this.dataset.ingestImages(zipFileId, name, owner, description, license,
             signature, anonymous, attribution);
     },
 
     updateUploadWidget: function () {
-        var visible = false;
-        var uploadList = [];
+        let visible = false;
+        let uploadList = [];
         if (this.uploadedZipFiles.length) {
             visible = false;
             uploadList = this.uploadedZipFiles;

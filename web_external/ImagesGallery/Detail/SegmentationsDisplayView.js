@@ -11,7 +11,7 @@ import './segmentationsDisplayPage.styl';
 /**
  * View for displaying an image segmentation's properties
  */
-var SegmentationDisplayView = View.extend({
+const SegmentationDisplayView = View.extend({
     /**
      * @param {SegmentationModel} settings.model
      */
@@ -26,8 +26,8 @@ var SegmentationDisplayView = View.extend({
     },
 
     render: function () {
-        var created = this.formatDate(this.model.get('created'));
-        var thumbnailUrl = [
+        let created = this.formatDate(this.model.get('created'));
+        let thumbnailUrl = [
             this.apiRoot,
             'segmentation',
             this.model.id,
@@ -52,11 +52,11 @@ var SegmentationDisplayView = View.extend({
 /**
  * View for selecting an image segmentation and displaying its properties
  */
-var SegmentationsDisplayView = View.extend({
+const SegmentationsDisplayView = View.extend({
     events: {
         'change select': function (event) {
-            var selectedSegmentationId = $(event.currentTarget).val();
-            var selectedSegmentation = this.segmentations.get(selectedSegmentationId);
+            let selectedSegmentationId = $(event.currentTarget).val();
+            let selectedSegmentation = this.segmentations.get(selectedSegmentationId);
             selectedSegmentation.select();
         }
     },

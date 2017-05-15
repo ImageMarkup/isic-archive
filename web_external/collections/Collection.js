@@ -3,7 +3,7 @@ import _ from 'underscore';
 import { restRequest } from 'girder/rest';
 import GirderCollection from 'girder/collections/Collection';
 
-var Collection = GirderCollection.extend({
+const Collection = GirderCollection.extend({
     model: null,
 
     url: function () {
@@ -29,8 +29,8 @@ var Collection = GirderCollection.extend({
 
         // Re-implement GirderCollection.prototype.fetch until Girder fix #1974 is included
         this.offset = 0;
-        var limit = this.pageLimit > 0 ? this.pageLimit + 1 : 0;
-        var xhr = restRequest({
+        let limit = this.pageLimit > 0 ? this.pageLimit + 1 : 0;
+        let xhr = restRequest({
             path: this.altUrl || this.resourceName,
             data: _.extend({
                 limit: limit,
@@ -78,13 +78,13 @@ var Collection = GirderCollection.extend({
     // "hasNextPage" should work fine in the upstream implementation
 
     fetchPreviousPage: function (params) {
-        var offset = this._currentOffset(params) - this.pageLimit;
+        let offset = this._currentOffset(params) - this.pageLimit;
         offset = Math.max(0, offset);
         this.fetch(_.extend(params || {}, {offset: offset}), false);
     },
 
     fetchNextPage: function (params) {
-        var offset = this._currentOffset(params) + this.pageLimit;
+        let offset = this._currentOffset(params) + this.pageLimit;
         this.fetch(_.extend(params || {}, {offset: offset}), false);
     },
 
@@ -93,7 +93,7 @@ var Collection = GirderCollection.extend({
     },
 
     fetchLastPage: function (total, params) {
-        var offset = Math.floor(total / this.pageLimit) * this.pageLimit;
+        let offset = Math.floor(total / this.pageLimit) * this.pageLimit;
         if (total % this.pageLimit === 0) {
             // there are a "pageLimit" number of elements in the last page, so
             // the math needs to be adjusted

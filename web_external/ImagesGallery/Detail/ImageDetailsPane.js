@@ -8,7 +8,7 @@ import View from '../../view';
 import ImageDetailsPageTemplate from './imageDetailsPage.pug';
 import './imageDetailsPage.styl';
 
-var ImageDetailsPane = View.extend({
+const ImageDetailsPane = View.extend({
     events: {
         'click #isic-image-details-zoom': 'zoom',
         'click #isic-image-details-close': 'closeDetails'
@@ -33,10 +33,10 @@ var ImageDetailsPane = View.extend({
 
     render: function () {
         // Get image data
-        var created = this.formatDate(this.image.get('created'));
+        let created = this.formatDate(this.image.get('created'));
 
         // Get license, default to CC-0
-        var license;
+        let license;
         if (this.image.has('license')) {
             license = {
                 name: this.image.get('license'),

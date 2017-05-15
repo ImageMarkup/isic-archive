@@ -10,7 +10,7 @@ import View from '../view';
 import ImagesPageTemplate from './imagesPage.pug';
 import './imagesPage.styl';
 
-var ImagesView = View.extend({
+const ImagesView = View.extend({
     initialize: function (settings) {
         this.completeFacets = new ImagesFacetCollection();
         // TODO: when filteredFacets fetch returns no images, all models are gone / removed
@@ -101,7 +101,7 @@ var ImagesView = View.extend({
         // when called; then remove the calls to "images.fetch" and "filteredFacets.reset"
         // from the "onCompleteFacetsFetched" handler and let them just run from here only
 
-        var filterQuery = JSON.stringify(this.filters.asAst());
+        let filterQuery = JSON.stringify(this.filters.asAst());
         this.filteredFacets._pendingRequest = this.filteredFacets.fetch({
             // filteredFacets is a direct subclass of Backbone.Collection, with different
             // arguments to ".fetch"

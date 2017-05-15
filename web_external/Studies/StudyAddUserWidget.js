@@ -12,14 +12,14 @@ import './studyAddUserWidget.styl';
 import UserInfoTemplate from './userInfo.pug';
 import './userInfo.styl';
 
-var StudyAddUserWidget = View.extend({
+const StudyAddUserWidget = View.extend({
     events: {
         'click .isic-add-user-ok-button': function (event) {
             if (!this.user) {
                 return;
             }
 
-            var study = new StudyModel({
+            let study = new StudyModel({
                 _id: this.study.id
             });
             study
@@ -50,7 +50,7 @@ var StudyAddUserWidget = View.extend({
     },
 
     render: function () {
-        var modal = this.$el.html(StudyAddUserWidgetTemplate({
+        let modal = this.$el.html(StudyAddUserWidgetTemplate({
             study: this.study
         }));
         modal
@@ -80,7 +80,7 @@ var StudyAddUserWidget = View.extend({
         this.searchWidget.resetState();
 
         // Check whether user is already in study
-        var userIds = _.pluck(this.study.get('users'), '_id');
+        let userIds = _.pluck(this.study.get('users'), '_id');
         if (_.contains(userIds, user.id)) {
             this.$('.isic-user-container').html('(user is already in study)');
             return;

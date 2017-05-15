@@ -17,7 +17,7 @@ import AlertDialogTemplate from './alertDialog.pug';
  *        user-created data within the text to prevent XSS exploits.
  * @param callback Callback function called when the user clicks the button.
  */
-var showAlertDialog = function (params) {
+const showAlertDialog = function (params) {
     params = _.extend({
         text: '',
         buttonText: 'OK',
@@ -25,7 +25,7 @@ var showAlertDialog = function (params) {
         escapedHtml: false
     }, params);
 
-    var container = $('#g-dialog-container');
+    let container = $('#g-dialog-container');
     container
         .html(AlertDialogTemplate({
             params: params
@@ -37,7 +37,7 @@ var showAlertDialog = function (params) {
             }
         });
 
-    var el = container.find('.modal-body>p');
+    let el = container.find('.modal-body>p');
     if (params.escapedHtml) {
         el.html(params.text);
     } else {

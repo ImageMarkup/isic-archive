@@ -5,7 +5,7 @@ import View from 'girder/views/View';
 
 import ConfigViewTemplate from '../templates/configView.pug';
 
-var ConfigView = View.extend({
+const ConfigView = View.extend({
     events: {
         'submit #isic-config-form': function (event) {
             event.preventDefault();

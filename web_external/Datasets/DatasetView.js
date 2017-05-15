@@ -7,7 +7,7 @@ import DatasetPageTemplate from './datasetPage.pug';
 import './datasetPage.styl';
 import '../common/Listing/listingItemPage.styl';
 
-var DatasetView = View.extend({
+const DatasetView = View.extend({
     events: {
         'click .isic-dataset-register-metadata-button': function () {
             router.navigate(

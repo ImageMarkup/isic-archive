@@ -28,7 +28,7 @@ function navigateToIfCanCreateDataset(View, settings) {
     //  (2) Accept the TOS
     //  (3) Request and receive create dataset access
     // before being able to see the create dataset view
-    var currentUser = getCurrentUser();
+    let currentUser = getCurrentUser();
     if (!currentUser) {
         // Anonymous users should not be here, so route to home page
         router.navigate('', {trigger: true});
@@ -86,7 +86,7 @@ router.route('useraccount/:id/token/:token', 'accountToken', (id, token) => {
 });
 import InviteUserView from './User/InviteUserView';
 router.route('user/invite', 'inviteUser', () => {
-    var currentUser = getCurrentUser();
+    let currentUser = getCurrentUser();
     if (currentUser && currentUser.canAdminStudy()) {
         navigateTo(InviteUserView);
     } else {
@@ -139,7 +139,7 @@ router.route('dataset/create', 'createDataset', () => {
 import ApplyMetadataView from './Datasets/ApplyMetadataView';
 router.route('dataset/:id/metadata/apply', 'applyMetadata', (id) => {
     // Fetch the dataset, then navigate to the view
-    var dataset = new DatasetModel({_id: id})
+    let dataset = new DatasetModel({_id: id})
         .once('g:fetched', () => {
             navigateToIfCanCreateDataset(ApplyMetadataView, {
                 dataset: dataset
@@ -153,7 +153,7 @@ router.route('dataset/:id/metadata/apply', 'applyMetadata', (id) => {
 import RegisterMetadataView from './Datasets/RegisterMetadataView';
 router.route('dataset/:id/metadata/register', 'registerMetadata', (id) => {
     // Fetch the dataset, then navigate to the view
-    var dataset = new DatasetModel({_id: id})
+    let dataset = new DatasetModel({_id: id})
         .once('g:fetched', () => {
             navigateToIfCanCreateDataset(RegisterMetadataView, {
                 dataset: dataset

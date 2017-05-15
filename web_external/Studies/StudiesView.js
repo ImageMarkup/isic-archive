@@ -11,15 +11,15 @@ import router from '../router';
 import StudiesPageTemplate from './studiesPage.pug';
 import './studiesPage.styl';
 
-var StudiesView = View.extend({
+const StudiesView = View.extend({
     // TODO refactor
     events: {
         'show.bs.collapse .isic-listing-panel-collapse': function (event) {
-            var target = $(event.target);
+            let target = $(event.target);
             target.parent().find('.icon-right-open').removeClass('icon-right-open').addClass('icon-down-open');
 
-            var viewIndex = parseInt(target.attr('data-model-index'), 10);
-            var viewContainer = target.find('.isic-listing-panel-body');
+            let viewIndex = parseInt(target.attr('data-model-index'), 10);
+            let viewContainer = target.find('.isic-listing-panel-body');
             this.renderStudy(viewIndex, viewContainer);
         },
         'hide.bs.collapse .isic-listing-panel-collapse': function (event) {
@@ -83,7 +83,7 @@ var StudiesView = View.extend({
 
     renderStudy: function (index, container) {
         if (container.children().length === 0) {
-            var study = this.studies.at(index);
+            let study = this.studies.at(index);
 
             new StudyView({ // eslint-disable-line no-new
                 el: container,

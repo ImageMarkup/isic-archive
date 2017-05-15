@@ -8,11 +8,11 @@ import router from '../router';
 import TermsAcceptancePageTemplate from './termsAcceptancePage.pug';
 import './termsAcceptancePage.styl';
 
-var TermsAcceptanceView = View.extend({
+const TermsAcceptanceView = View.extend({
     events: {
         'click #isic-terms-accept': function (event) {
             // Disable buttons while request is pending
-            var buttons = this.$('.isic-terms-agreement-button-container button');
+            let buttons = this.$('.isic-terms-agreement-button-container button');
             buttons.prop('disabled', true);
 
             UserModel.currentUserSetAcceptTerms(() => {

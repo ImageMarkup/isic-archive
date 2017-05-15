@@ -38,34 +38,34 @@ import StudyResultsPageTemplate from './studyResultsPage.pug';
 import './studyResultsPage.styl';
 
 // Model for a feature
-var FeatureModel = Backbone.Model.extend({
+const FeatureModel = Backbone.Model.extend({
     name: function () {
         return this.get('name');
     }
 });
 
 // Model for a feature image
-var FeatureImageModel = Backbone.Model.extend({
+const FeatureImageModel = Backbone.Model.extend({
 });
 
 // Model for a global feature result
-var GlobalFeatureResultModel = Backbone.Model.extend({
+const GlobalFeatureResultModel = Backbone.Model.extend({
     name: function () {
         return this.get('name');
     }
 });
 
 // Collection of feature models
-var FeatureCollection = Backbone.Collection.extend({
+const FeatureCollection = Backbone.Collection.extend({
     model: FeatureModel,
 
     // Update collection from an array of features of the form:
     // { 'id': id, 'name': [name1, name2, ...] }
     update: function (features) {
-        var models = _.map(features, (feature) => {
-            var featureId = feature['id'];
-            var featureNames = feature['name'];
-            var model = new FeatureModel({
+        let models = _.map(features, (feature) => {
+            let featureId = feature['id'];
+            let featureNames = feature['name'];
+            let model = new FeatureModel({
                 id: featureId,
                 name: featureNames.join(', ')
             });
@@ -76,7 +76,7 @@ var FeatureCollection = Backbone.Collection.extend({
 });
 
 // Header view for collection of images
-var StudyResultsImageHeaderView = View.extend({
+const StudyResultsImageHeaderView = View.extend({
     /**
      * @param {ImageCollection} settings.collection
      * @param {StudyModel} settings.study
@@ -100,7 +100,7 @@ var StudyResultsImageHeaderView = View.extend({
 });
 
 // View for a collection of studies in a select tag
-var StudyResultsSelectStudyView = View.extend({
+const StudyResultsSelectStudyView = View.extend({
     events: {
         'change': 'studyChanged',
         'click .isic-study-results-select-study-details-button': 'showDetails'
@@ -123,7 +123,7 @@ var StudyResultsSelectStudyView = View.extend({
     },
 
     showDetails: function () {
-        var studyId = this.$('select').val();
+        let studyId = this.$('select').val();
         if (!studyId) {
             return;
         }
@@ -133,7 +133,7 @@ var StudyResultsSelectStudyView = View.extend({
 
     render: function () {
         // Destroy previous select2
-        var select = this.$('#isic-study-results-select-study-select');
+        let select = this.$('#isic-study-results-select-study-select');
         select.select2('destroy');
 
         this.$el.html(StudyResultsSelectStudyPageTemplate({
@@ -141,7 +141,7 @@ var StudyResultsSelectStudyView = View.extend({
         }));
 
         // Set up select box
-        var placeholder = 'Select a study...';
+        let placeholder = 'Select a study...';
         if (!this.collection.isEmpty()) {
             placeholder += ` (${this.collection.length} available)`;
         }
@@ -160,7 +160,7 @@ var StudyResultsSelectStudyView = View.extend({
 });
 
 // Modal view for study details
-var StudyResultsStudyDetailsView = View.extend({
+const StudyResultsStudyDetailsView = View.extend({
     /**
      * @param {StudyModel} settings.model
      */
@@ -168,7 +168,7 @@ var StudyResultsStudyDetailsView = View.extend({
     },
 
     render: function () {
-        var hasStudy = this.model.has('name');
+        let hasStudy = this.model.has('name');
 
         this.$el.html(StudyResultsStudyDetailPageTemplate({
             model: this.model,
@@ -180,7 +180,7 @@ var StudyResultsStudyDetailsView = View.extend({
 });
 
 // View for a collection of images
-var StudyResultsSelectImageView = View.extend({
+const StudyResultsSelectImageView = View.extend({
     events: {
         'click .isic-study-results-select-image-image-container': 'imageSelected'
     },
@@ -198,7 +198,7 @@ var StudyResultsSelectImageView = View.extend({
         event.preventDefault();
 
         // currentTarget is the element that the event has bubbled up to
-        var target = $(event.currentTarget);
+        let target = $(event.currentTarget);
 
         this.$('.isic-study-results-select-image-image-container').removeClass('active');
         target.addClass('active');
@@ -217,7 +217,7 @@ var StudyResultsSelectImageView = View.extend({
 });
 
 // View for a collection of users in a select tag
-var StudyResultsSelectUsersView = View.extend({
+const StudyResultsSelectUsersView = View.extend({
     events: {
         'change': 'userChanged'
     },
@@ -237,7 +237,7 @@ var StudyResultsSelectUsersView = View.extend({
 
     render: function () {
         // Destroy previous select2
-        var select = this.$('#isic-study-results-select-users-select');
+        let select = this.$('#isic-study-results-select-users-select');
         select.select2('destroy');
 
         this.$el.html(StudyResultsSelectUsersPageTemplate({
@@ -245,7 +245,7 @@ var StudyResultsSelectUsersView = View.extend({
         }));
 
         // Set up select box
-        var placeholder = 'No users available';
+        let placeholder = 'No users available';
         if (!this.collection.isEmpty()) {
             placeholder = `Select an annotator... (${this.collection.length} available)`;
         }
@@ -259,7 +259,7 @@ var StudyResultsSelectUsersView = View.extend({
 });
 
 // View for a collection of local features in a select tag
-var StudyResultsSelectLocalFeaturesView = View.extend({
+const StudyResultsSelectLocalFeaturesView = View.extend({
     events: {
         'change': 'featureChanged'
     },
@@ -282,11 +282,11 @@ var StudyResultsSelectLocalFeaturesView = View.extend({
 
     render: function () {
         // Destroy previous select2
-        var select = this.$('#isic-study-results-select-local-features-select');
+        let select = this.$('#isic-study-results-select-local-features-select');
         select.select2('destroy');
 
         // Create local collection of those features that are annotated
-        var collection = this.collection.clone();
+        let collection = this.collection.clone();
         collection.reset(collection.filter((model) => {
             return this.featureAnnotated(model.id);
         }));
@@ -296,7 +296,7 @@ var StudyResultsSelectLocalFeaturesView = View.extend({
         }));
 
         // Set up select box
-        var placeholder = 'No features available';
+        let placeholder = 'No features available';
         if (!collection.isEmpty()) {
             placeholder = `Select a feature... (${collection.length} available)`;
         }
@@ -310,22 +310,22 @@ var StudyResultsSelectLocalFeaturesView = View.extend({
 });
 
 // Collection of global feature result models
-var GlobalFeatureResultCollection = Backbone.Collection.extend({
+const GlobalFeatureResultCollection = Backbone.Collection.extend({
     model: GlobalFeatureResultModel,
 
     // Update collection from annotation object and feature list
     update: function (annotations, features) {
-        var models = _.map(features, (feature) => {
-            var featureId = feature['id'];
-            var featureNames = feature['name'];
-            var model = new GlobalFeatureResultModel({
+        let models = _.map(features, (feature) => {
+            let featureId = feature['id'];
+            let featureNames = feature['name'];
+            let model = new GlobalFeatureResultModel({
                 id: featureId,
                 name: featureNames.join(', ')
             });
             if (annotations && _.has(annotations, featureId)) {
-                var featureOptions = _.indexBy(feature['options'], 'id');
-                var resultId = annotations[featureId];
-                var resultName = featureOptions[resultId]['name'];
+                let featureOptions = _.indexBy(feature['options'], 'id');
+                let resultId = annotations[featureId];
+                let resultName = featureOptions[resultId]['name'];
                 model.set('resultId', resultId);
                 model.set('resultName', resultName);
             }
@@ -336,7 +336,7 @@ var GlobalFeatureResultCollection = Backbone.Collection.extend({
 });
 
 // View for a global feature table
-var StudyResultsGlobalFeaturesTableView = View.extend({
+const StudyResultsGlobalFeaturesTableView = View.extend({
     /**
      * @param {GlobalFeatureResultCollection} settings.collection
      */
@@ -354,7 +354,7 @@ var StudyResultsGlobalFeaturesTableView = View.extend({
 });
 
 // View for the annotation results of global features in a featureset
-var StudyResultsGlobalFeaturesView = View.extend({
+const StudyResultsGlobalFeaturesView = View.extend({
     /**
      * @param {AnnotationModel} settings.annotation
      * @param {FeaturesetModel} settings.featureset
@@ -398,7 +398,7 @@ var StudyResultsGlobalFeaturesView = View.extend({
 });
 
 // View for a local feature image defined by an annotation and local feature
-var StudyResultsFeatureImageView = View.extend({
+const StudyResultsFeatureImageView = View.extend({
     /**
      * @param {FeatureImageModel} settings.model
      */
@@ -415,9 +415,9 @@ var StudyResultsFeatureImageView = View.extend({
     },
 
     render: function () {
-        var featureId = this.model.get('featureId');
-        var annotationId = this.model.get('annotationId');
-        var imageUrl = null;
+        let featureId = this.model.get('featureId');
+        let annotationId = this.model.get('annotationId');
+        let imageUrl = null;
         if (featureId && annotationId) {
             imageUrl = [
                 this.apiRoot,
@@ -436,7 +436,7 @@ var StudyResultsFeatureImageView = View.extend({
 
 // View to allow selecting a local feature from a featureset and to display an
 // image showing the annotation for the feature
-var StudyResultsLocalFeaturesView = View.extend({
+const StudyResultsLocalFeaturesView = View.extend({
     /**
      * @param {AnnotationModel} settings.annotation
      * @param {FeaturesetModel} settings.featureset
@@ -505,13 +505,13 @@ var StudyResultsLocalFeaturesView = View.extend({
         if (!featureId || !this.annotation.has('annotations')) {
             return false;
         }
-        var annotations = this.annotation.get('annotations');
+        let annotations = this.annotation.get('annotations');
         return _.has(annotations, featureId);
     }
 });
 
 // View for an image
-var StudyResultsImageView = View.extend({
+const StudyResultsImageView = View.extend({
     /**
      * @param {ImageModel} settings.model
      */
@@ -543,7 +543,7 @@ var StudyResultsImageView = View.extend({
 });
 
 // View for the results of an annotation study
-var StudyResultsView = View.extend({
+const StudyResultsView = View.extend({
     events: {
         // Update image visibility when image preview tab is activated
         'shown.bs.tab #isic-study-results-image-preview-tab': function (event) {
@@ -662,7 +662,7 @@ var StudyResultsView = View.extend({
             .set({'_id': studyId})
             .once('g:fetched', () => {
                 // Populate images collection
-                var imageModels = _.map(this.study.get('images'), (image) => {
+                let imageModels = _.map(this.study.get('images'), (image) => {
                     return new ImageModel(image);
                 });
                 this.images.reset(imageModels);
@@ -671,7 +671,7 @@ var StudyResultsView = View.extend({
                 this.users.reset(this.study.users().models);  // eslint-disable-line backbone/no-view-collection-models
 
                 // Fetch featureset
-                var featureset = this.study.featureset();
+                let featureset = this.study.featureset();
                 featureset
                     .once('g:fetched', () => {
                         this.featureset.set(featureset.attributes);
@@ -709,7 +709,7 @@ var StudyResultsView = View.extend({
             return;
         }
 
-        var annotations = new AnnotationCollection();
+        let annotations = new AnnotationCollection();
         annotations
             .once('g:changed', () => {
                 if (!annotations.isEmpty()) {
@@ -758,7 +758,7 @@ var StudyResultsView = View.extend({
     },
 
     setMainContainerVisible: function (visible) {
-        var element = this.$('#isic-study-results-main-container');
+        let element = this.$('#isic-study-results-main-container');
         this.setElementVisible(element, visible);
     },
 

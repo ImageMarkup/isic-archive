@@ -12,7 +12,7 @@ import StudyPageTemplate from './studyPage.pug';
 import './studyPage.styl';
 import '../common/Listing/listingItemPage.styl';
 
-var StudyView = View.extend({
+const StudyView = View.extend({
     events: {
         'click .isic-study-add-user-button': function () {
             if (!this.studyAddUserWidget) {
@@ -33,10 +33,10 @@ var StudyView = View.extend({
         },
 
         'click .isic-study-remove-user-button': function (event) {
-            var target = $(event.currentTarget);
-            var userId = target.closest('[data-user-id]').data('userId');
+            let target = $(event.currentTarget);
+            let userId = target.closest('[data-user-id]').data('userId');
             // TODO: StudyModel.users() should be cached instead of re-created
-            var user = this.model.users().get(userId);
+            let user = this.model.users().get(userId);
             this.confirmRemoveUser(user);
         },
 

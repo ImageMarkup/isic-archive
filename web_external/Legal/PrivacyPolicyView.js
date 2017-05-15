@@ -3,7 +3,7 @@ import View from '../view';
 import PrivacyPolicyPageTemplate from './privacyPolicyPage.pug';
 import './legal.styl';
 
-var PrivacyPolicyView = View.extend({
+const PrivacyPolicyView = View.extend({
     initialize: function (settings) {
         this.render();
     },

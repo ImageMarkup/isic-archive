@@ -5,11 +5,11 @@ import View from '../../view';
 
 import ImageWallTemplate from './imageWall.pug';
 
-var ImageWall = View.extend({
+const ImageWall = View.extend({
     events: {
         'click .thumb': function (event) {
-            var imageId = $(event.currentTarget).data('imageId');
-            var clickedImage = this.images.get(imageId);
+            let imageId = $(event.currentTarget).data('imageId');
+            let clickedImage = this.images.get(imageId);
 
             if (event.shiftKey) {
                 new ImageFullscreenWidget({ // eslint-disable-line no-new
@@ -58,7 +58,7 @@ var ImageWall = View.extend({
     _rerenderSelection: function () {
         this.$('.thumb').removeClass('selected');
 
-        var selectedImage = this.images.selected;
+        let selectedImage = this.images.selected;
         if (selectedImage) {
             this.$(`.thumb[data-image-id="${selectedImage.id}"]`).addClass('selected');
         }

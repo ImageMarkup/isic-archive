@@ -7,16 +7,16 @@ import UserModel from 'girder/models/UserModel';
 import {restRequest} from 'girder/rest';
 
 // Fallback variable for anonymous user with no local storage
-var acceptTerms = null;
+let acceptTerms = null;
 
 // Add additional instance methods
 UserModel.prototype.name = function () {
-    var realName;
+    let realName;
     if (this.has('login')) {
         realName = `${this.get('firstName')} ${this.get('lastName')} (${this.get('login')})`;
     }
 
-    var displayName;
+    let displayName;
     if (this.has('name')) {
         displayName = this.get('name');
         if (realName) {
@@ -119,7 +119,7 @@ UserModel.temporaryTokenLogin = function (userId, token) {
 };
 
 UserModel.currentUserCanAcceptTerms = function () {
-    var currentUser = getCurrentUser();
+    let currentUser = getCurrentUser();
     if (currentUser) {
         return currentUser.canAcceptTerms();
     } else {
@@ -129,7 +129,7 @@ UserModel.currentUserCanAcceptTerms = function () {
 };
 
 UserModel.currentUserSetAcceptTerms = function (successCallback) {
-    var currentUser = getCurrentUser();
+    let currentUser = getCurrentUser();
     if (currentUser) {
         currentUser.setAcceptTerms(successCallback);
     } else {

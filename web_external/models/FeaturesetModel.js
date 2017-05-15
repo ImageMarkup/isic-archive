@@ -5,7 +5,7 @@ import {getCurrentUser} from 'girder/auth';
 import Model from './Model';
 import UserModel from './UserModel';
 
-var FeaturesetModel = Model.extend({
+const FeaturesetModel = Model.extend({
     resourceName: 'featureset',
 
     /**
@@ -21,7 +21,7 @@ var FeaturesetModel = Model.extend({
 
     destroy: function (options) {
         // Don't modify the "options", but override some properties
-        var params = _.clone(options);
+        let params = _.clone(options);
         // Featureset deletion may fail if it's being used by a study
         params.wait = true;
 
@@ -29,7 +29,7 @@ var FeaturesetModel = Model.extend({
     },
 
     canAdmin: function () {
-        var user = getCurrentUser();
+        let user = getCurrentUser();
         return user && user.canAdminStudy();
     }
 });

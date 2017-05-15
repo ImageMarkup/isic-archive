@@ -15,7 +15,7 @@ import FeaturesetListEntryTemplate from './featuresetListEntry.pug';
 import UserListEntryTemplate from './userListEntry.pug';
 import '../common/Listing/listingPage.styl';
 
-var CreateStudyView = View.extend({
+const CreateStudyView = View.extend({
     events: {
         'submit #isic-study-form': function (event) {
             event.preventDefault();
@@ -24,21 +24,21 @@ var CreateStudyView = View.extend({
         },
 
         'click a.isic-user-list-entry-action-remove': function (event) {
-            var target = $(event.currentTarget);
+            let target = $(event.currentTarget);
             target.tooltip('hide');
 
-            var listEntry = target.closest('.isic-list-entry');
-            var userId = listEntry.data('userid');
+            let listEntry = target.closest('.isic-list-entry');
+            let userId = listEntry.data('userid');
             listEntry.remove();
 
             this._removeUser(userId);
         },
 
         'click a.isic-featureset-list-entry-action-remove': function (event) {
-            var target = $(event.currentTarget);
+            let target = $(event.currentTarget);
             target.tooltip('hide');
 
-            var listEntry = target.closest('.isic-list-entry');
+            let listEntry = target.closest('.isic-list-entry');
             listEntry.remove();
 
             this._removeFeatureset();
@@ -62,7 +62,7 @@ var CreateStudyView = View.extend({
             types: ['featureset.isic_archive'],
             getInfoCallback: function (type, obj) {
                 if (type === 'featureset.isic_archive') {
-                    var featureset = new FeaturesetModel(obj);
+                    let featureset = new FeaturesetModel(obj);
                     return {
                         text: featureset.name(),
                         icon: 'th'
@@ -109,7 +109,7 @@ var CreateStudyView = View.extend({
         }
         this.userIds.push(user.id);
 
-        var userList = this.$('#isic-study-user-list');
+        let userList = this.$('#isic-study-user-list');
         userList.append(UserListEntryTemplate({
             user: user
         }));
@@ -122,7 +122,7 @@ var CreateStudyView = View.extend({
     },
 
     _removeUser: function (userId) {
-        var index = _.indexOf(this.userIds, userId);
+        let index = _.indexOf(this.userIds, userId);
         if (index > -1) {
             this.userIds.splice(index);
         }
@@ -150,10 +150,10 @@ var CreateStudyView = View.extend({
     },
 
     submitStudy: function () {
-        var name = $('#isic-study-name').val();
-        var featuresetId = this.featuresetId;
-        var userIds = JSON.stringify(this.userIds);
-        var imageIds = JSON.stringify([]);
+        let name = $('#isic-study-name').val();
+        let featuresetId = this.featuresetId;
+        let userIds = JSON.stringify(this.userIds);
+        let imageIds = JSON.stringify([]);
 
         // TODO: move this into the StudyModel
         restRequest({

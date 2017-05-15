@@ -47,7 +47,7 @@
           else
             = license.name
 
-      - var meta = image.get('meta');
+      - let meta = image.get('meta');
       tr
         td.isic-image-details-table-section-header(colspan=2) Clinical Metadata
       each value, key in meta.clinical

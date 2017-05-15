@@ -12,16 +12,16 @@ import TaskPageTemplate from './taskPage.pug';
 import './taskPage.styl';
 
 // Model for a task
-var TaskModel = Model.extend({
+const TaskModel = Model.extend({
 });
 
 // Collection of tasks
-var TaskCollection = Collection.extend({
+const TaskCollection = Collection.extend({
     model: TaskModel
 });
 
 // View for a group of tasks
-var TasksGroupView = View.extend({
+const TasksGroupView = View.extend({
     /**
      * @param {string} settings.title - The title of the task type.
      * @param {string} settings.subtitle - The description of the task type.
@@ -61,13 +61,13 @@ var TasksGroupView = View.extend({
 });
 
 // View for the task dashboard
-var TasksView = View.extend({
+const TasksView = View.extend({
     events: {
         'click .isic-tasks-refresh-button': 'fetchTasks'
     },
 
     initialize: function (settings) {
-        var currentUser = getCurrentUser();
+        let currentUser = getCurrentUser();
 
         if (currentUser.canReviewDataset()) {
             this.reviewTasks = new TaskCollection();

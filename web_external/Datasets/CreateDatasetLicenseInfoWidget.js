@@ -4,7 +4,7 @@ import CreateDatasetLicenseInfoPageTemplate from './createDatasetLicenseInfoPage
 import './createDatasetLicenseInfoPage.styl';
 
 // Modal view for dataset license information
-var CreateDatasetLicenseInfoWidget = View.extend({
+const CreateDatasetLicenseInfoWidget = View.extend({
     render: function () {
         this.$el.html(CreateDatasetLicenseInfoPageTemplate()).girderModal(this);
         return this;

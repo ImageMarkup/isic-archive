@@ -3,7 +3,7 @@ import View from '../view';
 import TermsOfUsePageTemplate from './termsOfUsePage.pug';
 import './legal.styl';
 
-var TermsOfUseView = View.extend({
+const TermsOfUseView = View.extend({
     initialize: function (settings) {
         this.render();
     },
