@@ -375,16 +375,16 @@ const ImagesFacetHistogramView = ImagesFacetView.extend({
                     }
 
                     self.renderCache.shortenedLabels[i] = me.text();
-                }
 
-                // Add a tooltip to shortened labels, containing the full title.
-                if (shortened) {
-                    $(this).tooltip({
-                        container: 'body',
-                        title: function () {
-                            return self._getBinTitle(d.completeBin);
-                        }
-                    });
+                    // Add a tooltip to shortened labels, containing the full title.
+                    if (shortened) {
+                        $(this).tooltip({
+                            container: 'body',
+                            title: function () {
+                                return self._getBinTitle(d.completeBin);
+                            }
+                        });
+                    }
                 }
 
                 let boxHeight = Math.abs(this.getComputedTextLength() * Math.sin(transformAngleRadians));
