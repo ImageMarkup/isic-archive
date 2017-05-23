@@ -1,4 +1,5 @@
 import _ from 'underscore';
+import $ from 'jquery';
 
 import events from 'girder/events';
 import eventStream from 'girder/utilities/EventStream';
@@ -52,20 +53,26 @@ UserModel.prototype.canCreateDataset = function () {
     return this.get('permissions').createDataset;
 };
 
-UserModel.prototype.setCanCreateDataset = function (successCallback, failureCallback) {
+UserModel.prototype.setCanCreateDataset = function () {
+    const deferred = $.Deferred();
     restRequest({
         path: 'user/requestCreateDatasetPermission',
         type: 'POST'
-    }).done((resp) => {
+    })
+    .done((resp) => {
         if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
             // Directly update user permissions
             this.get('permissions').createDataset = true;
             this.trigger('change:permissions');
-            successCallback(resp);
+            deferred.resolve(resp);
         } else {
-            failureCallback(resp);
+            deferred.reject(resp);
         }
+    })
+    .fail((resp) => {
+        deferred.reject(resp);
     });
+    return deferred.promise();
 };
 
 UserModel.prototype.canReviewDataset = function () {
