@@ -138,7 +138,8 @@ const CreateDatasetView = View.extend({
             modal: false,
             noParent: true,
             title: false,
-            overrideStart: true
+            overrideStart: true,
+            multiFile: false
         });
 
         this.uploadWidget.setElement(this.$('.isic-upload-widget-container'));
