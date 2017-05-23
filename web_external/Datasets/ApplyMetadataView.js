@@ -242,7 +242,7 @@ const ApplyMetadataView = View.extend({
                     showAlertDialog({
                         text: '<h4>Metadata saved.</h4>',
                         escapedHtml: true,
-                        callback: function () {
+                        callback: () => {
                             router.navigate('', {trigger: true});
                         }
                     });
