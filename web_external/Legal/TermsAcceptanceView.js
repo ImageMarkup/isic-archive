@@ -15,10 +15,11 @@ const TermsAcceptanceView = View.extend({
             let buttons = this.$('.isic-terms-agreement-button-container button');
             buttons.prop('disabled', true);
 
-            UserModel.currentUserSetAcceptTerms(() => {
-                // Refresh page
-                Backbone.history.loadUrl();
-            });
+            UserModel.currentUserSetAcceptTerms()
+                .always(() => {
+                    // Refresh page
+                    Backbone.history.loadUrl();
+                });
         },
         'click #isic-terms-reject': function (event) {
             // Route to home page

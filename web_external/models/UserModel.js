@@ -34,19 +34,27 @@ UserModel.prototype.canAcceptTerms = function () {
     return this.get('permissions').acceptTerms === true;
 };
 
-UserModel.prototype.setAcceptTerms = function (successCallback) {
+UserModel.prototype.setAcceptTerms = function () {
+    const deferred = $.Deferred();
     restRequest({
         path: 'user/acceptTerms',
         type: 'POST'
-    }).done((resp) => {
+    })
+    .done((resp) => {
         if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
             // Directly update user permissions
             this.get('permissions').acceptTerms = true;
             this.trigger('change:permissions');
-            successCallback(resp);
+            deferred.resolve(resp);
+        } else {
+            // This should not fail
+            deferred.reject(resp);
         }
-        // This should not fail
+    })
+    .fail((resp) => {
+        deferred.reject(resp);
     });
+    return deferred.promise();
 };
 
 UserModel.prototype.canCreateDataset = function () {
@@ -135,17 +143,17 @@ UserModel.currentUserCanAcceptTerms = function () {
     }
 };
 
-UserModel.currentUserSetAcceptTerms = function (successCallback) {
-    let currentUser = getCurrentUser();
+UserModel.currentUserSetAcceptTerms = function () {
+    const currentUser = getCurrentUser();
     if (currentUser) {
-        currentUser.setAcceptTerms(successCallback);
+        return currentUser.setAcceptTerms();
     } else {
         try {
             window.localStorage.setItem('acceptTerms', 'true');
         } catch (e) {
             acceptTerms = true;
         }
-        successCallback();
+        return $.Deferred().resolve();
     }
 };
 
