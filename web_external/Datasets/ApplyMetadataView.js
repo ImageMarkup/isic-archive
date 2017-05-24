@@ -1,5 +1,4 @@
 import Backbone from 'backbone';
-import $ from 'jquery';
 import _ from 'underscore';
 
 import {SORT_DESC} from 'girder/constants';
@@ -148,16 +147,7 @@ const ApplyMetadataView = View.extend({
                 escapedHtml: true,
                 yesText: 'Save',
                 yesClass: 'btn-primary',
-                confirmCallback: () => {
-                    // Ensure dialog is hidden before continuing. Otherwise,
-                    // when validateMetadata() displays its modal alert dialog,
-                    // the Bootstrap-created element with class "modal-backdrop"
-                    // is erroneously not removed.
-                    $('#g-dialog-container').on('hidden.bs.modal', () => {
-                        let save = true;
-                        this.validateMetadata(save);
-                    });
-                }
+                confirmCallback: _.bind(this.validateMetadata, this, true)
             });
         }
     },

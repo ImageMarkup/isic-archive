@@ -80,13 +80,7 @@ const StudyView = View.extend({
         confirm({
             text: `<h4>Permanently remove <b>"${_.escape(user.name())}"</b> from study?</h4>`,
             escapedHtml: true,
-            confirmCallback: () => {
-                // Ensure dialog is hidden before continuing. Otherwise,
-                // when destroy() displays its modal alert dialog,
-                // the Bootstrap-created element with class "modal-backdrop"
-                // is erroneously not removed.
-                $('#g-dialog-container').on('hidden.bs.modal', _.bind(this.removeUser, this, user));
-            }
+            confirmCallback: _.bind(this.removeUser, this, user)
         });
     },
 
@@ -117,13 +111,7 @@ const StudyView = View.extend({
         confirm({
             text: `<h4>Permanently delete <b>"${_.escape(this.model.name())}"</b> study?</h4>`,
             escapedHtml: true,
-            confirmCallback: () => {
-                // Ensure dialog is hidden before continuing. Otherwise,
-                // when destroy() displays its modal alert dialog,
-                // the Bootstrap-created element with class "modal-backdrop"
-                // is erroneously not removed.
-                $('#g-dialog-container').on('hidden.bs.modal', _.bind(this.destroyModel, this));
-            }
+            confirmCallback: _.bind(this.destroyModel, this)
         });
     },
 
