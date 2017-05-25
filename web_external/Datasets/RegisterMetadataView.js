@@ -130,7 +130,10 @@ const RegisterMetadataView = View.extend({
     },
 
     uploadFinished: function (info) {
-        this.uploadedFiles = info.files;
+        this.uploadedFiles = _.map(
+            info.files,
+            (file) => ({id: file.id, name: file.name})
+        );
         this.updateUploadWidget();
     },
 
