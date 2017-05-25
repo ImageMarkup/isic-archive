@@ -35,12 +35,13 @@ UserModel.prototype.canAcceptTerms = function () {
 };
 
 UserModel.prototype.setAcceptTerms = function () {
-    const deferred = $.Deferred();
-    restRequest({
+    return restRequest({
         path: 'user/acceptTerms',
         type: 'POST'
     })
-    .done((resp) => {
+    .then((resp) => {
+        // TODO: In jQuery3, just return or throw the "resp" to resolve or reject
+        const deferred = $.Deferred();
         if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
             // Directly update user permissions
             this.get('permissions').acceptTerms = true;
@@ -50,11 +51,8 @@ UserModel.prototype.setAcceptTerms = function () {
             // This should not fail
             deferred.reject(resp);
         }
-    })
-    .fail((resp) => {
-        deferred.reject(resp);
+        return deferred.promise();
     });
-    return deferred.promise();
 };
 
 UserModel.prototype.canCreateDataset = function () {
@@ -62,12 +60,13 @@ UserModel.prototype.canCreateDataset = function () {
 };
 
 UserModel.prototype.setCanCreateDataset = function () {
-    const deferred = $.Deferred();
-    restRequest({
+    return restRequest({
         path: 'user/requestCreateDatasetPermission',
         type: 'POST'
     })
-    .done((resp) => {
+    .then((resp) => {
+        // TODO: In jQuery3, just return or throw the "resp" to resolve or reject
+        const deferred = $.Deferred();
         if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
             // Directly update user permissions
             this.get('permissions').createDataset = true;
@@ -76,11 +75,8 @@ UserModel.prototype.setCanCreateDataset = function () {
         } else {
             deferred.reject(resp);
         }
-    })
-    .fail((resp) => {
-        deferred.reject(resp);
+        return deferred.promise();
     });
-    return deferred.promise();
 };
 
 UserModel.prototype.canReviewDataset = function () {
@@ -153,7 +149,7 @@ UserModel.currentUserSetAcceptTerms = function () {
         } catch (e) {
             acceptTerms = true;
         }
-        return $.Deferred().resolve();
+        return $.Deferred().resolve().promise();
     }
 };
 
