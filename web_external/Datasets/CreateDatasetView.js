@@ -2,7 +2,6 @@ import $ from 'jquery';
 import _ from 'underscore';
 
 import FolderModel from 'girder/models/FolderModel';
-import ItemCollection from 'girder/collections/ItemCollection';
 import UploadWidget from 'girder/views/widgets/UploadWidget';
 import {getCurrentUser} from 'girder/auth';
 
@@ -50,36 +49,18 @@ const CreateDatasetView = View.extend({
             event.preventDefault();
             this.$('#isic-dataset-submit').prop('disabled', true);
 
-            // If no files have been uploaded, delegate error handling to submitDataset()
-            if (!this.uploadFolder) {
-                this.submitDataset(null);
-                return;
-            }
+            // Get file ID of uploaded file
+            const uploadedFileId = _.isEmpty(this.uploadedFiles)
+                ? null
+                : this.uploadedFiles[0].id;
 
-            // Get file ID of uploaded file, then submit dataset
-            let items = new ItemCollection();
-            items
-                .once('g:changed', () => {
-                    if (!items.isEmpty()) {
-                        let item = items.first();
-                        item
-                            .once('g:files', (fileCollection) => {
-                                let fileId = fileCollection.first().id;
-                                this.submitDataset(fileId);
-                            })
-                            .getFiles();
-                    } else {
-                        this.submitDataset(null);
-                    }
-                })
-                .fetch({
-                    folderId: this.uploadFolder.id
-                });
+            // If no files have been uploaded, delegate error handling to submitDataset()
+            this.submitDataset(uploadedFileId);
         }
     },
 
     initialize: function (settings) {
-        this.uploadedZipFiles = [];
+        this.uploadedFiles = [];
         this.uploadFolder = null;
 
         this.termsOfUseWidget = new TermsOfUseWidget({
@@ -138,7 +119,8 @@ const CreateDatasetView = View.extend({
             modal: false,
             noParent: true,
             title: false,
-            overrideStart: true
+            overrideStart: true,
+            multiFile: false
         });
 
         this.uploadWidget.setElement(this.$('.isic-upload-widget-container'));
@@ -178,8 +160,11 @@ const CreateDatasetView = View.extend({
         }
     },
 
-    uploadFinished: function (files) {
-        this.uploadedZipFiles = _.pluck(files.files, 'name');
+    uploadFinished: function (info) {
+        this.uploadedFiles = _.map(
+            info.files,
+            (file) => ({id: file.id, name: file.name})
+        );
         this.updateUploadWidget();
     },
 
@@ -208,27 +193,19 @@ const CreateDatasetView = View.extend({
     },
 
     updateUploadWidget: function () {
-        let visible = false;
-        let uploadList = [];
-        if (this.uploadedZipFiles.length) {
-            visible = false;
-            uploadList = this.uploadedZipFiles;
-        } else {
-            visible = true;
-        }
-
-        this.$('.isic-upload-widget-container').toggle(visible);
-        this.$('.isic-upload-reset-container').toggle(!visible);
+        const filesUploaded = !_.isEmpty(this.uploadedFiles);
+        this.$('.isic-upload-widget-container').toggle(!filesUploaded);
+        this.$('.isic-upload-reset-container').toggle(filesUploaded);
 
         this.uploadWidget.render();
-        this.$('.isic-upload-list').text(`Uploaded: ${uploadList.join(', ')}`);
+        this.$('.isic-upload-list').text(`Uploaded: ${_.pluck(this.uploadedFiles, 'name').join(', ')}`);
     },
 
     resetUpload: function () {
         // Delete uploaded files
         this.uploadFolder
             .once('g:success', () => {
-                this.uploadedZipFiles = [];
+                this.uploadedFiles = [];
                 this.updateUploadWidget();
             })
             .removeContents();

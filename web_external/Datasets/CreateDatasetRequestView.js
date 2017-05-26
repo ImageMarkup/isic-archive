@@ -14,23 +14,20 @@ const CreateDatasetRequestView = View.extend({
             event.preventDefault();
             this.$('#isic-dataset-submit').prop('disabled', true);
 
-            getCurrentUser().setCanCreateDataset(
-                // Success callback
-                (resp) => {
+            getCurrentUser().setCanCreateDataset()
+                .done((resp) => {
                     // Refresh page
                     Backbone.history.loadUrl();
-                },
-                // Failure (or request pending) callback
-                (resp) => {
+                })
+                .fail((resp) => {
                     // Display notification and route to index
                     showAlertDialog({
                         text: resp.message,
-                        callback: function () {
+                        callback: () => {
                             router.navigate('', {trigger: true});
                         }
                     });
-                }
-            );
+                });
         }
     },
 

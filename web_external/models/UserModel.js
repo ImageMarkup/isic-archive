@@ -1,4 +1,5 @@
 import _ from 'underscore';
+import $ from 'jquery';
 
 import events from 'girder/events';
 import eventStream from 'girder/utilities/EventStream';
@@ -33,18 +34,24 @@ UserModel.prototype.canAcceptTerms = function () {
     return this.get('permissions').acceptTerms === true;
 };
 
-UserModel.prototype.setAcceptTerms = function (successCallback) {
-    restRequest({
+UserModel.prototype.setAcceptTerms = function () {
+    return restRequest({
         path: 'user/acceptTerms',
         type: 'POST'
-    }).done((resp) => {
+    })
+    .then((resp) => {
+        // TODO: In jQuery3, just return or throw the "resp" to resolve or reject
+        const deferred = $.Deferred();
         if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
             // Directly update user permissions
             this.get('permissions').acceptTerms = true;
             this.trigger('change:permissions');
-            successCallback(resp);
+            deferred.resolve(resp);
+        } else {
+            // This should not fail
+            deferred.reject(resp);
         }
-        // This should not fail
+        return deferred.promise();
     });
 };
 
@@ -52,19 +59,23 @@ UserModel.prototype.canCreateDataset = function () {
     return this.get('permissions').createDataset;
 };
 
-UserModel.prototype.setCanCreateDataset = function (successCallback, failureCallback) {
-    restRequest({
+UserModel.prototype.setCanCreateDataset = function () {
+    return restRequest({
         path: 'user/requestCreateDatasetPermission',
         type: 'POST'
-    }).done((resp) => {
+    })
+    .then((resp) => {
+        // TODO: In jQuery3, just return or throw the "resp" to resolve or reject
+        const deferred = $.Deferred();
         if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
             // Directly update user permissions
             this.get('permissions').createDataset = true;
             this.trigger('change:permissions');
-            successCallback(resp);
+            deferred.resolve(resp);
         } else {
-            failureCallback(resp);
+            deferred.reject(resp);
         }
+        return deferred.promise();
     });
 };
 
@@ -128,17 +139,17 @@ UserModel.currentUserCanAcceptTerms = function () {
     }
 };
 
-UserModel.currentUserSetAcceptTerms = function (successCallback) {
-    let currentUser = getCurrentUser();
+UserModel.currentUserSetAcceptTerms = function () {
+    const currentUser = getCurrentUser();
     if (currentUser) {
-        currentUser.setAcceptTerms(successCallback);
+        return currentUser.setAcceptTerms();
     } else {
         try {
             window.localStorage.setItem('acceptTerms', 'true');
         } catch (e) {
             acceptTerms = true;
         }
-        successCallback();
+        return $.Deferred().resolve().promise();
     }
 };
 

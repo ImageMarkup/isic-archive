@@ -1,7 +1,6 @@
 import _ from 'underscore';
 
 import FolderModel from 'girder/models/FolderModel';
-import ItemCollection from 'girder/collections/ItemCollection';
 import UploadWidget from 'girder/views/widgets/UploadWidget';
 import {getCurrentUser} from 'girder/auth';
 
@@ -20,33 +19,18 @@ const RegisterMetadataView = View.extend({
             this.resetUpload();
         },
         'click #isic-register-metadata-submit': function (event) {
-            // Require CSV file to be uploaded
-            if (_.isEmpty(this.uploadedCsvFiles) || !this.uploadFolder) {
+            const uploadedFileId = _.isEmpty(this.uploadedFiles)
+                ? null
+                : this.uploadedFiles[0].id;
+
+            if (uploadedFileId) {
+                this.$('#isic-register-metadata-submit').prop('disabled', true);
+
+                this.registerMetadata(uploadedFileId);
+            } else {
+                // Require CSV file to be uploaded
                 showAlertDialog({ text: 'Please upload a CSV file.' });
-                return;
             }
-
-            this.$('#isic-register-metadata-submit').prop('disabled', true);
-
-            // Get file ID of uploaded file, then register metadata
-            let items = new ItemCollection();
-            items
-                .once('g:changed', () => {
-                    if (!items.isEmpty()) {
-                        let item = items.first();
-                        item
-                            .once('g:files', (fileCollection) => {
-                                let fileId = fileCollection.first().id;
-                                this.registerMetadata(fileId);
-                            })
-                            .getFiles();
-                    } else {
-                        this.registerMetadata(null);
-                    }
-                })
-                .fetch({
-                    folderId: this.uploadFolder.id
-                });
         }
     },
 
@@ -56,7 +40,7 @@ const RegisterMetadataView = View.extend({
     initialize: function (settings) {
         this.dataset = settings.dataset;
 
-        this.uploadedCsvFiles = [];
+        this.uploadedFiles = [];
         this.uploadFolder = null;
 
         this.listenTo(this.dataset, 'isic:registerMetadata:success', () => {
@@ -104,7 +88,8 @@ const RegisterMetadataView = View.extend({
             modal: false,
             noParent: true,
             title: false,
-            overrideStart: true
+            overrideStart: true,
+            multiFile: false
         });
 
         this.uploadWidget.setElement(this.$('.isic-upload-widget-container'));
@@ -144,8 +129,11 @@ const RegisterMetadataView = View.extend({
         }
     },
 
-    uploadFinished: function (files) {
-        this.uploadedCsvFiles = _.pluck(files.files, 'name');
+    uploadFinished: function (info) {
+        this.uploadedFiles = _.map(
+            info.files,
+            (file) => ({id: file.id, name: file.name})
+        );
         this.updateUploadWidget();
     },
 
@@ -157,27 +145,19 @@ const RegisterMetadataView = View.extend({
     },
 
     updateUploadWidget: function () {
-        let visible = false;
-        let uploadList = [];
-        if (this.uploadedCsvFiles.length) {
-            visible = false;
-            uploadList = this.uploadedCsvFiles;
-        } else {
-            visible = true;
-        }
-
-        this.$('.isic-upload-widget-container').toggle(visible);
-        this.$('.isic-upload-reset-container').toggle(!visible);
+        const filesUploaded = !_.isEmpty(this.uploadedFiles);
+        this.$('.isic-upload-widget-container').toggle(!filesUploaded);
+        this.$('.isic-upload-reset-container').toggle(filesUploaded);
 
         this.uploadWidget.render();
-        this.$('.isic-upload-list').text(`Uploaded: ${uploadList.join(', ')}`);
+        this.$('.isic-upload-list').text(`Uploaded: ${_.pluck(this.uploadedFiles, 'name').join(', ')}`);
     },
 
     resetUpload: function () {
         // Delete uploaded files
         this.uploadFolder
             .once('g:success', () => {
-                this.uploadedCsvFiles = [];
+                this.uploadedFiles = [];
                 this.updateUploadWidget();
             })
             .removeContents();

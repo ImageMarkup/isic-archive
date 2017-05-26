@@ -30,8 +30,9 @@ from girder.utility.plugin_utilities import getPluginDir, registerPluginWebroot
 from girder.utility.server import staticFile
 from girder.utility.webroot import WebrootBase
 
-from . import settings
 from . import api
+# Import settings for side effects
+from . import settings  # noqa: F401
 from .provision_utility import provisionDatabase
 
 
@@ -120,9 +121,6 @@ def clearRouteDocs():
 def load(info):
     # set the title of the HTML pages
     info['serverRoot'].updateHtmlVars({'title': 'ISIC Archive'})
-
-    # initialize plugin settings
-    settings.registerDefaults()
 
     # add event listeners
     events.bind('rest.get.describe/:resource.after',
