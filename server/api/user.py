@@ -153,7 +153,7 @@ def acceptTerms(self, params):
     .param('firstName', 'The user\'s first name.')
     .param('lastName', 'The user\'s last name.')
     .param('validityPeriod', 'The number of days that the invite will remain valid.',
-           required=False, dataType='float', default=30.0)
+           required=False, dataType='float', default=60.0)
 )
 @boundHandler(_sharedContext)
 def inviteUser(self, params):
@@ -168,7 +168,7 @@ def inviteUser(self, params):
         except ValueError:
             raise ValidationException('Validity period must be a number.', 'validityPeriod')
     else:
-        validityPeriod = 30.0
+        validityPeriod = 60.0
 
     currentUser = self.getCurrentUser()
     User.requireAdminStudy(currentUser)
