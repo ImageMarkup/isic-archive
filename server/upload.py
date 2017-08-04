@@ -73,6 +73,9 @@ class ZipFileOpener(object):
             if not originalFileName or not originalFile.file_size:
                 # file is probably a directory, skip
                 continue
+            if originalFileName.startswith('._'):
+                # file is probably a macOS resource fork, skip
+                continue
             fileList.append((originalFile, originalFileRelpath))
         return self._defaultUnzipIter(zipFile, fileList), len(fileList)
 
@@ -115,5 +118,8 @@ class ZipFileOpener(object):
                     tempFilePath = os.path.join(tempDirPath, tempFileName)
                     originalFileRelpath = os.path.relpath(
                         tempFilePath, tempDir)
+                    if tempFileName.startswith('._'):
+                        # file is probably a macOS resource fork, skip
+                        continue
                     fileList.append((tempFilePath, originalFileRelpath))
             return iter(fileList), len(fileList)
