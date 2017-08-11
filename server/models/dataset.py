@@ -279,7 +279,9 @@ class Dataset(FolderModel):
             flaggedCollection = Collection.findOne({'name': 'Flagged Images'})
             flaggedFolder = Folder.findOne({
                 'name': dataset['name'],
-                'parentId': flaggedCollection})
+                'parentId': flaggedCollection['_id'],
+                'parentCollection': 'collection'
+            })
             if not flaggedFolder:
                 flaggedFolder = Folder.createFolder(
                     parent=flaggedCollection,
