@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const path = require('path');
 
 module.exports = function (grunt) {
-    var path = require('path');
-
     var staticLibPath = path.resolve(
         grunt.config.get('staticDir'), 'built', 'plugins', 'isic_archive', 'libs');
 
@@ -114,7 +113,20 @@ module.exports = function (grunt) {
                             use: [
                                 'raw-loader'
                             ]
+                        },
+                        {
+                            resource: {
+                                test: /\.bibtex$/
+                            },
+                            use: [
+                                'bibtex-loader'
+                            ]
                         }
+                    ]
+                },
+                resolveLoader: {
+                    modules: [
+                        path.resolve('plugins/isic_archive/loaders')
                     ]
                 },
                 output: {

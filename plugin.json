@@ -7,6 +7,7 @@
     "npm": {
         "dependencies": {
             "backbone.select": "~2.1.0",
+            "bibtex-parse-js": "~0.0.23",
             "d3": "~3.5.17",
             "geojs": "0.11.1",
             "pegjs": "~0.10.0",
