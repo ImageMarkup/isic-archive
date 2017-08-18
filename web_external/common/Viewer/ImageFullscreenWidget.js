@@ -23,6 +23,8 @@ const ImageFullscreenWidget = View.extend({
                 delete this.imageViewerWidget;
             }
         });
+
+        return this;
     }
 });
 

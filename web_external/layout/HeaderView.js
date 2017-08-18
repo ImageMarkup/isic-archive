@@ -45,6 +45,8 @@ const LayoutHeaderView = View.extend({
             el: this.$('.isic-current-user-wrapper'),
             parentView: this
         }).render();
+
+        return this;
     }
 });
 
