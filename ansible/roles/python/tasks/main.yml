@@ -1,14 +1,19 @@
 ---
 
-- name: Ensure required variables are defined
-  fail: msg="\"python_dist_path\" must be set for non-system Python distributions."
-  when: (not python_dist_path) and (python_dist != "system")
+- name: Install virtualenv dependencies
+  apt:
+    name: "{{ item }}"
+  sudo: yes
+  with_items:
+    - python-virtualenv
 
-- include: system.yml
-  when: python_dist == "system"
+- name: Create virtualenv
+  pip:
+    virtualenv: "{{ python_dist_path }}"
+    name: []
 
-- include: virtualenv.yml
-  when: python_dist == "virtualenv"
-
-- include: conda.yml
-  when: python_dist == "conda"
+- name: Upgrade pip
+  pip:
+    name: pip
+    state: latest
+    virtualenv: "{{ python_dist_path }}"

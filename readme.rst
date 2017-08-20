@@ -30,8 +30,6 @@ Installation
     # from within your preferred source development directory
     git clone https://github.com/ImageMarkup/isic-archive.git
     cd isic-archive
-    git submodule update --init
-
 
 * Launch and automatically provision the development VM:
   ::

@@ -1,8 +1,0 @@
----
-
-- name: Install system packages
-  apt:
-    name: "{{ item }}"
-  sudo: yes
-  with_items:
-    - python-pip

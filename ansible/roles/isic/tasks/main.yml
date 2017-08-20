@@ -16,24 +16,6 @@
   with_items:
     - p7zip-full
 
-- name: Install Conda dependencies
-  conda:
-    name: "{{ item.name }}"
-    version: "{{ item.version }}"
-    executable: "{{ python_dist_path }}/bin/conda"
-  with_items:
-    - { name: libgfortran, version: 1.0 }
-    - { name: numpy, version: 1.10.2 }
-    - { name: scipy, version: 0.16.0 }
-    - { name: scikit-image, version: 0.12.3 }
-    - { name: opencv, version: 2.4.10 }
-
 - name: Install ISIC Archive
   command: "{{ python_dist_path }}/bin/girder-install plugin -s {{ isic_archive_path }}"
   notify: Build Girder
-
-- name: Install Python dependencies
-  pip:
-    requirements: "{{ isic_archive_path }}/requirements.txt"
-    virtualenv: "{{ python_dist_path }}"
-  sudo: yes if python_dist == "system" else no

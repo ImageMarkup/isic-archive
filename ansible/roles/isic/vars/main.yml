@@ -2,6 +2,5 @@
 
 girder_version: "v2.2.0"
 worker_version: "2cfb739c096c2373f8bbe00853e3709f433192a6"
-python_dist: "conda"
 python_dist_path: "{{ ansible_user_dir }}/env"
 large_image_version: "371ed81d93e3ad198f5d56902f9a0797f16c84b2"
