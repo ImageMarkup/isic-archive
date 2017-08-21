@@ -137,7 +137,7 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         flags |= cv2.FLOODFILL_FIXED_RANGE
         flags |= cv2.FLOODFILL_MASK_ONLY
 
-        area, (boundsX, boundsY, boundsWidth, boundsHeight) = cv2.floodFill(
+        area, imageOut, maskOut, (boundsX, boundsY, boundsWidth, boundsHeight) = cv2.floodFill(
             image=image,
             mask=maskImage,
             seedPoint=tuple(seedCoord),
@@ -223,7 +223,7 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         elif safe:
             maskImage = numpy.copy(maskImage)
 
-        contours, hierarchy = cv2.findContours(
+        imageOut, contours, hierarchy = cv2.findContours(
             image=maskImage,
             mode=cv2.RETR_EXTERNAL,
             method=cv2.CHAIN_APPROX_SIMPLE,
@@ -284,7 +284,7 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
             contours=[coords],
             contourIdx=-1,  # all contours
             color=255,
-            thickness=cv2.cv.CV_FILLED,
+            thickness=cv2.FILLED,
             lineType=8  # allow diagonal lines
         )
         return maskImage

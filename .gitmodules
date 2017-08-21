@@ -1,3 +1,0 @@
-[submodule "ansible/library/ansible-conda"]
-	path = ansible/library/ansible-conda
-	url = https://github.com/synthicity/ansible-conda.git

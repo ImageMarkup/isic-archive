@@ -1,3 +1,0 @@
----
-
-python_conda_installer_path: "{{ ansible_user_dir }}/miniconda.sh"

@@ -53,6 +53,8 @@ const ImageWall = View.extend({
             viewport: '#isic-images-imageWall',
             trigger: 'hover'
         });
+
+        return this;
     },
 
     _rerenderSelection: function () {

@@ -30,8 +30,6 @@ Installation
     # from within your preferred source development directory
     git clone https://github.com/ImageMarkup/isic-archive.git
     cd isic-archive
-    git submodule update --init
-
 
 * Launch and automatically provision the development VM:
   ::
@@ -112,8 +110,8 @@ Usage
     # Mongodb's console output
     tail -F /var/log/mongodb/mongod.log
 
-.. |build-status| image:: https://img.shields.io/travis/ImageMarkup/isic-archive/master.svg
-    :target: https://travis-ci.org/ImageMarkup/isic-archive
+.. |build-status| image:: https://img.shields.io/circleci/project/github/ImageMarkup/isic-archive/master.svg
+    :target: https://circleci.com/gh/ImageMarkup/isic-archive
     :alt: Build Status
 
 .. |coverage-badge| image:: https://codecov.io/gh/ImageMarkup/isic-archive/branch/master/graph/badge.svg
