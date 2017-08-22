@@ -24,7 +24,7 @@ const RegisterMetadataView = View.extend({
                 : this.uploadedFiles[0].id;
 
             if (uploadedFileId) {
-                this.$('#isic-register-metadata-submit').prop('disabled', true);
+                this.$('#isic-register-metadata-submit').girderEnable(false);
 
                 this.registerMetadata(uploadedFileId);
             } else {
@@ -59,7 +59,7 @@ const RegisterMetadataView = View.extend({
                 text: `<h4>Error registering metadata</h4><br>${_.escape(resp.responseJSON.message)}`,
                 escapedHtml: true
             });
-            this.$('#isic-register-metadata-submit').prop('disabled', false);
+            this.$('#isic-register-metadata-submit').girderEnable(true);
         });
 
         this.render();

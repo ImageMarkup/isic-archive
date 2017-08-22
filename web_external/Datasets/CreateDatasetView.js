@@ -26,9 +26,9 @@ const CreateDatasetView = View.extend({
             // Update attribution name field sensitivity
             let target = $(event.target);
             if (target.val() === 'anonymous') {
-                this.$('#isic-dataset-attribution-name').prop('disabled', true);
+                this.$('#isic-dataset-attribution-name').girderEnable(false);
             } else {
-                this.$('#isic-dataset-attribution-name').prop('disabled', false);
+                this.$('#isic-dataset-attribution-name').girderEnable(true);
             }
         },
         'change #isic-dataset-license': function (event) {
@@ -36,18 +36,18 @@ const CreateDatasetView = View.extend({
             let target = $(event.target);
             let anonymous = this.$('#isic-dataset-attribution-anonymous');
             if (target.val() === 'CC-0') {
-                anonymous.prop('disabled', false);
+                anonymous.girderEnable(true);
             } else {
                 if (anonymous.prop('checked')) {
                     this.$('#isic-dataset-attribution-attributed-to').prop('checked', true);
                     this.$('#isic-dataset-attribution-attributed-to').change();
                 }
-                anonymous.prop('disabled', true);
+                anonymous.girderEnable(false);
             }
         },
         'submit #isic-dataset-form': function (event) {
             event.preventDefault();
-            this.$('#isic-dataset-submit').prop('disabled', true);
+            this.$('#isic-dataset-submit').girderEnable(false);
 
             // Get file ID of uploaded file
             const uploadedFileId = _.isEmpty(this.uploadedFiles)
@@ -87,7 +87,7 @@ const CreateDatasetView = View.extend({
                 text: `<h4>Error submitting dataset</h4><br>${_.escape(resp.responseJSON.message)}`,
                 escapedHtml: true
             });
-            this.$('#isic-dataset-submit').prop('disabled', false);
+            this.$('#isic-dataset-submit').girderEnable(true);
         });
 
         this.render();

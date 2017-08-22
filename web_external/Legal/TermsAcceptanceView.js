@@ -12,8 +12,7 @@ const TermsAcceptanceView = View.extend({
     events: {
         'click #isic-terms-accept': function (event) {
             // Disable buttons while request is pending
-            let buttons = this.$('.isic-terms-agreement-button-container button');
-            buttons.prop('disabled', true);
+            this.$('.isic-terms-agreement-button-container button').girderEnable(false);
 
             UserModel.currentUserSetAcceptTerms()
                 .always(() => {

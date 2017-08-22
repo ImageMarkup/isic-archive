@@ -19,7 +19,7 @@ const CreateStudyView = View.extend({
     events: {
         'submit #isic-study-form': function (event) {
             event.preventDefault();
-            this.$('#isic-study-submit').prop('disabled', true);
+            this.$('#isic-study-submit').girderEnable(false);
             this.submitStudy();
         },
 
@@ -178,7 +178,7 @@ const CreateStudyView = View.extend({
                 text: `<h4>Error creating study</h4><br>${_.escape(resp.responseJSON.message)}`,
                 escapedHtml: true
             });
-            this.$('#isic-study-submit').prop('disabled', false);
+            this.$('#isic-study-submit').girderEnable(true);
         });
     }
 });

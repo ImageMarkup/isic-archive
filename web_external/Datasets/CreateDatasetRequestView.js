@@ -12,7 +12,7 @@ const CreateDatasetRequestView = View.extend({
     events: {
         'submit #isic-dataset-form': function (event) {
             event.preventDefault();
-            this.$('#isic-dataset-submit').prop('disabled', true);
+            this.$('#isic-dataset-submit').girderEnable(false);
 
             getCurrentUser().setCanCreateDataset()
                 .done((resp) => {

@@ -119,7 +119,7 @@ const StudyResultsSelectStudyView = View.extend({
         this.trigger('changed', this.$('select').val());
 
         // Enable study details button
-        this.$('.isic-study-results-select-study-details-button').removeAttr('disabled');
+        this.$('.isic-study-results-select-study-details-button').girderEnable(true);
     },
 
     showDetails: function () {

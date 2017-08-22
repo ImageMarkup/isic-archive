@@ -11,7 +11,7 @@ const RsvpUserView = View.extend({
     events: {
         'submit #isic-user-rsvp-form': function (event) {
             event.preventDefault();
-            this.$('#isic-user-rsvp-submit').prop('disabled', true);
+            this.$('#isic-user-rsvp-submit').girderEnable(false);
 
             if (this.$('#isic-user-rsvp-password').val() !== this.$('#isic-user-rsvp-password2').val()) {
                 showAlertDialog({
@@ -20,7 +20,7 @@ const RsvpUserView = View.extend({
                         this.$('#isic-user-rsvp-password2').val('').focus();
                     }
                 });
-                this.$('#isic-user-rsvp-submit').prop('disabled', false);
+                this.$('#isic-user-rsvp-submit').girderEnable(true);
                 return;
             }
 
@@ -37,7 +37,7 @@ const RsvpUserView = View.extend({
                         text: `<h4>Error changing password</h4><br>${_.escape(resp.responseJSON.message)}`,
                         escapedHtml: true
                     });
-                    this.$('#isic-user-rsvp-submit').prop('disabled', false);
+                    this.$('#isic-user-rsvp-submit').girderEnable(true);
                 });
         }
     },
