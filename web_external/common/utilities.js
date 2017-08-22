@@ -45,7 +45,7 @@ const showAlertDialog = function (params) {
     }
 
     $('#isic-alert-dialog-button')
-        .unbind('click')
+        .off('click')
         .click(() => {
             container.modal('hide');
         });
