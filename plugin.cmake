@@ -40,7 +40,7 @@ add_python_style_test(
 add_eslint_test(
   isic_archive_external
   "${CMAKE_CURRENT_LIST_DIR}/web_external"
-  ESLINT_CONFIG_FILE "${CMAKE_CURRENT_LIST_DIR}/.eslintrc")
+  ESLINT_CONFIG_FILE "${CMAKE_CURRENT_LIST_DIR}/.eslintrc.json")
 add_test(
   NAME puglint_isic_archive_external
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
@@ -53,4 +53,4 @@ add_stylint_test(
 add_eslint_test(
   isic_archive_grunt
   "${CMAKE_CURRENT_LIST_DIR}/Gruntfile.js"
-  ESLINT_CONFIG_FILE "${CMAKE_CURRENT_LIST_DIR}/.eslintrc")
+  ESLINT_CONFIG_FILE "${CMAKE_CURRENT_LIST_DIR}/.eslintrc.json")

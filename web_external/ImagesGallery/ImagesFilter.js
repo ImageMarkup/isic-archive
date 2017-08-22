@@ -3,7 +3,7 @@ import peg from 'pegjs';
 import _ from 'underscore';
 
 import {FACET_SCHEMA} from './Facets/ImagesFacetView';
-import queryGrammar from 'raw-loader!./query.pegjs';
+import queryGrammar from './query.pegjs';
 
 const ImagesFilter = function (completeFacets) {
     this.astParser = peg.generate(queryGrammar);

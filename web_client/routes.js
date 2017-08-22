@@ -1,3 +1,5 @@
+/* eslint-disable import/first */
+
 import events from 'girder/events';
 import {exposePluginConfig} from 'girder/utilities/PluginUtils';
 import router from 'girder/router';

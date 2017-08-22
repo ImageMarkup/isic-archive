@@ -106,6 +106,14 @@ module.exports = function (grunt) {
                                     }
                                 }
                             ]
+                        },
+                        {
+                            resource: {
+                                test: /\.pegjs$/
+                            },
+                            use: [
+                                'raw-loader'
+                            ]
                         }
                     ]
                 },

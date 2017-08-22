@@ -1,3 +1,5 @@
+/* eslint-disable import/first, import/order */
+
 import _ from 'underscore';
 
 import {getCurrentUser, setCurrentUser} from 'girder/auth';
