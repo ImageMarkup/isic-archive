@@ -521,13 +521,13 @@ const ImagesFacetCategoricalDatasetView = ImagesFacetCategoricalView.extend({
             trigger: 'hover',
             title: function () {
                 // Context is the element that the popover is attached to
-                let datasetId = $(this).data('bin-label');
+                let datasetId = $(this).data('binLabel');
                 let datasetModel = self.datasetCollection.get(datasetId);
                 return datasetModel.name();
             },
             content: function () {
                 // Context is the element that the popover is attached to
-                let datasetId = $(this).data('bin-label');
+                let datasetId = $(this).data('binLabel');
                 let datasetModel = self.datasetCollection.get(datasetId);
 
                 // Use dataset description if available

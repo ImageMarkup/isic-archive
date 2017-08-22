@@ -28,7 +28,7 @@ const CreateStudyView = View.extend({
             target.tooltip('hide');
 
             let listEntry = target.closest('.isic-list-entry');
-            let userId = listEntry.data('userid');
+            let userId = listEntry.data('userId');
             listEntry.remove();
 
             this._removeUser(userId);
