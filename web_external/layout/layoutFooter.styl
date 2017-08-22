@@ -1,6 +1,6 @@
 #isic-app-footer-container
   border-top 1px solid #eee
-  background-image linear-gradient(to bottom, #f6f6f6 0%, #fff 5px)
+  background-image linear-gradient(to bottom, #f6f6f6 0, #fff 5px)
   padding-top 5px
   white-space nowrap
 
@@ -9,22 +9,22 @@
     padding 0
 
   li
-    //- Lay out horizontally
+    // Lay out horizontally
     display inline-block
 
-  //- Add vertical line separator before list items, except the first
-  li + li
+  // Add vertical line separator before list items, except the first
+  li + li // @stylint ignore
     &:before
-      content '\2502'
+      content "\2502"
       padding 0 0.5em
 
-  //- Default section alignment
+  // Default section alignment
   .isic-footer-legal
     text-align center
   .isic-footer-links
     text-align right
 
-  //- 'sm' grid tier and below section alignment
+  // 'sm' grid tier and below section alignment
   @media (max-width: 991px)
     .isic-footer-legal
       text-align left
