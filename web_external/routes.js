@@ -80,7 +80,7 @@ router.route('useraccount/:id/token/:token', 'accountToken', (id, token) => {
             tab: 'password',
             temporary: token
         });
-    }).error(() => {
+    }).fail(() => {
         router.navigate('', {trigger: true});
     });
 });
