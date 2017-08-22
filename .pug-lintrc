@@ -13,13 +13,8 @@
     "requireIdLiteralsBeforeAttributes": true,
     "requireLineFeedAtFileEnd": true,
     "requireLowerCaseAttributes": true,
-    "requireLowerCaseTags": true,
     "requireSpaceAfterCodeOperator": true,
     "requireStrictEqualityOperators": true,
-    "validateAttributeSeparator": {
-        "separator": ", ",
-        "multiLineSeparator": ",\n    "
-    },
     "validateDivTags": true,
     "validateIndentation": 2,
     "validateLineBreaks": "LF",
