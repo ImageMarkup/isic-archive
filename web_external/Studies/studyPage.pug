@@ -31,7 +31,7 @@
           table(class=study.canAdmin() ? 'table-hover' : undefined)
             th(colspan=2)
             th(colspan=2) Completion
-            each user in study.users().models
+            each user in study.users().toArray()
               - let numCompleted = 'N/A'
               - let percentCompleted = 'N/A'
               if numImages > 0

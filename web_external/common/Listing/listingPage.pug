@@ -16,7 +16,7 @@
 
 .isic-listing-paginate-container
 .isic-listing-container
-  each model, index in models
+  each model, index in models.toArray()
     .isic-listing-panel-group.panel-group(id=`panel-group-${model.cid}`)
       .isic-listing-panel.panel.panel-default
         .isic-listing-panel-heading.panel-heading(

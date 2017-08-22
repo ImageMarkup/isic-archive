@@ -668,7 +668,7 @@ const StudyResultsView = View.extend({
                 this.images.reset(imageModels);
 
                 // Populate users collection
-                this.users.reset(this.study.users().models);  // eslint-disable-line backbone/no-view-collection-models
+                this.users.reset(this.study.users().toArray());
 
                 // Fetch featureset
                 let featureset = this.study.featureset();

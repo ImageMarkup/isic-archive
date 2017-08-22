@@ -44,7 +44,7 @@ const ImageWall = View.extend({
 
         this.$el.html(ImageWallTemplate({
             apiRoot: this.apiRoot,
-            images: this.images.models,
+            images: this.images,
             thumbnailSize: this.thumbnailSize
         }));
 
