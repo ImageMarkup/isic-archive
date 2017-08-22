@@ -81,10 +81,12 @@ module.exports = function (grunt) {
         'isic_archive-legacy'
     ]);
 
-    // Remove the DllReferencePlugin from the external app webpack configuration
+    // Remove the Dll*Plugins from the external app webpack configuration
     // TODO: This needs to be much more robust, and not depend on the order of the plugins array
     var plugins = grunt.config.get('webpack.app_isic_archive.plugins');
-    plugins.shift();
+    // This effectively keeps original element [3], but in-place
+    plugins.splice(0, 3);
+    plugins.splice(1);
     grunt.config.set('webpack.app_isic_archive.plugins', plugins);
 
     grunt.config.merge({
