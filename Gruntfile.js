@@ -91,13 +91,15 @@ module.exports = function (grunt) {
         webpack: {
             app_isic_archive: {
                 module: {
-                    loaders: [
+                    rules: [
                         {
-                            test: /\.(pdf|txt)$/,
-                            loaders: [
+                            resource: {
+                                test: /\.(pdf|txt)$/
+                            },
+                            use: [
                                 {
                                     loader: 'file-loader',
-                                    query: {
+                                    options: {
                                         name: 'assets/[name]-[hash:8].[ext]'
                                     }
                                 }
