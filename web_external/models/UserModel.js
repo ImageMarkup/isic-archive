@@ -40,18 +40,15 @@ UserModel.prototype.setAcceptTerms = function () {
         type: 'POST'
     })
     .then((resp) => {
-        // TODO: In jQuery3, just return or throw the "resp" to resolve or reject
-        const deferred = $.Deferred();
         if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
             // Directly update user permissions
             this.get('permissions').acceptTerms = true;
             this.trigger('change:permissions');
-            deferred.resolve(resp);
+            return resp;
         } else {
             // This should not fail
-            deferred.reject(resp);
+            throw resp;
         }
-        return deferred.promise();
     });
 };
 
@@ -65,17 +62,14 @@ UserModel.prototype.setCanCreateDataset = function () {
         type: 'POST'
     })
     .then((resp) => {
-        // TODO: In jQuery3, just return or throw the "resp" to resolve or reject
-        const deferred = $.Deferred();
         if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
             // Directly update user permissions
             this.get('permissions').createDataset = true;
             this.trigger('change:permissions');
-            deferred.resolve(resp);
+            return resp;
         } else {
-            deferred.reject(resp);
+            throw resp;
         }
-        return deferred.promise();
     });
 };
 
