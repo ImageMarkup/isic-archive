@@ -674,7 +674,7 @@ const StudyResultsView = View.extend({
                 let featureset = this.study.featureset();
                 featureset
                     .once('g:fetched', () => {
-                        this.featureset.set(featureset.attributes);
+                        this.featureset.set(featureset.toJSON());
                     })
                     .fetch();
 
@@ -714,7 +714,7 @@ const StudyResultsView = View.extend({
             .once('g:changed', () => {
                 if (!annotations.isEmpty()) {
                     // Fetch annotation detail
-                    this.annotation.set(annotations.first().attributes).fetch();
+                    this.annotation.set(annotations.first().toJSON()).fetch();
                 }
             })
             .fetch({
