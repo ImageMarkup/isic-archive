@@ -18,6 +18,7 @@
 ###############################################################################
 
 from girder.constants import AccessType, SettingKey
+from girder.plugins.large_image.constants import PluginSettings as LargeImageSettings
 from girder.utility.model_importer import ModelImporter
 
 
@@ -159,7 +160,12 @@ def _provisionStudies():
 def provisionDatabase():
     Setting = ModelImporter.model('setting')
 
+    # set external settings
     Setting.set(SettingKey.USER_DEFAULT_FOLDERS, 'none')
+    Setting.set(LargeImageSettings.LARGE_IMAGE_AUTO_SET, False)
+    Setting.set(LargeImageSettings.LARGE_IMAGE_MAX_SMALL_IMAGE_SIZE, 0)
+    # TODO: consider saving thumbnail files
+    Setting.set(LargeImageSettings.LARGE_IMAGE_MAX_THUMBNAIL_FILES, 0)
 
     _provisionImages()
     _provisionSegmentationGroups()

@@ -245,6 +245,7 @@ class Image(ItemModel):
     def originalFile(self, image):
         File = self.model('file')
         return File.load(
+            # TODO: this may fail if large_image allows "small images"
             image['largeImage']['originalId'], force=True, exc=True)
 
     def superpixelsFile(self, image):
