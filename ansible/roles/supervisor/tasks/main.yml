@@ -3,7 +3,7 @@
 - name: Install Supervisor
   apt:
     name: supervisor
-  sudo: yes
+  become: yes
 
 - name: Deploy Girder Supervisor config file
   template:
@@ -12,7 +12,7 @@
     owner: root
     group: root
     mode: 0644
-  sudo: yes
+  become: yes
   notify: Restart Supervisor
 
 - name: Deploy Worker Supervisor config file
@@ -22,5 +22,5 @@
     owner: root
     group: root
     mode: 0644
-  sudo: yes
+  become: yes
   notify: Restart Supervisor

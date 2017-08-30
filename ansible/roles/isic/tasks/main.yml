@@ -12,7 +12,7 @@
 - name: Install package dependencies
   apt:
     name: "{{ item }}"
-  sudo: yes
+  become: yes
   with_items:
     - p7zip-full
 

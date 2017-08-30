@@ -4,4 +4,4 @@
   service:
     name: supervisor
     state: restarted
-  sudo: yes
+  become: yes

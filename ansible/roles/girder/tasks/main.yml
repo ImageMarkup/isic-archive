@@ -3,7 +3,7 @@
 - name: Install build dependencies
   apt:
     name: "{{ item }}"
-  sudo: yes
+  become: yes
   with_items:
     - git
     - build-essential
