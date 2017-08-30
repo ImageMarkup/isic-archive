@@ -2,3 +2,4 @@
 
 - name: Build Girder
   command: "{{ python_dist_path }}/bin/girder-install web"
+  listen: Restart Girder

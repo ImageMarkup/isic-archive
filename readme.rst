@@ -37,36 +37,15 @@ Installation
     # from within the "isic-archive" sub-directory
     vagrant up
 
-Setup
-~~~~~
 * Use a web browser to visit ``http://127.0.0.1:8080/`` from your host
   development machine.
 
-* Register a new user (this will be an admin user).
+* Login as the user ``admin`` with password ``password``. This user can be also used for granting
+  additional access permissions to subsequent new users. This user may be deleted once another site
+  admin user is created.
 
-* Go to ``Admin console`` -> ``Plugins`` and enable the ``ISIC Archive`` plugin
-  (and optionally the ``OAuth2 login`` plugin), then use the button at the top
-  of the page to restart the server.
-
-* Go to ``Admin console`` -> ``Plugins`` and open the configuration page (gear
-  icon) for ``Remote worker``. Set the value
-  ``mongodb://localhost:27017/girder_worker`` for both ``Celery broker URL``
-  and ``Celery backend URL``, and ``Save``.
-
-* Go to ``Admin console`` -> ``Assetstores`` ->
-  ``Create new Filesystem assetstore``, enter ``default`` as the
-  ``Assetstore name``, ``/home/vagrant/assetstores/default`` as the
-  ``Root directory``, then click ``Create``.
-
-* Go to ``Admin console`` -> ``Server configuration`` -> ``Routing``, and change the setting values:
-
-  * for ``core_girder`` to ``/girder``
-  * for ``isic_archive`` to ``/``
-
-  then click ``Save`` and visit ``http://127.0.0.1:8080/``.
-
-Usage
-~~~~~
+Development
+~~~~~~~~~~~
   **Note**:
   Optionally, after adding the following line to your host systems's
   ``/etc/hosts`` file:

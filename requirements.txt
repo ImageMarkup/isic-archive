@@ -2,7 +2,6 @@ geojson>=1.3.2
 python-dateutil>=2.6.0
 numpy>=1.10.2
 
-# TODO: girder_worker requires Pillow==3.2.0
 Pillow==3.4.2
 
 scipy>=0.16.0

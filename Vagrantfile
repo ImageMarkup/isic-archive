@@ -24,9 +24,9 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder ".", "/home/vagrant/isic_archive"
 
   config.vm.provision "ansible_local" do |ansible|
-    ansible.playbook = "ansible/vagrant-playbook.yml"
-    ansible.galaxy_role_file = "ansible/requirements.yml"
-    ansible.provisioning_path = "/home/vagrant/isic_archive"
+    ansible.provisioning_path = "/home/vagrant/isic_archive/ansible"
+    ansible.galaxy_role_file = "requirements.yml"
+    ansible.playbook = "vagrant-playbook.yml"
     ansible.extra_vars = {
       bind_node_modules: bind_node_modules
     }

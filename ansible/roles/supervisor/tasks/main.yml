@@ -13,9 +13,9 @@
     group: root
     mode: 0644
   become: yes
-  notify: Restart Supervisor
+  notify: Restart Girder
 
-- name: Deploy Worker Supervisor config file
+- name: Deploy girder_worker Supervisor config file
   template:
     src: "worker.conf.j2"
     dest: "/etc/supervisor/conf.d/worker.conf"
@@ -23,4 +23,11 @@
     group: root
     mode: 0644
   become: yes
-  notify: Restart Supervisor
+  notify: Restart girder_worker
+
+# TODO: this should be a handler after both
+- name: Restart Supervisor for girder_worker
+  service:
+    name: supervisor
+    state: restarted
+  become: yes

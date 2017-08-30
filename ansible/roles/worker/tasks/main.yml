@@ -18,19 +18,11 @@
     update: yes
     force: yes
 
-- name: Install Pillow
+- name: Install Python package
   pip:
-    name: Pillow
-    version: 3.4.2
+    name: "{{ worker_path }}[girder_io]"
+    editable: true
     virtualenv: "{{ python_dist_path }}"
-
-- name: Install Python dependencies
-  pip:
-    requirements: "{{ item }}"
-    virtualenv: "{{ python_dist_path }}"
-  with_items:
-    - "{{ worker_path }}/requirements.txt"
-    - "{{ worker_path }}/girder_worker/plugins/girder_io/requirements.txt"
 
 - name: Deploy config file
   template:

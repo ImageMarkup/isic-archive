@@ -14,6 +14,7 @@
     version: "{{ large_image_version }}"
     update: no
     force: yes
+  # TODO: restart Girder too
   notify: Build Girder
 
 - name: Install Numpy
@@ -23,4 +24,7 @@
 
 - name: Install Large Image
   command: "{{ python_dist_path }}/bin/girder-install plugin -s {{ large_image_path }}"
-  notify: Build Girder
+  # TODO: This is creating a symlink only under the virtualenv site-packages
+#  args:
+#    creates: "{{ girder_path }}/plugins/large_image"
+  notify: Restart Girder
