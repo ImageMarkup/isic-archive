@@ -18,9 +18,8 @@
 
 - name: Install ISIC Archive
   command: "{{ python_dist_path }}/bin/girder-install plugin -s {{ isic_archive_path }}"
-  # TODO: This is creating a symlink only under the virtualenv site-packages
-#  args:
-#    creates: "{{ girder_path }}/plugins/isic_archive"
+  args:
+    creates: "{{ girder_path }}/plugins/isic_archive"
   notify: Restart Girder
 
 - name: Install Girder client for Girder Ansible module
