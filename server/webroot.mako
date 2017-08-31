@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${title}</title>
     <link rel="stylesheet"
-          href="//fonts.googleapis.com/css?family=Droid+Sans:400,700">
+          href="${staticRoot}/built/googlefonts.css">
     <link rel="stylesheet"
           href="${staticRoot}/built/fontello/css/fontello.css">
     <link rel="stylesheet"
