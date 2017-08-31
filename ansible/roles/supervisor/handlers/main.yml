@@ -1,5 +1,11 @@
 ---
 
+- listen: Restart Supervisor
+  service:
+    name: supervisor
+    state: restarted
+  become: yes
+
 - listen: Restart Girder
   supervisorctl:
     name: girder
