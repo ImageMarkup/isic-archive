@@ -26,7 +26,10 @@
 - name: Install Python package
   pip:
     name: "{{ girder_path }}"
-    editable: true
+#    editable: true
+    # TODO: The 'editable' option is broken until Ansible 2.4
+    # See: https://github.com/ansible/ansible/pull/19688
+    extra_args: '-e'
     virtualenv: "{{ python_dist_path }}"
 
 - name: Deploy config file
