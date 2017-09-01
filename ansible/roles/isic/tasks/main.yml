@@ -17,10 +17,10 @@
     - p7zip-full
 
 - name: Install ISIC Archive
-  command: "{{ python_dist_path }}/bin/girder-install plugin -s {{ isic_archive_path }}"
-  args:
-    creates: "{{ girder_path }}/plugins/isic_archive"
-  notify: Restart Girder
+  command: "{{ python_dist_path }}/bin/girder-install plugin --force --symlink {{ isic_archive_path }}"
+  notify:
+    - Restart Girder
+    - Build Girder
 
 - name: Install Girder client for Girder Ansible module
   pip:
@@ -62,7 +62,9 @@
     plugins:
       - isic_archive
     state: present
-  notify: Restart Girder
+  notify:
+    - Restart Girder
+    - Build Girder
 
 - meta: flush_handlers
 

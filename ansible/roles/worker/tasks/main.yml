@@ -17,6 +17,7 @@
     version: "{{ worker_version }}"
     update: yes
     force: yes
+  register: result
 
 - name: Install Python package
   pip:
@@ -26,8 +27,14 @@
     # See: https://github.com/ansible/ansible/pull/19688
     extra_args: '-e'
     virtualenv: "{{ python_dist_path }}"
+  when: result.changed
+  notify:
+    - Restart girder_worker
+    - Restart Girder
+    - Build Girder
 
 - name: Deploy config file
   template:
     src: "worker.local.cfg.j2"
     dest: "{{ worker_path }}/girder_worker/worker.local.cfg"
+  notify: Restart girder_worker

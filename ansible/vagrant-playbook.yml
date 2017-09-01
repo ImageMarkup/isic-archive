@@ -2,9 +2,9 @@
 
 - name: vagrant setup
   hosts: all
+  # TODO: setup SSH reverse lookup
+  # TODO: set hostname
   roles:
-    - role: base
-
     - role: isic
       isic_archive_path: "{{ ansible_user_dir }}/isic_archive"
 

@@ -39,6 +39,7 @@
     group: root
     mode: 0644
   become: yes
+  notify: Restart Nginx
   when: ssl
 
 - name: Deploy SSL key file
@@ -49,6 +50,7 @@
     group: root
     mode: 0600
   become: yes
+  notify: Restart Nginx
   when: ssl
 
 - name: Deploy supervisor site config file

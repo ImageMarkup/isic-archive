@@ -21,7 +21,7 @@
     version: "{{ girder_version }}"
     update: yes
     force: yes
-  notify: Build Girder
+  register: result
 
 - name: Install Python package
   pip:
@@ -31,8 +31,13 @@
     # See: https://github.com/ansible/ansible/pull/19688
     extra_args: '-e'
     virtualenv: "{{ python_dist_path }}"
+  when: result.changed
+  notify:
+    - Restart Girder
+    - Build Girder
 
 - name: Deploy config file
   template:
     src: "girder.local.cfg.j2"
     dest: "{{ girder_path }}/girder/conf/girder.local.cfg"
+  notify: Restart Girder
