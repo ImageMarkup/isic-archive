@@ -9,7 +9,7 @@ jobs:
 
     environment:
       - GIRDER_VERSION: 2.3.0
-      - WORKER_VERSION: 8706dabc512c4df61c10d0d1c2e6f87cd475bb1f
+      - WORKER_VERSION: d5b474864322d654b39a0e81c7376458995d3c73
       - LARGE_IMAGE_VERSION: 3e7719dfeb97e1ba30119c46f72cb0526b95faa7
 
     steps:
