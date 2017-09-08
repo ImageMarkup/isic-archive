@@ -1,0 +1,7 @@
+---
+
+- listen: Restart girder_worker
+  supervisorctl:
+    name: worker
+    state: restarted
+  become: yes

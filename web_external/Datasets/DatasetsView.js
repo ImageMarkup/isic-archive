@@ -51,7 +51,7 @@ const DatasetsView = View.extend({
     render: function () {
         this.$el.html(DatasetsPageTemplate({
             title: 'Datasets',
-            models: this.datasets.models,
+            models: this.datasets,
             loaded: this.loaded,
             canCreateDataset: DatasetCollection.canCreate()
         }));

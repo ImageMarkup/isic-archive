@@ -8,9 +8,9 @@ jobs:
     working_directory: /home/circleci/project # as $CIRCLE_WORKING_DIRECTORY
 
     environment:
-      - GIRDER_VERSION: v2.2.0
-      - WORKER_VERSION: 2cfb739c096c2373f8bbe00853e3709f433192a6
-      - LARGE_IMAGE_VERSION: 60c32b11abb4d5f0d1696221a7e81ab21c611980
+      - GIRDER_VERSION: 2.3.0
+      - WORKER_VERSION: d5b474864322d654b39a0e81c7376458995d3c73
+      - LARGE_IMAGE_VERSION: 3e7719dfeb97e1ba30119c46f72cb0526b95faa7
 
     steps:
       - run:
@@ -75,9 +75,7 @@ jobs:
           name: Install large_image
           command: |
             pip install 'numpy>=1.10.2'
-            pip install enum34==1.1.6 jsonschema==2.5.1 repoze.lru==0.6 libtiff==0.4.0
-          # girder-install plugin girder/plugins/large_image
-          # This version of large_image has some conflicts in its requirements.txt (openslide-python), so install manually
+            girder-install plugin girder/plugins/large_image
       - run:
           name: Install isic_archive
           command: girder-install plugin girder/plugins/isic_archive
@@ -122,6 +120,5 @@ jobs:
 
       - run:
           name: Upload coverage
-          command: codecov --pr $(basename $CIRCLE_PULL_REQUEST) --disable search pycov --file $CIRCLE_WORKING_DIRECTORY/girder_build/coverage.xml
+          command: codecov --disable search pycov --file $CIRCLE_WORKING_DIRECTORY/girder_build/coverage.xml
           working_directory: girder
-

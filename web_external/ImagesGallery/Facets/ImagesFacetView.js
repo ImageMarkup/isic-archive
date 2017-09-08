@@ -5,13 +5,16 @@ import _ from 'underscore';
 import {CategoricalFacetFilter, IntervalFacetFilter, TagsCategoricalFacetFilter} from '../ImagesFilter';
 import DatasetCollection from '../../collections/DatasetCollection';
 import View from '../../view';
+
 import HistogramScale from './HistogramScale';
 
+/* eslint-disable import/order */
 import ImagesFacetHistogramTemplate from './imagesFacetHistogram.pug';
 import ImagesFacetCategoricalTemplate from './imagesFacetCategorical.pug';
-import checkImageUrl from '!url-loader!svg-fill-loader!./check.svg?fill=#999999';
-import dashImageUrl from '!url-loader!svg-fill-loader!./dash.svg?fill=#999999';
-import exImageUrl from '!url-loader!svg-fill-loader!./ex.svg?fill=#999999';
+import checkImageUrl from '!url-loader!svg-fill-loader!./check.svg?fill=#999999'; // eslint-disable-line import/no-webpack-loader-syntax
+import dashImageUrl from '!url-loader!svg-fill-loader!./dash.svg?fill=#999999'; // eslint-disable-line import/no-webpack-loader-syntax
+import exImageUrl from '!url-loader!svg-fill-loader!./ex.svg?fill=#999999'; // eslint-disable-line import/no-webpack-loader-syntax
+/* eslint-enable import/order */
 
 const ImagesFacetView = View.extend({
     className: 'isic-images-facet',
@@ -521,13 +524,13 @@ const ImagesFacetCategoricalDatasetView = ImagesFacetCategoricalView.extend({
             trigger: 'hover',
             title: function () {
                 // Context is the element that the popover is attached to
-                let datasetId = $(this).data('bin-label');
+                let datasetId = $(this).data('binLabel');
                 let datasetModel = self.datasetCollection.get(datasetId);
                 return datasetModel.name();
             },
             content: function () {
                 // Context is the element that the popover is attached to
-                let datasetId = $(this).data('bin-label');
+                let datasetId = $(this).data('binLabel');
                 let datasetModel = self.datasetCollection.get(datasetId);
 
                 // Use dataset description if available

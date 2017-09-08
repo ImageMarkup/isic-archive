@@ -15,7 +15,7 @@ const InviteUserView = View.extend({
     events: {
         'submit #isic-user-invite-form': function (event) {
             event.preventDefault();
-            this.$('#isic-user-invite-submit').prop('disabled', true);
+            this.$('#isic-user-invite-submit').girderEnable(false);
 
             let data = {
                 login: this.$('#isic-user-invite-new-login').val(),
@@ -46,7 +46,7 @@ const InviteUserView = View.extend({
                     text: `<h4>Error sending invite</h4><br>${_.escape(resp.responseJSON.message)}`,
                     escapedHtml: true
                 });
-                this.$('#isic-user-invite-submit').prop('disabled', false);
+                this.$('#isic-user-invite-submit').girderEnable(true);
             });
         },
         'click #isic-invitation-confirmation-invite-user': function (event) {

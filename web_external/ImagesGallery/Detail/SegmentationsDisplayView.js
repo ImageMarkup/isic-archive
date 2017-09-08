@@ -81,7 +81,7 @@ const SegmentationsDisplayView = View.extend({
 
     render: function () {
         this.$el.html(SegmentationsDisplayPageTemplate({
-            segmentations: this.segmentations.models
+            segmentations: this.segmentations
         }));
 
         return this;

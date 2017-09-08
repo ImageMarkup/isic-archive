@@ -32,8 +32,8 @@ HistogramScale.prototype.update = function (overviewHistogram, filteredSetHistog
 
     this.ordinalBinCount = 0;
     this.categoricalBinCount = 0;
-    this.lowBound;
-    this.highBound;
+    this.lowBound = null;
+    this.highBound = null;
     this.categoricalLookup = {};
     this.overviewLabelLookup = {};
 

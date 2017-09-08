@@ -12,10 +12,87 @@
 - name: Install package dependencies
   apt:
     name: "{{ item }}"
-  sudo: yes
+  become: yes
   with_items:
     - p7zip-full
 
 - name: Install ISIC Archive
-  command: "{{ python_dist_path }}/bin/girder-install plugin -s {{ isic_archive_path }}"
-  notify: Build Girder
+  command: "{{ python_dist_path }}/bin/girder-install plugin --force --symlink {{ isic_archive_path }}"
+  notify:
+    - Restart Girder
+    - Build Girder
+
+- name: Install Girder client for Girder Ansible module
+  pip:
+    name: girder-client
+  become: yes
+
+- meta: flush_handlers
+
+- name: Create admin user
+  port: "{{ girder_port }}"
+  girder:
+    user:
+      firstName: "Provision"
+      lastName: "Admin"
+      login: "{{ girder_admin_username }}"
+      password: "{{ girder_admin_password }}"
+      email: "provision.admin@isic-archive.com"
+      admin: yes
+    state: present
+
+- name: Create assetstore
+  girder:
+    username: "{{ girder_admin_username }}"
+    password: "{{ girder_admin_password }}"
+    port: "{{ girder_port }}"
+    assetstore:
+      name: "Default"
+      type: "filesystem"
+      # TODO: make "root" a variable
+      root: "{{ ansible_user_dir }}/assetstores/default"
+      current: true
+    state: present
+
+- name: Enable isic_archive plugin
+  girder:
+    username: "{{ girder_admin_username }}"
+    password: "{{ girder_admin_password }}"
+    port: "{{ girder_port }}"
+    plugins:
+      - isic_archive
+    state: present
+  notify:
+    - Restart Girder
+    - Build Girder
+
+- meta: flush_handlers
+
+- name: Set girder_worker plugin settings
+  girder:
+    username: "{{ girder_admin_username }}"
+    password: "{{ girder_admin_password }}"
+    port: "{{ girder_port }}"
+    setting:
+      key: "{{ item }}"
+      value: "mongodb://localhost:27017/girder_worker"
+    state: present
+  with_items:
+    - "worker.backend"
+    - "worker.broker"
+  notify: Restart Girder
+
+- name: Remount webroots
+  girder:
+    username: "{{ girder_admin_username }}"
+    password: "{{ girder_admin_password }}"
+    port: "{{ girder_port }}"
+    setting:
+      key: "core.route_table"
+      value:
+        core_girder: "/girder"
+        core_static_root: "/static"
+        isic_archive: "/"
+        markup: "/markup"
+    state: present
+  notify: Restart Girder

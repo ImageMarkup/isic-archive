@@ -50,7 +50,7 @@ const FeaturesetsView = View.extend({
     render: function () {
         this.$el.html(ListingPageTemplate({
             title: 'Featuresets',
-            models: this.featuresets.models,
+            models: this.featuresets,
             loaded: this.loaded
         }));
 

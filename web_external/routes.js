@@ -1,3 +1,5 @@
+/* eslint-disable import/first, import/order */
+
 import _ from 'underscore';
 
 import {getCurrentUser, setCurrentUser} from 'girder/auth';
@@ -80,7 +82,7 @@ router.route('useraccount/:id/token/:token', 'accountToken', (id, token) => {
             tab: 'password',
             temporary: token
         });
-    }).error(() => {
+    }).fail(() => {
         router.navigate('', {trigger: true});
     });
 });

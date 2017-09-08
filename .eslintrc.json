@@ -1,0 +1,15 @@
+{
+    "extends": "girder",
+    "rules": {
+        "backbone/event-scope": "off",
+        "backbone/no-native-jquery": ["off", "selector"],
+        "backbone/no-view-onoff-binding": "error"
+    },
+    "settings": {
+        "backbone": {
+            "Collection": ["GirderCollection", "Collection"],
+            "Model": ["GirderModel", "Model"],
+            "View": ["GirderView", "View"]
+        }
+    }
+}

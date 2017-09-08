@@ -54,7 +54,7 @@ const StudiesView = View.extend({
     render: function () {
         this.$el.html(StudiesPageTemplate({
             title: 'Manage Annotation Studies',
-            models: this.studies.models,
+            models: this.studies,
             loaded: this.loaded,
             canCreateStudy: StudyCollection.canCreate()
         }));

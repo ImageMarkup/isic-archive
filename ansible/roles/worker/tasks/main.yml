@@ -3,7 +3,7 @@
 - name: Install build dependencies
   apt:
     name: "{{ item }}"
-  sudo: yes
+  become: yes
   with_items:
     - git
     - libjpeg-dev
@@ -17,22 +17,24 @@
     version: "{{ worker_version }}"
     update: yes
     force: yes
+  register: result
 
-- name: Install Pillow
+- name: Install Python package
   pip:
-    name: Pillow
-    version: 3.4.2
+    name: "{{ worker_path }}[girder_io]"
+#    editable: true
+    # TODO: The 'editable' option is broken until Ansible 2.4
+    # See: https://github.com/ansible/ansible/pull/19688
+    extra_args: '-e'
     virtualenv: "{{ python_dist_path }}"
-
-- name: Install Python dependencies
-  pip:
-    requirements: "{{ item }}"
-    virtualenv: "{{ python_dist_path }}"
-  with_items:
-    - "{{ worker_path }}/requirements.txt"
-    - "{{ worker_path }}/girder_worker/plugins/girder_io/requirements.txt"
+  when: result.changed
+  notify:
+    - Restart girder_worker
+    - Restart Girder
+    - Build Girder
 
 - name: Deploy config file
   template:
     src: "worker.local.cfg.j2"
     dest: "{{ worker_path }}/girder_worker/worker.local.cfg"
+  notify: Restart girder_worker

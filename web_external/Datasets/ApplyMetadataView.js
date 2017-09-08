@@ -199,7 +199,7 @@ const ApplyMetadataView = View.extend({
         this.errors.uninitialize();
 
         // Enable action buttons
-        this.$('#isic-apply-metadata-download-button, #isic-apply-metadata-validate-button').removeAttr('disabled');
+        this.$('#isic-apply-metadata-download-button, #isic-apply-metadata-validate-button').girderEnable(true);
     },
 
     errorsChanged: function () {

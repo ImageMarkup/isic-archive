@@ -1,10 +1,8 @@
 .g-config-breadcrumb-container
 form#isic-config-form(role="form")
-    .form-group
-        label.control-label(for="isic-demo-mode") Demo Mode
-        p
-          | Newly registered users will automatically have full access to all
-          | phases.
-        input.input-sm.form-control#isic-config-demo-mode(type="checkbox")
-    p#isic-config-error-message.g-validation-failed-message
-    input.btn.btn-sm.btn-primary(type="submit", value="Save")
+  .form-group
+    label.control-label(for="isic-config-demo-mode") Demo Mode
+    p Newly registered users will automatically have full access to all phases.
+    input#isic-config-demo-mode.input-sm.form-control(type="checkbox")
+  p#isic-config-error-message.g-validation-failed-message
+  input.btn.btn-sm.btn-primary(type="submit", value="Save")

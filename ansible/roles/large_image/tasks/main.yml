@@ -3,7 +3,7 @@
 - name: Install build dependencies
   apt:
     name: "{{ item }}"
-  sudo: yes
+  become: yes
   with_items:
     - git
 
@@ -14,13 +14,15 @@
     version: "{{ large_image_version }}"
     update: no
     force: yes
-  notify: Build Girder
-
-- name: Install Numpy
-  pip:
-    name: numpy
-    virtualenv: "{{ python_dist_path }}"
+  register: result
 
 - name: Install Large Image
-  command: "{{ python_dist_path }}/bin/girder-install plugin -s {{ large_image_path }}"
-  notify: Build Girder
+  block:
+    - pip:
+        name: numpy
+        virtualenv: "{{ python_dist_path }}"
+    - command: "{{ python_dist_path }}/bin/girder-install plugin --force {{ large_image_path }}"
+      notify:
+        - Restart Girder
+        - Build Girder
+  when: result.changed

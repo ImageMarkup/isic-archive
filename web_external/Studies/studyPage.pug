@@ -31,7 +31,7 @@
           table(class=study.canAdmin() ? 'table-hover' : undefined)
             th(colspan=2)
             th(colspan=2) Completion
-            each user in study.users().models
+            each user in study.users().toArray()
               - let numCompleted = 'N/A'
               - let percentCompleted = 'N/A'
               if numImages > 0
@@ -42,9 +42,8 @@
                 td.isic-study-user-name= user.name()
                 td
                   if study.canAdmin()
-                    a.isic-study-remove-user-button.isic-tooltip(
-                      title='Delete annotator')
-                        i.icon-cancel
+                    a.isic-study-remove-user-button.isic-tooltip(title='Delete annotator')
+                      i.icon-cancel
                 td.isic-study-user-completion-count= numCompleted
                 td.isic-study-user-completion-percent= percentCompleted
         else

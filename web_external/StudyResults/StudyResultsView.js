@@ -119,7 +119,7 @@ const StudyResultsSelectStudyView = View.extend({
         this.trigger('changed', this.$('select').val());
 
         // Enable study details button
-        this.$('.isic-study-results-select-study-details-button').removeAttr('disabled');
+        this.$('.isic-study-results-select-study-details-button').girderEnable(true);
     },
 
     showDetails: function () {
@@ -668,13 +668,13 @@ const StudyResultsView = View.extend({
                 this.images.reset(imageModels);
 
                 // Populate users collection
-                this.users.reset(this.study.users().models);  // eslint-disable-line backbone/no-view-collection-models
+                this.users.reset(this.study.users().toArray());
 
                 // Fetch featureset
                 let featureset = this.study.featureset();
                 featureset
                     .once('g:fetched', () => {
-                        this.featureset.set(featureset.attributes);
+                        this.featureset.set(featureset.toJSON());
                     })
                     .fetch();
 
@@ -714,7 +714,7 @@ const StudyResultsView = View.extend({
             .once('g:changed', () => {
                 if (!annotations.isEmpty()) {
                     // Fetch annotation detail
-                    this.annotation.set(annotations.first().attributes).fetch();
+                    this.annotation.set(annotations.first().toJSON()).fetch();
                 }
             })
             .fetch({

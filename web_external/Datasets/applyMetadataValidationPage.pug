@@ -22,5 +22,5 @@ if errors.initialized()
         | Errors:
       .isic-apply-metadata-validation-result-error-content
         ul
-          each error in errors.models
+          each error in errors.toArray()
             li= error.description()

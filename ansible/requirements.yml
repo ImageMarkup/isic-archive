@@ -2,3 +2,6 @@
 
 - src: DigitalSlideArchive.vips
   version: v0.2
+
+- src: girder.girder
+  version: master

@@ -1,4 +1,15 @@
 ---
 
-- name: Build Girder
+- listen: Restart Girder
+  supervisorctl:
+    name: girder
+    state: restarted
+  become: yes
+- listen: Restart Girder
+  wait_for:
+    port: "{{ girder_port }}"
+    state: started
+    timeout: 20
+
+- listen: Build Girder
   command: "{{ python_dist_path }}/bin/girder-install web"

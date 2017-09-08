@@ -69,7 +69,7 @@ const StudyAddUserWidget = View.extend({
         this.searchWidget.setElement(this.$('.isic-search-field-container')).render();
 
         // Disable OK button
-        this.$('.isic-add-user-ok-button').prop('disabled', true);
+        this.$('.isic-add-user-ok-button').girderEnable(false);
 
         handleOpen('addUser');
 
@@ -93,7 +93,7 @@ const StudyAddUserWidget = View.extend({
         }));
 
         // Enable OK button
-        this.$('.isic-add-user-ok-button').prop('disabled', false);
+        this.$('.isic-add-user-ok-button').girderEnable(true);
     }
 });
 

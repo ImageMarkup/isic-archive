@@ -77,9 +77,9 @@ const ImagesPagingPane = View.extend({
 
         // Disable / enable the appropriate paging buttons
         this.$('#isic-images-paging-seek-prev, #isic-images-paging-seek-first')
-            .prop('disabled', !this.images.hasPreviousPage());
+            .girderEnable(this.images.hasPreviousPage());
         this.$('#isic-images-paging-seek-next, #isic-images-paging-seek-last')
-            .prop('disabled', !this.images.hasNextPage());
+            .girderEnable(this.images.hasNextPage());
 
         // Show the relevant explanatory label
         this.$('#isic-images-paging-label>*').hide();
@@ -116,8 +116,7 @@ const ImagesPagingPane = View.extend({
             .css('left', () => `${(this.images._currentOffset() / this.filteredFacets.total) * 100}%`)
             .width(() => `${(this.images.length / this.filteredFacets.total) * 100}%`);
 
-        this.$('#isic-images-paging-downloadZip').prop(
-            'disabled', this.filteredFacets.total === 0);
+        this.$('#isic-images-paging-downloadZip').girderEnable(this.filteredFacets.total > 0);
 
         // Any just-disabled buttons will no longer trigger 'mouseleave' or 'focusout' events, so
         // any still-active tooltips on those buttons must be manually hidden
