@@ -1,5 +1,3 @@
-import _ from 'underscore';
-
 import View from '../view';
 
 import publicationsBibtex from './publications.bibtex';
@@ -26,32 +24,7 @@ const LiteratureView = View.extend({
             }
         });
 
-        _.each(this.publicationsJson, (publication) => {
-            if (publication.entryTags.author) {
-                publication.entryTags.author = this._escapeLatex(publication.entryTags.author);
-            }
-            if (publication.entryTags.school) {
-                publication.entryTags.school = this._escapeLatex(publication.entryTags.school);
-            }
-            if (publication.entryTags.title) {
-                publication.entryTags.title = this._escapeLatex(publication.entryTags.title);
-            }
-        });
-
         this.render();
-    },
-
-    _escapeLatex: function (str) {
-        return str
-            .replace(/\\&/g, '&amp;')
-            .replace(/{\\`([aeiou])}/g, '&$1grave;')
-            .replace(/{\\'([aeiouy])}/g, '&$1acute;')
-            .replace(/{\\^([aeiou])}/g, '&$1circ;')
-            .replace(/{\\~([ano])}/g, '&$1tilde;')
-            .replace(/{\\"([aeiouy])}/g, '&$1uml;')
-            .replace(/{\\c([c])}/g, '&$1cedil;')
-            .replace(/{\\i}/g, '&#x0131;')
-            .replace(/{\\l}/g, '&#x0142;');
     },
 
     render: function () {

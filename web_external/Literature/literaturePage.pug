@@ -43,11 +43,11 @@
                       pre= entryType
                 td
                   div
-                    a(href=entryTags.url, target='_blank', rel='noopener') "!{entryTags.title}"
-                  div!= entryTags.author
+                    a(href=entryTags.url, target='_blank', rel='noopener') "#{entryTags.title}"
+                  div= entryTags.author
 
                   div
-                    i!= entryTags.booktitle || entryTags.journal || entryTags.school
+                    i= entryTags.booktitle || entryTags.journal || entryTags.school
                     if entryTags.publisher
                       span , #{entryTags.publisher}
                     if entryTags.organization
