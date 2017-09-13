@@ -376,6 +376,8 @@ class Dataset(FolderModel):
 
             rowErrors = []
             for rowNum, csvRow in enumerate(csvReader):
+                # Offset row number to account for being zero-based and for header row
+                rowNum += 2
                 try:
                     image = self._getImageForMetadataCsvRow(
                         dataset, csvRow, originalNameField, isicIdField)
