@@ -7,8 +7,10 @@
     "npm": {
         "dependencies": {
             "backbone.select": "~2.1.0",
+            "bibtex-parse-js": "~0.0.23",
             "d3": "~3.5.17",
             "geojs": "0.11.1",
+            "mathy-unicode-characters": "^0.9.3",
             "pegjs": "~0.10.0",
             "raw-loader": "~0.5.1",
             "select2": "~4.0.3",

@@ -48,8 +48,16 @@ import FrontPageView from './Front/FrontPageView';
 router.route('', 'index', () => {
     navigateTo(FrontPageView);
 });
+
+// Forum
 router.route('forum', 'forum', () => {
     window.location.replace('http://forum.isic-archive.com');
+});
+
+// Literature page
+import LiteratureView from './Literature/LiteratureView';
+router.route('literature', 'literature', () => {
+    navigateTo(LiteratureView);
 });
 
 // User management

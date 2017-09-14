@@ -1,0 +1,61 @@
+.isic-literature.isic-body-nopad
+  h2 Literature
+  .container
+    .row
+      .col-lg-6
+        table.table.table-striped
+          thead
+            tr
+              th.isic-literature-column-year Year
+              th.isic-literature-column-type Type
+              th.isic-literature-column-publication Publication
+          tbody
+            for publication in publications
+              - const entryType = publication.entryType;
+              - const entryTags = publication.entryTags;
+              tr
+                td= entryTags.year
+                case entryType
+                  when 'article'
+                    td Journal
+                  when 'book'
+                    td Book
+                  when 'conference'
+                    td Conference
+                  when 'inbook'
+                    td Book Section
+                  when 'inproceedings'
+                    td Conference
+                  when 'mastersthesis'
+                    case entryTags.type
+                      when '{B.S.} thesis'
+                        td B.S. Thesis
+                      default
+                        td Master's Thesis
+                  when 'misc'
+                    td Other
+                  when 'phdthesis'
+                    td Ph.D. Thesis
+                  when 'proceedings'
+                    td Conference
+                  default
+                    td
+                      pre= entryType
+                td
+                  div
+                    a(href=entryTags.url, target='_blank', rel='noopener') "#{entryTags.title}"
+                  div= entryTags.author
+
+                  div
+                    i= entryTags.booktitle || entryTags.journal || entryTags.school
+                    if entryTags.publisher
+                      span , #{entryTags.publisher}
+                    if entryTags.organization
+                      span , #{entryTags.organization}
+                    if entryTags.volume
+                      span , #{entryTags.volume}
+                    if entryTags.number
+                      span (#{entryTags.number})
+                    if entryTags.pages
+                      span , #{entryTags.pages}
+                    span .
