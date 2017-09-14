@@ -1,10 +1,10 @@
 const _ = require('underscore');
 const BibtexParse = require('bibtex-parse-js');
-// Use destructiring assignment to import only the "latex2unicode" named export
+// Use destructuring assignment to import only the "latex2unicode" named export
 const { latex2unicode } = require('mathy-unicode-characters');
 
 function unescapeLatexUnicode(str) {
-    // Our BibTex sources (from Google Scholar) use non-standard character escape sequences
+    // Our BibTeX sources (from Google Scholar) use non-standard character escape sequences
 
     // Match strings like: "{\l}", "{\'a}", "{\'{a}}", "{\'\i}"
     return str.replace(/{(\\.){?(\\??.?)}?}/g, (match, combiningChar, baseChar) => {
@@ -26,7 +26,7 @@ function unescapeLatexUnicode(str) {
             // "LATIN SMALL LETTER O WITH ACUTE" ("U000F3")
             // so we will always assume it's the latter
             unicodePoint = 'U000F3';
-        } else if (_.isArray(unicodePoint)) {
+        } else if (!_.isString(unicodePoint)) {
             throw new Error(`Ambiguous character mapping: "${newEscape}"`);
         }
 
