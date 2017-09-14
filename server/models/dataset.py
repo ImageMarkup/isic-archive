@@ -365,19 +365,7 @@ class Dataset(FolderModel):
             if not csvReader.fieldnames:
                 raise FileMetadataException(
                     'no field names found on the first line of the CSV')
-            for originalNameField in csvReader.fieldnames:
-                if originalNameField.strip().lower() == 'filename':
-                    break
-            else:
-                originalNameField = None
-            for isicIdField in csvReader.fieldnames:
-                if isicIdField.strip().lower() == 'isic_id':
-                    break
-            else:
-                isicIdField = None
-            if (not originalNameField) and (not isicIdField):
-                raise FileMetadataException(
-                    'no "filename" or "isic_id" field found in CSV')
+            originalNameField, isicIdField = self._getFilenameFields(csvReader)
 
             for rowNum, csvRow in enumerate(csvReader):
                 # Offset row number to account for being zero-based and for header row
@@ -403,6 +391,22 @@ class Dataset(FolderModel):
                 Image.save(image)
 
         return metadataErrors
+
+    def _getFilenameFields(self, csvReader):
+        for originalNameField in csvReader.fieldnames:
+            if originalNameField.strip().lower() == 'filename':
+                break
+        else:
+            originalNameField = None
+        for isicIdField in csvReader.fieldnames:
+            if isicIdField.strip().lower() == 'isic_id':
+                break
+        else:
+            isicIdField = None
+        if (not originalNameField) and (not isicIdField):
+            raise FileMetadataException(
+                'no "filename" or "isic_id" field found in CSV')
+        return originalNameField, isicIdField
 
     def _getImageForMetadataCsvRow(self, dataset, csvRow, originalNameField,
                                    isicIdField):
