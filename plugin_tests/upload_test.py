@@ -18,6 +18,7 @@
 ###############################################################################
 
 import datetime
+import json
 import os
 
 from six import BytesIO
@@ -212,6 +213,20 @@ class UploadTestCase(IsicTestCase):
                 'Location': '/markup/gallery#/qc/%s' % reviewId
             }, resp.headers)
 
+        # Accept all images
+        resp = self.request(
+            path='/dataset/%s/review' % publicDataset['_id'], method='GET', user=reviewerUser)
+        self.assertStatusOk(resp)
+        self.assertEqual(len(resp.json), 3)
+        imageIds = [image['_id'] for image in resp.json]
+        resp = self.request(
+            path='/dataset/%s/review' % publicDataset['_id'], method='POST', user=reviewerUser,
+            params={
+                'accepted': json.dumps(imageIds),
+                'flagged': []
+            })
+        self.assertStatusOk(resp)
+
         # Test metadata registration
         resp = self.request(
             path='/folder', method='POST', user=uploaderUser, params={
@@ -322,3 +337,19 @@ class UploadTestCase(IsicTestCase):
             # This is actually checked above
             'time': resp.json[0]['time']
         }, resp.json[0])
+
+        # Test applying metadata
+        resp = self.request(
+            path='/dataset/%s/metadata/%s' % (publicDataset['_id'], metadataFile['_id']),
+            method='POST', user=uploaderUser, params={
+                'save': False
+            })
+        self.assertStatusOk(resp)
+        self.assertIn('errors', resp.json)
+        self.assertEqual(
+            resp.json['errors'], [
+                {u'description':
+                 u'on CSV row 4: no images found that match "filename": "test_1_small_3.jpg"'},
+                {u'description':
+                 u'on CSV row 6: no images found that match "filename": "test_1_large_2.jpg"'}
+            ])
