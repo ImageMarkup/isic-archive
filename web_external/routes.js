@@ -51,7 +51,7 @@ router.route('', 'index', () => {
 
 // Forum
 router.route('forum', 'forum', () => {
-    window.location.replace('http://forum.isic-archive.com');
+    window.location.replace('https://forum.isic-archive.com');
 });
 
 // Literature page
