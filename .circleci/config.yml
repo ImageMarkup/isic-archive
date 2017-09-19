@@ -120,5 +120,5 @@ jobs:
 
       - run:
           name: Upload coverage
-          command: codecov --disable search pycov --file $CIRCLE_WORKING_DIRECTORY/girder_build/coverage.xml
-          working_directory: girder
+          command: codecov --disable search pycov gcov --file $CIRCLE_WORKING_DIRECTORY/girder_build/coverage.xml
+          working_directory: girder/plugins/isic_archive
