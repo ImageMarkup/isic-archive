@@ -15,3 +15,10 @@
   apt:
     name: mongodb-org-server
   become: yes
+
+- name: Start service
+  service:
+    name: mongod
+    enabled: yes
+    state: started
+  become: yes
