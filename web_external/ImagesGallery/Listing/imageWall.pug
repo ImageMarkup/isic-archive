@@ -1,8 +1,8 @@
 for image in images.toArray()
-  img.thumb(
-    src=`${apiRoot}/image/${image.id}/thumbnail?width=${thumbnailSize}`,
-    height=thumbnailSize * 0.75,
-    width=thumbnailSize,
-    data-image-id=image.id,
-    data-toggle='tooltip',
-    title=image.name())
+  .isic-images-imageWall-thumbnail(
+      data-image-id=image.id,
+      data-toggle='tooltip',
+      title=image.name())
+    div(style=`height:${thumbnailHeight}px;width:${thumbnailWidth}px;`)
+      img(
+        src=`${apiRoot}/image/${image.id}/thumbnail?height=${thumbnailHeight}&width=${thumbnailWidth}`)

@@ -1,0 +1,35 @@
+.isic-images-imageWall
+  overflow-y auto
+  overflow-x hidden
+  min-width 32em
+
+  user-select none
+
+  // pack all lines together; separation will be via padding
+  line-height 0
+
+  .isic-images-imageWall-thumbnail
+    // inline-block ensures this will expend to the size of its content
+    display inline-block
+
+    padding 3px
+
+    &.selected
+      padding 0
+      border solid 3px deepskyblue
+
+    div
+      // inline-block forces this to respect inlined height and width
+      display inline-block
+      // nothing substantive should be hidden, but this will trim images to be pixel-perfect sizes
+      overflow hidden
+      // relative allows child blocks to position absolutly
+      position relative
+
+      img
+        // absolute allows top / transform to work
+        position absolute
+        // center image vertically and horizontally
+        left 50%
+        top 50%
+        transform translate(-50%, -50%)

@@ -4,10 +4,13 @@ import ImageFullscreenWidget from '../../common/Viewer/ImageFullscreenWidget';
 import View from '../../view';
 
 import ImageWallTemplate from './imageWall.pug';
+import './imageWall.styl';
 
 const ImageWall = View.extend({
+    className: 'isic-images-imageWall',
+
     events: {
-        'click .thumb': function (event) {
+        'click .isic-images-imageWall-thumbnail': function (event) {
             let imageId = $(event.currentTarget).data('imageId');
             let clickedImage = this.images.get(imageId);
 
@@ -45,12 +48,13 @@ const ImageWall = View.extend({
         this.$el.html(ImageWallTemplate({
             apiRoot: this.apiRoot,
             images: this.images,
-            thumbnailSize: this.thumbnailSize
+            thumbnailHeight: this.thumbnailSize * 0.75,
+            thumbnailWidth: this.thumbnailSize
         }));
 
         this.$('[data-toggle="tooltip"]').tooltip({
             placement: 'auto',
-            viewport: '#isic-images-imageWall',
+            viewport: this.$el,
             trigger: 'hover'
         });
 
@@ -58,11 +62,11 @@ const ImageWall = View.extend({
     },
 
     _rerenderSelection: function () {
-        this.$('.thumb').removeClass('selected');
+        this.$('.isic-images-imageWall-thumbnail').removeClass('selected');
 
         let selectedImage = this.images.selected;
         if (selectedImage) {
-            this.$(`.thumb[data-image-id="${selectedImage.id}"]`).addClass('selected');
+            this.$(`.isic-images-imageWall-thumbnail[data-image-id="${selectedImage.id}"]`).addClass('selected');
         }
     },
 
