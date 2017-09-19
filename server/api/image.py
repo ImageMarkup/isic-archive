@@ -237,8 +237,10 @@ class ImageResource(IsicResource):
     @describeRoute(
         Description('Return an image\'s thumbnail.')
         .param('id', 'The ID of the image.', paramType='path')
-        .param('width', 'The desired width for the thumbnail.', paramType='query', required=False,
-               default=256)
+        .param('width', 'The desired maximum width for the thumbnail.', paramType='query',
+               required=False, default=256)
+        .param('height', 'The desired maximum height for the thumbnail.', paramType='query',
+               required=False, default=256)
         .errorResponse('ID was invalid.')
     )
     @access.cookie
@@ -248,7 +250,8 @@ class ImageResource(IsicResource):
         ImageItem = self.model('image_item', 'large_image')
 
         width = int(params.get('width', 256))
-        thumbData, thumbMime = ImageItem.getThumbnail(image, width=width)
+        height = int(params.get('height', 256))
+        thumbData, thumbMime = ImageItem.getThumbnail(image, width=width, height=height)
 
         # Only setRawResponse now, as this handler may return a JSON error
         # earlier

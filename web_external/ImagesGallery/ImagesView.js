@@ -44,7 +44,7 @@ const ImagesView = View.extend({
         // This will self-render when this.images updates
         this.imageWall = new ImageWall({
             images: this.images,
-            el: this.$('#isic-images-imageWall'),
+            el: this.$('.isic-images-imageWall'),
             parentView: this
         });
 
