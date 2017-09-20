@@ -29,6 +29,7 @@ from girder.models.notification import ProgressState
 from girder.utility import assetstore_utilities, mail_utils
 from girder.utility.progress import ProgressContext
 
+from .image_metadata import addImageClinicalMetadata
 from ..upload import ZipFileOpener
 from ..utility import generateLines
 from ..utility import mail_utils as isic_mail_utils
@@ -351,8 +352,12 @@ class Dataset(FolderModel):
         :rtype: list
         """
         File = self.model('file')
+        Image = self.model('image', 'isic_archive')
 
         metadataFileStream = File.download(metadataFile, headers=False)()
+
+        images = []
+        metadataErrors = []
 
         try:
             csvReader = csv.DictReader(generateLines(metadataFileStream))
@@ -374,24 +379,30 @@ class Dataset(FolderModel):
                 raise FileMetadataException(
                     'no "filename" or "isic_id" field found in CSV')
 
-            rowErrors = []
             for rowNum, csvRow in enumerate(csvReader):
                 # Offset row number to account for being zero-based and for header row
                 rowNum += 2
                 try:
                     image = self._getImageForMetadataCsvRow(
                         dataset, csvRow, originalNameField, isicIdField)
-                    self._applyMetadataCsvRow(image, csvRow, save)
+                    validationErrors = addImageClinicalMetadata(image, csvRow)
+                    validationErrors = [
+                        'on CSV row %s: %s' % (rowNum, error) for error in validationErrors]
+                    metadataErrors.extend(validationErrors)
+                    images.append(image)
                 except RowMetadataException as e:
-                    rowErrors.append('on CSV row %d: %s' % (rowNum, str(e)))
-            if rowErrors:
-                raise FileMetadataException('\n'.join(rowErrors))
+                    metadataErrors.append('on CSV row %d: %s' % (rowNum, str(e)))
+        except FileMetadataException as e:
+            metadataErrors.append(str(e))
         except csv.Error as e:
-            raise FileMetadataException('parsing CSV: %s' % str(e))
+            metadataErrors.append('parsing CSV: %s' % str(e))
 
-        # TODO: return list of error strings, can be empty
-        return ['on CSV row 4: unable to parse age',
-                'on CSV row 10: unrecognized gender']
+        # Save updated metadata to images
+        if not metadataErrors and save:
+            for image in images:
+                Image.save(image)
+
+        return metadataErrors
 
     def _getImageForMetadataCsvRow(self, dataset, csvRow, originalNameField,
                                    isicIdField):
@@ -437,24 +448,10 @@ class Dataset(FolderModel):
         image = next(iter(images))
         return image
 
-    def _applyMetadataCsvRow(self, image, csvRow, save):
-        pass
-        # TODO: ...
-
-        # unstructuredMetadata = image['meta']['unstructured']
-        # unstructuredMetadata.update(csvRow)
-        # Item.setMetadata(image, {
-        #     'unstructured': unstructuredMetadata
-        # })
-
 
 class FileMetadataException(Exception):
     pass
 
 
 class RowMetadataException(Exception):
-    pass
-
-
-class FieldMetadataException(Exception):
     pass
