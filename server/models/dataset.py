@@ -29,6 +29,7 @@ from girder.models.notification import ProgressState
 from girder.utility import assetstore_utilities, mail_utils
 from girder.utility.progress import ProgressContext
 
+from .dataset_helpers import matchFilenameRegex
 from .image_metadata import addImageClinicalMetadata
 from ..upload import ZipFileOpener
 from ..utility import generateLines
@@ -419,8 +420,9 @@ class Dataset(FolderModel):
         }
         if originalNameField:
             originalName = csvRow.pop(originalNameField, None)
+            originalNameRegex = matchFilenameRegex(originalName)
             imageQuery.update({
-                'privateMeta.originalFilename': originalName
+                'privateMeta.originalFilename': originalNameRegex
             })
         else:
             originalName = None
