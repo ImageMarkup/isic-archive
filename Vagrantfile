@@ -10,7 +10,7 @@ end
 Vagrant.configure("2") do |config|
   bind_node_modules = true?(ENV.fetch("BIND_NODE_MODULES", Vagrant::Util::Platform.windows?))
 
-  config.vm.box = "ubuntu/trusty64"
+  config.vm.box = "ubuntu/xenial64"
   config.vm.hostname = "isic-archive.devel"
   config.vm.provider "virtualbox" do |virtualbox|
     virtualbox.name = "isic-archive.devel"
@@ -21,10 +21,10 @@ Vagrant.configure("2") do |config|
   config.vm.post_up_message = "ISIC Archive is running at http://localhost:8080"
 
   config.vm.synced_folder ".", "/vagrant", disabled: true
-  config.vm.synced_folder ".", "/home/vagrant/isic_archive"
+  config.vm.synced_folder ".", "/home/ubuntu/isic_archive"
 
   config.vm.provision "ansible_local" do |ansible|
-    ansible.provisioning_path = "/home/vagrant/isic_archive/ansible"
+    ansible.provisioning_path = "/home/ubuntu/isic_archive/ansible"
     ansible.galaxy_role_file = "requirements.yml"
     ansible.playbook = "vagrant-playbook.yml"
     ansible.extra_vars = {

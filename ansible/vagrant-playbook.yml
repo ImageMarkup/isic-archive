@@ -13,6 +13,12 @@
       upstream_proxy: true
 
   post_tasks:
+    - name: Activate virtualenv on login
+      lineinfile:
+        line: 'source {{ python_dist_path }}/bin/activate'
+        path: "{{ ansible_user_dir }}/.profile"
+        state: present
+
     - name: Create / remove a local girder_node_modules directory
       file:
         path: "{{ ansible_user_dir }}/girder_node_modules"

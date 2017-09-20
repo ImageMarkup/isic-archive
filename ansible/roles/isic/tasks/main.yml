@@ -23,8 +23,11 @@
     - Build Girder
 
 - name: Install Girder client for Girder Ansible module
-  pip:
-    name: girder-client
+  block:
+    - apt:
+        name: python-pip
+    - pip:
+        name: girder-client
   become: yes
 
 - meta: flush_handlers

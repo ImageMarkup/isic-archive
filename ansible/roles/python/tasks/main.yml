@@ -2,10 +2,8 @@
 
 - name: Install virtualenv dependencies
   apt:
-    name: "{{ item }}"
+    name: python-virtualenv
   become: yes
-  with_items:
-    - python-virtualenv
 
 - name: Create virtualenv
   pip:
