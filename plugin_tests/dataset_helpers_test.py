@@ -62,7 +62,6 @@ class DatasetHelpersTestCase(base.TestCase):
         self.assertMatch(originalFilename, 'ABC-6D.jpg')
         self.assertMatch(originalFilename, 'abc-6D.jpg')
         self.assertMatch(originalFilename, 'abc-6d.jpg')
-        self.assertNotMatch(originalFilename, 'ABC-6D.')
         self.assertNotMatch(originalFilename, 'ABC-6D.png')
         self.assertNotMatch(originalFilename, 'ABC-6D.PNG')
 
@@ -70,7 +69,6 @@ class DatasetHelpersTestCase(base.TestCase):
         self.assertMatch(originalFilename, '20010425124238356')
         self.assertMatch(originalFilename, '20010425124238356.jpg')
         self.assertMatch(originalFilename, '20010425124238356.JPG')
-        self.assertNotMatch(originalFilename, '20010425124238356.')
         self.assertNotMatch(originalFilename, '20010425124238356.png')
         self.assertNotMatch(originalFilename, '20010425124238356.PNG')
 
@@ -79,7 +77,6 @@ class DatasetHelpersTestCase(base.TestCase):
         self.assertMatch(originalFilename, 'AbcDef00598.jpg')
         self.assertMatch(originalFilename, 'AbcDef00598.JPG')
         self.assertMatch(originalFilename, 'abcdef00598.JPG')
-        self.assertNotMatch(originalFilename, 'AbcDef00598.')
         self.assertNotMatch(originalFilename, 'AbcDef00598.png')
         self.assertNotMatch(originalFilename, 'AbcDef00598.PNG')
 
@@ -88,7 +85,6 @@ class DatasetHelpersTestCase(base.TestCase):
         self.assertMatch(originalFilename, 'test-20010425124238356.jpg')
         self.assertMatch(originalFilename, 'TEST-20010425124238356.jpg')
         self.assertMatch(originalFilename, 'TEST-20010425124238356.JPG')
-        self.assertNotMatch(originalFilename, 'TEST-20010425124238356.')
         self.assertNotMatch(originalFilename, 'TEST-20010425124238356.png')
         self.assertNotMatch(originalFilename, 'TEST-20010425124238356.PNG')
 
@@ -98,7 +94,6 @@ class DatasetHelpersTestCase(base.TestCase):
         self.assertMatch(originalFilename, 'AEOU3014, (20020901020318037) 20010425124238356.JPG')
         self.assertMatch(originalFilename, 'aeou3014, (20020901020318037) 20010425124238356.JPG')
         self.assertMatch(originalFilename, 'aeou3014, (20020901020318037) 20010425124238356.jpg')
-        self.assertNotMatch(originalFilename, 'AEOU3014, (20020901020318037) 20010425124238356.')
         self.assertNotMatch(originalFilename, 'AEOU3014, (20020901020318037) 20010425124238356.png')
         self.assertNotMatch(originalFilename, 'AEOU3014, (20020901020318037) 20010425124238356.PNG')
 
@@ -108,6 +103,19 @@ class DatasetHelpersTestCase(base.TestCase):
         self.assertMatch(originalFilename, '20020901020318037_30445187_2002-0901_Null_ 001.JPG')
         self.assertMatch(originalFilename, '20020901020318037_30445187_2002-0901_NULL_ 001.jpg')
         self.assertMatch(originalFilename, '20020901020318037_30445187_2002-0901_NULL_ 001.JPG')
-        self.assertNotMatch(originalFilename, '20020901020318037_30445187_2002-0901_NULL_ 001.')
         self.assertNotMatch(originalFilename, '20020901020318037_30445187_2002-0901_NULL_ 001.png')
         self.assertNotMatch(originalFilename, '20020901020318037_30445187_2002-0901_NULL_ 001.PNG')
+
+        # Filename that contains a period
+        originalFilename = 'test.315704d.jpg'
+        self.assertMatch(originalFilename, 'test.315704d')
+        self.assertMatch(originalFilename, 'test.315704d.jpg')
+        self.assertNotMatch(originalFilename, 'test.315704d.PNG')
+
+        # Filename that contains multiple periods
+        originalFilename = 'test.315704d.4e95e3d.png'
+        self.assertMatch(originalFilename, 'test.315704d.4e95e3d')
+        self.assertMatch(originalFilename, 'test.315704d.4e95e3d.png')
+        self.assertNotMatch(originalFilename, 'test.315704d')
+        self.assertNotMatch(originalFilename, 'test.315704d.4e95e3d.')
+        self.assertNotMatch(originalFilename, 'test.315704d.4e95e3d.jpg')
