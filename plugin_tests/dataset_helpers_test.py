@@ -18,6 +18,7 @@
 ###############################################################################
 
 import os
+import six
 import sys
 
 from tests import base
@@ -39,12 +40,12 @@ class DatasetHelpersTestCase(base.TestCase):
     def assertMatch(self, originalFilename, csvFilename):
         """Assert that the filename in the CSV matches the original filename."""
         regex = self.matchFilenameRegex(csvFilename)
-        self.assertIsNotNone(regex.match(originalFilename))
+        six.assertRegex(self, originalFilename, regex)
 
     def assertNotMatch(self, originalFilename, csvFilename):
         """Assert that the filename in the CSV doesn't match the original filename."""
         regex = self.matchFilenameRegex(csvFilename)
-        self.assertIsNone(regex.match(originalFilename))
+        self.assertNotRegexpMatches(originalFilename, regex)
 
     def testMatchFilenameRegex(self):
         """
