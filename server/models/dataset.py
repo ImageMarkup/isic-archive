@@ -30,7 +30,7 @@ from girder.utility import assetstore_utilities, mail_utils
 from girder.utility.progress import ProgressContext
 
 from .dataset_helpers import matchFilenameRegex
-from .image_metadata import addImageClinicalMetadata
+from .dataset_helpers.image_metadata import addImageClinicalMetadata
 from ..upload import ZipFileOpener
 from ..utility import generateLines
 from ..utility import mail_utils as isic_mail_utils

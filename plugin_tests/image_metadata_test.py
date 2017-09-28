@@ -63,7 +63,7 @@ def setUpModule():
         BenignMalignantFieldParser, \
         DiagnosisFieldParser, \
         addImageClinicalMetadata
-    from image_metadata import \
+    from dataset_helpers.image_metadata import \
         MetadataFieldException, \
         MetadataFieldNotFoundException, \
         MetadataValueExistsException, \
