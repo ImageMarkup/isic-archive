@@ -22,32 +22,28 @@ import sys
 
 from tests import base
 
-matchFilenameRegex = None
-
-
-def setUpModule():
-    isicModelsModulePath = os.path.abspath(os.path.join(
-        os.path.dirname(__file__), '..', 'server', 'models'))
-    if isicModelsModulePath not in sys.path:
-        sys.path.append(isicModelsModulePath)
-
-    global matchFilenameRegex
-    from dataset_helpers import matchFilenameRegex
-
 
 class DatasetHelpersTestCase(base.TestCase):
     def setUp(self):
         # A Girder instance is not required for this test case
-        pass
+
+        # Load function under test
+        isicModelsModulePath = os.path.abspath(os.path.join(
+            os.path.dirname(__file__), '..', 'server', 'models'))
+        if isicModelsModulePath not in sys.path:
+            sys.path.append(isicModelsModulePath)
+
+        from dataset_helpers import matchFilenameRegex
+        self.matchFilenameRegex = matchFilenameRegex
 
     def assertMatch(self, originalFilename, csvFilename):
         """Assert that the filename in the CSV matches the original filename."""
-        regex = matchFilenameRegex(csvFilename)
+        regex = self.matchFilenameRegex(csvFilename)
         self.assertIsNotNone(regex.match(originalFilename))
 
     def assertNotMatch(self, originalFilename, csvFilename):
         """Assert that the filename in the CSV doesn't match the original filename."""
-        regex = matchFilenameRegex(csvFilename)
+        regex = self.matchFilenameRegex(csvFilename)
         self.assertIsNone(regex.match(originalFilename))
 
     def testMatchFilenameRegex(self):
