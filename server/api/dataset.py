@@ -325,7 +325,9 @@ class DatasetResource(IsicResource):
         user = self.getCurrentUser()
         User.requireCreateDataset(user)
 
-        errors = Dataset.applyMetadata(dataset=dataset, metadataFile=metadataFile, save=save)
+        errors, warnings = Dataset.applyMetadata(
+            dataset=dataset, metadataFile=metadataFile, save=save)
         return {
-            'errors': [{'description': description} for description in errors]
+            'errors': [{'description': description} for description in errors],
+            'warnings': [{'description': description} for description in warnings]
         }

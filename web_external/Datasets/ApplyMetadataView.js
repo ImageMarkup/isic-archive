@@ -51,23 +51,25 @@ const MetadataFileCollection = Collection.extend({
     }
 });
 
-// Model for a single metadata error
-const MetadataErrorModel = Backbone.Model.extend({
+// Model for a single metadata error or warning
+const MetadataResultModel = Backbone.Model.extend({
     description: function () {
         return this.get('description');
     }
 });
 
-// Collection of metadata errors. The list of items in the collection is
-// meaningful only when initialized() is true.
-const MetadataErrorCollection = Backbone.Collection.extend({
-    model: MetadataErrorModel,
+// Collection of metadata results, i.e. errors or warnings. The 'field' property
+// should be set to the name of the field to parse in the response from the server.
+// The list of items in the collection is meaningful only when initialized() is true.
+const MetadataResultModelCollection = Backbone.Collection.extend({
+    model: MetadataResultModel,
+    field: null,
 
     _initialized: false,
 
     parse: function (resp) {
         this._initialized = true;
-        return resp.errors;
+        return resp[this.field];
     },
 
     initialized: function () {
@@ -174,8 +176,11 @@ const ApplyMetadataView = View.extend({
         // Selected metadata file
         this.file = null;
 
-        // Errors in the selected metadata file
-        this.errors = new MetadataErrorCollection();
+        // Errors and warnings in the selected metadata file
+        this.errors = new MetadataResultModelCollection();
+        this.errors.field = 'errors';
+        this.warnings = new MetadataResultModelCollection();
+        this.warnings.field = 'warnings';
 
         this.selectFileView = new ApplyMetadataSelectFileView({
             collection: this.files,
@@ -183,7 +188,8 @@ const ApplyMetadataView = View.extend({
         });
 
         this.listenTo(this.selectFileView, 'changed', this.fileChanged);
-        this.listenTo(this.errors, 'reset', this.errorsChanged);
+        this.listenTo(this.errors, 'reset', this.resultsChanged);
+        this.listenTo(this.warnings, 'reset', this.resultsChanged);
 
         this.dataset
             .getRegisteredMetadata()
@@ -202,7 +208,7 @@ const ApplyMetadataView = View.extend({
         this.$('#isic-apply-metadata-download-button, #isic-apply-metadata-validate-button').girderEnable(true);
     },
 
-    errorsChanged: function () {
+    resultsChanged: function () {
         this.renderValidationContainer();
 
         let allowSave = this.errors.initialized() && this.errors.isEmpty();
@@ -226,6 +232,7 @@ const ApplyMetadataView = View.extend({
         this.$('#isic-apply-metadata-validation-container').html(
             ApplyMetadataValidationPageTemplate({
                 errors: this.errors,
+                warnings: this.warnings,
                 file: this.file
             }));
 
@@ -237,6 +244,7 @@ const ApplyMetadataView = View.extend({
             .applyMetadata(this.file.id, save)
             .done((resp) => {
                 this.errors.reset(resp, {parse: true});
+                this.warnings.reset(resp, {parse: true});
 
                 if (save) {
                     showAlertDialog({

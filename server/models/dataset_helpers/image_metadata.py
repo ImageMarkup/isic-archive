@@ -468,15 +468,18 @@ def addImageClinicalMetadata(image, data):
     image's clinical metadata field and private metadata field. Unrecognized
     fields are added to the image's unstructured metadata field.
 
-    Returns a list of descriptive errors with the metadata. An empty list
-    indicates that there are no errors.
+    Returns a tuple of:
+    - List of descriptive errors with the metadata. An empty list indicates that
+      there are no errors.
+    - Dictionary view object of unrecognized field names. To avoid erroneous
+      entries, this is populated only when there are no errors.
 
     :param image: The image.
     :type image: dict
     :param data: The image metadata.
     :type data: dict
-    :return: List of errors with the metadata.
-    :rtype: list of strings
+    :return: Tuple of (errors with the metadata, unrecognized field names)
+    :rtype: tuple(list of strings, dictionary view object or None)
     """
     errors = []
 
@@ -515,4 +518,7 @@ def addImageClinicalMetadata(image, data):
     # Add remaining data as unstructured metadata
     image['meta']['unstructured'].update(data)
 
-    return errors
+    # Report unrecognized fields when there are no errors
+    unrecognizedFields = six.viewkeys(data) if not errors else None
+
+    return errors, unrecognizedFields

@@ -349,8 +349,10 @@ class Dataset(FolderModel):
     def applyMetadata(self, dataset, metadataFile, save):
         """
         Apply metadata in a .csv file to a dataset.
-        :return: A list of strings describing parsing or validation errors.
-        :rtype: list
+        :return: Tuple of:
+            - List of strings describing parsing or validation errors.
+            - List of strings describing metadata warnings.
+        :rtype: tuple(list, list)
         """
         File = self.model('file')
         Image = self.model('image', 'isic_archive')
@@ -359,6 +361,7 @@ class Dataset(FolderModel):
 
         images = []
         metadataErrors = []
+        unrecognizedFields = None
 
         try:
             csvReader = csv.DictReader(generateLines(metadataFileStream))
@@ -374,10 +377,20 @@ class Dataset(FolderModel):
                 try:
                     image = self._getImageForMetadataCsvRow(
                         dataset, csvRow, originalNameField, isicIdField)
-                    validationErrors = addImageClinicalMetadata(image, csvRow)
+                    validationErrors, rowUnrecognizedFields = \
+                        addImageClinicalMetadata(image, csvRow)
+
+                    # Add row information to validation error strings
                     validationErrors = [
                         'on CSV row %s: %s' % (rowNum, error) for error in validationErrors]
                     metadataErrors.extend(validationErrors)
+
+                    # Store unrecognized fields. Because fields are per-file,
+                    # not per-row, only store for the first row.
+                    if not unrecognizedFields:
+                        unrecognizedFields = rowUnrecognizedFields
+
+                    # Add updated image to list of images to potentially save
                     images.append(image)
                 except RowMetadataException as e:
                     metadataErrors.append('on CSV row %d: %s' % (rowNum, str(e)))
@@ -386,12 +399,19 @@ class Dataset(FolderModel):
         except csv.Error as e:
             metadataErrors.append('parsing CSV: %s' % str(e))
 
+        # Add warnings for unrecognized fields
+        metadataWarnings = []
+        if unrecognizedFields:
+            metadataWarnings = [
+                'unrecognized field %r will be added to unstructured metadata' % (field)
+                for field in sorted(unrecognizedFields)]
+
         # Save updated metadata to images
         if not metadataErrors and save:
             for image in images:
                 Image.save(image)
 
-        return metadataErrors
+        return metadataErrors, metadataWarnings
 
     def _getFilenameFields(self, csvReader):
         for originalNameField in csvReader.fieldnames:

@@ -905,8 +905,9 @@ class ImageMetadataTestCase(base.TestCase):
         # Empty data
         data = {}
         image = self._createImage()
-        errors = addImageClinicalMetadata(image, data)
+        errors, unrecognizedFields = addImageClinicalMetadata(image, data)
         self.assertEquals([], errors)
+        self.assertEquals(0, len(unrecognizedFields))
 
         # Valid data with unrecognized fields and existing metadata
         data = {
@@ -924,8 +925,8 @@ class ImageMetadataTestCase(base.TestCase):
         image = self._createImage()
         image['meta']['clinical']['sex'] = 'female'
         image['meta']['unstructured']['laterality'] = 'left'
-        errors = addImageClinicalMetadata(image, data)
-        self.assertFalse(errors)
+        errors, unrecognizedFields = addImageClinicalMetadata(image, data)
+        self.assertEquals([], errors)
         self.assertDictEqual({
             'anatom_site_general': 'head',
             'anatomic': 'neck',
@@ -945,6 +946,10 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertDictEqual({
             'age': 45
         }, image['privateMeta'])
+        self.assertIsNotNone(unrecognizedFields)
+        self.assertEquals(2, len(unrecognizedFields))
+        self.assertIn('anatomic', unrecognizedFields)
+        self.assertIn('anatom_site_general', unrecognizedFields)
 
         # Data with errors
         data = {
@@ -964,7 +969,7 @@ class ImageMetadataTestCase(base.TestCase):
         image = self._createImage()
         image['meta']['clinical']['sex'] = 'male'
         image['meta']['clinical']['melanocytic'] = False
-        errors = addImageClinicalMetadata(image, data)
+        errors, unrecognizedFields = addImageClinicalMetadata(image, data)
         self.assertEquals(4, len(errors))
         self.assertIn(
             "value already exists for field 'sex' (old: 'male', new: 'female')",
@@ -980,3 +985,4 @@ class ImageMetadataTestCase(base.TestCase):
             "only one of field 'benign_malignant' may be present, "
             "found: ['ben_mal', 'benign_malignant']",
             errors)
+        self.assertIsNone(unrecognizedFields)
