@@ -76,7 +76,7 @@ const IsicApp = GirderApp.extend({
     },
 
     navigateTo: function (View, settings, opts) {
-        // TODO: Do we need this?
+        // This may be added by top-level views' "render" methods
         this.$('#g-app-body-container').removeClass('isic-body-nopad');
 
         settings = settings || {};

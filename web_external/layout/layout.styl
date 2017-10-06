@@ -1,11 +1,26 @@
-// TODO: Don't duplicate this with "layoutHeader.styl"
-$headerHeight = 54px
+html
+  // Always take up the whole page
+  position relative
+  min-height 100%
+  background-color #e8ebf1
+  font-family Roboto
 
-#g-app-body-container
-  margin 0
-  margin-top $headerHeight
-  min-height 0
-  padding 12px 15px
+  #isic-app-header-container
+    min-height 50px
 
-.isic-body-nopad
-  padding 0 !important
+  #g-app-body-container
+    margin 0 0 60px
+    min-height 0
+    background-color #e8ebf1
+    padding 12px 15px
+
+    &.isic-body-nopad
+      padding 0 !important
+
+  #isic-app-footer-container
+    position absolute
+    bottom 0
+    height 60px
+    width 100%
+
+

@@ -1,6 +1,7 @@
 const path = require('path');
 
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const GoogleFontsPlugin = require('google-fonts-webpack-plugin');
 
 module.exports = function (baseConfig, helperConfig) {
     if (helperConfig.output === 'app') {
@@ -9,6 +10,19 @@ module.exports = function (baseConfig, helperConfig) {
             new ExtractTextPlugin({
                 filename: `${helperConfig.output}.min.css`,
                 allChunks: true
+            }),
+            new GoogleFontsPlugin({
+                filename: 'fonts.css',
+                fonts: [
+                    {
+                        family: 'Open Sans',
+                        variants: ['regular', '700', 'italic', '700italic']
+                    },
+                    {
+                        family: 'Roboto',
+                        variants: ['regular', 'bold']
+                    }
+                ]
             })
         ];
 

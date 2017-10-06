@@ -1,37 +1,73 @@
 .isic-frontpage
-  $highlightColor = #005ce6
+  position relative
 
-  font-family "Open Sans Condensed", sans-serif
+  background-image url("./lesiondatasets.png")
+  background-size auto 460px
+  background-repeat repeat-x
 
-  .isic-frontpage-header
-    background linear-gradient(to bottom, #fff, #e6f7ff)
-    background-size 100%
-    background-attachment scroll, fixed
-    height 91px
-    letter-spacing 1px
+  &::before
+    // content is required to enable pseudo-elements
+    content ""
+    position absolute
+    height 460px
+    width 100%
+    background linear-gradient(0deg, #000000, #414141)
+    left 0
+    top 0
+    opacity 0.75
+
+  .isic-frontpage-banner
+    text-align center
+    color #ffffff
+    height 340px
 
     h1
-      font-size 28px
-      font-weight 400
-      color $highlightColor
-
+      margin-top 95px
+      font-size 50px
+      font-weight bold
     h2
-      font-size 14px
-      color #666
-      margin-top 10px
+      font-size 16px
 
-  .isic-frontpage-body
-    text-align justify
 
-    h3
-      font-size 28px
-      font-weight 300
-      color $highlightColor
+  .isic-frontpage-panels
+    background #ffffff
+    opacity 1
+    padding 40px 20px
+    position relative
 
-    h4
-      font-size 20px
-      font-weight 300
-      color $highlightColor
+    .row + .row
+      margin-top 50px
 
-    ul
-      padding-left 15px
+    .isic-frontpage-panel
+      cursor pointer
+      border-top solid 2px #e8ebf1
+      height 130px
+      position relative
+      text-align center
+      width 270px
+      padding 20px
+
+      i
+        color #bdc4d4
+        background #ffffff
+        font-size 20px
+        height 25px
+        left 105px
+        position absolute
+        top -10px
+        width 60px
+
+      &:hover
+        border-top-color #0288d1
+        box-shadow 0 1px 4px 0 rgba(0, 0, 0, 0.12), 0 2px 4px 0 rgba(0, 0, 0, 0.04)
+        i
+          color #0288d1
+
+      h3
+        color #464a52
+        font-size 16px
+        margin-top 10px
+        font-weight bold
+      span
+        color #6e7480
+        font-size 14px
