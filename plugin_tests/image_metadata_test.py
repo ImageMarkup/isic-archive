@@ -925,7 +925,7 @@ class ImageMetadataTestCase(base.TestCase):
         image = self._createImage()
         image['meta']['clinical']['sex'] = 'female'
         image['meta']['unstructured']['laterality'] = 'left'
-        errors, unrecognizedFields = addImageClinicalMetadata(image, data)
+        errors, warnings = addImageClinicalMetadata(image, data)
         self.assertEquals([], errors)
         self.assertDictEqual({
             'anatom_site_general': 'head',
@@ -946,10 +946,13 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertDictEqual({
             'age': 45
         }, image['privateMeta'])
-        self.assertIsNotNone(unrecognizedFields)
-        self.assertEquals(2, len(unrecognizedFields))
-        self.assertIn('anatomic', unrecognizedFields)
-        self.assertIn('anatom_site_general', unrecognizedFields)
+        self.assertEquals(2, len(warnings))
+        self.assertIn(
+            "unrecognized field 'anatomic' will be added to unstructured metadata",
+            warnings)
+        self.assertIn(
+            "unrecognized field 'anatom_site_general' will be added to unstructured metadata",
+            warnings)
 
         # Data with errors
         data = {
@@ -969,7 +972,7 @@ class ImageMetadataTestCase(base.TestCase):
         image = self._createImage()
         image['meta']['clinical']['sex'] = 'male'
         image['meta']['clinical']['melanocytic'] = False
-        errors, unrecognizedFields = addImageClinicalMetadata(image, data)
+        errors, warnings = addImageClinicalMetadata(image, data)
         self.assertEquals(4, len(errors))
         self.assertIn(
             "value already exists for field 'sex' (old: 'male', new: 'female')",
@@ -985,4 +988,4 @@ class ImageMetadataTestCase(base.TestCase):
             "only one of field 'benign_malignant' may be present, "
             "found: ['ben_mal', 'benign_malignant']",
             errors)
-        self.assertIsNone(unrecognizedFields)
+        self.assertEquals([], warnings)

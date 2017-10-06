@@ -361,7 +361,7 @@ class Dataset(FolderModel):
 
         images = []
         metadataErrors = []
-        unrecognizedFields = None
+        metadataWarnings = set()
 
         try:
             csvReader = csv.DictReader(generateLines(metadataFileStream))
@@ -377,7 +377,7 @@ class Dataset(FolderModel):
                 try:
                     image = self._getImageForMetadataCsvRow(
                         dataset, csvRow, originalNameField, isicIdField)
-                    validationErrors, rowUnrecognizedFields = \
+                    validationErrors, validationWarnings = \
                         addImageClinicalMetadata(image, csvRow)
 
                     # Add row information to validation error strings
@@ -385,10 +385,8 @@ class Dataset(FolderModel):
                         'on CSV row %s: %s' % (rowNum, error) for error in validationErrors]
                     metadataErrors.extend(validationErrors)
 
-                    # Store unrecognized fields. Because fields are per-file,
-                    # not per-row, only store for the first row.
-                    if not unrecognizedFields:
-                        unrecognizedFields = rowUnrecognizedFields
+                    # Update global collection of warnings
+                    metadataWarnings.update(validationWarnings)
 
                     # Add updated image to list of images to potentially save
                     images.append(image)
@@ -399,19 +397,12 @@ class Dataset(FolderModel):
         except csv.Error as e:
             metadataErrors.append('parsing CSV: %s' % str(e))
 
-        # Add warnings for unrecognized fields
-        metadataWarnings = []
-        if unrecognizedFields:
-            metadataWarnings = [
-                'unrecognized field %r will be added to unstructured metadata' % (field)
-                for field in sorted(unrecognizedFields)]
-
         # Save updated metadata to images
         if not metadataErrors and save:
             for image in images:
                 Image.save(image)
 
-        return metadataErrors, metadataWarnings
+        return metadataErrors, sorted(metadataWarnings)
 
     def _getFilenameFields(self, csvReader):
         for originalNameField in csvReader.fieldnames:
