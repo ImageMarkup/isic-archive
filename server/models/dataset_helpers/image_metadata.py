@@ -17,6 +17,7 @@
 #  limitations under the License.
 ###############################################################################
 
+import copy
 import six
 
 
@@ -468,17 +469,24 @@ def addImageClinicalMetadata(image, data):
     image's clinical metadata field and private metadata field. Unrecognized
     fields are added to the image's unstructured metadata field.
 
-    Returns a list of descriptive errors with the metadata. An empty list
-    indicates that there are no errors.
+    Returns a tuple of:
+    - List of descriptive errors with the metadata. An empty list indicates that
+      there are no errors.
+    - List of warnings about the metadata. To avoid erroneous entries, this is
+      populated only when there are no errors.
 
     :param image: The image.
     :type image: dict
     :param data: The image metadata.
     :type data: dict
-    :return: List of errors with the metadata.
-    :rtype: list of strings
+    :return: Tuple of (errors, warnings)
+    :rtype: tuple(list of strings, list of strings)
     """
+    # Operate on copy of image metadata
+    data = copy.deepcopy(data)
+
     errors = []
+    warnings = []
 
     for parser in [
         AgeFieldParser,
@@ -515,4 +523,10 @@ def addImageClinicalMetadata(image, data):
     # Add remaining data as unstructured metadata
     image['meta']['unstructured'].update(data)
 
-    return errors
+    # Report warnings for unrecognized fields when there are no errors
+    if not errors:
+        warnings = [
+            'unrecognized field %r will be added to unstructured metadata' % (field)
+            for field in data]
+
+    return errors, warnings

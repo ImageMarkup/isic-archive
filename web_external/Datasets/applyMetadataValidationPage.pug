@@ -1,21 +1,34 @@
 if errors.initialized()
   h3 Results
   - let hasErrors = !errors.isEmpty()
+  - let hasWarnings = !warnings.isEmpty()
   .isic-apply-metadata-validation-result-header(
     class=hasErrors ? 'isic-apply-metadata-validation-result-header-error' : 'isic-apply-metadata-validation-result-header-ok')
     .isic-apply-metadata-validation-result-header-filename
       = file.name()
     .isic-apply-metadata-validation-result-header-status
-      if !hasErrors
+      if !hasErrors && !hasWarnings
+        .isic-apply-metadata-validation-result-header-status-ok
         | OK&nbsp;
         i.icon-ok
       else
-        = errors.length
-        if errors.length > 1
-          |  Errors&nbsp;
-        else
-          |  Error&nbsp;
-        i.icon-attention
+        .isic-apply-metadata-validation-result-header-status-bad
+          if hasErrors
+            = errors.length
+            if errors.length > 1
+              |  errors
+            else
+              |  error
+          if hasWarnings
+            if hasErrors
+              | ,&nbsp;
+            | #{warnings.length}
+            if warnings.length > 1
+              |  warnings
+            else
+              |  warning
+          | &nbsp;
+          i.icon-attention
   if hasErrors
     .isic-apply-metadata-validation-result-content
       .isic-apply-metadata-validation-result-error-header
@@ -24,3 +37,11 @@ if errors.initialized()
         ul
           each error in errors.toArray()
             li= error.description()
+  if hasWarnings
+    .isic-apply-metadata-validation-result-content
+      .isic-apply-metadata-validation-result-error-header
+        | Warnings:
+      .isic-apply-metadata-validation-result-error-content
+        ul
+          each warning in warnings.toArray()
+            li= warning.description()
