@@ -17,6 +17,7 @@
 #  limitations under the License.
 ###############################################################################
 
+import copy
 import six
 
 
@@ -481,6 +482,9 @@ def addImageClinicalMetadata(image, data):
     :return: Tuple of (errors with the metadata, unrecognized field names)
     :rtype: tuple(list of strings, dictionary view object or None)
     """
+    # Operate on copy of image metadata
+    data = copy.deepcopy(data)
+
     errors = []
 
     for parser in [
