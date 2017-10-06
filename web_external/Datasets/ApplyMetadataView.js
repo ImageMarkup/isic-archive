@@ -62,14 +62,17 @@ const MetadataResultModel = Backbone.Model.extend({
 // should be set to the name of the field to parse in the response from the server.
 // The list of items in the collection is meaningful only when initialized() is true.
 const MetadataResultModelCollection = Backbone.Collection.extend({
+    initialize: function (models, options) {
+        this._field = options.field;
+    },
+
     model: MetadataResultModel,
-    field: null,
 
     _initialized: false,
 
     parse: function (resp) {
         this._initialized = true;
-        return resp[this.field];
+        return resp[this._field];
     },
 
     initialized: function () {
@@ -177,10 +180,8 @@ const ApplyMetadataView = View.extend({
         this.file = null;
 
         // Errors and warnings in the selected metadata file
-        this.errors = new MetadataResultModelCollection();
-        this.errors.field = 'errors';
-        this.warnings = new MetadataResultModelCollection();
-        this.warnings.field = 'warnings';
+        this.errors = new MetadataResultModelCollection(null, {'field': 'errors'});
+        this.warnings = new MetadataResultModelCollection(null, {'field': 'warnings'});
 
         this.selectFileView = new ApplyMetadataSelectFileView({
             collection: this.files,
