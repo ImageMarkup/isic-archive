@@ -59,6 +59,17 @@ class BadFieldTypeException(MetadataFieldException):
         self.value = value
 
 
+class InconsistentValuesException(MetadataFieldException):
+    """
+    Exception raised when the values of a group of fields don't adhere to the
+    defined validation rules.
+    """
+    def __init__(self, names, values):
+        super(InconsistentValuesException, self).__init__()
+        self.names = names
+        self.values = values
+
+
 class FieldParser(object):
     name = ''
     allowedFields = {}
@@ -462,6 +473,41 @@ class NevusTypeFieldParser(FieldParser):
 #                 sorted(allowed_diagnoses))
 
 
+def _validateMetadata(clinical):
+    """
+    Validate metadata with respect to consistency between fields. Fields with
+    unknown values always validate. An InconsistentValuesException is raised
+    if a value violates one of the pre-defined rules.
+    """
+    diagnosis = clinical.get('diagnosis')
+    benignMalignant = clinical.get('benign_malignant')
+    diagnosisConfirmType = clinical.get('diagnosis_confirm_type')
+
+    if diagnosis in [
+        'basal cell carcinoma',
+        'melanoma',
+        'squamous cell carcinoma',
+    ] and benignMalignant is not None and benignMalignant != 'malignant':
+        raise InconsistentValuesException(
+            names=[DiagnosisFieldParser.name, BenignMalignantFieldParser.name],
+            values=[diagnosis, benignMalignant])
+
+    if diagnosis == 'nevus' and benignMalignant is not None and benignMalignant != 'benign':
+        raise InconsistentValuesException(
+            names=[DiagnosisFieldParser.name, BenignMalignantFieldParser.name],
+            values=[diagnosis, benignMalignant])
+
+    if benignMalignant in [
+        'indeterminate/benign',
+        'indeterminate/malignant',
+        'indeterminate',
+        'malignant',
+    ] and diagnosisConfirmType is not None and diagnosisConfirmType != 'histopathology':
+        raise InconsistentValuesException(
+            names=[BenignMalignantFieldParser.name, DiagnosisConfirmTypeFieldParser.name],
+            values=[benignMalignant, diagnosisConfirmType])
+
+
 def addImageClinicalMetadata(image, data):
     """
     Add clinical metadata to an image. Data is expected to be a row from
@@ -518,7 +564,15 @@ def addImageClinicalMetadata(image, data):
                 'value is wrong type for field %r (expected %r, value: %r)' %
                 (e.name, e.fieldType, e.value))
 
-    # TODO: handle contingently required fields and inter-field validation
+    # TODO: handle contingently required fields
+
+    # Validate metadata with respect to consistency between fields
+    try:
+        _validateMetadata(clinical)
+    except InconsistentValuesException as e:
+        errors.append(
+            'values %r for fields %r are inconsistent' %
+            (e.values, e.names))
 
     # Add remaining data as unstructured metadata
     image['meta']['unstructured'].update(data)
