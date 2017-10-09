@@ -43,13 +43,9 @@ def _getInstance(instance_id):
     ec2 = boto3.resource('ec2')
 
     # Get EC2 instance
-    instance = list(ec2.instances.filter(
-        InstanceIds=[instance_id]
-    ))
-    if not instance:
-        raise Exception('Instance not found')
-    instance = instance[0]
+    instance = ec2.Instance(id=instance_id)
     logging.info('Found instance: %s', instance)
+    # This will raise an exception if the instance cannot be accessed
     logging.info('Instance root: %s', instance.root_device_name)
     return instance
 
