@@ -351,9 +351,9 @@ class UploadTestCase(IsicTestCase):
         self.assertEqual(
             resp.json['warnings'], [
                 {'description':
-                 'on CSV row 4: no images found that match "filename": "test_1_small_3.jpg"'},
+                 'on CSV row 4: no images found that match \'filename\': \'test_1_small_3.jpg\''},
                 {'description':
-                 'on CSV row 6: no images found that match "filename": "test_1_large_2.jpg"'},
+                 'on CSV row 6: no images found that match \'filename\': \'test_1_large_2.jpg\''},
                 {'description':
                  'unrecognized field \'age_approx\' will be added to unstructured metadata'},
                 {'description':

@@ -419,7 +419,7 @@ class Dataset(FolderModel):
             isicIdField = None
         if (not originalNameField) and (not isicIdField):
             raise FileMetadataException(
-                'no "filename" or "isic_id" field found in CSV')
+                'no \'filename\' or \'isic_id\' field found in CSV')
         return originalNameField, isicIdField
 
     def _getImageForMetadataCsvRow(self, dataset, csvRow, originalNameField,
@@ -456,13 +456,13 @@ class Dataset(FolderModel):
         numImages = images.count()
         if numImages != 1:
             if originalNameField and isicIdField:
-                errorStr = 'that match both "%s": "%s" and "%s": "%s"' % (
+                errorStr = 'that match both %r: %r and %r: %r' % (
                     originalNameField, originalName, isicIdField, isicId)
             elif originalNameField:
-                errorStr = 'that match "%s": "%s"' % (
+                errorStr = 'that match %r: %r' % (
                     originalNameField, originalName)
             else:  # isicIdField
-                errorStr = 'that match "%s": "%s"' % (
+                errorStr = 'that match %r: %r' % (
                     isicIdField, isicId)
 
             # No images found
