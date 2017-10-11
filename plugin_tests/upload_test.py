@@ -346,10 +346,16 @@ class UploadTestCase(IsicTestCase):
             })
         self.assertStatusOk(resp)
         self.assertIn('errors', resp.json)
+        self.assertIn('warnings', resp.json)
+        self.assertEqual([], resp.json['errors'])
         self.assertEqual(
-            resp.json['errors'], [
-                {u'description':
-                 u'on CSV row 4: no images found that match "filename": "test_1_small_3.jpg"'},
-                {u'description':
-                 u'on CSV row 6: no images found that match "filename": "test_1_large_2.jpg"'}
+            resp.json['warnings'], [
+                {'description':
+                 'on CSV row 4: no images found that match "filename": "test_1_small_3.jpg"'},
+                {'description':
+                 'on CSV row 6: no images found that match "filename": "test_1_large_2.jpg"'},
+                {'description':
+                 'unrecognized field \'age_approx\' will be added to unstructured metadata'},
+                {'description':
+                 'unrecognized field \'isic_source_name\' will be added to unstructured metadata'}
             ])

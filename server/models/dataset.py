@@ -390,7 +390,9 @@ class Dataset(FolderModel):
 
                     # Add updated image to list of images to potentially save
                     images.append(image)
-                except RowMetadataException as e:
+                except RowMetadataWarning as e:
+                    metadataWarnings.add('on CSV row %d: %s' % (rowNum, str(e)))
+                except RowMetadataError as e:
                     metadataErrors.append('on CSV row %d: %s' % (rowNum, str(e)))
         except FileMetadataException as e:
             metadataErrors.append(str(e))
@@ -422,6 +424,11 @@ class Dataset(FolderModel):
 
     def _getImageForMetadataCsvRow(self, dataset, csvRow, originalNameField,
                                    isicIdField):
+        """
+        Get the image specified in the CSV row.
+        Indicate a warning if no matching images are found.
+        Indicate an error if more than one matching images are found.
+        """
         Image = self.model('image', 'isic_archive')
 
         imageQuery = {
@@ -446,12 +453,8 @@ class Dataset(FolderModel):
             isicId = None
 
         images = Image.find(imageQuery)
-        try:
-            if not images.count():
-                raise RowMetadataException('no images found')
-            if images.count() > 1:
-                raise RowMetadataException('multiple images found')
-        except RowMetadataException as e:
+        numImages = images.count()
+        if numImages != 1:
             if originalNameField and isicIdField:
                 errorStr = 'that match both "%s": "%s" and "%s": "%s"' % (
                     originalNameField, originalName, isicIdField, isicId)
@@ -461,7 +464,14 @@ class Dataset(FolderModel):
             else:  # isicIdField
                 errorStr = 'that match "%s": "%s"' % (
                     isicIdField, isicId)
-            raise RowMetadataException('%s %s' % (str(e), errorStr))
+
+            # No images found
+            if numImages == 0:
+                raise RowMetadataWarning('%s %s' % ('no images found', errorStr))
+
+            # More than one images found
+            raise RowMetadataError('%s %s' % ('multiple images found', errorStr))
+
         image = next(iter(images))
         return image
 
@@ -471,4 +481,12 @@ class FileMetadataException(Exception):
 
 
 class RowMetadataException(Exception):
+    pass
+
+
+class RowMetadataError(RowMetadataException):
+    pass
+
+
+class RowMetadataWarning(RowMetadataException):
     pass
