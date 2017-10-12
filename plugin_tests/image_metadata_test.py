@@ -992,49 +992,36 @@ class ImageMetadataTestCase(base.TestCase):
 
     def testAddImageClinicalMetadataInterfieldValidation(self):
         # Valid cases
-        for data in [
-            {
-                'benign_malignant': 'malignant',
-                'diagnosis': 'melanoma'
-            },
-            {
-                'benign_malignant': None,
-                'diagnosis': 'melanoma'
-            },
-            {
-                'benign_malignant': 'malignant',
-                'diagnosis': None
-            },
-            {
-                'benign_malignant': 'benign',
-                'diagnosis': 'nevus'
-            },
-            {
-                'benign_malignant': None,
-                'diagnosis': 'nevus'
-            },
-            {
-                'benign_malignant': 'benign',
-                'diagnosis': None
-            },
-            {
-                'benign_malignant': 'malignant',
-                'diagnosis_confirm_type': 'histopathology'
-            },
-            {
-                'benign_malignant': None,
-                'diagnosis_confirm_type': 'histopathology'
-            },
-            {
-                'benign_malignant': 'malignant',
-                'diagnosis_confirm_type': None
-            },
-        ]:
-            image = self._createImage()
-            errors, _ = addImageClinicalMetadata(image, data)
-            self.assertEqual([], errors)
+        data = {
+            'benign_malignant': None,
+            'diagnosis': 'melanoma',
+            'diagnosis_confirm_type': 'histopathology'
+        }
+        image = self._createImage()
+        errors, _ = addImageClinicalMetadata(image, data)
+        self.assertEqual([], errors)
+        self.assertEqual('malignant', image['meta']['clinical']['benign_malignant'])
 
-        # Invalid cases
+        data = {
+            'benign_malignant': None,
+            'diagnosis': 'nevus',
+            'diagnosis_confirm_type': 'single image expert consensus'
+        }
+        image = self._createImage()
+        errors, _ = addImageClinicalMetadata(image, data)
+        self.assertEqual([], errors)
+        self.assertEqual('benign', image['meta']['clinical']['benign_malignant'])
+
+        data = {
+            'benign_malignant': 'indeterminate',
+            'diagnosis': 'other',
+            'diagnosis_confirm_type': 'histopathology'
+        }
+        image = self._createImage()
+        errors, _ = addImageClinicalMetadata(image, data)
+        self.assertEqual([], errors)
+
+        # Error cases
         data = {
             'benign_malignant': 'benign',
             'diagnosis': 'melanoma',
@@ -1042,28 +1029,30 @@ class ImageMetadataTestCase(base.TestCase):
         image = self._createImage()
         errors, _ = addImageClinicalMetadata(image, data)
         self.assertEqual(1, len(errors))
-        self.assertIn(
-            "values ['melanoma', 'benign'] for fields ['diagnosis', 'benign_malignant'] are "
-            "inconsistent", errors)
 
         data = {
-            'benign_malignant': 'indeterminate',
-            'diagnosis': 'nevus'
+            'benign_malignant': 'malignant',
+            'diagnosis': 'nevus',
         }
         image = self._createImage()
         errors, _ = addImageClinicalMetadata(image, data)
         self.assertEqual(1, len(errors))
-        self.assertIn(
-            "values ['nevus', 'indeterminate'] for fields ['diagnosis', 'benign_malignant'] are "
-            "inconsistent", errors)
 
         data = {
-            'benign_malignant': 'malignant',
+            'benign_malignant': 'indeterminate',
+            'diagnosis': 'other',
             'diagnosis_confirm_type': 'single image expert consensus'
         }
         image = self._createImage()
         errors, _ = addImageClinicalMetadata(image, data)
         self.assertEqual(1, len(errors))
-        self.assertIn(
-            "values ['malignant', 'single image expert consensus'] for fields ['benign_malignant', "
-            "'diagnosis_confirm_type'] are inconsistent", errors)
+
+        # Warning cases
+        data = {
+            'benign_malignant': 'benign',
+            'diagnosis': 'basal cell carcinoma',
+        }
+        image = self._createImage()
+        errors, warnings = addImageClinicalMetadata(image, data)
+        self.assertEqual([], errors)
+        self.assertEqual(1, len(warnings))
