@@ -473,39 +473,77 @@ class NevusTypeFieldParser(FieldParser):
 #                 sorted(allowed_diagnoses))
 
 
-def _validateMetadata(clinical):
+def _populateMetadata(clinical):
     """
-    Validate metadata with respect to consistency between fields. Fields with
-    unknown values always validate. An InconsistentValuesException is raised
-    if a value violates one of the pre-defined rules.
+    Populate empty metadata fields that can be determined based on other fields.
     """
     diagnosis = clinical.get('diagnosis')
     benignMalignant = clinical.get('benign_malignant')
     diagnosisConfirmType = clinical.get('diagnosis_confirm_type')
 
-    if diagnosis in [
-        'basal cell carcinoma',
-        'melanoma',
-        'squamous cell carcinoma',
-    ] and benignMalignant is not None and benignMalignant != 'malignant':
-        raise InconsistentValuesException(
-            names=[DiagnosisFieldParser.name, BenignMalignantFieldParser.name],
-            values=[diagnosis, benignMalignant])
+    if diagnosis == 'melanoma':
+        if benignMalignant is None:
+            clinical['benign_malignant'] = 'malignant'
+    elif diagnosis == 'nevus':
+        if benignMalignant is None and diagnosisConfirmType not in [None, 'histopathology']:
+                    clinical['benign_malignant'] = 'benign'
 
-    if diagnosis == 'nevus' and benignMalignant is not None and benignMalignant != 'benign':
-        raise InconsistentValuesException(
-            names=[DiagnosisFieldParser.name, BenignMalignantFieldParser.name],
-            values=[diagnosis, benignMalignant])
+
+def _checkMetadataErrors(clinical):
+    """
+    Check metadata for fatal errors with respect to consistency between fields.
+    Raises an InconsistentValuesException is raised if a value violates a rule.
+    """
+    diagnosis = clinical.get('diagnosis')
+    benignMalignant = clinical.get('benign_malignant')
+    diagnosisConfirmType = clinical.get('diagnosis_confirm_type')
+
+    if diagnosis == 'melanoma':
+        if benignMalignant != 'malignant':
+            raise InconsistentValuesException(
+                names=[DiagnosisFieldParser.name, BenignMalignantFieldParser.name],
+                values=[diagnosis, benignMalignant])
+    elif diagnosis == 'nevus':
+        if benignMalignant not in [
+            'benign',
+            'indeterminate/benign',
+            'indeterminate',
+        ]:
+            raise InconsistentValuesException(
+                names=[DiagnosisFieldParser.name, BenignMalignantFieldParser.name],
+                values=[diagnosis, benignMalignant])
 
     if benignMalignant in [
         'indeterminate/benign',
         'indeterminate/malignant',
         'indeterminate',
         'malignant',
-    ] and diagnosisConfirmType is not None and diagnosisConfirmType != 'histopathology':
+    ] and diagnosisConfirmType != 'histopathology':
         raise InconsistentValuesException(
             names=[BenignMalignantFieldParser.name, DiagnosisConfirmTypeFieldParser.name],
             values=[benignMalignant, diagnosisConfirmType])
+
+
+def _checkMetadataWarnings(clinical):
+    """
+    Check metadata for non-fatal warnings with respect to consistency between
+    fields. Returns a list of warnings.
+    """
+    warnings = []
+
+    diagnosis = clinical.get('diagnosis')
+    benignMalignant = clinical.get('benign_malignant')
+
+    if diagnosis in [
+        'basal cell carcinoma',
+        'squamous cell carcinoma',
+    ] and benignMalignant in [
+        'benign',
+        'indeterminate/benign',
+    ]:
+        warnings.append('%r is typically not %r' % (diagnosis, benignMalignant))
+
+    return warnings
 
 
 def addImageClinicalMetadata(image, data):
@@ -566,21 +604,25 @@ def addImageClinicalMetadata(image, data):
 
     # TODO: handle contingently required fields
 
-    # Validate metadata with respect to consistency between fields
+    # Populate empty metadata fields
+    _populateMetadata(clinical)
+
+    # Check metadata for errors
     try:
-        _validateMetadata(clinical)
+        _checkMetadataErrors(clinical)
     except InconsistentValuesException as e:
-        errors.append(
-            'values %r for fields %r are inconsistent' %
-            (e.values, e.names))
+        errors.append('values %r for fields %r are inconsistent' % (e.values, e.names))
+
+    # Check metadata for warnings
+    warnings.extend(_checkMetadataWarnings(clinical))
 
     # Add remaining data as unstructured metadata
     image['meta']['unstructured'].update(data)
 
     # Report warnings for unrecognized fields when there are no errors
     if not errors:
-        warnings = [
+        warnings.extend([
             'unrecognized field %r will be added to unstructured metadata' % (field)
-            for field in data]
+            for field in data])
 
     return errors, warnings
