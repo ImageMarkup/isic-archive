@@ -90,7 +90,7 @@ class DatasetResource(IsicResource):
         output['_modelType'] = 'dataset'
         output.update(dataset.get('meta', {}))
 
-        output['creator'] = User.filteredSummary(
+        output['creator'] = User.filterSummary(
             User.load(output.pop('creatorId'), force=True, exc=True),
             self.getCurrentUser())
 
@@ -252,7 +252,7 @@ class DatasetResource(IsicResource):
                     '_id': metadataFile['_id'],
                     'name': metadataFile['name']
                 },
-                'user': User.filteredSummary(
+                'user': User.filterSummary(
                     User.load(registration['userId'], force=True, exc=True),
                     user),
                 'time': registration['time']

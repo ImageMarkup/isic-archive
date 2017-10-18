@@ -115,7 +115,7 @@ class AnnotationResource(IsicResource):
             'image': Image.filterSummary(
                 Image.load(annotation['meta']['imageId'], force=True, exc=True),
                 currentUser),
-            'user': User.filteredSummary(
+            'user': User.filterSummary(
                 user=User.load(annotation['meta']['userId'], force=True, exc=True),
                 accessorUser=currentUser),
             'state': Annotation.getState(annotation)

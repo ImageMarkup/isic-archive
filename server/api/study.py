@@ -122,12 +122,12 @@ class StudyResource(IsicResource):
                 'featureset': Featureset.load(
                     id=study['meta']['featuresetId'],
                     fields=Featureset.summaryFields, exc=True),
-                'creator': User.filteredSummary(
+                'creator': User.filterSummary(
                     User.load(output.pop('creatorId'), force=True, exc=True),
                     currentUser),
                 'users': sorted(
                     (
-                        User.filteredSummary(annotatorUser, currentUser)
+                        User.filterSummary(annotatorUser, currentUser)
                         for annotatorUser in
                         Study.getAnnotators(study)
                     ),
@@ -204,7 +204,7 @@ class StudyResource(IsicResource):
                     int((annotation['meta']['stopTime'] -
                          annotation['meta']['startTime']).total_seconds())
 
-                filteredAnnotatorUser = User.filteredSummary(annotatorUser, currentUser)
+                filteredAnnotatorUser = User.filterSummary(annotatorUser, currentUser)
                 annotatorUserName = filteredAnnotatorUser['name']
                 if 'login' in filteredAnnotatorUser:
                     annotatorUserName += ' [%s %s (%s)]' % (

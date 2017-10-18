@@ -200,7 +200,7 @@ def inviteUser(self, params):
         text=html)
 
     return {
-        'newUser': User.filteredSummary(newUser, currentUser),
+        'newUser': User.filterSummary(newUser, currentUser),
         'inviteUrl': inviteUrl
     }
 

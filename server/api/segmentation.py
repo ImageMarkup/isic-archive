@@ -205,7 +205,7 @@ class SegmentationResource(IsicResource):
         Image.load(
             segmentation['imageId'], level=AccessType.READ, user=self.getCurrentUser(), exc=True)
 
-        segmentation['creator'] = User.filteredSummary(
+        segmentation['creator'] = User.filterSummary(
             User.load(segmentation.pop('creatorId'), force=True, exc=True),
             self.getCurrentUser())
 

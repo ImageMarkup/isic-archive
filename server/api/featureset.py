@@ -88,7 +88,7 @@ class FeaturesetResource(IsicResource):
 
         output = Featureset.filter(featureset)
 
-        output['creator'] = User.filteredSummary(
+        output['creator'] = User.filterSummary(
             User.load(output.pop('creatorId'), force=True, exc=True),
             self.getCurrentUser())
 

@@ -211,7 +211,7 @@ class ImageResource(IsicResource):
             '_modelType': 'image',
             'name': image['name'],
             'created': image['created'],
-            'creator': User.filteredSummary(
+            'creator': User.filterSummary(
                 User.load(image['creatorId'], force=True, exc=True),
                 user),
             # TODO: verify that "updated" is set correctly
