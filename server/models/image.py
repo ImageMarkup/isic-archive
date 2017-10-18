@@ -310,7 +310,7 @@ class Image(ItemModel):
         imageQuery = self._findQueryFilter(query)
         return super(Image, self).findOne(imageQuery, **kwargs)
 
-    def filteredSummary(self, image, accessorUser):
+    def filterSummary(self, image, user):
         return {
             field: image[field]
             for field in self.summaryFields

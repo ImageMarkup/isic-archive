@@ -96,7 +96,7 @@ class ImageResource(IsicResource):
                 query.update({'name': params['name']})
 
         return [
-            Image.filteredSummary(image, user)
+            Image.filterSummary(image, user)
             for image in
             Image.filterResultsByPermission(
                 # TODO: exclude additional fields from the cursor
