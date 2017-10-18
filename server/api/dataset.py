@@ -183,7 +183,7 @@ class DatasetResource(IsicResource):
             {
                 field: image[field]
                 for field in
-                Image.summaryFields + ['description', 'meta']
+                ['_id', 'name', 'updated', 'description', 'meta']
             }
             for image in
             Image.find(

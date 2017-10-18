@@ -46,7 +46,6 @@ class Image(ItemModel):
             # TODO: re-add once converted file no longer contributes to size
             # 'size',
         ])
-        self.summaryFields = ['_id', 'name', 'updated']
         self.prefixSearchFields = ['lowerName', 'name']
 
         events.bind('data.process',
@@ -310,10 +309,11 @@ class Image(ItemModel):
         imageQuery = self._findQueryFilter(query)
         return super(Image, self).findOne(imageQuery, **kwargs)
 
-    def filterSummary(self, image, user):
+    def filterSummary(self, image, user=None):
         return {
-            field: image[field]
-            for field in self.summaryFields
+            '_id': image['_id'],
+            'name': image['name'],
+            'updated': image['updated'],
         }
 
     def load(self, id, level=AccessType.ADMIN, user=None, objectId=True, force=False, fields=None,

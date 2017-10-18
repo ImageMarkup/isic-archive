@@ -135,7 +135,9 @@ class StudyResource(IsicResource):
                     key=lambda annotatorUser: annotatorUser['name']
                 ),
                 'images': list(
-                    Study.getImages(study, Image.summaryFields).sort('name', SortDir.ASCENDING)
+                    Image.filterSummary(image, currentUser)
+                    for image in
+                    Study.getImages(study).sort('name', SortDir.ASCENDING)
                 ),
                 'userCompletion': {
                     str(annotatorComplete['_id']): annotatorComplete['count']
