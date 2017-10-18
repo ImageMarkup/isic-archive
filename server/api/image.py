@@ -216,7 +216,7 @@ class ImageResource(IsicResource):
                 user),
             # TODO: verify that "updated" is set correctly
             'updated': image['updated'],
-            'dataset': Dataset.filteredSummary(
+            'dataset': Dataset.filterSummary(
                 Dataset.load(image['folderId'], force=True, exc=True),
                 user),
             'meta': {

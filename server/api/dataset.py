@@ -68,7 +68,7 @@ class DatasetResource(IsicResource):
         user = self.getCurrentUser()
 
         return [
-            Dataset.filteredSummary(dataset, user)
+            Dataset.filterSummary(dataset, user)
             for dataset in
             Dataset.list(user=user, limit=limit, offset=offset, sort=sort)
         ]
