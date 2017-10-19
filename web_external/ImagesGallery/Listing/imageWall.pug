@@ -6,3 +6,6 @@ for image in images.toArray()
     div(style=`height:${thumbnailHeight}px;width:${thumbnailWidth}px;`)
       img(
         src=`${apiRoot}/image/${image.id}/thumbnail?height=${thumbnailHeight}&width=${thumbnailWidth}`)
+
+      button.isic-images-imageWall-zoom.btn.btn-xs.btn-default
+        i.icon-zoom-in

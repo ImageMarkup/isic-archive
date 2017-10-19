@@ -23,6 +23,19 @@ const ImageWall = View.extend({
             } else {
                 clickedImage.toggleSelected();
             }
+        },
+
+        'click .isic-images-imageWall-zoom': function (event) {
+            let imageId = $(event.currentTarget).parent().parent().data('imageId');
+            let clickedImage = this.images.get(imageId);
+
+            new ImageFullscreenWidget({ // eslint-disable-line no-new
+                el: $('#g-dialog-container'),
+                model: clickedImage,
+                parentView: this
+            }).render();
+
+            event.stopPropagation();
         }
     },
 
