@@ -1,3 +1,5 @@
+import 'bootstrap/js/dropdown';
+
 import View from '../../view';
 
 import ImagesPagingPaneTemplate from './imagesPagingPane.pug';
@@ -20,13 +22,14 @@ const ImagesPagingPane = View.extend({
         'click #isic-images-paging-seek-last': function () {
             this.images.fetchLastPage(this.filteredFacets.total);
         },
-        'click #isic-images-paging-downloadZip': function () {
-            let downloadUrl = `${this.apiRoot}/image/download`;
-            let filterQuery = JSON.stringify(this.filters.asAst());
-            if (filterQuery) {
-                downloadUrl += `?filter=${filterQuery}`;
-            }
-            window.location.assign(downloadUrl);
+        'click #isic-images-paging-downloadZip-all': function () {
+            this._downloadZip('all');
+        },
+        'click #isic-images-paging-downloadZip-images': function () {
+            this._downloadZip('images');
+        },
+        'click #isic-images-paging-downloadZip-metadata': function () {
+            this._downloadZip('metadata');
         }
     },
 
@@ -116,11 +119,20 @@ const ImagesPagingPane = View.extend({
             .css('left', () => `${(this.images._currentOffset() / this.filteredFacets.total) * 100}%`)
             .width(() => `${(this.images.length / this.filteredFacets.total) * 100}%`);
 
-        this.$('#isic-images-paging-downloadZip').girderEnable(this.filteredFacets.total > 0);
+        this.$('#isic-images-paging-downloadZip>button').girderEnable(this.filteredFacets.total > 0);
 
         // Any just-disabled buttons will no longer trigger 'mouseleave' or 'focusout' events, so
         // any still-active tooltips on those buttons must be manually hidden
         this.$('[data-toggle="tooltip"][disabled]').tooltip('hide');
+    },
+
+    _downloadZip: function (include) {
+        let downloadUrl = `${this.apiRoot}/image/download?include=${include}`;
+        let filterQuery = JSON.stringify(this.filters.asAst());
+        if (filterQuery) {
+            downloadUrl += `&filter=${filterQuery}`;
+        }
+        window.location.assign(downloadUrl);
     }
 });
 

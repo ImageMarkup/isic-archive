@@ -47,12 +47,21 @@
         |  filtered images. There are&nbsp;
         span.isic-images-paging-label-total 0
         |  total images (ignoring filters).
-    button#isic-images-paging-downloadZip.btn.btn-sm.btn-default(
+    #isic-images-paging-downloadZip.btn-group(
       data-toggle='tooltip',
-      data-placement='bottom',
+      data-placement='left',
       title='Download all filtered images as a ZIP')
-      i.icon-file-archive
-      span Download as ZIP
+      button.btn.btn-default(data-toggle='dropdown')
+        i.icon-file-archive
+        span Download as ZIP
+        span.caret
+      ul.dropdown-menu
+        li#isic-images-paging-downloadZip-all
+          a Images and Metadata
+        li#isic-images-paging-downloadZip-images
+          a Images only
+        li#isic-images-paging-downloadZip-metadata
+          a Metadata only
   #isic-images-paging-bars.flexRow
     #isic-images-paging-bar-filteredTotal.isic-images-paging-bar
     #isic-images-paging-bar-pageTotal.isic-images-paging-bar
