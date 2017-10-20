@@ -27,7 +27,7 @@ const DatasetModel = Model.extend({
     ingestImages: function (zipFileId, name, owner, description, license,
         signature, anonymous, attribution) {
         restRequest({
-            path: this.resourceName,
+            url: this.resourceName,
             type: 'POST',
             data: {
                 zipFileId: zipFileId,
@@ -54,7 +54,7 @@ const DatasetModel = Model.extend({
      */
     registerMetadata: function (metadataFileId) {
         restRequest({
-            path: `${this.resourceName}/${this.id}/metadata`,
+            url: `${this.resourceName}/${this.id}/metadata`,
             type: 'POST',
             data: {
                 metadataFileId: metadataFileId
@@ -73,7 +73,7 @@ const DatasetModel = Model.extend({
     getRegisteredMetadata: function () {
         let deferred = $.Deferred();
         restRequest({
-            path: `${this.resourceName}/${this.id}/metadata`
+            url: `${this.resourceName}/${this.id}/metadata`
         }).done((resp) => {
             deferred.resolve(resp);
         });
@@ -87,7 +87,7 @@ const DatasetModel = Model.extend({
     applyMetadata: function (metadataFileId, save) {
         let deferred = $.Deferred();
         restRequest({
-            path: `${this.resourceName}/${this.id}/metadata/${metadataFileId}`,
+            url: `${this.resourceName}/${this.id}/metadata/${metadataFileId}`,
             type: 'POST',
             data: {
                 save: save

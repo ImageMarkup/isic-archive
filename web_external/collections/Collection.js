@@ -31,7 +31,7 @@ const Collection = GirderCollection.extend({
         this.offset = 0;
         let limit = this.pageLimit > 0 ? this.pageLimit + 1 : 0;
         let xhr = restRequest({
-            path: this.altUrl || this.resourceName,
+            url: this.altUrl || this.resourceName,
             data: _.extend({
                 limit: limit,
                 offset: this.offset,

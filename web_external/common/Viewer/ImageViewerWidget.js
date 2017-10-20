@@ -29,7 +29,7 @@ const ImageViewerWidget = View.extend({
 
         restRequest({
             type: 'GET',
-            path: `image/${this.model.id}/tiles`
+            url: `image/${this.model.id}/tiles`
         }).done((resp) => {
             this.destroyViewer();
 

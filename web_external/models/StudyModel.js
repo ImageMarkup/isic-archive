@@ -39,7 +39,7 @@ const StudyModel = Model.extend({
     addUser: function (userId) {
         // TODO: return a promise here, and use it (rather than events)
         restRequest({
-            path: `${this.resourceName}/${this.id}/users`,
+            url: `${this.resourceName}/${this.id}/users`,
             type: 'POST',
             data: {
                 userIds: JSON.stringify([userId])
@@ -53,7 +53,7 @@ const StudyModel = Model.extend({
 
     removeUser: function (user) {
         return restRequest({
-            path: `${this.resourceName}/${this.id}/users/${user.id}`,
+            url: `${this.resourceName}/${this.id}/users/${user.id}`,
             type: 'DELETE',
             error: null
         });
