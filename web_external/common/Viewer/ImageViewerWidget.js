@@ -2,7 +2,7 @@ import _ from 'underscore';
 
 import geo from 'geojs';
 
-import {restRequest} from 'girder/rest';
+import {getApiRoot, restRequest} from 'girder/rest';
 
 import View from '../../view';
 
@@ -82,7 +82,7 @@ const ImageViewerWidget = View.extend({
 
         _.extend(params.layer, {
             useCredentials: true,
-            url: `${this.apiRoot}/image/${this.model.id}/tiles/{z}/{x}/{y}`
+            url: `${getApiRoot()}/image/${this.model.id}/tiles/{z}/{x}/{y}`
         });
         this.imageLayer = this.viewer.createLayer('osm', params.layer);
     },

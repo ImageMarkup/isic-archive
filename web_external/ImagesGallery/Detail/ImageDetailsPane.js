@@ -1,6 +1,8 @@
 import $ from 'jquery';
 import _ from 'underscore';
 
+import {getApiRoot} from 'girder/rest';
+
 import SegmentationsDisplayView from './SegmentationsDisplayView';
 import ImageFullscreenWidget from '../../common/Viewer/ImageFullscreenWidget';
 import View from '../../view';
@@ -51,7 +53,7 @@ const ImageDetailsPane = View.extend({
 
         this.$el.html(ImageDetailsPageTemplate({
             _: _,
-            apiRoot: this.apiRoot,
+            apiRoot: getApiRoot(),
             image: this.image,
             created: created,
             license: license

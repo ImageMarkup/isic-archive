@@ -1,5 +1,7 @@
 import $ from 'jquery';
 
+import {getApiRoot} from 'girder/rest';
+
 import ImageFullscreenWidget from '../../common/Viewer/ImageFullscreenWidget';
 import View from '../../view';
 
@@ -51,7 +53,7 @@ const ImageWall = View.extend({
         this.clearTooltips();
 
         this.$el.html(ImageWallTemplate({
-            apiRoot: this.apiRoot,
+            apiRoot: getApiRoot(),
             images: this.images,
             thumbnailHeight: this.thumbnailSize * 0.75,
             thumbnailWidth: this.thumbnailSize

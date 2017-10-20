@@ -2,6 +2,8 @@ import Backbone from 'backbone';
 import $ from 'jquery';
 import _ from 'underscore';
 
+import {getApiRoot} from 'girder/rest';
+
 import AnnotationCollection from '../collections/AnnotationCollection';
 import ImageCollection from '../collections/ImageCollection';
 import StudyCollection from '../collections/StudyCollection';
@@ -209,7 +211,7 @@ const StudyResultsSelectImageView = View.extend({
     render: function () {
         this.$el.html(StudyResultsSelectImagePageTemplate({
             models: this.collection.toArray(),
-            apiRoot: this.apiRoot
+            apiRoot: getApiRoot()
         }));
 
         return this;
@@ -420,7 +422,7 @@ const StudyResultsFeatureImageView = View.extend({
         let imageUrl = null;
         if (featureId && annotationId) {
             imageUrl = [
-                this.apiRoot,
+                getApiRoot(),
                 'annotation', annotationId,
                 'render?contentDisposition=inline&featureId='
             ].join('/') + encodeURIComponent(featureId);

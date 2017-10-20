@@ -1,5 +1,7 @@
 import $ from 'jquery';
 
+import {getApiRoot} from 'girder/rest';
+
 import {SelectableSegmentationCollection} from '../../collections/SegmentationCollection';
 import View from '../../view';
 
@@ -28,7 +30,7 @@ const SegmentationDisplayView = View.extend({
     render: function () {
         let created = this.formatDate(this.model.get('created'));
         let thumbnailUrl = [
-            this.apiRoot,
+            getApiRoot(),
             'segmentation',
             this.model.id,
             'thumbnail?width=256'
