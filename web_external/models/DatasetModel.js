@@ -28,7 +28,7 @@ const DatasetModel = Model.extend({
         signature, anonymous, attribution) {
         restRequest({
             url: this.resourceName,
-            type: 'POST',
+            method: 'POST',
             data: {
                 zipFileId: zipFileId,
                 name: name,
@@ -55,7 +55,7 @@ const DatasetModel = Model.extend({
     registerMetadata: function (metadataFileId) {
         restRequest({
             url: `${this.resourceName}/${this.id}/metadata`,
-            type: 'POST',
+            method: 'POST',
             data: {
                 metadataFileId: metadataFileId
             },
@@ -88,7 +88,7 @@ const DatasetModel = Model.extend({
         let deferred = $.Deferred();
         restRequest({
             url: `${this.resourceName}/${this.id}/metadata/${metadataFileId}`,
-            type: 'POST',
+            method: 'POST',
             data: {
                 save: save
             },

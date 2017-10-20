@@ -40,7 +40,7 @@ const StudyModel = Model.extend({
         // TODO: return a promise here, and use it (rather than events)
         restRequest({
             url: `${this.resourceName}/${this.id}/users`,
-            type: 'POST',
+            method: 'POST',
             data: {
                 userIds: JSON.stringify([userId])
             }
@@ -54,7 +54,7 @@ const StudyModel = Model.extend({
     removeUser: function (user) {
         return restRequest({
             url: `${this.resourceName}/${this.id}/users/${user.id}`,
-            type: 'DELETE',
+            method: 'DELETE',
             error: null
         });
         // TODO: update the model in-place here, with the new list of annotators,

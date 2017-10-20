@@ -32,7 +32,7 @@ const InviteUserView = View.extend({
             restRequest({
                 url: 'user/invite',
                 data: data,
-                type: 'POST',
+                method: 'POST',
                 error: null
             })
             .done((resp) => {

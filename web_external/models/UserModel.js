@@ -37,7 +37,7 @@ UserModel.prototype.canAcceptTerms = function () {
 UserModel.prototype.setAcceptTerms = function () {
     return restRequest({
         url: 'user/acceptTerms',
-        type: 'POST'
+        method: 'POST'
     })
     .then((resp) => {
         if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
@@ -59,7 +59,7 @@ UserModel.prototype.canCreateDataset = function () {
 UserModel.prototype.setCanCreateDataset = function () {
     return restRequest({
         url: 'user/requestCreateDatasetPermission',
-        type: 'POST'
+        method: 'POST'
     })
     .then((resp) => {
         if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
@@ -94,7 +94,7 @@ UserModel.prototype.changePassword = function (oldPassword, newPassword) {
             old: oldPassword,
             new: newPassword
         },
-        type: 'PUT',
+        method: 'PUT',
         error: null
     })
     .done(() => {
@@ -110,7 +110,6 @@ UserModel.prototype.changePassword = function (oldPassword, newPassword) {
 UserModel.temporaryTokenLogin = function (userId, token) {
     return restRequest({
         url: `user/password/temporary/${userId}`,
-        type: 'GET',
         data: {token: token},
         error: null
     })

@@ -76,7 +76,6 @@ router.route('useraccount/:id/token/:token', 'accountToken', (id, token) => {
     // TODO: push this logic into the user model in upstream Girder
     restRequest({
         url: `user/password/temporary/${id}`,
-        type: 'GET',
         data: {token: token},
         error: null
     }).done((resp) => {

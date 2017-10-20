@@ -181,7 +181,7 @@ ItemModel.prototype.getFiles = function () {
 FolderModel.prototype.removeContents = function () {
     restRequest({
         url: `${this.resourceName}/${this.id}/contents`,
-        type: 'DELETE'
+        method: 'DELETE'
     }).done((resp) => {
         this.trigger('g:success');
     }).fail((err) => {

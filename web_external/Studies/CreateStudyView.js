@@ -157,7 +157,7 @@ const CreateStudyView = View.extend({
 
         // TODO: move this into the StudyModel
         restRequest({
-            type: 'POST',
+            method: 'POST',
             url: 'study',
             data: {
                 name: name,
