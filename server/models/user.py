@@ -64,7 +64,7 @@ class User(UserModel):
         obfuscatedName = 'User %s' % obfuscatedId
         return obfuscatedName
 
-    def filteredSummary(self, user, accessorUser):
+    def filterSummary(self, user, accessorUser):
         userSummary = {
             '_id': user['_id'],
             'name': self.obfuscatedName(user)

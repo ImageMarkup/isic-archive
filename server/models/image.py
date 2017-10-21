@@ -46,7 +46,6 @@ class Image(ItemModel):
             # TODO: re-add once converted file no longer contributes to size
             # 'size',
         ])
-        self.summaryFields = ['_id', 'name', 'updated']
         self.prefixSearchFields = ['lowerName', 'name']
 
         events.bind('data.process',
@@ -310,10 +309,43 @@ class Image(ItemModel):
         imageQuery = self._findQueryFilter(query)
         return super(Image, self).findOne(imageQuery, **kwargs)
 
-    def filteredSummary(self, image, accessorUser):
+    def filter(self, image, user=None, additionalKeys=None):
+        Dataset = self.model('dataset', 'isic_archive')
+        User = self.model('user', 'isic_archive')
+
+        output = {
+            '_id': image['_id'],
+            '_modelType': 'image',
+            'name': image['name'],
+            'created': image['created'],
+            'creator': User.filterSummary(
+                User.load(image['creatorId'], force=True, exc=True),
+                user),
+            # TODO: verify that "updated" is set correctly
+            'updated': image['updated'],
+            'dataset': Dataset.filterSummary(
+                Dataset.load(image['folderId'], force=True, exc=True),
+                user),
+            'meta': {
+                'acquisition': image['meta']['acquisition'],
+                'clinical': image['meta']['clinical'],
+                'unstructured': image['meta']['unstructured']
+            },
+            'notes': {
+                'reviewed': image['meta'].get('reviewed', None),
+                'tags': image['meta']['tags']
+            }
+        }
+        if User.canReviewDataset(user):
+            output['meta']['private'] = image['privateMeta']
+
+        return output
+
+    def filterSummary(self, image, user=None):
         return {
-            field: image[field]
-            for field in self.summaryFields
+            '_id': image['_id'],
+            'name': image['name'],
+            'updated': image['updated'],
         }
 
     def load(self, id, level=AccessType.ADMIN, user=None, objectId=True, force=False, fields=None,

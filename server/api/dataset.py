@@ -68,7 +68,7 @@ class DatasetResource(IsicResource):
         user = self.getCurrentUser()
 
         return [
-            Dataset.filteredSummary(dataset, user)
+            Dataset.filterSummary(dataset, user)
             for dataset in
             Dataset.list(user=user, limit=limit, offset=offset, sort=sort)
         ]
@@ -90,7 +90,7 @@ class DatasetResource(IsicResource):
         output['_modelType'] = 'dataset'
         output.update(dataset.get('meta', {}))
 
-        output['creator'] = User.filteredSummary(
+        output['creator'] = User.filterSummary(
             User.load(output.pop('creatorId'), force=True, exc=True),
             self.getCurrentUser())
 
@@ -183,7 +183,7 @@ class DatasetResource(IsicResource):
             {
                 field: image[field]
                 for field in
-                Image.summaryFields + ['description', 'meta']
+                ['_id', 'name', 'updated', 'description', 'meta']
             }
             for image in
             Image.find(
@@ -252,7 +252,7 @@ class DatasetResource(IsicResource):
                     '_id': metadataFile['_id'],
                     'name': metadataFile['name']
                 },
-                'user': User.filteredSummary(
+                'user': User.filterSummary(
                     User.load(registration['userId'], force=True, exc=True),
                     user),
                 'time': registration['time']

@@ -173,12 +173,12 @@ class Study(FolderModel):
             '_id': {'$in': annotatorFolders.distinct('meta.userId')}
         })
 
-    def getImages(self, study, fields=None):
+    def getImages(self, study):
         Annotation = self.model('annotation', 'isic_archive')
         Image = self.model('image', 'isic_archive')
         imageIds = Annotation.find({
             'meta.studyId': study['_id']}).distinct('meta.imageId')
-        return Image.find({'_id': {'$in': imageIds}}, fields=fields)
+        return Image.find({'_id': {'$in': imageIds}})
 
     def childAnnotations(self, study=None, annotatorUser=None,
                          image=None, state=None, **kwargs):

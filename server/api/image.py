@@ -68,6 +68,8 @@ class ImageResource(IsicResource):
     @describeRoute(
         Description('Return a list of lesion images.')
         .pagingParams(defaultSort='name')
+        .param('detail', 'Display the full information for each image, instead of a summary.',
+               required=False, dataType='boolean', default=False)
         .param('datasetId', 'The ID of the dataset to use.', required=False)
         .param('name', 'Find an image with a specific name.', required=False)
         .param('filter', 'Filter the images by a PegJS-specified grammar (causing "datasetId" and '
@@ -81,6 +83,7 @@ class ImageResource(IsicResource):
         Image = self.model('image', 'isic_archive')
 
         user = self.getCurrentUser()
+        detail = self.boolParam('detail', params, default=False)
         limit, offset, sort = self.getPagingParameters(params, 'name')
 
         if 'filter' in params:
@@ -95,12 +98,12 @@ class ImageResource(IsicResource):
             if 'name' in params:
                 query.update({'name': params['name']})
 
+        filterFunc = Image.filter if detail else Image.filterSummary
         return [
-            Image.filteredSummary(image, user)
+            filterFunc(image, user)
             for image in
             Image.filterResultsByPermission(
-                # TODO: exclude additional fields from the cursor
-                Image.find(query, sort=sort, fields={'meta': 0}),
+                Image.find(query, sort=sort),
                 user=user, level=AccessType.READ, limit=limit, offset=offset)
         ]
 
@@ -201,38 +204,10 @@ class ImageResource(IsicResource):
     @access.public
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def getImage(self, image, params):
-        Dataset = self.model('dataset', 'isic_archive')
-        User = self.model('user', 'isic_archive')
+        Image = self.model('image', 'isic_archive')
 
         user = self.getCurrentUser()
-
-        output = {
-            '_id': image['_id'],
-            '_modelType': 'image',
-            'name': image['name'],
-            'created': image['created'],
-            'creator': User.filteredSummary(
-                User.load(image['creatorId'], force=True, exc=True),
-                user),
-            # TODO: verify that "updated" is set correctly
-            'updated': image['updated'],
-            'dataset': Dataset.filteredSummary(
-                Dataset.load(image['folderId'], force=True, exc=True),
-                user),
-            'meta': {
-                'acquisition': image['meta']['acquisition'],
-                'clinical': image['meta']['clinical'],
-                'unstructured': image['meta']['unstructured']
-            },
-            'notes': {
-                'reviewed': image['meta'].get('reviewed', None),
-                'tags': image['meta']['tags']
-            }
-        }
-        if User.canReviewDataset(user):
-            output['meta']['private'] = image['privateMeta']
-
-        return output
+        return Image.filter(image, user)
 
     @describeRoute(
         Description('Return an image\'s thumbnail.')
