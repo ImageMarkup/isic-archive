@@ -107,8 +107,70 @@ class ImageResource(IsicResource):
                 user=user, level=AccessType.READ, limit=limit, offset=offset)
         ]
 
+    def _imagesZipGenerator(self, downloadFileName, images, include):
+        Dataset = self.model('dataset', 'isic_archive')
+        File = self.model('file')
+        Image = self.model('image', 'isic_archive')
+
+        datasetCache = {}
+        zipGenerator = ziputil.ZipGenerator(downloadFileName)
+
+        for image in images:
+            datasetId = image['folderId']
+            if datasetId not in datasetCache:
+                datasetCache[datasetId] = Dataset.load(datasetId, force=True, exc=True)
+            dataset = datasetCache[datasetId]
+
+            if include in {'all', 'images'}:
+                imageFile = Image.originalFile(image)
+                imageFileGenerator = File.download(imageFile, headers=False)
+                for data in zipGenerator.addFile(
+                        imageFileGenerator,
+                        path=os.path.join(dataset['name'], imageFile['name'])):
+                    yield data
+            if include in {'all', 'metadata'}:
+                def metadataGenerator():
+                    # TODO: Consider replacing this with Image.filter
+                    yield json.dumps({
+                        '_id': str(image['_id']),
+                        'name': image['name'],
+                        'meta': {
+                            'acquisition': image['meta']['acquisition'],
+                            'clinical': image['meta']['clinical']
+                        }
+                    })
+                for data in zipGenerator.addFile(
+                        metadataGenerator,
+                        path=os.path.join(dataset['name'], '%s.json' % image['name'])):
+                    yield data
+
+        for dataset in six.viewvalues(datasetCache):
+            licenseText = mail_utils.renderTemplate(
+                'license_%s.mako' % dataset['meta']['license'])
+            attributionText = mail_utils.renderTemplate(
+                'attribution_%s.mako' % dataset['meta']['license'],
+                {
+                    'work': dataset['name'],
+                    'author':
+                        dataset['meta']['attribution']
+                        if not dataset['meta']['anonymous']
+                        else 'Anonymous'
+                })
+            for data in zipGenerator.addFile(
+                    lambda: [licenseText],
+                    path=os.path.join(dataset['name'], 'LICENSE.txt')):
+                yield data
+            for data in zipGenerator.addFile(
+                    lambda: [attributionText],
+                    path=os.path.join(dataset['name'], 'ATTRIBUTION.txt')):
+                yield data
+
+        yield zipGenerator.footer()
+
     @describeRoute(
         Description('Download multiple images as a ZIP file.')
+        .param('include', 'Which types of data to include.', required=False,
+               enum=['all', 'images', 'metadata'], default='all')
         .param('datasetId', 'The ID of the dataset to download.', required=False)
         .param('filter', 'Filter the images by a PegJS-specified grammar (causing "datasetId" to '
                          'be ignored).',
@@ -118,9 +180,12 @@ class ImageResource(IsicResource):
     @access.cookie
     @access.public
     def downloadMultiple(self, params):
-        Dataset = self.model('dataset', 'isic_archive')
-        File = self.model('file')
         Image = self.model('image', 'isic_archive')
+
+        include = params.get('include', 'all')
+        if include not in {'all', 'images', 'metadata'}:
+            raise ValidationException(
+                'Param "include" must be one of: "all", "images", "metadata"', 'include')
 
         if 'filter' in params:
             query = self._parseFilter(params['filter'])
@@ -135,51 +200,14 @@ class ImageResource(IsicResource):
         user = self.getCurrentUser()
         downloadFileName = 'ISIC-images'
 
-        def stream():
-            datasetCache = {}
-            zipGenerator = ziputil.ZipGenerator(downloadFileName)
-
-            for image in Image.filterResultsByPermission(
-                    # TODO: exclude additional fields from the cursor
-                    Image.find(query, sort=[('name', 1)], fields={'meta': 0}),
-                    user=user, level=AccessType.READ, limit=0, offset=0):
-                datasetId = image['folderId']
-                if datasetId not in datasetCache:
-                    datasetCache[datasetId] = Dataset.load(datasetId, force=True, exc=True)
-                dataset = datasetCache[datasetId]
-                imageFile = Image.originalFile(image)
-                imageFileGenerator = File.download(imageFile, headers=False)
-                for data in zipGenerator.addFile(
-                        imageFileGenerator,
-                        path=os.path.join(dataset['name'], imageFile['name'])):
-                    yield data
-
-            for dataset in six.viewvalues(datasetCache):
-                licenseText = mail_utils.renderTemplate(
-                    'license_%s.mako' % dataset['meta']['license'])
-                attributionText = mail_utils.renderTemplate(
-                    'attribution_%s.mako' % dataset['meta']['license'],
-                    {
-                        'work': dataset['name'],
-                        'author':
-                            dataset['meta']['attribution']
-                            if not dataset['meta']['anonymous']
-                            else 'Anonymous'
-                    })
-                for data in zipGenerator.addFile(
-                        lambda: [licenseText],
-                        path=os.path.join(dataset['name'], 'LICENSE.txt')):
-                    yield data
-                for data in zipGenerator.addFile(
-                        lambda: [attributionText],
-                        path=os.path.join(dataset['name'], 'ATTRIBUTION.txt')):
-                    yield data
-
-            yield zipGenerator.footer()
+        images = Image.filterResultsByPermission(
+            Image.find(query, sort=[('name', 1)]),
+            user=user, level=AccessType.READ, limit=0, offset=0)
+        imagesZipGenerator = self._imagesZipGenerator(downloadFileName, images, include)
 
         setResponseHeader('Content-Type', 'application/zip')
         setResponseHeader('Content-Disposition', 'attachment; filename="%s.zip"' % downloadFileName)
-        return stream
+        return lambda: imagesZipGenerator
 
     @describeRoute(
         Description('Return histograms of image metadata.')
