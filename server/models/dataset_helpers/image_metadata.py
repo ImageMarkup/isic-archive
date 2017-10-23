@@ -535,12 +535,12 @@ def _checkMetadataErrors(clinical):
 
     # Set melanocytic field based on diagnosis
     if diagnosis in MelanocyticFieldParser.melanocyticDiagnoses:
-        if not melanocytic:
+        if melanocytic is False:
             raise InconsistentValuesException(
                 names=[DiagnosisFieldParser.name, MelanocyticFieldParser.name],
                 values=[diagnosis, melanocytic])
     elif diagnosis is not None and diagnosis != 'other':
-        if melanocytic:
+        if melanocytic is True:
             raise InconsistentValuesException(
                 names=[DiagnosisFieldParser.name, MelanocyticFieldParser.name],
                 values=[diagnosis, melanocytic])
