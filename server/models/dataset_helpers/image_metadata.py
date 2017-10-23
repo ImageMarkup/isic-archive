@@ -21,19 +21,6 @@ import copy
 import six
 
 
-_melanocyticDiagnoses = [
-    'AIMP',
-    'melanoma',
-    'melanoma metastasis',
-    'nevus',
-    'nevus spilus',
-    'atypical melanocytic proliferation',
-    'solar lentigo',
-    'lentigo simplex',
-    'lentigo NOS',
-]
-
-
 class MetadataFieldException(Exception):
     """Base class for exceptions raised while parsing metadata fields."""
     pass
@@ -296,6 +283,17 @@ class ClinicalSizeFieldParser(FieldParser):
 class MelanocyticFieldParser(FieldParser):
     name = 'melanocytic'
     allowedFields = {'melanocytic'}
+    melanocyticDiagnoses = [
+        'AIMP',
+        'melanoma',
+        'melanoma metastasis',
+        'nevus',
+        'nevus spilus',
+        'atypical melanocytic proliferation',
+        'solar lentigo',
+        'lentigo simplex',
+        'lentigo NOS',
+    ]
 
     @classmethod
     def transform(cls, value):
@@ -502,7 +500,7 @@ def _populateMetadata(clinical):
                     clinical['benign_malignant'] = 'benign'
 
     # Set melanocytic field based on diagnosis
-    if diagnosis in _melanocyticDiagnoses:
+    if diagnosis in MelanocyticFieldParser.melanocyticDiagnoses:
         if clinical.get('melanocytic') is None:
             clinical['melanocytic'] = True
     elif diagnosis is not None and diagnosis != 'other':
@@ -536,7 +534,7 @@ def _checkMetadataErrors(clinical):
                 values=[diagnosis, benignMalignant])
 
     # Set melanocytic field based on diagnosis
-    if diagnosis in _melanocyticDiagnoses:
+    if diagnosis in MelanocyticFieldParser.melanocyticDiagnoses:
         if not melanocytic:
             raise InconsistentValuesException(
                 names=[DiagnosisFieldParser.name, MelanocyticFieldParser.name],
