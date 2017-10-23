@@ -27,8 +27,55 @@
 
   table.table.table-condensed.isic-image-details-table
     tbody
+      - const meta = image.get('meta');
+      if !_.isEmpty(meta.clinical)
+        tr
+          td.isic-image-details-table-section-header(colspan=2) Clinical Information
+        each value, key in meta.clinical
+          tr
+            td= key
+            td= value
+
+      if !_.isEmpty(meta.acquisition)
+        tr
+          td.isic-image-details-table-section-header(colspan=2) Acquisition Information
+        tr
+          td Dimensions (pixels)
+          td #{meta.acquisition.pixelsX} &times; #{meta.acquisition.pixelsX}
+        each value, key in _.omit(meta.acquisition, 'pixelsX', 'pixelsY')
+          tr
+            td= key
+            td= value
+
+      if !_.isEmpty(meta.unstructured)
+        tr
+          td.isic-image-details-table-section-header(colspan=2) Unstructured Information
+        each value, key in meta.unstructured
+          tr
+            td= key
+            td= value
+
+      if _.has(meta, 'private')
+        tr
+          td.isic-image-details-table-section-header(colspan=2) Private Information
+        each value, key in meta.private
+          tr
+            td= key
+            td= value
+
+      - const tags = image.get('notes').tags;
+      if !_.isEmpty(tags)
+        tr
+          td.isic-image-details-table-section-header(colspan=2) Tags
+        tr
+          td(colspan=2)
+            each value in image.get('notes').tags
+              //- Labels separated by a space
+              span.label.label-default.isic-image-details-tag= value
+              | &#x20;
+
       tr
-        td.isic-image-details-table-section-header(colspan=2) Info
+        td.isic-image-details-table-section-header(colspan=2) ISIC Archive Information
       tr
         td Unique ID
         td
@@ -46,47 +93,5 @@
             a(href=license.url, target='_blank', rel='noopener')= license.name
           else
             = license.name
-
-      - let meta = image.get('meta');
-      tr
-        td.isic-image-details-table-section-header(colspan=2) Clinical Metadata
-      each value, key in meta.clinical
-        tr
-          td= key
-          td= value
-
-      tr
-        td.isic-image-details-table-section-header(colspan=2) Acquisition Metadata
-      tr
-        td Dimensions (pixels)
-        td #{meta.acquisition.pixelsX} &times; #{meta.acquisition.pixelsX}
-      each value, key in _.omit(meta.acquisition, 'pixelsX', 'pixelsY')
-        tr
-          td= key
-          td= value
-
-      tr
-        td.isic-image-details-table-section-header(colspan=2) Unstructured Metadata
-      each value, key in meta.unstructured
-        tr
-          td= key
-          td= value
-
-      if _.has(meta, 'private')
-        tr
-          td.isic-image-details-table-section-header(colspan=2) Private Metadata
-        each value, key in meta.private
-          tr
-            td= key
-            td= value
-
-      tr
-        td.isic-image-details-table-section-header(colspan=2) Tags
-      tr
-        td(colspan=2)
-          each value in image.get('notes').tags
-            //- Labels separated by a space
-            span.label.label-default.isic-image-details-tag= value
-            | &#x20;
 
   #isic-image-details-segmentations-display-view-container
