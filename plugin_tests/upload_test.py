@@ -347,7 +347,12 @@ class UploadTestCase(IsicTestCase):
         self.assertStatusOk(resp)
         self.assertIn('errors', resp.json)
         self.assertIn('warnings', resp.json)
-        self.assertEqual([], resp.json['errors'])
+        self.assertEqual(
+            resp.json['errors'], [
+                {'description':
+                 'on CSV row 5: values [\'solar lentigo\', False] for fields [\'diagnosis\', '
+                 '\'melanocytic\'] are inconsistent'}
+            ])
         self.assertEqual(
             resp.json['warnings'], [
                 {'description':
