@@ -30,7 +30,7 @@
       - const meta = image.get('meta');
       if !_.isEmpty(meta.clinical)
         tr
-          td.isic-image-details-table-section-header(colspan=2) CLINICAL INFORMATION
+          td.isic-image-details-table-section-header(colspan=2) Clinical Information
         each value, key in meta.clinical
           tr
             td= key
@@ -38,7 +38,7 @@
 
       if !_.isEmpty(meta.acquisition)
         tr
-          td.isic-image-details-table-section-header(colspan=2) ACQUISITION INFORMATION
+          td.isic-image-details-table-section-header(colspan=2) Acquisition Information
         tr
           td Dimensions (pixels)
           td #{meta.acquisition.pixelsX} &times; #{meta.acquisition.pixelsX}
@@ -49,7 +49,7 @@
 
       if !_.isEmpty(meta.unstructured)
         tr
-          td.isic-image-details-table-section-header(colspan=2) UNSTRUCTURED INFORMATION
+          td.isic-image-details-table-section-header(colspan=2) Unstructured Information
         each value, key in meta.unstructured
           tr
             td= key
@@ -57,7 +57,7 @@
 
       if _.has(meta, 'private')
         tr
-          td.isic-image-details-table-section-header(colspan=2) PRIVATE INFORMATION
+          td.isic-image-details-table-section-header(colspan=2) Private Information
         each value, key in meta.private
           tr
             td= key
@@ -66,7 +66,7 @@
       - const tags = image.get('notes').tags;
       if !_.isEmpty(tags)
         tr
-          td.isic-image-details-table-section-header(colspan=2) TAGS
+          td.isic-image-details-table-section-header(colspan=2) Tags
         tr
           td(colspan=2)
             each value in image.get('notes').tags
@@ -75,7 +75,7 @@
               | &#x20;
 
       tr
-        td.isic-image-details-table-section-header(colspan=2) ISIC ARCHIVE INFORMATION
+        td.isic-image-details-table-section-header(colspan=2) ISIC Archive Information
       tr
         td Unique ID
         td
