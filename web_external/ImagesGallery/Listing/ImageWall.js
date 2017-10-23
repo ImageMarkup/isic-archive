@@ -26,6 +26,8 @@ const ImageWall = View.extend({
         },
 
         'click .isic-images-imageWall-zoom': function (event) {
+            event.stopPropagation();
+
             let imageId = $(event.currentTarget).parent().parent().data('imageId');
             let clickedImage = this.images.get(imageId);
 
@@ -34,8 +36,6 @@ const ImageWall = View.extend({
                 model: clickedImage,
                 parentView: this
             }).render();
-
-            event.stopPropagation();
         }
     },
 
