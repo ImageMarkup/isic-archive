@@ -181,7 +181,8 @@ class ImageResource(IsicResource):
 
         include = params.get('include', 'all')
         if include not in {'all', 'images', 'metadata'}:
-            raise RestException('Param "include" must be one of: "all", "images", "metadata"')
+            raise ValidationException(
+                'Param "include" must be one of: "all", "images", "metadata"', 'include')
 
         if 'filter' in params:
             query = self._parseFilter(params['filter'])
