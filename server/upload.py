@@ -55,7 +55,7 @@ class ZipFileOpener(object):
     def __enter__(self):
         try:
             return self._defaultUnzip()
-        except zipfile.BadZipfile:
+        except (zipfile.BadZipfile, NotImplementedError):
             return self._fallbackUnzip()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -77,6 +77,13 @@ class ZipFileOpener(object):
                 # file is probably a macOS resource fork, skip
                 continue
             fileList.append((originalFile, originalFileRelpath))
+        # Test whether the archive uses a compression type that the zipfile module supports. For
+        # example, extracting from an archive that uses Deflate64 raises the following exception:
+        # "NotImplementedError: compression type 9 (deflate64)"
+        if fileList:
+            with zipFile.open(fileList[0][0]):
+                pass
+
         return self._defaultUnzipIter(zipFile, fileList), len(fileList)
 
     def _defaultUnzipIter(self, zipFile, fileList):
