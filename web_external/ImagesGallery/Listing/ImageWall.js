@@ -15,11 +15,7 @@ const ImageWall = View.extend({
             let clickedImage = this.images.get(imageId);
 
             if (event.shiftKey) {
-                new ImageFullscreenWidget({ // eslint-disable-line no-new
-                    el: $('#g-dialog-container'),
-                    model: clickedImage,
-                    parentView: this
-                }).render();
+                this._showImageZoomModal(clickedImage);
             } else {
                 clickedImage.toggleSelected();
             }
@@ -31,11 +27,7 @@ const ImageWall = View.extend({
             let imageId = $(event.currentTarget).parent().parent().data('imageId');
             let clickedImage = this.images.get(imageId);
 
-            new ImageFullscreenWidget({ // eslint-disable-line no-new
-                el: $('#g-dialog-container'),
-                model: clickedImage,
-                parentView: this
-            }).render();
+            this._showImageZoomModal(clickedImage);
         }
     },
 
@@ -88,6 +80,14 @@ const ImageWall = View.extend({
         // For unknown reasons, tooltips sometimes remain after they've been hidden, so manually
         // destroy the tooltip element.
         this.$('.tooltip').remove();
+    },
+
+    _showImageZoomModal: function (image) {
+        new ImageFullscreenWidget({ // eslint-disable-line no-new
+            el: $('#g-dialog-container'),
+            model: image,
+            parentView: this
+        }).render();
     }
 });
 
