@@ -915,7 +915,7 @@ class ImageMetadataTestCase(base.TestCase):
             'family_hx_mm': 'false',
             'personal_hx_mm': 'false',
             'clin_size_long_diam_mm': '3.0',
-            'melanocytic': 'false',
+            'melanocytic': 'true',
             'diagnosis_confirm_type': 'histopathology',
             'benign_malignant': 'malignant',
             'diagnosis': 'melanoma',
@@ -938,7 +938,7 @@ class ImageMetadataTestCase(base.TestCase):
             'family_hx_mm': False,
             'personal_hx_mm': False,
             'clin_size_long_diam_mm': 3.0,
-            'melanocytic': False,
+            'melanocytic': True,
             'diagnosis_confirm_type': 'histopathology',
             'benign_malignant': 'malignant',
             'diagnosis': 'melanoma',
@@ -973,7 +973,7 @@ class ImageMetadataTestCase(base.TestCase):
         image['meta']['clinical']['sex'] = 'male'
         image['meta']['clinical']['melanocytic'] = False
         errors, warnings = addImageClinicalMetadata(image, data)
-        self.assertEquals(4, len(errors))
+        self.assertEquals(5, len(errors))
         self.assertIn(
             "value already exists for field 'sex' (old: 'male', new: 'female')",
             errors)
@@ -987,6 +987,9 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertIn(
             "only one of field 'benign_malignant' may be present, "
             "found: ['ben_mal', 'benign_malignant']",
+            errors)
+        self.assertIn(
+            "values ['melanoma', False] for fields ['diagnosis', 'melanocytic'] are inconsistent",
             errors)
         self.assertEquals([], warnings)
 

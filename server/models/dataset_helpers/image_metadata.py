@@ -283,6 +283,17 @@ class ClinicalSizeFieldParser(FieldParser):
 class MelanocyticFieldParser(FieldParser):
     name = 'melanocytic'
     allowedFields = {'melanocytic'}
+    melanocyticDiagnoses = [
+        'AIMP',
+        'melanoma',
+        'melanoma metastasis',
+        'nevus',
+        'nevus spilus',
+        'atypical melanocytic proliferation',
+        'solar lentigo',
+        'lentigo simplex',
+        'lentigo NOS',
+    ]
 
     @classmethod
     def transform(cls, value):
@@ -488,6 +499,14 @@ def _populateMetadata(clinical):
         if benignMalignant is None and diagnosisConfirmType not in [None, 'histopathology']:
                     clinical['benign_malignant'] = 'benign'
 
+    # Set melanocytic field based on diagnosis
+    if diagnosis in MelanocyticFieldParser.melanocyticDiagnoses:
+        if clinical.get('melanocytic') is None:
+            clinical['melanocytic'] = True
+    elif diagnosis is not None and diagnosis != 'other':
+        if clinical.get('melanocytic') is None:
+            clinical['melanocytic'] = False
+
 
 def _checkMetadataErrors(clinical):
     """
@@ -497,6 +516,7 @@ def _checkMetadataErrors(clinical):
     diagnosis = clinical.get('diagnosis')
     benignMalignant = clinical.get('benign_malignant')
     diagnosisConfirmType = clinical.get('diagnosis_confirm_type')
+    melanocytic = clinical.get('melanocytic')
 
     if diagnosis == 'melanoma':
         if benignMalignant != 'malignant':
@@ -512,6 +532,18 @@ def _checkMetadataErrors(clinical):
             raise InconsistentValuesException(
                 names=[DiagnosisFieldParser.name, BenignMalignantFieldParser.name],
                 values=[diagnosis, benignMalignant])
+
+    # Set melanocytic field based on diagnosis
+    if diagnosis in MelanocyticFieldParser.melanocyticDiagnoses:
+        if melanocytic is False:
+            raise InconsistentValuesException(
+                names=[DiagnosisFieldParser.name, MelanocyticFieldParser.name],
+                values=[diagnosis, melanocytic])
+    elif diagnosis is not None and diagnosis != 'other':
+        if melanocytic is True:
+            raise InconsistentValuesException(
+                names=[DiagnosisFieldParser.name, MelanocyticFieldParser.name],
+                values=[diagnosis, melanocytic])
 
     if benignMalignant in [
         'indeterminate/benign',
