@@ -567,10 +567,13 @@ class DermoscopicTypeFieldParser(FieldParser):
         acquisition[cls.name] = value
 
 
-def _populateMetadata(clinical):
+def _populateMetadata(acquisition, clinical):
     """
     Populate empty metadata fields that can be determined based on other fields.
     """
+    dermoscopicType = acquisition.get('dermoscopic_type')
+    imageType = acquisition.get('image_type')
+
     diagnosis = clinical.get('diagnosis')
     benignMalignant = clinical.get('benign_malignant')
     diagnosisConfirmType = clinical.get('diagnosis_confirm_type')
@@ -590,12 +593,18 @@ def _populateMetadata(clinical):
         if clinical.get('melanocytic') is None:
             clinical['melanocytic'] = False
 
+    if dermoscopicType is not None and imageType is None:
+        acquisition['image_type'] = 'dermoscopic'
 
-def _checkMetadataErrors(clinical):
+
+def _checkMetadataErrors(acquisition, clinical):
     """
     Check metadata for fatal errors with respect to consistency between fields.
     Raises an InconsistentValuesException is raised if a value violates a rule.
     """
+    dermoscopicType = acquisition.get('dermoscopic_type')
+    imageType = acquisition.get('image_type')
+
     diagnosis = clinical.get('diagnosis')
     benignMalignant = clinical.get('benign_malignant')
     diagnosisConfirmType = clinical.get('diagnosis_confirm_type')
@@ -637,6 +646,11 @@ def _checkMetadataErrors(clinical):
         raise InconsistentValuesException(
             names=[BenignMalignantFieldParser.name, DiagnosisConfirmTypeFieldParser.name],
             values=[benignMalignant, diagnosisConfirmType])
+
+    if imageType != 'dermoscopic' and dermoscopicType is not None:
+        raise InconsistentValuesException(
+            names=[ImageTypeFieldParser.name, DermoscopicTypeFieldParser.name],
+            values=[imageType, dermoscopicType])
 
 
 def _checkMetadataWarnings(clinical):
@@ -723,11 +737,11 @@ def addImageClinicalMetadata(image, data):
     # TODO: handle contingently required fields
 
     # Populate empty metadata fields
-    _populateMetadata(clinical)
+    _populateMetadata(acquisition, clinical)
 
     # Check metadata for errors
     try:
-        _checkMetadataErrors(clinical)
+        _checkMetadataErrors(acquisition, clinical)
     except InconsistentValuesException as e:
         errors.append('values %r for fields %r are inconsistent' % (e.values, e.names))
 

@@ -1218,6 +1218,31 @@ class ImageMetadataTestCase(base.TestCase):
         errors, _ = addImageClinicalMetadata(image, data)
         self.assertEqual([], errors)
 
+        data = {
+            'image_type': 'dermoscopic',
+            'dermoscopic_type': 'contact polarized'
+        }
+        image = self._createImage()
+        errors, _ = addImageClinicalMetadata(image, data)
+        self.assertEqual([], errors)
+
+        data = {
+            'image_type': 'clinical',
+            'dermoscopic_type': None
+        }
+        image = self._createImage()
+        errors, _ = addImageClinicalMetadata(image, data)
+        self.assertEqual([], errors)
+
+        data = {
+            'image_type': None,
+            'dermoscopic_type': 'contact non-polarized'
+        }
+        image = self._createImage()
+        errors, _ = addImageClinicalMetadata(image, data)
+        self.assertEqual([], errors)
+        self.assertEqual('dermoscopic', image['meta']['acquisition']['image_type'])
+
         # Error cases
         data = {
             'benign_malignant': 'benign',
@@ -1239,6 +1264,14 @@ class ImageMetadataTestCase(base.TestCase):
             'benign_malignant': 'indeterminate',
             'diagnosis': 'other',
             'diagnosis_confirm_type': 'single image expert consensus'
+        }
+        image = self._createImage()
+        errors, _ = addImageClinicalMetadata(image, data)
+        self.assertEqual(1, len(errors))
+
+        data = {
+            'image_type': 'clinical',
+            'dermoscopic_type': 'contact polarized'
         }
         image = self._createImage()
         errors, _ = addImageClinicalMetadata(image, data)
