@@ -3,8 +3,7 @@ extends ../common/Listing/listingPage
 block title
   if canCreateDataset
     = title
-    a.isic-dataset-add-button.btn.btn-default.btn-sm.isic-tooltip(
-      title="Create new dataset")
+    a.isic-dataset-add-button.btn.btn-default.btn-sm(title="Create new dataset")
       i.icon-plus
   else
     = title

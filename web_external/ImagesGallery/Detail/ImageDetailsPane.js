@@ -65,15 +65,10 @@ const ImageDetailsPane = View.extend({
             parentView: this
         });
 
-        this.$('[data-toggle="tooltip"]').tooltip({
-            trigger: 'hover'
-        });
-
         return this;
     },
 
     zoom: function () {
-        this.clearTooltips();
         new ImageFullscreenWidget({ // eslint-disable-line no-new
             el: $('#g-dialog-container'),
             model: this.image,
@@ -83,10 +78,6 @@ const ImageDetailsPane = View.extend({
 
     closeDetails: function () {
         this.image.deselect();
-    },
-
-    clearTooltips: function () {
-        this.$('[data-toggle="tooltip"]').tooltip('hide');
     }
 });
 

@@ -3,8 +3,7 @@ extends ../common/Listing/listingPage
 block title
   if canCreateStudy
     = title
-    a.isic-study-add-button.btn.btn-default.btn-sm.isic-tooltip(
-      title='Create new study')
+    a.isic-study-add-button.btn.btn-default.btn-sm(title='Create new study')
       i.icon-plus
   else
     = title

@@ -1,7 +1,5 @@
 import 'bootstrap/js/dropdown';
 
-import {getApiRoot} from 'girder/rest';
-
 import View from '../../view';
 
 import ImagesPagingPaneTemplate from './imagesPagingPane.pug';
@@ -61,18 +59,6 @@ const ImagesPagingPane = View.extend({
     render: function () {
         this.$el.html(ImagesPagingPaneTemplate());
 
-        // Tooltips for buttons inside a "btn-group" must be attached to another element, or else
-        // the "btn-group" size will be disrupted when they appear
-        // Although these elements will be re-initialized with tooltip behavior in the next
-        // statement, this first "container" binding will stay in effect
-        this.$('.btn-group>[data-toggle="tooltip"]').tooltip({
-            trigger: 'hover',
-            container: this.$el
-        });
-        this.$('[data-toggle="tooltip"]').tooltip({
-            trigger: 'hover'
-        });
-
         return this;
     },
 
@@ -122,14 +108,10 @@ const ImagesPagingPane = View.extend({
             .width(() => `${(this.images.length / this.filteredFacets.total) * 100}%`);
 
         this.$('#isic-images-paging-downloadZip>button').girderEnable(this.filteredFacets.total > 0);
-
-        // Any just-disabled buttons will no longer trigger 'mouseleave' or 'focusout' events, so
-        // any still-active tooltips on those buttons must be manually hidden
-        this.$('[data-toggle="tooltip"][disabled]').tooltip('hide');
     },
 
     _downloadZip: function (include) {
-        let downloadUrl = `${getApiRoot()}/image/download?include=${include}`;
+        let downloadUrl = `${this.apiRoot}/image/download?include=${include}`;
         let filterQuery = JSON.stringify(this.filters.asAst());
         if (filterQuery) {
             downloadUrl += `&filter=${filterQuery}`;

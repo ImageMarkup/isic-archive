@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import 'bootstrap/js/tooltip';
 
 import {getApiRoot} from 'girder/rest';
 
@@ -48,10 +49,6 @@ const ImageWall = View.extend({
     },
 
     render: function () {
-        // Since tooltip-enabled elements are about to be destroyed, first remove any active
-        // tooltips from them.
-        this.clearTooltips();
-
         this.$el.html(ImageWallTemplate({
             apiRoot: getApiRoot(),
             images: this.images,
@@ -59,7 +56,7 @@ const ImageWall = View.extend({
             thumbnailWidth: this.thumbnailSize
         }));
 
-        this.$('[data-toggle="tooltip"]').tooltip({
+        this.$('[title]').tooltip({
             placement: 'auto',
             viewport: this.$el,
             trigger: 'hover'
@@ -75,13 +72,6 @@ const ImageWall = View.extend({
         if (selectedImage) {
             this.$(`.isic-images-imageWall-thumbnail[data-image-id="${selectedImage.id}"]`).addClass('selected');
         }
-    },
-
-    clearTooltips: function () {
-        this.$('[data-toggle="tooltip"]').tooltip('hide');
-        // For unknown reasons, tooltips sometimes remain after they've been hidden, so manually
-        // destroy the tooltip element.
-        this.$('.tooltip').remove();
     },
 
     _showImageZoomModal: function (image) {

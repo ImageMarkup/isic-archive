@@ -153,10 +153,6 @@ const StudyResultsSelectStudyView = View.extend({
         });
         select.focus();
 
-        this.$('.isic-tooltip').tooltip({
-            delay: 100
-        });
-
         return this;
     }
 });

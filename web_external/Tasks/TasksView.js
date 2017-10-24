@@ -134,10 +134,6 @@ const TasksView = View.extend({
         this.taskAnnotationView.setElement(
             this.$('#isic-tasks-annotation-container')).render();
 
-        this.$('.isic-tooltip').tooltip({
-            delay: 100
-        });
-
         return this;
     },
 

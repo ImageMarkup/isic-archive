@@ -22,8 +22,7 @@
       td.isic-listing-item-table-section-header Annotators
         |  (#{study.get('users').length})
         if study.canAdmin()
-          a.isic-study-add-user-button.btn.btn-default.btn-xs.isic-tooltip(
-            title='Add annotator')
+          a.isic-study-add-user-button.btn.btn-default.btn-xs(title='Add annotator')
             i.icon-plus
     tr
       td.isic-study-users-content
@@ -42,7 +41,7 @@
                 td.isic-study-user-name= user.name()
                 td
                   if study.canAdmin()
-                    a.isic-study-remove-user-button.isic-tooltip(title='Delete annotator')
+                    a.isic-study-remove-user-button(title='Delete annotator')
                       i.icon-cancel
                 td.isic-study-user-completion-count= numCompleted
                 td.isic-study-user-completion-percent= percentCompleted
