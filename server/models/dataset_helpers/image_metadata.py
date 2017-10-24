@@ -18,6 +18,9 @@
 ###############################################################################
 
 import copy
+import functools
+import math
+import re
 import six
 
 
@@ -137,6 +140,8 @@ class FieldParser(object):
     def _coerceFloat(cls, value):
         try:
             value = float(value)
+            if math.isinf(value) or math.isnan(value):
+                raise ValueError
         except ValueError:
             raise BadFieldTypeException(name=cls.name, fieldType='float', value=value)
         return value
@@ -260,8 +265,12 @@ class PersonalHxMmFieldParser(HxMmFieldParser):
 
 
 class ClinicalSizeFieldParser(FieldParser):
+    """
+    Parse clinical size field. Expects units to be specified (um, mm, or cm).
+    """
     name = 'clin_size_long_diam_mm'
     allowedFields = {'clin_size_long_diam_mm'}
+    _formatRegex = re.compile(r'(.+)(um|mm|cm)$')
 
     @classmethod
     def transform(cls, value):
@@ -271,7 +280,30 @@ class ClinicalSizeFieldParser(FieldParser):
             if value in ['', 'unknown']:
                 value = None
             else:
-                value = cls._coerceFloat(value)
+                def raiseBadFieldTypeExceptionWithValue(value):
+                    raise BadFieldTypeException(
+                        name=cls.name, fieldType='float with units (um, mm, or cm)', value=value)
+
+                raiseBadFieldTypeException = functools.partial(
+                    raiseBadFieldTypeExceptionWithValue, value)
+
+                # Parse value into floating point component and units
+                result = re.match(cls._formatRegex, value)
+                if not result:
+                    raiseBadFieldTypeException()
+
+                try:
+                    value, units = result.groups()
+                    value = cls._coerceFloat(value)
+                except BadFieldTypeException:
+                    raiseBadFieldTypeException()
+
+                # Convert to mm
+                if units == 'um':
+                    value *= 1e-3
+                elif units == 'cm':
+                    value *= 1e1
+
         return value
 
     @classmethod

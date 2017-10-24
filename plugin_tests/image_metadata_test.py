@@ -485,13 +485,31 @@ class ImageMetadataTestCase(base.TestCase):
     def testClinicalSizeFieldParser(self):
         parser = ClinicalSizeFieldParser
 
-        # Normal
-        data = {'clin_size_long_diam_mm': '1.5'}
+        # Normal, um
+        data = {'clin_size_long_diam_mm': '1500.0 um'}
         image = self._createImage()
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
         self.assertDictEqual({'clin_size_long_diam_mm': 1.5}, image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Normal, mm
+        data = {'clin_size_long_diam_mm': '1.5 mm'}
+        image = self._createImage()
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'clin_size_long_diam_mm': 1.5}, image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Normal, cm
+        data = {'clin_size_long_diam_mm': '1.5 cm'}
+        image = self._createImage()
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'clin_size_long_diam_mm': 15.0}, image['meta']['clinical'])
         self.assertDictEqual({}, image['privateMeta'])
 
         # Unknown values
@@ -505,7 +523,7 @@ class ImageMetadataTestCase(base.TestCase):
             self.assertDictEqual({}, image['privateMeta'])
 
         # Update null value with new value
-        data = {'clin_size_long_diam_mm': '1.5'}
+        data = {'clin_size_long_diam_mm': '1.5 mm'}
         image = self._createImage()
         image['meta']['clinical']['clin_size_long_diam_mm'] = None
         self.assertRunParser(image, data, parser)
@@ -515,7 +533,7 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertDictEqual({}, image['privateMeta'])
 
         # Update existing value with same value
-        data = {'clin_size_long_diam_mm': '1.5'}
+        data = {'clin_size_long_diam_mm': '1.5 mm'}
         image = self._createImage()
         image['meta']['clinical']['clin_size_long_diam_mm'] = 1.5
         self.assertRunParser(image, data, parser)
@@ -531,7 +549,7 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
 
         # Update existing value with new value
-        data = {'clin_size_long_diam_mm': '1.5'}
+        data = {'clin_size_long_diam_mm': '1.5 mm'}
         image = self._createImage()
         image['meta']['clinical']['clin_size_long_diam_mm'] = 2.0
         self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
@@ -541,6 +559,18 @@ class ImageMetadataTestCase(base.TestCase):
 
         # Bad field type
         data = {'clin_size_long_diam_mm': 'true'}
+        image = self._createImage()
+        self.assertRunParserRaises(image, data, parser, BadFieldTypeException)
+
+        data = {'clin_size_long_diam_mm': '0.001 m'}
+        image = self._createImage()
+        self.assertRunParserRaises(image, data, parser, BadFieldTypeException)
+
+        data = {'clin_size_long_diam_mm': 'inf'}
+        image = self._createImage()
+        self.assertRunParserRaises(image, data, parser, BadFieldTypeException)
+
+        data = {'clin_size_long_diam_mm': 'inf mm'}
         image = self._createImage()
         self.assertRunParserRaises(image, data, parser, BadFieldTypeException)
 
@@ -914,7 +944,7 @@ class ImageMetadataTestCase(base.TestCase):
             'age': '45',
             'family_hx_mm': 'false',
             'personal_hx_mm': 'false',
-            'clin_size_long_diam_mm': '3.0',
+            'clin_size_long_diam_mm': '3.0 mm',
             'melanocytic': 'true',
             'diagnosis_confirm_type': 'histopathology',
             'benign_malignant': 'malignant',
@@ -979,7 +1009,7 @@ class ImageMetadataTestCase(base.TestCase):
             errors)
         self.assertIn(
             "value is wrong type for field 'clin_size_long_diam_mm' "
-            "(expected 'float', value: '3.0+')",
+            "(expected 'float with units (um, mm, or cm)', value: '3.0+')",
             errors)
         self.assertIn(
             "value already exists for field 'melanocytic' (old: False, new: None)",
