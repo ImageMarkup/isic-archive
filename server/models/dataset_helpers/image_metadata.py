@@ -539,6 +539,34 @@ class ImageTypeFieldParser(FieldParser):
         acquisition[cls.name] = value
 
 
+class DermoscopicTypeFieldParser(FieldParser):
+    name = 'dermoscopic_type'
+    allowedFields = {'dermoscopic_type'}
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.lower()
+            if value in ['', 'unknown']:
+                value = None
+            else:
+                if value == 'contact non polarized':
+                    value = 'contact non-polarized'
+                elif value == 'non contact polarized':
+                    value = 'non-contact polarized'
+                cls._assertEnumerated(value, {
+                    'contact polarized',
+                    'contact non-polarized',
+                    'non-contact polarized'})
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(acquisition, cls.name, value)
+        acquisition[cls.name] = value
+
+
 def _populateMetadata(clinical):
     """
     Populate empty metadata fields that can be determined based on other fields.
@@ -671,6 +699,7 @@ def addImageClinicalMetadata(image, data):
         DiagnosisFieldParser,
         # NevusTypeFieldParser,
         ImageTypeFieldParser,
+        DermoscopicTypeFieldParser,
     ]:
         acquisition = image['meta']['acquisition']
         clinical = image['meta']['clinical']
