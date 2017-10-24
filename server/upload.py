@@ -53,13 +53,18 @@ class ZipFileOpener(object):
         # TODO: check for "7z" command
 
     def __enter__(self):
+        # Create temporary directory
+        self.tempDirManager = TempDir()
+        self.tempDir = self.tempDirManager.__enter__()
+
         try:
             return self._defaultUnzip()
         except (zipfile.BadZipfile, NotImplementedError):
             return self._fallbackUnzip()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+        # Destroy temporary directory
+        self.tempDirManager.__exit__(exc_type, exc_val, exc_tb)
 
     def _defaultUnzip(self):
         zipFile = zipfile.ZipFile(self.zipFilePath)
@@ -87,46 +92,44 @@ class ZipFileOpener(object):
         return self._defaultUnzipIter(zipFile, fileList), len(fileList)
 
     def _defaultUnzipIter(self, zipFile, fileList):
-        with TempDir() as temp_dir:
-            for originalFile, originalFileRelpath in fileList:
-                originalFileName = os.path.basename(originalFileRelpath)
-                tempFilePath = os.path.join(temp_dir, originalFileName)
-                with open(tempFilePath, 'wb') as tempFileStream:
-                    shutil.copyfileobj(
-                        zipFile.open(originalFile),
-                        tempFileStream
-                    )
-                yield tempFilePath, originalFileRelpath
-                os.remove(tempFilePath)
-            zipFile.close()
+        for originalFile, originalFileRelpath in fileList:
+            originalFileName = os.path.basename(originalFileRelpath)
+            tempFilePath = os.path.join(self.tempDir, originalFileName)
+            with open(tempFilePath, 'wb') as tempFileStream:
+                shutil.copyfileobj(
+                    zipFile.open(originalFile),
+                    tempFileStream
+                )
+            yield tempFilePath, originalFileRelpath
+            os.remove(tempFilePath)
+        zipFile.close()
 
     def _fallbackUnzip(self):
-        with TempDir() as tempDir:
-            unzipCommand = (
-                '7z',
-                'x',
-                '-y',
-                '-o%s' % tempDir,
-                self.zipFilePath
-            )
-            try:
-                with open(os.devnull, 'rb') as nullIn,\
-                        open(os.devnull, 'wb') as nullOut:
-                    subprocess.check_call(
-                        unzipCommand, stdin=nullIn, stdout=nullOut,
-                        stderr=subprocess.STDOUT)
-            except subprocess.CalledProcessError:
-                self.__exit__(*sys.exc_info())
-                raise
+        unzipCommand = (
+            '7z',
+            'x',
+            '-y',
+            '-o%s' % self.tempDir,
+            self.zipFilePath
+        )
+        try:
+            with open(os.devnull, 'rb') as nullIn,\
+                    open(os.devnull, 'wb') as nullOut:
+                subprocess.check_call(
+                    unzipCommand, stdin=nullIn, stdout=nullOut,
+                    stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError:
+            self.__exit__(*sys.exc_info())
+            raise
 
-            fileList = []
-            for tempDirPath, _, tempFileNames in os.walk(tempDir):
-                for tempFileName in tempFileNames:
-                    tempFilePath = os.path.join(tempDirPath, tempFileName)
-                    originalFileRelpath = os.path.relpath(
-                        tempFilePath, tempDir)
-                    if tempFileName.startswith('._'):
-                        # file is probably a macOS resource fork, skip
-                        continue
-                    fileList.append((tempFilePath, originalFileRelpath))
-            return iter(fileList), len(fileList)
+        fileList = []
+        for tempDirPath, _, tempFileNames in os.walk(self.tempDir):
+            for tempFileName in tempFileNames:
+                tempFilePath = os.path.join(tempDirPath, tempFileName)
+                originalFileRelpath = os.path.relpath(
+                    tempFilePath, self.tempDir)
+                if tempFileName.startswith('._'):
+                    # file is probably a macOS resource fork, skip
+                    continue
+                fileList.append((tempFilePath, originalFileRelpath))
+        return iter(fileList), len(fileList)
