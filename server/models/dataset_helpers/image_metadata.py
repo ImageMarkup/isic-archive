@@ -675,12 +675,12 @@ def _checkMetadataWarnings(clinical):
     return warnings
 
 
-def addImageClinicalMetadata(image, data):
+def addImageMetadata(image, data):
     """
-    Add clinical metadata to an image. Data is expected to be a row from
-    csv.DictReader. Values for recognized fields are parsed and added to the
-    image's clinical metadata field and private metadata field. Unrecognized
-    fields are added to the image's unstructured metadata field.
+    Add acquisition and clinical metadata to an image. Data is expected to be a
+    row from csv.DictReader. Values for recognized fields are parsed and added
+    to the image's clinical metadata field and private metadata field.
+    Unrecognized fields are added to the image's unstructured metadata field.
 
     Returns a tuple of:
     - List of descriptive errors with the metadata. An empty list indicates that

@@ -30,7 +30,7 @@ from girder.utility import assetstore_utilities, mail_utils
 from girder.utility.progress import ProgressContext
 
 from .dataset_helpers import matchFilenameRegex
-from .dataset_helpers.image_metadata import addImageClinicalMetadata
+from .dataset_helpers.image_metadata import addImageMetadata
 from ..upload import ZipFileOpener
 from ..utility import generateLines
 from ..utility import mail_utils as isic_mail_utils
@@ -378,7 +378,7 @@ class Dataset(FolderModel):
                     image = self._getImageForMetadataCsvRow(
                         dataset, csvRow, originalNameField, isicIdField)
                     validationErrors, validationWarnings = \
-                        addImageClinicalMetadata(image, csvRow)
+                        addImageMetadata(image, csvRow)
 
                     # Add row information to validation error strings
                     validationErrors = [
