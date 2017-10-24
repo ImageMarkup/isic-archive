@@ -37,6 +37,7 @@ MelanocyticFieldParser = None
 DiagnosisConfirmTypeFieldParser = None
 BenignMalignantFieldParser = None
 DiagnosisFieldParser = None
+ImageTypeFieldParser = None
 
 addImageClinicalMetadata = None
 
@@ -62,6 +63,7 @@ def setUpModule():
         DiagnosisConfirmTypeFieldParser, \
         BenignMalignantFieldParser, \
         DiagnosisFieldParser, \
+        ImageTypeFieldParser, \
         addImageClinicalMetadata
     from dataset_helpers.image_metadata import \
         MetadataFieldException, \
@@ -78,6 +80,7 @@ def setUpModule():
         DiagnosisConfirmTypeFieldParser, \
         BenignMalignantFieldParser, \
         DiagnosisFieldParser, \
+        ImageTypeFieldParser, \
         addImageClinicalMetadata
 
 
@@ -933,6 +936,73 @@ class ImageMetadataTestCase(base.TestCase):
         data = {'diagnosis': '1'}
         image = self._createImage()
         self.assertRunParserRaises(image, data, parser, BadFieldTypeException)
+
+    def testImageTypeFieldParser(self):
+        parser = ImageTypeFieldParser
+
+        # Valid values with varying case
+        for value in [
+            'dermoscopic',
+            'CLINICAL',
+            'Overview'
+        ]:
+            data = {'image_type': value}
+            image = self._createImage()
+            self.assertRunParser(image, data, parser)
+            self.assertDictEqual({}, data)
+            self.assertDictEqual({}, image['meta']['unstructured'])
+            self.assertDictEqual({'image_type': value.lower()}, image['meta']['acquisition'])
+            self.assertDictEqual({}, image['privateMeta'])
+
+        # Invalid value
+        data = {'image_type': 'bad'}
+        image = self._createImage()
+        self.assertRunParserRaises(image, data, parser, BadFieldTypeException)
+
+        # Unknown values
+        for value in self.unknownValues:
+            data = {'image_type': value}
+            image = self._createImage()
+            self.assertRunParser(image, data, parser)
+            self.assertDictEqual({}, data)
+            self.assertDictEqual({}, image['meta']['unstructured'])
+            self.assertDictEqual({'image_type': None}, image['meta']['acquisition'])
+            self.assertDictEqual({}, image['privateMeta'])
+
+        # Update null value with new value
+        data = {'image_type': 'dermoscopic'}
+        image = self._createImage()
+        image['meta']['acquisition']['image_type'] = None
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'image_type': 'dermoscopic'}, image['meta']['acquisition'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Update existing value with same value
+        data = {'image_type': 'dermoscopic'}
+        image = self._createImage()
+        image['meta']['acquisition']['image_type'] = 'dermoscopic'
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'image_type': 'dermoscopic'}, image['meta']['acquisition'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Update existing value with null value
+        data = {'image_type': None}
+        image = self._createImage()
+        image['meta']['acquisition']['image_type'] = 'dermoscopic'
+        self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
+
+        # Update existing value with new value
+        data = {'image_type': 'clinical'}
+        image = self._createImage()
+        image['meta']['acquisition']['image_type'] = 'dermoscopic'
+        self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
+
+        # Field not found
+        self._testFieldNotFound(parser)
 
     def testAddImageClinicalMetadata(self):
         # Empty data

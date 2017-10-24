@@ -515,6 +515,29 @@ class NevusTypeFieldParser(FieldParser):
 #                 'if this value is set, "path_diagnosis" must be one of %s' %
 #                 sorted(allowed_diagnoses))
 
+class ImageTypeFieldParser(FieldParser):
+    name = 'image_type'
+    allowedFields = {'image_type'}
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.lower()
+            if value in ['', 'unknown']:
+                value = None
+            else:
+                cls._assertEnumerated(value, {
+                    'dermoscopic',
+                    'clinical',
+                    'overview'})
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(acquisition, cls.name, value)
+        acquisition[cls.name] = value
+
 
 def _populateMetadata(clinical):
     """
@@ -647,6 +670,7 @@ def addImageClinicalMetadata(image, data):
         BenignMalignantFieldParser,
         DiagnosisFieldParser,
         # NevusTypeFieldParser,
+        ImageTypeFieldParser,
     ]:
         acquisition = image['meta']['acquisition']
         clinical = image['meta']['clinical']
