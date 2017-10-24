@@ -175,6 +175,7 @@ class ImageResource(IsicResource):
         .param('filter', 'Filter the images by a PegJS-specified grammar (causing "datasetId" to '
                          'be ignored).',
                required=False)
+        .produces('application/zip')
         .errorResponse()
     )
     @access.cookie
@@ -244,6 +245,7 @@ class ImageResource(IsicResource):
                required=False, default=256)
         .param('height', 'The desired maximum height for the thumbnail.', paramType='query',
                required=False, default=256)
+        .produces('image/jpeg')
         .errorResponse('ID was invalid.')
     )
     @access.cookie
@@ -283,6 +285,7 @@ class ImageResource(IsicResource):
                paramType='path')
         .param('x', 'The X coordinate of the tile (0 is the left side).', paramType='path')
         .param('y', 'The Y coordinate of the tile (0 is the top).', paramType='path')
+        .produces('image/jpeg')
         .errorResponse('ID was invalid.')
     )
     @access.cookie
@@ -310,6 +313,7 @@ class ImageResource(IsicResource):
         .param('contentDisposition',
                'Specify the Content-Disposition response header disposition-type value.',
                required=False, enum=['inline', 'attachment'])
+        .produces(['image/jpeg', 'image/png', 'image/bmp'])
         .errorResponse('ID was invalid.')
     )
     @access.cookie
@@ -331,6 +335,7 @@ class ImageResource(IsicResource):
     @describeRoute(
         Description('Get the superpixels for this image, as a PNG-encoded label map.')
         .param('id', 'The ID of the image.', paramType='path')
+        .produces('image/png')
         .errorResponse('ID was invalid.')
     )
     @access.cookie

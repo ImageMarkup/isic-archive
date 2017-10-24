@@ -137,6 +137,7 @@ class AnnotationResource(IsicResource):
         .param('contentDisposition',
                'Specify the Content-Disposition response header disposition-type value.',
                required=False, enum=['inline', 'attachment'])
+        .produces('image/jpeg')
         .errorResponse()
     )
     @access.cookie
