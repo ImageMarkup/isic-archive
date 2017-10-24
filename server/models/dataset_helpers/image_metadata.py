@@ -78,7 +78,7 @@ class FieldParser(object):
     allowedFields = {}
 
     @classmethod
-    def run(cls, data, clinical, private):
+    def run(cls, data, acquisition, clinical, private):
         try:
             rawValue = cls.extract(data)
         except MetadataFieldNotFoundException:
@@ -86,7 +86,7 @@ class FieldParser(object):
             return
 
         cleanValue = cls.transform(rawValue)
-        cls.load(cleanValue, clinical, private)
+        cls.load(cleanValue, acquisition, clinical, private)
 
     @classmethod
     def extract(cls, data):
@@ -124,7 +124,7 @@ class FieldParser(object):
         raise NotImplementedError()
 
     @classmethod
-    def load(cls, value, clinical, private):
+    def load(cls, value, acquisition, clinical, private):
         """Implement in subclasses."""
         raise NotImplementedError()
 
@@ -198,7 +198,7 @@ class AgeFieldParser(FieldParser):
         return value
 
     @classmethod
-    def load(cls, value, clinical, private):
+    def load(cls, value, acquisition, clinical, private):
         approxAge = \
             int(round(value / 5.0) * 5) \
             if value is not None \
@@ -231,7 +231,7 @@ class SexFieldParser(FieldParser):
         return value
 
     @classmethod
-    def load(cls, value, clinical, private):
+    def load(cls, value, acquisition, clinical, private):
         cls._checkWrite(clinical, cls.name, value)
         clinical[cls.name] = value
 
@@ -249,7 +249,7 @@ class HxMmFieldParser(FieldParser):
         return value
 
     @classmethod
-    def load(cls, value, clinical, private):
+    def load(cls, value, acquisition, clinical, private):
         cls._checkWrite(clinical, cls.name, value)
         clinical[cls.name] = value
 
@@ -307,7 +307,7 @@ class ClinicalSizeFieldParser(FieldParser):
         return value
 
     @classmethod
-    def load(cls, value, clinical, private):
+    def load(cls, value, acquisition, clinical, private):
         cls._checkWrite(clinical, cls.name, value)
         clinical[cls.name] = value
 
@@ -339,7 +339,7 @@ class MelanocyticFieldParser(FieldParser):
         return value
 
     @classmethod
-    def load(cls, value, clinical, private):
+    def load(cls, value, acquisition, clinical, private):
         cls._checkWrite(clinical, cls.name, value)
         clinical[cls.name] = value
 
@@ -363,7 +363,7 @@ class DiagnosisConfirmTypeFieldParser(FieldParser):
         return value
 
     @classmethod
-    def load(cls, value, clinical, private):
+    def load(cls, value, acquisition, clinical, private):
         cls._checkWrite(clinical, cls.name, value)
         clinical[cls.name] = value
 
@@ -391,7 +391,7 @@ class BenignMalignantFieldParser(FieldParser):
         return value
 
     @classmethod
-    def load(cls, value, clinical, private):
+    def load(cls, value, acquisition, clinical, private):
         cls._checkWrite(clinical, cls.name, value)
         clinical[cls.name] = value
 
@@ -465,7 +465,7 @@ class DiagnosisFieldParser(FieldParser):
         return value
 
     @classmethod
-    def load(cls, value, clinical, private):
+    def load(cls, value, acquisition, clinical, private):
         cls._checkWrite(clinical, cls.name, value)
         clinical[cls.name] = value
 
@@ -502,7 +502,7 @@ class NevusTypeFieldParser(FieldParser):
         return value
 
     @classmethod
-    def load(cls, value, clinical, private):
+    def load(cls, value, acquisition, clinical, private):
         cls._checkWrite(clinical, cls.name, value)
         clinical[cls.name] = value
 
@@ -648,11 +648,12 @@ def addImageClinicalMetadata(image, data):
         DiagnosisFieldParser,
         # NevusTypeFieldParser,
     ]:
+        acquisition = image['meta']['acquisition']
         clinical = image['meta']['clinical']
         private = image['privateMeta']
 
         try:
-            parser.run(data, clinical, private)
+            parser.run(data, acquisition, clinical, private)
         except MetadataValueExistsException as e:
             errors.append(
                 'value already exists for field %r (old: %r, new: %r)' %

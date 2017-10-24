@@ -93,17 +93,19 @@ class ImageMetadataTestCase(base.TestCase):
         """Create an empty mock image object."""
         image = {
             'meta': {
-                'unstructured': {},
-                'clinical': {}
+                'acquisition': {},
+                'clinical': {},
+                'unstructured': {}
             },
             'privateMeta': {}
         }
         return image
 
     def _runParser(self, image, data, parser):
+        acquisition = image['meta']['acquisition']
         clinical = image['meta']['clinical']
         private = image['privateMeta']
-        parser.run(data, clinical, private)
+        parser.run(data, acquisition, clinical, private)
 
     def assertRunParser(self, image, data, parser):
         """Assert that the parser runs without raising a MetadataFieldException."""
@@ -126,8 +128,9 @@ class ImageMetadataTestCase(base.TestCase):
         image = self._createImage()
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({'other': 'value'}, data)
-        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({}, image['meta']['acquisition'])
         self.assertDictEqual({}, image['meta']['clinical'])
+        self.assertDictEqual({}, image['meta']['unstructured'])
         self.assertDictEqual({}, image['privateMeta'])
 
     def testAgeFieldParser(self):
