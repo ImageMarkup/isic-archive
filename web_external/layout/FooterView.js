@@ -1,5 +1,7 @@
 import $ from 'jquery';
 
+import {getApiRoot} from 'girder/rest';
+
 import View from '../view';
 
 import LayoutFooterTemplate from './layoutFooter.pug';
@@ -12,7 +14,7 @@ const LayoutFooterView = View.extend({
 
     render: function () {
         this.$el.html(LayoutFooterTemplate({
-            apiRoot: this.apiRoot
+            apiRoot: getApiRoot()
         }));
 
         this.$('.isic-footer-disclaimer')

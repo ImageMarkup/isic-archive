@@ -31,6 +31,7 @@
             "plugin": "web_client/main.js",
             "app": "web_external/main.js"
         },
+        "configHelper": "webpack.helper.js",
         "defaultLoaders": true
     }
 }

@@ -33,6 +33,11 @@ import './routes';
 import LayoutTemplate from './layout/layout.pug';
 import './layout/layout.styl';
 
+// The 'girder/rest' import will always overwrite the publicPath to Girder's static root, which we
+// don't want; so re-overwrite it with the original value from the build configuration (which
+// cannot be captured here at load-time, due to import hoisting)
+__webpack_public_path__ = '/static/built/plugins/isic_archive/'; // eslint-disable-line no-undef, camelcase
+
 const IsicApp = GirderApp.extend({
     start: function () {
         // Set select2 default options
@@ -117,55 +122,12 @@ const IsicApp = GirderApp.extend({
     }
 });
 
-Backbone.sync = function (method, model, options) {
-    // In order to use the native "Backbone.Model.destroy" method (which triggers the correct
-    // collection-level events, unlike the Girder version), a working "Backbone.sync" method is
-    // required. Since all Ajax calls must be made via "restRequest" (to add auth headers)
-    // and since "Backbone.ajax" cannot be directly changed to use "restRequest" (since
-    // "restRequest actually calls "Backbone.ajax"), "Backbone.sync" must be reimplemented to
-    // use "restRequest" directly.
-    // In this reimplementation, the only important changes are:
-    //   * Use "restRequest" instead of "Backbone.ajax"
-    //   * Set "params.path" instead of "params.url"
-    let methodMap = {
-        'create': 'POST',
-        'update': 'PUT',
-        'patch': 'PATCH',
-        'delete': 'DELETE',
-        'read': 'GET'
-    };
-    let type = methodMap[method];
-
-    options = options || {};
-
-    let params = {type: type, dataType: 'json'};
-
-    if (!options.url) {
-        // params.url = _.result(model, 'url') || urlError();
-        // restRequest expects a "path" option, and will set "url" internally
-        params.path = _.result(model, 'url');
-    }
-
-    if (options.data === null && model && (method === 'create' || method === 'update' || method === 'patch')) {
-        params.contentType = 'application/json';
-        params.data = JSON.stringify(options.attrs || model.toJSON(options));
-    }
-
-    if (params.type !== 'GET') {
-        params.processData = false;
-    }
-
-    let xhr = options.xhr = restRequest(_.extend(params, options));
-    model.trigger('request', model, xhr, options);
-    return xhr;
-};
-
 /**
  * Patch ItemModel with a method to get the files within the item.
  */
 ItemModel.prototype.getFiles = function () {
     restRequest({
-        path: `${this.resourceName}/${this.id}/files`
+        url: `${this.resourceName}/${this.id}/files`
     }).done((resp) => {
         let fileCollection = new FileCollection(resp);
         this.trigger('g:files', fileCollection);
@@ -180,8 +142,8 @@ ItemModel.prototype.getFiles = function () {
  */
 FolderModel.prototype.removeContents = function () {
     restRequest({
-        path: `${this.resourceName}/${this.id}/contents`,
-        type: 'DELETE'
+        url: `${this.resourceName}/${this.id}/contents`,
+        method: 'DELETE'
     }).done((resp) => {
         this.trigger('g:success');
     }).fail((err) => {

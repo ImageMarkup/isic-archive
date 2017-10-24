@@ -1,6 +1,8 @@
 import $ from 'jquery';
 import _ from 'underscore';
 
+import {getApiRoot} from 'girder/rest';
+
 import SegmentationsDisplayView from './SegmentationsDisplayView';
 import ImageFullscreenWidget from '../../common/Viewer/ImageFullscreenWidget';
 import View from '../../view';
@@ -51,7 +53,7 @@ const ImageDetailsPane = View.extend({
 
         this.$el.html(ImageDetailsPageTemplate({
             _: _,
-            apiRoot: this.apiRoot,
+            apiRoot: getApiRoot(),
             image: this.image,
             created: created,
             license: license
@@ -63,15 +65,10 @@ const ImageDetailsPane = View.extend({
             parentView: this
         });
 
-        this.$('[data-toggle="tooltip"]').tooltip({
-            trigger: 'hover'
-        });
-
         return this;
     },
 
     zoom: function () {
-        this.clearTooltips();
         new ImageFullscreenWidget({ // eslint-disable-line no-new
             el: $('#g-dialog-container'),
             model: this.image,
@@ -81,10 +78,6 @@ const ImageDetailsPane = View.extend({
 
     closeDetails: function () {
         this.image.deselect();
-    },
-
-    clearTooltips: function () {
-        this.$('[data-toggle="tooltip"]').tooltip('hide');
     }
 });
 

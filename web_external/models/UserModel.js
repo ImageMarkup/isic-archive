@@ -36,8 +36,8 @@ UserModel.prototype.canAcceptTerms = function () {
 
 UserModel.prototype.setAcceptTerms = function () {
     return restRequest({
-        path: 'user/acceptTerms',
-        type: 'POST'
+        url: 'user/acceptTerms',
+        method: 'POST'
     })
     .then((resp) => {
         if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
@@ -58,8 +58,8 @@ UserModel.prototype.canCreateDataset = function () {
 
 UserModel.prototype.setCanCreateDataset = function () {
     return restRequest({
-        path: 'user/requestCreateDatasetPermission',
-        type: 'POST'
+        url: 'user/requestCreateDatasetPermission',
+        method: 'POST'
     })
     .then((resp) => {
         if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
@@ -89,12 +89,12 @@ UserModel.prototype.canAdminStudy = function () {
 // TODO: Remove this once Girder is updated
 UserModel.prototype.changePassword = function (oldPassword, newPassword) {
     return restRequest({
-        path: `${this.resourceName}/password`,
+        url: `${this.resourceName}/password`,
         data: {
             old: oldPassword,
             new: newPassword
         },
-        type: 'PUT',
+        method: 'PUT',
         error: null
     })
     .done(() => {
@@ -109,8 +109,7 @@ UserModel.prototype.changePassword = function (oldPassword, newPassword) {
 // TODO: Push temporaryTokenLogin to upstream Girder
 UserModel.temporaryTokenLogin = function (userId, token) {
     return restRequest({
-        path: `user/password/temporary/${userId}`,
-        type: 'GET',
+        url: `user/password/temporary/${userId}`,
         data: {token: token},
         error: null
     })

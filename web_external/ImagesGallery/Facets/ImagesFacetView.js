@@ -1,6 +1,7 @@
 import d3 from 'd3';
 import $ from 'jquery';
 import _ from 'underscore';
+import 'bootstrap/js/tooltip';
 
 import {CategoricalFacetFilter, IntervalFacetFilter, TagsCategoricalFacetFilter} from '../ImagesFilter';
 import DatasetCollection from '../../collections/DatasetCollection';

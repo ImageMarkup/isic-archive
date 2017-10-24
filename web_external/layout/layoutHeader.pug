@@ -18,36 +18,36 @@ nav.navbar.navbar-default.navbar-fixed-top.isic-header-wrapper
             span.caret
           ul.dropdown-menu
             li(role='presentation')
-              a(title='Home', href='#')
+              a(href='#')
                 i.icon-home
                 | Home
             li(role='presentation')
-              a(title='ISIC Project', href='http://isdis.net/isic-project/', target='_blank', rel='noopener')
+              a(href='http://isdis.net/isic-project/', target='_blank', rel='noopener')
                 i.icon-help
                 | ISIC Project
                 i.icon-link-ext
             li(role='presentation')
-              a(title='Working Group Members', href='http://isdis.net/isic-project/working-group-members/', target='_blank', rel='noopener')
+              a(href='http://isdis.net/isic-project/working-group-members/', target='_blank', rel='noopener')
                 i.icon-users
                 | Working Group Members
                 i.icon-link-ext
             li(role='presentation')
-              a(title='Literature', href='#literature')
+              a(href='#literature')
                 i.icon-book
                 | Literature
             li.divider(role='separator')
             li.dropdown-header
               | Policies
             li(role='presentation')
-              a(title='Terms of Use', href='#termsOfUse')
+              a(href='#termsOfUse')
                 i.icon-doc-text
                 | Terms of Use
             li(role='presentation')
-              a(title='Privacy Policy', href='#privacyPolicy')
+              a(href='#privacyPolicy')
                 i.icon-doc-text
                 | Privacy Policy
             li(role='presentation')
-              a(title='Medical Disclaimer', href='#medicalDisclaimer')
+              a(href='#medicalDisclaimer')
                 i.icon-doc-text
                 | Medical Disclaimer
 
@@ -57,21 +57,21 @@ nav.navbar.navbar-default.navbar-fixed-top.isic-header-wrapper
             span.caret
           ul.dropdown-menu
             li(role='presentation')
-              a(title='Literature', href='#literature')
+              a(href='#literature')
                 i.icon-book
                 | Literature
             //li(role='presentation')
-            //  a(title='Forum', href='#forum')
+            //  a(href='#forum')
             //    i.icon-chat
             //    | Forum
             //    i.icon-link-ext
             li(role='presentation')
-              a(title='2016 ISBI Grand Challenge', href='http://challenge2016.isic-archive.com', target='_blank', rel='noopener')
+              a(href='http://challenge2016.isic-archive.com', target='_blank', rel='noopener')
                 i.icon-award
                 | 2016 ISBI Grand Challenge
                 i.icon-link-ext
             li(role='presentation')
-              a(title='2017 ISBI Grand Challenge', href='http://challenge2017.isic-archive.com', target='_blank', rel='noopener')
+              a(href='http://challenge2017.isic-archive.com', target='_blank', rel='noopener')
                 i.icon-award
                 | 2017 ISBI Grand Challenge
                 i.icon-link-ext
@@ -82,16 +82,16 @@ nav.navbar.navbar-default.navbar-fixed-top.isic-header-wrapper
             span.caret
           ul.dropdown-menu
             li(role='presentation')
-              a(title='Datasets', href='#dataset')
+              a(href='#dataset')
                 i.icon-list
                 | Datasets
             if currentUser
               li(role='presentation')
-                a(title='Contribute Dataset', href='#dataset/create')
+                a(href='#dataset/create')
                   i.icon-upload
                   | Contribute Dataset
             li(role='presentation')
-              a(title='Lesion Images', href='#images')
+              a(href='#images')
                 i.icon-picture
                 | Lesion Images
 
@@ -101,26 +101,26 @@ nav.navbar.navbar-default.navbar-fixed-top.isic-header-wrapper
             span.caret
           ul.dropdown-menu
             li(role='presentation')
-              a(title='Featuresets', href='#featuresets')
+              a(href='#featuresets')
                 i.icon-list
                 | Featuresets
             li(role='presentation')
-              a(title='Manage Annotation Studies', href='#studies')
+              a(href='#studies')
                 i.icon-pencil
                 | Manage Annotation Studies
             li(role='presentation')
-              a(title='Annotation Study Results', href='#studyResults')
+              a(href='#studyResults')
                 i.icon-eye
                 | Annotation Study Results
             if currentUser && currentUser.canAdminStudy()
               li(role='presentation')
-                a(title='Invite New User', href='#user/invite')
+                a(href='#user/invite')
                   i.icon-mail-alt
                   | Invite New User
 
         if currentUser
           li(role='presentation')
-            a.isic-header-item(title='Your Tasks', href='#tasks')
+            a.isic-header-item(href='#tasks')
               i.icon-check
               | Your Tasks
 

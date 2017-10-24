@@ -74,10 +74,6 @@ const StudiesView = View.extend({
             }
         }
 
-        this.$('.isic-tooltip').tooltip({
-            delay: 100
-        });
-
         return this;
     },
 

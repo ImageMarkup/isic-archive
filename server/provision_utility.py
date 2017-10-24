@@ -162,6 +162,8 @@ def provisionDatabase():
 
     # set external settings
     Setting.set(SettingKey.USER_DEFAULT_FOLDERS, 'none')
+    Setting.set(SettingKey.CONTACT_EMAIL_ADDRESS, 'admin@isic-archive.com')
+    Setting.set(SettingKey.BRAND_NAME, 'ISIC Archive')
     Setting.set(LargeImageSettings.LARGE_IMAGE_AUTO_SET, False)
     Setting.set(LargeImageSettings.LARGE_IMAGE_MAX_SMALL_IMAGE_SIZE, 0)
     # TODO: consider saving thumbnail files

@@ -75,8 +75,7 @@ router.route('useraccount/:id/token/:token', 'accountToken', (id, token) => {
     // This allows reset password links to work
     // TODO: push this logic into the user model in upstream Girder
     restRequest({
-        path: `user/password/temporary/${id}`,
-        type: 'GET',
+        url: `user/password/temporary/${id}`,
         data: {token: token},
         error: null
     }).done((resp) => {

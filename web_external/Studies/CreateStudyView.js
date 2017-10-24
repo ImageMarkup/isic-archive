@@ -25,7 +25,6 @@ const CreateStudyView = View.extend({
 
         'click a.isic-user-list-entry-action-remove': function (event) {
             let target = $(event.currentTarget);
-            target.tooltip('hide');
 
             let listEntry = target.closest('.isic-list-entry');
             let userId = listEntry.data('userId');
@@ -36,7 +35,6 @@ const CreateStudyView = View.extend({
 
         'click a.isic-featureset-list-entry-action-remove': function (event) {
             let target = $(event.currentTarget);
-            target.tooltip('hide');
 
             let listEntry = target.closest('.isic-list-entry');
             listEntry.remove();
@@ -78,8 +76,6 @@ const CreateStudyView = View.extend({
     render: function () {
         this.$el.html(CreateStudyPageTemplate());
 
-        this._makeTooltips();
-
         this.userSearchWidget.setElement(
             this.$('.isic-study-user-search-field-container')).render();
         this.featuresetSearchWidget.setElement(
@@ -88,16 +84,6 @@ const CreateStudyView = View.extend({
         this.$('input#isic-study-name').focus();
 
         return this;
-    },
-
-    _makeTooltips: function () {
-        this.$('.isic-list-entry-action-remove').tooltip({
-            placement: 'bottom',
-            animation: false,
-            delay: {
-                show: 100
-            }
-        });
     },
 
     _addUser: function (user) {
@@ -113,8 +99,6 @@ const CreateStudyView = View.extend({
         userList.append(UserListEntryTemplate({
             user: user
         }));
-
-        this._makeTooltips();
 
         userList.animate({
             scrollTop: userList[0].scrollHeight
@@ -140,8 +124,6 @@ const CreateStudyView = View.extend({
             featureset: featureset
         }));
 
-        this._makeTooltips();
-
         this.featuresetId = featureset.id;
     },
 
@@ -157,8 +139,8 @@ const CreateStudyView = View.extend({
 
         // TODO: move this into the StudyModel
         restRequest({
-            type: 'POST',
-            path: 'study',
+            method: 'POST',
+            url: 'study',
             data: {
                 name: name,
                 featuresetId: featuresetId,

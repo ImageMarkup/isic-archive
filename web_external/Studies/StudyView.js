@@ -69,10 +69,6 @@ const StudyView = View.extend({
             formatDate: this.formatDate
         }));
 
-        this.$('.isic-tooltip').tooltip({
-            delay: 100
-        });
-
         return this;
     },
 

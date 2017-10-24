@@ -8,7 +8,7 @@ jobs:
     working_directory: /home/circleci/project # as $CIRCLE_WORKING_DIRECTORY
 
     environment:
-      - GIRDER_VERSION: 2.3.0
+      - GIRDER_VERSION: 0392e67f0a5ff6e162effafcd490ddd159f7a0d0
       - WORKER_VERSION: d5b474864322d654b39a0e81c7376458995d3c73
       - LARGE_IMAGE_VERSION: 3e7719dfeb97e1ba30119c46f72cb0526b95faa7
 
@@ -33,7 +33,10 @@ jobs:
 
       - run:
           name: Clone Girder
-          command: git clone --depth 1 --branch $GIRDER_VERSION -- https://github.com/girder/girder.git girder
+          #command: git clone --depth 1 --branch $GIRDER_VERSION -- https://github.com/girder/girder.git girder
+          command: |
+            git clone https://github.com/girder/girder.git girder
+            git -C girder checkout $GIRDER_VERSION
       - run:
           name: Clone girder_worker
           #command: git clone --depth 1 --branch $WORKER_VERSION -- https://github.com/girder/girder_worker.git girder/plugins/girder_worker

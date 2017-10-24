@@ -1,6 +1,7 @@
 import _ from 'underscore';
 
 import {getCurrentUser} from 'girder/auth';
+import {getApiRoot} from 'girder/rest';
 
 import Collection from '../collections/Collection';
 import Model from '../models/Model';
@@ -77,7 +78,7 @@ const TasksView = View.extend({
             this.taskReviewView = new TasksGroupView({
                 title: 'Dataset Review',
                 subtitle: 'QC review newly created datasets',
-                linkPrefix: `${this.apiRoot}/task/me/review/redirect?datasetId=`,
+                linkPrefix: `${getApiRoot()}/task/me/review/redirect?datasetId=`,
                 resourceName: 'dataset',
                 collection: this.reviewTasks,
                 parentView: this
@@ -92,7 +93,7 @@ const TasksView = View.extend({
             this.taskSegmentationView = new TasksGroupView({
                 title: 'Lesion Segmentation',
                 subtitle: 'Segment boundaries between lesion and normal skin',
-                linkPrefix: `${this.apiRoot}/task/me/segmentation/redirect?datasetId=`,
+                linkPrefix: `${getApiRoot()}/task/me/segmentation/redirect?datasetId=`,
                 resourceName: 'dataset',
                 collection: this.segmentationTasks,
                 parentView: this
@@ -106,7 +107,7 @@ const TasksView = View.extend({
         this.taskAnnotationView = new TasksGroupView({
             title: 'Annotation Studies',
             subtitle: 'Clinical feature annotation studies',
-            linkPrefix: `${this.apiRoot}/task/me/annotation/redirect?studyId=`,
+            linkPrefix: `${getApiRoot()}/task/me/annotation/redirect?studyId=`,
             resourceName: 'study',
             collection: this.annotationTasks,
             parentView: this
@@ -132,10 +133,6 @@ const TasksView = View.extend({
         }
         this.taskAnnotationView.setElement(
             this.$('#isic-tasks-annotation-container')).render();
-
-        this.$('.isic-tooltip').tooltip({
-            delay: 100
-        });
 
         return this;
     },
