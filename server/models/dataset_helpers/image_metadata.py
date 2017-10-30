@@ -78,7 +78,7 @@ class FieldParser(object):
     allowedFields = {}
 
     @classmethod
-    def run(cls, data, clinical, private):
+    def run(cls, data, acquisition, clinical, private):
         try:
             rawValue = cls.extract(data)
         except MetadataFieldNotFoundException:
@@ -86,7 +86,7 @@ class FieldParser(object):
             return
 
         cleanValue = cls.transform(rawValue)
-        cls.load(cleanValue, clinical, private)
+        cls.load(cleanValue, acquisition, clinical, private)
 
     @classmethod
     def extract(cls, data):
@@ -124,7 +124,7 @@ class FieldParser(object):
         raise NotImplementedError()
 
     @classmethod
-    def load(cls, value, clinical, private):
+    def load(cls, value, acquisition, clinical, private):
         """Implement in subclasses."""
         raise NotImplementedError()
 
@@ -198,7 +198,7 @@ class AgeFieldParser(FieldParser):
         return value
 
     @classmethod
-    def load(cls, value, clinical, private):
+    def load(cls, value, acquisition, clinical, private):
         approxAge = \
             int(round(value / 5.0) * 5) \
             if value is not None \
@@ -231,7 +231,7 @@ class SexFieldParser(FieldParser):
         return value
 
     @classmethod
-    def load(cls, value, clinical, private):
+    def load(cls, value, acquisition, clinical, private):
         cls._checkWrite(clinical, cls.name, value)
         clinical[cls.name] = value
 
@@ -249,7 +249,7 @@ class HxMmFieldParser(FieldParser):
         return value
 
     @classmethod
-    def load(cls, value, clinical, private):
+    def load(cls, value, acquisition, clinical, private):
         cls._checkWrite(clinical, cls.name, value)
         clinical[cls.name] = value
 
@@ -307,7 +307,7 @@ class ClinicalSizeFieldParser(FieldParser):
         return value
 
     @classmethod
-    def load(cls, value, clinical, private):
+    def load(cls, value, acquisition, clinical, private):
         cls._checkWrite(clinical, cls.name, value)
         clinical[cls.name] = value
 
@@ -339,7 +339,7 @@ class MelanocyticFieldParser(FieldParser):
         return value
 
     @classmethod
-    def load(cls, value, clinical, private):
+    def load(cls, value, acquisition, clinical, private):
         cls._checkWrite(clinical, cls.name, value)
         clinical[cls.name] = value
 
@@ -363,7 +363,7 @@ class DiagnosisConfirmTypeFieldParser(FieldParser):
         return value
 
     @classmethod
-    def load(cls, value, clinical, private):
+    def load(cls, value, acquisition, clinical, private):
         cls._checkWrite(clinical, cls.name, value)
         clinical[cls.name] = value
 
@@ -391,7 +391,7 @@ class BenignMalignantFieldParser(FieldParser):
         return value
 
     @classmethod
-    def load(cls, value, clinical, private):
+    def load(cls, value, acquisition, clinical, private):
         cls._checkWrite(clinical, cls.name, value)
         clinical[cls.name] = value
 
@@ -465,7 +465,7 @@ class DiagnosisFieldParser(FieldParser):
         return value
 
     @classmethod
-    def load(cls, value, clinical, private):
+    def load(cls, value, acquisition, clinical, private):
         cls._checkWrite(clinical, cls.name, value)
         clinical[cls.name] = value
 
@@ -502,7 +502,7 @@ class NevusTypeFieldParser(FieldParser):
         return value
 
     @classmethod
-    def load(cls, value, clinical, private):
+    def load(cls, value, acquisition, clinical, private):
         cls._checkWrite(clinical, cls.name, value)
         clinical[cls.name] = value
 
@@ -515,11 +515,65 @@ class NevusTypeFieldParser(FieldParser):
 #                 'if this value is set, "path_diagnosis" must be one of %s' %
 #                 sorted(allowed_diagnoses))
 
+class ImageTypeFieldParser(FieldParser):
+    name = 'image_type'
+    allowedFields = {'image_type'}
 
-def _populateMetadata(clinical):
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.lower()
+            if value in ['', 'unknown']:
+                value = None
+            else:
+                cls._assertEnumerated(value, {
+                    'dermoscopic',
+                    'clinical',
+                    'overview'})
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(acquisition, cls.name, value)
+        acquisition[cls.name] = value
+
+
+class DermoscopicTypeFieldParser(FieldParser):
+    name = 'dermoscopic_type'
+    allowedFields = {'dermoscopic_type', 'dermoscopy_type'}
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.lower()
+            if value in ['', 'unknown']:
+                value = None
+            else:
+                if value == 'contact non polarized':
+                    value = 'contact non-polarized'
+                elif value == 'non contact polarized':
+                    value = 'non-contact polarized'
+                cls._assertEnumerated(value, {
+                    'contact polarized',
+                    'contact non-polarized',
+                    'non-contact polarized'})
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(acquisition, cls.name, value)
+        acquisition[cls.name] = value
+
+
+def _populateMetadata(acquisition, clinical):
     """
     Populate empty metadata fields that can be determined based on other fields.
     """
+    dermoscopicType = acquisition.get('dermoscopic_type')
+    imageType = acquisition.get('image_type')
+
     diagnosis = clinical.get('diagnosis')
     benignMalignant = clinical.get('benign_malignant')
     diagnosisConfirmType = clinical.get('diagnosis_confirm_type')
@@ -539,12 +593,18 @@ def _populateMetadata(clinical):
         if clinical.get('melanocytic') is None:
             clinical['melanocytic'] = False
 
+    if dermoscopicType is not None and imageType is None:
+        acquisition['image_type'] = 'dermoscopic'
 
-def _checkMetadataErrors(clinical):
+
+def _checkMetadataErrors(acquisition, clinical):
     """
     Check metadata for fatal errors with respect to consistency between fields.
     Raises an InconsistentValuesException is raised if a value violates a rule.
     """
+    dermoscopicType = acquisition.get('dermoscopic_type')
+    imageType = acquisition.get('image_type')
+
     diagnosis = clinical.get('diagnosis')
     benignMalignant = clinical.get('benign_malignant')
     diagnosisConfirmType = clinical.get('diagnosis_confirm_type')
@@ -565,7 +625,7 @@ def _checkMetadataErrors(clinical):
                 names=[DiagnosisFieldParser.name, BenignMalignantFieldParser.name],
                 values=[diagnosis, benignMalignant])
 
-    # Set melanocytic field based on diagnosis
+    # Verify melanocytic field with respect to diagnosis
     if diagnosis in MelanocyticFieldParser.melanocyticDiagnoses:
         if melanocytic is False:
             raise InconsistentValuesException(
@@ -586,6 +646,11 @@ def _checkMetadataErrors(clinical):
         raise InconsistentValuesException(
             names=[BenignMalignantFieldParser.name, DiagnosisConfirmTypeFieldParser.name],
             values=[benignMalignant, diagnosisConfirmType])
+
+    if imageType != 'dermoscopic' and dermoscopicType is not None:
+        raise InconsistentValuesException(
+            names=[ImageTypeFieldParser.name, DermoscopicTypeFieldParser.name],
+            values=[imageType, dermoscopicType])
 
 
 def _checkMetadataWarnings(clinical):
@@ -610,12 +675,12 @@ def _checkMetadataWarnings(clinical):
     return warnings
 
 
-def addImageClinicalMetadata(image, data):
+def addImageMetadata(image, data):
     """
-    Add clinical metadata to an image. Data is expected to be a row from
-    csv.DictReader. Values for recognized fields are parsed and added to the
-    image's clinical metadata field and private metadata field. Unrecognized
-    fields are added to the image's unstructured metadata field.
+    Add acquisition and clinical metadata to an image. Data is expected to be a
+    row from csv.DictReader. Values for recognized fields are parsed and added
+    to the image's clinical metadata field and private metadata field.
+    Unrecognized fields are added to the image's unstructured metadata field.
 
     Returns a tuple of:
     - List of descriptive errors with the metadata. An empty list indicates that
@@ -647,12 +712,15 @@ def addImageClinicalMetadata(image, data):
         BenignMalignantFieldParser,
         DiagnosisFieldParser,
         # NevusTypeFieldParser,
+        ImageTypeFieldParser,
+        DermoscopicTypeFieldParser,
     ]:
+        acquisition = image['meta']['acquisition']
         clinical = image['meta']['clinical']
         private = image['privateMeta']
 
         try:
-            parser.run(data, clinical, private)
+            parser.run(data, acquisition, clinical, private)
         except MetadataValueExistsException as e:
             errors.append(
                 'value already exists for field %r (old: %r, new: %r)' %
@@ -669,11 +737,11 @@ def addImageClinicalMetadata(image, data):
     # TODO: handle contingently required fields
 
     # Populate empty metadata fields
-    _populateMetadata(clinical)
+    _populateMetadata(acquisition, clinical)
 
     # Check metadata for errors
     try:
-        _checkMetadataErrors(clinical)
+        _checkMetadataErrors(acquisition, clinical)
     except InconsistentValuesException as e:
         errors.append('values %r for fields %r are inconsistent' % (e.values, e.names))
 
