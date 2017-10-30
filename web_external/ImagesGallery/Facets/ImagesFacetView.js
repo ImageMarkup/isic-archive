@@ -616,6 +616,13 @@ const FACET_SCHEMA = {
         title: 'Lesion Diagnosis',
         collapsed: true
     },
+    'meta.clinical.melanocytic': {
+        FacetView: ImagesFacetHistogramView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Melanocytic',
+        collapsed: true
+    },
     'meta.clinical.clin_size_long_diam_mm': {
         FacetView: ImagesFacetHistogramView,
         FacetFilter: IntervalFacetFilter,
