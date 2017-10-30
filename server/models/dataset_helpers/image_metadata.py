@@ -541,7 +541,7 @@ class ImageTypeFieldParser(FieldParser):
 
 class DermoscopicTypeFieldParser(FieldParser):
     name = 'dermoscopic_type'
-    allowedFields = {'dermoscopic_type'}
+    allowedFields = {'dermoscopic_type', 'dermoscopy_type'}
 
     @classmethod
     def transform(cls, value):
