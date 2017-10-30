@@ -648,6 +648,13 @@ const FACET_SCHEMA = {
         title: 'Family History of Melanoma',
         collapsed: true
     },
+    'meta.acquisition.image_type': {
+        FacetView: ImagesFacetHistogramView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Image Type',
+        collapsed: true
+    },
     'meta.tags': {
         FacetView: ImagesFacetCategoricalTagsView,
         FacetFilter: TagsCategoricalFacetFilter,

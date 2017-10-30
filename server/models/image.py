@@ -382,7 +382,8 @@ class Image(ItemModel):
             'meta.clinical.diagnosis',
             'meta.clinical.melanocytic',
             'meta.clinical.personal_hx_mm',
-            'meta.clinical.family_hx_mm'
+            'meta.clinical.family_hx_mm',
+            'meta.acquisition.image_type',
         ]
         tagFacets = [
             'meta.tags'
