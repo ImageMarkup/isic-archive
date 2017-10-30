@@ -655,6 +655,13 @@ const FACET_SCHEMA = {
         title: 'Image Type',
         collapsed: true
     },
+    'meta.acquisition.dermoscopic_type': {
+        FacetView: ImagesFacetHistogramView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Dermoscopic Type',
+        collapsed: true
+    },
     'meta.tags': {
         FacetView: ImagesFacetCategoricalTagsView,
         FacetFilter: TagsCategoricalFacetFilter,

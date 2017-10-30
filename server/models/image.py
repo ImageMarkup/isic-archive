@@ -384,6 +384,7 @@ class Image(ItemModel):
             'meta.clinical.personal_hx_mm',
             'meta.clinical.family_hx_mm',
             'meta.acquisition.image_type',
+            'meta.acquisition.dermoscopic_type'
         ]
         tagFacets = [
             'meta.tags'
