@@ -380,8 +380,11 @@ class Image(ItemModel):
             'meta.clinical.sex',
             'meta.clinical.diagnosis_confirm_type',
             'meta.clinical.diagnosis',
+            'meta.clinical.melanocytic',
             'meta.clinical.personal_hx_mm',
-            'meta.clinical.family_hx_mm'
+            'meta.clinical.family_hx_mm',
+            'meta.acquisition.image_type',
+            'meta.acquisition.dermoscopic_type'
         ]
         tagFacets = [
             'meta.tags'

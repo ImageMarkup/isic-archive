@@ -616,6 +616,13 @@ const FACET_SCHEMA = {
         title: 'Lesion Diagnosis',
         collapsed: true
     },
+    'meta.clinical.melanocytic': {
+        FacetView: ImagesFacetHistogramView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Melanocytic',
+        collapsed: true
+    },
     'meta.clinical.clin_size_long_diam_mm': {
         FacetView: ImagesFacetHistogramView,
         FacetFilter: IntervalFacetFilter,
@@ -639,6 +646,20 @@ const FACET_SCHEMA = {
         FacetFilter: CategoricalFacetFilter,
         coerceToType: 'string',
         title: 'Family History of Melanoma',
+        collapsed: true
+    },
+    'meta.acquisition.image_type': {
+        FacetView: ImagesFacetHistogramView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Image Type',
+        collapsed: true
+    },
+    'meta.acquisition.dermoscopic_type': {
+        FacetView: ImagesFacetHistogramView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Dermoscopic Type',
         collapsed: true
     },
     'meta.tags': {
