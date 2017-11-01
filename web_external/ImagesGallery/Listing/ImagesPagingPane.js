@@ -1,5 +1,7 @@
 import 'bootstrap/js/dropdown';
 
+import {getApiRoot} from 'girder/rest';
+
 import View from '../../view';
 
 import ImagesPagingPaneTemplate from './imagesPagingPane.pug';
@@ -111,7 +113,7 @@ const ImagesPagingPane = View.extend({
     },
 
     _downloadZip: function (include) {
-        let downloadUrl = `${this.apiRoot}/image/download?include=${include}`;
+        let downloadUrl = `${getApiRoot()}/image/download?include=${include}`;
         let filterQuery = JSON.stringify(this.filters.asAst());
         if (filterQuery) {
             downloadUrl += `&filter=${filterQuery}`;
