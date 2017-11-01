@@ -18,16 +18,21 @@
 ###############################################################################
 
 from girder.constants import AccessType, SettingKey
+from girder.models.collection import Collection
+from girder.models.group import Group
+from girder.models.setting import Setting
+
 from girder.plugins.large_image.constants import PluginSettings as LargeImageSettings
-from girder.utility.model_importer import ModelImporter
+
+from .models.user import User
 
 
 def getAdminUser():
-    User = ModelImporter.model('user', 'isic_archive')
+
     # TODO: cache this?
-    adminUser = User.findOne({'login': 'isic-admin'})
+    adminUser = User().findOne({'login': 'isic-admin'})
     if not adminUser:
-        adminUser = User.createUser(
+        adminUser = User().createUser(
             login='isic-admin',
             password='isic-admin',
             firstName='ISIC Archive',
@@ -38,47 +43,44 @@ def getAdminUser():
         )
         adminUser['status'] = 'disabled'
         # TODO: subsequent re-saves of this user will re-enable it, until another user is created
-        adminUser = User.save(adminUser, validate=False)
+        adminUser = User().save(adminUser, validate=False)
     return adminUser
 
 
 def _provisionImages():
-    Collection = ModelImporter.model('collection')
-    Group = ModelImporter.model('group')
-
-    if not Group.findOne({'name': 'Dataset Contributors'}):
-        contributorsGroup = Group.createGroup(
+    if not Group().findOne({'name': 'Dataset Contributors'}):
+        contributorsGroup = Group().createGroup(
             name='Dataset Contributors',
             creator=getAdminUser(),
             description='Users that can create datasets',
             public=True
         )
-        Group.removeUser(contributorsGroup, getAdminUser())
+        Group().removeUser(contributorsGroup, getAdminUser())
 
-    reviewerGroup = Group.findOne({'name': 'Dataset QC Reviewers'})
+    reviewerGroup = Group().findOne({'name': 'Dataset QC Reviewers'})
     if not reviewerGroup:
-        reviewerGroup = Group.createGroup(
+        reviewerGroup = Group().createGroup(
             name='Dataset QC Reviewers',
             creator=getAdminUser(),
             description='Users responsible for doing initial QC',
             public=True
         )
-        Group.removeUser(reviewerGroup, getAdminUser())
+        Group().removeUser(reviewerGroup, getAdminUser())
 
-    if not Collection.findOne({'name': 'Flagged Images'}):
-        flaggedCollection = Collection.createCollection(
+    if not Collection().findOne({'name': 'Flagged Images'}):
+        flaggedCollection = Collection().createCollection(
             name='Flagged Images',
             creator=getAdminUser(),
             description='Images that have been flagged for any reason',
             public=False,
             reuseExisting=False
         )
-        flaggedCollection = Collection.setAccessList(
+        flaggedCollection = Collection().setAccessList(
             doc=flaggedCollection,
             access={},
             save=False
         )
-        Collection.setGroupAccess(
+        Collection().setGroupAccess(
             doc=flaggedCollection,
             group=reviewerGroup,
             # TODO: make this a special access level
@@ -86,14 +88,14 @@ def _provisionImages():
             save=True
         )
 
-    imageCollection = Collection.createCollection(
+    imageCollection = Collection().createCollection(
         name='Lesion Images',
         creator=getAdminUser(),
         description='All public lesion image datasets',
         public=True,
         reuseExisting=True
     )
-    Collection.setAccessList(
+    Collection().setAccessList(
         doc=imageCollection,
         access={},
         save=True
@@ -101,54 +103,49 @@ def _provisionImages():
 
 
 def _provisionSegmentationGroups():
-    Group = ModelImporter.model('group')
-
-    if not Group.findOne({'name': 'Segmentation Novices'}):
-        segmentationNovicesGroup = Group.createGroup(
+    if not Group().findOne({'name': 'Segmentation Novices'}):
+        segmentationNovicesGroup = Group().createGroup(
             name='Segmentation Novices',
             creator=getAdminUser(),
             description='Users able to tentatively segment lesion boundaries',
             public=True
         )
-        Group.removeUser(segmentationNovicesGroup, getAdminUser())
+        Group().removeUser(segmentationNovicesGroup, getAdminUser())
 
-    if not Group.findOne({'name': 'Segmentation Experts'}):
-        segmentationExpertsGroup = Group.createGroup(
+    if not Group().findOne({'name': 'Segmentation Experts'}):
+        segmentationExpertsGroup = Group().createGroup(
             name='Segmentation Experts',
             creator=getAdminUser(),
             description='Users able to definitively segment lesion boundaries',
             public=True
         )
-        Group.removeUser(segmentationExpertsGroup, getAdminUser())
+        Group().removeUser(segmentationExpertsGroup, getAdminUser())
 
 
 def _provisionStudies():
-    Collection = ModelImporter.model('collection')
-    Group = ModelImporter.model('group')
-
-    studyAdminGroup = Group.findOne({'name': 'Study Administrators'})
+    studyAdminGroup = Group().findOne({'name': 'Study Administrators'})
     if not studyAdminGroup:
-        studyAdminGroup = Group.createGroup(
+        studyAdminGroup = Group().createGroup(
             name='Study Administrators',
             creator=getAdminUser(),
             description='Annotation study creators and administrators',
             public=True
         )
-        Group.removeUser(studyAdminGroup, getAdminUser())
+        Group().removeUser(studyAdminGroup, getAdminUser())
 
-    studiesCollection = Collection.createCollection(
+    studiesCollection = Collection().createCollection(
         name='Annotation Studies',
         creator=getAdminUser(),
         description='Clinical feature annotation studies',
         public=True,
         reuseExisting=True
     )
-    studiesCollection = Collection.setAccessList(
+    studiesCollection = Collection().setAccessList(
         doc=studiesCollection,
         access={},
         save=False
     )
-    Collection.setGroupAccess(
+    Collection().setGroupAccess(
         doc=studiesCollection,
         group=studyAdminGroup,
         # TODO: make this a special access level
@@ -158,16 +155,14 @@ def _provisionStudies():
 
 
 def provisionDatabase():
-    Setting = ModelImporter.model('setting')
-
     # set external settings
-    Setting.set(SettingKey.USER_DEFAULT_FOLDERS, 'none')
-    Setting.set(SettingKey.CONTACT_EMAIL_ADDRESS, 'admin@isic-archive.com')
-    Setting.set(SettingKey.BRAND_NAME, 'ISIC Archive')
-    Setting.set(LargeImageSettings.LARGE_IMAGE_AUTO_SET, False)
-    Setting.set(LargeImageSettings.LARGE_IMAGE_MAX_SMALL_IMAGE_SIZE, 0)
+    Setting().set(SettingKey.USER_DEFAULT_FOLDERS, 'none')
+    Setting().set(SettingKey.CONTACT_EMAIL_ADDRESS, 'admin@isic-archive.com')
+    Setting().set(SettingKey.BRAND_NAME, 'ISIC Archive')
+    Setting().set(LargeImageSettings.LARGE_IMAGE_AUTO_SET, False)
+    Setting().set(LargeImageSettings.LARGE_IMAGE_MAX_SMALL_IMAGE_SIZE, 0)
     # TODO: consider saving thumbnail files
-    Setting.set(LargeImageSettings.LARGE_IMAGE_MAX_THUMBNAIL_FILES, 0)
+    Setting().set(LargeImageSettings.LARGE_IMAGE_MAX_THUMBNAIL_FILES, 0)
 
     _provisionImages()
     _provisionSegmentationGroups()

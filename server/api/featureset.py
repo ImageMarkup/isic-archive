@@ -26,6 +26,9 @@ from girder.constants import SortDir
 from girder.models.model_base import ValidationException
 
 from .base import IsicResource
+from ..models.featureset import Featureset
+from ..models.study import Study
+from ..models.user import User
 
 
 class FeaturesetResource(IsicResource):
@@ -46,8 +49,6 @@ class FeaturesetResource(IsicResource):
     @access.cookie
     @access.public
     def find(self, params):
-        Featureset = self.model('featureset', 'isic_archive')
-
         # TODO: make the default sort lowerName (after adding that field)
         limit, offset, sort = self.getPagingParameters(params, 'name')
 
@@ -63,10 +64,10 @@ class FeaturesetResource(IsicResource):
             {
                 field: featureset[field]
                 for field in
-                Featureset.summaryFields
+                Featureset().summaryFields
             }
             for featureset in
-            Featureset.find(
+            Featureset().find(
                 limit=limit,
                 offset=offset,
                 sort=sort
@@ -83,13 +84,10 @@ class FeaturesetResource(IsicResource):
     @access.public
     @loadmodel(model='featureset', plugin='isic_archive')
     def getFeatureset(self, featureset, params):
-        Featureset = self.model('featureset', 'isic_archive')
-        User = self.model('user', 'isic_archive')
+        output = Featureset().filter(featureset)
 
-        output = Featureset.filter(featureset)
-
-        output['creator'] = User.filterSummary(
-            User.load(output.pop('creatorId'), force=True, exc=True),
+        output['creator'] = User().filterSummary(
+            User().load(output.pop('creatorId'), force=True, exc=True),
             self.getCurrentUser())
 
         return output
@@ -105,12 +103,9 @@ class FeaturesetResource(IsicResource):
     )
     @access.user
     def createFeatureset(self, params):
-        Featureset = self.model('featureset', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         creatorUser = self.getCurrentUser()
         # For now, study admins will be the ones that can create featuresets
-        User.requireAdminStudy(creatorUser)
+        User().requireAdminStudy(creatorUser)
 
         params = self._decodeParams(params)
         self.requireParams(['name', 'version', 'globalFeatures', 'localFeatures'], params)
@@ -128,7 +123,7 @@ class FeaturesetResource(IsicResource):
         globalFeatures = params['globalFeatures']
         localFeatures = params['localFeatures']
 
-        featureset = Featureset.createFeatureset(
+        featureset = Featureset().createFeatureset(
             name=featuresetName,
             version=featuresetVersion,
             creator=creatorUser,
@@ -145,18 +140,14 @@ class FeaturesetResource(IsicResource):
     @access.user
     @loadmodel(model='featureset', plugin='isic_archive')
     def deleteFeatureset(self, featureset, params):
-        Featureset = self.model('featureset', 'isic_archive')
-        Study = self.model('study', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         user = self.getCurrentUser()
         # For now, study admins will be the ones that can delete featuresets
-        User.requireAdminStudy(user)
+        User().requireAdminStudy(user)
 
-        if Study.find({'meta.featuresetId': featureset['_id']}).count():
+        if Study().find({'meta.featuresetId': featureset['_id']}).count():
             raise RestException('Featureset is in use by one or more studies.', 409)
 
-        Featureset.remove(featureset)
+        Featureset().remove(featureset)
 
         # No Content
         cherrypy.response.status = 204

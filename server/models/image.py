@@ -25,17 +25,28 @@ import six
 
 from girder import events
 from girder.constants import AccessType, TokenScope
-from girder.models.item import Item as ItemModel
+from girder.models.collection import Collection
+from girder.models.file import File
+from girder.models.item import Item
 from girder.models.model_base import AccessException
+from girder.models.setting import Setting
+from girder.models.token import Token
+from girder.models.upload import Upload
+
+from girder.plugins.large_image.models.image_item import ImageItem
+from girder.plugins.jobs.models.job import Job
 from girder.plugins.worker import utils as workerUtils
 
 from . import segmentation_helpers
+from .dataset import Dataset
+from .study import Study
+from .user import User
 from ..settings import PluginSettings
 from ..provision_utility import getAdminUser
 from .segmentation_helpers import ScikitSegmentationHelper
 
 
-class Image(ItemModel):
+class Image(Item):
     def initialize(self):
         super(Image, self).initialize()
 
@@ -53,17 +64,14 @@ class Image(ItemModel):
 
     def createImage(self, imageDataStream, imageDataSize, originalName,
                     parentFolder, creator):
-        Setting = self.model('setting')
-        Upload = self.model('upload')
-
-        newIsicId = Setting.get(PluginSettings.MAX_ISIC_ID) + 1
+        newIsicId = Setting().get(PluginSettings.MAX_ISIC_ID) + 1
         image = self.createItem(
             name='ISIC_%07d' % newIsicId,
             creator=creator,
             folder=parentFolder,
             description=''
         )
-        Setting.set(PluginSettings.MAX_ISIC_ID, newIsicId)
+        Setting().set(PluginSettings.MAX_ISIC_ID, newIsicId)
 
         image['privateMeta'] = {
             'originalFilename': originalName
@@ -75,7 +83,7 @@ class Image(ItemModel):
             'tags': []
         })
 
-        originalFile = Upload.uploadFromFile(
+        originalFile = Upload().uploadFromFile(
             obj=imageDataStream,
             size=imageDataSize,
             name='%s%s' % (
@@ -91,7 +99,7 @@ class Image(ItemModel):
         image = self.load(image['_id'], force=True, exc=True)
 
         # this synchronously adds image['largeImage']['originalId'] and allows
-        # the subsequent use of Image.originalFile and Image.imageData
+        # the subsequent use of Image().originalFile and Image().imageData
         self._generateLargeimage(image, originalFile)
 
         self._generateSuperpixels(image)
@@ -106,30 +114,22 @@ class Image(ItemModel):
         return image
 
     def _generateLargeimage(self, image, originalFile):
-        ImageItem = self.model('image_item', 'large_image')
-        Token = self.model('token')
-        User = self.model('user', 'isic_archive')
-
-        user = User.load(image['creatorId'], force=True, exc=True)
+        user = User().load(image['creatorId'], force=True, exc=True)
         # Use admin user, to ensure that worker always has access
-        token = Token.createToken(
+        token = Token().createToken(
             user=getAdminUser(),
             days=1,
             scope=[TokenScope.DATA_READ, TokenScope.DATA_WRITE])
 
-        job = ImageItem.createImageItem(image, originalFile, user, token)
+        job = ImageItem().createImageItem(image, originalFile, user, token)
         return job
 
     def _generateSuperpixels(self, image):
-        Job = self.model('job', 'jobs')
-        Token = self.model('token')
-        User = self.model('user', 'isic_archive')
-
         SUPERPIXEL_VERSION = 3.0
 
-        user = User.load(image['creatorId'], force=True, exc=True)
+        user = User().load(image['creatorId'], force=True, exc=True)
         # Use admin user, to ensure that worker always has access
-        token = Token.createToken(
+        token = Token().createToken(
             user=getAdminUser(),
             days=1,
             scope=[TokenScope.DATA_READ, TokenScope.DATA_WRITE])
@@ -141,7 +141,7 @@ class Image(ItemModel):
 
         title = 'superpixels v%s generation: %s' % (
             SUPERPIXEL_VERSION, image['name'])
-        job = Job.createJob(
+        job = Job().createJob(
             title=title,
             type='isic_archive_superpixels',
             handler='worker_handler',
@@ -198,7 +198,7 @@ class Image(ItemModel):
         )
         job['kwargs']['jobInfo'] = workerUtils.jobInfoSpec(
             job,
-            Job.createJobToken(job),
+            Job().createJobToken(job),
             logPrint=True
         )
         job['meta'] = {
@@ -208,9 +208,9 @@ class Image(ItemModel):
             'imageName': image['name'],
             'superpixelsVersion': SUPERPIXEL_VERSION
         }
-        job = Job.save(job)
+        job = Job().save(job)
 
-        Job.scheduleJob(job)
+        Job().scheduleJob(job)
         return job
 
     def onSuperpixelsUpload(self, event):
@@ -229,35 +229,30 @@ class Image(ItemModel):
         if not superpixelsFileNameMatch:
             return
 
-        File = self.model('file')
         superpixelsVersion = float(superpixelsFileNameMatch.group(1))
         superpixelsFile['superpixelVersion'] = superpixelsVersion
-        # Work around an upstream Girder bug where "File.validate" sets
+        # Work around an upstream Girder bug where "File().validate" sets
         #   superpixelsFile['exts'] = ['0', 'png']
-        superpixelsFile = File.validate(superpixelsFile)
+        superpixelsFile = File().validate(superpixelsFile)
         superpixelsFile['exts'] = ['png']
-        superpixelsFile = File.save(superpixelsFile, validate=False)
+        superpixelsFile = File().save(superpixelsFile, validate=False)
 
         image['superpixelsId'] = superpixelsFile['_id']
         self.save(image)
 
     def originalFile(self, image):
-        File = self.model('file')
-        return File.load(
+        return File().load(
             # TODO: this may fail if large_image allows "small images"
             image['largeImage']['originalId'], force=True, exc=True)
 
     def superpixelsFile(self, image):
-        File = self.model('file')
-        return File.load(
+        return File().load(
             image['superpixelsId'], force=True, exc=True)
 
     def _decodeDataFromFile(self, fileObj):
-        File = self.model('file')
-
         fileStream = six.BytesIO()
         fileStream.writelines(
-            File.download(fileObj, headers=False)()
+            File().download(fileObj, headers=False)()
         )
         # Scikit-Image is ~70ms faster at decoding image data
         data = ScikitSegmentationHelper.loadImage(fileStream)
@@ -286,10 +281,9 @@ class Image(ItemModel):
         return superpixelsLabelData
 
     def _findQueryFilter(self, query):
-        Collection = self.model('collection')
         # assumes collection has been created by provision_utility
         # TODO: cache this value
-        imageCollection = Collection.findOne(
+        imageCollection = Collection().findOne(
             {'name': 'Lesion Images'},
             fields={'_id': 1}
         )
@@ -310,21 +304,18 @@ class Image(ItemModel):
         return super(Image, self).findOne(imageQuery, **kwargs)
 
     def filter(self, image, user=None, additionalKeys=None):
-        Dataset = self.model('dataset', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         output = {
             '_id': image['_id'],
             '_modelType': 'image',
             'name': image['name'],
             'created': image['created'],
-            'creator': User.filterSummary(
-                User.load(image['creatorId'], force=True, exc=True),
+            'creator': User().filterSummary(
+                User().load(image['creatorId'], force=True, exc=True),
                 user),
             # TODO: verify that "updated" is set correctly
             'updated': image['updated'],
-            'dataset': Dataset.filterSummary(
-                Dataset.load(image['folderId'], force=True, exc=True),
+            'dataset': Dataset().filterSummary(
+                Dataset().load(image['folderId'], force=True, exc=True),
                 user),
             'meta': {
                 'acquisition': image['meta']['acquisition'],
@@ -336,7 +327,7 @@ class Image(ItemModel):
                 'tags': image['meta']['tags']
             }
         }
-        if User.canReviewDataset(user):
+        if User().canReviewDataset(user):
             output['meta']['private'] = image['privateMeta']
 
         return output
@@ -352,27 +343,23 @@ class Image(ItemModel):
              exc=False):
         # Allow annotators assigned to an image to always have read access to that image.
 
-        # TODO: Ideally, this might set Image.resourceColl to Dataset, then add the special case
-        # checks in Dataset.hasAccess. However, since AccessControlMixin.resourceColl doesn't work
+        # TODO: Ideally, this might set Image().resourceColl to Dataset, then add the special case
+        # checks in Dataset().hasAccess. However, since AccessControlMixin.resourceColl doesn't work
         # properly (yet) with plugin types, and since we really only care about the cases where an
         # image is loaded directly (rather than when all images or datasets are iterated over);
         # adding the special case logic here works fine for now.
-
-        Study = self.model('study', 'isic_archive')
 
         try:
             return super(Image, self).load(
                 id, level=level, user=user, objectId=objectId, force=force, fields=fields, exc=exc)
         except AccessException:
             image = self.load(id, objectId=objectId, force=True, fields=fields, exc=exc)
-            if Study.childAnnotations(annotatorUser=user, image=image).count():
+            if Study().childAnnotations(annotatorUser=user, image=image).count():
                 return image
             else:
                 raise
 
     def getHistograms(self, filterQuery, user):
-        Dataset = self.model('dataset', 'isic_archive')
-
         # Define facets
         categorialFacets = [
             'folderId',
@@ -406,7 +393,7 @@ class Image(ItemModel):
         # Build and run the pipeline
         folderQuery = {
             'folderId': {'$in': [
-                dataset['_id'] for dataset in Dataset.list(user=user)]}
+                dataset['_id'] for dataset in Dataset().list(user=user)]}
         }
         if filterQuery:
             query = {

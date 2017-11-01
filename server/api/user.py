@@ -22,24 +22,24 @@ from girder.api import access
 from girder.api.describe import Description, describeRoute
 from girder.api.rest import RestException, boundHandler
 from girder.constants import AccessType, TokenScope
+from girder.models.group import Group
 from girder.models.model_base import ValidationException
+from girder.models.token import Token
 from girder.utility import mail_utils
-from girder.utility.model_importer import ModelImporter
 
 from .base import IsicResource
+from ..models.user import User
 
 
 def attachUserPermissions(userResponse):
-    User = ModelImporter.model('user', 'isic_archive')
-
-    user = User.load(userResponse['_id'], exc=True, force=True)
+    user = User().load(userResponse['_id'], exc=True, force=True)
 
     userResponse['permissions'] = {
-        'acceptTerms': User.canAcceptTerms(user),
-        'createDataset': User.canCreateDataset(user),
-        'reviewDataset': User.canReviewDataset(user),
-        'segmentationSkill': User.getSegmentationSkill(user),
-        'adminStudy': User.canAdminStudy(user)
+        'acceptTerms': User().canAcceptTerms(user),
+        'createDataset': User().canCreateDataset(user),
+        'reviewDataset': User().canReviewDataset(user),
+        'segmentationSkill': User().getSegmentationSkill(user),
+        'adminStudy': User().canAdminStudy(user)
     }
 
 
@@ -66,8 +66,7 @@ def onGetPasswordTemporaryId(event):
 
 
 def getUserEmail(user):
-    User = ModelImporter.model('user', 'isic_archive')
-    user = User.load(user['id'], force=True, exc=True)
+    user = User().load(user['id'], force=True, exc=True)
     return user['email']
 
 
@@ -79,32 +78,30 @@ _sharedContext = IsicResource()
     Description('Request permission to create datasets.'))
 @boundHandler(_sharedContext)
 def requestCreateDatasetPermission(self, params):
-    User = self.model('user', 'isic_archive')
-    Group = self.model('group')
     currentUser = self.getCurrentUser()
     resp = {}
-    if User.canCreateDataset(currentUser):
+    if User().canCreateDataset(currentUser):
         resp['message'] = 'Dataset Contributor access granted.',
         resp['extra'] = 'hasPermission'
     else:
         # Request that user join group
         groupName = 'Dataset Contributors'
-        group = Group.findOne({'name': groupName})
+        group = Group().findOne({'name': groupName})
         if not group:
             raise RestException('Could not load group: %s' % groupName)
         resp['message'] = 'Dataset Contributor access requested. An administrator may contact ' \
                           'you via email (at %s) to process your request.' % currentUser['email']
 
-        for request in Group.getFullRequestList(group):
+        for request in Group().getFullRequestList(group):
             if request['id'] == currentUser['_id']:
                 # Request for this user is already pending
                 break
         else:
             # No request for this user yet
-            Group.joinGroup(group, currentUser)
+            Group().joinGroup(group, currentUser)
 
             # Send email to group moderators and administrators
-            groupAcl = Group.getFullAccessList(group)
+            groupAcl = Group().getFullAccessList(group)
             groupModeratorEmails = [
                 getUserEmail(user)
                 for user in groupAcl['users']
@@ -131,12 +128,10 @@ def requestCreateDatasetPermission(self, params):
     Description('Accept Terms of Use.'))
 @boundHandler(_sharedContext)
 def acceptTerms(self, params):
-    User = self.model('user', 'isic_archive')
-
     currentUser = self.getCurrentUser()
-    if not User.canAcceptTerms(currentUser):
-        User.acceptTerms(currentUser)
-        User.save(currentUser)
+    if not User().canAcceptTerms(currentUser):
+        User().acceptTerms(currentUser)
+        User().save(currentUser)
 
     resp = {
         'message': 'Terms of Use accepted.',
@@ -157,9 +152,6 @@ def acceptTerms(self, params):
 )
 @boundHandler(_sharedContext)
 def inviteUser(self, params):
-    Token = self.model('token')
-    User = self.model('user', 'isic_archive')
-
     params = self._decodeParams(params)
     self.requireParams(['login', 'email', 'firstName', 'lastName'], params)
     if 'validityPeriod' in params:
@@ -171,9 +163,9 @@ def inviteUser(self, params):
         validityPeriod = 60.0
 
     currentUser = self.getCurrentUser()
-    User.requireAdminStudy(currentUser)
+    User().requireAdminStudy(currentUser)
 
-    newUser = User.createUser(
+    newUser = User().createUser(
         login=params['login'],
         password=None,
         email=params['email'],
@@ -181,7 +173,7 @@ def inviteUser(self, params):
         lastName=params['lastName']
     )
 
-    token = Token.createToken(
+    token = Token().createToken(
         newUser, days=validityPeriod,
         scope=[TokenScope.TEMPORARY_USER_AUTH])
 
@@ -200,7 +192,7 @@ def inviteUser(self, params):
         text=html)
 
     return {
-        'newUser': User.filterSummary(newUser, currentUser),
+        'newUser': User().filterSummary(newUser, currentUser),
         'inviteUrl': inviteUrl
     }
 

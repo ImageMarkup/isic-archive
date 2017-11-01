@@ -26,7 +26,11 @@ from girder.constants import AccessType
 from girder.models.model_base import ValidationException
 
 from .base import IsicResource
+from ..models.annotation import Annotation
+from ..models.image import Image
 from ..models.segmentation_helpers import ScikitSegmentationHelper
+from ..models.study import Study
+from ..models.user import User
 
 
 class AnnotationResource(IsicResource):
@@ -49,23 +53,18 @@ class AnnotationResource(IsicResource):
     @access.cookie
     @access.public
     def find(self, params):
-        Annotation = self.model('annotation', 'isic_archive')
-        Image = self.model('image', 'isic_archive')
-        Study = self.model('study', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         self.requireParams(['studyId'], params)
 
         # check access here for simplicity
-        study = Study.load(
+        study = Study().load(
             params['studyId'], user=self.getCurrentUser(),
             level=AccessType.READ, exc=True)
 
-        annotatorUser = User.load(
+        annotatorUser = User().load(
             params['userId'], force=True, exc=True) \
             if 'userId' in params else None
 
-        image = Image.load(
+        image = Image().load(
             params['imageId'], force=True, exc=True) \
             if 'imageId' in params else None
 
@@ -74,7 +73,7 @@ class AnnotationResource(IsicResource):
         # TODO: add limit, offset, sort
 
         # TODO: limit fields returned
-        annotations = Study.childAnnotations(
+        annotations = Study().childAnnotations(
             study=study,
             annotatorUser=annotatorUser,
             image=image
@@ -87,7 +86,7 @@ class AnnotationResource(IsicResource):
                 'studyId': annotation['meta']['studyId'],
                 'userId': annotation['meta']['userId'],
                 'imageId': annotation['meta']['imageId'],
-                'state': Annotation.getState(annotation)
+                'state': Annotation().getState(annotation)
             }
             for annotation in annotations
         ]
@@ -101,26 +100,21 @@ class AnnotationResource(IsicResource):
     @access.public
     @loadmodel(model='annotation', plugin='isic_archive', level=AccessType.READ)
     def getAnnotation(self, annotation, params):
-        Annotation = self.model('annotation', 'isic_archive')
-        Image = self.model('image', 'isic_archive')
-        Study = self.model('study', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         currentUser = self.getCurrentUser()
 
         output = {
             '_id': annotation['_id'],
             '_modelType': 'annotation',
             'studyId': annotation['meta']['studyId'],
-            'image': Image.filterSummary(
-                Image.load(annotation['meta']['imageId'], force=True, exc=True),
+            'image': Image().filterSummary(
+                Image().load(annotation['meta']['imageId'], force=True, exc=True),
                 currentUser),
-            'user': User.filterSummary(
-                user=User.load(annotation['meta']['userId'], force=True, exc=True),
+            'user': User().filterSummary(
+                user=User().load(annotation['meta']['userId'], force=True, exc=True),
                 accessorUser=currentUser),
-            'state': Annotation.getState(annotation)
+            'state': Annotation().getState(annotation)
         }
-        if Annotation.getState(annotation) == Study.State.COMPLETE:
+        if Annotation().getState(annotation) == Study().State.COMPLETE:
             output.update({
                 'annotations': annotation['meta']['annotations'],
                 'status': annotation['meta']['status'],
@@ -144,8 +138,6 @@ class AnnotationResource(IsicResource):
     @access.public
     @loadmodel(model='annotation', plugin='isic_archive', level=AccessType.READ)
     def renderAnnotation(self, annotation, params):
-        Study = self.model('study', 'isic_archive')
-        Annotation = self.model('annotation', 'isic_archive')
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
             raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
@@ -154,15 +146,15 @@ class AnnotationResource(IsicResource):
         self.requireParams(['featureId'], params)
         featureId = params['featureId']
 
-        study = Study.load(annotation['meta']['studyId'], force=True, exc=True)
-        featureset = Study.getFeatureset(study)
+        study = Study().load(annotation['meta']['studyId'], force=True, exc=True)
+        featureset = Study().getFeatureset(study)
 
         if not any(featureId == feature['id'] for feature in featureset['localFeatures']):
             raise ValidationException('Invalid featureId.', 'featureId')
-        if Annotation.getState(annotation) != Study.State.COMPLETE:
+        if Annotation().getState(annotation) != Study().State.COMPLETE:
             raise RestException('Only complete annotations can be rendered.')
 
-        renderData = Annotation.renderAnnotation(annotation, featureId)
+        renderData = Annotation().renderAnnotation(annotation, featureId)
 
         renderEncodedStream = ScikitSegmentationHelper.writeImage(renderData, 'jpeg')
         renderEncodedData = renderEncodedStream.getvalue()
@@ -197,10 +189,7 @@ class AnnotationResource(IsicResource):
     @access.user
     @loadmodel(model='annotation', plugin='isic_archive', level=AccessType.READ)
     def submitAnnotation(self, annotation, params):
-        Annotation = self.model('annotation', 'isic_archive')
-        Study = self.model('study', 'isic_archive')
-
-        if annotation['baseParentId'] != Study.loadStudyCollection()['_id']:
+        if annotation['baseParentId'] != Study().loadStudyCollection()['_id']:
             raise RestException('Annotation id references a non-annotation item.')
 
         if annotation['meta']['userId'] != self.getCurrentUser()['_id']:
@@ -219,4 +208,4 @@ class AnnotationResource(IsicResource):
             bodyJson['stopTime'] / 1000.0)
         annotation['meta']['annotations'] = bodyJson['annotations']
 
-        Annotation.save(annotation)
+        Annotation().save(annotation)

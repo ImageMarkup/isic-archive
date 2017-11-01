@@ -23,11 +23,14 @@ import hashlib
 
 from girder.constants import AccessType
 from girder import events
-from girder.models.user import User as UserModel
+from girder.models.group import Group
+from girder.models.user import User as GirderUser
 from girder.models.model_base import AccessException, ValidationException
 
+from .segmentation import Segmentation
 
-class User(UserModel):
+
+class User(GirderUser):
     def initialize(self):
         super(User, self).initialize()
 
@@ -38,7 +41,6 @@ class User(UserModel):
                     'onUserCreated', self._onUserCreated)
 
     def _onUserCreated(self, event):
-        Group = self.model('group')
         user = event.info
 
         # make all users private
@@ -46,7 +48,7 @@ class User(UserModel):
         if user['login'] != 'isic-admin':
             self.setGroupAccess(
                 doc=user,
-                group=Group.findOne({'name': 'Study Administrators'}),
+                group=Group().findOne({'name': 'Study Administrators'}),
                 level=AccessType.READ,
                 save=False
             )
@@ -75,12 +77,11 @@ class User(UserModel):
         return userSummary
 
     def _isAdminOrMember(self, user, groupName):
-        Group = self.model('group')
         if not user:
             return False
         if user.get('admin', False):
             return True
-        group = Group.findOne({'name': groupName})
+        group = Group().findOne({'name': groupName})
         if not group:
             raise ValidationException('Could not load group: %s' % groupName)
         return group['_id'] in user['groups']
@@ -115,16 +116,14 @@ class User(UserModel):
                 'datasets.')
 
     def getSegmentationSkill(self, user):
-        Group = self.model('group')
-        Segmentation = self.model('segmentation', 'isic_archive')
         if not user:
             return None
-        expertGroup = Group.findOne({'name': 'Segmentation Experts'})
+        expertGroup = Group().findOne({'name': 'Segmentation Experts'})
         if expertGroup['_id'] in user['groups']:
-            return Segmentation.Skill.EXPERT
-        noviceGroup = Group.findOne({'name': 'Segmentation Novices'})
+            return Segmentation().Skill.EXPERT
+        noviceGroup = Group().findOne({'name': 'Segmentation Novices'})
         if noviceGroup['_id'] in user['groups']:
-            return Segmentation.Skill.NOVICE
+            return Segmentation().Skill.NOVICE
         return None
 
     def requireSegmentationSkill(self, user):

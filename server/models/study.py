@@ -18,11 +18,18 @@
 ###############################################################################
 
 from girder.constants import AccessType
-from girder.models.folder import Folder as FolderModel
+from girder.models.collection import Collection
+from girder.models.folder import Folder
+from girder.models.group import Group
 from girder.models.model_base import ValidationException
 
+from .annotation import Annotation
+from .featureset import Featureset
+from .image import Image
+from .user import User
 
-class Study(FolderModel):
+
+class Study(Folder):
     class State(object):
         ACTIVE = 'active'
         COMPLETE = 'complete'
@@ -39,14 +46,12 @@ class Study(FolderModel):
         self.prefixSearchFields = ['lowerName', 'name']
 
     def loadStudyCollection(self):
-        Collection = self.model('collection')
         # assumes collection has been created by provision_utility
         # TODO: cache this value
-        return Collection.findOne({'name': 'Annotation Studies'})
+        return Collection().findOne({'name': 'Annotation Studies'})
 
     def createStudy(self, name, creatorUser, featureset, annotatorUsers,
                     images):
-        Group = self.model('group')
         # this may raise a ValidationException if the name already exists
         studyFolder = self.createFolder(
             parent=self.loadStudyCollection(),
@@ -65,7 +70,7 @@ class Study(FolderModel):
         # Allow study admins to read
         studyFolder = self.setGroupAccess(
             doc=studyFolder,
-            group=Group.findOne({'name': 'Study Administrators'}),
+            group=Group().findOne({'name': 'Study Administrators'}),
             level=AccessType.READ,
             save=False)
 
@@ -85,10 +90,6 @@ class Study(FolderModel):
 
     def addAnnotator(self, study, annotatorUser, creatorUser,
                      images=None):
-        Annotation = self.model('annotation', 'isic_archive')
-        Group = self.model('group')
-        User = self.model('user', 'isic_archive')
-
         if not images:
             images = self.getImages(study)
 
@@ -101,7 +102,7 @@ class Study(FolderModel):
 
         annotatorFolder = self.createFolder(
             parent=study,
-            name=User.obfuscatedName(annotatorUser),
+            name=User().obfuscatedName(annotatorUser),
             # Allow a rename, in the rare event of an obfuscated name collision
             allowRename=True,
             description='',
@@ -118,7 +119,7 @@ class Study(FolderModel):
         # Allow study admins to read
         annotatorFolder = self.setGroupAccess(
             doc=annotatorFolder,
-            group=Group.findOne({'name': 'Study Administrators'}),
+            group=Group().findOne({'name': 'Study Administrators'}),
             level=AccessType.READ,
             save=False)
         # Allow annotator to read
@@ -138,51 +139,42 @@ class Study(FolderModel):
         )
 
         for image in images:
-            Annotation.createAnnotation(
+            Annotation().createAnnotation(
                 study, image, creatorUser, annotatorFolder)
 
         # Since parent study could theoretically have changed, return it
         return study
 
     def removeAnnotator(self, study, annotatorUser):
-        Folder = self.model('folder')
-        annotatorFolder = Folder.findOne({
+        annotatorFolder = Folder().findOne({
             'parentId': study['_id'],
             'meta.userId': annotatorUser['_id']
         })
         if not annotatorFolder:
             raise ValidationException('Annotator user is not in study.')
-        Folder.remove(annotatorFolder)
+        Folder().remove(annotatorFolder)
 
     def addImage(self, study, image, creatorUser):
-        Folder = self.model('folder')
-        Annotation = self.model('annotation', 'isic_archive')
-        for annotatorFolder in Folder.find({'parentId': study['_id']}):
-            Annotation.createAnnotation(
+        for annotatorFolder in Folder().find({'parentId': study['_id']}):
+            Annotation().createAnnotation(
                 study, image, creatorUser, annotatorFolder)
 
     def getFeatureset(self, study):
-        Featureset = self.model('featureset', 'isic_archive')
-        return Featureset.load(study['meta']['featuresetId'], exc=True)
+        return Featureset().load(study['meta']['featuresetId'], exc=True)
 
     def getAnnotators(self, study):
-        Folder = self.model('folder')
-        User = self.model('user', 'isic_archive')
-        annotatorFolders = Folder.find({'parentId': study['_id']})
-        return User.find({
+        annotatorFolders = Folder().find({'parentId': study['_id']})
+        return User().find({
             '_id': {'$in': annotatorFolders.distinct('meta.userId')}
         })
 
     def getImages(self, study):
-        Annotation = self.model('annotation', 'isic_archive')
-        Image = self.model('image', 'isic_archive')
-        imageIds = Annotation.find({
+        imageIds = Annotation().find({
             'meta.studyId': study['_id']}).distinct('meta.imageId')
-        return Image.find({'_id': {'$in': imageIds}})
+        return Image().find({'_id': {'$in': imageIds}})
 
     def childAnnotations(self, study=None, annotatorUser=None,
                          image=None, state=None, **kwargs):
-        Annotation = self.model('annotation', 'isic_archive')
         query = {}
         if study:
             query['meta.studyId'] = study['_id']
@@ -197,7 +189,7 @@ class Study(FolderModel):
                 query['meta.stopTime'] = {'$ne': None}
             else:
                 raise ValueError('"state" must be "active" or "complete".')
-        return Annotation.find(query, **kwargs)
+        return Annotation().find(query, **kwargs)
 
     def _findQueryFilter(self, query, annotatorUser, state):
         newQuery = query.copy() if query is not None else {}

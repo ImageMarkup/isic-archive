@@ -17,8 +17,8 @@
 #  limitations under the License.
 ###############################################################################
 
+from girder.models.group import Group
 from girder.utility import mail_utils
-from girder.utility.model_importer import ModelImporter
 
 
 def sendEmailToGroup(groupName, templateFilename, templateParams, subject=None):
@@ -30,12 +30,10 @@ def sendEmailToGroup(groupName, templateFilename, templateParams, subject=None):
     :param templateParams: The parameters with which to render the template.
     :param subject: The subject line of the email.
     """
-    Group = ModelImporter.model('group')
-
-    group = Group.findOne({'name': groupName})
+    group = Group().findOne({'name': groupName})
     if not group:
         raise Exception('Could not load group: %s.' % groupName)
-    emails = [member['email'] for member in Group.listMembers(group)]
+    emails = [member['email'] for member in Group().listMembers(group)]
     if emails:
         html = mail_utils.renderTemplate(templateFilename, templateParams)
         mail_utils.sendEmail(to=emails, subject=subject, text=html)

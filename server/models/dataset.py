@@ -23,7 +23,11 @@ import itertools
 import os
 
 from girder.constants import AccessType
-from girder.models.folder import Folder as FolderModel
+from girder.models.collection import Collection
+from girder.models.file import File
+from girder.models.folder import Folder
+from girder.models.group import Group
+from girder.models.assetstore import Assetstore
 from girder.models.model_base import GirderException, ValidationException
 from girder.models.notification import ProgressState
 from girder.utility import assetstore_utilities, mail_utils
@@ -31,12 +35,13 @@ from girder.utility.progress import ProgressContext
 
 from .dataset_helpers import matchFilenameRegex
 from .dataset_helpers.image_metadata import addImageMetadata
+from .image import Image
 from ..upload import ZipFileOpener
 from ..utility import generateLines
 from ..utility import mail_utils as isic_mail_utils
 
 
-class Dataset(FolderModel):
+class Dataset(Folder):
     def initialize(self):
         super(Dataset, self).initialize()
         # TODO: add indexes
@@ -50,12 +55,9 @@ class Dataset(FolderModel):
         self.summaryFields = ['_id', 'name', 'updated']
 
     def createDataset(self, name, description, creatorUser):
-        Collection = self.model('collection')
-        Group = self.model('group')
-
         # This will raise an exception if a duplicate name exists
         datasetFolder = self.createFolder(
-            parent=Collection.findOne({'name': 'Lesion Images'}),
+            parent=Collection().findOne({'name': 'Lesion Images'}),
             name=name,
             description=description,
             parentType='collection',
@@ -77,7 +79,7 @@ class Dataset(FolderModel):
         # Allow reviewers to admin (so they can delete the dataset)
         datasetFolder = self.setGroupAccess(
             doc=datasetFolder,
-            group=Group.findOne({'name': 'Dataset QC Reviewers'}),
+            group=Group().findOne({'name': 'Dataset QC Reviewers'}),
             level=AccessType.ADMIN,
             save=False)
 
@@ -85,21 +87,18 @@ class Dataset(FolderModel):
 
     def childImages(self, dataset, limit=0, offset=0, sort=None, filters=None,
                     **kwargs):
-        Image = self.model('image', 'isic_archive')
-
         query = filters.copy() if filters is not None else {}
         query.update({
             'folderId': dataset['_id']
         })
 
-        return Image.find(
+        return Image().find(
             query, limit=limit, offset=offset, sort=sort, **kwargs)
 
     def _findQueryFilter(self, query):
-        Collection = self.model('collection')
         # assumes collection has been created by provision_utility
         # TODO: cache this value
-        datasetCollection = Collection.findOne(
+        datasetCollection = Collection().findOne(
             {'name': 'Lesion Images'},
             fields={'_id': 1}
         )
@@ -149,8 +148,6 @@ class Dataset(FolderModel):
         Ingest an uploaded dataset from a .zip file of images. The images are
         extracted to a "Pre-review" folder within a new dataset folder.
         """
-        Folder = self.model('folder')
-
         # Create dataset folder
         dataset = self.createDataset(name, description, user)
 
@@ -164,13 +161,13 @@ class Dataset(FolderModel):
             'metadataFiles': []
         })
 
-        prereviewFolder = Folder.createFolder(
+        prereviewFolder = Folder().createFolder(
             parent=dataset,
             name='Pre-review',
             parentType='folder',
             creator=user,
             public=False)
-        prereviewFolder = Folder.copyAccessPolicies(
+        prereviewFolder = Folder().copyAccessPolicies(
             dataset, prereviewFolder, save=True)
 
         # Process zip file
@@ -211,11 +208,8 @@ class Dataset(FolderModel):
         return dataset
 
     def _handleZip(self, prereviewFolder, user, zipFile):
-        Assetstore = self.model('assetstore')
-        Image = self.model('image', 'isic_archive')
-
         # Get full path of zip file in assetstore
-        assetstore = Assetstore.getCurrent()
+        assetstore = Assetstore().getCurrent()
         assetstore_adapter = assetstore_utilities.getAssetstoreAdapter(
             assetstore)
         fullPath = assetstore_adapter.fullPath(zipFile)
@@ -236,7 +230,7 @@ class Dataset(FolderModel):
                         message='Extracting "%s"' % originalFileName)
 
                     with open(originalFilePath, 'rb') as originalFileStream:
-                        Image.createImage(
+                        Image().createImage(
                             imageDataStream=originalFileStream,
                             imageDataSize=os.path.getsize(originalFilePath),
                             originalName=originalFileName,
@@ -245,17 +239,12 @@ class Dataset(FolderModel):
                         )
 
     def prereviewFolder(self, dataset):
-        Folder = self.model('folder')
-        return Folder.findOne({
+        return Folder().findOne({
             'name': 'Pre-review',
             'parentId': dataset['_id']
         })
 
     def reviewImages(self, dataset, acceptedImages, flaggedImages, user):
-        Collection = self.model('collection')
-        Folder = self.model('folder')
-        Image = self.model('image', 'isic_archive')
-
         # Verify that all images are pending review
         prereviewFolder = self.prereviewFolder(dataset)
         if not prereviewFolder:
@@ -268,24 +257,24 @@ class Dataset(FolderModel):
         now = datetime.datetime.utcnow()
 
         for image in acceptedImages:
-            image = Image.setMetadata(image, {
+            image = Image().setMetadata(image, {
                 'reviewed': {
                     'userId': user['_id'],
                     'time': now,
                     'accepted': True
                 }
             })
-            Image.move(image, dataset)
+            Image().move(image, dataset)
 
         if flaggedImages:
-            flaggedCollection = Collection.findOne({'name': 'Flagged Images'})
-            flaggedFolder = Folder.findOne({
+            flaggedCollection = Collection().findOne({'name': 'Flagged Images'})
+            flaggedFolder = Folder().findOne({
                 'name': dataset['name'],
                 'parentId': flaggedCollection['_id'],
                 'parentCollection': 'collection'
             })
             if not flaggedFolder:
-                flaggedFolder = Folder.createFolder(
+                flaggedFolder = Folder().createFolder(
                     parent=flaggedCollection,
                     name=dataset['name'],
                     parentType='collection',
@@ -293,22 +282,22 @@ class Dataset(FolderModel):
                     creator=user,
                     allowRename=False,
                     reuseExisting=False)
-                flaggedFolder = Folder.copyAccessPolicies(
+                flaggedFolder = Folder().copyAccessPolicies(
                     prereviewFolder, flaggedFolder, save=True)
             for image in flaggedImages:
-                image = Image.setMetadata(image, {
+                image = Image().setMetadata(image, {
                     'reviewed': {
                         'userId': user['_id'],
                         'time': now,
                         'accepted': False
                     }
                 })
-                Image.move(image, flaggedFolder)
+                Image().move(image, flaggedFolder)
 
         # Remove an empty Pre-review folder
-        if (Folder.countItems(prereviewFolder) +
-                Folder.countFolders(prereviewFolder)) == 0:
-            Folder.remove(prereviewFolder)
+        if (Folder().countItems(prereviewFolder) +
+                Folder().countFolders(prereviewFolder)) == 0:
+            Folder().remove(prereviewFolder)
 
     def registerMetadata(self, dataset, metadataFile, user, sendMail=False):
         """Register a .csv file containing metadata about images."""
@@ -354,10 +343,7 @@ class Dataset(FolderModel):
             - List of strings describing metadata warnings.
         :rtype: tuple(list, list)
         """
-        File = self.model('file')
-        Image = self.model('image', 'isic_archive')
-
-        metadataFileStream = File.download(metadataFile, headers=False)()
+        metadataFileStream = File().download(metadataFile, headers=False)()
 
         images = []
         metadataErrors = []
@@ -402,7 +388,7 @@ class Dataset(FolderModel):
         # Save updated metadata to images
         if not metadataErrors and save:
             for image in images:
-                Image.save(image)
+                Image().save(image)
 
         return metadataErrors, sorted(metadataWarnings)
 
@@ -429,8 +415,6 @@ class Dataset(FolderModel):
         Indicate a warning if no matching images are found.
         Indicate an error if more than one matching images are found.
         """
-        Image = self.model('image', 'isic_archive')
-
         imageQuery = {
             'folderId': dataset['_id']
             # TODO: match images in the Pre-review folder too
@@ -452,7 +436,7 @@ class Dataset(FolderModel):
         else:
             isicId = None
 
-        images = Image.find(imageQuery)
+        images = Image().find(imageQuery)
         numImages = images.count()
         if numImages != 1:
             if originalNameField and isicIdField:

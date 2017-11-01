@@ -29,9 +29,15 @@ from girder.api import access
 from girder.api.rest import RestException, loadmodel, setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
+from girder.models.folder import Folder
 from girder.models.model_base import ValidationException
 
 from .base import IsicResource
+from ..models.annotation import Annotation
+from ..models.featureset import Featureset
+from ..models.image import Image
+from ..models.study import Study
+from ..models.user import User
 
 
 class StudyResource(IsicResource):
@@ -59,9 +65,6 @@ class StudyResource(IsicResource):
     @access.cookie
     @access.public
     def find(self, params):
-        Study = self.model('study', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         limit, offset, sort = self.getPagingParameters(params, 'lowerName')
 
         annotatorUser = None
@@ -69,23 +72,23 @@ class StudyResource(IsicResource):
             if params['userId'] == 'me':
                 annotatorUser = self.getCurrentUser()
             else:
-                annotatorUser = User.load(params['userId'], force=True, exc=True)
+                annotatorUser = User().load(params['userId'], force=True, exc=True)
 
         state = None
         if params.get('state'):
             state = params['state']
-            if state not in {Study.State.ACTIVE, Study.State.COMPLETE}:
+            if state not in {Study().State.ACTIVE, Study().State.COMPLETE}:
                 raise ValidationException('Value may only be "active" or "complete".', 'state')
 
         return [
             {
                 field: study[field]
                 for field in
-                Study.summaryFields
+                Study().summaryFields
             }
             for study in
-            Study.filterResultsByPermission(
-                Study.find(query=None, annotatorUser=annotatorUser, state=state, sort=sort),
+            Study().filterResultsByPermission(
+                Study().find(query=None, annotatorUser=annotatorUser, state=state, sort=sort),
                 user=self.getCurrentUser(), level=AccessType.READ, limit=limit, offset=offset
             )
         ]
@@ -101,12 +104,6 @@ class StudyResource(IsicResource):
     @access.public
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
     def getStudy(self, study, params):
-        Annotation = self.model('annotation', 'isic_archive')
-        Featureset = self.model('featureset', 'isic_archive')
-        Image = self.model('image', 'isic_archive')
-        Study = self.model('study', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         if params.get('format') == 'csv':
             setResponseHeader('Content-Type', 'text/csv')
             setResponseHeader('Content-Disposition',
@@ -115,34 +112,34 @@ class StudyResource(IsicResource):
 
         else:
             currentUser = self.getCurrentUser()
-            output = Study.filter(study, currentUser)
+            output = Study().filter(study, currentUser)
             del output['_accessLevel']
             output.update({
                 '_modelType': 'study',
-                'featureset': Featureset.load(
+                'featureset': Featureset().load(
                     id=study['meta']['featuresetId'],
-                    fields=Featureset.summaryFields, exc=True),
-                'creator': User.filterSummary(
-                    User.load(output.pop('creatorId'), force=True, exc=True),
+                    fields=Featureset().summaryFields, exc=True),
+                'creator': User().filterSummary(
+                    User().load(output.pop('creatorId'), force=True, exc=True),
                     currentUser),
                 'users': sorted(
                     (
-                        User.filterSummary(annotatorUser, currentUser)
+                        User().filterSummary(annotatorUser, currentUser)
                         for annotatorUser in
-                        Study.getAnnotators(study)
+                        Study().getAnnotators(study)
                     ),
                     # Sort by the obfuscated name
                     key=lambda annotatorUser: annotatorUser['name']
                 ),
                 'images': list(
-                    Image.filterSummary(image, currentUser)
+                    Image().filterSummary(image, currentUser)
                     for image in
-                    Study.getImages(study).sort('name', SortDir.ASCENDING)
+                    Study().getImages(study).sort('name', SortDir.ASCENDING)
                 ),
                 'userCompletion': {
                     str(annotatorComplete['_id']): annotatorComplete['count']
                     for annotatorComplete in
-                    Annotation.collection.aggregate([
+                    Annotation().collection.aggregate([
                         {'$match': {
                             'meta.studyId': study['_id'],
                         }},
@@ -161,13 +158,9 @@ class StudyResource(IsicResource):
             return output
 
     def _getStudyCSVStream(self, study):
-        Study = self.model('study', 'isic_archive')
-        Featureset = self.model('featureset', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         currentUser = self.getCurrentUser()
 
-        featureset = Featureset.load(study['meta']['featuresetId'], exc=True)
+        featureset = Featureset().load(study['meta']['featuresetId'], exc=True)
         csvFields = tuple(itertools.chain(
             ('study_name', 'study_id',
              'user_name', 'user_id',
@@ -187,26 +180,26 @@ class StudyResource(IsicResource):
         responseBody.truncate()
 
         images = list(
-            Study.getImages(study).sort('lowerName', SortDir.ASCENDING))
+            Study().getImages(study).sort('lowerName', SortDir.ASCENDING))
 
         for annotatorUser, image in itertools.product(
             sorted(
-                Study.getAnnotators(study),
-                key=lambda annotatorUser: User.obfuscatedName(annotatorUser)),
+                Study().getAnnotators(study),
+                key=lambda annotatorUser: User().obfuscatedName(annotatorUser)),
             images
         ):
             # this will iterate either 0 or 1 times
-            for annotation in Study.childAnnotations(
+            for annotation in Study().childAnnotations(
                 study=study,
                 annotatorUser=annotatorUser,
                 image=image,
-                state=Study.State.COMPLETE
+                state=Study().State.COMPLETE
             ):
                 elapsedSeconds = \
                     int((annotation['meta']['stopTime'] -
                          annotation['meta']['startTime']).total_seconds())
 
-                filteredAnnotatorUser = User.filterSummary(annotatorUser, currentUser)
+                filteredAnnotatorUser = User().filterSummary(annotatorUser, currentUser)
                 annotatorUserName = filteredAnnotatorUser['name']
                 if 'login' in filteredAnnotatorUser:
                     annotatorUserName += ' [%s %s (%s)]' % (
@@ -263,13 +256,8 @@ class StudyResource(IsicResource):
     )
     @access.user
     def createStudy(self, params):
-        Study = self.model('study', 'isic_archive')
-        Featureset = self.model('featureset', 'isic_archive')
-        Image = self.model('image', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         creatorUser = self.getCurrentUser()
-        User.requireAdminStudy(creatorUser)
+        User().requireAdminStudy(creatorUser)
 
         params = self._decodeParams(params)
         self.requireParams(['name', 'featuresetId', 'userIds', 'imageIds'], params)
@@ -281,12 +269,12 @@ class StudyResource(IsicResource):
         featuresetId = params['featuresetId']
         if not featuresetId:
             raise ValidationException('Invalid featureset ID.', 'featuresetId')
-        featureset = Featureset.load(featuresetId, exc=True)
+        featureset = Featureset().load(featuresetId, exc=True)
 
         if len(set(params['userIds'])) != len(params['userIds']):
             raise ValidationException('Duplicate user IDs.', 'userIds')
         annotatorUsers = [
-            User.load(annotatorUserId, user=creatorUser, level=AccessType.READ, exc=True)
+            User().load(annotatorUserId, user=creatorUser, level=AccessType.READ, exc=True)
             for annotatorUserId in params['userIds']
         ]
 
@@ -295,11 +283,11 @@ class StudyResource(IsicResource):
         images = [
             # TODO: This should probably not allow images that the user only as access to via an
             # annotation
-            Image.load(imageId, user=creatorUser, level=AccessType.READ, exc=True)
+            Image().load(imageId, user=creatorUser, level=AccessType.READ, exc=True)
             for imageId in params['imageIds']
         ]
 
-        study = Study.createStudy(
+        study = Study().createStudy(
             name=studyName,
             creatorUser=creatorUser,
             featureset=featureset,
@@ -318,30 +306,26 @@ class StudyResource(IsicResource):
     @access.user
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
     def addAnnotators(self, study, params):
-        Folder = self.model('folder')
-        Study = self.model('study', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         # TODO: make the loadmodel decorator use AccessType.WRITE,
         # once permissions work
         params = self._decodeParams(params)
         self.requireParams(['userIds'], params)
 
         creatorUser = self.getCurrentUser()
-        User.requireAdminStudy(creatorUser)
+        User().requireAdminStudy(creatorUser)
 
         # Load all users before adding any, to ensure all are valid
         if len(set(params['userIds'])) != len(params['userIds']):
             raise ValidationException('Duplicate user IDs.', 'userIds')
         annotatorUsers = [
-            User.load(userId, user=creatorUser, level=AccessType.READ, exc=True)
+            User().load(userId, user=creatorUser, level=AccessType.READ, exc=True)
             for userId in params['userIds']
         ]
         # Existing duplicate Annotators are tricky to check for, because it's
         # possible to have a Study with multiple annotator Users (each with a
         # sub-Folder), but with no Images yet, and thus no Annotation (Items)
         # inside yet
-        duplicateAnnotatorFolders = Folder.find({
+        duplicateAnnotatorFolders = Folder().find({
             'parentId': study['_id'],
             'meta.userId': {'$in': [annotatorUser['_id'] for annotatorUser in annotatorUsers]}
         })
@@ -351,9 +335,9 @@ class StudyResource(IsicResource):
             raise ValidationException('Annotator user "%s" is already part of the study.' %
                                       duplicateAnnotatorFolder['meta']['userId'])
         # Look up images only once for efficiency
-        images = Study.getImages(study)
+        images = Study().getImages(study)
         for annotatorUser in annotatorUsers:
-            Study.addAnnotator(study, annotatorUser, creatorUser, images)
+            Study().addAnnotator(study, annotatorUser, creatorUser, images)
 
         return self.getStudy(id=study['_id'], params={})
 
@@ -367,16 +351,11 @@ class StudyResource(IsicResource):
     @access.user
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
     def addImages(self, study, params):
-        Annotation = self.model('annotation', 'isic_archive')
-        Image = self.model('image', 'isic_archive')
-        Study = self.model('study', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         params = self._decodeParams(params)
         self.requireParams(['imageIds'], params)
 
         creatorUser = self.getCurrentUser()
-        User.requireAdminStudy(creatorUser)
+        User().requireAdminStudy(creatorUser)
 
         # Load all images before adding any, to ensure all are valid and
         # accessible
@@ -385,10 +364,10 @@ class StudyResource(IsicResource):
         images = [
             # TODO: This should probably not allow images that the user only as access to via an
             # annotation
-            Image.load(imageId, user=creatorUser, level=AccessType.READ, exc=True)
+            Image().load(imageId, user=creatorUser, level=AccessType.READ, exc=True)
             for imageId in params['imageIds']
         ]
-        duplicateAnnotations = Annotation.find({
+        duplicateAnnotations = Annotation().find({
             'meta.studyId': study['_id'],
             'meta.imageId': {'$in': [image['_id'] for image in images]}
         })
@@ -398,7 +377,7 @@ class StudyResource(IsicResource):
             raise ValidationException(
                 'Image "%s" is already part of the study.' % duplicateAnnotation['meta']['imageId'])
         for image in images:
-            Study.addImage(study, image, creatorUser)
+            Study().addImage(study, image, creatorUser)
 
         return self.getStudy(id=study['_id'], params={})
 
@@ -410,17 +389,14 @@ class StudyResource(IsicResource):
     @access.user
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
     def deleteStudy(self, study, params):
-        Study = self.model('study', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         user = self.getCurrentUser()
         # For now, study admins will be the ones that can delete studies
-        User.requireAdminStudy(user)
+        User().requireAdminStudy(user)
 
-        if Study.childAnnotations(study=study, state=Study.State.COMPLETE).count():
+        if Study().childAnnotations(study=study, state=Study().State.COMPLETE).count():
             raise RestException('Study has completed annotations.', 409)
 
-        Study.remove(study)
+        Study().remove(study)
 
         # No Content
         cherrypy.response.status = 204
@@ -436,19 +412,16 @@ class StudyResource(IsicResource):
     @loadmodel(model='user', plugin='isic_archive', map={'userId': 'annotatorUser'},
                level=AccessType.READ)
     def deleteAnnotator(self, study, annotatorUser, params):
-        Study = self.model('study', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         user = self.getCurrentUser()
         # For now, study admins will be the ones that can delete annotators
-        User.requireAdminStudy(user)
+        User().requireAdminStudy(user)
 
-        if Study.childAnnotations(
-                study=study, annotatorUser=annotatorUser, state=Study.State.COMPLETE).count():
+        if Study().childAnnotations(
+                study=study, annotatorUser=annotatorUser, state=Study().State.COMPLETE).count():
             raise RestException('Annotator user has completed annotations.', 409)
 
         try:
-            Study.removeAnnotator(study, annotatorUser)
+            Study().removeAnnotator(study, annotatorUser)
         except ValidationException as e:
             raise ValidationException(str(e), 'userId')
 
