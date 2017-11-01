@@ -17,7 +17,6 @@
 #  limitations under the License.
 ###############################################################################
 
-import csv
 import datetime
 import itertools
 import os
@@ -28,6 +27,7 @@ from girder.models.model_base import GirderException, ValidationException
 from girder.models.notification import ProgressState
 from girder.utility import assetstore_utilities, mail_utils
 from girder.utility.progress import ProgressContext
+from backports import csv
 
 from .dataset_helpers import matchFilenameRegex
 from .dataset_helpers.image_metadata import addImageMetadata
@@ -398,6 +398,9 @@ class Dataset(FolderModel):
             metadataErrors.append(str(e))
         except csv.Error as e:
             metadataErrors.append('parsing CSV: %s' % str(e))
+        except UnicodeDecodeError as e:
+            metadataErrors.append('CSV is not UTF-8 encoded (%s at position %d in %r)' %
+                                  (e.reason, e.start, e.object))
 
         # Save updated metadata to images
         if not metadataErrors and save:

@@ -350,17 +350,17 @@ class UploadTestCase(IsicTestCase):
         self.assertEqual(
             resp.json['errors'], [
                 {'description':
-                 'on CSV row 5: values [\'solar lentigo\', False] for fields [\'diagnosis\', '
+                 'on CSV row 5: values [u\'solar lentigo\', False] for fields [\'diagnosis\', '
                  '\'melanocytic\'] are inconsistent'}
             ])
         self.assertEqual(
             resp.json['warnings'], [
                 {'description':
-                 'on CSV row 4: no images found that match \'filename\': \'test_1_small_3.jpg\''},
+                 'on CSV row 4: no images found that match u\'filename\': u\'test_1_small_3.jpg\''},
                 {'description':
-                 'on CSV row 6: no images found that match \'filename\': \'test_1_large_2.jpg\''},
+                 'on CSV row 6: no images found that match u\'filename\': u\'test_1_large_2.jpg\''},
                 {'description':
-                 'unrecognized field \'age_approx\' will be added to unstructured metadata'},
+                 'unrecognized field u\'age_approx\' will be added to unstructured metadata'},
                 {'description':
-                 'unrecognized field \'isic_source_name\' will be added to unstructured metadata'}
+                 'unrecognized field u\'isic_source_name\' will be added to unstructured metadata'}
             ])
