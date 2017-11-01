@@ -23,7 +23,6 @@ from girder.models.folder import Folder
 from girder.models.group import Group
 from girder.models.model_base import ValidationException
 
-from .annotation import Annotation
 from .featureset import Featureset
 from .image import Image
 from .user import User
@@ -90,6 +89,9 @@ class Study(Folder):
 
     def addAnnotator(self, study, annotatorUser, creatorUser,
                      images=None):
+        # Avoid circular import
+        from .annotation import Annotation
+
         if not images:
             images = self.getImages(study)
 
@@ -155,6 +157,9 @@ class Study(Folder):
         Folder().remove(annotatorFolder)
 
     def addImage(self, study, image, creatorUser):
+        # Avoid circular import
+        from .annotation import Annotation
+
         for annotatorFolder in Folder().find({'parentId': study['_id']}):
             Annotation().createAnnotation(
                 study, image, creatorUser, annotatorFolder)
@@ -169,12 +174,18 @@ class Study(Folder):
         })
 
     def getImages(self, study):
+        # Avoid circular import
+        from .annotation import Annotation
+
         imageIds = Annotation().find({
             'meta.studyId': study['_id']}).distinct('meta.imageId')
         return Image().find({'_id': {'$in': imageIds}})
 
     def childAnnotations(self, study=None, annotatorUser=None,
                          image=None, state=None, **kwargs):
+        # Avoid circular import
+        from .annotation import Annotation
+
         query = {}
         if study:
             query['meta.studyId'] = study['_id']

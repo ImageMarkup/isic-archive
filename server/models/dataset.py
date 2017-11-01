@@ -35,7 +35,6 @@ from girder.utility.progress import ProgressContext
 
 from .dataset_helpers import matchFilenameRegex
 from .dataset_helpers.image_metadata import addImageMetadata
-from .image import Image
 from ..upload import ZipFileOpener
 from ..utility import generateLines
 from ..utility import mail_utils as isic_mail_utils
@@ -87,6 +86,9 @@ class Dataset(Folder):
 
     def childImages(self, dataset, limit=0, offset=0, sort=None, filters=None,
                     **kwargs):
+        # Avoid circular import
+        from .image import Image
+
         query = filters.copy() if filters is not None else {}
         query.update({
             'folderId': dataset['_id']
@@ -208,6 +210,9 @@ class Dataset(Folder):
         return dataset
 
     def _handleZip(self, prereviewFolder, user, zipFile):
+        # Avoid circular import
+        from .image import Image
+
         # Get full path of zip file in assetstore
         assetstore = Assetstore().getCurrent()
         assetstore_adapter = assetstore_utilities.getAssetstoreAdapter(
@@ -245,6 +250,9 @@ class Dataset(Folder):
         })
 
     def reviewImages(self, dataset, acceptedImages, flaggedImages, user):
+        # Avoid circular import
+        from .image import Image
+
         # Verify that all images are pending review
         prereviewFolder = self.prereviewFolder(dataset)
         if not prereviewFolder:
@@ -343,6 +351,9 @@ class Dataset(Folder):
             - List of strings describing metadata warnings.
         :rtype: tuple(list, list)
         """
+        # Avoid circular import
+        from .image import Image
+
         metadataFileStream = File().download(metadataFile, headers=False)()
 
         images = []
@@ -415,6 +426,9 @@ class Dataset(Folder):
         Indicate a warning if no matching images are found.
         Indicate an error if more than one matching images are found.
         """
+        # Avoid circular import
+        from .image import Image
+
         imageQuery = {
             'folderId': dataset['_id']
             # TODO: match images in the Pre-review folder too

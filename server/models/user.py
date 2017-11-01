@@ -27,8 +27,6 @@ from girder.models.group import Group
 from girder.models.user import User as GirderUser
 from girder.models.model_base import AccessException, ValidationException
 
-from .segmentation import Segmentation
-
 
 class User(GirderUser):
     def initialize(self):
@@ -116,6 +114,9 @@ class User(GirderUser):
                 'datasets.')
 
     def getSegmentationSkill(self, user):
+        # Avoid circular import
+        from .segmentation import Segmentation
+
         if not user:
             return None
         expertGroup = Group().findOne({'name': 'Segmentation Experts'})

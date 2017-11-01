@@ -39,7 +39,6 @@ from girder.plugins.worker import utils as workerUtils
 
 from . import segmentation_helpers
 from .dataset import Dataset
-from .study import Study
 from .user import User
 from ..settings import PluginSettings
 from ..provision_utility import getAdminUser
@@ -341,6 +340,9 @@ class Image(Item):
 
     def load(self, id, level=AccessType.ADMIN, user=None, objectId=True, force=False, fields=None,
              exc=False):
+        # Avoid circular import
+        from .study import Study
+
         # Allow annotators assigned to an image to always have read access to that image.
 
         # TODO: Ideally, this might set Image().resourceColl to Dataset, then add the special case
