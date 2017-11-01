@@ -1,6 +1,6 @@
 ---
 
-girder_version: "0392e67f0a5ff6e162effafcd490ddd159f7a0d0"
+girder_version: "cb7cc3a0194eee752354d48057c64e7f8edede00"
 worker_version: "d5b474864322d654b39a0e81c7376458995d3c73"
 python_dist_path: "{{ ansible_user_dir }}/env"
 large_image_version: "3e7719dfeb97e1ba30119c46f72cb0526b95faa7"
