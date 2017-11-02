@@ -10,7 +10,7 @@ jobs:
     environment:
       - GIRDER_VERSION: cb7cc3a0194eee752354d48057c64e7f8edede00
       - WORKER_VERSION: 042a69d6ae7d472e32242d98f8b7acb3148980f9
-      - LARGE_IMAGE_VERSION: 3e7719dfeb97e1ba30119c46f72cb0526b95faa7
+      - LARGE_IMAGE_VERSION: e055e9f8f69efc2485da42a15a34cc947dd9a839
 
     steps:
       - run:
@@ -59,7 +59,7 @@ jobs:
             echo "source $CIRCLE_WORKING_DIRECTORY/venv/bin/activate" >> $BASH_ENV
       - run:
           name: Create cache key
-          command: cat girder/setup.py girder/requirements-dev.txt girder_worker/setup.py girder/plugins/large_image/requirements.txt girder/plugins/isic_archive/requirements.txt | sha512sum > venv-req-hash.txt
+          command: cat girder/setup.py girder/requirements-dev.txt girder_worker/setup.py girder/plugins/large_image/setup.py girder/plugins/isic_archive/requirements.txt | sha512sum > venv-req-hash.txt
       - restore_cache:
           key: venv-{{ checksum "venv-req-hash.txt" }}
       - run:
