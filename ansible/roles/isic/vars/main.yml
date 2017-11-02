@@ -1,9 +1,9 @@
 ---
 
-girder_version: "0392e67f0a5ff6e162effafcd490ddd159f7a0d0"
-worker_version: "d5b474864322d654b39a0e81c7376458995d3c73"
+girder_version: "cb7cc3a0194eee752354d48057c64e7f8edede00"
+worker_version: "042a69d6ae7d472e32242d98f8b7acb3148980f9"
 python_dist_path: "{{ ansible_user_dir }}/env"
-large_image_version: "3e7719dfeb97e1ba30119c46f72cb0526b95faa7"
+large_image_version: "e055e9f8f69efc2485da42a15a34cc947dd9a839"
 
 girder_port: 8080
 girder_admin_username: "admin"
