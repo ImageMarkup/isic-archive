@@ -20,8 +20,9 @@
 
 def generateLines(stream):
     """
-    Generate individual lines of text from a stream. Newlines are retained in
-    the output.
+    Generate individual unicode lines of text from a stream. Newlines are
+    retained in the output. Decoding using 'utf-8-sig' removes Unicode BOM
+    (byte order mark).
     """
     lastLine = None
     keepends = True
@@ -36,8 +37,8 @@ def generateLines(stream):
             lines = chunk.splitlines(keepends)
             lastLine = lines.pop()
             for line in lines:
-                yield line
+                yield unicode(line, 'utf-8-sig')
     except StopIteration:
         if lastLine is not None:
-            yield lastLine
+            yield unicode(lastLine, 'utf-8-sig')
         raise StopIteration
