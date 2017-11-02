@@ -60,8 +60,9 @@ jobs:
       - run:
           name: Create cache key
           command: cat girder/setup.py girder/requirements-dev.txt girder_worker/setup.py girder/plugins/large_image/setup.py girder/plugins/isic_archive/requirements.txt | sha512sum > venv-req-hash.txt
-      - restore_cache:
-          key: venv-{{ arch }}-{{ checksum "venv-req-hash.txt" }}
+      #- restore_cache:
+      # TODO: caching is broken, because "girder/requirements-dev.txt" requires exactly "pbr==1.10.0", and "girder_worker/setup.py" requires a newer version; however installing fresh every time still works
+      #    key: venv-{{ arch }}-{{ checksum "venv-req-hash.txt" }}
       - run:
           name: Install Girder
           command: |
@@ -83,9 +84,9 @@ jobs:
       - run:
           name: Install coverage client
           command: pip install codecov
-      - save_cache:
-          paths: venv
-          key: venv-{{ arch }}-{{ checksum "venv-req-hash.txt" }}
+      #- save_cache:
+      #    paths: venv
+      #    key: venv-{{ arch }}-{{ checksum "venv-req-hash.txt" }}
 
       - restore_cache:
           key: npm-{{ arch }}-{{ checksum "girder/package.json" }}-{{ checksum "girder/plugins/isic_archive/plugin.json" }}
