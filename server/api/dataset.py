@@ -23,9 +23,14 @@ from girder.api import access
 from girder.api.rest import loadmodel
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
+from girder.models.file import File
+from girder.models.folder import Folder
 from girder.models.model_base import AccessException, ValidationException
 
 from .base import IsicResource
+from ..models.dataset import Dataset
+from ..models.image import Image
+from ..models.user import User
 
 CSV_FORMATS = [
     'text/csv',
@@ -62,15 +67,13 @@ class DatasetResource(IsicResource):
     @access.cookie
     @access.public
     def find(self, params):
-        Dataset = self.model('dataset', 'isic_archive')
-
         limit, offset, sort = self.getPagingParameters(params, 'name')
         user = self.getCurrentUser()
 
         return [
-            Dataset.filterSummary(dataset, user)
+            Dataset().filterSummary(dataset, user)
             for dataset in
-            Dataset.list(user=user, limit=limit, offset=offset, sort=sort)
+            Dataset().list(user=user, limit=limit, offset=offset, sort=sort)
         ]
 
     @describeRoute(
@@ -82,16 +85,13 @@ class DatasetResource(IsicResource):
     @access.public
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
     def getDataset(self, dataset, params):
-        Dataset = self.model('dataset', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
-        output = Dataset.filter(dataset, self.getCurrentUser())
+        output = Dataset().filter(dataset, self.getCurrentUser())
         del output['_accessLevel']
         output['_modelType'] = 'dataset'
         output.update(dataset.get('meta', {}))
 
-        output['creator'] = User.filterSummary(
-            User.load(output.pop('creatorId'), force=True, exc=True),
+        output['creator'] = User().filterSummary(
+            User().load(output.pop('creatorId'), force=True, exc=True),
             self.getCurrentUser())
 
         return output
@@ -110,20 +110,16 @@ class DatasetResource(IsicResource):
     )
     @access.user
     def ingestDataset(self, params):
-        Dataset = self.model('dataset', 'isic_archive')
-        File = self.model('file')
-        User = self.model('user', 'isic_archive')
-
         params = self._decodeParams(params)
         self.requireParams(['zipFileId', 'name', 'owner'], params)
 
         user = self.getCurrentUser()
-        User.requireCreateDataset(user)
+        User().requireCreateDataset(user)
 
         zipFileId = params.get('zipFileId')
         if not zipFileId:
             raise ValidationException('No file was uploaded.', 'zipFileId')
-        zipFile = File.load(zipFileId, user=user, level=AccessType.WRITE, exc=False)
+        zipFile = File().load(zipFileId, user=user, level=AccessType.WRITE, exc=False)
         if not zipFile:
             raise ValidationException('Invalid upload file ID.', 'zipFileId')
         if not self._checkFileFormat(zipFile, ZIP_FORMATS):
@@ -149,7 +145,7 @@ class DatasetResource(IsicResource):
                 'Attribution must be specified when not contributing anonymously.', 'attribution')
 
         # TODO: make this return only the dataset fields
-        return Dataset.ingestDataset(
+        return Dataset().ingestDataset(
             zipFile=zipFile, user=user, name=name, owner=owner,
             description=description, license=licenseValue, signature=signature,
             anonymous=anonymous, attribution=attribution, sendMail=True)
@@ -163,17 +159,12 @@ class DatasetResource(IsicResource):
     @access.user
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
     def getReviewImages(self, dataset, params):
-        Dataset = self.model('dataset', 'isic_archive')
-        Folder = self.model('folder')
-        Image = self.model('image', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         user = self.getCurrentUser()
-        User.requireReviewDataset(user)
+        User().requireReviewDataset(user)
 
-        prereviewFolder = Dataset.prereviewFolder(dataset)
+        prereviewFolder = Dataset().prereviewFolder(dataset)
         if not (prereviewFolder and
-                Folder.hasAccess(prereviewFolder, user=user, level=AccessType.READ)):
+                Folder().hasAccess(prereviewFolder, user=user, level=AccessType.READ)):
             raise AccessException(
                 'User does not have access to any Pre-review images for this dataset.')
 
@@ -186,7 +177,7 @@ class DatasetResource(IsicResource):
                 ['_id', 'name', 'updated', 'description', 'meta']
             }
             for image in
-            Image.find(
+            Image().find(
                 {'folderId': prereviewFolder['_id']},
                 limit=limit, sort=[('name', SortDir.ASCENDING)]
             )
@@ -204,27 +195,23 @@ class DatasetResource(IsicResource):
     @access.user
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
     def submitReviewImages(self, dataset, params):
-        Dataset = self.model('dataset', 'isic_archive')
-        Image = self.model('image', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         user = self.getCurrentUser()
-        User.requireReviewDataset(user)
+        User().requireReviewDataset(user)
 
         params = self._decodeParams(params)
         self.requireParams(['accepted', 'flagged'], params)
         # TODO: validate that parameters are lists of strings
 
         acceptedImages = [
-            Image.load(imageId, user=user, level=AccessType.READ, exc=True)
+            Image().load(imageId, user=user, level=AccessType.READ, exc=True)
             for imageId in params['accepted']
         ]
         flaggedImages = [
-            Image.load(imageId, user=user, level=AccessType.READ, exc=True)
+            Image().load(imageId, user=user, level=AccessType.READ, exc=True)
             for imageId in params['flagged']
         ]
 
-        Dataset.reviewImages(dataset, acceptedImages, flaggedImages, user)
+        Dataset().reviewImages(dataset, acceptedImages, flaggedImages, user)
 
         # TODO: return value?
         return {'status': 'success'}
@@ -236,24 +223,21 @@ class DatasetResource(IsicResource):
     @access.user
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
     def getRegisteredMetadata(self, dataset, params):
-        File = self.model('file')
-        User = self.model('user', 'isic_archive')
-
         user = self.getCurrentUser()
-        User.requireReviewDataset(user)
+        User().requireReviewDataset(user)
 
         output = []
         for registration in dataset['meta']['metadataFiles']:
-            # TODO: "File.load" can use the "fields" argument and be expressed
+            # TODO: "File().load" can use the "fields" argument and be expressed
             # as a comprehension, once the fix from upstream Girder is available
-            metadataFile = File.load(registration['fileId'], force=True, exc=True)
+            metadataFile = File().load(registration['fileId'], force=True, exc=True)
             output.append({
                 'file': {
                     '_id': metadataFile['_id'],
                     'name': metadataFile['name']
                 },
-                'user': User.filterSummary(
-                    User.load(registration['userId'], force=True, exc=True),
+                'user': User().filterSummary(
+                    User().load(registration['userId'], force=True, exc=True),
                     user),
                 'time': registration['time']
             })
@@ -267,24 +251,20 @@ class DatasetResource(IsicResource):
     @access.user
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
     def registerMetadata(self, dataset, params):
-        Dataset = self.model('dataset', 'isic_archive')
-        File = self.model('file')
-        User = self.model('user', 'isic_archive')
-
         params = self._decodeParams(params)
         self.requireParams(['metadataFileId'], params)
 
         user = self.getCurrentUser()
-        User.requireCreateDataset(user)
+        User().requireCreateDataset(user)
 
-        metadataFile = File.load(
+        metadataFile = File().load(
             params['metadataFileId'], user=user, level=AccessType.READ, exc=False)
         if not metadataFile:
             raise ValidationException('Invalid metadata file ID.', 'metadataFileId')
         if not self._checkFileFormat(metadataFile, CSV_FORMATS):
             raise ValidationException('File must be in .csv format.', 'metadataFileId')
 
-        Dataset.registerMetadata(
+        Dataset().registerMetadata(
             dataset=dataset, user=user, metadataFile=metadataFile, sendMail=True)
         # TODO: return value?
         return {'status': 'success'}
@@ -315,17 +295,14 @@ class DatasetResource(IsicResource):
     @loadmodel(model='file', map={'fileId': 'metadataFile'}, force=True)
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
     def applyMetadata(self, dataset, metadataFile, params):
-        Dataset = self.model('dataset', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         params = self._decodeParams(params)
         self.requireParams('save', params)
         save = self.boolParam('save', params)
 
         user = self.getCurrentUser()
-        User.requireCreateDataset(user)
+        User().requireCreateDataset(user)
 
-        errors, warnings = Dataset.applyMetadata(
+        errors, warnings = Dataset().applyMetadata(
             dataset=dataset, metadataFile=metadataFile, save=save)
         return {
             'errors': [{'description': description} for description in errors],

@@ -24,8 +24,8 @@ import subprocess
 import tempfile
 import zipfile
 
+from girder.models.assetstore import Assetstore
 from girder.utility import assetstore_utilities
-from girder.utility.model_importer import ModelImporter
 
 
 class TempDir(object):
@@ -33,8 +33,7 @@ class TempDir(object):
         pass
 
     def __enter__(self):
-        Assetstore = ModelImporter.model('assetstore')
-        assetstore = Assetstore.getCurrent()
+        assetstore = Assetstore().getCurrent()
         assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(
             assetstore)
         try:

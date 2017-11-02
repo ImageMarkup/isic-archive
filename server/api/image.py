@@ -29,11 +29,17 @@ from girder.api import access
 from girder.api.rest import RestException, loadmodel, setRawResponse, setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
+from girder.models.file import File
 from girder.models.model_base import GirderException, ValidationException
 from girder.utility import mail_utils, ziputil
+
 from girder.plugins.large_image.models import TileGeneralException
+from girder.plugins.large_image.models.image_item import ImageItem
 
 from .base import IsicResource
+from ..models.dataset import Dataset
+from ..models.image import Image
+from ..models.segmentation import Segmentation
 from ..utility import querylang
 
 
@@ -80,8 +86,6 @@ class ImageResource(IsicResource):
     @access.cookie
     @access.public
     def find(self, params):
-        Image = self.model('image', 'isic_archive')
-
         user = self.getCurrentUser()
         detail = self.boolParam('detail', params, default=False)
         limit, offset, sort = self.getPagingParameters(params, 'name')
@@ -98,39 +102,35 @@ class ImageResource(IsicResource):
             if 'name' in params:
                 query.update({'name': params['name']})
 
-        filterFunc = Image.filter if detail else Image.filterSummary
+        filterFunc = Image().filter if detail else Image().filterSummary
         return [
             filterFunc(image, user)
             for image in
-            Image.filterResultsByPermission(
-                Image.find(query, sort=sort),
+            Image().filterResultsByPermission(
+                Image().find(query, sort=sort),
                 user=user, level=AccessType.READ, limit=limit, offset=offset)
         ]
 
     def _imagesZipGenerator(self, downloadFileName, images, include):
-        Dataset = self.model('dataset', 'isic_archive')
-        File = self.model('file')
-        Image = self.model('image', 'isic_archive')
-
         datasetCache = {}
         zipGenerator = ziputil.ZipGenerator(downloadFileName)
 
         for image in images:
             datasetId = image['folderId']
             if datasetId not in datasetCache:
-                datasetCache[datasetId] = Dataset.load(datasetId, force=True, exc=True)
+                datasetCache[datasetId] = Dataset().load(datasetId, force=True, exc=True)
             dataset = datasetCache[datasetId]
 
             if include in {'all', 'images'}:
-                imageFile = Image.originalFile(image)
-                imageFileGenerator = File.download(imageFile, headers=False)
+                imageFile = Image().originalFile(image)
+                imageFileGenerator = File().download(imageFile, headers=False)
                 for data in zipGenerator.addFile(
                         imageFileGenerator,
                         path=os.path.join(dataset['name'], imageFile['name'])):
                     yield data
             if include in {'all', 'metadata'}:
                 def metadataGenerator():
-                    # TODO: Consider replacing this with Image.filter
+                    # TODO: Consider replacing this with Image().filter
                     yield json.dumps({
                         '_id': str(image['_id']),
                         'name': image['name'],
@@ -181,8 +181,6 @@ class ImageResource(IsicResource):
     @access.cookie
     @access.public
     def downloadMultiple(self, params):
-        Image = self.model('image', 'isic_archive')
-
         include = params.get('include', 'all')
         if include not in {'all', 'images', 'metadata'}:
             raise ValidationException(
@@ -201,8 +199,8 @@ class ImageResource(IsicResource):
         user = self.getCurrentUser()
         downloadFileName = 'ISIC-images'
 
-        images = Image.filterResultsByPermission(
-            Image.find(query, sort=[('name', 1)]),
+        images = Image().filterResultsByPermission(
+            Image().find(query, sort=[('name', 1)]),
             user=user, level=AccessType.READ, limit=0, offset=0)
         imagesZipGenerator = self._imagesZipGenerator(downloadFileName, images, include)
 
@@ -218,11 +216,9 @@ class ImageResource(IsicResource):
     @access.cookie
     @access.public
     def getHistogram(self, params):
-        Image = self.model('image', 'isic_archive')
-
         query = self._parseFilter(params['filter']) if 'filter' in params else None
         user = self.getCurrentUser()
-        return Image.getHistograms(query, user)
+        return Image().getHistograms(query, user)
 
     @describeRoute(
         Description('Return an image\'s details.')
@@ -233,10 +229,8 @@ class ImageResource(IsicResource):
     @access.public
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def getImage(self, image, params):
-        Image = self.model('image', 'isic_archive')
-
         user = self.getCurrentUser()
-        return Image.filter(image, user)
+        return Image().filter(image, user)
 
     @describeRoute(
         Description('Return an image\'s thumbnail.')
@@ -252,11 +246,9 @@ class ImageResource(IsicResource):
     @access.public
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def thumbnail(self, image, params):
-        ImageItem = self.model('image_item', 'large_image')
-
         width = int(params.get('width', 256))
         height = int(params.get('height', 256))
-        thumbData, thumbMime = ImageItem.getThumbnail(image, width=width, height=height)
+        thumbData, thumbMime = ImageItem().getThumbnail(image, width=width, height=height)
 
         # Only setRawResponse now, as this handler may return a JSON error
         # earlier
@@ -273,10 +265,9 @@ class ImageResource(IsicResource):
     @access.public
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def getTileInfo(self, image, params):
-        ImageItem = self.model('image_item', 'large_image')
         # These endpoints should guarantee that large_image functionality works, so a
         # TileGeneralException can be treated as an internal server error and not get caught
-        return ImageItem.getMetadata(image)
+        return ImageItem().getMetadata(image)
 
     @describeRoute(
         Description('Return a multiresolution tile for an image.')
@@ -292,7 +283,6 @@ class ImageResource(IsicResource):
     @access.public
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def getTile(self, image, z, x, y, params):
-        ImageItem = self.model('image_item', 'large_image')
         try:
             x, y, z = int(x), int(y), int(z)
         except ValueError:
@@ -300,7 +290,7 @@ class ImageResource(IsicResource):
         if x < 0 or y < 0 or z < 0:
             raise RestException('x, y, and z must be positive integers')
         try:
-            tileData, tileMime = ImageItem.getTile(image, x, y, z)
+            tileData, tileMime = ImageItem().getTile(image, x, y, z)
         except TileGeneralException as e:
             raise RestException(e.message, code=404)
         setResponseHeader('Content-Type', tileMime)
@@ -320,16 +310,13 @@ class ImageResource(IsicResource):
     @access.public
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def download(self, image, params):
-        File = self.model('file')
-        Image = self.model('image', 'isic_archive')
-
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
             raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
                                       'contentDisposition')
 
-        originalFile = Image.originalFile(image)
-        fileStream = File.download(originalFile, headers=True, contentDisposition=contentDisp)
+        originalFile = Image().originalFile(image)
+        fileStream = File().download(originalFile, headers=True, contentDisposition=contentDisp)
         return fileStream
 
     @describeRoute(
@@ -342,11 +329,8 @@ class ImageResource(IsicResource):
     @access.public
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def getSuperpixels(self, image, params):
-        File = self.model('file')
-        Image = self.model('image', 'isic_archive')
-
-        superpixelsFile = Image.superpixelsFile(image)
-        return File.download(superpixelsFile, headers=True)
+        superpixelsFile = Image().superpixelsFile(image)
+        return File().download(superpixelsFile, headers=True)
 
     @describeRoute(
         Description('Run and return a new semi-automated segmentation.')
@@ -358,7 +342,6 @@ class ImageResource(IsicResource):
     @access.user
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def doSegmentation(self, image, params):
-        Segmentation = self.model('segmentation', 'isic_archive')
         params = self._decodeParams(params)
         self.requireParams(['seed', 'tolerance'], params)
 
@@ -376,7 +359,7 @@ class ImageResource(IsicResource):
             raise ValidationException('Value must be an integer.', 'tolerance')
 
         try:
-            contourCoords = Segmentation.doContourSegmentation(image, seedCoord, tolerance)
+            contourCoords = Segmentation().doContourSegmentation(image, seedCoord, tolerance)
         except GirderException as e:
             raise RestException(e.message)
 

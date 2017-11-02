@@ -27,10 +27,14 @@ from girder.api import access
 from girder.api.rest import RestException, loadmodel, setRawResponse, setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
+from girder.models.file import File
 from girder.models.model_base import ValidationException
 
 from .base import IsicResource
+from ..models.image import Image
+from ..models.segmentation import Segmentation
 from ..models.segmentation_helpers import OpenCVSegmentationHelper, ScikitSegmentationHelper
+from ..models.user import User
 
 
 class SegmentationResource(IsicResource):
@@ -55,15 +59,11 @@ class SegmentationResource(IsicResource):
     @access.cookie
     @access.public
     def find(self, params):
-        Image = self.model('image', 'isic_archive')
-        Segmentation = self.model('segmentation', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         self.requireParams(['imageId'], params)
         limit, offset, sort = self.getPagingParameters(
             params, defaultSortField='created', defaultSortDir=SortDir.DESCENDING)
 
-        image = Image.load(
+        image = Image().load(
             params['imageId'], level=AccessType.READ, user=self.getCurrentUser(), exc=True)
 
         filters = {
@@ -71,7 +71,7 @@ class SegmentationResource(IsicResource):
         }
         if 'creatorId' in params:
             # Ensure that the user exists
-            creatorUser = User.load(params['creatorId'], force=True, exc=True)
+            creatorUser = User().load(params['creatorId'], force=True, exc=True)
             filters['creatorId'] = creatorUser['_id']
 
         return [
@@ -82,12 +82,12 @@ class SegmentationResource(IsicResource):
                 'skill':
                     'expert'
                     if any(
-                        review['skill'] == Segmentation.Skill.EXPERT
+                        review['skill'] == Segmentation().Skill.EXPERT
                         for review in segmentation['reviews']
                     )
                     else 'novice'
             }
-            for segmentation in Segmentation.find(
+            for segmentation in Segmentation().find(
                 query=filters,
                 sort=sort,
                 limit=limit,
@@ -106,22 +106,18 @@ class SegmentationResource(IsicResource):
     )
     @access.user
     def createSegmentation(self, params):
-        Image = self.model('image', 'isic_archive')
-        Segmentation = self.model('segmentation', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         params = self._decodeParams(params)
         self.requireParams(['imageId'], params)
 
         user = self.getCurrentUser()
-        User.requireSegmentationSkill(user)
+        User().requireSegmentationSkill(user)
 
-        image = Image.load(params['imageId'], level=AccessType.READ, user=user, exc=True)
+        image = Image().load(params['imageId'], level=AccessType.READ, user=user, exc=True)
 
         failed = self.boolParam('failed', params)
 
         if failed:
-            segmentation = Segmentation.createSegmentation(
+            segmentation = Segmentation().createSegmentation(
                 image=image,
                 creator=user,
                 mask=None,
@@ -154,7 +150,7 @@ class SegmentationResource(IsicResource):
                 if not isinstance(tolerance, int):
                     raise ValidationException('Value must be an integer.', 'tolerance')
 
-                mask = Segmentation.doSegmentation(image, seedCoord, tolerance)
+                mask = Segmentation().doSegmentation(image, seedCoord, tolerance)
             else:
                 coords = lesionBoundary['geometry']['coordinates'][0]
                 mask = OpenCVSegmentationHelper.contourToMask(
@@ -165,7 +161,7 @@ class SegmentationResource(IsicResource):
                     numpy.rint(numpy.array(coords)).astype(int)
                 )
 
-            segmentation = Segmentation.createSegmentation(
+            segmentation = Segmentation().createSegmentation(
                 image=image,
                 creator=user,
                 mask=mask,
@@ -176,7 +172,7 @@ class SegmentationResource(IsicResource):
             maskStream.write(base64.b64decode(params['mask']))
             mask = ScikitSegmentationHelper.loadImage(maskStream)
 
-            segmentation = Segmentation.createSegmentation(
+            segmentation = Segmentation().createSegmentation(
                 image=image,
                 creator=user,
                 mask=mask,
@@ -198,15 +194,12 @@ class SegmentationResource(IsicResource):
     @access.public
     @loadmodel(model='segmentation', plugin='isic_archive')
     def getSegmentation(self, segmentation, params):
-        Image = self.model('image', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         # TODO: convert this to make Segmentation use an AccessControlMixin
-        Image.load(
+        Image().load(
             segmentation['imageId'], level=AccessType.READ, user=self.getCurrentUser(), exc=True)
 
-        segmentation['creator'] = User.filterSummary(
-            User.load(segmentation.pop('creatorId'), force=True, exc=True),
+        segmentation['creator'] = User().filterSummary(
+            User().load(segmentation.pop('creatorId'), force=True, exc=True),
             self.getCurrentUser())
 
         segmentation['failed'] = segmentation.pop('maskId') is None
@@ -226,23 +219,20 @@ class SegmentationResource(IsicResource):
     @access.public
     @loadmodel(model='segmentation', plugin='isic_archive')
     def mask(self, segmentation, params):
-        File = self.model('file')
-        Image = self.model('image', 'isic_archive')
-        Segmentation = self.model('segmentation', 'isic_archive')
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
             raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
                                       'contentDisposition')
 
         # TODO: convert this to make Segmentation use an AccessControlMixin
-        Image.load(
+        Image().load(
             segmentation['imageId'], level=AccessType.READ, user=self.getCurrentUser(), exc=True)
 
-        maskFile = Segmentation.maskFile(segmentation)
+        maskFile = Segmentation().maskFile(segmentation)
         if maskFile is None:
             raise RestException('This segmentation is failed, and thus has no mask.', code=410)
 
-        return File.download(maskFile, headers=True, contentDisposition=contentDisp)
+        return File().download(maskFile, headers=True, contentDisposition=contentDisp)
 
     @describeRoute(
         Description('Get a segmentation, rendered as a thumbnail with a boundary overlay.')
@@ -259,20 +249,18 @@ class SegmentationResource(IsicResource):
     @access.public
     @loadmodel(model='segmentation', plugin='isic_archive')
     def thumbnail(self, segmentation, params):
-        Image = self.model('image', 'isic_archive')
-        Segmentation = self.model('segmentation', 'isic_archive')
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
             raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
                                       'contentDisposition')
 
         # TODO: convert this to make Segmentation use an AccessControlMixin
-        image = Image.load(
+        image = Image().load(
             segmentation['imageId'], level=AccessType.READ, user=self.getCurrentUser(), exc=True)
 
         width = int(params.get('width', 256))
 
-        thumbnailImageStream = Segmentation.boundaryThumbnail(segmentation, image, width)
+        thumbnailImageStream = Segmentation().boundaryThumbnail(segmentation, image, width)
         if thumbnailImageStream is None:
             raise RestException('This segmentation is failed, and thus has no thumbnail.', code=410)
         thumbnailImageData = thumbnailImageStream.getvalue()
@@ -300,18 +288,15 @@ class SegmentationResource(IsicResource):
     @access.user
     @loadmodel(model='segmentation', plugin='isic_archive')
     def doReview(self, segmentation, params):
-        Segmentation = self.model('segmentation', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         params = self._decodeParams(params)
         self.requireParams(['approved'], params)
 
         approved = self.boolParam('approved', params)
 
         user = self.getCurrentUser()
-        User.requireSegmentationSkill(user)
+        User().requireSegmentationSkill(user)
 
-        segmentation = Segmentation.review(segmentation, approved, user)
+        segmentation = Segmentation().review(segmentation, approved, user)
 
         # TODO: return 201?
         # TODO: remove maskId from return?

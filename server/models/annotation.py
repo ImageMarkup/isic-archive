@@ -23,11 +23,14 @@ import six
 
 from bson import ObjectId
 
-from girder.models.item import Item as ItemModel
+from girder.models.item import Item
 from girder.models.model_base import ValidationException, GirderException
 
+from .image import Image
+from .study import Study
 
-class Annotation(ItemModel):
+
+class Annotation(Item):
     def createAnnotation(self, study, image, creatorUser,
                          annotatorFolder):
         annotationItem = self.createItem(
@@ -51,16 +54,12 @@ class Annotation(ItemModel):
         return annotationItem
 
     def getState(self, annotation):
-        Study = self.model('study', 'isic_archive')
-        return (Study.State.COMPLETE
+        return (Study().State.COMPLETE
                 if annotation['meta'].get('stopTime') is not None
-                else Study.State.ACTIVE)
+                else Study().State.ACTIVE)
 
     def _getImageMasks(self, annotation, featureId, image=None):
-        Image = self.model('image', 'isic_archive')
-        Study = self.model('study', 'isic_archive')
-
-        if self.getState(annotation) != Study.State.COMPLETE:
+        if self.getState(annotation) != Study().State.COMPLETE:
             raise GirderException('Annotation is incomplete.')
 
         featureValues = annotation['meta']['annotations'].get(featureId, [])
@@ -82,9 +81,8 @@ class Annotation(ItemModel):
         ])
 
         if not image:
-            image = Image.load(annotation['meta']['imageId'], force=True,
-                               exc=True)
-        superpixelsData = Image.superpixelsData(image)
+            image = Image().load(annotation['meta']['imageId'], force=True, exc=True)
+        superpixelsData = Image().superpixelsData(image)
 
         possibleMask = numpy.in1d(
             superpixelsData.flat,
@@ -100,10 +98,8 @@ class Annotation(ItemModel):
         return possibleMask, definiteMask
 
     def renderAnnotation(self, annotation, featureId):
-        Image = self.model('image', 'isic_archive')
-
-        image = Image.load(annotation['meta']['imageId'], force=True, exc=True)
-        renderData = Image.imageData(image)
+        image = Image().load(annotation['meta']['imageId'], force=True, exc=True)
+        renderData = Image().imageData(image)
 
         possibleMask, definiteMask = self._getImageMasks(
             annotation, featureId, image)
@@ -117,10 +113,9 @@ class Annotation(ItemModel):
         return renderData
 
     def _findQueryFilter(self, query):
-        Study = self.model('study', 'isic_archive')
         newQuery = query.copy() if query is not None else {}
         newQuery.update({
-            'baseParentId': Study.loadStudyCollection()['_id']
+            'baseParentId': Study().loadStudyCollection()['_id']
         })
         return newQuery
 
@@ -133,8 +128,6 @@ class Annotation(ItemModel):
         return super(Annotation, self).findOne(annotationQuery, **kwargs)
 
     def validate(self, doc):  # noqa - C901
-        Image = self.model('image', 'isic_archive')
-        Study = self.model('study', 'isic_archive')
         # If annotation is fully created
         if doc.get('meta') and 'studyId' in doc['meta']:
             for field in ['studyId', 'userId', 'imageId']:
@@ -142,7 +135,7 @@ class Annotation(ItemModel):
                     raise ValidationException(
                         'Annotation field "%s" must be an ObjectId' % field)
 
-            study = Study.load(doc['meta']['studyId'], force=True, exc=False)
+            study = Study().load(doc['meta']['studyId'], force=True, exc=False)
             if not study:
                 raise ValidationException(
                     'Annotation field "studyId" must reference an existing '
@@ -163,7 +156,7 @@ class Annotation(ItemModel):
                     raise ValidationException(
                         'Annotation field "annotations" must be a mapping '
                         '(dict).')
-                featureset = Study.getFeatureset(study)
+                featureset = Study().getFeatureset(study)
                 featuresetGlobalFeatures = {
                     feature['id']: feature
                     for feature in
@@ -175,8 +168,8 @@ class Annotation(ItemModel):
                     featureset['localFeatures']
                 }
                 if featuresetLocalFeatures:
-                    image = Image.load(doc['meta']['imageId'], force=True)
-                    superpixels = Image.superpixelsData(image)
+                    image = Image().load(doc['meta']['imageId'], force=True)
+                    superpixels = Image().superpixelsData(image)
                     maxSuperpixel = superpixels.max()
                 else:
                     maxSuperpixel = None

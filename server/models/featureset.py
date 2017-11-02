@@ -25,6 +25,8 @@ import six
 from girder.constants import AccessType
 from girder.models.model_base import Model, ValidationException
 
+from .user import User
+
 
 class Featureset(Model):
     def initialize(self):
@@ -64,8 +66,6 @@ class Featureset(Model):
                 'dashes, underscores, and forward-slashes')
 
     def validate(self, doc):  # noqa - C901
-        User = self.model('user', 'isic_archive')
-
         extraFields = set(six.viewkeys(doc)) - {
             '_id', 'name', 'creatorId', 'created', 'version',
             'globalFeatures', 'localFeatures'}
@@ -78,8 +78,7 @@ class Featureset(Model):
                 'Featureset field "name" must be a non-empty string.')
 
         # This is slower, but we don't save featuresets very often
-        if not User.load(doc.get('creatorId'), force=True, exc=False,
-                         fields=['_id']):
+        if not User().load(doc.get('creatorId'), force=True, exc=False, fields=['_id']):
             raise ValidationException(
                 'Featureset field "creatorId" must reference a user.')
 

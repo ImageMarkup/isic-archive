@@ -26,10 +26,13 @@ from PIL import Image as PIL_Image, ImageDraw as PIL_ImageDraw
 
 from girder import events
 from girder.constants import AccessType
+from girder.models.file import File
 from girder.models.model_base import Model, GirderException, ValidationException
+from girder.models.upload import Upload
 
-from .segmentation_helpers import ScikitSegmentationHelper, \
-    OpenCVSegmentationHelper
+from .image import Image
+from .segmentation_helpers import ScikitSegmentationHelper, OpenCVSegmentationHelper
+from .user import User
 
 
 class Segmentation(Model):
@@ -65,8 +68,7 @@ class Segmentation(Model):
         :return: The lesion segmentation, as a mask.
         :rtype: numpy.ndarray
         """
-        Image = self.model('image', 'isic_archive')
-        imageData = Image.imageData(image)
+        imageData = Image().imageData(image)
 
         if not(
             # The imageData has a shape of (rows, cols), the seed is (x, y)
@@ -91,9 +93,6 @@ class Segmentation(Model):
         return contour
 
     def createSegmentation(self, image, creator, mask, meta=None):
-        File = self.model('file')
-        Upload = self.model('upload')
-
         now = datetime.datetime.utcnow()
 
         if mask is not None:
@@ -111,7 +110,7 @@ class Segmentation(Model):
         })
 
         if mask is not None:
-            maskFile = Upload.uploadFromFile(
+            maskFile = Upload().uploadFromFile(
                 obj=maskOutputStream,
                 size=len(maskOutputStream.getvalue()),
                 name='%s_segmentation.png' % (image['name']),
@@ -124,7 +123,7 @@ class Segmentation(Model):
             )
             # TODO: remove this once a bug in upstream Girder is fixed
             maskFile['attachedToType'] = ['segmentation', 'isic_archive']
-            maskFile = File.save(maskFile)
+            maskFile = File().save(maskFile)
 
             segmentation['maskId'] = maskFile['_id']
 
@@ -138,10 +137,9 @@ class Segmentation(Model):
         return segmentation
 
     def maskFile(self, segmentation):
-        File = self.model('file')
         if segmentation['maskId'] is None:
             return None
-        return File.load(segmentation['maskId'], force=True, exc=True)
+        return File().load(segmentation['maskId'], force=True, exc=True)
 
     def maskData(self, segmentation):
         """
@@ -149,16 +147,14 @@ class Segmentation(Model):
 
         :rtype: numpy.ndarray
         """
-        Image = self.model('image', 'isic_archive')
         maskFile = self.maskFile(segmentation)
         if maskFile is None:
             return None
-        return Image._decodeDataFromFile(maskFile)
+        return Image()._decodeDataFromFile(maskFile)
 
     def boundaryThumbnail(self, segmentation, image=None, width=256):
-        Image = self.model('image', 'isic_archive')
         if not image:
-            image = Image.load(segmentation['imageId'], force=True, exc=True)
+            image = Image().load(segmentation['imageId'], force=True, exc=True)
 
         mask = self.maskData(segmentation)
         if mask is None:
@@ -178,9 +174,7 @@ class Segmentation(Model):
             numpy.asarray(pilImageData), 'jpeg', width)
 
     def review(self, segmentation, approved, user, time=None):
-        User = self.model('user', 'isic_archive')
-
-        skill = User.getSegmentationSkill(user)
+        skill = User().getSegmentationSkill(user)
         if time is None:
             time = datetime.datetime.utcnow()
 
@@ -202,10 +196,9 @@ class Segmentation(Model):
             self.remove(segmentation, **event.info['kwargs'])
 
     def remove(self, segmentation, **kwargs):
-        File = self.model('file')
         # A segmentation could be "failed" and have a "maskId" of None
         if segmentation['maskId'] is not None:
-            File.remove(self.maskFile(segmentation))
+            File().remove(self.maskFile(segmentation))
         super(Segmentation, self).remove(segmentation, **kwargs)
 
     def _validateMask(self, mask, image):
@@ -246,9 +239,6 @@ class Segmentation(Model):
         return mask
 
     def validate(self, doc):
-        File = self.model('file')
-        Image = self.model('image', 'isic_archive')
-        User = self.model('user', 'isic_archive')
         try:
             assert set(six.viewkeys(doc)) >= {
                 'imageId', 'creatorId', 'created', 'maskId', 'reviews', 'meta'}
@@ -257,23 +247,23 @@ class Segmentation(Model):
                 'meta'}
 
             assert isinstance(doc['imageId'], ObjectId)
-            assert Image.find({'_id': doc['imageId']}).count()
+            assert Image().find({'_id': doc['imageId']}).count()
 
             assert isinstance(doc['creatorId'], ObjectId)
-            assert User.find({'_id': doc['creatorId']}).count()
+            assert User().find({'_id': doc['creatorId']}).count()
 
             assert isinstance(doc['created'], datetime.datetime)
 
             if doc['maskId']:
                 assert isinstance(doc['maskId'], ObjectId)
-                assert File.find({'_id': doc['maskId']}).count()
+                assert File().find({'_id': doc['maskId']}).count()
 
             assert isinstance(doc['reviews'], list)
             for review in doc['reviews']:
                 assert set(six.viewkeys(review)) == {
                     'userId', 'skill', 'time', 'approved'}
                 assert isinstance(review['userId'], ObjectId)
-                assert User.find({'_id': review['userId']}).count()
+                assert User().find({'_id': review['userId']}).count()
                 assert review['skill'] in {self.Skill.NOVICE, self.Skill.EXPERT}
                 assert isinstance(review['time'], datetime.datetime)
                 assert isinstance(review['approved'], bool)

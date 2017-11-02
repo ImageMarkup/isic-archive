@@ -26,9 +26,16 @@ from girder.api import access
 from girder.api.rest import RestException
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
+from girder.models.collection import Collection
+from girder.models.folder import Folder
 from girder.models.model_base import AccessException
 
 from .base import IsicResource
+from ..models.dataset import Dataset
+from ..models.image import Image
+from ..models.segmentation import Segmentation
+from ..models.study import Study
+from ..models.user import User
 
 
 class TaskResource(IsicResource):
@@ -59,28 +66,22 @@ class TaskResource(IsicResource):
     )
     @access.user
     def getReviewTasks(self, params):
-        Collection = self.model('collection')
-        Dataset = self.model('dataset', 'isic_archive')
-        Folder = self.model('folder')
-        Image = self.model('image', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         user = self.getCurrentUser()
-        User.requireReviewDataset(user)
+        User().requireReviewDataset(user)
 
         results = []
-        for prereviewFolder in Folder.find({
+        for prereviewFolder in Folder().find({
             'name': 'Pre-review',
-            'baseParentId': Collection.findOne({'name': 'Lesion Images'})['_id']
+            'baseParentId': Collection().findOne({'name': 'Lesion Images'})['_id']
         }):
-            if not Folder.hasAccess(prereviewFolder, user=user, level=AccessType.READ):
+            if not Folder().hasAccess(prereviewFolder, user=user, level=AccessType.READ):
                 continue
 
-            count = Image.find({'folderId': prereviewFolder['_id']}).count()
+            count = Image().find({'folderId': prereviewFolder['_id']}).count()
             if not count:
                 continue
 
-            dataset = Dataset.load(
+            dataset = Dataset().load(
                 prereviewFolder['parentId'], user=user, level=AccessType.READ, exc=False)
             if not dataset:
                 # This should not typically occur
@@ -104,37 +105,31 @@ class TaskResource(IsicResource):
     @access.cookie
     @access.user
     def redirectReviewTask(self, params):
-        Dataset = self.model('dataset', 'isic_archive')
-        Folder = self.model('folder')
-        Image = self.model('image', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         self.requireParams(['datasetId'], params)
 
         user = self.getCurrentUser()
-        User.requireReviewDataset(user)
+        User().requireReviewDataset(user)
 
-        dataset = Dataset.load(params['datasetId'], user=user, level=AccessType.READ, exc=True)
+        dataset = Dataset().load(params['datasetId'], user=user, level=AccessType.READ, exc=True)
 
-        prereviewFolder = Dataset.prereviewFolder(dataset)
+        prereviewFolder = Dataset().prereviewFolder(dataset)
         if not (prereviewFolder and
-                Folder.hasAccess(prereviewFolder, user=user, level=AccessType.READ)):
+                Folder().hasAccess(prereviewFolder, user=user, level=AccessType.READ)):
             raise AccessException(
                 'User does not have access to any Pre-review images for this dataset.')
 
-        if not Image.find({'folderId': prereviewFolder['_id']}).count():
+        if not Image().find({'folderId': prereviewFolder['_id']}).count():
             raise RestException('No Pre-review images are available for this dataset.')
 
         reviewUrl = '/markup/gallery#/qc/%s' % dataset['_id']
         self._doRedirect(reviewUrl)
 
     def _pipeline1AllImages(self, user):
-        Dataset = self.model('dataset', 'isic_archive')
         return [
             # Filter viewable images out of all items
             {'$match': {
                 'folderId': {'$in': [
-                    dataset['_id'] for dataset in Dataset.list(user=user)]}}}
+                    dataset['_id'] for dataset in Dataset().list(user=user)]}}}
         ]
 
     def _pipeline1ImagesFromDataset(self, dataset):
@@ -176,13 +171,13 @@ class TaskResource(IsicResource):
         ]
 
     def _pipeline3NoExpertSegmentations(self):
-        Segmentation = self.model('segmentation', 'isic_archive')
+
         return [
             # Get only images with no successful expert segmentations
             {'$match': {
                 'segmentations.reviews': {
                     '$not': {'$elemMatch': {
-                        'skill': Segmentation.Skill.EXPERT,
+                        'skill': Segmentation().Skill.EXPERT,
                         'approved': True
                     }}
                 }
@@ -256,14 +251,10 @@ class TaskResource(IsicResource):
     )
     @access.user
     def getSegmentationTasks(self, params):
-        Image = self.model('image', 'isic_archive')
-        Segmentation = self.model('segmentation', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         details = self.boolParam('details', params, False)
 
         user = self.getCurrentUser()
-        userSkill = User.getSegmentationSkill(user)
+        userSkill = User().getSegmentationSkill(user)
         if userSkill is None:
             raise AccessException('You are not authorized to perform segmentations.')
 
@@ -272,7 +263,7 @@ class TaskResource(IsicResource):
             self._pipeline2ImagesWithSegmentations(),
             (
                 self._pipeline3NoExpertSegmentations()
-                if userSkill == Segmentation.Skill.EXPERT else
+                if userSkill == Segmentation().Skill.EXPERT else
                 self._pipeline3MissingSegmentations()
             ),
             (
@@ -283,7 +274,7 @@ class TaskResource(IsicResource):
             self._pipeline5JoinDataset()
         ))
 
-        results = list(Image.collection.aggregate(pipeline))
+        results = list(Image().collection.aggregate(pipeline))
 
         return results
 
@@ -295,17 +286,12 @@ class TaskResource(IsicResource):
     )
     @access.user
     def nextSegmentationTask(self, params):
-        Dataset = self.model('dataset', 'isic_archive')
-        Image = self.model('image', 'isic_archive')
-        Segmentation = self.model('segmentation', 'isic_archive')
-        User = self.model('user', 'isic_archive')
-
         self.requireParams(['datasetId'], params)
         user = self.getCurrentUser()
 
-        dataset = Dataset.load(params['datasetId'], user=user, level=AccessType.READ, exc=True)
+        dataset = Dataset().load(params['datasetId'], user=user, level=AccessType.READ, exc=True)
 
-        userSkill = User.getSegmentationSkill(user)
+        userSkill = User().getSegmentationSkill(user)
         if userSkill is None:
             raise AccessException('You are not authorized to perform segmentations.')
 
@@ -316,18 +302,18 @@ class TaskResource(IsicResource):
                 # TODO: prefer an image with a novice segmentation to one with
                 # no segmentations
                 self._pipeline3NoExpertSegmentations()
-                if userSkill == Segmentation.Skill.EXPERT else
+                if userSkill == Segmentation().Skill.EXPERT else
                 self._pipeline3MissingSegmentations()
             ),
             self._pipeline4RandomImage()
         ))
 
-        results = list(Image.collection.aggregate(pipeline))
+        results = list(Image().collection.aggregate(pipeline))
         if not results:
             raise RestException('No segmentations are needed for this dataset.')
         nextImage = results[0]
 
-        return Image.filterSummary(nextImage, user)
+        return Image().filterSummary(nextImage, user)
 
     @describeRoute(
         Description('Redirect to a random segmentation task.')
@@ -348,8 +334,6 @@ class TaskResource(IsicResource):
     )
     @access.user
     def getAnnotationTasks(self, params):
-        Study = self.model('study', 'isic_archive')
-
         user = self.getCurrentUser()
         # TODO: this could be done more efficiently, without duplicate queries
         results = [
@@ -358,16 +342,16 @@ class TaskResource(IsicResource):
                     '_id': study['_id'],
                     'name': study['name'],
                 },
-                'count': Study.childAnnotations(
+                'count': Study().childAnnotations(
                     study=study,
                     annotatorUser=user,
-                    state=Study.State.ACTIVE
+                    state=Study().State.ACTIVE
                 ).count(),
             }
             for study in
-            Study.find(
+            Study().find(
                 annotatorUser=user,
-                state=Study.State.ACTIVE,
+                state=Study().State.ACTIVE,
                 sort=[('lowerName', SortDir.ASCENDING)]
             )
         ]
@@ -379,16 +363,14 @@ class TaskResource(IsicResource):
     )
     @access.user
     def nextAnnotationTask(self, params):
-        Study = self.model('study', 'isic_archive')
-
         self.requireParams(['studyId'], params)
         user = self.getCurrentUser()
 
-        study = Study.load(params['studyId'], user=user, level=AccessType.READ, exc=True)
-        activeAnnotations = Study.childAnnotations(
+        study = Study().load(params['studyId'], user=user, level=AccessType.READ, exc=True)
+        activeAnnotations = Study().childAnnotations(
             study=study,
             annotatorUser=user,
-            state=Study.State.ACTIVE,
+            state=Study().State.ACTIVE,
             sort=[('lowerName', SortDir.ASCENDING)]
         )
         # Skip to a deterministic random element
