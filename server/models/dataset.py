@@ -22,6 +22,8 @@ import datetime
 import itertools
 import os
 
+from natsort import natsorted
+
 from girder.constants import AccessType
 from girder.models.folder import Folder as FolderModel
 from girder.models.model_base import GirderException, ValidationException
@@ -404,7 +406,7 @@ class Dataset(FolderModel):
             for image in images:
                 Image.save(image)
 
-        return metadataErrors, sorted(metadataWarnings)
+        return metadataErrors, natsorted(metadataWarnings)
 
     def _getFilenameFields(self, csvReader):
         for originalNameField in csvReader.fieldnames:
