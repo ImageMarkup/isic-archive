@@ -10,7 +10,7 @@ jobs:
     environment:
       - GIRDER_VERSION: cb7cc3a0194eee752354d48057c64e7f8edede00
       - WORKER_VERSION: 042a69d6ae7d472e32242d98f8b7acb3148980f9
-      - LARGE_IMAGE_VERSION: e055e9f8f69efc2485da42a15a34cc947dd9a839
+      - LARGE_IMAGE_VERSION: 4dc82976d58b2a6e6542863e2e410628649a040c
 
     steps:
       - run:

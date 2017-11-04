@@ -7,14 +7,6 @@
   with_items:
     - git
 
-- name: Work around a bug in PyLibTiff
-  file:
-    path: "/usr/include/tiff.h"
-    state: link
-    src: "/usr/local/include/tiff.h"
-    force: yes
-  become: yes
-
 - name: Download
   git:
     repo: "https://github.com/DigitalSlideArchive/large_image.git"
