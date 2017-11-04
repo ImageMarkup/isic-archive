@@ -3,7 +3,7 @@
 girder_version: "cb7cc3a0194eee752354d48057c64e7f8edede00"
 worker_version: "042a69d6ae7d472e32242d98f8b7acb3148980f9"
 python_dist_path: "{{ ansible_user_dir }}/env"
-large_image_version: "e055e9f8f69efc2485da42a15a34cc947dd9a839"
+large_image_version: "4dc82976d58b2a6e6542863e2e410628649a040c"
 
 girder_port: 8080
 girder_admin_username: "admin"
