@@ -76,24 +76,25 @@ nav.navbar.navbar-default.navbar-fixed-top.isic-header-wrapper
                 | 2017 ISBI Grand Challenge
                 i.icon-link-ext
 
+        li(role='presentation')
+          a.isic-header-item(href='#images')
+            i.icon-check
+            | Gallery
+
         li.dropdown
-          a.dropdown-toggle.isic-header-item(href='#images', role='button', aria-haspopup='true', aria-expanded='false')
-            | Lesion Images&nbsp;
+          a.dropdown-toggle.isic-header-item(href='#dataset', role='button', aria-haspopup='true', aria-expanded='false')
+            | Datasets&nbsp;
             span.caret
           ul.dropdown-menu
             li(role='presentation')
               a(href='#dataset')
                 i.icon-list
-                | Datasets
+                | View Datasets
             if currentUser
               li(role='presentation')
                 a(href='#dataset/create')
                   i.icon-upload
                   | Contribute Dataset
-            li(role='presentation')
-              a(href='#images')
-                i.icon-picture
-                | Lesion Images
 
         li.dropdown
           a.dropdown-toggle.isic-header-item(href='#studyResults', role='button', aria-haspopup='true', aria-expanded='false')
