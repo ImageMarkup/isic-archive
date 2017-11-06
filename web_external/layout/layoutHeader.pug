@@ -2,7 +2,7 @@ nav.navbar.navbar-default.navbar-fixed-top.isic-header-wrapper
   .container-fluid
 
     .navbar-header
-      button.navbar-toggle.collapsed(type='button', data-toggle='collapse', data-target='#isic-navbar-collapse', aria-expanded='false')
+      button.navbar-toggle.collapsed(type='button', data-toggle='collapse', data-target='#isic-navbar-collapse')
         span.sr-only Toggle navigation
         i.icon-bar
         i.icon-bar
@@ -13,112 +13,112 @@ nav.navbar.navbar-default.navbar-fixed-top.isic-header-wrapper
       ul.nav.navbar-nav
 
         li.dropdown
-          a.dropdown-toggle.isic-header-item(href='#', role='button', aria-haspopup='true', aria-expanded='false')
+          a.dropdown-toggle.isic-header-item(href='#')
             | About&nbsp;
             span.caret
           ul.dropdown-menu
-            li(role='presentation')
+            li
               a(href='#')
                 i.icon-home
                 | Home
-            li(role='presentation')
+            li
               a(href='http://isdis.net/isic-project/', target='_blank', rel='noopener')
                 i.icon-help
                 | ISIC Project
                 i.icon-link-ext
-            li(role='presentation')
+            li
               a(href='http://isdis.net/isic-project/working-group-members/', target='_blank', rel='noopener')
                 i.icon-users
                 | Working Group Members
                 i.icon-link-ext
-            li(role='presentation')
+            li
               a(href='#literature')
                 i.icon-book
                 | Literature
-            li.divider(role='separator')
+            li.divider
             li.dropdown-header
               | Policies
-            li(role='presentation')
+            li
               a(href='#termsOfUse')
                 i.icon-doc-text
                 | Terms of Use
-            li(role='presentation')
+            li
               a(href='#privacyPolicy')
                 i.icon-doc-text
                 | Privacy Policy
-            li(role='presentation')
+            li
               a(href='#medicalDisclaimer')
                 i.icon-doc-text
                 | Medical Disclaimer
 
         li.dropdown
-          a.dropdown-toggle.isic-header-item(href='#', role='button', aria-haspopup='true', aria-expanded='false')
+          a.dropdown-toggle.isic-header-item(href='#')
             | Community&nbsp;
             span.caret
           ul.dropdown-menu
-            li(role='presentation')
+            li
               a(href='#literature')
                 i.icon-book
                 | Literature
-            //li(role='presentation')
+            //li
             //  a(href='#forum')
             //    i.icon-chat
             //    | Forum
             //    i.icon-link-ext
-            li(role='presentation')
+            li
               a(href='http://challenge2016.isic-archive.com', target='_blank', rel='noopener')
                 i.icon-award
                 | 2016 ISBI Grand Challenge
                 i.icon-link-ext
-            li(role='presentation')
+            li
               a(href='http://challenge2017.isic-archive.com', target='_blank', rel='noopener')
                 i.icon-award
                 | 2017 ISBI Grand Challenge
                 i.icon-link-ext
 
-        li(role='presentation')
+        li
           a.isic-header-item(href='#images')
             i.icon-check
             | Gallery
 
         li.dropdown
-          a.dropdown-toggle.isic-header-item(href='#dataset', role='button', aria-haspopup='true', aria-expanded='false')
+          a.dropdown-toggle.isic-header-item(href='#dataset')
             | Datasets&nbsp;
             span.caret
           ul.dropdown-menu
-            li(role='presentation')
+            li
               a(href='#dataset')
                 i.icon-list
                 | View Datasets
-            li(role='presentation')
+            li
               a(href='#dataset/create')
                 i.icon-upload
                 | Contribute Dataset
 
         li.dropdown
-          a.dropdown-toggle.isic-header-item(href='#studyResults', role='button', aria-haspopup='true', aria-expanded='false')
+          a.dropdown-toggle.isic-header-item(href='#studyResults')
             | Annotation Study Results&nbsp;
             span.caret
           ul.dropdown-menu
-            li(role='presentation')
+            li
               a(href='#featuresets')
                 i.icon-list
                 | Featuresets
-            li(role='presentation')
+            li
               a(href='#studies')
                 i.icon-pencil
                 | Manage Annotation Studies
-            li(role='presentation')
+            li
               a(href='#studyResults')
                 i.icon-eye
                 | Annotation Study Results
             if currentUser && currentUser.canAdminStudy()
-              li(role='presentation')
+              li
                 a(href='#user/invite')
                   i.icon-mail-alt
                   | Invite New User
 
-        li(role='presentation')
+        li
           a.isic-header-item(href='#tasks')
             i.icon-check
             | Your Tasks
