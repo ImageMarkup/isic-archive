@@ -131,6 +131,9 @@ class Dataset(Folder):
         return super(Dataset, self).findOne(datasetQuery, **kwargs)
 
     def filter(self, dataset, user=None, additionalKeys=None):
+        # Avoid circular import
+        from .image import Image
+
         output = {
             '_id': dataset['_id'],
             '_modelType': 'dataset',
@@ -146,7 +149,8 @@ class Dataset(Folder):
             'attribution':
                 dataset['meta']['attribution']
                 if not dataset['meta']['anonymous'] else
-                'Anonymous'
+                'Anonymous',
+            'count': Image().find({'folderId': dataset['_id']}).count()
         }
         # TODO: Use the real permissions on this dataset instead
         if User().canCreateDataset(user):
