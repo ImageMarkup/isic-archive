@@ -56,6 +56,8 @@ class StudyResource(IsicResource):
     @describeRoute(
         Description('Return a list of annotation studies.')
         .pagingParams(defaultSort='lowerName')
+        .param('detail', 'Display the full information for each image, instead of a summary.',
+               required=False, dataType='boolean', default=False)
         .param('state', 'Filter studies to those at a given state', paramType='query',
                required=False, enum=('active', 'complete'))
         .param('userId', 'Filter studies to those containing a user ID, or "me".',
@@ -65,12 +67,14 @@ class StudyResource(IsicResource):
     @access.cookie
     @access.public
     def find(self, params):
+        currentUser = self.getCurrentUser()
+        detail = self.boolParam('detail', params, default=False)
         limit, offset, sort = self.getPagingParameters(params, 'lowerName')
 
         annotatorUser = None
         if params.get('userId'):
             if params['userId'] == 'me':
-                annotatorUser = self.getCurrentUser()
+                annotatorUser = currentUser
             else:
                 annotatorUser = User().load(params['userId'], force=True, exc=True)
 
@@ -80,16 +84,13 @@ class StudyResource(IsicResource):
             if state not in {Study().State.ACTIVE, Study().State.COMPLETE}:
                 raise ValidationException('Value may only be "active" or "complete".', 'state')
 
+        filterFunc = Study().filter if detail else Study().filterSummary
         return [
-            {
-                field: study[field]
-                for field in
-                Study().summaryFields
-            }
+            filterFunc(study, currentUser)
             for study in
             Study().filterResultsByPermission(
                 Study().find(query=None, annotatorUser=annotatorUser, state=state, sort=sort),
-                user=self.getCurrentUser(), level=AccessType.READ, limit=limit, offset=offset
+                user=currentUser, level=AccessType.READ, limit=limit, offset=offset
             )
         ]
 
@@ -111,51 +112,8 @@ class StudyResource(IsicResource):
             return functools.partial(self._getStudyCSVStream, study)
 
         else:
-            currentUser = self.getCurrentUser()
-            output = Study().filter(study, currentUser)
-            del output['_accessLevel']
-            output.update({
-                '_modelType': 'study',
-                'featureset': Featureset().load(
-                    id=study['meta']['featuresetId'],
-                    fields=Featureset().summaryFields, exc=True),
-                'creator': User().filterSummary(
-                    User().load(output.pop('creatorId'), force=True, exc=True),
-                    currentUser),
-                'users': sorted(
-                    (
-                        User().filterSummary(annotatorUser, currentUser)
-                        for annotatorUser in
-                        Study().getAnnotators(study)
-                    ),
-                    # Sort by the obfuscated name
-                    key=lambda annotatorUser: annotatorUser['name']
-                ),
-                'images': list(
-                    Image().filterSummary(image, currentUser)
-                    for image in
-                    Study().getImages(study).sort('name', SortDir.ASCENDING)
-                ),
-                'userCompletion': {
-                    str(annotatorComplete['_id']): annotatorComplete['count']
-                    for annotatorComplete in
-                    Annotation().collection.aggregate([
-                        {'$match': {
-                            'meta.studyId': study['_id'],
-                        }},
-                        {'$group': {
-                            '_id': '$meta.userId',
-                            'count': {'$sum': {'$cond': {
-                                'if': '$meta.stopTime',
-                                'then': 1,
-                                'else': 0
-                            }}}
-                        }}
-                    ])
-                }
-            })
-
-            return output
+            user = self.getCurrentUser()
+            return Study().filter(study, user)
 
     def _getStudyCSVStream(self, study):
         currentUser = self.getCurrentUser()

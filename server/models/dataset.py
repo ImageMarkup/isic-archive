@@ -37,6 +37,7 @@ from backports import csv
 
 from .dataset_helpers import matchFilenameRegex
 from .dataset_helpers.image_metadata import addImageMetadata
+from .user import User
 from ..upload import ZipFileOpener
 from ..utility import generateLines
 from ..utility import mail_utils as isic_mail_utils
@@ -53,7 +54,6 @@ class Dataset(Folder):
             # TODO: re-add once converted files no longer contributes to size
             # 'size',
         ])
-        self.summaryFields = ['_id', 'name', 'updated']
 
     def createDataset(self, name, description, creatorUser):
         # This will raise an exception if a duplicate name exists
@@ -130,10 +130,45 @@ class Dataset(Folder):
         datasetQuery = self._findQueryFilter(query)
         return super(Dataset, self).findOne(datasetQuery, **kwargs)
 
-    def filterSummary(self, image, accessorUser):
+    def filter(self, dataset, user=None, additionalKeys=None):
+        # Avoid circular import
+        from .image import Image
+
+        output = {
+            '_id': dataset['_id'],
+            '_modelType': 'dataset',
+            'name': dataset['name'],
+            'description': dataset['description'],
+            'created': dataset['created'],
+            'creator': User().filterSummary(
+                User().load(dataset['creatorId'], force=True, exc=True),
+                user),
+            # TODO: verify that "updated" is set correctly
+            'updated': dataset['updated'],
+            'license': dataset['meta']['license'],
+            'attribution':
+                dataset['meta']['attribution']
+                if not dataset['meta']['anonymous'] else
+                'Anonymous',
+            'count': Image().find({'folderId': dataset['_id']}).count()
+        }
+        # TODO: Use the real permissions on this dataset instead
+        if User().canCreateDataset(user):
+            output.update({
+                'owner': dataset['meta']['owner'],
+                'signature': dataset['meta']['signature'],
+                'metadataFiles': dataset['meta']['metadataFiles'],
+            })
+
+        return output
+
+    def filterSummary(self, dataset, user=None):
         return {
-            field: image[field]
-            for field in self.summaryFields
+            '_id': dataset['_id'],
+            'name': dataset['name'],
+            'description': dataset['description'],
+            'updated': dataset['updated'],
+            'license': dataset['meta']['license'],
         }
 
     def validate(self, doc, **kwargs):
@@ -156,14 +191,15 @@ class Dataset(Folder):
         dataset = self.createDataset(name, description, user)
 
         # Set dataset metadata, including license info
-        dataset = self.setMetadata(dataset, {
+        dataset['meta'] = {
             'owner': owner,
             'signature': signature,
             'anonymous': anonymous,
             'attribution': attribution,
             'license': license,
             'metadataFiles': []
-        })
+        }
+        dataset = Dataset().save(dataset)
 
         prereviewFolder = Folder().createFolder(
             parent=dataset,
@@ -318,15 +354,12 @@ class Dataset(Folder):
 
         # Add image metadata file information to list
         now = datetime.datetime.utcnow()
-        metadataFiles = dataset['meta']['metadataFiles']
-        metadataFiles.append({
+        dataset['meta']['metadataFiles'].append({
             'fileId': metadataFile['_id'],
             'userId': user['_id'],
             'time': now
         })
-        dataset = self.setMetadata(dataset, {
-            'metadataFiles': metadataFiles
-        })
+        dataset = Dataset().save(dataset)
 
         # Send email notification
         if sendMail:

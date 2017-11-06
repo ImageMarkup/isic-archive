@@ -103,7 +103,7 @@ const DatasetModel = Model.extend({
 
     canAdmin: function () {
         let user = getCurrentUser();
-        return user && user.canAdminStudy();
+        return user && user.canCreateDataset();
     }
 });
 

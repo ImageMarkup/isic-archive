@@ -12,13 +12,13 @@
     tr
       td.isic-listing-item-table-label Created
       td= formatDate(dataset.get('created'))
+    tr
+      td.isic-listing-item-table-label Image Count
+      td= dataset.get('count')
 
   table.table.table-condensed.isic-listing-item-table
     tr
-      td.isic-listing-item-table-section-header(colspan=2) Description
-    tr
-      td.isic-listing-item-table-label Owner
-      td= dataset.get('owner')
+      td.isic-listing-item-table-section-header(colspan=2) Attributes
     tr
       td.isic-listing-item-table-label Description
       td= dataset.get('description')
@@ -27,14 +27,14 @@
       td= dataset.get('license')
     tr
       td.isic-listing-item-table-label Attribution
-      td
-        if dataset.get('anonymous')
-          | Anonymous
-        else
-          = dataset.get('attribution')
-    tr
-      td.isic-listing-item-table-label Signature
-      td= dataset.get('signature')
+      td= dataset.get('attribution')
+    if dataset.canAdmin()
+      tr
+        td.isic-listing-item-table-label Owner
+        td= dataset.get('owner')
+      tr
+        td.isic-listing-item-table-label Signature
+        td= dataset.get('signature')
   if dataset.canAdmin()
     table.table.table-condensed.isic-listing-item-table
       tr

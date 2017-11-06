@@ -62,16 +62,20 @@ class DatasetResource(IsicResource):
     @describeRoute(
         Description('Return a list of lesion image datasets.')
         .pagingParams(defaultSort='name')
+        .param('detail', 'Display the full information for each image, instead of a summary.',
+               required=False, dataType='boolean', default=False)
         .errorResponse()
     )
     @access.cookie
     @access.public
     def find(self, params):
-        limit, offset, sort = self.getPagingParameters(params, 'name')
         user = self.getCurrentUser()
+        detail = self.boolParam('detail', params, default=False)
+        limit, offset, sort = self.getPagingParameters(params, 'name')
 
+        filterFunc = Dataset().filter if detail else Dataset().filterSummary
         return [
-            Dataset().filterSummary(dataset, user)
+            filterFunc(dataset, user)
             for dataset in
             Dataset().list(user=user, limit=limit, offset=offset, sort=sort)
         ]
@@ -85,16 +89,8 @@ class DatasetResource(IsicResource):
     @access.public
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
     def getDataset(self, dataset, params):
-        output = Dataset().filter(dataset, self.getCurrentUser())
-        del output['_accessLevel']
-        output['_modelType'] = 'dataset'
-        output.update(dataset.get('meta', {}))
-
-        output['creator'] = User().filterSummary(
-            User().load(output.pop('creatorId'), force=True, exc=True),
-            self.getCurrentUser())
-
-        return output
+        user = self.getCurrentUser()
+        return Dataset().filter(dataset, user)
 
     @describeRoute(
         Description('Create a lesion image dataset.')
