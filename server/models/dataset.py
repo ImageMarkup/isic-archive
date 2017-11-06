@@ -187,14 +187,15 @@ class Dataset(Folder):
         dataset = self.createDataset(name, description, user)
 
         # Set dataset metadata, including license info
-        dataset = self.setMetadata(dataset, {
+        dataset['meta'] = {
             'owner': owner,
             'signature': signature,
             'anonymous': anonymous,
             'attribution': attribution,
             'license': license,
             'metadataFiles': []
-        })
+        }
+        dataset = Dataset().save(dataset)
 
         prereviewFolder = Folder().createFolder(
             parent=dataset,
@@ -349,15 +350,12 @@ class Dataset(Folder):
 
         # Add image metadata file information to list
         now = datetime.datetime.utcnow()
-        metadataFiles = dataset['meta']['metadataFiles']
-        metadataFiles.append({
+        dataset['meta']['metadataFiles'].append({
             'fileId': metadataFile['_id'],
             'userId': user['_id'],
             'time': now
         })
-        dataset = self.setMetadata(dataset, {
-            'metadataFiles': metadataFiles
-        })
+        dataset = Dataset().save(dataset)
 
         # Send email notification
         if sendMail:
