@@ -37,18 +37,14 @@ const ImagesFacetsPane = View.extend({
             ]
         }));
 
-        this._createFacetView('meta.clinical.diagnosis')
-            .$el.insertBefore(this.$('.isic-images-facets-clinical'));
         this.completeFacets.forEach((completeFacet) => {
             const facetId = completeFacet.id;
 
             let headerEl = null;
-            // TODO: Use String.startswith and a ES6 polyfill
-            if (facetId.indexOf('meta.clinical') !== -1) {
-                if (facetId === 'meta.clinical.diagnosis') {
-                    // Special case
-                    return;
-                }
+            if (facetId === 'meta.clinical.diagnosis' || facetId === 'meta.clinical.benign_malignant') {
+                headerEl = this.$('.isic-images-facets-diagnosis');
+            } else if (facetId.indexOf('meta.clinical') !== -1) {
+                // TODO: Use String.startswith and a ES6 polyfill instead of indexOf
                 headerEl = this.$('.isic-images-facets-clinical');
             } else if (facetId.indexOf('meta.acquisition') !== -1) {
                 headerEl = this.$('.isic-images-facets-acquisition');
