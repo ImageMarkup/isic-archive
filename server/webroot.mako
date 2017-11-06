@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${title}</title>
     <link rel="stylesheet"
-          href="${staticRoot}/built/googlefonts.css">
+          href="${staticRoot}/built/plugins/isic_archive/fonts.css">
     <link rel="stylesheet"
           href="${staticRoot}/built/fontello/css/fontello.css">
     <link rel="stylesheet"

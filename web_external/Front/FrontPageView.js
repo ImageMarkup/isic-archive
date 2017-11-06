@@ -6,6 +6,7 @@ import './frontPage.styl';
 const FrontPageView = View.extend({
     initialize: function (settings) {
         this.render();
+        this.$el.addClass('isic-body-nopad');
     },
 
     render: function () {
