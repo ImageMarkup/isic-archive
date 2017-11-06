@@ -162,7 +162,7 @@ class Segmentation(Model):
         contour = OpenCVSegmentationHelper.maskToContour(
             mask, paddedInput=False)
 
-        pilImageData = PIL_Image.fromarray(Image.imageData(image))
+        pilImageData = PIL_Image.fromarray(Image().imageData(image))
         pilDraw = PIL_ImageDraw.Draw(pilImageData)
         pilDraw.line(
             list(six.moves.map(tuple, contour)),

@@ -22,7 +22,7 @@ import json
 import cherrypy
 import six
 
-from girder.api.rest import Resource
+from girder.api.rest import Resource, RestException
 
 
 class IsicResource(Resource):
@@ -37,6 +37,8 @@ class IsicResource(Resource):
         """
         if cherrypy.request.headers.get('Content-Type', '').split(';')[0] == 'application/json':
             decodedParams = self.getBodyJson()
+            if not isinstance(decodedParams, dict):
+                raise RestException('JSON content should be an object at the top level.')
         else:
             decodedParams = {}
             for field, value in six.viewitems(params):
