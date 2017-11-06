@@ -5,7 +5,8 @@ import DatasetModel from '../models/DatasetModel';
 
 const DatasetCollection = Collection.extend({
     resourceName: 'dataset',
-    model: DatasetModel
+    model: DatasetModel,
+    sortField: '_id'
 }, {
     canCreate: function () {
         let user = getCurrentUser();
