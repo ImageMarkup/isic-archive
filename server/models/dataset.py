@@ -162,7 +162,9 @@ class Dataset(Folder):
         return {
             '_id': dataset['_id'],
             'name': dataset['name'],
+            'description': dataset['description'],
             'updated': dataset['updated'],
+            'license': dataset['meta']['license'],
         }
 
     def validate(self, doc, **kwargs):
