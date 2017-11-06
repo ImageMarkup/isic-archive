@@ -24,7 +24,7 @@
       - const meta = image.get('meta');
       if !_.isEmpty(meta.clinical)
         tr
-          td.isic-image-details-table-section-header(colspan=2) Clinical Information
+          td.isic-image-details-table-section-header(colspan=2) Clinical Attributes
         each value, key in meta.clinical
           tr
             td= key
@@ -32,7 +32,7 @@
 
       if !_.isEmpty(meta.acquisition)
         tr
-          td.isic-image-details-table-section-header(colspan=2) Acquisition Information
+          td.isic-image-details-table-section-header(colspan=2) Technological Attributes
         tr
           td Dimensions (pixels)
           td #{meta.acquisition.pixelsX} &times; #{meta.acquisition.pixelsX}
@@ -43,7 +43,7 @@
 
       if !_.isEmpty(meta.unstructured)
         tr
-          td.isic-image-details-table-section-header(colspan=2) Unstructured Information
+          td.isic-image-details-table-section-header(colspan=2) Unstructured Attributes
         each value, key in meta.unstructured
           tr
             td= key
@@ -51,7 +51,7 @@
 
       if _.has(meta, 'private')
         tr
-          td.isic-image-details-table-section-header(colspan=2) Private Information
+          td.isic-image-details-table-section-header(colspan=2) Private Attributes
         each value, key in meta.private
           tr
             td= key
@@ -69,7 +69,7 @@
               | &#x20;
 
       tr
-        td.isic-image-details-table-section-header(colspan=2) ISIC Archive Information
+        td.isic-image-details-table-section-header(colspan=2) Database Attributes
       tr
         td Unique ID
         td
