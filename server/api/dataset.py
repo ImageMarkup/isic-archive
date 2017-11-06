@@ -67,8 +67,8 @@ class DatasetResource(IsicResource):
     @access.cookie
     @access.public
     def find(self, params):
-        limit, offset, sort = self.getPagingParameters(params, 'name')
         user = self.getCurrentUser()
+        limit, offset, sort = self.getPagingParameters(params, 'name')
 
         return [
             Dataset().filterSummary(dataset, user)
@@ -85,16 +85,8 @@ class DatasetResource(IsicResource):
     @access.public
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
     def getDataset(self, dataset, params):
-        output = Dataset().filter(dataset, self.getCurrentUser())
-        del output['_accessLevel']
-        output['_modelType'] = 'dataset'
-        output.update(dataset.get('meta', {}))
-
-        output['creator'] = User().filterSummary(
-            User().load(output.pop('creatorId'), force=True, exc=True),
-            self.getCurrentUser())
-
-        return output
+        user = self.getCurrentUser()
+        return Dataset().filter(dataset, user)
 
     @describeRoute(
         Description('Create a lesion image dataset.')
