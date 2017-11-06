@@ -1,6 +1,3 @@
-import {getCurrentUser} from 'girder/auth';
-import events from 'girder/events';
-
 import router from '../router';
 import View from '../view';
 
@@ -19,11 +16,7 @@ const FrontPageView = View.extend({
             router.navigate('challenges', {trigger: true});
         },
         'click .isic-frontpage-upload': function () {
-            if (getCurrentUser()) {
-                router.navigate('dataset/create', {trigger: true});
-            } else {
-                events.trigger('g:loginUi');
-            }
+            router.navigate('dataset/create', {trigger: true});
         },
         'click .isic-frontpage-studies': function () {
             router.navigate('studies', {trigger: true});
@@ -32,11 +25,7 @@ const FrontPageView = View.extend({
             router.navigate('dermoscopedia', {trigger: true});
         },
         'click .isic-frontpage-dashboard': function () {
-            if (getCurrentUser()) {
-                router.navigate('tasks', {trigger: true});
-            } else {
-                events.trigger('g:loginUi');
-            }
+            router.navigate('tasks', {trigger: true});
         },
         'click .isic-frontpage-api': function () {
             router.navigate('api', {trigger: true});

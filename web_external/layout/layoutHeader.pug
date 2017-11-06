@@ -90,11 +90,10 @@ nav.navbar.navbar-default.navbar-fixed-top.isic-header-wrapper
               a(href='#dataset')
                 i.icon-list
                 | View Datasets
-            if currentUser
-              li(role='presentation')
-                a(href='#dataset/create')
-                  i.icon-upload
-                  | Contribute Dataset
+            li(role='presentation')
+              a(href='#dataset/create')
+                i.icon-upload
+                | Contribute Dataset
 
         li.dropdown
           a.dropdown-toggle.isic-header-item(href='#studyResults', role='button', aria-haspopup='true', aria-expanded='false')
@@ -119,10 +118,9 @@ nav.navbar.navbar-default.navbar-fixed-top.isic-header-wrapper
                   i.icon-mail-alt
                   | Invite New User
 
-        if currentUser
-          li(role='presentation')
-            a.isic-header-item(href='#tasks')
-              i.icon-check
-              | Your Tasks
+        li(role='presentation')
+          a.isic-header-item(href='#tasks')
+            i.icon-check
+            | Your Tasks
 
       .isic-current-user-wrapper

@@ -22,18 +22,28 @@ function navigateToIfTermsAccepted(View, settings) {
     }
 }
 
+function navigateToIfLoggedIn(View, settings) {
+    let currentUser = getCurrentUser();
+    if (!currentUser) {
+        events.trigger('g:loginUi');
+    } else if (!currentUser.canAcceptTerms()) {
+        navigateTo(TermsAcceptanceView);
+    } else {
+        navigateTo(View, settings);
+    }
+}
+
 import CreateDatasetRequestView from './Datasets/CreateDatasetRequestView';
 import DatasetCollection from './collections/DatasetCollection';
 function navigateToIfCanCreateDataset(View, settings) {
     // Users must:
-    //  (1) Be registered
+    //  (1) Be logged in
     //  (2) Accept the TOS
     //  (3) Request and receive create dataset access
     // before being able to see the create dataset view
     let currentUser = getCurrentUser();
     if (!currentUser) {
-        // Anonymous users should not be here, so route to home page
-        router.navigate('', {trigger: true});
+        events.trigger('g:loginUi');
     } else if (!currentUser.canAcceptTerms()) {
         navigateTo(TermsAcceptanceView);
     } else if (!DatasetCollection.canCreate()) {
@@ -229,5 +239,5 @@ router.route('studyResults', 'studyResults', () => {
 // Task
 import TasksView from './Tasks/TasksView';
 router.route('tasks', 'tasks', () => {
-    navigateToIfTermsAccepted(TasksView);
+    navigateToIfLoggedIn(TasksView);
 });
