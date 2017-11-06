@@ -110,6 +110,10 @@ nav.navbar.navbar-default.navbar-fixed-top.isic-header-wrapper
               a(href='#studyResults')
                 i.icon-eye
                 | Annotation Study Results
+            li
+              a(href='http://dermannotator.org/multirater/', target='_blank', rel='noopener')
+                i.icon-eye
+                | Compare Annotations (beta)
             if currentUser && currentUser.canAdminStudy()
               li
                 a(href='#user/invite')
