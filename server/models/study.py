@@ -17,7 +17,7 @@
 #  limitations under the License.
 ###############################################################################
 
-from girder.constants import AccessType
+from girder.constants import AccessType, SortDir
 from girder.models.collection import Collection
 from girder.models.folder import Folder
 from girder.models.group import Group
@@ -37,11 +37,6 @@ class Study(Folder):
         super(Study, self).initialize()
         # TODO: add indexes
 
-        self._filterKeys[AccessType.READ].clear()
-        self.exposeFields(level=AccessType.READ, fields=[
-            '_id', 'name', 'description', 'created', 'creatorId', 'updated'
-        ])
-        self.summaryFields = ['_id', 'name', 'updated']
         self.prefixSearchFields = ['lowerName', 'name']
 
     def loadStudyCollection(self):
@@ -233,6 +228,66 @@ class Study(Folder):
     def findOne(self, query=None, annotatorUser=None, state=None, **kwargs):
         studyQuery = self._findQueryFilter(query, annotatorUser, state)
         return super(Study, self).findOne(studyQuery, **kwargs)
+
+    def filter(self, study, user=None, additionalKeys=None):
+        # Avoid circular import
+        from .annotation import Annotation
+
+        output = {
+            '_id': study['_id'],
+            '_modelType': 'study',
+            'name': study['name'],
+            'description': study['description'],
+            'created': study['created'],
+            'creator': User().filterSummary(
+                User().load(study['creatorId'], force=True, exc=True),
+                user),
+            # TODO: verify that "updated" is set correctly
+            'updated': study['updated'],
+            'featureset': Featureset().load(
+                id=study['meta']['featuresetId'],
+                fields=Featureset().summaryFields, exc=True),
+            'users': sorted(
+                (
+                    User().filterSummary(annotatorUser, user)
+                    for annotatorUser in
+                    Study().getAnnotators(study)
+                ),
+                # Sort by the obfuscated name
+                key=lambda annotatorUser: annotatorUser['name']
+            ),
+            'images': list(
+                Image().filterSummary(image, user)
+                for image in
+                Study().getImages(study).sort('name', SortDir.ASCENDING)
+            ),
+            'userCompletion': {
+                str(annotatorComplete['_id']): annotatorComplete['count']
+                for annotatorComplete in
+                Annotation().collection.aggregate([
+                    {'$match': {
+                        'meta.studyId': study['_id'],
+                    }},
+                    {'$group': {
+                        '_id': '$meta.userId',
+                        'count': {'$sum': {'$cond': {
+                            'if': '$meta.stopTime',
+                            'then': 1,
+                            'else': 0
+                        }}}
+                    }}
+                ])
+            }
+        }
+
+        return output
+
+    def filterSummary(self, study, user=None):
+        return {
+            '_id': study['_id'],
+            'name': study['name'],
+            'updated': study['updated'],
+        }
 
     def validate(self, doc, **kwargs):
         # TODO: implement
