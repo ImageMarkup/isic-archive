@@ -59,35 +59,10 @@ router.route('', 'index', () => {
     navigateTo(FrontPageView);
 });
 
-// About
-router.route('about', 'about', () => {
-    window.location.replace('http://isdis.net/isic-project/');
-});
-
-// Forum
-router.route('forum', 'forum', () => {
-    window.location.replace('https://forum.isic-archive.com');
-});
-
-// Challenges
-router.route('challenges', 'challenges', () => {
-    window.location.replace('http://challenge.isic-archive.com');
-});
-
-// Dermoscopedia
-router.route('dermoscopedia', 'dermoscopedia', () => {
-    window.location.replace('https://dermoscopedia.org/');
-});
-
 // Literature page
 import LiteratureView from './Literature/LiteratureView';
 router.route('literature', 'literature', () => {
     navigateTo(LiteratureView);
-});
-
-// API page
-router.route('api', 'api', () => {
-    window.location.replace('/api/v1');
 });
 
 // User management
