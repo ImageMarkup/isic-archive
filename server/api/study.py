@@ -56,6 +56,8 @@ class StudyResource(IsicResource):
     @describeRoute(
         Description('Return a list of annotation studies.')
         .pagingParams(defaultSort='lowerName')
+        .param('detail', 'Display the full information for each image, instead of a summary.',
+               required=False, dataType='boolean', default=False)
         .param('state', 'Filter studies to those at a given state', paramType='query',
                required=False, enum=('active', 'complete'))
         .param('userId', 'Filter studies to those containing a user ID, or "me".',
@@ -66,6 +68,7 @@ class StudyResource(IsicResource):
     @access.public
     def find(self, params):
         currentUser = self.getCurrentUser()
+        detail = self.boolParam('detail', params, default=False)
         limit, offset, sort = self.getPagingParameters(params, 'lowerName')
 
         annotatorUser = None
@@ -81,8 +84,9 @@ class StudyResource(IsicResource):
             if state not in {Study().State.ACTIVE, Study().State.COMPLETE}:
                 raise ValidationException('Value may only be "active" or "complete".', 'state')
 
+        filterFunc = Study().filter if detail else Study().filterSummary
         return [
-            Study().filterSummary(study, currentUser)
+            filterFunc(study, currentUser)
             for study in
             Study().filterResultsByPermission(
                 Study().find(query=None, annotatorUser=annotatorUser, state=state, sort=sort),
