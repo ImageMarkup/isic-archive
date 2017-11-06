@@ -286,6 +286,7 @@ class Study(Folder):
         return {
             '_id': study['_id'],
             'name': study['name'],
+            'description': study['description'],
             'updated': study['updated'],
         }
 
