@@ -43,10 +43,9 @@ const ImagesFacetsPane = View.extend({
             let headerEl = null;
             if (facetId === 'meta.clinical.diagnosis' || facetId === 'meta.clinical.benign_malignant') {
                 headerEl = this.$('.isic-images-facets-diagnosis');
-            } else if (facetId.indexOf('meta.clinical') !== -1) {
-                // TODO: Use String.startswith and a ES6 polyfill instead of indexOf
+            } else if (facetId.startsWith('meta.clinical')) {
                 headerEl = this.$('.isic-images-facets-clinical');
-            } else if (facetId.indexOf('meta.acquisition') !== -1) {
+            } else if (facetId.startsWith('meta.acquisition')) {
                 headerEl = this.$('.isic-images-facets-acquisition');
             } else {
                 headerEl = this.$('.isic-images-facets-database');
