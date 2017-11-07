@@ -12,6 +12,7 @@ const BrowserAlertView = View.extend({
     initialize: function (settings) {
         this.currentBrowserName = (new UAParser()).getBrowser().name;
         this.unsupportedBrowsers = [
+            'Edge',
             'IE',
             'Safari'
         ];
