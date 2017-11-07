@@ -32,6 +32,7 @@ import router from './router';
 import './routes';
 import LayoutTemplate from './layout/layout.pug';
 import './layout/layout.styl';
+import BrowserAlertView from './layout/BrowserAlertView';
 
 // The 'girder/rest' import will always overwrite the publicPath to Girder's static root, which we
 // don't want; so re-overwrite it with the original value from the build configuration (which
@@ -72,6 +73,10 @@ const IsicApp = GirderApp.extend({
             parentView: this
         });
 
+        this.browserAlert = new BrowserAlertView({
+            parentView: this
+        });
+
         return this;
     },
 
@@ -100,6 +105,10 @@ const IsicApp = GirderApp.extend({
             if (opts.renderNow) {
                 this.bodyView.render();
             }
+
+            this.browserAlert
+                .render()
+                .$el.prependTo(this.bodyView.$el);
         } else {
             console.error('Undefined page.');
         }
