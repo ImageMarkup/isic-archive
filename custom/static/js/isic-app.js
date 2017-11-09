@@ -36,10 +36,6 @@ isicApp.factory('Study', function ($resource) {
     return $resource('/api/v1/study/:id', {id: '@_id'});
 });
 
-isicApp.factory('Featureset', function ($resource) {
-    return $resource('/api/v1/featureset/:id', {id: '@_id'});
-});
-
 isicApp.factory('Annotation', function ($resource) {
     return $resource('/api/v1/annotation/:id', {id: '@_id'});
 });

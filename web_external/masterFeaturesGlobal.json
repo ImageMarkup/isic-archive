@@ -1,0 +1,128 @@
+[
+    {
+        "id": "benign_malignant",
+        "type": "select",
+        "name": "Classify the lesion as benign or malignant",
+        "options": [
+            {
+                "id": "benign",
+                "name": "Benign"
+            },
+            {
+                "id": "malignant",
+                "name": "Malignant"
+            }
+        ]
+    },
+    {
+        "id": "benign_malignant2",
+        "type": "select",
+        "name": "Classify the lesion as nevus, seborrheic keratosis, or melanoma",
+        "options": [
+            {
+                "id": "nevus",
+                "name": "Nevus"
+            },
+            {
+                "id": "seborrheic_keratosis",
+                "name": "Seborrheic keratosis"
+            },
+            {
+                "id": "melanoma",
+                "name": "Melanoma"
+            }
+        ]
+    },
+    {
+        "id": "management_decision",
+        "type": "select",
+        "name": "Indicate your management decision",
+        "options": [
+            {
+                "id": "biopsy",
+                "name": "Biopsy"
+            },
+            {
+                "id": "observation",
+                "name": "Observation and/or reassurance"
+            }
+        ]
+    },
+    {
+        "id": "classification_confidence",
+        "type": "select",
+        "name": "Rate your confidence level in your classification decision",
+        "options": [
+            {
+                "id": "confidence_3",
+                "name": "Absolutely confident"
+            },
+            {
+                "id": "confidence_2",
+                "name": "Confident"
+            },
+            {
+                "id": "confidence_1",
+                "name": "Somewhat confident"
+            },
+            {
+                "id": "confidence_0",
+                "name": "Neither confident nor unconfident"
+            },
+            {
+                "id": "confidence_-1",
+                "name": "Somewhat unconfident"
+            },
+            {
+                "id": "confidence_-2",
+                "name": "Unconfident"
+            },
+            {
+                "id": "confidence_-3",
+                "name": "Not confident at all"
+            }
+        ]
+    },
+    {
+        "id": "lesion_organization",
+        "type": "select",
+        "name": "Lesion Organization",
+        "options": [
+            {
+                "id": "organized",
+                "name": "Organized"
+            },
+            {
+                "id": "disorganized",
+                "name": "Disorganized"
+            },
+            {
+                "id": "uncertain",
+                "name": "Uncertain"
+            }
+        ]
+    },
+    {
+        "id": "pattern_symmetry",
+        "type": "select",
+        "name": "Pattern Symmetry",
+        "options": [
+            {
+                "id": "two_axis",
+                "name": "Two axis symmetry"
+            },
+            {
+                "id": "one_axis",
+                "name": "One axis symmetry"
+            },
+            {
+                "id": "asymmetry",
+                "name": "Asymmetry"
+            },
+            {
+                "id": "uncertain",
+                "name": "Uncertain"
+            }
+        ]
+    }
+]

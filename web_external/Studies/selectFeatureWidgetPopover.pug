@@ -1,0 +1,30 @@
+table.table.table-condensed
+  tr
+    th Unique Id
+    td
+      code= feature.id
+  if feature.get('type') === 'select'
+    tr
+      th Choices
+      td
+        ul
+          each option in feature.get('options')
+            li= option.name
+  else if feature.get('type') === 'superpixel'
+    tr
+      th Nomenclature
+      case feature.get('nomenclature')
+        when 'descriptive'
+          td Descriptive
+        when 'metaphoric'
+          td Metaphoric
+        default
+          td
+            code unknown
+    tr
+      th Aliases
+      td
+        ul
+          each aliasFeatureId in feature.get('aliases')
+            - const aliasFeature = featureDictionary.get(aliasFeatureId);
+            li #{aliasFeature.get('nomenclature')}: #{aliasFeature.name()}

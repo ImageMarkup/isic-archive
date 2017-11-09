@@ -4,9 +4,9 @@ table.table.table-condensed.isic-study-results-global-features-table
       th ID
       th Value
   tbody
-    each feature in features
+    each response in globalResponses
       tr
-        td.isic-study-results-annotation-feature-id(title=feature.name(), class={disabled: !feature.has('resultName')})
-          code= feature.id
+        td.isic-study-results-annotation-feature-id(title=response.name(), class={disabled: !response.has('resultName')})
+          code= response.id
         td.isic-study-results-annotation-feature-value(title=feature.get("resultId"))
-          = feature.get('resultName')
+          = response.get('resultName')

@@ -130,7 +130,6 @@ def load(info):
     # add custom model searching
     resource.allowedSearchTypes.update({
         'image.isic_archive',
-        'featureset.isic_archive',
         'study.isic_archive',
     })
 
@@ -170,7 +169,6 @@ def load(info):
     # TODO: nest these under a "/isic" path?
     info['apiRoot'].annotation = api.AnnotationResource()
     info['apiRoot'].dataset = api.DatasetResource()
-    info['apiRoot'].featureset = api.FeaturesetResource()
     info['apiRoot'].image = api.ImageResource()
     info['apiRoot'].segmentation = api.SegmentationResource()
     info['apiRoot'].study = api.StudyResource()

@@ -1,0 +1,53 @@
+.isic-features
+  h2 Global Features
+  h3 Multiple Choice Features
+  table.table.table-striped
+    thead
+      tr
+        th Name
+        th Choices
+        th Unique ID
+    tbody
+      each feature in features.filterType('select')
+        tr
+          td= feature.name()
+          td
+            table.table.table-condensed.table-bordered
+              thead
+                tr
+                  th Name
+                  th Unique ID
+              tbody
+                for option in feature.get('options')
+                  tr
+                    td= option.name
+                    td
+                      code= option.id
+          td
+            code= feature.id
+  h2 Local Features
+  h3 Superpixel Features
+  - const nomenclatureNames = {descriptive: 'Descriptive', metaphoric: 'Metaphoric'}
+  each nomenclature in ['descriptive', 'metaphoric']
+    h4= nomenclatureNames[nomenclature]
+    table.table.table-striped
+      thead
+        tr
+          th Nomenclature
+          th Name
+          th Aliases
+          th Unique ID
+      tbody
+        each feature in features.filterType('superpixel')
+          if feature.get('nomenclature') === nomenclature
+            tr
+              td= nomenclatureNames[feature.get('nomenclature')]
+              td= feature.name()
+              td
+                ul
+                  each aliasFeatureId in feature.get('aliases')
+                    - const aliasFeature = features.get(aliasFeatureId);
+                    li #{nomenclatureNames[aliasFeature.get('nomenclature')]}: #{aliasFeature.name()}
+              td
+                code= feature.id
+

@@ -17,14 +17,16 @@
 #  limitations under the License.
 ###############################################################################
 
-# Deal with a bug where PEP257 crashes when parsing __all__
-# flake8: noqa
+import json
+import os
 
-from .annotation import Annotation
-from .dataset import Dataset
-from .image import Image
-from .segmentation import Segmentation
-from .study import Study
-from .user import User
-
-__all__ = [Annotation, Dataset, Image, Segmentation, Study, User]
+masterFeaturesPath = os.path.normpath(os.path.join(
+    os.path.dirname(__file__), '..', '..', 'web_external', 'masterFeatures.json'
+))
+with open(masterFeaturesPath, 'rb') as masterFeaturesStream:
+    # Index with stringified names, for convenient internal lookup
+    MASTER_FEATURES = {
+        ':'.join(feature['name']): feature
+        for feature in
+        json.load(masterFeaturesStream)
+    }

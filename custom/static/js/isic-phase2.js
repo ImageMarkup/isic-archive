@@ -23,9 +23,9 @@ derm_app.controller('ApplicationController',
 
 derm_app.controller('AnnotationController', [
     '$scope', '$rootScope', '$location', '$http',
-    'Annotation', 'Study', 'Featureset', 'Image',
+    'Annotation', 'Study', 'Image',
     function ($scope, $rootScope, $location, $http,
-              Annotation, Study, Featureset, Image) {
+              Annotation, Study, Image) {
         $scope.annotation_values = {};
         $scope.clearAnnotations = function () {
             // annotation_values should be set before initialization,
@@ -71,7 +71,17 @@ derm_app.controller('AnnotationController', [
             if (!$scope.study || !$scope.study.$resolved) {
                 return;
             }
-            $scope.featureset = Featureset.get({'id': $scope.study.featureset._id});
+            $scope.globalFeatures = [];
+            $scope.localFeatures = [];
+            $scope.study.features.forEach(function (feature) {
+                if (feature.type === 'select') {
+                    $scope.globalFeatures.push(feature);
+                } else if (feature.type === 'superpixel') {
+                    $scope.localFeatures.push(feature);
+                } else {
+                    throw new Error('Unknown feature type');
+                }
+            });
         });
 
         $scope.flagStatus = 'ok';
@@ -87,7 +97,7 @@ derm_app.controller('AnnotationController', [
                 imageId: $scope.image._id,
                 startTime: start_time,
                 stopTime: Date.now(),
-                annotations: $scope.annotation_values
+                responses: $scope.annotation_values
             };
             $http.put(submit_url, annotation_to_store).success(function () {
                 // window.location.replace('/#tasks');
@@ -100,13 +110,6 @@ derm_app.controller('AnnotationController', [
 
 derm_app.controller('GlobalFeatureAnnotationController', ['$scope',
     function ($scope) {
-        $scope.$watch('featureset && featureset._id', function () {
-            if (!$scope.featureset || !$scope.featureset.$resolved) {
-                return;
-            }
-            // TODO: reset
-        });
-
         $scope.$on('reset', function () {
             // will also be called to initialize
             // TODO: reset drop-downs

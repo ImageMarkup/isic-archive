@@ -40,10 +40,10 @@ class AnnotationResource(IsicResource):
 
         self.route('GET', (), self.find)
         self.route('GET', (':annotationId',), self.getAnnotation)
-        self.route('GET', (':annotationId', ':featureId'), self.getAnnotationFeature)
-        self.route('GET', (':annotationId', ':featureId', 'mask'), self.getAnnotationFeatureMask)
-        self.route('GET', (':annotationId', ':featureId', 'render'),
-                   self.getAnnotationFeatureRendered)
+        self.route('GET', (':annotationId', ':responseId'), self.getAnnotationResponse)
+        self.route('GET', (':annotationId', ':responseId', 'mask'), self.getAnnotationResponseMask)
+        self.route('GET', (':annotationId', ':responseId', 'render'),
+                   self.getAnnotationResponseRendered)
         self.route('PUT', (':annotationId',), self.submitAnnotation)
 
     @describeRoute(
@@ -110,31 +110,28 @@ class AnnotationResource(IsicResource):
         return Annotation().filter(annotation, user)
 
     @describeRoute(
-        Description('Return an annotation feature as a raw superpixel array.')
+        Description('Return an annotation response as a raw superpixel array.')
         .param('annotationId', 'The ID of the annotation.', paramType='path')
-        .param('featureId', 'The feature ID within the annotation.', paramType='path')
+        .param('responseId', 'The response ID within the annotation.', paramType='path')
         .errorResponse()
     )
     @access.cookie
     @access.public
     @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
                level=AccessType.READ)
-    def getAnnotationFeature(self, annotation, featureId, params):
-        study = Study().load(annotation['meta']['studyId'], force=True, exc=True)
-        featureset = Study().getFeatureset(study)
-
-        if not any(featureId == feature['id'] for feature in featureset['localFeatures']):
-            raise ValidationException('Invalid featureId.', 'featureId')
+    def getAnnotationResponse(self, annotation, responseId, params):
+        # TODO: Should we check this?
         if Annotation().getState(annotation) != Study().State.COMPLETE:
             raise RestException('Only complete annotations have superpixel data.')
 
-        featureValues = annotation['meta']['annotations'].get(featureId, [])
-        return featureValues
+        # TODO: Should we default to a list?
+        responseValues = annotation['meta']['responses'].get(responseId, [])
+        return responseValues
 
     @describeRoute(
-        Description('Return an annotation feature as a mask.')
+        Description('Return an annotation response as a mask.')
         .param('annotationId', 'The ID of the annotation.', paramType='path')
-        .param('featureId', 'The feature ID within the annotation.', paramType='path')
+        .param('responseId', 'The response ID within the annotation.', paramType='path')
         .produces('image/png')
         .errorResponse()
     )
@@ -142,16 +139,8 @@ class AnnotationResource(IsicResource):
     @access.public
     @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
                level=AccessType.READ)
-    def getAnnotationFeatureMask(self, annotation, featureId, params):
-        study = Study().load(annotation['meta']['studyId'], force=True, exc=True)
-        featureset = Study().getFeatureset(study)
-
-        if not any(featureId == feature['id'] for feature in featureset['localFeatures']):
-            raise ValidationException('Invalid featureId.', 'featureId')
-        if Annotation().getState(annotation) != Study().State.COMPLETE:
-            raise RestException('Only complete annotations have superpixel data.')
-
-        renderData = Annotation().renderMask(annotation, featureId)
+    def getAnnotationResponseMask(self, annotation, responseId, params):
+        renderData = Annotation().renderResponse(annotation, responseId)
 
         renderEncodedStream = ScikitSegmentationHelper.writeImage(renderData, 'png')
         renderEncodedData = renderEncodedStream.getvalue()
@@ -159,9 +148,9 @@ class AnnotationResource(IsicResource):
         # Only setRawResponse now, as this handler may return a JSON error earlier
         setRawResponse()
         setResponseHeader('Content-Type', 'image/png')
-        contentName = '%s_%s_annotation.png' % (
+        contentName = '%s_%s_response.png' % (
             annotation['_id'],
-            featureId.replace('/', ',')  # TODO: replace with a better character
+            responseId.replace('/', ',')  # TODO: replace with a better character
         )
         setResponseHeader(
             'Content-Disposition',
@@ -171,9 +160,9 @@ class AnnotationResource(IsicResource):
         return renderEncodedData
 
     @describeRoute(
-        Description('Render an annotation feature, overlaid on its image.')
+        Description('Render an annotation response, overlaid on its image.')
         .param('annotationId', 'The ID of the annotation to be rendered.', paramType='path')
-        .param('featureId', 'The feature ID to be rendered.', paramType='path')
+        .param('responseId', 'The response ID to be rendered.', paramType='path')
         .param('contentDisposition',
                'Specify the Content-Disposition response header disposition-type value.',
                required=False, enum=['inline', 'attachment'])
@@ -184,21 +173,13 @@ class AnnotationResource(IsicResource):
     @access.public
     @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
                level=AccessType.READ)
-    def getAnnotationFeatureRendered(self, annotation, featureId, params):
+    def getAnnotationResponseRendered(self, annotation, responseId, params):
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
             raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
                                       'contentDisposition')
 
-        study = Study().load(annotation['meta']['studyId'], force=True, exc=True)
-        featureset = Study().getFeatureset(study)
-
-        if not any(featureId == feature['id'] for feature in featureset['localFeatures']):
-            raise ValidationException('Invalid featureId.', 'featureId')
-        if Annotation().getState(annotation) != Study().State.COMPLETE:
-            raise RestException('Only complete annotations can be rendered.')
-
-        renderData = Annotation().renderAnnotation(annotation, featureId)
+        renderData = Annotation().renderResponse(annotation, responseId)
 
         renderEncodedStream = ScikitSegmentationHelper.writeImage(renderData, 'jpeg')
         renderEncodedData = renderEncodedStream.getvalue()
@@ -206,9 +187,9 @@ class AnnotationResource(IsicResource):
         # Only setRawResponse now, as this handler may return a JSON error earlier
         setRawResponse()
         setResponseHeader('Content-Type', 'image/jpeg')
-        contentName = '%s_%s_annotation.jpg' % (
+        contentName = '%s_%s_response.jpg' % (
             annotation['_id'],
-            featureId.replace('/', ',')  # TODO: replace with a better character
+            responseId.replace('/', ',')  # TODO: replace with a better character
         )
         if contentDisp == 'inline':
             setResponseHeader(
@@ -243,13 +224,13 @@ class AnnotationResource(IsicResource):
             raise RestException('Annotation is already complete.')
 
         bodyJson = self.getBodyJson()
-        self.requireParams(['status', 'startTime', 'stopTime', 'annotations'], bodyJson)
+        self.requireParams(['status', 'startTime', 'stopTime', 'responses'], bodyJson)
 
         annotation['meta']['status'] = bodyJson['status']
         annotation['meta']['startTime'] = datetime.datetime.utcfromtimestamp(
             bodyJson['startTime'] / 1000.0)
         annotation['meta']['stopTime'] = datetime.datetime.utcfromtimestamp(
             bodyJson['stopTime'] / 1000.0)
-        annotation['meta']['annotations'] = bodyJson['annotations']
+        annotation['meta']['responses'] = bodyJson['responses']
 
         Annotation().save(annotation)

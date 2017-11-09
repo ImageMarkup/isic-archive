@@ -34,7 +34,7 @@ from girder.models.folder import Folder
 
 from .base import IsicResource
 from ..models.annotation import Annotation
-from ..models.featureset import Featureset
+from ..models.feature import MASTER_FEATURES
 from ..models.image import Image
 from ..models.study import Study
 from ..models.user import User
@@ -47,6 +47,7 @@ class StudyResource(IsicResource):
 
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getStudy)
+        self.route('GET', ('features',), self.getMasterFeatures)
         self.route('POST', (), self.createStudy)
         self.route('POST', (':id', 'users'), self.addAnnotators)
         self.route('POST', (':id', 'images'), self.addImages)
@@ -118,15 +119,17 @@ class StudyResource(IsicResource):
     def _getStudyCSVStream(self, study):
         currentUser = self.getCurrentUser()
 
-        featureset = Featureset().load(study['meta']['featuresetId'], exc=True)
+        globalFeaturesIds = (
+            feature['id']
+            for feature in study['meta']['features']
+            if feature['type'] == 'select'
+        )
         csvFields = tuple(itertools.chain(
             ('study_name', 'study_id',
              'user_name', 'user_id',
              'image_name', 'image_id',
              'flag_status', 'elapsed_seconds'),
-            (feature['id'] for feature in featureset['globalFeatures']),
-            ('superpixel_id',),
-            (feature['id'] for feature in featureset['localFeatures'])
+            globalFeaturesIds,
         ))
 
         responseBody = StringIO()
@@ -177,36 +180,32 @@ class StudyResource(IsicResource):
                 }
 
                 outDict = outDictBase.copy()
-                for globalFeature in featureset['globalFeatures']:
-                    if globalFeature['id'] in annotation['meta']['annotations']:
+                for globalFeature in globalFeaturesIds:
+                    if globalFeature['id'] in annotation['meta']['responses']:
                         outDict[globalFeature['id']] = \
-                            annotation['meta']['annotations'][globalFeature['id']]
+                            annotation['meta']['responses'][globalFeature['id']]
                 csvWriter.writerow(outDict)
                 yield responseBody.getvalue()
                 responseBody.seek(0)
                 responseBody.truncate()
 
-                # TODO: move this into the query
-                if 'localFeatures' in annotation['meta']['annotations']:
-                    superpixelCount = len(next(six.viewvalues(
-                        annotation['meta']['annotations']['localFeatures'])))
-                    for superpixelMum in xrange(superpixelCount):
 
-                        outDict = outDictBase.copy()
-                        outDict['superpixel_id'] = superpixelMum
-                        for featureName, featureValue in six.viewitems(
-                                annotation['meta']['annotations']['localFeatures']):
-                            outDict[featureName] = featureValue[superpixelMum]
-
-                        csvWriter.writerow(outDict)
-                        yield responseBody.getvalue()
-                        responseBody.seek(0)
-                        responseBody.truncate()
+    @describeRoute(
+        Description('Get the list of all possible features.')
+    )
+    @access.cookie
+    @access.public
+    def getMasterFeatures(self, params):
+        return sorted(
+            six.viewvalues(MASTER_FEATURES),
+            key=lambda feature: (feature['type'], feature['name'])
+        )
 
     @describeRoute(
         Description('Create an annotation study.')
         .param('name', 'The name of the study.', paramType='form')
-        .param('featuresetId', 'The featureset ID of the study.', paramType='form')
+        .param('featureIds', 'The ordered feature IDs of the study, as a JSON array.',
+               paramType='form')
         .param('userIds', 'The annotators user IDs of the study, as a JSON array.',
                paramType='form')
         .param('imageIds', 'The image IDs of the study, as a JSON array.', paramType='form')
@@ -218,37 +217,42 @@ class StudyResource(IsicResource):
         User().requireAdminStudy(creatorUser)
 
         params = self._decodeParams(params)
-        self.requireParams(['name', 'featuresetId', 'userIds', 'imageIds'], params)
+        self.requireParams(['name', 'featureIds', 'userIds', 'imageIds'], params)
 
         studyName = params['name'].strip()
         if not studyName:
             raise ValidationException('Name must not be empty.', 'name')
 
-        featuresetId = params['featuresetId']
-        if not featuresetId:
-            raise ValidationException('Invalid featureset ID.', 'featuresetId')
-        featureset = Featureset().load(featuresetId, exc=True)
+        featureIds = params['featureIds']
+        if len(set(featureIds)) != len(featureIds):
+            raise ValidationException('Duplicate feature IDs.', 'featureIds')
+        # TODO: The ordering won't really matter for now, but we'll store the order it was submitted
+        for featureId in featureIds:
+            if featureId not in MASTER_FEATURES:
+                raise ValidationException('Invalid feature ID: %s.' % featureId, 'featureIds')
 
-        if len(set(params['userIds'])) != len(params['userIds']):
+        annotatorUserIds = params['userIds']
+        if len(set(annotatorUserIds)) != len(annotatorUserIds):
             raise ValidationException('Duplicate user IDs.', 'userIds')
         annotatorUsers = [
             User().load(annotatorUserId, user=creatorUser, level=AccessType.READ, exc=True)
-            for annotatorUserId in params['userIds']
+            for annotatorUserId in annotatorUserIds
         ]
 
-        if len(set(params['imageIds'])) != len(params['imageIds']):
+        imageIds = params['imageIds']
+        if len(set(imageIds)) != len(imageIds):
             raise ValidationException('Duplicate image IDs.', 'imageIds')
         images = [
             # TODO: This should probably not allow images that the user only as access to via an
             # annotation
             Image().load(imageId, user=creatorUser, level=AccessType.READ, exc=True)
-            for imageId in params['imageIds']
+            for imageId in imageIds
         ]
 
         study = Study().createStudy(
             name=studyName,
             creatorUser=creatorUser,
-            featureset=featureset,
+            featureIds=featureIds,
             annotatorUsers=annotatorUsers,
             images=images)
 

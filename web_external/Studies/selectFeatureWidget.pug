@@ -1,0 +1,7 @@
+input(id=`isic-selectFeature-${feature.cid}`, type='checkbox')
+label(for=`isic-selectFeature-${feature.cid}`)
+  a(
+    data-toggle='popover',
+    data-trigger='hover',
+    data-placement='auto'
+  )= feature.name()

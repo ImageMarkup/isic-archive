@@ -86,14 +86,14 @@
                 <!-- Step content -->
                 <div
                         ng-controller="GlobalFeatureAnnotationController"
-                        ng-show="featureset.globalFeatures.length" ng-cloak
+                        ng-show="globalFeatures.length" ng-cloak
                         class="isic-annotation">
                     <h3 class="isic-annotation-header">Global Features</h3>
                     <div class="isic-annotation-body">
                         <uib-accordion close-others="false">
                             <uib-accordion-group
-                                        ng-repeat="feature in featureset.globalFeatures track by feature.id"
-                                        heading="{{ feature.name.join(': ') }}"
+                                        ng-repeat="feature in globalFeatures track by feature.id"
+                                        heading="{{ feature.name }}"
                                         is-open="true">
                                 <div ng-show="!showReview">
                                     <div ng-repeat="feature_option in feature.options track by feature_option.id">
@@ -118,7 +118,7 @@
 
                 <div
                         ng-controller="LocalFeatureAnnotationController"
-                        ng-show="featureset.localFeatures.length" ng-cloak
+                        ng-show="localFeatures.length" ng-cloak
                         class="isic-annotation">
                     <h3 class="isic-annotation-header">Local Features</h3>
                     <div class="isic-annotation-body">
@@ -162,7 +162,7 @@
                         </div>
                         <div class="isic-annotation-section">
                             <span
-                                    ng-repeat="feature in featureset.localFeatures track by feature.id"
+                                    ng-repeat="feature in localFeatures track by feature.id"
                                     class="isic-annotation-features-local"
                                     ng-show="!showReview || featureIsSet(feature.id)">
                                 <button
@@ -170,14 +170,14 @@
                                         type="button" class="btn btn-default isic-annotation-radio-btn isic-annotation-features-local-activate"
                                         ng-class="{active: isActive(feature.id)}"
                                         ng-click="onActivateClick(feature.id)">
-                                    <span>{{ feature.name.join(': ') }}</span>
+                                    <span>{{ feature.name }}</span>
                                 </button>
                                 <button
                                         ng-show="showReview" ng-cloak
                                         type="button" class="btn btn-default isic-annotation-radio-btn isic-annotation-features-local-activate"
                                         ng-mouseenter="displayFeature(feature.id)"
                                         ng-mouseleave="displayFeature(null)">
-                                    <span>{{ feature.name.join(': ') }}</span>
+                                    <span>{{ feature.name }}</span>
                                 </button>
                                 <button
                                         ng-show="!showReview && featureIsSet(feature.id)" ng-cloak

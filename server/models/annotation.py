@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+    #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 ###############################################################################
@@ -26,6 +26,7 @@ from bson import ObjectId
 from girder.models.item import Item
 from girder.exceptions import GirderException, ValidationException
 
+from .feature import MASTER_FEATURES
 from .image import Image
 from .study import Study
 from .user import User
@@ -49,7 +50,7 @@ class Annotation(Item):
                 'imageId': image['_id'],
                 'startTime': None,
                 'stopTime': None,
-                'annotations': None
+                'responses': None
             }
         )
         return annotationItem
@@ -59,26 +60,35 @@ class Annotation(Item):
                 if annotation['meta'].get('stopTime') is not None
                 else Study().State.ACTIVE)
 
-    def _getImageMasks(self, annotation, featureId, image=None):
+    def _getImageMasks(self, annotation, responseId, image=None):
         if self.getState(annotation) != Study().State.COMPLETE:
             raise GirderException('Annotation is incomplete.')
 
-        featureValues = annotation['meta']['annotations'].get(featureId, [])
-        if not isinstance(featureValues, list):
-            raise GirderException(
-                'Feature %s is not a superpixel annotation.' % featureId)
+        if MASTER_FEATURES[responseId]['type'] != 'superpixel':
+            raise GirderException('Response %s type is not superpixels.' % responseId)
+        try:
+            responseValue = annotation['meta']['responses'][responseId]
+        except KeyError:
+            # If the response is missing, it may simply be absent, or may be invalid for this study
+            study = Study().load(annotation['meta']['studyId'], force=True, exc=True)
+            if responseId in study['meta']['featureIds']:
+                responseValue = []
+            else:
+                raise GirderException(
+                    'Response %s does not correspond to a feature in the study.' % responseId)
+
 
         possibleSuperpixelNums = numpy.array([
             superpixelNum
-            for superpixelNum, featureValue
-            in enumerate(featureValues)
-            if featureValue == 0.5
+            for superpixelNum, superpixelValue
+            in enumerate(responseValue)
+            if superpixelValue == 0.5
         ])
         definiteSuperpixelNums = numpy.array([
             superpixelNum
-            for superpixelNum, featureValue
-            in enumerate(featureValues)
-            if featureValue == 1.0
+            for superpixelNum, superpixelValue
+            in enumerate(responseValue)
+            if superpixelValue == 1.0
         ])
 
         if not image:
@@ -98,8 +108,8 @@ class Annotation(Item):
 
         return possibleMask, definiteMask
 
-    def renderMask(self, annotation, featureId):
-        possibleMask, definiteMask = self._getImageMasks(annotation, featureId)
+    def renderResponse(self, annotation, responseId):
+        possibleMask, definiteMask = self._getImageMasks(annotation, responseId)
 
         renderedMask = numpy.zeros(possibleMask.shape, dtype=numpy.uint)
         renderedMask[possibleMask] = 128
@@ -107,12 +117,11 @@ class Annotation(Item):
 
         return renderedMask
 
-    def renderAnnotation(self, annotation, featureId):
+    def renderAnnotation(self, annotation, responseId):
         image = Image().load(annotation['meta']['imageId'], force=True, exc=True)
         renderData = Image().imageData(image)
 
-        possibleMask, definiteMask = self._getImageMasks(
-            annotation, featureId, image)
+        possibleMask, definiteMask = self._getImageMasks(annotation, responseId, image)
 
         POSSIBLE_OVERLAY_COLOR = numpy.array([250, 250, 0])
         DEFINITE_OVERLAY_COLOR = numpy.array([0, 0, 255])
@@ -202,50 +211,38 @@ class Annotation(Item):
                         raise ValidationException(
                             'Annotation field "%s" must be a datetime.' % field)
 
-                if not isinstance(doc['meta'].get('annotations'), dict):
+                if not isinstance(doc['meta'].get('responses'), dict):
                     raise ValidationException(
-                        'Annotation field "annotations" must be a mapping '
-                        '(dict).')
-                featureset = Study().getFeatureset(study)
-                featuresetGlobalFeatures = {
-                    feature['id']: feature
-                    for feature in
-                    featureset['globalFeatures']
-                }
-                featuresetLocalFeatures = {
-                    feature['id']: feature
-                    for feature in
-                    featureset['localFeatures']
-                }
-                if featuresetLocalFeatures:
-                    image = Image().load(doc['meta']['imageId'], force=True)
-                    superpixels = Image().superpixelsData(image)
-                    maxSuperpixel = superpixels.max()
-                else:
-                    maxSuperpixel = None
-                for featureId, featureValue in six.viewitems(
-                        doc['meta']['annotations']):
-                    if featureId in featuresetGlobalFeatures:
-                        featureOptions = set(
-                            option['id']
-                            for option in
-                            featuresetGlobalFeatures[featureId]['options'])
-                        if featureValue not in featureOptions:
+                        'Annotation field "responses" must be a mapping (dict).')
+
+                # maxSuperpixel will be looked up and cached if necessary
+                maxSuperpixel = None
+                for responseId, responseValue in six.viewitems(doc['meta']['responses']):
+                    try:
+                        featureInfo = MASTER_FEATURES[responseId]
+                    except KeyError:
+                        raise ValidationException(
+                            'Annotation has invalid response "%s".' % responseId)
+
+                    if featureInfo['type'] == 'select':
+                        featureOptions = set(option['id'] for option in featureInfo['options'])
+                        if responseValue not in featureOptions:
                             raise ValidationException(
-                                'Annotation feature "%s" has invalid '
-                                'value "%s".' % (featureId, featureValue))
-                    elif featureId in featuresetLocalFeatures:
+                                'Annotation response "%s" has invalid value "%s".' %
+                                (responseId, responseValue))
+                    elif featureInfo['type'] == 'superpixel':
+                        if maxSuperpixel is None:
+                            image = Image().load(doc['meta']['imageId'], force=True)
+                            superpixels = Image().superpixelsData(image)
+                            maxSuperpixel = superpixels.max()
                         if not (
-                            isinstance(featureValue, list) and
-                            len(featureValue) == maxSuperpixel + 1 and
+                            isinstance(responseValue, list) and
+                            len(responseValue) == maxSuperpixel + 1 and
                             all(superpixelValue in [0.0, 0.5, 1.0]
-                                for superpixelValue in featureValue)
+                                for superpixelValue in responseValue)
                         ):
                             raise ValidationException(
-                                'Annotation feature "%s" has invalid '
-                                'value "%s".' % (featureId, featureValue))
-                    else:
-                        raise ValidationException(
-                            'Annotation has invalid feature "%s".' % featureId)
+                                'Annotation response "%s" has invalid value "%s".' %
+                                (responseId, responseValue))
 
         return super(Annotation, self).validate(doc)

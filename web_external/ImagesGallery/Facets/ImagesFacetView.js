@@ -715,7 +715,14 @@ const FACET_SCHEMA = {
         coerceToType: 'string',
         title: 'Tags',
         collapsed: true
-    }
+    },
+    'responses.benign_malignant': {
+        FacetView: ImagesFacetCategoricalView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Benign or Malignant',
+        collapsed: true
+    },
 };
 
 export {

@@ -23,7 +23,7 @@ from girder.models.collection import Collection
 from girder.models.folder import Folder
 from girder.models.group import Group
 
-from .featureset import Featureset
+from .feature import MASTER_FEATURES
 from .image import Image
 from .user import User
 
@@ -44,8 +44,7 @@ class Study(Folder):
         # TODO: cache this value
         return Collection().findOne({'name': 'Annotation Studies'})
 
-    def createStudy(self, name, creatorUser, featureset, annotatorUsers,
-                    images):
+    def createStudy(self, name, creatorUser, featureIds, annotatorUsers, images):
         # this may raise a ValidationException if the name already exists
         studyFolder = self.createFolder(
             parent=self.loadStudyCollection(),
@@ -72,7 +71,7 @@ class Study(Folder):
         studyFolder = self.setMetadata(
             folder=studyFolder,
             metadata={
-                'featuresetId': featureset['_id']
+                'featureIds': featureIds
             }
         )
 
@@ -159,8 +158,11 @@ class Study(Folder):
             Annotation().createAnnotation(
                 study, image, creatorUser, annotatorFolder)
 
-    def getFeatureset(self, study):
-        return Featureset().load(study['meta']['featuresetId'], exc=True)
+    def getFeatures(self, study):
+        return [
+            MASTER_FEATURES[featureId]
+            for featureId in study['meta']['featureIds']
+        ]
 
     def getAnnotators(self, study):
         annotatorFolders = Folder().find({'parentId': study['_id']})
@@ -244,9 +246,10 @@ class Study(Folder):
                 user),
             # TODO: verify that "updated" is set correctly
             'updated': study['updated'],
-            'featureset': Featureset().load(
-                id=study['meta']['featuresetId'],
-                fields=Featureset().summaryFields, exc=True),
+            'features': [
+                MASTER_FEATURES[featureId]
+                for featureId in study['meta']['featureIds']
+            ],
             'users': sorted(
                 (
                     User().filterSummary(annotatorUser, user)
