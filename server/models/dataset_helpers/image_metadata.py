@@ -567,6 +567,49 @@ class DermoscopicTypeFieldParser(FieldParser):
         acquisition[cls.name] = value
 
 
+class MelThickMmFieldParser(FieldParser):
+    name = 'mel_thick_mm'
+    allowedFields = {'mel_thick_mm', 'mel_thick'}
+    _formatRegex = re.compile(r"""
+        (.+?)    # Non-greedy
+        (?:mm)?  # Optional units, non-capturing
+        $
+        """, re.VERBOSE)
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.lower()
+            if value in ['', 'unknown']:
+                value = None
+            else:
+                def raiseBadFieldTypeExceptionWithValue(value):
+                    raise BadFieldTypeException(
+                        name=cls.name, fieldType='float with optional units (mm)', value=value)
+
+                raiseBadFieldTypeException = functools.partial(
+                    raiseBadFieldTypeExceptionWithValue, value)
+
+                # Parse value into floating point component and units
+                result = re.match(cls._formatRegex, value)
+                if not result:
+                    raiseBadFieldTypeException()
+
+                try:
+                    value = result.group(1)
+                    value = cls._coerceFloat(value)
+                except BadFieldTypeException:
+                    raiseBadFieldTypeException()
+
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(clinical, cls.name, value)
+        clinical[cls.name] = value
+
+
 def _populateMetadata(acquisition, clinical):
     """
     Populate empty metadata fields that can be determined based on other fields.
@@ -714,6 +757,7 @@ def addImageMetadata(image, data):
         # NevusTypeFieldParser,
         ImageTypeFieldParser,
         DermoscopicTypeFieldParser,
+        MelThickMmFieldParser,
     ]:
         acquisition = image['meta']['acquisition']
         clinical = image['meta']['clinical']

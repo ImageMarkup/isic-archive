@@ -648,6 +648,17 @@ const FACET_SCHEMA = {
         title: 'Family History of Melanoma',
         collapsed: true
     },
+    'meta.clinical.mel_thick_mm': {
+        FacetView: ImagesFacetHistogramView,
+        FacetFilter: IntervalFacetFilter,
+        coerceToType: 'number',
+        interpretation: 'ordinal',
+        title: 'Thickness',
+        lowBound: 0,
+        highBound: 5,
+        numBins: 10,
+        collapsed: true
+    },
     'meta.acquisition.image_type': {
         FacetView: ImagesFacetHistogramView,
         FacetFilter: CategoricalFacetFilter,
