@@ -107,6 +107,9 @@ def _astToMongo_helper(ast):
                     else x,
                 value)
 
+        if typename == 'boolean':
+            value = map(lambda x: cast(x, 'boolean') if x is not None else x, value)
+
         return {field: {_mongo_operators[operator]: value}}
 
 
