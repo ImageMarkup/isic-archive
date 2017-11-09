@@ -89,7 +89,8 @@ const ImagesFacetView = View.extend({
         if (completeBin.label === '__null__') {
             return 'unknown';
         } else if (_.has(completeBin, 'lowBound')) {
-            let formatter = d3.format('0.3s');
+            // Decimal notation, rounded to significant digits
+            let formatter = d3.format('0.3r');
             let lowBracket = completeBin.label[0];
             let highBracket = completeBin.label[completeBin.label.length - 1];
             let lowBound = formatter(completeBin.lowBound);
