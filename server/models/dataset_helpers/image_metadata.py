@@ -768,6 +768,11 @@ def _checkMetadataErrors(acquisition, clinical):
     benignMalignant = clinical.get('benign_malignant')
     diagnosisConfirmType = clinical.get('diagnosis_confirm_type')
     melanocytic = clinical.get('melanocytic')
+    melThickMm = clinical.get('mel_thick_mm')
+    melClass = clinical.get('mel_class')
+    melType = clinical.get('mel_type')
+    melMitoticIndex = clinical.get('mel_mitotic_index')
+    ulcer = clinical.get('ulcer')
 
     if diagnosis == 'melanoma':
         if benignMalignant != 'malignant':
@@ -795,6 +800,19 @@ def _checkMetadataErrors(acquisition, clinical):
             raise InconsistentValuesException(
                 names=[DiagnosisFieldParser.name, MelanocyticFieldParser.name],
                 values=[diagnosis, melanocytic])
+
+    # Verify melanoma-related fields with respect to diagnosis
+    for value, parser in [
+        (melThickMm, MelThickMmFieldParser),
+        (melClass, MelClassFieldParser),
+        (melType, MelTypeFieldParser),
+        (melMitoticIndex, MelMitoticIndexFieldParser),
+        (ulcer, UlcerFieldParser)
+    ]:
+        if value is not None and diagnosis != 'melanoma':
+            raise InconsistentValuesException(
+                names=[parser.name, DiagnosisFieldParser.name],
+                values=[value, diagnosis])
 
     if benignMalignant in [
         'indeterminate/benign',

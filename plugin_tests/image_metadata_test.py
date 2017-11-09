@@ -1655,6 +1655,15 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertEqual([], errors)
 
         data = {
+            'mel_thick_mm': '1.23 mm',
+            'diagnosis': 'melanoma',
+            'diagnosis_confirm_type': 'histopathology'
+        }
+        image = self._createImage()
+        errors, _ = addImageMetadata(image, data)
+        self.assertEqual([], errors)
+
+        data = {
             'image_type': 'dermoscopic',
             'dermoscopic_type': 'contact polarized'
         }
@@ -1700,6 +1709,14 @@ class ImageMetadataTestCase(base.TestCase):
             'benign_malignant': 'indeterminate',
             'diagnosis': 'other',
             'diagnosis_confirm_type': 'single image expert consensus'
+        }
+        image = self._createImage()
+        errors, _ = addImageMetadata(image, data)
+        self.assertEqual(1, len(errors))
+
+        data = {
+            'mel_thick_mm': '1.23 mm',
+            'diagnosis': 'other'
         }
         image = self._createImage()
         errors, _ = addImageMetadata(image, data)
