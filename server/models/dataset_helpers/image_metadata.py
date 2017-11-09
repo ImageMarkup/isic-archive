@@ -677,6 +677,27 @@ class MelTypeFieldParser(FieldParser):
         clinical[cls.name] = value
 
 
+class UlcerFieldParser(FieldParser):
+    name = 'ulcer'
+    allowedFields = {'ulcer'}
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.lower()
+            if value in ['', 'unknown']:
+                value = None
+            else:
+                value = cls._coerceBool(value)
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(clinical, cls.name, value)
+        clinical[cls.name] = value
+
+
 def _populateMetadata(acquisition, clinical):
     """
     Populate empty metadata fields that can be determined based on other fields.
@@ -827,6 +848,7 @@ def addImageMetadata(image, data):
         MelThickMmFieldParser,
         MelClassFieldParser,
         MelTypeFieldParser,
+        UlcerFieldParser,
     ]:
         acquisition = image['meta']['acquisition']
         clinical = image['meta']['clinical']
