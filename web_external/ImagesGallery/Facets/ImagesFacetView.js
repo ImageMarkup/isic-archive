@@ -619,7 +619,7 @@ const FACET_SCHEMA = {
     'meta.clinical.melanocytic': {
         FacetView: ImagesFacetHistogramView,
         FacetFilter: CategoricalFacetFilter,
-        coerceToType: 'string',
+        coerceToType: 'boolean',
         title: 'Melanocytic',
         collapsed: true
     },
