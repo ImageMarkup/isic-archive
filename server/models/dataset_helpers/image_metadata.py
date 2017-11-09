@@ -677,6 +677,34 @@ class MelTypeFieldParser(FieldParser):
         clinical[cls.name] = value
 
 
+class MelMitoticIndexFieldParser(FieldParser):
+    name = 'mel_mitotic_index'
+    allowedFields = {'mel_mitotic_index', 'mel_mit'}
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.lower()
+            if value in ['', 'unknown']:
+                value = None
+            else:
+                cls._assertEnumerated(value, {
+                    '0/mm^2',
+                    '<1/mm^2',
+                    '1/mm^2',
+                    '2/mm^2',
+                    '3/mm^2',
+                    '4/mm^2',
+                    '>5/mm^2'})
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(clinical, cls.name, value)
+        clinical[cls.name] = value
+
+
 class UlcerFieldParser(FieldParser):
     name = 'ulcer'
     allowedFields = {'ulcer'}
@@ -848,6 +876,7 @@ def addImageMetadata(image, data):
         MelThickMmFieldParser,
         MelClassFieldParser,
         MelTypeFieldParser,
+        MelMitoticIndexFieldParser,
         UlcerFieldParser,
     ]:
         acquisition = image['meta']['acquisition']

@@ -673,6 +673,13 @@ const FACET_SCHEMA = {
         title: 'Melanoma Type',
         collapsed: true
     },
+    'meta.clinical.mel_mitotic_index': {
+        FacetView: ImagesFacetCategoricalView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Mitotic Index',
+        collapsed: true
+    },
     'meta.clinical.ulcer': {
         FacetView: ImagesFacetHistogramView,
         FacetFilter: CategoricalFacetFilter,

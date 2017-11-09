@@ -42,6 +42,7 @@ DermoscopicTypeFieldParser = None
 MelThickMmFieldParser = None
 MelClassFieldParser = None
 MelTypeFieldParser = None
+MelMitoticIndexFieldParser = None
 UlcerFieldParser = None
 
 addImageMetadata = None
@@ -73,6 +74,7 @@ def setUpModule():
         MelThickMmFieldParser, \
         MelClassFieldParser, \
         MelTypeFieldParser, \
+        MelMitoticIndexFieldParser, \
         UlcerFieldParser, \
         addImageMetadata
     from dataset_helpers.image_metadata import \
@@ -95,6 +97,7 @@ def setUpModule():
         MelThickMmFieldParser, \
         MelClassFieldParser, \
         MelTypeFieldParser, \
+        MelMitoticIndexFieldParser, \
         UlcerFieldParser, \
         addImageMetadata
 
@@ -1389,6 +1392,79 @@ class ImageMetadataTestCase(base.TestCase):
         data = {'mel_type': 'spindle cell features melanoma'}
         image = self._createImage()
         image['meta']['clinical']['mel_type'] = 'nodular melanoma'
+        self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
+
+        # Field not found
+        self._testFieldNotFound(parser)
+
+    def testMelMitoticIndexFieldParser(self):
+        parser = MelMitoticIndexFieldParser
+
+        # Valid values with varying case
+        for value in [
+            '0/mm^2',
+            '<1/mm^2',
+            '1/mm^2',
+            '2/mm^2',
+            '3/mm^2',
+            '4/MM^2',
+            '>5/mm^2'
+        ]:
+            data = {'mel_mitotic_index': value}
+            image = self._createImage()
+            self.assertRunParser(image, data, parser)
+            self.assertDictEqual({}, data)
+            self.assertDictEqual({}, image['meta']['unstructured'])
+            self.assertDictEqual({'mel_mitotic_index': value.lower()}, image['meta']['clinical'])
+            self.assertDictEqual({}, image['privateMeta'])
+
+        # Invalid value
+        data = {'mel_mitotic_index': 'bad'}
+        image = self._createImage()
+        self.assertRunParserRaises(image, data, parser, BadFieldTypeException)
+
+        # Unknown values
+        for value in self.unknownValues:
+            data = {'mel_mitotic_index': value}
+            image = self._createImage()
+            self.assertRunParser(image, data, parser)
+            self.assertDictEqual({}, data)
+            self.assertDictEqual({}, image['meta']['unstructured'])
+            self.assertDictEqual({'mel_mitotic_index': None}, image['meta']['clinical'])
+            self.assertDictEqual({}, image['privateMeta'])
+
+        # Update null value with new value
+        data = {'mel_mitotic_index': '1/mm^2'}
+        image = self._createImage()
+        image['meta']['clinical']['mel_mitotic_index'] = None
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_mitotic_index': '1/mm^2'},
+                             image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Update existing value with same value
+        data = {'mel_mitotic_index': '1/mm^2'}
+        image = self._createImage()
+        image['meta']['clinical']['mel_mitotic_index'] = '1/mm^2'
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_mitotic_index': '1/mm^2'},
+                             image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Update existing value with null value
+        data = {'mel_mitotic_index': None}
+        image = self._createImage()
+        image['meta']['clinical']['mel_mitotic_index'] = '1/mm^2'
+        self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
+
+        # Update existing value with new value
+        data = {'mel_mitotic_index': '<1/mm^2'}
+        image = self._createImage()
+        image['meta']['clinical']['mel_mitotic_index'] = '1/mm^2'
         self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
 
         # Field not found
