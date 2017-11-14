@@ -373,6 +373,7 @@ class Image(Item):
             'meta.clinical.personal_hx_mm',
             'meta.clinical.family_hx_mm',
             'meta.clinical.mel_class',
+            'meta.clinical.mel_type',
             'meta.acquisition.image_type',
             'meta.acquisition.dermoscopic_type'
         ]
