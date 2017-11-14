@@ -659,6 +659,13 @@ const FACET_SCHEMA = {
         numBins: 10,
         collapsed: true
     },
+    'meta.clinical.mel_class': {
+        FacetView: ImagesFacetCategoricalView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Melanoma Class',
+        collapsed: true
+    },
     'meta.acquisition.image_type': {
         FacetView: ImagesFacetHistogramView,
         FacetFilter: CategoricalFacetFilter,

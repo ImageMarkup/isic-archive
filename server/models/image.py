@@ -372,6 +372,7 @@ class Image(Item):
             'meta.clinical.melanocytic',
             'meta.clinical.personal_hx_mm',
             'meta.clinical.family_hx_mm',
+            'meta.clinical.mel_class',
             'meta.acquisition.image_type',
             'meta.acquisition.dermoscopic_type'
         ]

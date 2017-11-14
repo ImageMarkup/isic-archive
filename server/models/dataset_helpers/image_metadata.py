@@ -610,6 +610,38 @@ class MelThickMmFieldParser(FieldParser):
         clinical[cls.name] = value
 
 
+class MelClassFieldParser(FieldParser):
+    name = 'mel_class'
+    allowedFields = {'mel_class'}
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.lower()
+            if value in ['', 'unknown']:
+                value = None
+            else:
+                if value == 'recurrent/persistent melanoma in situ':
+                    value = 'recurrent/persistent melanoma, in situ'
+                elif value == 'recurrent/persistent melanoma invasive':
+                    value = 'recurrent/persistent melanoma, invasive'
+                elif value == 'melanoma nos':
+                    value = 'melanoma NOS'
+                cls._assertEnumerated(value, {
+                    'melanoma in situ',
+                    'invasive melanoma',
+                    'recurrent/persistent melanoma, in situ',
+                    'recurrent/persistent melanoma, invasive',
+                    'melanoma NOS'})
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(clinical, cls.name, value)
+        clinical[cls.name] = value
+
+
 def _populateMetadata(acquisition, clinical):
     """
     Populate empty metadata fields that can be determined based on other fields.
@@ -758,6 +790,7 @@ def addImageMetadata(image, data):
         ImageTypeFieldParser,
         DermoscopicTypeFieldParser,
         MelThickMmFieldParser,
+        MelClassFieldParser,
     ]:
         acquisition = image['meta']['acquisition']
         clinical = image['meta']['clinical']
