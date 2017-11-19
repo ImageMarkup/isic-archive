@@ -620,7 +620,7 @@ const FACET_SCHEMA = {
     'meta.clinical.melanocytic': {
         FacetView: ImagesFacetHistogramView,
         FacetFilter: CategoricalFacetFilter,
-        coerceToType: 'string',
+        coerceToType: 'boolean',
         title: 'Melanocytic',
         collapsed: true
     },
@@ -638,14 +638,14 @@ const FACET_SCHEMA = {
     'meta.clinical.personal_hx_mm': {
         FacetView: ImagesFacetHistogramView,
         FacetFilter: CategoricalFacetFilter,
-        coerceToType: 'string',
+        coerceToType: 'boolean',
         title: 'Personal History of Melanoma',
         collapsed: true
     },
     'meta.clinical.family_hx_mm': {
         FacetView: ImagesFacetHistogramView,
         FacetFilter: CategoricalFacetFilter,
-        coerceToType: 'string',
+        coerceToType: 'boolean',
         title: 'Family History of Melanoma',
         collapsed: true
     },
