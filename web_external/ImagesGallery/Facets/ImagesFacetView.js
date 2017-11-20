@@ -617,6 +617,13 @@ const FACET_SCHEMA = {
         title: 'Lesion Diagnosis',
         collapsed: true
     },
+    'meta.clinical.nevus_type': {
+        FacetView: ImagesFacetCategoricalView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Nevus Type',
+        collapsed: true
+    },
     'meta.clinical.melanocytic': {
         FacetView: ImagesFacetHistogramView,
         FacetFilter: CategoricalFacetFilter,
