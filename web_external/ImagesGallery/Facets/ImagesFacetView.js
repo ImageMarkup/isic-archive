@@ -653,7 +653,7 @@ const FACET_SCHEMA = {
         FacetFilter: IntervalFacetFilter,
         coerceToType: 'number',
         interpretation: 'ordinal',
-        title: 'Thickness',
+        title: 'Melanoma Thickness (mm)',
         lowBound: 0,
         highBound: 5,
         numBins: 10,
@@ -677,7 +677,7 @@ const FACET_SCHEMA = {
         FacetView: ImagesFacetCategoricalView,
         FacetFilter: CategoricalFacetFilter,
         coerceToType: 'string',
-        title: 'Mitotic Index',
+        title: 'Melanoma Mitotic Index',
         collapsed: true
     },
     'meta.clinical.mel_ulcer': {
