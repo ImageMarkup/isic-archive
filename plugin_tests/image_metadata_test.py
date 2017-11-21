@@ -1407,7 +1407,7 @@ class ImageMetadataTestCase(base.TestCase):
             '2/mm^2',
             '3/mm^2',
             '4/MM^2',
-            '>5/mm^2'
+            '>4/mm^2'
         ]:
             data = {'mel_mitotic_index': value}
             image = self._createImage()

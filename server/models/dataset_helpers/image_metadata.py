@@ -695,7 +695,7 @@ class MelMitoticIndexFieldParser(FieldParser):
                     '2/mm^2',
                     '3/mm^2',
                     '4/mm^2',
-                    '>5/mm^2'})
+                    '>4/mm^2'})
         return value
 
     @classmethod
