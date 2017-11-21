@@ -43,7 +43,7 @@ MelThickMmFieldParser = None
 MelClassFieldParser = None
 MelTypeFieldParser = None
 MelMitoticIndexFieldParser = None
-UlcerFieldParser = None
+MelUlcerFieldParser = None
 
 addImageMetadata = None
 
@@ -75,7 +75,7 @@ def setUpModule():
         MelClassFieldParser, \
         MelTypeFieldParser, \
         MelMitoticIndexFieldParser, \
-        UlcerFieldParser, \
+        MelUlcerFieldParser, \
         addImageMetadata
     from dataset_helpers.image_metadata import \
         MetadataFieldException, \
@@ -98,7 +98,7 @@ def setUpModule():
         MelClassFieldParser, \
         MelTypeFieldParser, \
         MelMitoticIndexFieldParser, \
-        UlcerFieldParser, \
+        MelUlcerFieldParser, \
         addImageMetadata
 
 
@@ -1470,65 +1470,65 @@ class ImageMetadataTestCase(base.TestCase):
         # Field not found
         self._testFieldNotFound(parser)
 
-    def testUlcerFieldParser(self):
-        parser = UlcerFieldParser
+    def testMelUlcerFieldParser(self):
+        parser = MelUlcerFieldParser
 
         # Normal
-        data = {'ulcer': 'false'}
+        data = {'mel_ulcer': 'false'}
         image = self._createImage()
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
-        self.assertDictEqual({'ulcer': False}, image['meta']['clinical'])
+        self.assertDictEqual({'mel_ulcer': False}, image['meta']['clinical'])
         self.assertDictEqual({}, image['privateMeta'])
 
         # Unknown values
         for value in self.unknownValues:
-            data = {'ulcer': value}
+            data = {'mel_ulcer': value}
             image = self._createImage()
             self.assertRunParser(image, data, parser)
             self.assertDictEqual({}, data)
             self.assertDictEqual({}, image['meta']['unstructured'])
-            self.assertDictEqual({'ulcer': None}, image['meta']['clinical'])
+            self.assertDictEqual({'mel_ulcer': None}, image['meta']['clinical'])
             self.assertDictEqual({}, image['privateMeta'])
 
         # Update null value with new value
-        data = {'ulcer': 'true'}
+        data = {'mel_ulcer': 'true'}
         image = self._createImage()
-        image['meta']['clinical']['ulcer'] = None
+        image['meta']['clinical']['mel_ulcer'] = None
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
-        self.assertDictEqual({'ulcer': True}, image['meta']['clinical'])
+        self.assertDictEqual({'mel_ulcer': True}, image['meta']['clinical'])
         self.assertDictEqual({}, image['privateMeta'])
 
         # Update existing value with same value
-        data = {'ulcer': 'true'}
+        data = {'mel_ulcer': 'true'}
         image = self._createImage()
-        image['meta']['clinical']['ulcer'] = True
+        image['meta']['clinical']['mel_ulcer'] = True
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
-        self.assertDictEqual({'ulcer': True}, image['meta']['clinical'])
+        self.assertDictEqual({'mel_ulcer': True}, image['meta']['clinical'])
         self.assertDictEqual({}, image['privateMeta'])
 
         # Update existing value with null value
-        data = {'ulcer': None}
+        data = {'mel_ulcer': None}
         image = self._createImage()
-        image['meta']['clinical']['ulcer'] = True
+        image['meta']['clinical']['mel_ulcer'] = True
         self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
 
         # Update existing value with new value
-        data = {'ulcer': 'true'}
+        data = {'mel_ulcer': 'true'}
         image = self._createImage()
-        image['meta']['clinical']['ulcer'] = False
+        image['meta']['clinical']['mel_ulcer'] = False
         self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
 
         # Field not found
         self._testFieldNotFound(parser)
 
         # Bad field type
-        data = {'ulcer': '1'}
+        data = {'mel_ulcer': '1'}
         image = self._createImage()
 
     def testAddImageClinicalMetadata(self):

@@ -705,9 +705,9 @@ class MelMitoticIndexFieldParser(FieldParser):
         clinical[cls.name] = value
 
 
-class UlcerFieldParser(FieldParser):
-    name = 'ulcer'
-    allowedFields = {'ulcer'}
+class MelUlcerFieldParser(FieldParser):
+    name = 'mel_ulcer'
+    allowedFields = {'mel_ulcer'}
 
     @classmethod
     def transform(cls, value):
@@ -772,7 +772,7 @@ def _checkMetadataErrors(acquisition, clinical):
     melClass = clinical.get('mel_class')
     melType = clinical.get('mel_type')
     melMitoticIndex = clinical.get('mel_mitotic_index')
-    ulcer = clinical.get('ulcer')
+    melUlcer = clinical.get('mel_ulcer')
 
     if diagnosis == 'melanoma':
         if benignMalignant != 'malignant':
@@ -807,7 +807,7 @@ def _checkMetadataErrors(acquisition, clinical):
         (melClass, MelClassFieldParser),
         (melType, MelTypeFieldParser),
         (melMitoticIndex, MelMitoticIndexFieldParser),
-        (ulcer, UlcerFieldParser)
+        (melUlcer, MelUlcerFieldParser)
     ]:
         if value is not None and diagnosis != 'melanoma':
             raise InconsistentValuesException(
@@ -895,7 +895,7 @@ def addImageMetadata(image, data):
         MelClassFieldParser,
         MelTypeFieldParser,
         MelMitoticIndexFieldParser,
-        UlcerFieldParser,
+        MelUlcerFieldParser,
     ]:
         acquisition = image['meta']['acquisition']
         clinical = image['meta']['clinical']

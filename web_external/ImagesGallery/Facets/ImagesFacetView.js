@@ -680,11 +680,11 @@ const FACET_SCHEMA = {
         title: 'Mitotic Index',
         collapsed: true
     },
-    'meta.clinical.ulcer': {
+    'meta.clinical.mel_ulcer': {
         FacetView: ImagesFacetHistogramView,
         FacetFilter: CategoricalFacetFilter,
         coerceToType: 'boolean',
-        title: 'Ulcer',
+        title: 'Melanoma Ulceration',
         collapsed: true
     },
     'meta.acquisition.image_type': {
