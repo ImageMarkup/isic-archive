@@ -1294,8 +1294,7 @@ class ImageMetadataTestCase(base.TestCase):
             'superficial spreading melanoma',
             'nodular melanoma',
             'lentigo maligna melanoma',
-            'ACRAL LENTIGINOUS MELANOMA',
-            'spindle cell features melanoma'
+            'ACRAL LENTIGINOUS MELANOMA'
         ]:
             data = {'mel_type': value}
             image = self._createImage()
@@ -1389,7 +1388,7 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
 
         # Update existing value with new value
-        data = {'mel_type': 'spindle cell features melanoma'}
+        data = {'mel_type': 'acral lentiginous melanoma'}
         image = self._createImage()
         image['meta']['clinical']['mel_type'] = 'nodular melanoma'
         self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)

@@ -667,8 +667,7 @@ class MelTypeFieldParser(FieldParser):
                     'nodular melanoma',
                     'lentigo maligna melanoma',
                     'acral lentiginous melanoma',
-                    'melanoma NOS',
-                    'spindle cell features melanoma'})
+                    'melanoma NOS'})
         return value
 
     @classmethod
