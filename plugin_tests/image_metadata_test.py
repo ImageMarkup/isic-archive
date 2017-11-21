@@ -1507,6 +1507,12 @@ class ImageMetadataTestCase(base.TestCase):
             self.assertDictEqual({'mel_mitotic_index': value.lower()}, image['meta']['clinical'])
             self.assertDictEqual({}, image['privateMeta'])
 
+        # Valid value with non-standard units
+        data = {'mel_mitotic_index': '2/mm2'}
+        image = self._createImage()
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({'mel_mitotic_index': '2/mm^2'}, image['meta']['clinical'])
+
         # Invalid value
         data = {'mel_mitotic_index': 'bad'}
         image = self._createImage()

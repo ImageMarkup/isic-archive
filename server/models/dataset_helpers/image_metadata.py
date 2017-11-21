@@ -676,6 +676,7 @@ class MelMitoticIndexFieldParser(FieldParser):
             if value in ['', 'unknown']:
                 value = None
             else:
+                value = re.sub(r'mm2$', 'mm^2', value)
                 cls._assertEnumerated(value, {
                     '0/mm^2',
                     '<1/mm^2',
