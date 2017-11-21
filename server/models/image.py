@@ -369,6 +369,7 @@ class Image(Item):
             'meta.clinical.sex',
             'meta.clinical.diagnosis_confirm_type',
             'meta.clinical.diagnosis',
+            'meta.clinical.nevus_type',
             'meta.clinical.melanocytic',
             'meta.clinical.personal_hx_mm',
             'meta.clinical.family_hx_mm',

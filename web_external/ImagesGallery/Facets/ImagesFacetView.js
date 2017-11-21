@@ -89,7 +89,8 @@ const ImagesFacetView = View.extend({
         if (completeBin.label === '__null__') {
             return 'unknown';
         } else if (_.has(completeBin, 'lowBound')) {
-            let formatter = d3.format('0.3s');
+            // Decimal notation, rounded to significant digits
+            let formatter = d3.format('0.3r');
             let lowBracket = completeBin.label[0];
             let highBracket = completeBin.label[completeBin.label.length - 1];
             let lowBound = formatter(completeBin.lowBound);
@@ -616,10 +617,17 @@ const FACET_SCHEMA = {
         title: 'Lesion Diagnosis',
         collapsed: true
     },
+    'meta.clinical.nevus_type': {
+        FacetView: ImagesFacetCategoricalView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Nevus Type',
+        collapsed: true
+    },
     'meta.clinical.melanocytic': {
         FacetView: ImagesFacetHistogramView,
         FacetFilter: CategoricalFacetFilter,
-        coerceToType: 'string',
+        coerceToType: 'boolean',
         title: 'Melanocytic',
         collapsed: true
     },
@@ -637,14 +645,14 @@ const FACET_SCHEMA = {
     'meta.clinical.personal_hx_mm': {
         FacetView: ImagesFacetHistogramView,
         FacetFilter: CategoricalFacetFilter,
-        coerceToType: 'string',
+        coerceToType: 'boolean',
         title: 'Personal History of Melanoma',
         collapsed: true
     },
     'meta.clinical.family_hx_mm': {
         FacetView: ImagesFacetHistogramView,
         FacetFilter: CategoricalFacetFilter,
-        coerceToType: 'string',
+        coerceToType: 'boolean',
         title: 'Family History of Melanoma',
         collapsed: true
     },

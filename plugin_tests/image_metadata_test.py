@@ -37,6 +37,7 @@ MelanocyticFieldParser = None
 DiagnosisConfirmTypeFieldParser = None
 BenignMalignantFieldParser = None
 DiagnosisFieldParser = None
+NevusTypeFieldParser = None
 ImageTypeFieldParser = None
 DermoscopicTypeFieldParser = None
 MelThickMmFieldParser = None
@@ -69,6 +70,7 @@ def setUpModule():
         DiagnosisConfirmTypeFieldParser, \
         BenignMalignantFieldParser, \
         DiagnosisFieldParser, \
+        NevusTypeFieldParser, \
         ImageTypeFieldParser, \
         DermoscopicTypeFieldParser, \
         MelThickMmFieldParser, \
@@ -92,6 +94,7 @@ def setUpModule():
         DiagnosisConfirmTypeFieldParser, \
         BenignMalignantFieldParser, \
         DiagnosisFieldParser, \
+        NevusTypeFieldParser, \
         ImageTypeFieldParser, \
         DermoscopicTypeFieldParser, \
         MelThickMmFieldParser, \
@@ -955,6 +958,93 @@ class ImageMetadataTestCase(base.TestCase):
         image = self._createImage()
         self.assertRunParserRaises(image, data, parser, BadFieldTypeException)
 
+    def testNevusTypeFieldParser(self):
+        parser = NevusTypeFieldParser
+
+        # Valid values with varying case
+        for value in [
+            'blue',
+            'combined',
+            'deep penetrating',
+            'halo',
+            'PERSISTENT/RECURRENT',
+            'pigmented spindle cell of reed',
+            'plexiform spindle cell',
+            'special site',
+            'spitz'
+        ]:
+            data = {'nevus_type': value}
+            image = self._createImage()
+            self.assertRunParser(image, data, parser)
+            self.assertDictEqual({}, data)
+            self.assertDictEqual({}, image['meta']['unstructured'])
+            self.assertDictEqual({'nevus_type': value.lower()}, image['meta']['clinical'])
+            self.assertDictEqual({}, image['privateMeta'])
+
+        # Special case: nevus NOS
+        data = {'nevus_type': 'nevus NOS'}
+        image = self._createImage()
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'nevus_type': 'nevus NOS'}, image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Invalid value
+        data = {'nevus_type': 'bad'}
+        image = self._createImage()
+        self.assertRunParserRaises(image, data, parser, BadFieldTypeException)
+
+        # Unknown values
+        for value in self.unknownValues:
+            data = {'nevus_type': value}
+            image = self._createImage()
+            self.assertRunParser(image, data, parser)
+            self.assertDictEqual({}, data)
+            self.assertDictEqual({}, image['meta']['unstructured'])
+            self.assertDictEqual({'nevus_type': None}, image['meta']['clinical'])
+            self.assertDictEqual({}, image['privateMeta'])
+
+        # Update null value with new value
+        data = {'nevus_type': 'spitz'}
+        image = self._createImage()
+        image['meta']['clinical']['nevus_type'] = None
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'nevus_type': 'spitz'}, image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Update existing value with same value
+        data = {'nevus_type': 'spitz'}
+        image = self._createImage()
+        image['meta']['clinical']['nevus_type'] = 'spitz'
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'nevus_type': 'spitz'}, image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Update existing value with null value
+        data = {'nevus_type': None}
+        image = self._createImage()
+        image['meta']['clinical']['nevus_type'] = 'spitz'
+        self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
+
+        # Update existing value with new value
+        data = {'nevus_type': 'halo'}
+        image = self._createImage()
+        image['meta']['clinical']['nevus_type'] = 'spitz'
+        self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
+
+        # Field not found
+        self._testFieldNotFound(parser)
+
+        # Bad field type
+        data = {'nevus_type': '1'}
+        image = self._createImage()
+        self.assertRunParserRaises(image, data, parser, BadFieldTypeException)
+
     def testImageTypeFieldParser(self):
         parser = ImageTypeFieldParser
 
@@ -1663,6 +1753,15 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertEqual([], errors)
 
         data = {
+            'nevus_type': 'blue',
+            'diagnosis': 'nevus',
+            'benign_malignant': 'benign'
+        }
+        image = self._createImage()
+        errors, _ = addImageMetadata(image, data)
+        self.assertEqual([], errors)
+
+        data = {
             'image_type': 'dermoscopic',
             'dermoscopic_type': 'contact polarized'
         }
@@ -1715,6 +1814,14 @@ class ImageMetadataTestCase(base.TestCase):
 
         data = {
             'mel_thick_mm': '1.23 mm',
+            'diagnosis': 'other'
+        }
+        image = self._createImage()
+        errors, _ = addImageMetadata(image, data)
+        self.assertEqual(1, len(errors))
+
+        data = {
+            'nevus_type': 'blue',
             'diagnosis': 'other'
         }
         image = self._createImage()

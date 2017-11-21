@@ -481,24 +481,20 @@ class NevusTypeFieldParser(FieldParser):
             value = value.lower()
             if value in ['', 'unknown']:
                 value = None
-            elif value == 'not applicable':
-                value = None
             else:
-                # TODO: finish this
+                if value == 'nevus nos':
+                    value = 'nevus NOS'
                 cls._assertEnumerated(value, {
                     'blue',
                     'combined',
                     'nevus NOS',
                     'deep penetrating',
                     'halo',
-                    'other',
                     'persistent/recurrent',
                     'pigmented spindle cell of reed',
                     'plexiform spindle cell',
                     'special site',
-                    'spitz',
-                    #             'not applicable'
-                    'unknown'})
+                    'spitz'})
         return value
 
     @classmethod
@@ -506,14 +502,6 @@ class NevusTypeFieldParser(FieldParser):
         cls._checkWrite(clinical, cls.name, value)
         clinical[cls.name] = value
 
-#     if 'diagnosis' in clinical:
-
-
-# allowed_diagnoses = {'nevus', 'nevus spilus', 'epidermal nevus'}
-#         if clinical['path_diagnosis'] not in allowed_diagnoses:
-#             raise Exception(
-#                 'if this value is set, "path_diagnosis" must be one of %s' %
-#                 sorted(allowed_diagnoses))
 
 class ImageTypeFieldParser(FieldParser):
     name = 'image_type'
@@ -772,6 +760,7 @@ def _checkMetadataErrors(acquisition, clinical):
     melType = clinical.get('mel_type')
     melMitoticIndex = clinical.get('mel_mitotic_index')
     melUlcer = clinical.get('mel_ulcer')
+    nevusType = clinical.get('nevus_type')
 
     if diagnosis == 'melanoma':
         if benignMalignant != 'malignant':
@@ -822,6 +811,12 @@ def _checkMetadataErrors(acquisition, clinical):
         raise InconsistentValuesException(
             names=[BenignMalignantFieldParser.name, DiagnosisConfirmTypeFieldParser.name],
             values=[benignMalignant, diagnosisConfirmType])
+
+    # Verify nevus type field with respect to diagnosis
+    if nevusType is not None and diagnosis not in ['nevus', 'nevus spilus']:
+        raise InconsistentValuesException(
+            names=[DiagnosisFieldParser.name, NevusTypeFieldParser.name],
+            values=[diagnosis, nevusType])
 
     if imageType != 'dermoscopic' and dermoscopicType is not None:
         raise InconsistentValuesException(
@@ -887,7 +882,7 @@ def addImageMetadata(image, data):
         DiagnosisConfirmTypeFieldParser,
         BenignMalignantFieldParser,
         DiagnosisFieldParser,
-        # NevusTypeFieldParser,
+        NevusTypeFieldParser,
         ImageTypeFieldParser,
         DermoscopicTypeFieldParser,
         MelThickMmFieldParser,

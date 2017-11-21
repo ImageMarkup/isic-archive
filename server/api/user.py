@@ -107,18 +107,19 @@ def requestCreateDatasetPermission(self, params):
                 for user in groupAcl['users']
                 if user['level'] >= AccessType.WRITE
             ]
-            host = mail_utils.getEmailUrlPrefix()
-            html = mail_utils.renderTemplate(
-                'datasetContributorRequest.mako',
-                {
-                    'user': currentUser,
-                    'group': group,
-                    'host': host,
-                })
-            mail_utils.sendEmail(
-                to=groupModeratorEmails,
-                subject='ISIC Archive: Dataset Contributor Request',
-                text=html)
+            if groupModeratorEmails:
+                host = mail_utils.getEmailUrlPrefix()
+                html = mail_utils.renderTemplate(
+                    'datasetContributorRequest.mako',
+                    {
+                        'user': currentUser,
+                        'group': group,
+                        'host': host,
+                    })
+                mail_utils.sendEmail(
+                    to=groupModeratorEmails,
+                    subject='ISIC Archive: Dataset Contributor Request',
+                    text=html)
 
     return resp
 
