@@ -707,7 +707,7 @@ class MelMitoticIndexFieldParser(FieldParser):
 
 class MelUlcerFieldParser(FieldParser):
     name = 'mel_ulcer'
-    allowedFields = {'mel_ulcer'}
+    allowedFields = {'mel_ulcer', 'ulcer'}
 
     @classmethod
     def transform(cls, value):
