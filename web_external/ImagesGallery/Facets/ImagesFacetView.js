@@ -656,6 +656,45 @@ const FACET_SCHEMA = {
         title: 'Family History of Melanoma',
         collapsed: true
     },
+    'meta.clinical.mel_thick_mm': {
+        FacetView: ImagesFacetHistogramView,
+        FacetFilter: IntervalFacetFilter,
+        coerceToType: 'number',
+        interpretation: 'ordinal',
+        title: 'Melanoma Thickness (mm)',
+        lowBound: 0,
+        highBound: 5,
+        numBins: 10,
+        collapsed: true
+    },
+    'meta.clinical.mel_class': {
+        FacetView: ImagesFacetCategoricalView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Melanoma Class',
+        collapsed: true
+    },
+    'meta.clinical.mel_type': {
+        FacetView: ImagesFacetCategoricalView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Melanoma Type',
+        collapsed: true
+    },
+    'meta.clinical.mel_mitotic_index': {
+        FacetView: ImagesFacetCategoricalView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Melanoma Mitotic Index',
+        collapsed: true
+    },
+    'meta.clinical.mel_ulcer': {
+        FacetView: ImagesFacetHistogramView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'boolean',
+        title: 'Melanoma Ulceration',
+        collapsed: true
+    },
     'meta.acquisition.image_type': {
         FacetView: ImagesFacetHistogramView,
         FacetFilter: CategoricalFacetFilter,

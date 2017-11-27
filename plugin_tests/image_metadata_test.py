@@ -40,6 +40,11 @@ DiagnosisFieldParser = None
 NevusTypeFieldParser = None
 ImageTypeFieldParser = None
 DermoscopicTypeFieldParser = None
+MelThickMmFieldParser = None
+MelClassFieldParser = None
+MelTypeFieldParser = None
+MelMitoticIndexFieldParser = None
+MelUlcerFieldParser = None
 
 addImageMetadata = None
 
@@ -68,6 +73,11 @@ def setUpModule():
         NevusTypeFieldParser, \
         ImageTypeFieldParser, \
         DermoscopicTypeFieldParser, \
+        MelThickMmFieldParser, \
+        MelClassFieldParser, \
+        MelTypeFieldParser, \
+        MelMitoticIndexFieldParser, \
+        MelUlcerFieldParser, \
         addImageMetadata
     from dataset_helpers.image_metadata import \
         MetadataFieldException, \
@@ -87,6 +97,11 @@ def setUpModule():
         NevusTypeFieldParser, \
         ImageTypeFieldParser, \
         DermoscopicTypeFieldParser, \
+        MelThickMmFieldParser, \
+        MelClassFieldParser, \
+        MelTypeFieldParser, \
+        MelMitoticIndexFieldParser, \
+        MelUlcerFieldParser, \
         addImageMetadata
 
 
@@ -1185,6 +1200,432 @@ class ImageMetadataTestCase(base.TestCase):
         # Field not found
         self._testFieldNotFound(parser)
 
+    def testMelThickMmFieldParser(self):
+        parser = MelThickMmFieldParser
+
+        # Normal
+        for value in ['1.23 mm', '1.23mm', '1.23']:
+            data = {'mel_thick_mm': value}
+            image = self._createImage()
+            self.assertRunParser(image, data, parser)
+            self.assertDictEqual({}, data)
+            self.assertDictEqual({}, image['meta']['unstructured'])
+            self.assertDictEqual({'mel_thick_mm': 1.23}, image['meta']['clinical'])
+            self.assertDictEqual({}, image['privateMeta'])
+
+        # Alternative field name
+        data = {'mel_thick': '1.25 mm'}
+        image = self._createImage()
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_thick_mm': 1.25}, image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Unknown values
+        for value in self.unknownValues:
+            data = {'mel_thick_mm': value}
+            image = self._createImage()
+            self.assertRunParser(image, data, parser)
+            self.assertDictEqual({}, data)
+            self.assertDictEqual({}, image['meta']['unstructured'])
+            self.assertDictEqual({'mel_thick_mm': None}, image['meta']['clinical'])
+            self.assertDictEqual({}, image['privateMeta'])
+
+        # Update null value with new value
+        data = {'mel_thick_mm': '1.23 mm'}
+        image = self._createImage()
+        image['meta']['clinical']['mel_thick_mm'] = None
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_thick_mm': 1.23}, image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Update existing value with same value
+        data = {'mel_thick_mm': '1.23 mm'}
+        image = self._createImage()
+        image['meta']['clinical']['mel_thick_mm'] = 1.23
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_thick_mm': 1.23}, image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Update existing value with null value
+        data = {'mel_thick_mm': None}
+        image = self._createImage()
+        image['meta']['clinical']['mel_thick_mm'] = 1.23
+        self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
+
+        # Update existing value with new value
+        data = {'mel_thick_mm': '1.23 mm'}
+        image = self._createImage()
+        image['meta']['clinical']['mel_thick_mm'] = 2.1
+        self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
+
+        # Field not found
+        self._testFieldNotFound(parser)
+
+        # Bad field type
+        data = {'mel_thick_mm': 'true'}
+        image = self._createImage()
+        self.assertRunParserRaises(image, data, parser, BadFieldTypeException)
+
+        data = {'mel_thick_mm': '1.23 cm'}
+        image = self._createImage()
+        self.assertRunParserRaises(image, data, parser, BadFieldTypeException)
+
+    def testMelClassFieldParser(self):
+        parser = MelClassFieldParser
+
+        # Valid values with varying case
+        for value in [
+            'melanoma in situ',
+            'invasive melanoma',
+            'recurrent/persistent melanoma, in situ',
+            'RECURRENT/PERSISTENT MELANOMA, INVASIVE',
+        ]:
+            data = {'mel_class': value}
+            image = self._createImage()
+            self.assertRunParser(image, data, parser)
+            self.assertDictEqual({}, data)
+            self.assertDictEqual({}, image['meta']['unstructured'])
+            self.assertDictEqual({'mel_class': value.lower()}, image['meta']['clinical'])
+            self.assertDictEqual({}, image['privateMeta'])
+
+        # Special case
+        data = {'mel_class': 'recurrent/persistent melanoma in situ'}
+        image = self._createImage()
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_class': 'recurrent/persistent melanoma, in situ'},
+                             image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Special case
+        data = {'mel_class': 'recurrent/persistent melanoma invasive'}
+        image = self._createImage()
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_class': 'recurrent/persistent melanoma, invasive'},
+                             image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Special case
+        data = {'mel_class': 'melanoma nos'}
+        image = self._createImage()
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_class': 'melanoma NOS'},
+                             image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Invalid value
+        data = {'mel_class': 'bad'}
+        image = self._createImage()
+        self.assertRunParserRaises(image, data, parser, BadFieldTypeException)
+
+        # Unknown values
+        for value in self.unknownValues:
+            data = {'mel_class': value}
+            image = self._createImage()
+            self.assertRunParser(image, data, parser)
+            self.assertDictEqual({}, data)
+            self.assertDictEqual({}, image['meta']['unstructured'])
+            self.assertDictEqual({'mel_class': None}, image['meta']['clinical'])
+            self.assertDictEqual({}, image['privateMeta'])
+
+        # Update null value with new value
+        data = {'mel_class': 'melanoma in situ'}
+        image = self._createImage()
+        image['meta']['clinical']['mel_class'] = None
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_class': 'melanoma in situ'},
+                             image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Update existing value with same value
+        data = {'mel_class': 'melanoma in situ'}
+        image = self._createImage()
+        image['meta']['clinical']['mel_class'] = 'melanoma in situ'
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_class': 'melanoma in situ'},
+                             image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Update existing value with null value
+        data = {'mel_class': None}
+        image = self._createImage()
+        image['meta']['clinical']['mel_class'] = 'melanoma in situ'
+        self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
+
+        # Update existing value with new value
+        data = {'mel_class': 'melanoma nos'}
+        image = self._createImage()
+        image['meta']['clinical']['mel_class'] = 'melanoma in situ'
+        self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
+
+        # Field not found
+        self._testFieldNotFound(parser)
+
+    def testMelTypeFieldParser(self):
+        parser = MelTypeFieldParser
+
+        # Valid values with varying case
+        for value in [
+            'superficial spreading melanoma',
+            'nodular melanoma',
+            'lentigo maligna melanoma',
+            'ACRAL LENTIGINOUS MELANOMA'
+        ]:
+            data = {'mel_type': value}
+            image = self._createImage()
+            self.assertRunParser(image, data, parser)
+            self.assertDictEqual({}, data)
+            self.assertDictEqual({}, image['meta']['unstructured'])
+            self.assertDictEqual({'mel_type': value.lower()}, image['meta']['clinical'])
+            self.assertDictEqual({}, image['privateMeta'])
+
+        # Special case
+        data = {'mel_type': 'ssm'}
+        image = self._createImage()
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_type': 'superficial spreading melanoma'},
+                             image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Special case
+        data = {'mel_type': 'lmm'}
+        image = self._createImage()
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_type': 'lentigo maligna melanoma'},
+                             image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Special case
+        data = {'mel_type': 'alm'}
+        image = self._createImage()
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_type': 'acral lentiginous melanoma'},
+                             image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Special case
+        data = {'mel_type': 'melanoma nos'}
+        image = self._createImage()
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_type': 'melanoma NOS'},
+                             image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Invalid value
+        data = {'mel_type': 'bad'}
+        image = self._createImage()
+        self.assertRunParserRaises(image, data, parser, BadFieldTypeException)
+
+        # Unknown values
+        for value in self.unknownValues:
+            data = {'mel_type': value}
+            image = self._createImage()
+            self.assertRunParser(image, data, parser)
+            self.assertDictEqual({}, data)
+            self.assertDictEqual({}, image['meta']['unstructured'])
+            self.assertDictEqual({'mel_type': None}, image['meta']['clinical'])
+            self.assertDictEqual({}, image['privateMeta'])
+
+        # Update null value with new value
+        data = {'mel_type': 'nodular melanoma'}
+        image = self._createImage()
+        image['meta']['clinical']['mel_type'] = None
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_type': 'nodular melanoma'},
+                             image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Update existing value with same value
+        data = {'mel_type': 'nodular melanoma'}
+        image = self._createImage()
+        image['meta']['clinical']['mel_type'] = 'nodular melanoma'
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_type': 'nodular melanoma'},
+                             image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Update existing value with null value
+        data = {'mel_type': None}
+        image = self._createImage()
+        image['meta']['clinical']['mel_type'] = 'nodular melanoma'
+        self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
+
+        # Update existing value with new value
+        data = {'mel_type': 'acral lentiginous melanoma'}
+        image = self._createImage()
+        image['meta']['clinical']['mel_type'] = 'nodular melanoma'
+        self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
+
+        # Field not found
+        self._testFieldNotFound(parser)
+
+    def testMelMitoticIndexFieldParser(self):
+        parser = MelMitoticIndexFieldParser
+
+        # Valid values with varying case
+        for value in [
+            '0/mm^2',
+            '<1/mm^2',
+            '1/mm^2',
+            '2/mm^2',
+            '3/mm^2',
+            '4/MM^2',
+            '>4/mm^2'
+        ]:
+            data = {'mel_mitotic_index': value}
+            image = self._createImage()
+            self.assertRunParser(image, data, parser)
+            self.assertDictEqual({}, data)
+            self.assertDictEqual({}, image['meta']['unstructured'])
+            self.assertDictEqual({'mel_mitotic_index': value.lower()}, image['meta']['clinical'])
+            self.assertDictEqual({}, image['privateMeta'])
+
+        # Valid value with non-standard units
+        data = {'mel_mitotic_index': '2/mm2'}
+        image = self._createImage()
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({'mel_mitotic_index': '2/mm^2'}, image['meta']['clinical'])
+
+        # Invalid value
+        data = {'mel_mitotic_index': 'bad'}
+        image = self._createImage()
+        self.assertRunParserRaises(image, data, parser, BadFieldTypeException)
+
+        # Unknown values
+        for value in self.unknownValues:
+            data = {'mel_mitotic_index': value}
+            image = self._createImage()
+            self.assertRunParser(image, data, parser)
+            self.assertDictEqual({}, data)
+            self.assertDictEqual({}, image['meta']['unstructured'])
+            self.assertDictEqual({'mel_mitotic_index': None}, image['meta']['clinical'])
+            self.assertDictEqual({}, image['privateMeta'])
+
+        # Update null value with new value
+        data = {'mel_mitotic_index': '1/mm^2'}
+        image = self._createImage()
+        image['meta']['clinical']['mel_mitotic_index'] = None
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_mitotic_index': '1/mm^2'},
+                             image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Update existing value with same value
+        data = {'mel_mitotic_index': '1/mm^2'}
+        image = self._createImage()
+        image['meta']['clinical']['mel_mitotic_index'] = '1/mm^2'
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_mitotic_index': '1/mm^2'},
+                             image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Update existing value with null value
+        data = {'mel_mitotic_index': None}
+        image = self._createImage()
+        image['meta']['clinical']['mel_mitotic_index'] = '1/mm^2'
+        self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
+
+        # Update existing value with new value
+        data = {'mel_mitotic_index': '<1/mm^2'}
+        image = self._createImage()
+        image['meta']['clinical']['mel_mitotic_index'] = '1/mm^2'
+        self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
+
+        # Field not found
+        self._testFieldNotFound(parser)
+
+    def testMelUlcerFieldParser(self):
+        parser = MelUlcerFieldParser
+
+        # Normal
+        data = {'mel_ulcer': 'false'}
+        image = self._createImage()
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_ulcer': False}, image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Unknown values
+        for value in self.unknownValues:
+            data = {'mel_ulcer': value}
+            image = self._createImage()
+            self.assertRunParser(image, data, parser)
+            self.assertDictEqual({}, data)
+            self.assertDictEqual({}, image['meta']['unstructured'])
+            self.assertDictEqual({'mel_ulcer': None}, image['meta']['clinical'])
+            self.assertDictEqual({}, image['privateMeta'])
+
+        # Update null value with new value
+        data = {'mel_ulcer': 'true'}
+        image = self._createImage()
+        image['meta']['clinical']['mel_ulcer'] = None
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_ulcer': True}, image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Update existing value with same value
+        data = {'mel_ulcer': 'true'}
+        image = self._createImage()
+        image['meta']['clinical']['mel_ulcer'] = True
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({}, data)
+        self.assertDictEqual({}, image['meta']['unstructured'])
+        self.assertDictEqual({'mel_ulcer': True}, image['meta']['clinical'])
+        self.assertDictEqual({}, image['privateMeta'])
+
+        # Update existing value with null value
+        data = {'mel_ulcer': None}
+        image = self._createImage()
+        image['meta']['clinical']['mel_ulcer'] = True
+        self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
+
+        # Update existing value with new value
+        data = {'mel_ulcer': 'true'}
+        image = self._createImage()
+        image['meta']['clinical']['mel_ulcer'] = False
+        self.assertRunParserRaises(image, data, parser, MetadataValueExistsException)
+
+        # Field not found
+        self._testFieldNotFound(parser)
+
+        # Bad field type
+        data = {'mel_ulcer': '1'}
+        image = self._createImage()
+
     def testAddImageClinicalMetadata(self):
         # Empty data
         data = {}
@@ -1309,6 +1750,15 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertEqual([], errors)
 
         data = {
+            'mel_thick_mm': '1.23 mm',
+            'diagnosis': 'melanoma',
+            'diagnosis_confirm_type': 'histopathology'
+        }
+        image = self._createImage()
+        errors, _ = addImageMetadata(image, data)
+        self.assertEqual([], errors)
+
+        data = {
             'nevus_type': 'blue',
             'diagnosis': 'nevus',
             'benign_malignant': 'benign'
@@ -1363,6 +1813,14 @@ class ImageMetadataTestCase(base.TestCase):
             'benign_malignant': 'indeterminate',
             'diagnosis': 'other',
             'diagnosis_confirm_type': 'single image expert consensus'
+        }
+        image = self._createImage()
+        errors, _ = addImageMetadata(image, data)
+        self.assertEqual(1, len(errors))
+
+        data = {
+            'mel_thick_mm': '1.23 mm',
+            'diagnosis': 'other'
         }
         image = self._createImage()
         errors, _ = addImageMetadata(image, data)

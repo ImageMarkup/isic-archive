@@ -555,6 +555,165 @@ class DermoscopicTypeFieldParser(FieldParser):
         acquisition[cls.name] = value
 
 
+class MelThickMmFieldParser(FieldParser):
+    name = 'mel_thick_mm'
+    allowedFields = {'mel_thick_mm', 'mel_thick'}
+    _formatRegex = re.compile(r"""
+        (.+?)    # Non-greedy
+        (?:mm)?  # Optional units, non-capturing
+        $
+        """, re.VERBOSE)
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.lower()
+            if value in ['', 'unknown']:
+                value = None
+            else:
+                def raiseBadFieldTypeExceptionWithValue(value):
+                    raise BadFieldTypeException(
+                        name=cls.name, fieldType='float with optional units (mm)', value=value)
+
+                raiseBadFieldTypeException = functools.partial(
+                    raiseBadFieldTypeExceptionWithValue, value)
+
+                # Parse value into floating point component and units
+                result = re.match(cls._formatRegex, value)
+                if not result:
+                    raiseBadFieldTypeException()
+
+                try:
+                    value = result.group(1)
+                    value = cls._coerceFloat(value)
+                except BadFieldTypeException:
+                    raiseBadFieldTypeException()
+
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(clinical, cls.name, value)
+        clinical[cls.name] = value
+
+
+class MelClassFieldParser(FieldParser):
+    name = 'mel_class'
+    allowedFields = {'mel_class'}
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.lower()
+            if value in ['', 'unknown']:
+                value = None
+            else:
+                if value == 'recurrent/persistent melanoma in situ':
+                    value = 'recurrent/persistent melanoma, in situ'
+                elif value == 'recurrent/persistent melanoma invasive':
+                    value = 'recurrent/persistent melanoma, invasive'
+                elif value == 'melanoma nos':
+                    value = 'melanoma NOS'
+                cls._assertEnumerated(value, {
+                    'melanoma in situ',
+                    'invasive melanoma',
+                    'recurrent/persistent melanoma, in situ',
+                    'recurrent/persistent melanoma, invasive',
+                    'melanoma NOS'})
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(clinical, cls.name, value)
+        clinical[cls.name] = value
+
+
+class MelTypeFieldParser(FieldParser):
+    name = 'mel_type'
+    allowedFields = {'mel_type'}
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.lower()
+            if value in ['', 'unknown']:
+                value = None
+            else:
+                if value == 'ssm':
+                    value = 'superficial spreading melanoma'
+                elif value == 'lmm':
+                    value = 'lentigo maligna melanoma'
+                elif value == 'alm':
+                    value = 'acral lentiginous melanoma'
+                elif value == 'melanoma nos':
+                    value = 'melanoma NOS'
+                cls._assertEnumerated(value, {
+                    'superficial spreading melanoma',
+                    'nodular melanoma',
+                    'lentigo maligna melanoma',
+                    'acral lentiginous melanoma',
+                    'melanoma NOS'})
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(clinical, cls.name, value)
+        clinical[cls.name] = value
+
+
+class MelMitoticIndexFieldParser(FieldParser):
+    name = 'mel_mitotic_index'
+    allowedFields = {'mel_mitotic_index', 'mel_mit'}
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.lower()
+            if value in ['', 'unknown']:
+                value = None
+            else:
+                value = re.sub(r'mm2$', 'mm^2', value)
+                cls._assertEnumerated(value, {
+                    '0/mm^2',
+                    '<1/mm^2',
+                    '1/mm^2',
+                    '2/mm^2',
+                    '3/mm^2',
+                    '4/mm^2',
+                    '>4/mm^2'})
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(clinical, cls.name, value)
+        clinical[cls.name] = value
+
+
+class MelUlcerFieldParser(FieldParser):
+    name = 'mel_ulcer'
+    allowedFields = {'mel_ulcer', 'ulcer'}
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.lower()
+            if value in ['', 'unknown']:
+                value = None
+            else:
+                value = cls._coerceBool(value)
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(clinical, cls.name, value)
+        clinical[cls.name] = value
+
+
 def _populateMetadata(acquisition, clinical):
     """
     Populate empty metadata fields that can be determined based on other fields.
@@ -597,6 +756,11 @@ def _checkMetadataErrors(acquisition, clinical):
     benignMalignant = clinical.get('benign_malignant')
     diagnosisConfirmType = clinical.get('diagnosis_confirm_type')
     melanocytic = clinical.get('melanocytic')
+    melThickMm = clinical.get('mel_thick_mm')
+    melClass = clinical.get('mel_class')
+    melType = clinical.get('mel_type')
+    melMitoticIndex = clinical.get('mel_mitotic_index')
+    melUlcer = clinical.get('mel_ulcer')
     nevusType = clinical.get('nevus_type')
 
     if diagnosis == 'melanoma':
@@ -625,6 +789,19 @@ def _checkMetadataErrors(acquisition, clinical):
             raise InconsistentValuesException(
                 names=[DiagnosisFieldParser.name, MelanocyticFieldParser.name],
                 values=[diagnosis, melanocytic])
+
+    # Verify melanoma-related fields with respect to diagnosis
+    for value, parser in [
+        (melThickMm, MelThickMmFieldParser),
+        (melClass, MelClassFieldParser),
+        (melType, MelTypeFieldParser),
+        (melMitoticIndex, MelMitoticIndexFieldParser),
+        (melUlcer, MelUlcerFieldParser)
+    ]:
+        if value is not None and diagnosis != 'melanoma':
+            raise InconsistentValuesException(
+                names=[parser.name, DiagnosisFieldParser.name],
+                values=[value, diagnosis])
 
     if benignMalignant in [
         'indeterminate/benign',
@@ -709,6 +886,11 @@ def addImageMetadata(image, data):
         NevusTypeFieldParser,
         ImageTypeFieldParser,
         DermoscopicTypeFieldParser,
+        MelThickMmFieldParser,
+        MelClassFieldParser,
+        MelTypeFieldParser,
+        MelMitoticIndexFieldParser,
+        MelUlcerFieldParser,
     ]:
         acquisition = image['meta']['acquisition']
         clinical = image['meta']['clinical']
