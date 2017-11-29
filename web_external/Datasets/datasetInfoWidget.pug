@@ -1,10 +1,16 @@
 //- Dataset info for use in an .isic-form-container.
-.isic-form-group
-  h3 Dataset
-  table.table.table-condensed.isic-dataset-info-table
+h3 Dataset
+table.table.table-condensed.isic-dataset-info-table
+  if dataset
     tr
       td.isic-dataset-info-table-label Name
       td= dataset.name()
     tr
       td.isic-dataset-info-table-label Description
       td= dataset.get('description')
+    tr
+      td.isic-dataset-info-table-label License
+      td= dataset.get('license')
+  else
+    tr
+      td.isic-dataset-info-none-selected None selected
