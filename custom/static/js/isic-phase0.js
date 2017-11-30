@@ -14,7 +14,7 @@ isic_app.controller('ApplicationController',
             var dataset_id = url_path_components[1];
 
             // get folder details for name and times
-            var dataset_url = '/api/v1/folder/' + dataset_id;
+            var dataset_url = '/api/v1/dataset/' + dataset_id;
             $http.get(dataset_url).success(function (data) {
                 $scope.dataset = data;
             });

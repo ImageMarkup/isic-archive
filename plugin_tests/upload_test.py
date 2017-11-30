@@ -100,23 +100,26 @@ class UploadTestCase(IsicTestCase):
             mimeType='application/zip'
         )
 
-        self.assertNoMail()
         resp = self.request(
             path='/dataset', method='POST', user=uploaderUser, params={
-                'zipFileId': str(zipFile['_id']),
                 'name': datasetName,
-                'owner': 'Test Organization',
                 'description': datasetDescription,
                 'license': 'CC-0',
-                'signature': 'Test Uploader',
-                'anonymous': False,
-                'attribution': 'Test Organization'
+                'attribution': 'Test Organization',
+                'owner': 'Test Organization'
             })
         self.assertStatusOk(resp)
         dataset = Dataset.findOne({'name': datasetName})
         self.assertIsNotNone(dataset)
         self.assertEqual(str(dataset['_id']), resp.json['_id'])
 
+        self.assertNoMail()
+        resp = self.request(
+            path='/dataset/%s/zip' % dataset['_id'], method='POST', user=uploaderUser, params={
+                'zipFileId': str(zipFile['_id']),
+                'signature': 'Test Uploader'
+            })
+        self.assertStatusOk(resp)
         # Uploader user and reviewer user should receive emails
         self.assertMails(count=2)
 
