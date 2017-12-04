@@ -179,9 +179,12 @@ class Dataset(AccessControlledModel):
         # Avoid circular import
         from .image import Image
 
+        level = self.getAccessLevel(dataset, user)
+
         output = {
             '_id': dataset['_id'],
             '_modelType': 'dataset',
+            '_accessLevel': level,
             'name': dataset['name'],
             'description': dataset['description'],
             'license': dataset['license'],
@@ -203,8 +206,11 @@ class Dataset(AccessControlledModel):
         return output
 
     def filterSummary(self, dataset, user=None):
+        level = self.getAccessLevel(dataset, user)
+
         return {
             '_id': dataset['_id'],
+            '_accessLevel': level,
             'name': dataset['name'],
             'description': dataset['description'],
             'updated': dataset['updated'],
