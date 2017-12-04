@@ -1,6 +1,7 @@
 import $ from 'jquery';
 
 import {getCurrentUser} from 'girder/auth';
+import {AccessType} from 'girder/constants';
 import {restRequest} from 'girder/rest';
 
 import Model from './Model';
@@ -83,7 +84,15 @@ const DatasetModel = Model.extend({
         return deferred.promise();
     },
 
+    canWrite: function () {
+        return this.get('_accessLevel') >= AccessType.WRITE;
+    },
+
     canAdmin: function () {
+        return this.get('_accessLevel') >= AccessType.ADMIN;
+    }
+}, {
+    canCreate: function () {
         let user = getCurrentUser();
         return user && user.canCreateDataset();
     }

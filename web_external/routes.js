@@ -34,7 +34,6 @@ function navigateToIfLoggedIn(View, settings) {
 }
 
 import CreateDatasetRequestView from './Datasets/CreateDatasetRequestView';
-import DatasetCollection from './collections/DatasetCollection';
 function navigateToIfCanCreateDataset(View, settings) {
     // Users must:
     //  (1) Be logged in
@@ -46,7 +45,7 @@ function navigateToIfCanCreateDataset(View, settings) {
         events.trigger('g:loginUi');
     } else if (!currentUser.canAcceptTerms()) {
         navigateTo(TermsAcceptanceView);
-    } else if (!DatasetCollection.canCreate()) {
+    } else if (!DatasetModel.canCreate()) {
         navigateTo(CreateDatasetRequestView);
     } else {
         navigateTo(View, settings);

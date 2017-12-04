@@ -5,6 +5,7 @@ import PaginateWidget from 'girder/views/widgets/PaginateWidget';
 
 import DatasetView from './DatasetView';
 import DatasetCollection from '../collections/DatasetCollection';
+import DatasetModel from '../models/DatasetModel';
 import View from '../view';
 import router from '../router';
 
@@ -53,7 +54,7 @@ const DatasetsView = View.extend({
             title: 'Datasets',
             models: this.datasets,
             loaded: this.loaded,
-            canCreateDataset: DatasetCollection.canCreate()
+            canCreateDataset: DatasetModel.canCreate()
         }));
 
         this.paginateWidget.setElement(this.$('.isic-listing-paginate-container')).render();
