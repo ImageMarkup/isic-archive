@@ -15,25 +15,22 @@ const CreateDatasetView = View.extend({
         'click #isic-create-dataset-show-license-info-link': 'showLicenseInfo',
         'change input[name="attribution"]': function (event) {
             // Update attribution name field sensitivity
-            const target = $(event.target);
-            if (target.val() === 'anonymous') {
-                this.$('#isic-create-dataset-attribution-name').girderEnable(false);
-            } else {
-                this.$('#isic-create-dataset-attribution-name').girderEnable(true);
-            }
+            const attributionEl = $(event.currentTarget);
+            const isAttributed = attributionEl.val() === 'attributed-to';
+            this.$('#isic-create-dataset-attribution-name').girderEnable(isAttributed);
         },
         'change #isic-create-dataset-license': function (event) {
-            // Disable anonymous attribution unless CC-0 license is selected
-            const target = $(event.target);
-            const anonymous = this.$('#isic-create-dataset-attribution-anonymous');
-            if (target.val() === 'CC-0') {
-                anonymous.girderEnable(true);
-            } else {
-                if (anonymous.prop('checked')) {
-                    this.$('#isic-create-dataset-attribution-attributed-to').prop('checked', true);
-                    this.$('#isic-create-dataset-attribution-attributed-to').change();
-                }
-                anonymous.girderEnable(false);
+            const licenseEl = $(event.currentTarget);
+            const isCC0 = licenseEl.val() === 'CC-0';
+            const anonymousEl = this.$('#isic-create-dataset-attribution-anonymous');
+            const isAnonymous = anonymousEl.prop('checked');
+
+            anonymousEl.girderEnable(isCC0);
+            if (!isCC0 && isAnonymous) {
+                // Can no longer be anonymous
+                this.$('#isic-create-dataset-attribution-attributed-to')
+                    .prop('checked', true)
+                    .change();
             }
         },
         'submit #isic-create-dataset-form': function (event) {
