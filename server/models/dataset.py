@@ -244,7 +244,7 @@ class Dataset(AccessControlledModel):
         doc['attribution'] = doc['attribution'].strip()
         if not doc['attribution']:
             raise ValidationException('Attribution must not be empty.', 'attribution')
-        if doc['attribution'].lower() == 'anonymous':
+        if doc['attribution'].lower() in ['anonymous', 'anon']:
             doc['attribution'] = 'Anonymous'
         if doc['attribution'] == 'Anonymous' and doc['license'] != 'CC-0':
             raise ValidationException(
