@@ -11,6 +11,13 @@ table.table.table-condensed.isic-dataset-info-table
     tr
       td.isic-dataset-info-table-label License
       td= dataset.get('license')
+    tr
+      td.isic-dataset-info-table-label Attribution
+      td= dataset.get('attribution')
+    if dataset.canWrite()
+      tr
+        td.isic-dataset-info-table-label Owner
+        td= dataset.get('owner')
   else
     tr
       td.isic-dataset-info-none-selected None selected

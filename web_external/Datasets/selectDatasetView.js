@@ -21,7 +21,10 @@ const SelectDatasetView = View.extend({
     datasetChanged: function () {
         const datasetId = this.$('select').val();
         const dataset = this.collection.get(datasetId);
-        this.trigger('changed', dataset);
+        dataset.fetch()
+            .done(() => {
+                this.trigger('changed', dataset);
+            });
     },
 
     render: function () {
