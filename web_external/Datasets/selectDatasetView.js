@@ -7,7 +7,7 @@ import SelectDatasetPageTemplate from './selectDatasetPage.pug';
 // parameter.
 const SelectDatasetView = View.extend({
     events: {
-        'change': 'datasetChanged'
+        'change #isic-select-dataset-select': 'datasetChanged'
     },
 
     /**
