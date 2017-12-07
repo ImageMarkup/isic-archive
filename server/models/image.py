@@ -49,20 +49,13 @@ class Image(Item):
     def initialize(self):
         super(Image, self).initialize()
 
-        self._filterKeys[AccessType.READ].clear()
-        self.exposeFields(level=AccessType.READ, fields=[
-            '_id', 'name', 'description', 'meta', 'created', 'creatorId',
-            'updated', 'folderId'
-            # TODO: re-add once converted file no longer contributes to size
-            # 'size',
-        ])
         self.prefixSearchFields = ['lowerName', 'name']
 
         events.bind('data.process',
                     'onSuperpixelsUpload', self.onSuperpixelsUpload)
 
     def createImage(self, imageDataStream, imageDataSize, originalName,
-                    parentFolder, creator):
+                    parentFolder, creator, dataset, batch):
         newIsicId = Setting().get(PluginSettings.MAX_ISIC_ID) + 1
         image = self.createItem(
             name='ISIC_%07d' % newIsicId,
@@ -75,12 +68,15 @@ class Image(Item):
         image['privateMeta'] = {
             'originalFilename': originalName
         }
-        image = self.setMetadata(image, {
+        image['meta'] = {
             'acquisition': {},
             'clinical': {},
             'unstructured': {},
-            'tags': []
-        })
+            'tags': [],
+            'datasetId': dataset['_id'],
+            'batchId': batch['_id']
+        }
+        image = Image().save(image)
 
         originalFile = Upload().uploadFromFile(
             obj=imageDataStream,
@@ -314,7 +310,7 @@ class Image(Item):
             # TODO: verify that "updated" is set correctly
             'updated': image['updated'],
             'dataset': Dataset().filterSummary(
-                Dataset().load(image['folderId'], force=True, exc=True),
+                Dataset().load(image['meta']['datasetId'], force=True, exc=True),
                 user),
             'meta': {
                 'acquisition': image['meta']['acquisition'],
@@ -364,7 +360,7 @@ class Image(Item):
     def getHistograms(self, filterQuery, user):
         # Define facets
         categorialFacets = [
-            'folderId',
+            'meta.datasetId',
             'meta.clinical.benign_malignant',
             'meta.clinical.sex',
             'meta.clinical.diagnosis_confirm_type',
@@ -404,7 +400,7 @@ class Image(Item):
         # Build and run the pipeline
         folderQuery = {
             'folderId': {'$in': [
-                dataset['_id'] for dataset in Dataset().list(user=user)]}
+                dataset['folderId'] for dataset in Dataset().list(user=user)]}
         }
         if filterQuery:
             query = {

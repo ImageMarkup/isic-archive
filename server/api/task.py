@@ -28,7 +28,7 @@ from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 from girder.models.collection import Collection
 from girder.models.folder import Folder
-from girder.models.model_base import AccessException
+from girder.models.model_base import AccessException, GirderException
 
 from .base import IsicResource
 from ..models.dataset import Dataset
@@ -81,9 +81,11 @@ class TaskResource(IsicResource):
             if not count:
                 continue
 
-            dataset = Dataset().load(
-                prereviewFolder['parentId'], user=user, level=AccessType.READ, exc=False)
+            dataset = Dataset().findOne({'folderId': prereviewFolder['parentId']})
             if not dataset:
+                raise GirderException(
+                    'No dataset for pre-review folder: %s' % prereviewFolder['_id'])
+            if not Dataset().hasAccess(dataset, user=user, level=AccessType.WRITE):
                 # This should not typically occur
                 continue
 
@@ -110,7 +112,7 @@ class TaskResource(IsicResource):
         user = self.getCurrentUser()
         User().requireReviewDataset(user)
 
-        dataset = Dataset().load(params['datasetId'], user=user, level=AccessType.READ, exc=True)
+        dataset = Dataset().load(params['datasetId'], user=user, level=AccessType.WRITE, exc=True)
 
         prereviewFolder = Dataset().prereviewFolder(dataset)
         if not (prereviewFolder and
@@ -129,14 +131,14 @@ class TaskResource(IsicResource):
             # Filter viewable images out of all items
             {'$match': {
                 'folderId': {'$in': [
-                    dataset['_id'] for dataset in Dataset().list(user=user)]}}}
+                    dataset['folderId'] for dataset in Dataset().list(user=user)]}}}
         ]
 
     def _pipeline1ImagesFromDataset(self, dataset):
         return [
             # Filter only images in dataset out of all items
             {'$match': {
-                'folderId': dataset['_id']}}
+                'folderId': dataset['folderId']}}
         ]
 
     def _pipeline2ImagesWithSegmentations(self):
@@ -146,7 +148,7 @@ class TaskResource(IsicResource):
                 '_id': 1,
                 'name': 1,
                 'updated': 1,
-                'folderId': 1}},
+                'meta.datasetId': 1}},
             # Join all segmentations into images
             {'$lookup': {
                 'from': 'segmentation',
@@ -158,7 +160,7 @@ class TaskResource(IsicResource):
                 '_id': 1,
                 'name': 1,
                 'updated': 1,
-                'folderId': 1,
+                'meta.datasetId': 1,
                 'segmentations._id': 1,
                 'segmentations.reviews': 1}}
         ]
@@ -188,7 +190,7 @@ class TaskResource(IsicResource):
         return [
             # Count results by dataset id
             {'$group': {
-                '_id': '$folderId',
+                '_id': '$meta.datasetId',
                 'count': {'$sum': 1}}},
         ]
 
@@ -199,7 +201,7 @@ class TaskResource(IsicResource):
                 'name': SortDir.ASCENDING}},
             # Group images by dataset id
             {'$group': {
-                '_id': '$folderId',
+                '_id': '$meta.datasetId',
                 'images': {'$push': {
                     '_id': '$_id',
                     'name': '$name',

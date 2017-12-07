@@ -96,7 +96,7 @@ class ImageResource(IsicResource):
             query = {}
             if 'datasetId' in params:
                 try:
-                    query.update({'folderId': ObjectId(params['datasetId'])})
+                    query.update({'meta.datasetId': ObjectId(params['datasetId'])})
                 except InvalidId:
                     raise ValidationException('Invalid ObjectId.', 'datasetId')
             if 'name' in params:
@@ -116,7 +116,7 @@ class ImageResource(IsicResource):
         zipGenerator = ziputil.ZipGenerator(downloadFileName)
 
         for image in images:
-            datasetId = image['folderId']
+            datasetId = image['meta']['datasetId']
             if datasetId not in datasetCache:
                 datasetCache[datasetId] = Dataset().load(datasetId, force=True, exc=True)
             dataset = datasetCache[datasetId]
@@ -146,15 +146,12 @@ class ImageResource(IsicResource):
 
         for dataset in six.viewvalues(datasetCache):
             licenseText = mail_utils.renderTemplate(
-                'license_%s.mako' % dataset['meta']['license'])
+                'license_%s.mako' % dataset['license'])
             attributionText = mail_utils.renderTemplate(
-                'attribution_%s.mako' % dataset['meta']['license'],
+                'attribution_%s.mako' % dataset['license'],
                 {
                     'work': dataset['name'],
-                    'author':
-                        dataset['meta']['attribution']
-                        if not dataset['meta']['anonymous']
-                        else 'Anonymous'
+                    'author': dataset['attribution']
                 })
             for data in zipGenerator.addFile(
                     lambda: [licenseText],
@@ -192,7 +189,7 @@ class ImageResource(IsicResource):
             query = {}
             if 'datasetId' in params:
                 try:
-                    query.update({'folderId': ObjectId(params['datasetId'])})
+                    query.update({'meta.datasetId': ObjectId(params['datasetId'])})
                 except InvalidId:
                     raise ValidationException('Invalid ObjectId.', 'datasetId')
 

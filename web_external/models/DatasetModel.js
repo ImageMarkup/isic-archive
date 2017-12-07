@@ -1,6 +1,7 @@
 import $ from 'jquery';
 
 import {getCurrentUser} from 'girder/auth';
+import {AccessType} from 'girder/constants';
 import {restRequest} from 'girder/rest';
 
 import Model from './Model';
@@ -14,37 +15,19 @@ const DatasetModel = Model.extend({
     },
 
      /**
-     * Create a new dataset from a .zip file of images.
+     * Upload a batch of images.
      * @param [zipFileId] The ID of the .zip file.
-     * @param [name] Name of the dataset.
-     * @param [owner] Owner of the dataset.
-     * @param [description] Description of the dataset.
-     * @param [license] License of the dataset.
      * @param [signature] Signature of license agreement.
-     * @param [anonymous] Whether to use an anonymous attribution for the dataset.
-     * @param [attribution] Attribution of the dataset.
      */
-    ingestImages: function (zipFileId, name, owner, description, license,
-        signature, anonymous, attribution) {
-        restRequest({
-            url: this.resourceName,
+    uploadBatch: function (zipFileId, signature) {
+        return restRequest({
+            url: `${this.resourceName}/${this.id}/zip`,
             method: 'POST',
             data: {
                 zipFileId: zipFileId,
-                name: name,
-                owner: owner,
-                description: description,
-                license: license,
-                signature: signature,
-                anonymous: anonymous,
-                attribution: attribution
+                signature: signature
             },
             error: null
-        }).done((resp) => {
-            this.set(resp);
-            this.trigger('isic:ingestImages:success', resp);
-        }).fail((err) => {
-            this.trigger('isic:ingestImages:error', err);
         });
     },
 
@@ -101,7 +84,15 @@ const DatasetModel = Model.extend({
         return deferred.promise();
     },
 
+    canWrite: function () {
+        return this.get('_accessLevel') >= AccessType.WRITE;
+    },
+
     canAdmin: function () {
+        return this.get('_accessLevel') >= AccessType.ADMIN;
+    }
+}, {
+    canCreate: function () {
         let user = getCurrentUser();
         return user && user.canCreateDataset();
     }

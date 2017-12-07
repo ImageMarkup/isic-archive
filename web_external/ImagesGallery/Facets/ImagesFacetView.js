@@ -571,7 +571,7 @@ const ImagesFacetCategoricalTagsView = ImagesFacetCategoricalView.extend({
 });
 
 const FACET_SCHEMA = {
-    'folderId': {
+    'meta.datasetId': {
         FacetView: ImagesFacetCategoricalDatasetView,
         FacetFilter: CategoricalFacetFilter,
         coerceToType: 'objectid',

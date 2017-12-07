@@ -24,7 +24,6 @@ from girder.api.rest import loadmodel
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 from girder.models.file import File
-from girder.models.folder import Folder
 from girder.models.model_base import AccessException, ValidationException
 
 from .base import IsicResource
@@ -52,7 +51,8 @@ class DatasetResource(IsicResource):
 
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getDataset)
-        self.route('POST', (), self.ingestDataset)
+        self.route('POST', (), self.createDataset)
+        self.route('POST', (':id', 'zip'), self.addZipBatch)
         self.route('GET', (':id', 'review'), self.getReviewImages)
         self.route('POST', (':id', 'review'), self.submitReviewImages)
         self.route('GET', (':id', 'metadata'), self.getRegisteredMetadata)
@@ -94,25 +94,47 @@ class DatasetResource(IsicResource):
 
     @describeRoute(
         Description('Create a lesion image dataset.')
-        .param('zipFileId', 'The ID of the .zip file of images.')
-        .param('name', 'Name of the dataset.')
-        .param('owner', 'Owner of the dataset.')
-        .param('description', 'Description of the dataset.', required=False, paramType='form')
-        .param('license', 'License of the dataset.', required=False, paramType='form')
-        .param('signature', 'Signature of license agreement.', required=True, paramType='form')
-        .param('anonymous', 'Whether to use an anonymous attribution for the dataset',
-               dataType='boolean', required=False, paramType='form')
-        .param('attribution', 'Attribution of the dataset.', required=False, paramType='form')
+        .param('name', 'Name of the dataset.', paramType='form')
+        .param('description', 'Description of the dataset.', paramType='form')
+        .param('license', 'License of the dataset.', paramType='form')
+        .param('attribution', 'Attribution of the dataset.', paramType='form')
+        .param('owner', 'Owner of the dataset.', paramType='form')
     )
     @access.user
-    def ingestDataset(self, params):
+    def createDataset(self, params):
         params = self._decodeParams(params)
-        self.requireParams(['zipFileId', 'name', 'owner'], params)
+        self.requireParams(['name', 'description', 'license', 'attribution', 'owner'], params)
 
         user = self.getCurrentUser()
         User().requireCreateDataset(user)
 
-        zipFileId = params.get('zipFileId')
+        dataset = Dataset().createDataset(
+            name=params['name'],
+            description=params['description'],
+            license=params['license'],
+            attribution=params['attribution'],
+            owner=params['owner'],
+            creatorUser=user
+        )
+
+        return Dataset().filter(dataset, user)
+
+    @describeRoute(
+        Description('Upload a batch of ZIP images to a dataset.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('zipFileId', 'The ID of the .zip file of images.', paramType='form')
+        .param('signature', 'Signature of license agreement.', paramType='form')
+    )
+    @access.user
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
+    def addZipBatch(self, dataset, params):
+        params = self._decodeParams(params)
+        self.requireParams(['zipFileId', 'signature'], params)
+
+        user = self.getCurrentUser()
+        User().requireCreateDataset(user)
+
+        zipFileId = params['zipFileId']
         if not zipFileId:
             raise ValidationException('No file was uploaded.', 'zipFileId')
         zipFile = File().load(zipFileId, user=user, level=AccessType.WRITE, exc=False)
@@ -121,30 +143,13 @@ class DatasetResource(IsicResource):
         if not self._checkFileFormat(zipFile, ZIP_FORMATS):
             raise ValidationException('File must be in .zip format.', 'zipFileId')
 
-        name = params['name'].strip()
-        owner = params['owner'].strip()
-        if not owner:
-            raise ValidationException('Owner must be specified.', 'owner')
-        description = params.get('description', '').strip()
-
-        # Enforce valid licensing metadata only at API level
-        licenseValue = params.get('license', '').strip()
-        if licenseValue not in {'CC-0', 'CC-BY', 'CC-BY-NC'}:
-            raise ValidationException('Unknown license type.', 'license')
-        signature = params.get('signature', '').strip()
+        signature = params['signature'].strip()
         if not signature:
-            raise ValidationException('Signature must be specified.', 'signature')
-        anonymous = self.boolParam('anonymous', params, False)
-        attribution = params.get('attribution', '').strip()
-        if not anonymous and not attribution:
-            raise ValidationException(
-                'Attribution must be specified when not contributing anonymously.', 'attribution')
+            raise ValidationException('Signature must be specified.', 'owner')
 
-        # TODO: make this return only the dataset fields
-        return Dataset().ingestDataset(
-            zipFile=zipFile, user=user, name=name, owner=owner,
-            description=description, license=licenseValue, signature=signature,
-            anonymous=anonymous, attribution=attribution, sendMail=True)
+        # TODO: make this return something
+        Dataset().addZipBatch(
+            dataset=dataset, zipFile=zipFile, signature=signature, user=user, sendMail=True)
 
     @describeRoute(
         Description('Get a list of images in this dataset to QC Review.')
@@ -153,16 +158,14 @@ class DatasetResource(IsicResource):
         .errorResponse('ID was invalid.')
     )
     @access.user
-    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
     def getReviewImages(self, dataset, params):
         user = self.getCurrentUser()
         User().requireReviewDataset(user)
 
         prereviewFolder = Dataset().prereviewFolder(dataset)
-        if not (prereviewFolder and
-                Folder().hasAccess(prereviewFolder, user=user, level=AccessType.READ)):
-            raise AccessException(
-                'User does not have access to any Pre-review images for this dataset.')
+        if not prereviewFolder:
+            raise AccessException('There are no pending Pre-review images for this dataset.')
 
         limit = int(params.get('limit', 50))
 
@@ -189,7 +192,7 @@ class DatasetResource(IsicResource):
         .errorResponse('ID was invalid.')
     )
     @access.user
-    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
     def submitReviewImages(self, dataset, params):
         user = self.getCurrentUser()
         User().requireReviewDataset(user)
@@ -217,13 +220,13 @@ class DatasetResource(IsicResource):
         .param('id', 'The ID of the dataset.', paramType='path')
     )
     @access.user
-    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
     def getRegisteredMetadata(self, dataset, params):
         user = self.getCurrentUser()
         User().requireReviewDataset(user)
 
         output = []
-        for registration in dataset['meta']['metadataFiles']:
+        for registration in dataset['metadataFiles']:
             # TODO: "File().load" can use the "fields" argument and be expressed
             # as a comprehension, once the fix from upstream Girder is available
             metadataFile = File().load(registration['fileId'], force=True, exc=True)
@@ -245,7 +248,7 @@ class DatasetResource(IsicResource):
         .param('metadataFileId', 'The ID of the .csv metadata file.')
     )
     @access.user
-    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
     def registerMetadata(self, dataset, params):
         params = self._decodeParams(params)
         self.requireParams(['metadataFileId'], params)
@@ -254,7 +257,7 @@ class DatasetResource(IsicResource):
         User().requireCreateDataset(user)
 
         metadataFile = File().load(
-            params['metadataFileId'], user=user, level=AccessType.READ, exc=False)
+            params['metadataFileId'], user=user, level=AccessType.WRITE, exc=False)
         if not metadataFile:
             raise ValidationException('Invalid metadata file ID.', 'metadataFileId')
         if not self._checkFileFormat(metadataFile, CSV_FORMATS):
@@ -289,7 +292,7 @@ class DatasetResource(IsicResource):
     )
     @access.user
     @loadmodel(model='file', map={'fileId': 'metadataFile'}, force=True)
-    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
     def applyMetadata(self, dataset, metadataFile, params):
         params = self._decodeParams(params)
         self.requireParams('save', params)

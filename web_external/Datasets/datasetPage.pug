@@ -28,14 +28,11 @@
     tr
       td.isic-listing-item-table-label Attribution
       td= dataset.get('attribution')
-    if dataset.canAdmin()
+    if dataset.canWrite()
       tr
         td.isic-listing-item-table-label Owner
         td= dataset.get('owner')
-      tr
-        td.isic-listing-item-table-label Signature
-        td= dataset.get('signature')
-  if dataset.canAdmin()
+  if dataset.canWrite()
     table.table.table-condensed.isic-listing-item-table
       tr
         td.isic-listing-item-table-section-header Actions
