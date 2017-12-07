@@ -5,6 +5,8 @@
     .isic-form-group
       h3 Select dataset
       #isic-upload-batch-select-dataset-container.form-group
+      if canCreateDataset
+        .form-group Or #[a(href='#dataset/create') create a new dataset]
     .isic-form-group
       #isic-upload-batch-dataset-info-widget-container
     .isic-form-group

@@ -7,6 +7,7 @@ import {AccessType} from 'girder/constants';
 
 import {SelectableDatasetCollection} from '../collections/DatasetCollection';
 import TermsOfUseWidget from '../common/TermsOfUse/TermsOfUseWidget';
+import DatasetModel from '../models/DatasetModel';
 import View from '../view';
 import {showAlertDialog} from '../common/utilities';
 import router from '../router';
@@ -98,6 +99,7 @@ const UploadBatchView = View.extend({
 
     render: function () {
         this.$el.html(UploadBatchTemplate({
+            canCreateDataset: DatasetModel.canCreate()
         }));
 
         this.$('#isic-upload-batch-submit').girderEnable(false);
