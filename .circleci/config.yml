@@ -3,12 +3,12 @@ jobs:
   build:
     docker:
       - image: circleci/python:2.7
-      - image: mongo:3.4
+      - image: mongo:3.6
 
     working_directory: /home/circleci/project # as $CIRCLE_WORKING_DIRECTORY
 
     environment:
-      - GIRDER_VERSION: b70a8cadf4d61673eb5040e1e0687a7a53fa6611
+      - GIRDER_VERSION: a33eba3db6ef21cc501b9870f76103ab9692d111
       - WORKER_VERSION: 042a69d6ae7d472e32242d98f8b7acb3148980f9
       - LARGE_IMAGE_VERSION: 4dc82976d58b2a6e6542863e2e410628649a040c
 
@@ -66,8 +66,10 @@ jobs:
       - run:
           name: Install Girder
           command: |
-            pip install -e girder
-            pip install -r girder/requirements-dev.txt
+            pip install -e .
+            pip install -r ./requirements-dev.txt
+          # pytest_girder requires that install be run from this directory
+          working_directory: girder
       - run:
           name: Install girder_worker
           command: pip install -e girder_worker
