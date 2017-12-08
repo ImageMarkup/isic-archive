@@ -51,6 +51,8 @@ class DatasetResource(IsicResource):
 
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getDataset)
+        self.route('GET', (':id', 'access'), self.getDatasetAccess)
+        self.route('PUT', (':id', 'access'), self.setDatasetAccess)
         self.route('POST', (), self.createDataset)
         self.route('POST', (':id', 'zip'), self.addZipBatch)
         self.route('GET', (':id', 'review'), self.getReviewImages)
@@ -91,6 +93,37 @@ class DatasetResource(IsicResource):
     def getDataset(self, dataset, params):
         user = self.getCurrentUser()
         return Dataset().filter(dataset, user)
+
+    @describeRoute(
+        Description('Get the access control list for a dataset.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .errorResponse('ID was invalid.')
+    )
+    @access.user
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.ADMIN)
+    def getDatasetAccess(self, dataset, params):
+        return {
+            'access': Dataset().getFullAccessList(dataset),
+            'public': dataset['public']
+        }
+
+    @describeRoute(
+        Description('Set the access control list for a dataset.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('access', 'The JSON-encoded access control list.', paramType='form')
+        .param('public', 'Whether the dataset should be publicly visible.', paramType='form')
+        .errorResponse('ID was invalid.')
+    )
+    @access.user
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.ADMIN)
+    def setDatasetAccess(self, dataset, params):
+        params = self._decodeParams(params)
+        self.requireParams(['access', 'public'], params)
+        access = params['access']
+        public = self.boolParam('public', params)
+
+        Dataset().setAccessList(dataset, access)
+        Dataset().setPublic(dataset, public)
 
     @describeRoute(
         Description('Create a lesion image dataset.')

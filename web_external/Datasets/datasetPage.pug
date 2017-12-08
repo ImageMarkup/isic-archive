@@ -44,3 +44,7 @@
           button.isic-dataset-apply-metadata-button.btn.btn-default.btn-md
             i.icon-tags
             |  Apply metadata
+          if dataset.canAdmin()
+            button.isic-dataset-access-button.btn.btn-default.btn-md
+              i.icon-lock
+              |  Set access

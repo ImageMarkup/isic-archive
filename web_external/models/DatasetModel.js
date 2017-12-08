@@ -4,10 +4,10 @@ import {getCurrentUser} from 'girder/auth';
 import {AccessType} from 'girder/constants';
 import {restRequest} from 'girder/rest';
 
-import Model from './Model';
+import {AccessControlledModel} from './Model';
 import UserModel from './UserModel';
 
-const DatasetModel = Model.extend({
+const DatasetModel = AccessControlledModel.extend({
     resourceName: 'dataset',
 
     creator: function () {
