@@ -8,7 +8,7 @@
 
 - name: Add PPA
   apt_repository:
-    repo: "deb https://repo.mongodb.org/apt/ubuntu {{ ansible_distribution_release }}/mongodb-org/3.4 multiverse"
+    repo: "deb https://repo.mongodb.org/apt/ubuntu {{ ansible_distribution_release }}/mongodb-org/3.6 multiverse"
   become: yes
 
 - name: Install package

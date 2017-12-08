@@ -3,7 +3,7 @@ jobs:
   build:
     docker:
       - image: circleci/python:2.7
-      - image: mongo:3.4
+      - image: mongo:3.6
 
     working_directory: /home/circleci/project # as $CIRCLE_WORKING_DIRECTORY
 
