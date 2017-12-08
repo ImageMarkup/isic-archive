@@ -1,4 +1,5 @@
 import LoadingAnimation from 'girder/views/widgets/LoadingAnimation';
+import AccessWidget from 'girder/views/widgets/AccessWidget';
 
 import View from '../view';
 import router from '../router';
@@ -18,7 +19,19 @@ const DatasetView = View.extend({
             router.navigate(
                 `dataset/${this.model.id}/metadata/apply`,
                 {trigger: true});
+        },
+        'click .isic-dataset-access-button': function () {
+            this.accessWidget = new AccessWidget({
+                el: $('#g-dialog-container'),
+                model: this.model,
+                modelType: 'Dataset',
+                hideRecurseOption: true,
+                noAccessFlag: true,
+                modal: true,
+                parentView: this
+            });
         }
+
     },
 
     /**
