@@ -39,12 +39,12 @@ class AnnotationResource(IsicResource):
         self.resourceName = 'annotation'
 
         self.route('GET', (), self.find)
-        self.route('GET', (':id',), self.getAnnotation)
+        self.route('GET', (':annotationId',), self.getAnnotation)
         self.route('GET', (':annotationId', ':featureId'), self.getAnnotationFeature)
         self.route('GET', (':annotationId', ':featureId', 'mask'), self.getAnnotationFeatureMask)
         self.route('GET', (':annotationId', ':featureId', 'render'),
                    self.getAnnotationFeatureRendered)
-        self.route('PUT', (':id',), self.submitAnnotation)
+        self.route('PUT', (':annotationId',), self.submitAnnotation)
 
     @describeRoute(
         Description('Return a list of annotations.')
@@ -93,12 +93,13 @@ class AnnotationResource(IsicResource):
 
     @describeRoute(
         Description('Get annotation details.')
-        .param('id', 'The ID of the annotation to be fetched.', paramType='path')
+        .param('annotationId', 'The ID of the annotation to be fetched.', paramType='path')
         .errorResponse()
     )
     @access.cookie
     @access.public
-    @loadmodel(model='annotation', plugin='isic_archive', level=AccessType.READ)
+    @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
+               level=AccessType.READ)
     def getAnnotation(self, annotation, params):
         user = self.getCurrentUser()
         return Annotation().filter(annotation, user)
@@ -218,13 +219,14 @@ class AnnotationResource(IsicResource):
 
     @describeRoute(
         Description('Submit a completed annotation.')
-        .param('id', 'The ID of the annotation to be submitted.', paramType='path')
+        .param('annotationId', 'The ID of the annotation to be submitted.', paramType='path')
         .param('body', 'JSON containing the annotation parameters.',
                paramType='body', required=True)
         .errorResponse()
     )
     @access.user
-    @loadmodel(model='annotation', plugin='isic_archive', level=AccessType.READ)
+    @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
+               level=AccessType.READ)
     def submitAnnotation(self, annotation, params):
         if annotation['baseParentId'] != Study().loadStudyCollection()['_id']:
             raise RestException('Annotation id references a non-annotation item.')
