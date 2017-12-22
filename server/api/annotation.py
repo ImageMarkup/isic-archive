@@ -40,6 +40,7 @@ class AnnotationResource(IsicResource):
 
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getAnnotation)
+        self.route('GET', (':annotationId', ':featureId'), self.getAnnotationFeature)
         self.route('GET', (':id', 'render'), self.renderAnnotation)
         self.route('PUT', (':id',), self.submitAnnotation)
 
@@ -99,6 +100,28 @@ class AnnotationResource(IsicResource):
     def getAnnotation(self, annotation, params):
         user = self.getCurrentUser()
         return Annotation().filter(annotation, user)
+
+    @describeRoute(
+        Description('Return an annotation feature as a raw superpixel array.')
+        .param('annotationId', 'The ID of the annotation.', paramType='path')
+        .param('featureId', 'The feature ID within the annotation.', paramType='path')
+        .errorResponse()
+    )
+    @access.cookie
+    @access.public
+    @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
+               level=AccessType.READ)
+    def getAnnotationFeature(self, annotation, featureId, params):
+        study = Study().load(annotation['meta']['studyId'], force=True, exc=True)
+        featureset = Study().getFeatureset(study)
+
+        if not any(featureId == feature['id'] for feature in featureset['localFeatures']):
+            raise ValidationException('Invalid featureId.', 'featureId')
+        if Annotation().getState(annotation) != Study().State.COMPLETE:
+            raise RestException('Only complete annotations have superpixel data.')
+
+        featureValues = annotation['meta']['annotations'].get(featureId, [])
+        return featureValues
 
     @describeRoute(
         Description('Render an annotation feature, overlaid on its image.')
