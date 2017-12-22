@@ -48,6 +48,8 @@ class AnnotationResource(IsicResource):
         .param('studyId', 'The ID of the study to filter by.', paramType='query', required=True)
         .param('userId', 'The ID of the user to filter by.', paramType='query', required=False)
         .param('imageId', 'The ID of the image to filter by.', paramType='query', required=False)
+        .param('state', 'Filter annotations to those at a given state', paramType='query',
+               required=False, enum=('active', 'complete'))
         .errorResponse()
     )
     @access.cookie
@@ -68,7 +70,11 @@ class AnnotationResource(IsicResource):
             params['imageId'], force=True, exc=True) \
             if 'imageId' in params else None
 
-        # TODO: add state
+        state = None
+        if 'state' in params:
+            state = params['state']
+            if state not in {Study().State.ACTIVE, Study().State.COMPLETE}:
+                raise ValidationException('Value may only be "active" or "complete".', 'state')
 
         # TODO: add limit, offset, sort
         return [
@@ -77,7 +83,8 @@ class AnnotationResource(IsicResource):
             Study().childAnnotations(
                 study=study,
                 annotatorUser=annotatorUser,
-                image=image
+                image=image,
+                state=state
             )
         ]
 

@@ -79,7 +79,7 @@ class StudyResource(IsicResource):
                 annotatorUser = User().load(params['userId'], force=True, exc=True)
 
         state = None
-        if params.get('state'):
+        if 'state' in params:
             state = params['state']
             if state not in {Study().State.ACTIVE, Study().State.COMPLETE}:
                 raise ValidationException('Value may only be "active" or "complete".', 'state')
