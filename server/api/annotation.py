@@ -71,24 +71,14 @@ class AnnotationResource(IsicResource):
         # TODO: add state
 
         # TODO: add limit, offset, sort
-
-        # TODO: limit fields returned
-        annotations = Study().childAnnotations(
-            study=study,
-            annotatorUser=annotatorUser,
-            image=image
-        )
-
         return [
-            {
-                '_id': annotation['_id'],
-                'name': annotation['name'],
-                'studyId': annotation['meta']['studyId'],
-                'userId': annotation['meta']['userId'],
-                'imageId': annotation['meta']['imageId'],
-                'state': Annotation().getState(annotation)
-            }
-            for annotation in annotations
+            Annotation().filterSummary(annotation)
+            for annotation in
+            Study().childAnnotations(
+                study=study,
+                annotatorUser=annotatorUser,
+                image=image
+            )
         ]
 
     @describeRoute(
@@ -100,29 +90,8 @@ class AnnotationResource(IsicResource):
     @access.public
     @loadmodel(model='annotation', plugin='isic_archive', level=AccessType.READ)
     def getAnnotation(self, annotation, params):
-        currentUser = self.getCurrentUser()
-
-        output = {
-            '_id': annotation['_id'],
-            '_modelType': 'annotation',
-            'studyId': annotation['meta']['studyId'],
-            'image': Image().filterSummary(
-                Image().load(annotation['meta']['imageId'], force=True, exc=True),
-                currentUser),
-            'user': User().filterSummary(
-                user=User().load(annotation['meta']['userId'], force=True, exc=True),
-                accessorUser=currentUser),
-            'state': Annotation().getState(annotation)
-        }
-        if Annotation().getState(annotation) == Study().State.COMPLETE:
-            output.update({
-                'annotations': annotation['meta']['annotations'],
-                'status': annotation['meta']['status'],
-                'startTime': annotation['meta']['startTime'],
-                'stopTime': annotation['meta']['startTime'],
-            })
-
-        return output
+        user = self.getCurrentUser()
+        return Annotation().filter(annotation, user)
 
     @describeRoute(
         Description('Render an annotation feature, overlaid on its image.')
