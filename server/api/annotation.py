@@ -42,7 +42,8 @@ class AnnotationResource(IsicResource):
         self.route('GET', (':id',), self.getAnnotation)
         self.route('GET', (':annotationId', ':featureId'), self.getAnnotationFeature)
         self.route('GET', (':annotationId', ':featureId', 'mask'), self.getAnnotationFeatureMask)
-        self.route('GET', (':id', 'render'), self.renderAnnotation)
+        self.route('GET', (':annotationId', ':featureId', 'render'),
+                   self.getAnnotationFeatureRendered)
         self.route('PUT', (':id',), self.submitAnnotation)
 
     @describeRoute(
@@ -165,8 +166,8 @@ class AnnotationResource(IsicResource):
 
     @describeRoute(
         Description('Render an annotation feature, overlaid on its image.')
-        .param('id', 'The ID of the annotation to be rendered.', paramType='path')
-        .param('featureId', 'The feature ID to be rendered.', paramType='query', required=True)
+        .param('annotationId', 'The ID of the annotation to be rendered.', paramType='path')
+        .param('featureId', 'The feature ID to be rendered.', paramType='path')
         .param('contentDisposition',
                'Specify the Content-Disposition response header disposition-type value.',
                required=False, enum=['inline', 'attachment'])
@@ -175,15 +176,13 @@ class AnnotationResource(IsicResource):
     )
     @access.cookie
     @access.public
-    @loadmodel(model='annotation', plugin='isic_archive', level=AccessType.READ)
-    def renderAnnotation(self, annotation, params):
+    @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
+               level=AccessType.READ)
+    def getAnnotationFeatureRendered(self, annotation, featureId, params):
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
             raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
                                       'contentDisposition')
-
-        self.requireParams(['featureId'], params)
-        featureId = params['featureId']
 
         study = Study().load(annotation['meta']['studyId'], force=True, exc=True)
         featureset = Study().getFeatureset(study)
