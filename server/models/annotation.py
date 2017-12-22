@@ -143,7 +143,14 @@ class Annotation(Item):
         }
         if Annotation().getState(annotation) == Study().State.COMPLETE:
             output.update({
-                'annotations': annotation['meta']['annotations'],
+                'annotations': {
+                    featureId:
+                        featureValue
+                        if not isinstance(featureValue, list) else
+                        any(featureValue)
+                    for featureId, featureValue in
+                    six.viewitems(annotation['meta']['annotations'])
+                },
                 'status': annotation['meta']['status'],
                 'startTime': annotation['meta']['startTime'],
                 'stopTime': annotation['meta']['startTime'],
