@@ -98,6 +98,15 @@ class Annotation(Item):
 
         return possibleMask, definiteMask
 
+    def renderMask(self, annotation, featureId):
+        possibleMask, definiteMask = self._getImageMasks(annotation, featureId)
+
+        renderedMask = numpy.zeros(possibleMask.shape, dtype=numpy.uint)
+        renderedMask[possibleMask] = 128
+        renderedMask[definiteMask] = 255
+
+        return renderedMask
+
     def renderAnnotation(self, annotation, featureId):
         image = Image().load(annotation['meta']['imageId'], force=True, exc=True)
         renderData = Image().imageData(image)

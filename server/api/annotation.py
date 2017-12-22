@@ -41,6 +41,7 @@ class AnnotationResource(IsicResource):
         self.route('GET', (), self.find)
         self.route('GET', (':id',), self.getAnnotation)
         self.route('GET', (':annotationId', ':featureId'), self.getAnnotationFeature)
+        self.route('GET', (':annotationId', ':featureId', 'mask'), self.getAnnotationFeatureMask)
         self.route('GET', (':id', 'render'), self.renderAnnotation)
         self.route('PUT', (':id',), self.submitAnnotation)
 
@@ -124,6 +125,45 @@ class AnnotationResource(IsicResource):
         return featureValues
 
     @describeRoute(
+        Description('Return an annotation feature as a mask.')
+        .param('annotationId', 'The ID of the annotation.', paramType='path')
+        .param('featureId', 'The feature ID within the annotation.', paramType='path')
+        .produces('image/png')
+        .errorResponse()
+    )
+    @access.cookie
+    @access.public
+    @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
+               level=AccessType.READ)
+    def getAnnotationFeatureMask(self, annotation, featureId, params):
+        study = Study().load(annotation['meta']['studyId'], force=True, exc=True)
+        featureset = Study().getFeatureset(study)
+
+        if not any(featureId == feature['id'] for feature in featureset['localFeatures']):
+            raise ValidationException('Invalid featureId.', 'featureId')
+        if Annotation().getState(annotation) != Study().State.COMPLETE:
+            raise RestException('Only complete annotations have superpixel data.')
+
+        renderData = Annotation().renderMask(annotation, featureId)
+
+        renderEncodedStream = ScikitSegmentationHelper.writeImage(renderData, 'png')
+        renderEncodedData = renderEncodedStream.getvalue()
+
+        # Only setRawResponse now, as this handler may return a JSON error earlier
+        setRawResponse()
+        setResponseHeader('Content-Type', 'image/png')
+        contentName = '%s_%s_annotation.png' % (
+            annotation['_id'],
+            featureId.replace('/', ',')  # TODO: replace with a better character
+        )
+        setResponseHeader(
+            'Content-Disposition',
+            'inline; filename="%s"' % contentName)
+        setResponseHeader('Content-Length', len(renderEncodedData))
+
+        return renderEncodedData
+
+    @describeRoute(
         Description('Render an annotation feature, overlaid on its image.')
         .param('id', 'The ID of the annotation to be rendered.', paramType='path')
         .param('featureId', 'The feature ID to be rendered.', paramType='query', required=True)
@@ -158,8 +198,7 @@ class AnnotationResource(IsicResource):
         renderEncodedStream = ScikitSegmentationHelper.writeImage(renderData, 'jpeg')
         renderEncodedData = renderEncodedStream.getvalue()
 
-        # Only setRawResponse now, as this handler may return a JSON error
-        # earlier
+        # Only setRawResponse now, as this handler may return a JSON error earlier
         setRawResponse()
         setResponseHeader('Content-Type', 'image/jpeg')
         contentName = '%s_%s_annotation.jpg' % (
