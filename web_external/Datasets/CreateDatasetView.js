@@ -23,19 +23,8 @@ const CreateDatasetView = View.extend({
         'change #isic-create-dataset-owner': function () {
             this.dataset.set('owner', this.$('#isic-create-dataset-owner').val());
         },
-        'change #isic-create-dataset-license': function () {
-            this.dataset.set('license', this.$('#isic-create-dataset-license').val());
-        },
-        'change input[name="attribution"],#isic-create-dataset-attribution-name': function () {
-            let anonymous = this.$('#isic-create-dataset-attribution-anonymous').prop('checked');
-            const attribution = this.$('#isic-create-dataset-attribution-name').val();
-            if (_.contains(['anonymous', 'anon'], attribution.toLowerCase())) {
-                // This could lead to a non-valid UI state, but it will be caught by server-side
-                // validation and it's still easy for the user to resolve
-                anonymous = true;
-            }
-            this.dataset.set('attribution', anonymous ? 'Anonymous' : attribution);
-        },
+        'change #isic-create-dataset-license': this._setLicense,
+        'change input[name="attribution"],#isic-create-dataset-attribution-name': this._setAttribution,
 
         'submit #isic-create-dataset-form': function (event) {
             event.preventDefault();
@@ -50,6 +39,14 @@ const CreateDatasetView = View.extend({
         this.listenTo(this.dataset, 'change:attribution', this._onChangeAttribution);
 
         this.render();
+
+        // Since "this.dataset" is initialized as empty and there's no data binding of initial model
+        // values into the template, some fields with default values (as determined by the template)
+        // will never be set into the model if the user doesn't change them.
+        // TODO: This should be fixed by either having robust two-way data binding, or by reverting
+        // to setting model values just before submission.
+        this._setLicense();
+        this._setAttribution();
     },
 
     render: function () {
@@ -58,6 +55,21 @@ const CreateDatasetView = View.extend({
         this.$('input#isic-create-dataset-name').focus();
 
         return this;
+    },
+
+    _setLicense: function () {
+        this.dataset.set('license', this.$('#isic-create-dataset-license').val());
+    },
+
+    _setAttribution: function () {
+        let anonymous = this.$('#isic-create-dataset-attribution-anonymous').prop('checked');
+        const attribution = this.$('#isic-create-dataset-attribution-name').val();
+        if (_.contains(['anonymous', 'anon'], attribution.toLowerCase())) {
+            // This could lead to a non-valid UI state, but it will be caught by server-side
+            // validation and it's still easy for the user to resolve
+            anonymous = true;
+        }
+        this.dataset.set('attribution', anonymous ? 'Anonymous' : attribution);
     },
 
     _showLicenseInfo: function () {
