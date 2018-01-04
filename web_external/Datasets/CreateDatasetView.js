@@ -23,8 +23,8 @@ const CreateDatasetView = View.extend({
         'change #isic-create-dataset-owner': function () {
             this.dataset.set('owner', this.$('#isic-create-dataset-owner').val());
         },
-        'change #isic-create-dataset-license': this._setLicense,
-        'change input[name="attribution"],#isic-create-dataset-attribution-name': this._setAttribution,
+        'change #isic-create-dataset-license': '_setLicense',
+        'change input[name="attribution"],#isic-create-dataset-attribution-name': '_setAttribution',
 
         'submit #isic-create-dataset-form': function (event) {
             event.preventDefault();
