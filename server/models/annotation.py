@@ -28,6 +28,7 @@ from girder.models.model_base import ValidationException, GirderException
 
 from .image import Image
 from .study import Study
+from .user import User
 
 
 class Annotation(Item):
@@ -97,6 +98,15 @@ class Annotation(Item):
 
         return possibleMask, definiteMask
 
+    def renderMask(self, annotation, featureId):
+        possibleMask, definiteMask = self._getImageMasks(annotation, featureId)
+
+        renderedMask = numpy.zeros(possibleMask.shape, dtype=numpy.uint)
+        renderedMask[possibleMask] = 128
+        renderedMask[definiteMask] = 255
+
+        return renderedMask
+
     def renderAnnotation(self, annotation, featureId):
         image = Image().load(annotation['meta']['imageId'], force=True, exc=True)
         renderData = Image().imageData(image)
@@ -126,6 +136,46 @@ class Annotation(Item):
     def findOne(self, query=None, **kwargs):
         annotationQuery = self._findQueryFilter(query)
         return super(Annotation, self).findOne(annotationQuery, **kwargs)
+
+    def filter(self, annotation, user=None, additionalKeys=None):
+        output = {
+            '_id': annotation['_id'],
+            '_modelType': 'annotation',
+            'studyId': annotation['meta']['studyId'],
+            'image': Image().filterSummary(
+                Image().load(annotation['meta']['imageId'], force=True, exc=True),
+                user),
+            'user': User().filterSummary(
+                user=User().load(annotation['meta']['userId'], force=True, exc=True),
+                accessorUser=user),
+            'state': Annotation().getState(annotation)
+        }
+        if Annotation().getState(annotation) == Study().State.COMPLETE:
+            output.update({
+                'annotations': {
+                    featureId:
+                        featureValue
+                        if not isinstance(featureValue, list) else
+                        any(featureValue)
+                    for featureId, featureValue in
+                    six.viewitems(annotation['meta']['annotations'])
+                },
+                'status': annotation['meta']['status'],
+                'startTime': annotation['meta']['startTime'],
+                'stopTime': annotation['meta']['startTime'],
+            })
+
+        return output
+
+    def filterSummary(self, annotation, user=None):
+        return {
+            '_id': annotation['_id'],
+            'name': annotation['name'],
+            'studyId': annotation['meta']['studyId'],
+            'userId': annotation['meta']['userId'],
+            'imageId': annotation['meta']['imageId'],
+            'state': self.getState(annotation)
+        }
 
     def validate(self, doc):  # noqa - C901
         # If annotation is fully created

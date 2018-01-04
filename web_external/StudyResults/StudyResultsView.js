@@ -420,8 +420,9 @@ const StudyResultsFeatureImageView = View.extend({
             imageUrl = [
                 getApiRoot(),
                 'annotation', annotationId,
-                'render?contentDisposition=inline&featureId='
-            ].join('/') + encodeURIComponent(featureId);
+                encodeURIComponent(featureId),
+                'render'
+            ].join('/') + '?contentDisposition=inline';
         }
 
         this.$el.html(StudyResultsFeatureImagePageTemplate({

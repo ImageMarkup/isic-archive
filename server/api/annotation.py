@@ -39,15 +39,20 @@ class AnnotationResource(IsicResource):
         self.resourceName = 'annotation'
 
         self.route('GET', (), self.find)
-        self.route('GET', (':id',), self.getAnnotation)
-        self.route('GET', (':id', 'render'), self.renderAnnotation)
-        self.route('PUT', (':id',), self.submitAnnotation)
+        self.route('GET', (':annotationId',), self.getAnnotation)
+        self.route('GET', (':annotationId', ':featureId'), self.getAnnotationFeature)
+        self.route('GET', (':annotationId', ':featureId', 'mask'), self.getAnnotationFeatureMask)
+        self.route('GET', (':annotationId', ':featureId', 'render'),
+                   self.getAnnotationFeatureRendered)
+        self.route('PUT', (':annotationId',), self.submitAnnotation)
 
     @describeRoute(
         Description('Return a list of annotations.')
         .param('studyId', 'The ID of the study to filter by.', paramType='query', required=True)
         .param('userId', 'The ID of the user to filter by.', paramType='query', required=False)
         .param('imageId', 'The ID of the image to filter by.', paramType='query', required=False)
+        .param('state', 'Filter annotations to those at a given state.', paramType='query',
+               required=False, enum=('active', 'complete'))
         .errorResponse()
     )
     @access.cookie
@@ -68,66 +73,102 @@ class AnnotationResource(IsicResource):
             params['imageId'], force=True, exc=True) \
             if 'imageId' in params else None
 
-        # TODO: add state
+        state = None
+        if 'state' in params:
+            state = params['state']
+            if state not in {Study().State.ACTIVE, Study().State.COMPLETE}:
+                raise ValidationException('Value may only be "active" or "complete".', 'state')
 
         # TODO: add limit, offset, sort
-
-        # TODO: limit fields returned
-        annotations = Study().childAnnotations(
-            study=study,
-            annotatorUser=annotatorUser,
-            image=image
-        )
-
         return [
-            {
-                '_id': annotation['_id'],
-                'name': annotation['name'],
-                'studyId': annotation['meta']['studyId'],
-                'userId': annotation['meta']['userId'],
-                'imageId': annotation['meta']['imageId'],
-                'state': Annotation().getState(annotation)
-            }
-            for annotation in annotations
+            Annotation().filterSummary(annotation)
+            for annotation in
+            Study().childAnnotations(
+                study=study,
+                annotatorUser=annotatorUser,
+                image=image,
+                state=state
+            )
         ]
 
     @describeRoute(
         Description('Get annotation details.')
-        .param('id', 'The ID of the annotation to be fetched.', paramType='path')
+        .param('annotationId', 'The ID of the annotation to be fetched.', paramType='path')
         .errorResponse()
     )
     @access.cookie
     @access.public
-    @loadmodel(model='annotation', plugin='isic_archive', level=AccessType.READ)
+    @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
+               level=AccessType.READ)
     def getAnnotation(self, annotation, params):
-        currentUser = self.getCurrentUser()
+        user = self.getCurrentUser()
+        return Annotation().filter(annotation, user)
 
-        output = {
-            '_id': annotation['_id'],
-            '_modelType': 'annotation',
-            'studyId': annotation['meta']['studyId'],
-            'image': Image().filterSummary(
-                Image().load(annotation['meta']['imageId'], force=True, exc=True),
-                currentUser),
-            'user': User().filterSummary(
-                user=User().load(annotation['meta']['userId'], force=True, exc=True),
-                accessorUser=currentUser),
-            'state': Annotation().getState(annotation)
-        }
-        if Annotation().getState(annotation) == Study().State.COMPLETE:
-            output.update({
-                'annotations': annotation['meta']['annotations'],
-                'status': annotation['meta']['status'],
-                'startTime': annotation['meta']['startTime'],
-                'stopTime': annotation['meta']['startTime'],
-            })
+    @describeRoute(
+        Description('Return an annotation feature as a raw superpixel array.')
+        .param('annotationId', 'The ID of the annotation.', paramType='path')
+        .param('featureId', 'The feature ID within the annotation.', paramType='path')
+        .errorResponse()
+    )
+    @access.cookie
+    @access.public
+    @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
+               level=AccessType.READ)
+    def getAnnotationFeature(self, annotation, featureId, params):
+        study = Study().load(annotation['meta']['studyId'], force=True, exc=True)
+        featureset = Study().getFeatureset(study)
 
-        return output
+        if not any(featureId == feature['id'] for feature in featureset['localFeatures']):
+            raise ValidationException('Invalid featureId.', 'featureId')
+        if Annotation().getState(annotation) != Study().State.COMPLETE:
+            raise RestException('Only complete annotations have superpixel data.')
+
+        featureValues = annotation['meta']['annotations'].get(featureId, [])
+        return featureValues
+
+    @describeRoute(
+        Description('Return an annotation feature as a mask.')
+        .param('annotationId', 'The ID of the annotation.', paramType='path')
+        .param('featureId', 'The feature ID within the annotation.', paramType='path')
+        .produces('image/png')
+        .errorResponse()
+    )
+    @access.cookie
+    @access.public
+    @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
+               level=AccessType.READ)
+    def getAnnotationFeatureMask(self, annotation, featureId, params):
+        study = Study().load(annotation['meta']['studyId'], force=True, exc=True)
+        featureset = Study().getFeatureset(study)
+
+        if not any(featureId == feature['id'] for feature in featureset['localFeatures']):
+            raise ValidationException('Invalid featureId.', 'featureId')
+        if Annotation().getState(annotation) != Study().State.COMPLETE:
+            raise RestException('Only complete annotations have superpixel data.')
+
+        renderData = Annotation().renderMask(annotation, featureId)
+
+        renderEncodedStream = ScikitSegmentationHelper.writeImage(renderData, 'png')
+        renderEncodedData = renderEncodedStream.getvalue()
+
+        # Only setRawResponse now, as this handler may return a JSON error earlier
+        setRawResponse()
+        setResponseHeader('Content-Type', 'image/png')
+        contentName = '%s_%s_annotation.png' % (
+            annotation['_id'],
+            featureId.replace('/', ',')  # TODO: replace with a better character
+        )
+        setResponseHeader(
+            'Content-Disposition',
+            'inline; filename="%s"' % contentName)
+        setResponseHeader('Content-Length', len(renderEncodedData))
+
+        return renderEncodedData
 
     @describeRoute(
         Description('Render an annotation feature, overlaid on its image.')
-        .param('id', 'The ID of the annotation to be rendered.', paramType='path')
-        .param('featureId', 'The feature ID to be rendered.', paramType='query', required=True)
+        .param('annotationId', 'The ID of the annotation to be rendered.', paramType='path')
+        .param('featureId', 'The feature ID to be rendered.', paramType='path')
         .param('contentDisposition',
                'Specify the Content-Disposition response header disposition-type value.',
                required=False, enum=['inline', 'attachment'])
@@ -136,15 +177,13 @@ class AnnotationResource(IsicResource):
     )
     @access.cookie
     @access.public
-    @loadmodel(model='annotation', plugin='isic_archive', level=AccessType.READ)
-    def renderAnnotation(self, annotation, params):
+    @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
+               level=AccessType.READ)
+    def getAnnotationFeatureRendered(self, annotation, featureId, params):
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
             raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
                                       'contentDisposition')
-
-        self.requireParams(['featureId'], params)
-        featureId = params['featureId']
 
         study = Study().load(annotation['meta']['studyId'], force=True, exc=True)
         featureset = Study().getFeatureset(study)
@@ -159,8 +198,7 @@ class AnnotationResource(IsicResource):
         renderEncodedStream = ScikitSegmentationHelper.writeImage(renderData, 'jpeg')
         renderEncodedData = renderEncodedStream.getvalue()
 
-        # Only setRawResponse now, as this handler may return a JSON error
-        # earlier
+        # Only setRawResponse now, as this handler may return a JSON error earlier
         setRawResponse()
         setResponseHeader('Content-Type', 'image/jpeg')
         contentName = '%s_%s_annotation.jpg' % (
@@ -181,13 +219,14 @@ class AnnotationResource(IsicResource):
 
     @describeRoute(
         Description('Submit a completed annotation.')
-        .param('id', 'The ID of the annotation to be submitted.', paramType='path')
+        .param('annotationId', 'The ID of the annotation to be submitted.', paramType='path')
         .param('body', 'JSON containing the annotation parameters.',
                paramType='body', required=True)
         .errorResponse()
     )
     @access.user
-    @loadmodel(model='annotation', plugin='isic_archive', level=AccessType.READ)
+    @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
+               level=AccessType.READ)
     def submitAnnotation(self, annotation, params):
         if annotation['baseParentId'] != Study().loadStudyCollection()['_id']:
             raise RestException('Annotation id references a non-annotation item.')
