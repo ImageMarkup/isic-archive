@@ -51,7 +51,7 @@ class AnnotationResource(IsicResource):
         .param('studyId', 'The ID of the study to filter by.', paramType='query', required=True)
         .param('userId', 'The ID of the user to filter by.', paramType='query', required=False)
         .param('imageId', 'The ID of the image to filter by.', paramType='query', required=False)
-        .param('state', 'Filter annotations to those at a given state', paramType='query',
+        .param('state', 'Filter annotations to those at a given state.', paramType='query',
                required=False, enum=('active', 'complete'))
         .errorResponse()
     )
