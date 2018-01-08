@@ -17,6 +17,7 @@
 #  limitations under the License.
 ###############################################################################
 
+import cherrypy
 import mimetypes
 
 from girder.api import access
@@ -25,6 +26,7 @@ from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 from girder.models.file import File
 from girder.models.model_base import AccessException, ValidationException
+from girder.utility import RequestBodyStream
 
 from .base import IsicResource
 from ..models.dataset import Dataset
@@ -54,6 +56,7 @@ class DatasetResource(IsicResource):
         self.route('GET', (':id', 'access'), self.getDatasetAccess)
         self.route('PUT', (':id', 'access'), self.setDatasetAccess)
         self.route('POST', (), self.createDataset)
+        self.route('POST', (':id', 'image'), self.addImage)
         self.route('POST', (':id', 'zip'), self.addZipBatch)
         self.route('GET', (':id', 'review'), self.getReviewImages)
         self.route('POST', (':id', 'review'), self.submitReviewImages)
@@ -151,6 +154,42 @@ class DatasetResource(IsicResource):
         )
 
         return Dataset().filter(dataset, user)
+
+    @describeRoute(
+        Description('Upload an image to a dataset.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('filename', 'Image filename.', paramType='form')
+        .param('signature', 'Signature of license agreement.', paramType='form')
+    )
+    @access.user
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
+    def addImage(self, dataset, params):
+        params = self._decodeParams(params)
+        self.requireParams(['filename', 'signature'], params)
+
+        user = self.getCurrentUser()
+        User().requireCreateDataset(user)
+
+        filename = params['filename']
+        if not filename:
+            raise ValidationException('Filename must be specified.', 'filename')
+
+        signature = params['signature'].strip()
+        if not signature:
+            raise ValidationException('Signature must be specified.', 'signature')
+
+        imageDataStream = RequestBodyStream(cherrypy.request.body)
+        imageDataSize = len(imageDataStream)
+
+        # TODO: make this return something
+        Dataset().addImage(
+            dataset=dataset,
+            imageDataStream=imageDataStream,
+            imageDataSize=imageDataSize,
+            filename=filename,
+            signature=signature,
+            user=user,
+            sendMail=True)
 
     @describeRoute(
         Description('Upload a batch of ZIP images to a dataset.')
