@@ -1700,11 +1700,11 @@ class ImageMetadataTestCase(base.TestCase):
         errors, warnings = addImageMetadata(image, data)
         self.assertEquals(5, len(errors))
         self.assertIn(
-            "value already exists for field 'sex' (old: 'male', new: 'female')",
+            "value already exists for field 'sex' (old: 'male', new: u'female')",
             errors)
         self.assertIn(
             "value is wrong type for field 'clin_size_long_diam_mm' "
-            "(expected 'float with units (um, mm, or cm)', value: '3.0+')",
+            "(expected 'float with units (um, mm, or cm)', value: u'3.0+')",
             errors)
         self.assertIn(
             "value already exists for field 'melanocytic' (old: False, new: None)",
@@ -1714,7 +1714,7 @@ class ImageMetadataTestCase(base.TestCase):
             "found: ['ben_mal', 'benign_malignant']",
             errors)
         self.assertIn(
-            "values ['melanoma', False] for fields ['diagnosis', 'melanocytic'] are inconsistent",
+            "values [u'melanoma', False] for fields ['diagnosis', 'melanocytic'] are inconsistent",
             errors)
         self.assertEquals([], warnings)
 
