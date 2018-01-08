@@ -27,7 +27,7 @@ import six
 
 from girder.api import access
 from girder.api.rest import RestException, loadmodel, setRawResponse, setResponseHeader
-from girder.api.describe import Description, describeRoute
+from girder.api.describe import Description, autoDescribeRoute, describeRoute
 from girder.constants import AccessType
 from girder.models.file import File
 from girder.models.model_base import GirderException, ValidationException
@@ -39,6 +39,7 @@ from girder.plugins.large_image.models.image_item import ImageItem
 from .base import IsicResource
 from ..models.dataset import Dataset
 from ..models.image import Image
+from ..models.user import User
 from ..models.segmentation import Segmentation
 from ..utility import querylang
 
@@ -59,6 +60,7 @@ class ImageResource(IsicResource):
         self.route('GET', (':id', 'superpixels'), self.getSuperpixels)
 
         self.route('POST', (':id', 'segment'), self.doSegmentation)
+        self.route('POST', (':id', 'metadata'), self.applyMetadata)
 
     def _parseFilter(self, filterParam):
         if isinstance(filterParam, six.string_types):
@@ -372,3 +374,28 @@ class ImageResource(IsicResource):
         )
 
         return contourFeature
+
+    @autoDescribeRoute(
+        Description('Apply metadata to an image.')
+        .modelParam('id', model=Image, destName='image', level=AccessType.READ)
+        .jsonParam('metadata', 'The JSON object containing image metadata.', paramType='body',
+                   requireObject=True)
+        .param('save', 'Whether to save the metadata to the image if validation succeeds.',
+               dataType='boolean', default=False)
+        .errorResponse(('ID was invalid.',
+                        'Invalid JSON passed in request body.'))
+    )
+    @access.user
+    def applyMetadata(self, image, metadata, save):
+        user = self.getCurrentUser()
+        User().requireCreateDataset(user)
+
+        # Require write access to image's dataset
+        Dataset().load(image['meta']['datasetId'], user=user, level=AccessType.WRITE, exc=True)
+
+        errors, warnings = Image().applyMetadata(image, metadata, save)
+
+        return {
+            'errors': [{'description': description} for description in errors],
+            'warnings': [{'description': description} for description in warnings]
+        }
