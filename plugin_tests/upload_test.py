@@ -58,6 +58,46 @@ class UploadTestCase(IsicTestCase):
         self.testDataDir = os.path.join(
             os.environ['GIRDER_TEST_DATA_PREFIX'], 'plugins', 'isic_archive')
 
+    def _createReviewerUser(self):
+        """Create a reviewer user that will receive notification emails."""
+        Group = self.model('group')
+        User = self.model('user', 'isic_archive')
+
+        resp = self.request(path='/user', method='POST', params={
+            'email': 'reviewer-user@isic-archive.com',
+            'login': 'reviewer-user',
+            'firstName': 'reviewer',
+            'lastName': 'user',
+            'password': 'password'
+        })
+        self.assertStatusOk(resp)
+
+        reviewerUser = User.findOne({'login': 'reviewer-user'})
+        reviewersGroup = Group.findOne({'name': 'Dataset QC Reviewers'})
+        Group.addUser(reviewersGroup, reviewerUser, level=AccessType.READ)
+
+        return reviewerUser
+
+    def _createUploaderUser(self):
+        """Create an uploader user."""
+        Group = self.model('group')
+        User = self.model('user', 'isic_archive')
+
+        resp = self.request(path='/user', method='POST', params={
+            'email': 'uploader-user@isic-archive.com',
+            'login': 'uploader-user',
+            'firstName': 'uploader',
+            'lastName': 'user',
+            'password': 'password'
+        })
+        self.assertStatusOk(resp)
+
+        uploaderUser = User.findOne({'login': 'uploader-user'})
+        contributorsGroup = Group.findOne({'name': 'Dataset Contributors'})
+        Group.addUser(contributorsGroup, uploaderUser, level=AccessType.READ)
+
+        return uploaderUser
+
     def _uploadDataset(self, uploaderUser, zipName, zipContentNames,
                        datasetName, datasetDescription):
         Dataset = self.model('dataset', 'isic_archive')
@@ -128,35 +168,12 @@ class UploadTestCase(IsicTestCase):
     def testUploadDataset(self):
         File = self.model('file')
         Folder = self.model('folder')
-        Group = self.model('group')
         Upload = self.model('upload')
         User = self.model('user', 'isic_archive')
 
-        # Create a reviewer user that will receive notification emails
-        resp = self.request(path='/user', method='POST', params={
-            'email': 'reviewer-user@isic-archive.com',
-            'login': 'reviewer-user',
-            'firstName': 'reviewer',
-            'lastName': 'user',
-            'password': 'password'
-        })
-        self.assertStatusOk(resp)
-        reviewerUser = User.findOne({'login': 'reviewer-user'})
-        reviewersGroup = Group.findOne({'name': 'Dataset QC Reviewers'})
-        Group.addUser(reviewersGroup, reviewerUser, level=AccessType.READ)
-
-        # Create an uploader user
-        resp = self.request(path='/user', method='POST', params={
-            'email': 'uploader-user@isic-archive.com',
-            'login': 'uploader-user',
-            'firstName': 'uploader',
-            'lastName': 'user',
-            'password': 'password'
-        })
-        self.assertStatusOk(resp)
-        uploaderUser = User.findOne({'login': 'uploader-user'})
-        contributorsGroup = Group.findOne({'name': 'Dataset Contributors'})
-        Group.addUser(contributorsGroup, uploaderUser, level=AccessType.READ)
+        # Create users
+        reviewerUser = self._createReviewerUser()
+        uploaderUser = self._createUploaderUser()
 
         # Create and upload two ZIP files of images
         publicDataset = self._uploadDataset(
