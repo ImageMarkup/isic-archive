@@ -384,3 +384,104 @@ class UploadTestCase(IsicTestCase):
                 {'description':
                  'unrecognized field u\'isic_source_name\' will be added to unstructured metadata'}
             ])
+
+    def testUploadImages(self):
+        """
+        Test creating dataset, uploading images to the dataset individually, and applying metadata
+        to an uploading image.
+        """
+        # Create users
+        reviewerUser = self._createReviewerUser()
+        uploaderUser = self._createUploaderUser()
+
+        # Create a dataset
+        resp = self.request(path='/dataset', method='POST', user=uploaderUser, params={
+            'name': 'test_dataset_1',
+            'description': 'A public test dataset',
+            'license': 'CC-0',
+            'attribution': 'Test Organization',
+            'owner': 'Test Organization'
+        })
+        self.assertStatusOk(resp)
+        dataset = resp.json
+
+        # Add images to the dataset
+        for imageName in ['test_1_small_1.jpg', 'test_1_large_1.jpg']:
+            with open(os.path.join(self.testDataDir, imageName), 'rb') as fileObj:
+                fileData = fileObj.read()
+            resp = self.request(
+                path='/dataset/%s/image' % dataset['_id'], method='POST',
+                user=uploaderUser, body=fileData, type='application/octet-stream',
+                params={
+                    'filename': imageName,
+                    'signature': 'Test Uploader'
+                })
+            self.assertStatusOk(resp)
+
+        # Accept all images
+        resp = self.request(
+            path='/dataset/%s/review' % dataset['_id'], method='GET', user=reviewerUser)
+        self.assertStatusOk(resp)
+        self.assertEqual(2, len(resp.json))
+        imageIds = [image['_id'] for image in resp.json]
+        resp = self.request(
+            path='/dataset/%s/review' % dataset['_id'], method='POST', user=reviewerUser,
+            params={
+                'accepted': json.dumps(imageIds),
+                'flagged': []
+            })
+        self.assertStatusOk(resp)
+
+        # Check number of images in dataset
+        resp = self.request(path='/dataset/%s' % dataset['_id'], user=uploaderUser)
+        self.assertStatusOk(resp)
+        dataset = resp.json
+        self.assertEqual(2, dataset['count'])
+
+        # Add metadata to images
+        resp = self.request(path='/image', user=uploaderUser, params={
+            'datasetId': dataset['_id']
+        })
+        self.assertStatusOk(resp)
+        self.assertEqual(2, len(resp.json))
+        image = resp.json[0]
+
+        metadata = {
+            'diagnosis': 'melanoma',
+            'benign_malignant': 'benign'
+        }
+        resp = self.request(
+            path='/image/%s/metadata' % image['_id'], method='POST',
+            user=uploaderUser, body=json.dumps(metadata), type='application/json', params={
+                'save': False
+            })
+        self.assertStatusOk(resp)
+        self.assertIn('errors', resp.json)
+        self.assertIn('warnings', resp.json)
+        self.assertEqual(1, len(resp.json['errors']))
+        self.assertEqual([], resp.json['warnings'])
+
+        metadata = {
+            'diagnosis': 'melanoma',
+            'benign_malignant': 'malignant',
+            'diagnosis_confirm_type': 'histopathology',
+            'custom_id': '111-222-3334'
+        }
+        resp = self.request(
+            path='/image/%s/metadata' % image['_id'], method='POST',
+            user=uploaderUser, body=json.dumps(metadata), type='application/json', params={
+                'save': True
+            })
+        self.assertStatusOk(resp)
+        self.assertIn('errors', resp.json)
+        self.assertIn('warnings', resp.json)
+        self.assertEqual([], resp.json['errors'])
+        self.assertEqual(1, len(resp.json['warnings']))
+
+        # Verify that metadata exists on image
+        resp = self.request(path='/image/%s' % image['_id'], user=uploaderUser)
+        self.assertStatusOk(resp)
+        self.assertEqual('melanoma', resp.json['meta']['clinical']['diagnosis'])
+        self.assertEqual('malignant', resp.json['meta']['clinical']['benign_malignant'])
+        self.assertEqual('histopathology', resp.json['meta']['clinical']['diagnosis_confirm_type'])
+        self.assertEqual('111-222-3334', resp.json['meta']['unstructured']['custom_id'])
