@@ -19,12 +19,14 @@
 
 import cherrypy
 import mimetypes
+import time
 
 from girder.api import access
-from girder.api.rest import loadmodel
+from girder.api.rest import RestException, loadmodel
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 from girder.models.file import File
+from girder.models.folder import Folder
 from girder.models.model_base import AccessException, ValidationException
 from girder.utility import RequestBodyStream
 
@@ -57,6 +59,7 @@ class DatasetResource(IsicResource):
         self.route('PUT', (':id', 'access'), self.setDatasetAccess)
         self.route('POST', (), self.createDataset)
         self.route('POST', (':id', 'image'), self.addImage)
+        self.route('POST', (':id', 'image', ':contentId'), self.addImageData)
         self.route('POST', (':id', 'zip'), self.addZipBatch)
         self.route('GET', (':id', 'review'), self.getReviewImages)
         self.route('POST', (':id', 'review'), self.submitReviewImages)
@@ -156,7 +159,13 @@ class DatasetResource(IsicResource):
         return Dataset().filter(dataset, user)
 
     @describeRoute(
-        Description('Upload an image to a dataset.')
+        Description('Start the process of adding an image to a dataset.')
+        .notes('Calling this endpoint is the first step in a two-step process to '
+               'add an image to a dataset.\n\n'
+               'To add an image:\n'
+               '1. POST to this endpoint to provide the metadata and receive the content ID.\n'
+               '2. POST to the `/dataset/:id/image/:contentId` endpoint and supply the image '
+               'data in the request body.')
         .param('id', 'The ID of the dataset.', paramType='path')
         .param('filename', 'Image filename.', paramType='form')
         .param('signature', 'Signature of license agreement.', paramType='form')
@@ -178,10 +187,91 @@ class DatasetResource(IsicResource):
         if not signature:
             raise ValidationException('Signature must be specified.', 'signature')
 
+        # Create a temporary place to store the upload metadata; a Folder is convenient
+        # because it allows storing metadata.
+        tempFolder = Folder().createFolder(
+            parent=user,
+            name='isic_image_%.3f' % time.time(),
+            parentType='user',
+            creator=user,
+            public=False)
+
+        metadata = {
+            'filename': filename,
+            'signature': signature
+        }
+
+        Folder().setMetadata(tempFolder, metadata)
+
+        return {
+            'contentId': str(tempFolder['_id'])
+        }
+
+    @describeRoute(
+        Description('Upload image data.')
+        .notes('Calling this endpoint is the second step in a two-step process to '
+               'add an image to a dataset.\n\n'
+               'Supply the image data in the request body as shown in the examples below. '
+               'Note that authentication and error handling are ignored.\n\n'
+               'In the examples, `file` is a '
+               '[File](https://developer.mozilla.org/en-US/docs/Web/API/File) object, '
+               'for example from an [&lt;input type="file"&gt;]'
+               '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file) '
+               'element or a drag and drop operation\'s [DataTransfer]'
+               '(https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer) object.\n\n'
+               'Example using `XMLHttpRequest`:\n'
+               '```\n'
+               'var req = new XMLHttpRequest();\n'
+               'req.open(\'POST\', url, true);\n'
+               'req.onload = function (event) {\n'
+               '    // Uploaded\n'
+               '};\n'
+               'req.setRequestHeader(\'Content-Type\', \'image/jpeg\');\n'
+               'req.send(file);\n'
+               '```\n\n'
+               'Example using `jQuery.ajax()`:\n'
+               '```\n'
+               '$.ajax({\n'
+               '     url: url,\n'
+               '     method: \'POST\',\n'
+               '     data: file,\n'
+               '     contentType: \'image/jpeg\',\n'
+               '     processData: false,\n'
+               '}).done(function (resp) {\n'
+               '    // Uploaded\n'
+               '});\n'
+               '```\n\n'
+               'Note that files uploaded in the request body are not supported by '
+               '[OpenAPI 2.0](https://swagger.io/docs/specification/2-0/file-upload/), '
+               'so it\'s currently not possible to use this endpoint from the Swagger UI '
+               'interface. [OpenAPI 3.0]'
+               '(https://swagger.io/docs/specification/describing-request-body/file-upload/) '
+               'supports this, but it\'s unclear whether Swagger UI properly displays the '
+               'file upload UI; see https://github.com/swagger-api/swagger-ui/issues/3641.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('contentId', 'The ID of the image content', paramType='path')
+    )
+    @access.user
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
+    @loadmodel(map={'contentId': 'folder'}, model='folder', level=AccessType.ADMIN)
+    def addImageData(self, dataset, folder, params):
+        user = self.getCurrentUser()
+        User().requireCreateDataset(user)
+
+        filename = folder['meta'].get('filename')
+        if not filename:
+            raise ValidationException('Filename not found.', 'filename')
+
+        signature = folder['meta'].get('signature')
+        if not signature:
+            raise ValidationException('Signature not found', 'signature')
+
         imageDataStream = RequestBodyStream(cherrypy.request.body)
         imageDataSize = len(imageDataStream)
 
-        # TODO: make this return something
+        if not imageDataSize:
+            raise RestException('No data provided in request body.')
+
         Dataset().addImage(
             dataset=dataset,
             imageDataStream=imageDataStream,
@@ -190,6 +280,8 @@ class DatasetResource(IsicResource):
             signature=signature,
             user=user,
             sendMail=True)
+
+        Folder().remove(folder)
 
     @describeRoute(
         Description('Upload a batch of ZIP images to a dataset.')
