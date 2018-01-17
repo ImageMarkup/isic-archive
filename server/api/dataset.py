@@ -24,8 +24,8 @@ from girder.api import access
 from girder.api.rest import RestException, loadmodel
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
+from girder.exceptions import AccessException, ValidationException
 from girder.models.file import File
-from girder.models.model_base import AccessException, ValidationException
 from girder.utility import RequestBodyStream
 
 from .base import IsicResource

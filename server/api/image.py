@@ -26,11 +26,11 @@ import geojson
 import six
 
 from girder.api import access
-from girder.api.rest import RestException, loadmodel, setRawResponse, setResponseHeader
+from girder.api.rest import loadmodel, setRawResponse, setResponseHeader
 from girder.api.describe import Description, autoDescribeRoute, describeRoute
 from girder.constants import AccessType
+from girder.exceptions import GirderException, RestException, ValidationException
 from girder.models.file import File
-from girder.models.model_base import GirderException, ValidationException
 from girder.utility import mail_utils, ziputil
 
 from girder.plugins.large_image.models import TileGeneralException

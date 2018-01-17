@@ -18,10 +18,10 @@
 ###############################################################################
 
 from girder.constants import AccessType, SortDir
+from girder.exceptions import ValidationException
 from girder.models.collection import Collection
 from girder.models.folder import Folder
 from girder.models.group import Group
-from girder.models.model_base import ValidationException
 
 from .featureset import Featureset
 from .image import Image

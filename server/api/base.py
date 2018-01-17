@@ -22,7 +22,8 @@ import json
 import cherrypy
 import six
 
-from girder.api.rest import Resource, RestException
+from girder.api.rest import Resource
+from girder.exceptions import RestException
 
 
 class IsicResource(Resource):

@@ -20,10 +20,10 @@
 from girder import events
 from girder.api import access
 from girder.api.describe import Description, describeRoute
-from girder.api.rest import RestException, boundHandler
+from girder.api.rest import boundHandler
 from girder.constants import AccessType, TokenScope
+from girder.exceptions import RestException, ValidationException
 from girder.models.group import Group
-from girder.models.model_base import ValidationException
 from girder.models.token import Token
 from girder.utility import mail_utils
 

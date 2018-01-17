@@ -25,10 +25,10 @@ import six
 
 from girder import events
 from girder.constants import AccessType, TokenScope
+from girder.exceptions import AccessException
 from girder.models.collection import Collection
 from girder.models.file import File
 from girder.models.item import Item
-from girder.models.model_base import AccessException
 from girder.models.setting import Setting
 from girder.models.token import Token
 from girder.models.upload import Upload
