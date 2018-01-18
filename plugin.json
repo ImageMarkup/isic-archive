@@ -16,7 +16,8 @@
             "select2": "~4.0.3",
             "select2-bootstrap-theme": ">=0.1.0-beta.10",
             "svg-fill-loader": "~0.0.8",
-            "ua-parser-js": "~0.7.17"
+            "ua-parser-js": "~0.7.17",
+            "url-loader": "~0.6.2"
         }
     },
     "grunt": {
