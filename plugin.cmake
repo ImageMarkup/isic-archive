@@ -44,6 +44,7 @@ add_test(
   NAME puglint_isic_archive_external
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
   COMMAND npx pug-lint -c "${CMAKE_CURRENT_LIST_DIR}/.pug-lintrc" "${CMAKE_CURRENT_LIST_DIR}/web_external")
+set_property(TEST puglint_isic_archive_external PROPERTY LABELS girder_browser)
 add_stylint_test(
   isic_archive_external
   "${CMAKE_CURRENT_LIST_DIR}/web_external")
