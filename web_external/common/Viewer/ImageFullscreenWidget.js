@@ -9,20 +9,20 @@ const ImageFullscreenWidget = View.extend({
         this.$el.html(ImageFullscreenWidgetTemplate({
             model: this.model
         }))
-        .girderModal(this)
-        .on('shown.bs.modal', () => {
-            this.imageViewerWidget = new ImageViewerWidget({
-                el: this.$('.isic-image-fullscreen-container'),
-                model: this.model,
-                parentView: this
-            }).render();
-        })
-        .on('hidden.bs.modal', () => {
-            if (this.imageViewerWidget) {
-                this.imageViewerWidget.destroy();
-                delete this.imageViewerWidget;
-            }
-        });
+            .girderModal(this)
+            .on('shown.bs.modal', () => {
+                this.imageViewerWidget = new ImageViewerWidget({
+                    el: this.$('.isic-image-fullscreen-container'),
+                    model: this.model,
+                    parentView: this
+                }).render();
+            })
+            .on('hidden.bs.modal', () => {
+                if (this.imageViewerWidget) {
+                    this.imageViewerWidget.destroy();
+                    delete this.imageViewerWidget;
+                }
+            });
 
         return this;
     }

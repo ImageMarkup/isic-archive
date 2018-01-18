@@ -21,13 +21,13 @@ const StudyView = View.extend({
                     study: this.model,
                     parentView: this
                 })
-                .on('g:saved', () => {
-                    this.model
-                        .once('g:fetched', () => {
-                            this.render();
-                        })
-                        .fetch();
-                });
+                    .on('g:saved', () => {
+                        this.model
+                            .once('g:fetched', () => {
+                                this.render();
+                            })
+                            .fetch();
+                    });
             }
             this.studyAddUserWidget.render();
         },
