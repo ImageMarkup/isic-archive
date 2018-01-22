@@ -407,25 +407,17 @@ class UploadTestCase(IsicTestCase):
 
         # Add images to the dataset
         for imageName in ['test_1_small_1.jpg', 'test_1_large_1.jpg']:
-            # Step 1: Start upload by sending metadata
+            with open(os.path.join(self.testDataDir, imageName), 'rb') as fileObj:
+                fileData = fileObj.read()
+
             resp = self.request(
                 path='/dataset/%s/image' % dataset['_id'], method='POST', user=uploaderUser,
+                body=fileData, type='image/jpeg', isJson=False,
                 params={
                     'filename': imageName,
                     'signature': 'Test Uploader'
                 })
             self.assertStatusOk(resp)
-            self.assertIn('contentId', resp.json)
-            contentId = resp.json['contentId']
-
-            # Step 2: Upload image data
-            with open(os.path.join(self.testDataDir, imageName), 'rb') as fileObj:
-                fileData = fileObj.read()
-                resp = self.request(
-                    path='/dataset/%s/image/%s' % (dataset['_id'], contentId), method='POST',
-                    user=uploaderUser, body=fileData, type='image/jpeg', isJson=False
-                )
-                self.assertStatusOk(resp)
 
         # Accept all images
         resp = self.request(

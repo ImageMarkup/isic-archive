@@ -259,8 +259,7 @@ class Dataset(AccessControlledModel):
 
         return doc
 
-    def addImage(self, dataset, imageDataStream, imageDataSize, filename, signature, user,
-                 sendMail=False):
+    def addImage(self, dataset, imageDataStream, imageDataSize, filename, signature, user):
         """
         Add an image to a dataset. The image is stored in a "Pre-review" folder
         within the dataset folder.
@@ -291,8 +290,6 @@ class Dataset(AccessControlledModel):
             dataset=dataset,
             batch=batch
         )
-
-        # TODO: Send email confirmations
 
     def addZipBatch(self, dataset, zipFile, signature, user, sendMail=False):
         """
