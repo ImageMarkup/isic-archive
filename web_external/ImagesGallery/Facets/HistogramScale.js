@@ -106,7 +106,7 @@ HistogramScale.prototype.positionToBin = function (position) {
 HistogramScale.prototype.getBinRect = function (binLabel, histogram) {
     if (histogram === 'filteredSet') {
         histogram = this.filteredSetHistogram;
-    } else {  // default: return the overview count
+    } else { // default: return the overview count
         histogram = this.overviewHistogram;
     }
     let bin = _.findWhere(histogram, {label: binLabel});

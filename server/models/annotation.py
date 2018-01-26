@@ -24,7 +24,7 @@ import six
 from bson import ObjectId
 
 from girder.models.item import Item
-from girder.models.model_base import ValidationException, GirderException
+from girder.exceptions import GirderException, ValidationException
 
 from .image import Image
 from .study import Study

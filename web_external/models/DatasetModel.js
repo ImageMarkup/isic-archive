@@ -14,7 +14,7 @@ const DatasetModel = AccessControlledModel.extend({
         return new UserModel(this.get('creator'));
     },
 
-     /**
+    /**
      * Upload a batch of images.
      * @param [zipFileId] The ID of the .zip file.
      * @param [signature] Signature of license agreement.
@@ -31,7 +31,7 @@ const DatasetModel = AccessControlledModel.extend({
         });
     },
 
-     /**
+    /**
      * Register a metadata file with the dataset.
      * @param [metadataFileId] The ID of the metadata file.
      */
@@ -50,7 +50,7 @@ const DatasetModel = AccessControlledModel.extend({
         });
     },
 
-     /**
+    /**
      * Get the registered metadata for the dataset. Returns a promise.
      */
     getRegisteredMetadata: function () {
@@ -63,7 +63,7 @@ const DatasetModel = AccessControlledModel.extend({
         return deferred.promise();
     },
 
-     /**
+    /**
      * Apply registered metadata to the dataset. Returns a promise.
      * @param [metadataFileId] The ID of the metadata file.
      */

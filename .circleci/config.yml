@@ -1,28 +1,17 @@
 version: 2
 jobs:
-  build:
+  serverInstall:
     docker:
-      - image: circleci/python:2.7
-      - image: mongo:3.6
+      - image: girder/girder_test:latest-py2
 
     working_directory: /home/circleci/project # as $CIRCLE_WORKING_DIRECTORY
 
     environment:
-      - GIRDER_VERSION: a33eba3db6ef21cc501b9870f76103ab9692d111
+      - GIRDER_VERSION: e3b2f195c41c34f277e163153b20339448d93e19
       - WORKER_VERSION: 042a69d6ae7d472e32242d98f8b7acb3148980f9
       - LARGE_IMAGE_VERSION: 4dc82976d58b2a6e6542863e2e410628649a040c
 
     steps:
-      - run:
-          name: Install Node.js
-          command: |
-            curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
-            sudo apt-get install -y nodejs
-            sudo npm install -g npm
-
-      - run:
-          name: Install Girder dependencies
-          command: sudo apt-get install -y cmake
       - run:
           name: Install Pillow dependencies
           # https://pillow.readthedocs.org/en/latest/installation.html)
@@ -55,40 +44,95 @@ jobs:
       - run:
           name: Create and activate virtualenv
           command: |
-            virtualenv venv
-            echo "source $CIRCLE_WORKING_DIRECTORY/venv/bin/activate" >> $BASH_ENV
+            virtualenv girder_env
+            echo "source $CIRCLE_WORKING_DIRECTORY/girder_env/bin/activate" >> $BASH_ENV
       - run:
           name: Create cache key
           command: cat girder/setup.py girder/requirements-dev.txt girder_worker/setup.py girder/plugins/large_image/setup.py girder/plugins/isic_archive/requirements.txt | sha512sum > venv-req-hash.txt
-      #- restore_cache:
-      # TODO: caching is broken, because "girder/requirements-dev.txt" requires exactly "pbr==1.10.0", and "girder_worker/setup.py" requires a newer version; however installing fresh every time still works
-      #    key: venv-{{ arch }}-{{ checksum "venv-req-hash.txt" }}
+      - restore_cache:
+          key: venv-{{ arch }}-{{ checksum "venv-req-hash.txt" }}
       - run:
           name: Install Girder
           command: |
-            pip install -e .
-            pip install -r ./requirements-dev.txt
+            pip install --upgrade --editable . --requirement requirements-dev.txt
           # pytest_girder requires that install be run from this directory
           working_directory: girder
       - run:
           name: Install girder_worker
-          command: pip install -e girder_worker
+          command: pip install --upgrade --editable girder_worker
         # TODO: set up worker.local.cfg
         # cp $PWD/plugin_tests/test_files/girder_worker.cfg $girder_worker_path/girder_worker/worker.local.cfg
       - run:
           name: Install large_image
           command: |
-            pip install 'numpy>=1.10.2'
+            pip install --upgrade 'numpy>=1.10.2'
             girder-install plugin girder/plugins/large_image
       - run:
           name: Install isic_archive
           command: girder-install plugin girder/plugins/isic_archive
       - run:
           name: Install coverage client
-          command: pip install codecov
-      #- save_cache:
-      #    paths: venv
-      #    key: venv-{{ arch }}-{{ checksum "venv-req-hash.txt" }}
+          command: pip install --upgrade codecov
+      - save_cache:
+          paths: girder_env
+          key: venv-{{ arch }}-{{ checksum "venv-req-hash.txt" }}
+
+      - run:
+          name: Create Girder build directory
+          command: mkdir girder_build
+      - run:
+          name: Run CMake
+          command: |
+            cmake -DPYTHON_VERSION:STRING=2.7 -DRUN_CORE_TESTS:BOOL=OFF -DTEST_PLUGINS:STRING="isic_archive" $CIRCLE_WORKING_DIRECTORY/girder
+            make
+          working_directory: girder_build
+
+      - persist_to_workspace:
+          root: /home/circleci/project
+          paths:
+            - girder
+            - girder_build
+            - girder_env
+
+  serverTest:
+    docker:
+      - image: girder/girder_test:latest-py2
+      - image: circleci/mongo:3.6-ram
+        command: ["mongod", "--storageEngine", "ephemeralForTest", "--dbpath", "/dev/shm/mongo"]
+
+    working_directory: /home/circleci/project
+
+    steps:
+      - attach_workspace:
+          at: /home/circleci/project
+      - run:
+          name: Activate virtualenv
+          command: echo "source $CIRCLE_WORKING_DIRECTORY/girder_env/bin/activate" >> $BASH_ENV
+
+      # TODO: start girder_worker?
+      - run:
+          name: Run CTest
+          command: ctest -VV -L 'girder_python|girder_coverage' -E js_coverage
+          working_directory: girder_build
+
+      - run:
+          name: Upload coverage
+          command: codecov --disable search pycov gcov --root girder/plugins/isic_archive --file girder/build/test/coverage/py_coverage.xml
+
+  webBuild_webTest:
+    docker:
+      - image: girder/girder_test:latest-py2
+      #- image: circleci/mongo:3.6-ram
+      #  command: ["mongod", "--storageEngine", "ephemeralForTest", "--dbpath", "/dev/shm/mongo"]
+
+    working_directory: /home/circleci/project
+
+    steps:
+      - attach_workspace:
+          at: /home/circleci/project
+      - run:
+          name: Activate virtualenv
+          command: echo "source $CIRCLE_WORKING_DIRECTORY/girder_env/bin/activate" >> $BASH_ENV
 
       - restore_cache:
           key: npm-{{ arch }}-{{ checksum "girder/package.json" }}-{{ checksum "girder/plugins/isic_archive/plugin.json" }}
@@ -102,24 +146,18 @@ jobs:
           key: npm-{{ arch }}-{{ checksum "girder/package.json" }}-{{ checksum "girder/plugins/isic_archive/plugin.json" }}
 
       - run:
-          name: Create Girder build directory
-          command: mkdir girder_build
-      - run:
-          name: Run CMake
-          command: |
-            cmake -DPYTHON_COVERAGE:BOOL=ON -DCOVERAGE_MINIMUM_PASS:STRING=40 -DPYTHON_VERSION:STRING=2.7 -DRUN_CORE_TESTS:BOOL=OFF -DTEST_PLUGINS:STRING="isic_archive" $CIRCLE_WORKING_DIRECTORY/girder
-            make
-          working_directory: girder_build
-      # TODO: start girder_worker?
-      - run:
           name: Run CTest
-          # js_coverage_combine_report may fail due to an upstream bug
-          command: ctest -VV -E 'js_coverage'
-          environment:
-            - JASMINE_TIMEOUT: 15000
+          command: ctest -VV -L girder_browser -E js_coverage
           working_directory: girder_build
 
-      - run:
-          name: Upload coverage
-          command: codecov --disable search pycov gcov --file $CIRCLE_WORKING_DIRECTORY/girder_build/coverage.xml
-          working_directory: girder/plugins/isic_archive
+workflows:
+  version: 2
+  test_all:
+    jobs:
+      - serverInstall
+      - serverTest:
+          requires:
+            - serverInstall
+      - webBuild_webTest:
+          requires:
+            - serverInstall

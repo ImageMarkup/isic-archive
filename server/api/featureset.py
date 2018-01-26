@@ -20,10 +20,10 @@
 import cherrypy
 
 from girder.api import access
-from girder.api.rest import loadmodel, RestException
+from girder.api.rest import loadmodel
 from girder.api.describe import Description, describeRoute
 from girder.constants import SortDir
-from girder.models.model_base import ValidationException
+from girder.exceptions import RestException, ValidationException
 
 from .base import IsicResource
 from ..models.featureset import Featureset

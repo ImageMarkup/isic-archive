@@ -257,7 +257,7 @@ const ImagesFacetHistogramView = ImagesFacetView.extend({
                 .each(function (d) {
                     // this refers to the DOM element
                     d3.select(this)
-                      .attr(self.scale.getBinRect(d.completeBin.label, 'filteredSet'));
+                        .attr(self.scale.getBinRect(d.completeBin.label, 'filteredSet'));
                 });
             bins.select('rect.target')
                 .each(function (d) {
@@ -271,13 +271,13 @@ const ImagesFacetHistogramView = ImagesFacetView.extend({
                     // overview bar (so that it appears on top of the bar
                     // itself, not at the top of the bar space).
                     d3.select(this)
-                      .attr(self.scale.getFullRect())
-                      .on('mouseenter', () => {
-                          $(el).tooltip('show');
-                      })
-                      .on('mouseleave', () => {
-                          $(el).tooltip('hide');
-                      });
+                        .attr(self.scale.getFullRect())
+                        .on('mouseenter', () => {
+                            $(el).tooltip('show');
+                        })
+                        .on('mouseleave', () => {
+                            $(el).tooltip('hide');
+                        });
                 });
             // Comment out these lines to hide the page histogram (2/2):
             // bins.select('rect.page')

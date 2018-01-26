@@ -22,10 +22,10 @@ import datetime
 import hashlib
 
 from girder.constants import AccessType
+from girder.exceptions import AccessException, ValidationException
 from girder import events
 from girder.models.group import Group
 from girder.models.user import User as GirderUser
-from girder.models.model_base import AccessException, ValidationException
 
 
 class User(GirderUser):

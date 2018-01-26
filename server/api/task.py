@@ -23,12 +23,11 @@ import random
 import cherrypy
 
 from girder.api import access
-from girder.api.rest import RestException
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
+from girder.exceptions import AccessException, GirderException, RestException
 from girder.models.collection import Collection
 from girder.models.folder import Folder
-from girder.models.model_base import AccessException, GirderException
 
 from .base import IsicResource
 from ..models.dataset import Dataset

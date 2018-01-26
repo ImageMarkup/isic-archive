@@ -39,17 +39,17 @@ UserModel.prototype.setAcceptTerms = function () {
         url: 'user/acceptTerms',
         method: 'POST'
     })
-    .then((resp) => {
-        if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
-            // Directly update user permissions
-            this.get('permissions').acceptTerms = true;
-            this.trigger('change:permissions');
-            return resp;
-        } else {
-            // This should not fail
-            throw resp;
-        }
-    });
+        .then((resp) => {
+            if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
+                // Directly update user permissions
+                this.get('permissions').acceptTerms = true;
+                this.trigger('change:permissions');
+                return resp;
+            } else {
+                // This should not fail
+                throw resp;
+            }
+        });
 };
 
 UserModel.prototype.canCreateDataset = function () {
@@ -61,16 +61,16 @@ UserModel.prototype.setCanCreateDataset = function () {
         url: 'user/requestCreateDatasetPermission',
         method: 'POST'
     })
-    .then((resp) => {
-        if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
-            // Directly update user permissions
-            this.get('permissions').createDataset = true;
-            this.trigger('change:permissions');
-            return resp;
-        } else {
-            throw resp;
-        }
-    });
+        .then((resp) => {
+            if (_.has(resp, 'extra') && resp.extra === 'hasPermission') {
+                // Directly update user permissions
+                this.get('permissions').createDataset = true;
+                this.trigger('change:permissions');
+                return resp;
+            } else {
+                throw resp;
+            }
+        });
 };
 
 UserModel.prototype.canReviewDataset = function () {
@@ -97,12 +97,12 @@ UserModel.prototype.changePassword = function (oldPassword, newPassword) {
         method: 'PUT',
         error: null
     })
-    .done(() => {
-        this.trigger('g:passwordChanged');
-    })
-    .fail((err) => {
-        this.trigger('g:error', err);
-    });
+        .done(() => {
+            this.trigger('g:passwordChanged');
+        })
+        .fail((err) => {
+            this.trigger('g:error', err);
+        });
 };
 
 // Add additional static methods
@@ -113,13 +113,13 @@ UserModel.temporaryTokenLogin = function (userId, token) {
         data: {token: token},
         error: null
     })
-    .done((resp) => {
-        resp.user.token = resp.authToken.token;
-        eventStream.close();
-        setCurrentUser(new UserModel(resp.user));
-        eventStream.open();
-        events.trigger('g:login-changed');
-    });
+        .done((resp) => {
+            resp.user.token = resp.authToken.token;
+            eventStream.close();
+            setCurrentUser(new UserModel(resp.user));
+            eventStream.open();
+            events.trigger('g:login-changed');
+        });
 };
 
 UserModel.currentUserCanAcceptTerms = function () {

@@ -26,8 +26,9 @@ from PIL import Image as PIL_Image, ImageDraw as PIL_ImageDraw
 
 from girder import events
 from girder.constants import AccessType
+from girder.exceptions import GirderException, ValidationException
 from girder.models.file import File
-from girder.models.model_base import Model, GirderException, ValidationException
+from girder.models.model_base import Model
 from girder.models.upload import Upload
 
 from .image import Image

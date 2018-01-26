@@ -23,7 +23,8 @@ import re
 import six
 
 from girder.constants import AccessType
-from girder.models.model_base import Model, ValidationException
+from girder.exceptions import ValidationException
+from girder.models.model_base import Model
 
 from .user import User
 

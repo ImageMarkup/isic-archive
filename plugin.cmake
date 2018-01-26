@@ -39,12 +39,12 @@ add_python_style_test(
 # External client static analysis
 add_eslint_test(
   isic_archive_external
-  "${CMAKE_CURRENT_LIST_DIR}/web_external"
-  ESLINT_CONFIG_FILE "${CMAKE_CURRENT_LIST_DIR}/.eslintrc.json")
+  "${CMAKE_CURRENT_LIST_DIR}/web_external")
 add_test(
   NAME puglint_isic_archive_external
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-  COMMAND "${PUGLINT_EXECUTABLE}" -c "${CMAKE_CURRENT_LIST_DIR}/.pug-lintrc" "${CMAKE_CURRENT_LIST_DIR}/web_external")
+  COMMAND npx pug-lint -c "${CMAKE_CURRENT_LIST_DIR}/.pug-lintrc" "${CMAKE_CURRENT_LIST_DIR}/web_external")
+set_property(TEST puglint_isic_archive_external PROPERTY LABELS girder_browser)
 add_stylint_test(
   isic_archive_external
   "${CMAKE_CURRENT_LIST_DIR}/web_external")
@@ -52,5 +52,4 @@ add_stylint_test(
 # Other Javascript code
 add_eslint_test(
   isic_archive_grunt
-  "${CMAKE_CURRENT_LIST_DIR}/Gruntfile.js"
-  ESLINT_CONFIG_FILE "${CMAKE_CURRENT_LIST_DIR}/.eslintrc.json")
+  "${CMAKE_CURRENT_LIST_DIR}/Gruntfile.js")

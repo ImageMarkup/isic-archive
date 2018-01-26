@@ -25,12 +25,13 @@ import six
 from natsort import natsorted
 
 from girder.constants import AccessType
+from girder.exceptions import GirderException, ValidationException
 from girder.models.collection import Collection
 from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.group import Group
 from girder.models.assetstore import Assetstore
-from girder.models.model_base import AccessControlledModel, GirderException, ValidationException
+from girder.models.model_base import AccessControlledModel
 from girder.models.notification import ProgressState
 from girder.utility import assetstore_utilities, mail_utils
 from girder.utility.progress import ProgressContext

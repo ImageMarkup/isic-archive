@@ -90,9 +90,9 @@ const ImagesPagingPane = View.extend({
 
         // Update the values in the label
         labelElement.find('.isic-images-paging-label-total')
-          .text(this.completeFacets.total);
+            .text(this.completeFacets.total);
         labelElement.find('.isic-images-paging-label-filtered')
-          .text(this.filteredFacets.total);
+            .text(this.filteredFacets.total);
         if (hasPaging) {
             // Use base 1 for the page text labels
             let startImageNum = this.images._currentOffset() + 1;

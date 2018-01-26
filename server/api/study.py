@@ -26,11 +26,11 @@ import cherrypy
 import six
 
 from girder.api import access
-from girder.api.rest import RestException, loadmodel, setResponseHeader
+from girder.api.rest import loadmodel, setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
+from girder.exceptions import RestException, ValidationException
 from girder.models.folder import Folder
-from girder.models.model_base import ValidationException
 
 from .base import IsicResource
 from ..models.annotation import Annotation
