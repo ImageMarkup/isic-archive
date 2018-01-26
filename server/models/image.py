@@ -39,6 +39,7 @@ from girder.plugins.worker import utils as workerUtils
 
 from . import segmentation_helpers
 from .dataset import Dataset
+from .dataset_helpers.image_metadata import addImageMetadata
 from .user import User
 from ..settings import PluginSettings
 from ..provision_utility import getAdminUser
@@ -483,3 +484,21 @@ class Image(Item):
     def validate(self, doc):
         # TODO: implement
         return super(Image, self).validate(doc)
+
+    def applyMetadata(self, image, metadata, save):
+        """
+        Apply metadata to an image.
+        :param image: Image document.
+        :param metadata: Image metadata.
+        :param save: Whether to save the metadata to the image if validation succeeds.
+        :return: Tuple of:
+            - List of strings describing validation errors.
+            - List of strings describing metadata warnings.
+        :rtype: tuple(list, list)
+        """
+        errors, warnings = addImageMetadata(image, metadata)
+
+        if not errors and save:
+            self.save(image)
+
+        return errors, warnings

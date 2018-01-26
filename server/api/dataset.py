@@ -17,14 +17,16 @@
 #  limitations under the License.
 ###############################################################################
 
+import cherrypy
 import mimetypes
 
 from girder.api import access
-from girder.api.rest import loadmodel
+from girder.api.rest import RestException, loadmodel
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 from girder.models.file import File
 from girder.models.model_base import AccessException, ValidationException
+from girder.utility import RequestBodyStream
 
 from .base import IsicResource
 from ..models.dataset import Dataset
@@ -54,6 +56,7 @@ class DatasetResource(IsicResource):
         self.route('GET', (':id', 'access'), self.getDatasetAccess)
         self.route('PUT', (':id', 'access'), self.setDatasetAccess)
         self.route('POST', (), self.createDataset)
+        self.route('POST', (':id', 'image'), self.addImage)
         self.route('POST', (':id', 'zip'), self.addZipBatch)
         self.route('GET', (':id', 'review'), self.getReviewImages)
         self.route('POST', (':id', 'review'), self.submitReviewImages)
@@ -151,6 +154,99 @@ class DatasetResource(IsicResource):
         )
 
         return Dataset().filter(dataset, user)
+
+    @describeRoute(
+        Description('Upload an image to a dataset.')
+        .notes('Send the image data in the request body, as shown in the examples below, '
+               'and the parameters in the query string. '
+               'Note that the examples ignore authentication and error handling.\n\n'
+               'In the examples, `file` is a '
+               '[File](https://developer.mozilla.org/en-US/docs/Web/API/File) object, '
+               'for example from an [&lt;input type="file"&gt;]'
+               '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file) '
+               'element or a drag and drop operation\'s [DataTransfer]'
+               '(https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer) object.\n\n'
+               'Example using [XMLHttpRequest]'
+               '(https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest):\n'
+               '```\n'
+               'var req = new XMLHttpRequest();\n'
+               'req.open(\'POST\', url, true); // url includes parameters\n'
+               'req.onload = function (event) {\n'
+               '    // Uploaded\n'
+               '};\n'
+               'req.setRequestHeader(\'Content-Type\', \'image/jpeg\');\n'
+               'req.send(file);\n'
+               '```\n\n'
+               'Example using [jQuery.ajax()](http://api.jquery.com/jquery.ajax/):\n'
+               '```\n'
+               '$.ajax({\n'
+               '     url: url, // url includes parameters\n'
+               '     method: \'POST\',\n'
+               '     data: file,\n'
+               '     contentType: \'image/jpeg\',\n'
+               '     processData: false,\n'
+               '}).done(function (resp) {\n'
+               '    // Uploaded\n'
+               '});\n'
+               '```\n\n'
+               'Example using [axios](https://github.com/axios/axios):\n'
+               '```\n'
+               'axios({\n'
+               '    method: \'post\',\n'
+               '    url: url,\n'
+               '    params: {\n'
+               '        filename: \'my_image.jpg\',\n'
+               '        signature: \'my signature\',\n'
+               '    },\n'
+               '    data: file,\n'
+               '    headers: {\n'
+               '        \'Content-Type\': \'image/jpeg\',\n'
+               '    }\n'
+               '}).then(function (resp) {\n'
+               '    // Uploaded\n'
+               '});\n'
+               '```\n\n'
+               'Note that files uploaded in the request body are not supported by '
+               '[OpenAPI 2.0](https://swagger.io/docs/specification/2-0/file-upload/), '
+               'so it\'s currently not possible to use this endpoint from the Swagger UI '
+               'interface. [OpenAPI 3.0]'
+               '(https://swagger.io/docs/specification/describing-request-body/file-upload/) '
+               'supports this, but it\'s unclear whether Swagger UI properly displays the '
+               'file upload UI; see https://github.com/swagger-api/swagger-ui/issues/3641.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('filename', 'Image filename.', paramType='query')
+        .param('signature', 'Signature of license agreement.', paramType='query')
+    )
+    @access.user
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
+    def addImage(self, dataset, params):
+        params = self._decodeParams(params)
+        self.requireParams(['filename', 'signature'], params)
+
+        user = self.getCurrentUser()
+        User().requireCreateDataset(user)
+
+        filename = params['filename'].strip()
+        if not filename:
+            raise ValidationException('Filename must be specified.', 'filename')
+
+        signature = params['signature'].strip()
+        if not signature:
+            raise ValidationException('Signature must be specified.', 'signature')
+
+        imageDataStream = RequestBodyStream(cherrypy.request.body)
+        imageDataSize = len(imageDataStream)
+
+        if not imageDataSize:
+            raise RestException('No data provided in request body.')
+
+        Dataset().addImage(
+            dataset=dataset,
+            imageDataStream=imageDataStream,
+            imageDataSize=imageDataSize,
+            filename=filename,
+            signature=signature,
+            user=user)
 
     @describeRoute(
         Description('Upload a batch of ZIP images to a dataset.')

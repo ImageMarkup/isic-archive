@@ -111,6 +111,9 @@ class FieldParser(object):
         field = foundFields.pop()
         value = data.pop(field)
 
+        if value is not None:
+            value = six.text_type(value)
+
         assert(value is None or isinstance(value, six.string_types))
 
         return value
@@ -850,9 +853,10 @@ def _checkMetadataWarnings(clinical):
 def addImageMetadata(image, data):
     """
     Add acquisition and clinical metadata to an image. Data is expected to be a
-    row from csv.DictReader. Values for recognized fields are parsed and added
-    to the image's clinical metadata field and private metadata field.
-    Unrecognized fields are added to the image's unstructured metadata field.
+    dict, such as a row from csv.DictReader. Values for recognized fields are
+    parsed and added to the image's clinical metadata field and private metadata
+    field. Unrecognized fields are added to the image's unstructured metadata
+    field.
 
     Returns a tuple of:
     - List of descriptive errors with the metadata. An empty list indicates that

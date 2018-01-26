@@ -259,6 +259,38 @@ class Dataset(AccessControlledModel):
 
         return doc
 
+    def addImage(self, dataset, imageDataStream, imageDataSize, filename, signature, user):
+        """
+        Add an image to a dataset. The image is stored in a "Pre-review" folder
+        within the dataset folder.
+        """
+        # Avoid circular import
+        from .image import Image
+
+        batch = Batch().createBatch(
+            dataset=dataset,
+            creator=user,
+            signature=signature
+        )
+
+        prereviewFolder = Folder().createFolder(
+            parent=self.imagesFolder(dataset),
+            name='Pre-review',
+            parentType='folder',
+            creator=user,
+            public=False,
+            reuseExisting=True)
+
+        Image().createImage(
+            imageDataStream=imageDataStream,
+            imageDataSize=imageDataSize,
+            originalName=filename,
+            parentFolder=prereviewFolder,
+            creator=user,
+            dataset=dataset,
+            batch=batch
+        )
+
     def addZipBatch(self, dataset, zipFile, signature, user, sendMail=False):
         """
         Ingest an uploaded dataset from a .zip file of images. The images are

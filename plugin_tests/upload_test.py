@@ -58,6 +58,46 @@ class UploadTestCase(IsicTestCase):
         self.testDataDir = os.path.join(
             os.environ['GIRDER_TEST_DATA_PREFIX'], 'plugins', 'isic_archive')
 
+    def _createReviewerUser(self):
+        """Create a reviewer user that will receive notification emails."""
+        Group = self.model('group')
+        User = self.model('user', 'isic_archive')
+
+        resp = self.request(path='/user', method='POST', params={
+            'email': 'reviewer-user@isic-archive.com',
+            'login': 'reviewer-user',
+            'firstName': 'reviewer',
+            'lastName': 'user',
+            'password': 'password'
+        })
+        self.assertStatusOk(resp)
+
+        reviewerUser = User.findOne({'login': 'reviewer-user'})
+        reviewersGroup = Group.findOne({'name': 'Dataset QC Reviewers'})
+        Group.addUser(reviewersGroup, reviewerUser, level=AccessType.READ)
+
+        return reviewerUser
+
+    def _createUploaderUser(self):
+        """Create an uploader user."""
+        Group = self.model('group')
+        User = self.model('user', 'isic_archive')
+
+        resp = self.request(path='/user', method='POST', params={
+            'email': 'uploader-user@isic-archive.com',
+            'login': 'uploader-user',
+            'firstName': 'uploader',
+            'lastName': 'user',
+            'password': 'password'
+        })
+        self.assertStatusOk(resp)
+
+        uploaderUser = User.findOne({'login': 'uploader-user'})
+        contributorsGroup = Group.findOne({'name': 'Dataset Contributors'})
+        Group.addUser(contributorsGroup, uploaderUser, level=AccessType.READ)
+
+        return uploaderUser
+
     def _uploadDataset(self, uploaderUser, zipName, zipContentNames,
                        datasetName, datasetDescription):
         Dataset = self.model('dataset', 'isic_archive')
@@ -128,35 +168,12 @@ class UploadTestCase(IsicTestCase):
     def testUploadDataset(self):
         File = self.model('file')
         Folder = self.model('folder')
-        Group = self.model('group')
         Upload = self.model('upload')
         User = self.model('user', 'isic_archive')
 
-        # Create a reviewer user that will receive notification emails
-        resp = self.request(path='/user', method='POST', params={
-            'email': 'reviewer-user@isic-archive.com',
-            'login': 'reviewer-user',
-            'firstName': 'reviewer',
-            'lastName': 'user',
-            'password': 'password'
-        })
-        self.assertStatusOk(resp)
-        reviewerUser = User.findOne({'login': 'reviewer-user'})
-        reviewersGroup = Group.findOne({'name': 'Dataset QC Reviewers'})
-        Group.addUser(reviewersGroup, reviewerUser, level=AccessType.READ)
-
-        # Create an uploader user
-        resp = self.request(path='/user', method='POST', params={
-            'email': 'uploader-user@isic-archive.com',
-            'login': 'uploader-user',
-            'firstName': 'uploader',
-            'lastName': 'user',
-            'password': 'password'
-        })
-        self.assertStatusOk(resp)
-        uploaderUser = User.findOne({'login': 'uploader-user'})
-        contributorsGroup = Group.findOne({'name': 'Dataset Contributors'})
-        Group.addUser(contributorsGroup, uploaderUser, level=AccessType.READ)
+        # Create users
+        reviewerUser = self._createReviewerUser()
+        uploaderUser = self._createUploaderUser()
 
         # Create and upload two ZIP files of images
         publicDataset = self._uploadDataset(
@@ -367,3 +384,105 @@ class UploadTestCase(IsicTestCase):
                 {'description':
                  'unrecognized field u\'isic_source_name\' will be added to unstructured metadata'}
             ])
+
+    def testUploadImages(self):
+        """
+        Test creating dataset, uploading images to the dataset individually, and applying metadata
+        to an uploading image.
+        """
+        # Create users
+        reviewerUser = self._createReviewerUser()
+        uploaderUser = self._createUploaderUser()
+
+        # Create a dataset
+        resp = self.request(path='/dataset', method='POST', user=uploaderUser, params={
+            'name': 'test_dataset_1',
+            'description': 'A public test dataset',
+            'license': 'CC-0',
+            'attribution': 'Test Organization',
+            'owner': 'Test Organization'
+        })
+        self.assertStatusOk(resp)
+        dataset = resp.json
+
+        # Add images to the dataset
+        for imageName in ['test_1_small_1.jpg', 'test_1_large_1.jpg']:
+            with open(os.path.join(self.testDataDir, imageName), 'rb') as fileObj:
+                fileData = fileObj.read()
+
+            resp = self.request(
+                path='/dataset/%s/image' % dataset['_id'], method='POST', user=uploaderUser,
+                body=fileData, type='image/jpeg', isJson=False,
+                params={
+                    'filename': imageName,
+                    'signature': 'Test Uploader'
+                })
+            self.assertStatusOk(resp)
+
+        # Accept all images
+        resp = self.request(
+            path='/dataset/%s/review' % dataset['_id'], method='GET', user=reviewerUser)
+        self.assertStatusOk(resp)
+        self.assertEqual(2, len(resp.json))
+        imageIds = [image['_id'] for image in resp.json]
+        resp = self.request(
+            path='/dataset/%s/review' % dataset['_id'], method='POST', user=reviewerUser,
+            params={
+                'accepted': json.dumps(imageIds),
+                'flagged': []
+            })
+        self.assertStatusOk(resp)
+
+        # Check number of images in dataset
+        resp = self.request(path='/dataset/%s' % dataset['_id'], user=uploaderUser)
+        self.assertStatusOk(resp)
+        dataset = resp.json
+        self.assertEqual(2, dataset['count'])
+
+        # Add metadata to images
+        resp = self.request(path='/image', user=uploaderUser, params={
+            'datasetId': dataset['_id']
+        })
+        self.assertStatusOk(resp)
+        self.assertEqual(2, len(resp.json))
+        image = resp.json[0]
+
+        metadata = {
+            'diagnosis': 'melanoma',
+            'benign_malignant': 'benign'
+        }
+        resp = self.request(
+            path='/image/%s/metadata' % image['_id'], method='POST',
+            user=uploaderUser, body=json.dumps(metadata), type='application/json', params={
+                'save': False
+            })
+        self.assertStatusOk(resp)
+        self.assertIn('errors', resp.json)
+        self.assertIn('warnings', resp.json)
+        self.assertEqual(1, len(resp.json['errors']))
+        self.assertEqual([], resp.json['warnings'])
+
+        metadata = {
+            'diagnosis': 'melanoma',
+            'benign_malignant': 'malignant',
+            'diagnosis_confirm_type': 'histopathology',
+            'custom_id': '111-222-3334'
+        }
+        resp = self.request(
+            path='/image/%s/metadata' % image['_id'], method='POST',
+            user=uploaderUser, body=json.dumps(metadata), type='application/json', params={
+                'save': True
+            })
+        self.assertStatusOk(resp)
+        self.assertIn('errors', resp.json)
+        self.assertIn('warnings', resp.json)
+        self.assertEqual([], resp.json['errors'])
+        self.assertEqual(1, len(resp.json['warnings']))
+
+        # Verify that metadata exists on image
+        resp = self.request(path='/image/%s' % image['_id'], user=uploaderUser)
+        self.assertStatusOk(resp)
+        self.assertEqual('melanoma', resp.json['meta']['clinical']['diagnosis'])
+        self.assertEqual('malignant', resp.json['meta']['clinical']['benign_malignant'])
+        self.assertEqual('histopathology', resp.json['meta']['clinical']['diagnosis_confirm_type'])
+        self.assertEqual('111-222-3334', resp.json['meta']['unstructured']['custom_id'])
