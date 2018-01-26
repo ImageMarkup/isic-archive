@@ -2,7 +2,7 @@
 
 - name: Add PPA key
   apt_key:
-    id: "0C49F3730359A14518585931BC711F9BA15703C6"
+    id: "2930ADAE8CAF5059EE73BB4B58712A2291FA4AD5"
     keyserver: "keyserver.ubuntu.com"
   become: yes
 
