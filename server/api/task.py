@@ -172,7 +172,6 @@ class TaskResource(IsicResource):
         ]
 
     def _pipeline3NoExpertSegmentations(self):
-
         return [
             # Get only images with no successful expert segmentations
             {'$match': {
@@ -212,7 +211,7 @@ class TaskResource(IsicResource):
         return [
             # Join dataset details into groups
             {'$lookup': {
-                'from': 'folder',
+                'from': 'dataset',
                 'localField': '_id',
                 'foreignField': '_id',
                 'as': 'dataset'}},
