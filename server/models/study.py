@@ -72,7 +72,8 @@ class Study(Folder):
         studyFolder = self.setMetadata(
             folder=studyFolder,
             metadata={
-                'featuresetId': featureset['_id']
+                'featuresetId': featureset['_id'],
+                'waitingUsers': []
             }
         )
 
@@ -89,6 +90,9 @@ class Study(Folder):
 
         if not images:
             images = self.getImages(study)
+
+        # Remove user from list of users waiting to participate in the study
+        self.removeWaitingUser(study, annotatorUser)
 
         # Allow annotator to read parent study
         study = self.setUserAccess(
@@ -151,6 +155,12 @@ class Study(Folder):
             raise ValidationException('Annotator user is not in study.')
         Folder().remove(annotatorFolder)
 
+    def hasAnnotator(self, study, annotatorUser):
+        return Folder().findOne({
+            'parentId': study['_id'],
+            'meta.userId': annotatorUser['_id']
+        }) is not None
+
     def addImage(self, study, image, creatorUser):
         # Avoid circular import
         from .annotation import Annotation
@@ -175,6 +185,54 @@ class Study(Folder):
         imageIds = Annotation().find({
             'meta.studyId': study['_id']}).distinct('meta.imageId')
         return Image().find({'_id': {'$in': imageIds}})
+
+    def addWaitingUser(self, study, user):
+        """
+        Add user to list of users waiting to participate in the study.
+        """
+        waitingUsers = study['meta'].get('waitingUsers', [])
+        waitingUsers.append(user['_id'])
+
+        # "setMetadata" will always save
+        self.setMetadata(
+            folder=study,
+            metadata={
+                'waitingUsers': waitingUsers
+            }
+        )
+
+    def removeWaitingUser(self, study, user):
+        """
+        Remove user from list of users waiting to participate in the study.
+        """
+        try:
+            waitingUsers = study['meta'].get('waitingUsers', [])
+            waitingUsers.remove(user['_id'])
+
+            # "setMetadata" will always save
+            self.setMetadata(
+                folder=study,
+                metadata={
+                    'waitingUsers': waitingUsers
+                }
+            )
+        except ValueError:
+            pass
+
+    def hasWaitingUser(self, study, user):
+        """
+        Check whether a user is in the list of users waiting to participate in the study.
+        """
+        waitingUsers = study['meta'].get('waitingUsers', [])
+        return user['_id'] in waitingUsers
+
+    def getWaitingUsers(self, study):
+        """
+        Get the list of users waiting to participate in the study.
+        """
+        return User().find({
+            '_id': {'$in': study['meta'].get('waitingUsers', [])}
+        })
 
     def childAnnotations(self, study=None, annotatorUser=None,
                          image=None, state=None, **kwargs):
@@ -233,6 +291,17 @@ class Study(Folder):
         # Avoid circular import
         from .annotation import Annotation
 
+        # Get list of users sorted by name
+        def getSortedUserList(users):
+            return sorted(
+                (
+                    User().filterSummary(studyUser, user)
+                    for studyUser in
+                    users
+                ),
+                # Sort by the obfuscated name
+                key=lambda user: user['name'])
+
         output = {
             '_id': study['_id'],
             '_modelType': 'study',
@@ -247,15 +316,7 @@ class Study(Folder):
             'featureset': Featureset().load(
                 id=study['meta']['featuresetId'],
                 fields=Featureset().summaryFields, exc=True),
-            'users': sorted(
-                (
-                    User().filterSummary(annotatorUser, user)
-                    for annotatorUser in
-                    Study().getAnnotators(study)
-                ),
-                # Sort by the obfuscated name
-                key=lambda annotatorUser: annotatorUser['name']
-            ),
+            'users': getSortedUserList(Study().getAnnotators(study)),
             'images': list(
                 Image().filterSummary(image, user)
                 for image in
@@ -279,6 +340,9 @@ class Study(Folder):
                 ])
             }
         }
+
+        if User().canAdminStudy(user):
+            output['waitingUsers'] = getSortedUserList(Study().getWaitingUsers(study))
 
         return output
 
