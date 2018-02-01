@@ -33,6 +33,18 @@ const StudyModel = Model.extend({
         return new UserCollection(userModels);
     },
 
+    waitingUsers: function () {
+        let userModels;
+        if (this.has('waitingUsers')) {
+            userModels = this.get('waitingUsers').map((user) => {
+                return new UserModel(user);
+            });
+        } else {
+            userModels = [];
+        }
+        return new UserCollection(userModels);
+    },
+
     /**
      * Add a user to the study.
      */
@@ -54,6 +66,14 @@ const StudyModel = Model.extend({
         });
         // TODO: update the model in-place here, with the new list of annotators,
         // then trigger a changed event
+    },
+
+    deleteParticipationRequest: function (user) {
+        return restRequest({
+            url: `${this.resourceName}/${this.id}/participate/${user.id}`,
+            method: 'DELETE',
+            error: null
+        });
     },
 
     destroy: function (options) {

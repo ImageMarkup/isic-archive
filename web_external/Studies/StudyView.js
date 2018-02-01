@@ -40,6 +40,20 @@ const StudyView = View.extend({
             this.confirmRemoveUser(user);
         },
 
+        'click .isic-study-accept-request-button': function (event) {
+            let target = $(event.currentTarget);
+            let userId = target.closest('[data-user-id]').data('userId');
+            let user = this.model.waitingUsers().get(userId);
+            this.confirmAcceptParticipationRequest(user);
+        },
+
+        'click .isic-study-delete-request-button': function (event) {
+            let target = $(event.currentTarget);
+            let userId = target.closest('[data-user-id]').data('userId');
+            let user = this.model.waitingUsers().get(userId);
+            this.confirmDeleteParticipationRequest(user);
+        },
+
         'click .isic-study-destroy-button': 'confirmDestroy'
     },
 
@@ -104,6 +118,70 @@ const StudyView = View.extend({
             .fail((resp) => {
                 showAlertDialog({
                     text: `<h4>Error deleting annotator</h4><br>${_.escape(resp.responseJSON.message)}`,
+                    escapedHtml: true
+                });
+            });
+    },
+
+    confirmAcceptParticipationRequest: function (user) {
+        confirm({
+            text: `<h4>Add user <b>"${_.escape(user.name())}"</b> to the study?</h4>`,
+            escapedHtml: true,
+            confirmCallback: () => {
+                // Ensure dialog is hidden before continuing. Otherwise,
+                // when destroy() displays its modal alert dialog,
+                // the Bootstrap-created element with class "modal-backdrop"
+                // is erroneously not removed.
+                $('#g-dialog-container').on('hidden.bs.modal', _.bind(this.acceptParticipationRequest, this, user));
+            }
+        });
+    },
+
+    acceptParticipationRequest: function (user) {
+        this.model
+            .addUser(user)
+            .done(() => {
+                this.model
+                    .once('g:fetched', () => {
+                        this.render();
+                    })
+                    .fetch();
+            })
+            .fail((resp) => {
+                showAlertDialog({
+                    text: `<h4>Error adding user to the study</h4><br>${_.escape(resp.responseJSON.message)}`,
+                    escapedHtml: true
+                });
+            });
+    },
+
+    confirmDeleteParticipationRequest: function (user) {
+        confirm({
+            text: `<h4>Delete participation request from <b>"${_.escape(user.name())}"</b>?</h4>`,
+            escapedHtml: true,
+            confirmCallback: () => {
+                // Ensure dialog is hidden before continuing. Otherwise,
+                // when destroy() displays its modal alert dialog,
+                // the Bootstrap-created element with class "modal-backdrop"
+                // is erroneously not removed.
+                $('#g-dialog-container').on('hidden.bs.modal', _.bind(this.deleteParticipationRequest, this, user));
+            }
+        });
+    },
+
+    deleteParticipationRequest: function (user) {
+        this.model
+            .deleteParticipationRequest(user)
+            .done(() => {
+                this.model
+                    .once('g:fetched', () => {
+                        this.render();
+                    })
+                    .fetch();
+            })
+            .fail((resp) => {
+                showAlertDialog({
+                    text: `<h4>Error deleting participation request</h4><br>${_.escape(resp.responseJSON.message)}`,
                     escapedHtml: true
                 });
             });
