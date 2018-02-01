@@ -57,7 +57,7 @@ const SelectFeaturesWidget = View.extend({
     },
 
     initialize: function (settings) {
-        this.collection = MultiselectableFeatureCollection.fromFeatureDictionary();
+        this.collection = MultiselectableFeatureCollection.fromMasterFeatures();
     },
 
     render: function () {

@@ -7,17 +7,23 @@ import {restRequest} from 'girder/rest';
 import {SelectFeatureModel, SuperpixelFeatureModel} from '../models/FeatureModel';
 import masterFeatures from '../masterFeatures.json';
 
-masterFeatures.sort((a, b) => {
-    // Sort first type 'type', then by 'name'
-    // TODO: This would probably be easier with Lodash's "sortBy"
-    if (a.type < b.type) {
-        return -1;
-    } else if (a.type > b.type) {
-        return 1;
-    } else {
-        return a.name < b.name ? -1 : 1;
+_.forEach(masterFeatures, (feature) => {
+    if (feature.type === 'superpixel') {
+        feature.id = [feature.nomenclature].concat(feature.name).join(':');
     }
 });
+
+// masterFeatures.sort((a, b) => {
+//     // Sort first type 'type', then by 'name'
+//     // TODO: This would probably be easier with Lodash's "sortBy"
+//     if (a.type < b.type) {
+//         return -1;
+//     } else if (a.type > b.type) {
+//         return 1;
+//     } else {
+//         return a.name < b.name ? -1 : 1;
+//     }
+// });
 
 const FeatureCollection = Backbone.Collection.extend({
     model: function (attrs, options) {
@@ -40,7 +46,7 @@ const FeatureCollection = Backbone.Collection.extend({
     }
 
 }, {
-    fromFeatureDictionary: function () {
+    fromMasterFeatures: function () {
         return new FeatureCollection(masterFeatures);
     }
 });
@@ -51,7 +57,7 @@ const SelectableFeatureCollection = FeatureCollection.extend({
         FeatureCollection.prototype.initialize.apply(this, arguments);
     }
 }, {
-    fromFeatureDictionary: function () {
+    fromMasterFeatures: function () {
         return new SelectableFeatureCollection(masterFeatures);
     }
 });
@@ -62,7 +68,7 @@ const MultiselectableFeatureCollection = FeatureCollection.extend({
         FeatureCollection.prototype.initialize.apply(this, arguments);
     }
 }, {
-    fromFeatureDictionary: function () {
+    fromMasterFeatures: function () {
         return new MultiselectableFeatureCollection(masterFeatures);
     }
 });

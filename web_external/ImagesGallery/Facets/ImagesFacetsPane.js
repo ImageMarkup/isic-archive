@@ -1,9 +1,14 @@
 import _ from 'underscore';
 
 import View from '../../view';
+import {MultiselectableFeatureCollection} from '../../collections/FeatureCollection';
 
 import ImagesFacetsPaneTemplate from './imagesFacetsPane.pug';
 import './imagesFacetsPane.styl';
+
+import FeatureFacetsSubsectionTemplate from './featureFacetsSubsection.pug';
+import FeatureFacetTemplate from './featureFacet.pug';
+import './featureFacets.styl';
 
 const ImagesFacetsPane = View.extend({
     /**
@@ -59,6 +64,15 @@ const ImagesFacetsPane = View.extend({
             facetView.render();
         });
 
+        new FeatureFacetsSubsection({
+            name: 'Metaphoric',
+            level: 0,
+            subFeatures: MultiselectableFeatureCollection.fromMasterFeatures(),
+            parentView: this
+        })
+            .render()
+            .$el.appendTo(this.$('.isic-images-facets-features>.isic-images-facets-features-section'));
+
         return this;
     },
 
@@ -75,5 +89,84 @@ const ImagesFacetsPane = View.extend({
         return facetView;
     }
 });
+
+const FeatureFacetsSubsection = View.extend({
+    className: 'isic-images-facets-features-section',
+
+    events: {
+        'click .isic-images-facets-feature-toggle': function (event) {
+            this.childListEl.toggle();
+            this.childListEl.siblings('.isic-images-facets-feature-toggle')
+                .toggleClass('icon-down-open')
+                .toggleClass('icon-right-open');
+            event.stopPropagation();
+        }
+    },
+
+    initialize: function (settings) {
+        this.name = settings.name;
+        this.level = settings.level;
+        this.subFeatures = settings.subFeatures;
+
+        this.childViews = _.chain(this.subFeatures.models)
+            .groupBy((feature) => {
+                return feature.get('name')[this.level + 1]
+            })
+            .map((childSubFeatures, childSubsectionName) => {
+                if (childSubFeatures.length <= 1) {
+                    return new FeatureFacetView({
+                        name: childSubsectionName,
+                        level: this.level + 1,
+                        parentView: this
+                    });
+                } else {
+                    return new FeatureFacetsSubsection({
+                        name: childSubsectionName,
+                        level: this.level + 1,
+                        subFeatures: new MultiselectableFeatureCollection(childSubFeatures),
+                        parentView: this
+                    });
+                }
+            })
+            .each((childView) => {
+            })
+            .value();
+    },
+
+    render: function () {
+        this.$el.html(FeatureFacetsSubsectionTemplate({
+            name: this.name
+        }));
+        // Must find this before children start adding their own sub-children?
+        this.childListEl = this.$('.isic-images-facets-features-children');
+        _.each(this.childViews, (childView) => {
+            childView
+                .render()
+                .$el.appendTo(this.childListEl);
+        });
+
+        return this;
+    }
+});
+
+const FeatureFacetView = View.extend({
+    className: 'isic-images-facets-features-section',
+
+    initialize: function (settings) {
+        this.name = settings.name;
+        this.level = settings.level;
+    },
+
+    render: function () {
+        this.$el.html(FeatureFacetTemplate({
+            name: this.name
+        }));
+        // TODO: remove this placeholder and replace with margin.
+        this.$('.icon-right-open').css('visibility', 'hidden');
+        return this;
+    }
+});
+
+
 
 export default ImagesFacetsPane;
