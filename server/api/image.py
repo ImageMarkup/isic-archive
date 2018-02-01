@@ -73,6 +73,34 @@ class ImageResource(IsicResource):
         except (TypeError, ValueError) as e:
             raise ValidationException('Could not parse filter:' % str(e), 'filter')
 
+    def _parseImageIds(self, imageIdsParam):
+        if isinstance(imageIdsParam, six.string_types):
+            try:
+                imageIdsParam = json.loads(imageIdsParam)
+            except ValueError as e:
+                raise ValidationException('Could not decode JSON: %s' % str(e), 'imageIds')
+        if not isinstance(imageIdsParam, list):
+            raise ValidationException('"imageIds" must be a JSON-encoded array.', 'imageIds')
+        if len(imageIdsParam) > 100:
+            raise ValidationException('"imageIds" may not contain more than 100 IDs.', 'imageIds')
+        imageIds = []
+        for imageId in imageIdsParam:
+            if not isinstance(imageId, six.string_types):
+                raise ValidationException('Each of "imageIds" must be a string.', 'imageIds')
+            try:
+                imageId = ObjectId(imageId)
+            except InvalidId:
+                raise ValidationException('Invalid ObjectId.', 'imageIds')
+            imageIds.append(imageId)
+        # TODO: We could validate that the user has access to all of the requested IDs, and
+        # raise a 403 error if now. Currently, we will silently exclude images that the user doesn't
+        # have permission to READ.
+
+        query = {
+            '_id': {'$in': imageIds}
+        }
+        return query
+
     @describeRoute(
         Description('Return a list of lesion images.')
         .pagingParams(defaultSort='name')
@@ -80,6 +108,9 @@ class ImageResource(IsicResource):
                required=False, dataType='boolean', default=False)
         .param('name', 'Find an image with a specific name.', required=False)
         .param('filter', 'Filter the images by a PegJS-specified grammar.',
+               required=False)
+        .param('imageIds',
+               'A JSON array of up to 100 image IDs, which will be exclusively included.',
                required=False)
         .errorResponse()
     )
@@ -90,12 +121,17 @@ class ImageResource(IsicResource):
         detail = self.boolParam('detail', params, default=False)
         limit, offset, sort = self.getPagingParameters(params, 'name')
 
-        if 'filter' in params:
+        if sum(option in params for option in {'name', 'filter', 'imageIds'}) > 1:
+            raise RestException('Only one of "name", "filter", or "imageIds" may be specified.')
+
+        if 'name' in params:
+            query = {'name': params['name']}
+        elif 'filter' in params:
             query = self._parseFilter(params['filter'])
+        elif 'imageIds' in params:
+            query = self._parseImageIds(params['imageIds'])
         else:
             query = {}
-            if 'name' in params:
-                query.update({'name': params['name']})
 
         filterFunc = Image().filter if detail else Image().filterSummary
         return [
@@ -165,6 +201,9 @@ class ImageResource(IsicResource):
                enum=['all', 'images', 'metadata'], default='all')
         .param('filter', 'Filter the images by a PegJS-specified grammar.',
                required=False)
+        .param('imageIds',
+               'A JSON array of up to 100 image IDs, which will be exclusively included.',
+               required=False)
         .produces('application/zip')
         .errorResponse()
     )
@@ -176,8 +215,13 @@ class ImageResource(IsicResource):
             raise ValidationException(
                 'Param "include" must be one of: "all", "images", "metadata"', 'include')
 
+        if 'filter' in params and 'imageIds' in params:
+            raise RestException('Only one of "filter" or "imageIds" may be specified.')
+
         if 'filter' in params:
             query = self._parseFilter(params['filter'])
+        elif 'imageIds' in params:
+            query = self._parseImageIds(params['imageIds'])
         else:
             query = {}
 
