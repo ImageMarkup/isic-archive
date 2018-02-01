@@ -122,7 +122,7 @@ class FieldParser(object):
     def transform(cls, value):
         """
         Implement in subclasses. Values that are None, match the empty string,
-        or 'unknown' (ignoring case) should be coerced to None.
+        'unknown', or sometimes 'not applicable' (ignoring case) should be coerced to None.
         """
         raise NotImplementedError()
 
@@ -482,7 +482,7 @@ class NevusTypeFieldParser(FieldParser):
         if value is not None:
             value = value.strip()
             value = value.lower()
-            if value in ['', 'unknown']:
+            if value in ['', 'unknown', 'not applicable']:
                 value = None
             else:
                 if value == 'nevus nos':
@@ -539,7 +539,7 @@ class DermoscopicTypeFieldParser(FieldParser):
         if value is not None:
             value = value.strip()
             value = value.lower()
-            if value in ['', 'unknown']:
+            if value in ['', 'unknown', 'not applicable']:
                 value = None
             else:
                 if value == 'contact non polarized':
@@ -572,7 +572,7 @@ class MelThickMmFieldParser(FieldParser):
         if value is not None:
             value = value.strip()
             value = value.lower()
-            if value in ['', 'unknown']:
+            if value in ['', 'unknown', 'not applicable']:
                 value = None
             else:
                 def raiseBadFieldTypeExceptionWithValue(value):
@@ -610,7 +610,7 @@ class MelClassFieldParser(FieldParser):
         if value is not None:
             value = value.strip()
             value = value.lower()
-            if value in ['', 'unknown']:
+            if value in ['', 'unknown', 'not applicable']:
                 value = None
             else:
                 if value == 'recurrent/persistent melanoma in situ':
@@ -642,7 +642,7 @@ class MelTypeFieldParser(FieldParser):
         if value is not None:
             value = value.strip()
             value = value.lower()
-            if value in ['', 'unknown']:
+            if value in ['', 'unknown', 'not applicable']:
                 value = None
             else:
                 if value == 'ssm':
@@ -676,7 +676,7 @@ class MelMitoticIndexFieldParser(FieldParser):
         if value is not None:
             value = value.strip()
             value = value.lower()
-            if value in ['', 'unknown']:
+            if value in ['', 'unknown', 'not applicable']:
                 value = None
             else:
                 value = re.sub(r'mm2$', 'mm^2', value)
@@ -705,7 +705,7 @@ class MelUlcerFieldParser(FieldParser):
         if value is not None:
             value = value.strip()
             value = value.lower()
-            if value in ['', 'unknown']:
+            if value in ['', 'unknown', 'not applicable']:
                 value = None
             else:
                 value = cls._coerceBool(value)
