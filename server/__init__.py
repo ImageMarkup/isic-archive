@@ -180,6 +180,14 @@ def load(info):
     # remove docs for default Girder API, to simplify page
     clearRouteDocs()
 
+    # Customize API docs template
+    baseTemplateFilename = info['apiRoot'].templateFilename
+    info['apiRoot'].updateHtmlVars({
+        'baseTemplateFilename': baseTemplateFilename
+    })
+    templatePath = os.path.join(info['pluginRootDir'], 'server', 'isic_api_docs.mako')
+    info['apiRoot'].setTemplatePath(templatePath)
+
     # TODO: nest these under a "/isic" path?
     info['apiRoot'].annotation = api.AnnotationResource()
     info['apiRoot'].dataset = api.DatasetResource()
