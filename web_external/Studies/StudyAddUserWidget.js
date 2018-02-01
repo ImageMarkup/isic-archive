@@ -23,14 +23,14 @@ const StudyAddUserWidget = View.extend({
                 _id: this.study.id
             });
             study
-                .once('g:addedUser', () => {
+                .addUser(this.user)
+                .done(() => {
                     this.trigger('g:saved');
                     $('.modal').modal('hide');
                 })
-                .once('g:error', () => {
+                .fail((resp) => {
                     $('.modal').modal('hide');
-                })
-                .addUser(this.user.id);
+                });
         }
     },
 
