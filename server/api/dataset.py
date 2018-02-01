@@ -374,7 +374,7 @@ class DatasetResource(IsicResource):
     @describeRoute(
         Description('Register metadata with a dataset.')
         .param('id', 'The ID of the dataset.', paramType='path')
-        .param('metadataFileId', 'The ID of the .csv metadata file.')
+        .param('metadataFileId', 'The ID of the .csv metadata file.', paramType='form')
     )
     @access.user
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
