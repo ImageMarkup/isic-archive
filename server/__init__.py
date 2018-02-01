@@ -21,9 +21,11 @@ import itertools
 import os
 
 import six
+import lxml.html
 from bson import json_util
+from six.moves import urllib
 
-from girder import events
+from girder import constants, events
 from girder.api.v1 import resource
 from girder.utility import mail_utils
 from girder.utility.plugin_utilities import getPluginDir, registerPluginWebroot
@@ -118,6 +120,32 @@ def clearRouteDocs():
     routes['user']['/user/authentication'] = user_auth_ops
 
 
+def loadApiDocsTemplate():
+    """
+    Return upstream API docs template with description replaced by custom template.
+    """
+    baseTemplatePath = os.path.join(constants.PACKAGE_DIR, 'api', 'api_docs.mako')
+
+    apiDescriptionTemplatePath = os.path.join(
+        getPluginDir(), 'isic_archive', 'server', 'api_description.mako')
+    with open(apiDescriptionTemplatePath) as apiDescriptionTemplateFile:
+        apiDescriptionTemplate = apiDescriptionTemplateFile.read()
+
+    # Parse upstream template and replace API description
+    tree = lxml.html.parse(baseTemplatePath)
+    root = tree.getroot()
+    body = root.find_class('docs-body')[0]
+    for child in body:
+        body.remove(child)
+    description = lxml.html.fragments_fromstring(apiDescriptionTemplate)
+    body.extend(description)
+
+    # Return string representation, undoing the URL encoding
+    template = lxml.html.tostring(tree)
+    template = urllib.parse.unquote(template)
+    return template
+
+
 def load(info):
     # set the title of the HTML pages
     info['serverRoot'].updateHtmlVars({'title': 'ISIC Archive'})
@@ -166,6 +194,13 @@ def load(info):
     # add api routes
     # remove docs for default Girder API, to simplify page
     clearRouteDocs()
+
+    # Customize API docs template
+    try:
+        info['apiRoot'].template = loadApiDocsTemplate()
+    except Exception:
+        # ignore and use default template
+        pass
 
     # TODO: nest these under a "/isic" path?
     info['apiRoot'].annotation = api.AnnotationResource()
