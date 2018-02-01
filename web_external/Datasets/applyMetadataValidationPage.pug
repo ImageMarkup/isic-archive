@@ -1,47 +1,65 @@
-if errors.initialized()
+- let pending = errors.pending() && warnings.pending
+- let initialized = errors.initialized() && warnings.initialized()
+if pending || initialized
   h3 Results
-  - let hasErrors = !errors.isEmpty()
-  - let hasWarnings = !warnings.isEmpty()
-  .isic-apply-metadata-validation-result-header(
-    class=hasErrors ? 'isic-apply-metadata-validation-result-header-error' : 'isic-apply-metadata-validation-result-header-ok')
-    .isic-apply-metadata-validation-result-header-filename
-      = file.name()
-    .isic-apply-metadata-validation-result-header-status
-      if !hasErrors && !hasWarnings
-        .isic-apply-metadata-validation-result-header-status-ok
-        | OK&nbsp;
-        i.icon-ok
-      else
-        .isic-apply-metadata-validation-result-header-status-bad
-          if hasErrors
-            = errors.length
-            if errors.length > 1
-              |  errors
-            else
-              |  error
-          if hasWarnings
-            if hasErrors
-              | ,&nbsp;
-            | #{warnings.length}
-            if warnings.length > 1
-              |  warnings
-            else
-              |  warning
-          | &nbsp;
-          i.icon-attention
-  if hasErrors
-    .isic-apply-metadata-validation-result-content
-      .isic-apply-metadata-validation-result-error-header
-        | Errors:
-      .isic-apply-metadata-validation-result-error-content
-        ul
-          each error in errors.toArray()
-            li= error.description()
-  if hasWarnings
-    .isic-apply-metadata-validation-result-content
-      .isic-apply-metadata-validation-result-error-header
-        | Warnings:
-      .isic-apply-metadata-validation-result-error-content
-        ul
-          each warning in warnings.toArray()
-            li= warning.description()
+  .isic-apply-metadata-validation-result-container
+    if pending || saved
+      .isic-apply-metadata-validation-result-pending
+        p
+          if saving
+            | Saving&hellip;
+          else if saved
+            | Metadata saved.
+          else
+            | Validating&hellip;
+        p.isic-apply-metadata-validation-result-pending-progress-indicator
+          if saved
+            i.icon-ok
+          else
+            i.icon-spin1.animate-spin
+    else
+      - let hasErrors = !errors.isEmpty()
+      - let hasWarnings = !warnings.isEmpty()
+      .isic-apply-metadata-validation-result-header(
+        class=hasErrors ? 'isic-apply-metadata-validation-result-header-error' : 'isic-apply-metadata-validation-result-header-ok')
+        .isic-apply-metadata-validation-result-header-filename
+          = file.name()
+        .isic-apply-metadata-validation-result-header-status
+          if !hasErrors && !hasWarnings
+            .isic-apply-metadata-validation-result-header-status-ok
+            | OK&nbsp;
+            i.icon-ok
+          else
+            .isic-apply-metadata-validation-result-header-status-bad
+              if hasErrors
+                = errors.length
+                if errors.length > 1
+                  |  errors
+                else
+                  |  error
+              if hasWarnings
+                if hasErrors
+                  | ,&nbsp;
+                | #{warnings.length}
+                if warnings.length > 1
+                  |  warnings
+                else
+                  |  warning
+              | &nbsp;
+              i.icon-attention
+      if hasErrors
+        .isic-apply-metadata-validation-result-content
+          .isic-apply-metadata-validation-result-error-header
+            | Errors:
+          .isic-apply-metadata-validation-result-error-content
+            ul
+              each error in errors.toArray()
+                li= error.description()
+      if hasWarnings
+        .isic-apply-metadata-validation-result-content
+          .isic-apply-metadata-validation-result-error-header
+            | Warnings:
+          .isic-apply-metadata-validation-result-error-content
+            ul
+              each warning in warnings.toArray()
+                li= warning.description()
