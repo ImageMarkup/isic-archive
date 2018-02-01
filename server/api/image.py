@@ -78,10 +78,8 @@ class ImageResource(IsicResource):
         .pagingParams(defaultSort='name')
         .param('detail', 'Display the full information for each image, instead of a summary.',
                required=False, dataType='boolean', default=False)
-        .param('datasetId', 'The ID of the dataset to use.', required=False)
         .param('name', 'Find an image with a specific name.', required=False)
-        .param('filter', 'Filter the images by a PegJS-specified grammar (causing "datasetId" and '
-                         '"name" to be ignored).',
+        .param('filter', 'Filter the images by a PegJS-specified grammar.',
                required=False)
         .errorResponse()
     )
@@ -96,11 +94,6 @@ class ImageResource(IsicResource):
             query = self._parseFilter(params['filter'])
         else:
             query = {}
-            if 'datasetId' in params:
-                try:
-                    query.update({'meta.datasetId': ObjectId(params['datasetId'])})
-                except InvalidId:
-                    raise ValidationException('Invalid ObjectId.', 'datasetId')
             if 'name' in params:
                 query.update({'name': params['name']})
 
@@ -170,9 +163,7 @@ class ImageResource(IsicResource):
         Description('Download multiple images as a ZIP file.')
         .param('include', 'Which types of data to include.', required=False,
                enum=['all', 'images', 'metadata'], default='all')
-        .param('datasetId', 'The ID of the dataset to download.', required=False)
-        .param('filter', 'Filter the images by a PegJS-specified grammar (causing "datasetId" to '
-                         'be ignored).',
+        .param('filter', 'Filter the images by a PegJS-specified grammar.',
                required=False)
         .produces('application/zip')
         .errorResponse()
@@ -189,11 +180,6 @@ class ImageResource(IsicResource):
             query = self._parseFilter(params['filter'])
         else:
             query = {}
-            if 'datasetId' in params:
-                try:
-                    query.update({'meta.datasetId': ObjectId(params['datasetId'])})
-                except InvalidId:
-                    raise ValidationException('Invalid ObjectId.', 'datasetId')
 
         user = self.getCurrentUser()
         downloadFileName = 'ISIC-images'
