@@ -34,14 +34,9 @@ const StudyModel = Model.extend({
     },
 
     waitingUsers: function () {
-        let userModels;
-        if (this.has('waitingUsers')) {
-            userModels = this.get('waitingUsers').map((user) => {
-                return new UserModel(user);
-            });
-        } else {
-            userModels = [];
-        }
+        let userModels = this.get('waitingUsers').map((user) => {
+            return new UserModel(user);
+        });
         return new UserCollection(userModels);
     },
 
