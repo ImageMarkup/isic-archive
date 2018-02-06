@@ -190,7 +190,7 @@ class Study(Folder):
         """
         Add user to list of users waiting to participate in the study.
         """
-        waitingUsers = study['meta'].get('waitingUsers', [])
+        waitingUsers = study['meta']['waitingUsers']
         waitingUsers.append(user['_id'])
 
         # "setMetadata" will always save
@@ -206,7 +206,7 @@ class Study(Folder):
         Remove user from list of users waiting to participate in the study.
         """
         try:
-            waitingUsers = study['meta'].get('waitingUsers', [])
+            waitingUsers = study['meta']['waitingUsers']
             waitingUsers.remove(user['_id'])
 
             # "setMetadata" will always save
@@ -223,7 +223,7 @@ class Study(Folder):
         """
         Check whether a user is in the list of users waiting to participate in the study.
         """
-        waitingUsers = study['meta'].get('waitingUsers', [])
+        waitingUsers = study['meta']['waitingUsers']
         return user['_id'] in waitingUsers
 
     def getWaitingUsers(self, study):
@@ -231,7 +231,7 @@ class Study(Folder):
         Get the list of users waiting to participate in the study.
         """
         return User().find({
-            '_id': {'$in': study['meta'].get('waitingUsers', [])}
+            '_id': {'$in': study['meta']['waitingUsers']}
         })
 
     def childAnnotations(self, study=None, annotatorUser=None,
