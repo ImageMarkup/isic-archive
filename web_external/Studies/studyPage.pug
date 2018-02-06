@@ -47,19 +47,23 @@
                 td.isic-study-user-completion-percent= percentCompleted
         else
           | (no users)
-      if study.canAdmin() && study.get('waitingUsers').length
+      if study.canAdmin()
         tr
           td.isic-study-users-content
             table.table-hover
               th(colspan=2) Participation Requests
-              each user in study.waitingUsers().toArray()
-                tr(data-user-id=user.id)
-                  td.isic-study-user-name= user.name()
-                  td
-                    a.isic-study-accept-request-button(title='Add user as annotator')
-                      i.icon-ok
-                    a.isic-study-delete-request-button.isic-study-delete-button(title='Delete request')
-                      i.icon-cancel
+              if study.get('waitingUsers').length
+                each user in study.waitingUsers().toArray()
+                  tr(data-user-id=user.id)
+                    td.isic-study-user-name= user.name()
+                    td
+                      a.isic-study-accept-request-button(title='Add user as annotator')
+                        i.icon-ok
+                      a.isic-study-delete-request-button.isic-study-delete-button(title='Delete request')
+                        i.icon-cancel
+              else
+                tr
+                  td (no requests)
 
   table.table.table-condensed.isic-listing-item-table
     tr
