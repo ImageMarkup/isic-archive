@@ -356,8 +356,8 @@ class StudyResource(IsicResource):
     def requestToParticipate(self, study, params):
         currentUser = self.getCurrentUser()
 
-        # Check if user is already waiting to participate in the study
-        if Study().hasWaitingUser(study, currentUser):
+        # Check if user already requested to participate in the study
+        if Study().hasParticipationRequest(study, currentUser):
             raise ValidationException('User "%s" already requested to participate in the study.' %
                                       currentUser['_id'])
 
@@ -366,7 +366,7 @@ class StudyResource(IsicResource):
             raise ValidationException('User "%s" is already part of the study.' %
                                       currentUser['_id'])
 
-        Study().addWaitingUser(study, currentUser)
+        Study().addParticipationRequest(study, currentUser)
 
         # Send email notification to study administrators
         host = mail_utils.getEmailUrlPrefix()
@@ -441,9 +441,9 @@ class StudyResource(IsicResource):
         currentUser = self.getCurrentUser()
         User().requireAdminStudy(currentUser)
 
-        # Check if user is waiting to participate in the study
-        if not Study().hasWaitingUser(study, otherUser):
+        # Check if user requested to participate in the study
+        if not Study().hasParticipationRequest(study, otherUser):
             raise ValidationException('User "%s" did not request to participate in the study.' %
                                       otherUser['_id'])
 
-        Study().removeWaitingUser(study, otherUser)
+        Study().removeParticipationRequest(study, otherUser)

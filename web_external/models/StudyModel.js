@@ -33,8 +33,11 @@ const StudyModel = Model.extend({
         return new UserCollection(userModels);
     },
 
-    waitingUsers: function () {
-        let userModels = this.get('waitingUsers').map((user) => {
+    /**
+     * Users requesting to participate in the study.
+     */
+    participationRequests: function () {
+        let userModels = this.get('participationRequests').map((user) => {
             return new UserModel(user);
         });
         return new UserCollection(userModels);

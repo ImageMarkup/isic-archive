@@ -52,8 +52,8 @@
           td.isic-study-users-content
             table.table-hover
               th(colspan=2) Participation Requests
-              if study.get('waitingUsers').length
-                each user in study.waitingUsers().toArray()
+              if study.get('participationRequests').length
+                each user in study.participationRequests().toArray()
                   tr(data-user-id=user.id)
                     td.isic-study-user-name= user.name()
                     td

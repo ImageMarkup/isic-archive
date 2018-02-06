@@ -73,7 +73,7 @@ class Study(Folder):
             folder=studyFolder,
             metadata={
                 'featuresetId': featureset['_id'],
-                'waitingUsers': []
+                'participationRequests': []
             }
         )
 
@@ -136,8 +136,8 @@ class Study(Folder):
             }
         )
 
-        # Remove user from list of users waiting to participate in the study
-        self.removeWaitingUser(study, annotatorUser)
+        # Remove request from the user to participate in the study
+        self.removeParticipationRequest(study, annotatorUser)
 
         for image in images:
             Annotation().createAnnotation(
@@ -186,37 +186,37 @@ class Study(Folder):
             'meta.studyId': study['_id']}).distinct('meta.imageId')
         return Image().find({'_id': {'$in': imageIds}})
 
-    def addWaitingUser(self, study, user):
+    def addParticipationRequest(self, study, user):
         """
-        Add user to list of users waiting to participate in the study.
-        """
-        self.update(
-            {'_id': study['_id']},
-            {'$addToSet': {'meta.waitingUsers': user['_id']}}
-        )
-
-    def removeWaitingUser(self, study, user):
-        """
-        Remove user from list of users waiting to participate in the study.
+        Add a request from a user to participate in the study.
         """
         self.update(
             {'_id': study['_id']},
-            {'$pull': {'meta.waitingUsers': user['_id']}}
+            {'$addToSet': {'meta.participationRequests': user['_id']}}
         )
 
-    def hasWaitingUser(self, study, user):
+    def removeParticipationRequest(self, study, user):
         """
-        Check whether a user is in the list of users waiting to participate in the study.
+        Remove a request from a user to participate in the study.
         """
-        waitingUsers = study['meta']['waitingUsers']
-        return user['_id'] in waitingUsers
+        self.update(
+            {'_id': study['_id']},
+            {'$pull': {'meta.participationRequests': user['_id']}}
+        )
 
-    def getWaitingUsers(self, study):
+    def hasParticipationRequest(self, study, user):
         """
-        Get the list of users waiting to participate in the study.
+        Check whether a user requested to participate in the study.
+        """
+        participationRequests = study['meta']['participationRequests']
+        return user['_id'] in participationRequests
+
+    def participationRequests(self, study):
+        """
+        Get the list of users requesting to participate in the study.
         """
         return User().find({
-            '_id': {'$in': study['meta']['waitingUsers']}
+            '_id': {'$in': study['meta']['participationRequests']}
         })
 
     def childAnnotations(self, study=None, annotatorUser=None,
@@ -327,7 +327,8 @@ class Study(Folder):
         }
 
         if User().canAdminStudy(user):
-            output['waitingUsers'] = getSortedUserList(Study().getWaitingUsers(study))
+            participationRequests = self.participationRequests(study)
+            output['participationRequests'] = getSortedUserList(participationRequests)
 
         return output
 

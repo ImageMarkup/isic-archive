@@ -43,14 +43,14 @@ const StudyView = View.extend({
         'click .isic-study-accept-request-button': function (event) {
             let target = $(event.currentTarget);
             let userId = target.closest('[data-user-id]').data('userId');
-            let user = this.model.waitingUsers().get(userId);
+            let user = this.model.participationRequests().get(userId);
             this.confirmAcceptParticipationRequest(user);
         },
 
         'click .isic-study-delete-request-button': function (event) {
             let target = $(event.currentTarget);
             let userId = target.closest('[data-user-id]').data('userId');
-            let user = this.model.waitingUsers().get(userId);
+            let user = this.model.participationRequests().get(userId);
             this.confirmDeleteParticipationRequest(user);
         },
 
