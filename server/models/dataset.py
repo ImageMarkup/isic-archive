@@ -282,7 +282,7 @@ class Dataset(AccessControlledModel):
             public=False,
             reuseExisting=True)
 
-        Image().createImage(
+        image = Image().createImage(
             imageDataStream=imageDataStream,
             imageDataSize=imageDataSize,
             originalName=filename,
@@ -291,6 +291,8 @@ class Dataset(AccessControlledModel):
             dataset=dataset,
             batch=batch
         )
+
+        return image
 
     def addZipBatch(self, dataset, zipFile, signature, user, sendMail=False):
         """
