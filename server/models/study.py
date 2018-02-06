@@ -91,9 +91,6 @@ class Study(Folder):
         if not images:
             images = self.getImages(study)
 
-        # Remove user from list of users waiting to participate in the study
-        self.removeWaitingUser(study, annotatorUser)
-
         # Allow annotator to read parent study
         study = self.setUserAccess(
             doc=study,
@@ -138,6 +135,9 @@ class Study(Folder):
                 'userId': annotatorUser['_id']
             }
         )
+
+        # Remove user from list of users waiting to participate in the study
+        self.removeWaitingUser(study, annotatorUser)
 
         for image in images:
             Annotation().createAnnotation(
@@ -190,34 +190,19 @@ class Study(Folder):
         """
         Add user to list of users waiting to participate in the study.
         """
-        waitingUsers = study['meta']['waitingUsers']
-        waitingUsers.append(user['_id'])
-
-        # "setMetadata" will always save
-        self.setMetadata(
-            folder=study,
-            metadata={
-                'waitingUsers': waitingUsers
-            }
+        self.update(
+            {'_id': study['_id']},
+            {'$addToSet': {'meta.waitingUsers': user['_id']}}
         )
 
     def removeWaitingUser(self, study, user):
         """
         Remove user from list of users waiting to participate in the study.
         """
-        try:
-            waitingUsers = study['meta']['waitingUsers']
-            waitingUsers.remove(user['_id'])
-
-            # "setMetadata" will always save
-            self.setMetadata(
-                folder=study,
-                metadata={
-                    'waitingUsers': waitingUsers
-                }
-            )
-        except ValueError:
-            pass
+        self.update(
+            {'_id': study['_id']},
+            {'$pull': {'meta.waitingUsers': user['_id']}}
+        )
 
     def hasWaitingUser(self, study, user):
         """
