@@ -240,13 +240,15 @@ class DatasetResource(IsicResource):
         if not imageDataSize:
             raise RestException('No data provided in request body.')
 
-        Dataset().addImage(
+        image = Dataset().addImage(
             dataset=dataset,
             imageDataStream=imageDataStream,
             imageDataSize=imageDataSize,
             filename=filename,
             signature=signature,
             user=user)
+
+        return Image().filter(image, user=user)
 
     @describeRoute(
         Description('Upload a batch of ZIP images to a dataset.')
