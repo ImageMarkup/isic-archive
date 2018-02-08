@@ -1698,7 +1698,7 @@ class ImageMetadataTestCase(base.TestCase):
         image['meta']['clinical']['sex'] = 'male'
         image['meta']['clinical']['melanocytic'] = False
         errors, warnings = addImageMetadata(image, data)
-        self.assertEquals(5, len(errors))
+        self.assertEquals(4, len(errors))
         self.assertIn(
             "value already exists for field 'sex' (old: 'male', new: u'female')",
             errors)
@@ -1713,10 +1713,11 @@ class ImageMetadataTestCase(base.TestCase):
             "only one of field 'benign_malignant' may be present, "
             "found: ['ben_mal', 'benign_malignant']",
             errors)
+        self.assertEqual(1, len(warnings))
         self.assertIn(
-            "values [u'melanoma', False] for fields ['diagnosis', 'melanocytic'] are inconsistent",
-            errors)
-        self.assertEquals([], warnings)
+            "corrected inconsistent value for field 'melanocytic' based on field 'diagnosis' "
+            "(new value: True, 'diagnosis': u'melanoma')",
+            warnings)
 
     def testAddImageClinicalMetadataInterfieldValidation(self):
         # Valid cases
@@ -1851,3 +1852,41 @@ class ImageMetadataTestCase(base.TestCase):
         errors, warnings = addImageMetadata(image, data)
         self.assertEqual([], errors)
         self.assertEqual(1, len(warnings))
+
+    def testMelanocyticValidation(self):
+        # Test populating melanocytic field based on diagnosis
+        data = {
+            'benign_malignant': 'malignant',
+            'diagnosis': 'melanoma',
+            'diagnosis_confirm_type': 'histopathology',
+            'melanocytic': None
+        }
+        image = self._createImage()
+        errors, warnings = addImageMetadata(image, data)
+        self.assertEqual([], errors)
+        self.assertEqual([], warnings)
+        self.assertTrue(image['meta']['clinical']['melanocytic'])
+
+        # Test autocorrecting inconsistent melanocytic field to True based on diagnosis
+        data = {
+            'benign_malignant': 'malignant',
+            'diagnosis': 'melanoma',
+            'diagnosis_confirm_type': 'histopathology',
+            'melanocytic': False
+        }
+        image = self._createImage()
+        errors, warnings = addImageMetadata(image, data)
+        self.assertEqual([], errors)
+        self.assertEqual(1, len(warnings))
+        self.assertTrue(image['meta']['clinical']['melanocytic'])
+
+        # Test autocorrecting inconsistent melanocytic field to False based on diagnosis
+        data = {
+            'diagnosis': 'verruca',
+            'melanocytic': True
+        }
+        image = self._createImage()
+        errors, warnings = addImageMetadata(image, data)
+        self.assertEqual([], errors)
+        self.assertEqual(1, len(warnings))
+        self.assertFalse(image['meta']['clinical']['melanocytic'])
