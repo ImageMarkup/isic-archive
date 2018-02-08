@@ -34,20 +34,25 @@ const StudyModel = Model.extend({
     },
 
     /**
+     * Users requesting to participate in the study.
+     */
+    participationRequests: function () {
+        let userModels = this.get('participationRequests').map((user) => {
+            return new UserModel(user);
+        });
+        return new UserCollection(userModels);
+    },
+
+    /**
      * Add a user to the study.
      */
-    addUser: function (userId) {
-        // TODO: return a promise here, and use it (rather than events)
-        restRequest({
+    addUser: function (user) {
+        return restRequest({
             url: `${this.resourceName}/${this.id}/users`,
             method: 'POST',
             data: {
-                userIds: JSON.stringify([userId])
+                userIds: JSON.stringify([user.id])
             }
-        }).done((resp) => {
-            this.trigger('g:addedUser');
-        }).fail((err) => {
-            this.trigger('g:error', err);
         });
     },
 
@@ -59,6 +64,14 @@ const StudyModel = Model.extend({
         });
         // TODO: update the model in-place here, with the new list of annotators,
         // then trigger a changed event
+    },
+
+    deleteParticipationRequest: function (user) {
+        return restRequest({
+            url: `${this.resourceName}/${this.id}/participate/${user.id}`,
+            method: 'DELETE',
+            error: null
+        });
     },
 
     destroy: function (options) {

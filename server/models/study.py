@@ -72,7 +72,8 @@ class Study(Folder):
         studyFolder = self.setMetadata(
             folder=studyFolder,
             metadata={
-                'featuresetId': featureset['_id']
+                'featuresetId': featureset['_id'],
+                'participationRequests': []
             }
         )
 
@@ -135,6 +136,9 @@ class Study(Folder):
             }
         )
 
+        # Remove request from the user to participate in the study
+        self.removeParticipationRequest(study, annotatorUser)
+
         for image in images:
             Annotation().createAnnotation(
                 study, image, creatorUser, annotatorFolder)
@@ -150,6 +154,12 @@ class Study(Folder):
         if not annotatorFolder:
             raise ValidationException('Annotator user is not in study.')
         Folder().remove(annotatorFolder)
+
+    def hasAnnotator(self, study, annotatorUser):
+        return Folder().findOne({
+            'parentId': study['_id'],
+            'meta.userId': annotatorUser['_id']
+        }) is not None
 
     def addImage(self, study, image, creatorUser):
         # Avoid circular import
@@ -175,6 +185,39 @@ class Study(Folder):
         imageIds = Annotation().find({
             'meta.studyId': study['_id']}).distinct('meta.imageId')
         return Image().find({'_id': {'$in': imageIds}})
+
+    def addParticipationRequest(self, study, user):
+        """
+        Add a request from a user to participate in the study.
+        """
+        self.update(
+            {'_id': study['_id']},
+            {'$addToSet': {'meta.participationRequests': user['_id']}}
+        )
+
+    def removeParticipationRequest(self, study, user):
+        """
+        Remove a request from a user to participate in the study.
+        """
+        self.update(
+            {'_id': study['_id']},
+            {'$pull': {'meta.participationRequests': user['_id']}}
+        )
+
+    def hasParticipationRequest(self, study, user):
+        """
+        Check whether a user requested to participate in the study.
+        """
+        participationRequests = study['meta']['participationRequests']
+        return user['_id'] in participationRequests
+
+    def participationRequests(self, study):
+        """
+        Get the list of users requesting to participate in the study.
+        """
+        return User().find({
+            '_id': {'$in': study['meta']['participationRequests']}
+        })
 
     def childAnnotations(self, study=None, annotatorUser=None,
                          image=None, state=None, **kwargs):
@@ -233,6 +276,17 @@ class Study(Folder):
         # Avoid circular import
         from .annotation import Annotation
 
+        # Get list of users sorted by name
+        def getSortedUserList(users):
+            return sorted(
+                (
+                    User().filterSummary(studyUser, user)
+                    for studyUser in
+                    users
+                ),
+                # Sort by the obfuscated name
+                key=lambda user: user['name'])
+
         output = {
             '_id': study['_id'],
             '_modelType': 'study',
@@ -247,15 +301,7 @@ class Study(Folder):
             'featureset': Featureset().load(
                 id=study['meta']['featuresetId'],
                 fields=Featureset().summaryFields, exc=True),
-            'users': sorted(
-                (
-                    User().filterSummary(annotatorUser, user)
-                    for annotatorUser in
-                    Study().getAnnotators(study)
-                ),
-                # Sort by the obfuscated name
-                key=lambda annotatorUser: annotatorUser['name']
-            ),
+            'users': getSortedUserList(Study().getAnnotators(study)),
             'images': list(
                 Image().filterSummary(image, user)
                 for image in
@@ -279,6 +325,10 @@ class Study(Folder):
                 ])
             }
         }
+
+        if User().canAdminStudy(user):
+            participationRequests = self.participationRequests(study)
+            output['participationRequests'] = getSortedUserList(participationRequests)
 
         return output
 

@@ -31,6 +31,7 @@ from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 from girder.exceptions import RestException, ValidationException
 from girder.models.folder import Folder
+from girder.utility import mail_utils
 
 from .base import IsicResource
 from ..models.annotation import Annotation
@@ -38,6 +39,7 @@ from ..models.featureset import Featureset
 from ..models.image import Image
 from ..models.study import Study
 from ..models.user import User
+from ..utility import mail_utils as isic_mail_utils
 
 
 class StudyResource(IsicResource):
@@ -50,8 +52,10 @@ class StudyResource(IsicResource):
         self.route('POST', (), self.createStudy)
         self.route('POST', (':id', 'users'), self.addAnnotators)
         self.route('POST', (':id', 'images'), self.addImages)
+        self.route('POST', (':id', 'participate'), self.requestToParticipate)
         self.route('DELETE', (':id',), self.deleteStudy)
         self.route('DELETE', (':id', 'users', ':userId',), self.deleteAnnotator)
+        self.route('DELETE', (':id', 'participate', ':userId'), self.deleteParticipationRequest)
 
     @describeRoute(
         Description('Return a list of annotation studies.')
@@ -340,6 +344,43 @@ class StudyResource(IsicResource):
         return self.getStudy(id=study['_id'], params={})
 
     @describeRoute(
+        Description('Request to participate in a study.')
+        .notes('Study administrators can accept the request by adding the user to the study '
+               'with `POST /study/{id}/users` or delete the request with '
+               '`DELETE /study/{id}/participate/{userId}`.')
+        .param('id', 'The ID of the study.', paramType='path')
+        .errorResponse('ID was invalid.')
+    )
+    @access.user
+    @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
+    def requestToParticipate(self, study, params):
+        currentUser = self.getCurrentUser()
+
+        # Check if user already requested to participate in the study
+        if Study().hasParticipationRequest(study, currentUser):
+            raise ValidationException('User "%s" already requested to participate in the study.' %
+                                      currentUser['_id'])
+
+        # Check if user is already an annotator in the study
+        if Study().hasAnnotator(study, currentUser):
+            raise ValidationException('User "%s" is already part of the study.' %
+                                      currentUser['_id'])
+
+        Study().addParticipationRequest(study, currentUser)
+
+        # Send email notification to study administrators
+        host = mail_utils.getEmailUrlPrefix()
+        isic_mail_utils.sendEmailToGroup(
+            groupName='Study Administrators',
+            templateFilename='participateInStudyRequest.mako',
+            templateParams={
+                'host': host,
+                'study': study,
+                'user': currentUser
+            },
+            subject='ISIC Archive: Study Participation Request')
+
+    @describeRoute(
         Description('Delete a study.')
         .param('id', 'The ID of the study.', paramType='path')
         .errorResponse('ID was invalid.')
@@ -385,3 +426,24 @@ class StudyResource(IsicResource):
 
         # No Content
         cherrypy.response.status = 204
+
+    @describeRoute(
+        Description('Delete a request from a user to participate in a study.')
+        .param('id', 'The ID of the study.', paramType='path')
+        .param('userId', 'The ID of the user.', paramType='path')
+        .errorResponse('ID was invalid.')
+    )
+    @access.user
+    @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
+    @loadmodel(model='user', plugin='isic_archive', map={'userId': 'otherUser'},
+               level=AccessType.READ)
+    def deleteParticipationRequest(self, study, otherUser, params):
+        currentUser = self.getCurrentUser()
+        User().requireAdminStudy(currentUser)
+
+        # Check if user requested to participate in the study
+        if not Study().hasParticipationRequest(study, otherUser):
+            raise ValidationException('User "%s" did not request to participate in the study.' %
+                                      otherUser['_id'])
+
+        Study().removeParticipationRequest(study, otherUser)
