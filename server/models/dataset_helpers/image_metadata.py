@@ -720,13 +720,18 @@ class MelUlcerFieldParser(FieldParser):
 def _populateMetadata(acquisition, clinical):
     """
     Populate empty metadata fields that can be determined based on other fields.
+    In some cases, populates inconsistent fields and emits a warning.
+    Returns a list of warnings.
     """
+    warnings = []
+
     dermoscopicType = acquisition.get('dermoscopic_type')
     imageType = acquisition.get('image_type')
 
     diagnosis = clinical.get('diagnosis')
     benignMalignant = clinical.get('benign_malignant')
     diagnosisConfirmType = clinical.get('diagnosis_confirm_type')
+    melanocytic = clinical.get('melanocytic')
 
     if diagnosis == 'melanoma':
         if benignMalignant is None:
@@ -737,14 +742,28 @@ def _populateMetadata(acquisition, clinical):
 
     # Set melanocytic field based on diagnosis
     if diagnosis in MelanocyticFieldParser.melanocyticDiagnoses:
-        if clinical.get('melanocytic') is None:
+        if melanocytic is None:
             clinical['melanocytic'] = True
+        elif not melanocytic:
+            clinical['melanocytic'] = True
+            warnings.append('corrected inconsistent value for field %r based on field %r '
+                            '(new value: %r, %r: %r)' %
+                            (MelanocyticFieldParser.name, DiagnosisFieldParser.name,
+                             True, DiagnosisFieldParser.name, diagnosis))
     elif diagnosis is not None and diagnosis != 'other':
-        if clinical.get('melanocytic') is None:
+        if melanocytic is None:
             clinical['melanocytic'] = False
+        elif melanocytic:
+            clinical['melanocytic'] = False
+            warnings.append('corrected inconsistent value for field %r based on field %r '
+                            '(new value: %r, %r: %r)' %
+                            (MelanocyticFieldParser.name, DiagnosisFieldParser.name,
+                             False, DiagnosisFieldParser.name, diagnosis))
 
     if dermoscopicType is not None and imageType is None:
         acquisition['image_type'] = 'dermoscopic'
+
+    return warnings
 
 
 def _checkMetadataErrors(acquisition, clinical):
@@ -758,7 +777,6 @@ def _checkMetadataErrors(acquisition, clinical):
     diagnosis = clinical.get('diagnosis')
     benignMalignant = clinical.get('benign_malignant')
     diagnosisConfirmType = clinical.get('diagnosis_confirm_type')
-    melanocytic = clinical.get('melanocytic')
     melThickMm = clinical.get('mel_thick_mm')
     melClass = clinical.get('mel_class')
     melType = clinical.get('mel_type')
@@ -780,18 +798,6 @@ def _checkMetadataErrors(acquisition, clinical):
             raise InconsistentValuesException(
                 names=[DiagnosisFieldParser.name, BenignMalignantFieldParser.name],
                 values=[diagnosis, benignMalignant])
-
-    # Verify melanocytic field with respect to diagnosis
-    if diagnosis in MelanocyticFieldParser.melanocyticDiagnoses:
-        if melanocytic is False:
-            raise InconsistentValuesException(
-                names=[DiagnosisFieldParser.name, MelanocyticFieldParser.name],
-                values=[diagnosis, melanocytic])
-    elif diagnosis is not None and diagnosis != 'other':
-        if melanocytic is True:
-            raise InconsistentValuesException(
-                names=[DiagnosisFieldParser.name, MelanocyticFieldParser.name],
-                values=[diagnosis, melanocytic])
 
     # Verify melanoma-related fields with respect to diagnosis
     for value, parser in [
@@ -918,7 +924,7 @@ def addImageMetadata(image, data):
     # TODO: handle contingently required fields
 
     # Populate empty metadata fields
-    _populateMetadata(acquisition, clinical)
+    warnings.extend(_populateMetadata(acquisition, clinical))
 
     # Check metadata for errors
     try:
