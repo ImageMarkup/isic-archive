@@ -112,10 +112,33 @@ def onJobSave(event):
 
 def clearRouteDocs():
     from girder.api.docs import routes
-    # preserve the user token login operation
-    user_auth_ops = routes['user']['/user/authentication']
+
+    # Preserve some upstream operations for user lifecycle management
+    savedRoutes = {}
+    for routeMethod, routePath in {
+        ('GET', '/user/authentication'),  # log in by password
+        ('DELETE', '/user/authentication'),  # log out
+        ('GET', '/user/me'),  # personal info on the current user
+        ('POST', '/user'),  # personal info on the current user
+        ('GET', '/oauth/provider'),  # initiate an OAuth2 workflow for login / registration
+        ('PUT', '/user/{id}'),  # change personal info
+        ('PUT', '/user/password'),  # change password
+        ('PUT', '/user/password/temporary'),  # initiate email reset of forgotten password
+        ('GET', '/user/password/temporary/{id}'),  # complete email reset of forgotten password
+        ('POST', '/user/verification'),  # resend an email verification message
+    }:
+        # The [0] element of the routePath split is '', since it starts with a '/'
+        routeResource = routePath.split('/')[1]
+        try:
+            routeOperation = routes[routeResource][routePath][routeMethod]
+        except KeyError:
+            continue
+        savedRoutes[(routeResource, routePath, routeMethod)] = routeOperation
+
     routes.clear()
-    routes['user']['/user/authentication'] = user_auth_ops
+
+    for (routeResource, routePath, routeMethod), routeOperation in six.viewitems(savedRoutes):
+        routes[routeResource][routePath][routeMethod] = routeOperation
 
 
 def load(info):
