@@ -129,7 +129,10 @@ def clearRouteDocs():
     }:
         # The [0] element of the routePath split is '', since it starts with a '/'
         routeResource = routePath.split('/')[1]
-        routeOperation = routes[routeResource][routePath][routeMethod]
+        try:
+            routeOperation = routes[routeResource][routePath][routeMethod]
+        except KeyError:
+            continue
         savedRoutes[(routeResource, routePath, routeMethod)] = routeOperation
 
     routes.clear()
