@@ -32,6 +32,28 @@ const DatasetModel = AccessControlledModel.extend({
     },
 
     /**
+     * Upload an image.
+     * @param [filename] Image filename.
+     * @param [signature] Signature of license agreement.
+     * @param [imageData] Image data.
+     */
+    uploadImage: function (filename, signature, imageData) {
+        const params = {
+            filename: filename,
+            signature: signature
+        };
+
+        return restRequest({
+            url: `${this.resourceName}/${this.id}/image?` + $.param(params),
+            method: 'POST',
+            data: imageData,
+            contentType: false,
+            processData: false,
+            error: null
+        });
+    },
+
+    /**
      * Register a metadata file with the dataset.
      * @param [metadataFileId] The ID of the metadata file.
      */
