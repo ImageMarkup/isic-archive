@@ -150,7 +150,7 @@ router.route('dataset/create', 'createDataset', () => {
     navigateToIfCanCreateDataset(CreateDatasetView);
 });
 import UploadBatchView from './Datasets/UploadBatchView';
-router.route('dataset/uploadBatch', 'uploadBatch', () => {
+router.route('dataset/upload/batch', 'uploadBatch', () => {
     navigateToIfCanCreateDataset(UploadBatchView);
 });
 import ApplyMetadataView from './Datasets/ApplyMetadataView';
