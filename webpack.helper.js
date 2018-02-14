@@ -4,7 +4,7 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const GoogleFontsPlugin = require('google-fonts-webpack-plugin');
 
 module.exports = function (baseConfig, helperConfig) {
-    if (helperConfig.output === 'app') {
+    if (helperConfig.output === 'app' || 'app_integration') {
         // Don't use any Dll*Plugins
         baseConfig.plugins = [
             new ExtractTextPlugin({
