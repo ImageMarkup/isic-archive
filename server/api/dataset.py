@@ -383,9 +383,7 @@ class DatasetResource(IsicResource):
     def registerMetadata(self, dataset, params):
         params = self._decodeParams(params)
         self.requireParams(['metadataFileId'], params)
-
         user = self.getCurrentUser()
-        User().requireCreateDataset(user)
 
         metadataFile = File().load(
             params['metadataFileId'], user=user, level=AccessType.WRITE, exc=False)
@@ -428,9 +426,6 @@ class DatasetResource(IsicResource):
         params = self._decodeParams(params)
         self.requireParams('save', params)
         save = self.boolParam('save', params)
-
-        user = self.getCurrentUser()
-        User().requireCreateDataset(user)
 
         errors, warnings = Dataset().applyMetadata(
             dataset=dataset, metadataFile=metadataFile, save=save)
