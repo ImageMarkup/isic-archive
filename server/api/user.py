@@ -17,6 +17,10 @@
 #  limitations under the License.
 ###############################################################################
 
+import re
+
+import cherrypy
+
 from girder import events
 from girder.api import access
 from girder.api.describe import Description, describeRoute
@@ -63,6 +67,16 @@ def onPostUser(event):
 def onGetPasswordTemporaryId(event):
     userResponse = event.info['returnVal']['user']
     attachUserPermissions(userResponse)
+
+
+def onSetCookie(event):
+    cookie = cherrypy.response.cookie
+    if 'girderToken' in cookie:
+        # Persist 'display.' subdomain logins to the root domain
+        # TODO: This makes the cookie available to any other subdomains (like 'forum.')
+        origin = cherrypy.request.headers.get('origin')
+        if origin and re.match(r'https?://display\.isic-archive\.com', origin):
+            cookie['girderToken']['Domain'] = 'isic-archive.com'
 
 
 def getUserEmail(user):
@@ -205,6 +219,13 @@ def attachUserApi(user):
     events.bind('rest.post.user.after', 'onPostUser', onPostUser)
     events.bind('rest.get.user/password/temporary/:id.after', 'onGetPasswordTemporaryId',
                 onGetPasswordTemporaryId)
+
+    # TODO: Bind these in a more general way, as other places (e.g. OAuth) may also set the cookie
+    events.bind('rest.post.user.after', 'onSetCookie', onSetCookie)
+    events.bind('rest.get.user/authentication.after', 'onSetCookie', onSetCookie)
+    events.bind('rest.get.user/password/temporary/:id.after', 'onSetCookie', onSetCookie)
+    events.bind('rest.put.user/:id/verification.after', 'onSetCookie', onSetCookie)
+
     user.route('POST', ('requestCreateDatasetPermission',), requestCreateDatasetPermission)
     user.route('POST', ('acceptTerms',), acceptTerms)
     user.route('POST', ('invite',), inviteUser)
