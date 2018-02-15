@@ -26,7 +26,7 @@ from bson import json_util
 from girder import events
 from girder.api.v1 import resource
 from girder.utility import mail_utils
-from girder.utility.plugin_utilities import getPluginDir, registerPluginWebroot
+from girder.utility.plugin_utilities import registerPluginWebroot
 from girder.utility.server import staticFile
 from girder.utility.webroot import WebrootBase
 
@@ -34,22 +34,6 @@ from . import api
 # Import settings for side effects
 from . import settings  # noqa: F401
 from .provision_utility import provisionDatabase
-
-
-class Webroot(WebrootBase):
-    """
-    The webroot endpoint simply serves the main index HTML file.
-    """
-    def __init__(self, templatePath=None):
-        if not templatePath:
-            templatePath = os.path.join(getPluginDir(), 'isic_archive', 'server', 'webroot.mako')
-        super(Webroot, self).__init__(templatePath)
-
-        self.vars = {
-            'apiRoot': '/api/v1',
-            'staticRoot': '/static',
-            'title': 'ISIC Archive'
-        }
 
 
 def onDescribeResource(event):
@@ -162,7 +146,13 @@ def load(info):
         os.path.join(info['pluginRootDir'], 'server', 'license_templates'),
         prepend=True)
 
-    registerPluginWebroot(Webroot(), info['name'])
+    externalWebroot = WebrootBase(os.path.join(info['pluginRootDir'], 'server', 'webroot.mako'))
+    externalWebroot.updateHtmlVars({
+        'apiRoot': '/api/v1',
+        'staticRoot': '/static',
+        'title': 'ISIC Archive'
+    })
+    registerPluginWebroot(externalWebroot, info['name'])
 
     # add static file serving
     info['config']['/uda'] = {
