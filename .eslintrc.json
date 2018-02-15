@@ -1,5 +1,6 @@
 {
-    "extends": "girder",
+    "extends": ["girder", "plugin:vue/recommended"],
+    "plugins": ["vue"],
     "rules": {
         "backbone/event-scope": "off",
         "backbone/no-native-jquery": ["off", "selector"],
