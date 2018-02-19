@@ -325,7 +325,6 @@ class MelanocyticFieldParser(FieldParser):
         'nevus',
         'nevus spilus',
         'atypical melanocytic proliferation',
-        'solar lentigo',
         'lentigo simplex',
         'lentigo NOS',
     ]
