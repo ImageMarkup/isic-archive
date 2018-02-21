@@ -56,6 +56,18 @@ module.exports = function (baseConfig, helperConfig) {
                 use: [
                     'bibtex-loader'
                 ]
+            },
+            {
+                resource: {
+                    test: /\.vue$/,
+                },
+                use: [
+                    {
+                        loader: 'vue-loader',
+                        options: {
+                        }
+                    }
+                ]
             }
         );
 
