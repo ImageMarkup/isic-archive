@@ -440,7 +440,8 @@ class ImageResource(IsicResource):
                '\n'
                'When there are no errors, the `warnings` list contains warnings that don\'t '
                'prevent saving the metadata, but should be reviewed.')
-        .modelParam('id', model=Image, destName='image', level=AccessType.READ)
+        .modelParam('id', description='The ID of the image.', model=Image, destName='image',
+                    level=AccessType.READ)
         .jsonParam('metadata', 'The JSON object containing image metadata.', paramType='body',
                    requireObject=True)
         .param('save', 'Whether to save the metadata to the image if validation succeeds.',
