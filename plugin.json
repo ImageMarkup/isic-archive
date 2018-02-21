@@ -21,7 +21,8 @@
             "url-loader": "~0.6.2",
             "vue": "~2.5.0",
             "vue-loader": "~14.1.0",
-            "vue-template-compiler": "~2.5.0"
+            "vue-template-compiler": "~2.5.0",
+            "vue2-dropzone": "~3.0.0"
         }
     },
     "grunt": {
