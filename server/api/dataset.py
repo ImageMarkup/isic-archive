@@ -209,10 +209,11 @@ class DatasetResource(IsicResource):
                'Note that files uploaded in the request body are not supported by '
                '[OpenAPI 2.0](https://swagger.io/docs/specification/2-0/file-upload/), '
                'so it\'s currently not possible to use this endpoint from the Swagger UI '
-               'interface. [OpenAPI 3.0]'
-               '(https://swagger.io/docs/specification/describing-request-body/file-upload/) '
-               'supports this, but it\'s unclear whether Swagger UI properly displays the '
-               'file upload UI; see https://github.com/swagger-api/swagger-ui/issues/3641.')
+               'interface.')
+        # Note: OpenAPI 3.0 supports files uploaded in the request body, but Swagger GUI may not
+        # properly display the file upload UI. See:
+        # - https://swagger.io/docs/specification/describing-request-body/file-upload/
+        # - https://github.com/swagger-api/swagger-ui/issues/3641
         .param('id', 'The ID of the dataset.', paramType='path')
         .param('filename', 'Image filename.', paramType='query')
         .param('signature', 'Signature of license agreement.', paramType='query')
