@@ -407,6 +407,39 @@ class ImageResource(IsicResource):
 
     @autoDescribeRoute(
         Description('Apply metadata to an image.')
+        .notes('Validates and adds acquisition and clinical metadata to an image.\n'
+               'The `metadata` parameter is a JSON object which contains a name/value pair '
+               'for each field to add or update. The object should not contain nested structures.'
+               '\n\n'
+               'Example:\n'
+               '```\n'
+               '{\n'
+               '    "age": 45,\n'
+               '    "sex": "male",\n'
+               '    "benign_malignant": "malignant",\n'
+               '    "diagnosis": "melanoma",\n'
+               '    "diagnosis_confirm_type": "histopathology",\n'
+               '    "mel_class": "melanoma NOS",\n'
+               '    "mel_mitotic_index": "2/mm^2",\n'
+               '    "mel_thick_mm": "1.5 mm",\n'
+               '    "mel_type": "melanoma NOS",\n'
+               '    "mel_ulcer": "true"\n'
+               '}\n'
+               '```\n'
+               'Returns an object that has two fields: `errors` and `warnings`. Each contains a '
+               'list of objects that have a `description` field, which is a user-readable '
+               'string describing the error or warning.'
+               '\n\n'
+               'Validation is successful when the `errors` list is empty. Otherwise, the metadata '
+               'is not saved, regardless of the value of the `save` parameter, and the `errors` '
+               'list contains the validation errors. Validation can fail for several reasons, '
+               'including but not limited to:\n'
+               '- The value of a field is of the wrong type\n'
+               '- The values of two or more fields are inconsistent with one another\n'
+               '- A value of a field already exists and cannot be safely overwritten\n'
+               '\n'
+               'When there are no errors, the `warnings` list contains warnings that don\'t '
+               'prevent saving the metadata, but should be reviewed.')
         .modelParam('id', model=Image, destName='image', level=AccessType.READ)
         .jsonParam('metadata', 'The JSON object containing image metadata.', paramType='body',
                    requireObject=True)
