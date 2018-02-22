@@ -327,7 +327,7 @@ export default {
                 thumbnailWidth: 250,
                 thumbnailHeight: null,
                 acceptedFiles: 'image/*',
-                dictDefaultMessage: '<i class="icon-upload-cloud" style="font-size: 100px"></i><p>Drop File or Click Here</p>'
+                dictDefaultMessage: '<i class="icon-upload-cloud" style="font-size: 100px"></i><p>Drag and Drop File or Click Here</p>'
             }
         };
     },
