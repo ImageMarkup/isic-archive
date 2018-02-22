@@ -212,10 +212,39 @@ export default {
                     {value: 'unknown', description: 'Unknown'}
                 ],
                 diagnosis: [
-                    {value: 'atypical melanocytic proliferation', description: 'AMP'},
                     {value: 'AIMP', description: 'AIMP'},
+                    {value: 'atypical melanocytic proliferation', description: 'AMP'},
+                    {value: 'acrochordon', description: 'Acrochordon'},
+                    {value: 'actinic keratosis', description: 'Actinic Keratosis'},
+                    {value: 'adnexal tumor', description: 'Adnexal Tumor'},
+                    {value: 'angiofibroma or fibrous papule', description: 'Angiofibroma or Fibrous Papule'},
+                    {value: 'angiokeratoma', description: 'Angiokeratoma'},
+                    {value: 'angioma', description: 'Angioma'},
+                    {value: 'atypical spitz tumor', description: 'Atypical Spitz Tumor'},
+                    {value: 'basal cell carcinoma', description: 'Basal Cell Carcinoma'},
+                    {value: 'cafe-au-lait macule', description: 'Café-au-Lait Macule'},
+                    {value: 'clear cell acanthoma', description: 'Clear Cell Acanthoma'},
+                    {value: 'dermatofibroma', description: 'Dermatofibroma'},
+                    {value: 'ephelis', description: 'Ephelis'},
+                    {value: 'epidermal nevus', description: 'Epidermal Nevus'},
+                    {value: 'lentigo NOS', description: 'Lentigo NOS'},
+                    {value: 'lentigo simplex', description: 'Lentigo Simplex'},
+                    {value: 'lichenoid keratosis', description: 'Lichenoid Keratosis'},
                     {value: 'melanoma', description: 'Melanoma'},
+                    {value: 'melanoma metastasis', description: 'Melanoma Metastasis'},
+                    {value: 'merkel cell carcinoma', description: 'Merkel Cell Carcinoma'},
+                    {value: 'mucosal melanosis', description: 'Mucosal Melanosis'},
+                    {value: 'neurofibroma', description: 'Neurofibroma'},
                     {value: 'nevus', description: 'Nevus'},
+                    {value: 'nevus spilus', description: 'Nevus Spilus'},
+                    {value: 'pyogenic granuloma', description: 'Pyogenic Granuloma'},
+                    {value: 'scar', description: 'Scar'},
+                    {value: 'sebaceous adenoma', description: 'Sebaceous Adenoma'},
+                    {value: 'sebaceous hyperplasia', description: 'Sebaceous Hyperplasia'},
+                    {value: 'seborrheic keratosis', description: 'Seborrheic Keratosis'},
+                    {value: 'solar lentigo', description: 'Solar Lentigo'},
+                    {value: 'squamous cell carcinoma', description: 'Squamous Cell Carcinoma'},
+                    {value: 'verruca', description: 'Verruca'},
                     {value: 'other', description: 'Other'},
                     {value: 'unknown', description: 'Unknown'}
                 ],
@@ -350,7 +379,7 @@ export default {
             return this.diagnosis === 'melanoma';
         },
         nevus: function () {
-            return this.diagnosis === 'nevus';
+            return this.diagnosis === 'nevus' || this.diagnosis === 'nevus spilus';
         },
         melanocytic: function () {
             if (!this.diagnosis) {
