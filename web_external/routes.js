@@ -110,8 +110,7 @@ router.route('user/invite', 'inviteUser', () => {
 import RsvpUserView from './User/RsvpUserView';
 import {showAlertDialog} from './common/utilities';
 router.route('user/:id/rsvp/:token', 'rsvpUser', (id, token) => {
-    UserModel
-        .temporaryTokenLogin(id, token)
+    UserModel.fromTemporaryToken(id, token)
         .done((resp) => {
             events.trigger('g:navigateTo', RsvpUserView, {
                 user: getCurrentUser(),

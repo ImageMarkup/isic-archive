@@ -1,9 +1,7 @@
 import _ from 'underscore';
 import $ from 'jquery';
 
-import events from 'girder/events';
-import eventStream from 'girder/utilities/EventStream';
-import {getCurrentUser, setCurrentUser} from 'girder/auth';
+import {getCurrentUser} from 'girder/auth';
 import UserModel from 'girder/models/UserModel';
 import {restRequest} from 'girder/rest';
 
@@ -85,43 +83,7 @@ UserModel.prototype.canAdminStudy = function () {
     return this.get('permissions').adminStudy;
 };
 
-// Patch upstream changePassword to return a promise
-// TODO: Remove this once Girder is updated
-UserModel.prototype.changePassword = function (oldPassword, newPassword) {
-    return restRequest({
-        url: `${this.resourceName}/password`,
-        data: {
-            old: oldPassword,
-            new: newPassword
-        },
-        method: 'PUT',
-        error: null
-    })
-        .done(() => {
-            this.trigger('g:passwordChanged');
-        })
-        .fail((err) => {
-            this.trigger('g:error', err);
-        });
-};
-
 // Add additional static methods
-// TODO: Push temporaryTokenLogin to upstream Girder
-UserModel.temporaryTokenLogin = function (userId, token) {
-    return restRequest({
-        url: `user/password/temporary/${userId}`,
-        data: {token: token},
-        error: null
-    })
-        .done((resp) => {
-            resp.user.token = resp.authToken.token;
-            eventStream.close();
-            setCurrentUser(new UserModel(resp.user));
-            eventStream.open();
-            events.trigger('g:login-changed');
-        });
-};
-
 UserModel.currentUserCanAcceptTerms = function () {
     let currentUser = getCurrentUser();
     if (currentUser) {
