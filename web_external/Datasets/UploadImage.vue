@@ -71,7 +71,7 @@
           .form-group
             label.control-label.col-sm-2 Melanocytic
             .col-sm-10
-              select.form-control(v-model='melanocytic', disabled, title='Inferred from diagnosis')
+              select.form-control(v-model='melanocytic', :disabled='forceMelanocyticValue', :title='forceMelanocyticValue ? \'Inferred from diagnosis\' : null')
                 option(selected, disabled, hidden, value='null')
                 option(v-for='option in options.melanocytic', :value='option.value') {{ option.description }}
           .form-group
@@ -173,6 +173,7 @@ export default {
             dxConfirmTypeRaw: null,
             diagnosis: null,
             benignMalignantRaw: null,
+            melanocyticRaw: null,
             nevusTypeRaw: null,
             clinicalSize: null,
             familyHistoryOfMelanoma: null,
@@ -212,41 +213,41 @@ export default {
                     {value: 'unknown', description: 'Unknown'}
                 ],
                 diagnosis: [
-                    {value: 'AIMP', description: 'AIMP'},
-                    {value: 'atypical melanocytic proliferation', description: 'AMP'},
-                    {value: 'acrochordon', description: 'Acrochordon'},
-                    {value: 'actinic keratosis', description: 'Actinic Keratosis'},
-                    {value: 'adnexal tumor', description: 'Adnexal Tumor'},
-                    {value: 'angiofibroma or fibrous papule', description: 'Angiofibroma or Fibrous Papule'},
-                    {value: 'angiokeratoma', description: 'Angiokeratoma'},
-                    {value: 'angioma', description: 'Angioma'},
-                    {value: 'atypical spitz tumor', description: 'Atypical Spitz Tumor'},
-                    {value: 'basal cell carcinoma', description: 'Basal Cell Carcinoma'},
-                    {value: 'cafe-au-lait macule', description: 'Café-au-Lait Macule'},
-                    {value: 'clear cell acanthoma', description: 'Clear Cell Acanthoma'},
-                    {value: 'dermatofibroma', description: 'Dermatofibroma'},
-                    {value: 'ephelis', description: 'Ephelis'},
-                    {value: 'epidermal nevus', description: 'Epidermal Nevus'},
-                    {value: 'lentigo NOS', description: 'Lentigo NOS'},
-                    {value: 'lentigo simplex', description: 'Lentigo Simplex'},
-                    {value: 'lichenoid keratosis', description: 'Lichenoid Keratosis'},
-                    {value: 'melanoma', description: 'Melanoma'},
-                    {value: 'melanoma metastasis', description: 'Melanoma Metastasis'},
-                    {value: 'merkel cell carcinoma', description: 'Merkel Cell Carcinoma'},
-                    {value: 'mucosal melanosis', description: 'Mucosal Melanosis'},
-                    {value: 'neurofibroma', description: 'Neurofibroma'},
-                    {value: 'nevus', description: 'Nevus'},
-                    {value: 'nevus spilus', description: 'Nevus Spilus'},
-                    {value: 'pyogenic granuloma', description: 'Pyogenic Granuloma'},
-                    {value: 'scar', description: 'Scar'},
-                    {value: 'sebaceous adenoma', description: 'Sebaceous Adenoma'},
-                    {value: 'sebaceous hyperplasia', description: 'Sebaceous Hyperplasia'},
-                    {value: 'seborrheic keratosis', description: 'Seborrheic Keratosis'},
-                    {value: 'solar lentigo', description: 'Solar Lentigo'},
-                    {value: 'squamous cell carcinoma', description: 'Squamous Cell Carcinoma'},
-                    {value: 'verruca', description: 'Verruca'},
-                    {value: 'other', description: 'Other'},
-                    {value: 'unknown', description: 'Unknown'}
+                    {value: 'AIMP', description: 'AIMP', melanocytic: true},
+                    {value: 'atypical melanocytic proliferation', description: 'AMP', melanocytic: true},
+                    {value: 'acrochordon', description: 'Acrochordon', melanocytic: false},
+                    {value: 'actinic keratosis', description: 'Actinic Keratosis', melanocytic: false},
+                    {value: 'adnexal tumor', description: 'Adnexal Tumor', melanocytic: false},
+                    {value: 'angiofibroma or fibrous papule', description: 'Angiofibroma or Fibrous Papule', melanocytic: false},
+                    {value: 'angiokeratoma', description: 'Angiokeratoma', melanocytic: false},
+                    {value: 'angioma', description: 'Angioma', melanocytic: false},
+                    {value: 'atypical spitz tumor', description: 'Atypical Spitz Tumor', melanocytic: false},
+                    {value: 'basal cell carcinoma', description: 'Basal Cell Carcinoma', melanocytic: false},
+                    {value: 'cafe-au-lait macule', description: 'Café-au-Lait Macule', melanocytic: false},
+                    {value: 'clear cell acanthoma', description: 'Clear Cell Acanthoma', melanocytic: false},
+                    {value: 'dermatofibroma', description: 'Dermatofibroma', melanocytic: false},
+                    {value: 'ephelis', description: 'Ephelis', melanocytic: false},
+                    {value: 'epidermal nevus', description: 'Epidermal Nevus', melanocytic: false},
+                    {value: 'lentigo NOS', description: 'Lentigo NOS', melanocytic: true},
+                    {value: 'lentigo simplex', description: 'Lentigo Simplex', melanocytic: true},
+                    {value: 'lichenoid keratosis', description: 'Lichenoid Keratosis', melanocytic: false},
+                    {value: 'melanoma', description: 'Melanoma', melanocytic: true},
+                    {value: 'melanoma metastasis', description: 'Melanoma Metastasis', melanocytic: true},
+                    {value: 'merkel cell carcinoma', description: 'Merkel Cell Carcinoma', melanocytic: false},
+                    {value: 'mucosal melanosis', description: 'Mucosal Melanosis', melanocytic: false},
+                    {value: 'neurofibroma', description: 'Neurofibroma', melanocytic: false},
+                    {value: 'nevus', description: 'Nevus', melanocytic: true},
+                    {value: 'nevus spilus', description: 'Nevus Spilus', melanocytic: true},
+                    {value: 'pyogenic granuloma', description: 'Pyogenic Granuloma', melanocytic: false},
+                    {value: 'scar', description: 'Scar', melanocytic: false},
+                    {value: 'sebaceous adenoma', description: 'Sebaceous Adenoma', melanocytic: false},
+                    {value: 'sebaceous hyperplasia', description: 'Sebaceous Hyperplasia', melanocytic: false},
+                    {value: 'seborrheic keratosis', description: 'Seborrheic Keratosis', melanocytic: false},
+                    {value: 'solar lentigo', description: 'Solar Lentigo', melanocytic: true},
+                    {value: 'squamous cell carcinoma', description: 'Squamous Cell Carcinoma', melanocytic: false},
+                    {value: 'verruca', description: 'Verruca', melanocytic: false},
+                    {value: 'other', description: 'Other', melanocytic: null},
+                    {value: 'unknown', description: 'Unknown', melanocytic: null}
                 ],
                 benignMalignant: [
                     {value: 'benign', description: 'Benign'},
@@ -381,15 +382,21 @@ export default {
         nevus: function () {
             return this.diagnosis === 'nevus' || this.diagnosis === 'nevus spilus';
         },
-        melanocytic: function () {
-            if (!this.diagnosis) {
-                return null;
+        forceMelanocyticValue: function () {
+            let diagnosis = _.findWhere(this.options.diagnosis, {value: this.diagnosis});
+            return diagnosis ? !_.isNull(diagnosis.melanocytic) : false;
+        },
+        melanocytic: {
+            get: function () {
+                let diagnosis = _.findWhere(this.options.diagnosis, {value: this.diagnosis});
+                if (diagnosis && !_.isNull(diagnosis.melanocytic)) {
+                    return diagnosis.melanocytic;
+                }
+                return this.melanocyticRaw;
+            },
+            set: function (newValue) {
+                this.melanocyticRaw = newValue;
             }
-            return _.contains([
-                'AIMP',
-                'melanoma',
-                'nevus'],
-            this.diagnosis);
         },
         nevusType: {
             get: function () {
