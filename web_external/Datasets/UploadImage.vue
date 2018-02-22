@@ -612,7 +612,6 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
-// FIXME: using vue-loader scoped attribute breaks .dz-preview style below
 form
   label
     font-weight normal
@@ -622,11 +621,11 @@ form
   border-radius 8px
   padding 0
 
-  .dz-preview
+  // Use >>> combinator so that scoped style in this component affects the child dropzone component
+  >>> .dz-preview
     transition none
     &:hover
       .dz-details
-        color red
         display none
       .dz-image
         img
