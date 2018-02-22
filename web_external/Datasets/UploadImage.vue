@@ -468,13 +468,6 @@ export default {
             }
         }
     },
-    watch: {
-        nevus: function (newValue) {
-            if (newValue) {
-                this.benignMalignant = 'benign';
-            }
-        }
-    },
     created: function () {
         // Fetch datasets for which the user has write access
         let datasets = new DatasetCollection();
