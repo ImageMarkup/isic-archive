@@ -3,12 +3,10 @@
 import _ from 'underscore';
 
 import {getCurrentUser, setCurrentUser} from 'girder/auth';
-import {AccessType} from 'girder/constants';
 import events from 'girder/events';
 
 import router from './router';
 import VueComponentView from './vueComponentView';
-import DatasetCollection from './collections/DatasetCollection';
 import DatasetModel from './models/DatasetModel';
 import UserModel from './models/UserModel';
 
@@ -186,28 +184,9 @@ router.route('dataset/:id/metadata/register', 'registerMetadata', (id) => {
 });
 import UploadImage from './Datasets/UploadImage.vue';
 router.route('dataset/upload/image', 'uploadImage', () => {
-    // Fetch dataset for which the user has write access, then navigate to the view
-    let datasets = new DatasetCollection();
-    datasets
-        .fetch({
-            limit: 0
-        })
-        .done((resp) => {
-            datasets.reset(
-                _.filter(resp, (dataset) => {
-                    return dataset['_accessLevel'] >= AccessType.WRITE;
-                })
-            );
-            navigateToIfCanCreateDataset(VueComponentView, {
-                component: UploadImage,
-                props: {
-                    datasets: datasets.toArray()
-                }
-            });
-        })
-        .fail(() => {
-            router.navigate('', {trigger: true});
-        });
+    navigateToIfCanCreateDataset(VueComponentView, {
+        component: UploadImage
+    });
 });
 
 // Image

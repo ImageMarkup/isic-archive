@@ -141,10 +141,13 @@ import _ from 'underscore';
 import vue2Dropzone from 'vue2-dropzone';
 import 'vue2-dropzone/dist/vue2Dropzone.css';
 
+import {AccessType} from 'girder/constants';
+
 import router from '../router';
 import {showAlertDialog} from '../common/utilities';
 
 import SelectDataset from './SelectDataset.vue';
+import DatasetCollection from '../collections/DatasetCollection';
 import ImageModel from '../models/ImageModel';
 
 export default {
@@ -153,14 +156,11 @@ export default {
         SelectDataset: SelectDataset,
         vueDropzone: vue2Dropzone
     },
-    props: {
-        datasets: {
-            type: Array,
-            required: true
-        }
-    },
     data: function () {
         return {
+            // Array of datasets
+            datasets: [],
+
             // Image data
             image: null,
             dataset: null,
@@ -439,6 +439,25 @@ export default {
             }
         }
     },
+    created: function () {
+        // Fetch datasets for which the user has write access
+        let datasets = new DatasetCollection();
+        datasets
+            .fetch({
+                limit: 0
+            })
+            .done(() => {
+                this.datasets = datasets.filter((dataset) => {
+                    return dataset.get('_accessLevel') >= AccessType.WRITE;
+                });
+            })
+            .fail((resp) => {
+                showAlertDialog({
+                    text: `<h4>Error fetching datasets</h4><br>${_.escape(resp.responseJSON.message)}`,
+                    escapedHtml: true
+                });
+            });
+    },
     methods: {
         onFileAdded: function (file) {
             this.filename = file.name;
@@ -502,8 +521,6 @@ export default {
             if (_.has(metadata, 'clin_size_long_diam_mm')) {
                 metadata.clin_size_long_diam_mm = `${metadata.clin_size_long_diam_mm} mm`;
             }
-
-            console.log(metadata);
 
             return image.applyMetadata(metadata, true);
         },
