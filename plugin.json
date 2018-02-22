@@ -9,6 +9,7 @@
             "backbone.select": "~2.1.0",
             "bibtex-parse-js": "~0.0.23",
             "d3": "~3.5.17",
+            "eslint-plugin-vue": "~4.2.0",
             "geojs": "0.11.1",
             "mathy-unicode-characters": "^0.9.3",
             "pegjs": "~0.10.0",
@@ -17,7 +18,11 @@
             "select2-bootstrap-theme": ">=0.1.0-beta.10",
             "svg-fill-loader": "~0.0.8",
             "ua-parser-js": "~0.7.17",
-            "url-loader": "~0.6.2"
+            "url-loader": "~0.6.2",
+            "vue": "~2.5.0",
+            "vue-loader": "~14.1.0",
+            "vue-template-compiler": "~2.5.0",
+            "vue2-dropzone": "~3.0.0"
         }
     },
     "grunt": {

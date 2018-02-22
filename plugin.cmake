@@ -14,6 +14,20 @@
 #  limitations under the License.
 ###############################################################################
 
+# Extended add_eslint_test to lint .vue files in addition to .js files
+function(add_eslint_test_ext name input)
+  if (NOT JAVASCRIPT_STYLE_TESTS)
+    return()
+  endif()
+
+  add_test(
+    NAME "eslint_${name}"
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    COMMAND npx eslint --ext .js,.vue "${input}"
+  )
+  set_property(TEST "eslint_${name}" PROPERTY LABELS girder_browser)
+endfunction()
+
 add_standard_plugin_tests()
 
 # Fetch external data
@@ -37,7 +51,7 @@ add_python_style_test(
   "${CMAKE_CURRENT_LIST_DIR}/scripts")
 
 # External client static analysis
-add_eslint_test(
+add_eslint_test_ext(
   isic_archive_external
   "${CMAKE_CURRENT_LIST_DIR}/web_external")
 add_test(

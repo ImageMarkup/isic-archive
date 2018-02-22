@@ -6,6 +6,7 @@ import {getCurrentUser, setCurrentUser} from 'girder/auth';
 import events from 'girder/events';
 
 import router from './router';
+import VueComponentView from './vueComponentView';
 import DatasetModel from './models/DatasetModel';
 import UserModel from './models/UserModel';
 
@@ -180,6 +181,12 @@ router.route('dataset/:id/metadata/register', 'registerMetadata', (id) => {
             router.navigate('', {trigger: true});
         });
     dataset.fetch();
+});
+import UploadImage from './Datasets/UploadImage.vue';
+router.route('dataset/upload/image', 'uploadImage', () => {
+    navigateToIfCanCreateDataset(VueComponentView, {
+        component: UploadImage
+    });
 });
 
 // Image
