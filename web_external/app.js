@@ -19,10 +19,6 @@ import _ from 'underscore';
 import GirderApp from 'girder/views/App';
 import { getCurrentUser } from 'girder/auth';
 import eventStream from 'girder/utilities/EventStream';
-import FileCollection from 'girder/collections/FileCollection';
-import FolderModel from 'girder/models/FolderModel';
-import ItemModel from 'girder/models/ItemModel';
-import {restRequest} from 'girder/rest';
 import { splitRoute } from 'girder/misc';
 
 import './global.styl';
@@ -130,34 +126,5 @@ const IsicApp = GirderApp.extend({
         }
     }
 });
-
-/**
- * Patch ItemModel with a method to get the files within the item.
- */
-ItemModel.prototype.getFiles = function () {
-    restRequest({
-        url: `${this.resourceName}/${this.id}/files`
-    }).done((resp) => {
-        let fileCollection = new FileCollection(resp);
-        this.trigger('g:files', fileCollection);
-    }).fail((err) => {
-        this.trigger('g:error', err);
-    });
-};
-
-/**
- * Patch FolderModel with a method to remove the contents of the
- * folder.
- */
-FolderModel.prototype.removeContents = function () {
-    restRequest({
-        url: `${this.resourceName}/${this.id}/contents`,
-        method: 'DELETE'
-    }).done((resp) => {
-        this.trigger('g:success');
-    }).fail((err) => {
-        this.trigger('g:error', err);
-    });
-};
 
 export default IsicApp;
