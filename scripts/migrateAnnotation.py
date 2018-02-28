@@ -15,9 +15,9 @@ for annotationItem in Item().find({
         'imageId': annotationItem['meta']['studyId'],
         'userId': annotationItem['meta']['studyId'],
         'startTime': annotationItem['meta']['startTime'],
-        'stopTime': annotationItem['meta']['startTime'],
-        'status': annotationItem['meta']['startTime'],
-        'annotations': annotationItem['meta']['startTime'],
+        'stopTime': annotationItem['meta']['stopTime'],
+        'status': annotationItem['meta']['status'],
+        'annotations': annotationItem['meta']['annotations'],
     })
 
 for studyAnnotatorFolder in Folder().find({

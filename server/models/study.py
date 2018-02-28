@@ -48,7 +48,7 @@ class Study(Folder):
         from .annotation import Annotation
 
         # this may raise a ValidationException if the name already exists
-        studyFolder = self.createFolder(
+        study = self.createFolder(
             parent=self.loadStudyCollection(),
             name=name,
             description='',
@@ -58,26 +58,27 @@ class Study(Folder):
             allowRename=False
         )
         # Clear all inherited accesses
-        studyFolder = self.setAccessList(
-            doc=studyFolder,
+        study = self.setAccessList(
+            doc=study,
             access={},
             save=False)
         # Allow study admins to read
-        studyFolder = self.setGroupAccess(
-            doc=studyFolder,
+        study = self.setGroupAccess(
+            doc=study,
             group=Group().findOne({'name': 'Study Administrators'}),
             level=AccessType.READ,
             save=False)
+        # Allow annotators to read study (since annotations delegate their access to study)
         for annotatorUser in annotatorUsers:
-            studyFolder = self.setUserAccess(
-                doc=studyFolder,
+            study = self.setUserAccess(
+                doc=study,
                 user=annotatorUser,
                 level=AccessType.READ,
                 save=False)
 
         # "setMetadata" will always save
-        studyFolder = self.setMetadata(
-            folder=studyFolder,
+        study = self.setMetadata(
+            folder=study,
             metadata={
                 'featuresetId': featureset['_id'],
                 'participationRequests': []
@@ -86,9 +87,9 @@ class Study(Folder):
 
         for annotatorUser in annotatorUsers:
             for image in images:
-                Annotation().createAnnotation(studyFolder, image, annotatorUser)
+                Annotation().createAnnotation(study, image, annotatorUser)
 
-        return studyFolder
+        return study
 
     def addAnnotator(self, study, annotatorUser):
         # Avoid circular import

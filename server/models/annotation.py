@@ -147,7 +147,7 @@ class Annotation(AccessControlMixin, Model):
                 },
                 'status': annotation['status'],
                 'startTime': annotation['startTime'],
-                'stopTime': annotation['startTime'],
+                'stopTime': annotation['stopTime'],
             })
 
         return output
@@ -222,5 +222,3 @@ class Annotation(AccessControlMixin, Model):
                 else:
                     raise ValidationException(
                         'Annotation has invalid feature "%s".' % featureId)
-
-        return super(Annotation, self).validate(doc)
