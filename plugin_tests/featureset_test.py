@@ -234,16 +234,13 @@ class FeaturesetTestCase(IsicTestCase):
         self.assertStatus(resp, 403)
 
         # Try to delete a featureset being used by a study
-        resp = self.request(
-            path='/study', method='POST', user=studyAdminUser,
-            type='application/json', body=json.dumps({
-                'name': 'Test Study',
-                'featuresetId': str(basicFeatureset['_id']),
-                'userIds': [],
-                'imageIds': []
-            }))
-        self.assertStatusOk(resp)
-        testStudy = Study.load(resp.json['_id'], force=True)
+        testStudy = Study.createStudy(
+            name='Test Study',
+            creatorUser=studyAdminUser,
+            featureset=basicFeatureset,
+            annotatorUsers=[],
+            images=[]
+        )
         resp = self.request(
             path='/featureset/%s' % basicFeatureset['_id'], method='DELETE',
             user=studyAdminUser)
