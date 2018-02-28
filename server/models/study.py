@@ -221,7 +221,7 @@ class Study(Folder):
                 state=state
             )
             newQuery.update({
-                '_id': {'$in': annotations.distinct('meta.studyId')}
+                '_id': {'$in': annotations.distinct('studyId')}
             })
         return newQuery
 
@@ -315,7 +315,7 @@ class Study(Folder):
         from .annotation import Annotation
 
         for annotation in self.childAnnotations(study):
-            Annotation.remove(annotation)
+            Annotation().remove(annotation)
 
         return super(Study, self).remove(study)
 

@@ -233,9 +233,6 @@ class AnnotationResource(IsicResource):
     @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
                level=AccessType.READ)
     def submitAnnotation(self, annotation, params):
-        if annotation['baseParentId'] != Study().loadStudyCollection()['_id']:
-            raise RestException('Annotation id references a non-annotation item.')
-
         if annotation['userId'] != self.getCurrentUser()['_id']:
             raise RestException('Current user does not own this annotation.')
 

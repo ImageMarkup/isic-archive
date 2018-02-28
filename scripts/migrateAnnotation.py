@@ -9,15 +9,15 @@ from girder.plugins.isic_archive.models.study import Study  # noqa: E402
 for annotationItem in Item().find({
     'baseParentId': Study().loadStudyCollection()['_id']
 }):
-    dataset = Annotation().save({
+    Annotation().save({
         '_id': annotationItem['_id'],
         'studyId': annotationItem['meta']['studyId'],
         'imageId': annotationItem['meta']['imageId'],
         'userId': annotationItem['meta']['userId'],
-        'startTime': annotationItem['meta']['startTime'],
-        'stopTime': annotationItem['meta']['stopTime'],
-        'status': annotationItem['meta']['status'],
-        'annotations': annotationItem['meta']['annotations'],
+        'startTime': annotationItem['meta'].get('startTime', None),
+        'stopTime': annotationItem['meta'].get('stopTime', None),
+        'status': annotationItem['meta'].get('status', None),
+        'annotations': annotationItem['meta'].get('annotations', None),
     })
 
 for studyAnnotatorFolder in Folder().find({

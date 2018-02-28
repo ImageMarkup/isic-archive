@@ -222,3 +222,5 @@ class Annotation(AccessControlMixin, Model):
                 else:
                     raise ValidationException(
                         'Annotation has invalid feature "%s".' % featureId)
+
+        return doc
