@@ -12,8 +12,8 @@ for annotationItem in Item().find({
     dataset = Annotation().save({
         '_id': annotationItem['_id'],
         'studyId': annotationItem['meta']['studyId'],
-        'imageId': annotationItem['meta']['studyId'],
-        'userId': annotationItem['meta']['studyId'],
+        'imageId': annotationItem['meta']['imageId'],
+        'userId': annotationItem['meta']['userId'],
         'startTime': annotationItem['meta']['startTime'],
         'stopTime': annotationItem['meta']['stopTime'],
         'status': annotationItem['meta']['status'],
