@@ -18,7 +18,6 @@
 ###############################################################################
 
 from girder.constants import AccessType, SortDir
-from girder.exceptions import ValidationException
 from girder.models.collection import Collection
 from girder.models.folder import Folder
 from girder.models.group import Group
@@ -44,10 +43,12 @@ class Study(Folder):
         # TODO: cache this value
         return Collection().findOne({'name': 'Annotation Studies'})
 
-    def createStudy(self, name, creatorUser, featureset, annotatorUsers,
-                    images):
+    def createStudy(self, name, creatorUser, featureset, annotatorUsers, images):
+        # Avoid circular import
+        from .annotation import Annotation
+
         # this may raise a ValidationException if the name already exists
-        studyFolder = self.createFolder(
+        study = self.createFolder(
             parent=self.loadStudyCollection(),
             name=name,
             description='',
@@ -57,20 +58,27 @@ class Study(Folder):
             allowRename=False
         )
         # Clear all inherited accesses
-        studyFolder = self.setAccessList(
-            doc=studyFolder,
+        study = self.setAccessList(
+            doc=study,
             access={},
             save=False)
         # Allow study admins to read
-        studyFolder = self.setGroupAccess(
-            doc=studyFolder,
+        study = self.setGroupAccess(
+            doc=study,
             group=Group().findOne({'name': 'Study Administrators'}),
             level=AccessType.READ,
             save=False)
+        # Allow annotators to read study (since annotations delegate their access to study)
+        for annotatorUser in annotatorUsers:
+            study = self.setUserAccess(
+                doc=study,
+                user=annotatorUser,
+                level=AccessType.READ,
+                save=False)
 
         # "setMetadata" will always save
-        studyFolder = self.setMetadata(
-            folder=studyFolder,
+        study = self.setMetadata(
+            folder=study,
             metadata={
                 'featuresetId': featureset['_id'],
                 'participationRequests': []
@@ -78,18 +86,14 @@ class Study(Folder):
         )
 
         for annotatorUser in annotatorUsers:
-            studyFolder = self.addAnnotator(
-                studyFolder, annotatorUser, creatorUser, images)
+            for image in images:
+                Annotation().createAnnotation(study, image, annotatorUser)
 
-        return studyFolder
+        return study
 
-    def addAnnotator(self, study, annotatorUser, creatorUser,
-                     images=None):
+    def addAnnotator(self, study, annotatorUser):
         # Avoid circular import
         from .annotation import Annotation
-
-        if not images:
-            images = self.getImages(study)
 
         # Allow annotator to read parent study
         study = self.setUserAccess(
@@ -98,92 +102,53 @@ class Study(Folder):
             level=AccessType.READ,
             save=True)
 
-        annotatorFolder = self.createFolder(
-            parent=study,
-            name=User().obfuscatedName(annotatorUser),
-            # Allow a rename, in the rare event of an obfuscated name collision
-            allowRename=True,
-            description='',
-            parentType='folder',
-            # Inherit public access state from parent
-            public=None,
-            creator=creatorUser
-        )
-        # Clear all inherited accesses
-        annotatorFolder = self.setAccessList(
-            doc=annotatorFolder,
-            access={},
-            save=False)
-        # Allow study admins to read
-        annotatorFolder = self.setGroupAccess(
-            doc=annotatorFolder,
-            group=Group().findOne({'name': 'Study Administrators'}),
-            level=AccessType.READ,
-            save=False)
-        # Allow annotator to read
-        annotatorFolder = self.setUserAccess(
-            doc=annotatorFolder,
-            user=annotatorUser,
-            # TODO: make write?
-            level=AccessType.READ,
-            save=False)
-
-        # "setMetadata" will always save
-        self.setMetadata(
-            folder=annotatorFolder,
-            metadata={
-                'userId': annotatorUser['_id']
-            }
-        )
-
         # Remove request from the user to participate in the study
-        self.removeParticipationRequest(study, annotatorUser)
+        study = self.removeParticipationRequest(study, annotatorUser)
 
-        for image in images:
-            Annotation().createAnnotation(
-                study, image, creatorUser, annotatorFolder)
+        for image in self.getImages(study):
+            Annotation().createAnnotation(study, image, annotatorUser)
 
-        # Since parent study could theoretically have changed, return it
+        # Since parent study could have changed, return it
         return study
 
     def removeAnnotator(self, study, annotatorUser):
-        annotatorFolder = Folder().findOne({
-            'parentId': study['_id'],
-            'meta.userId': annotatorUser['_id']
-        })
-        if not annotatorFolder:
-            raise ValidationException('Annotator user is not in study.')
-        Folder().remove(annotatorFolder)
-
-    def hasAnnotator(self, study, annotatorUser):
-        return Folder().findOne({
-            'parentId': study['_id'],
-            'meta.userId': annotatorUser['_id']
-        }) is not None
-
-    def addImage(self, study, image, creatorUser):
         # Avoid circular import
         from .annotation import Annotation
 
-        for annotatorFolder in Folder().find({'parentId': study['_id']}):
-            Annotation().createAnnotation(
-                study, image, creatorUser, annotatorFolder)
+        for annotation in self.childAnnotations(study, annotatorUser=annotatorUser):
+            Annotation().remove(annotation)
+
+    def hasAnnotator(self, study, annotatorUser):
+        return self.childAnnotations(study, annotatorUser=annotatorUser).count() > 0
+
+    def addImage(self, study, image):
+        # Avoid circular import
+        from .annotation import Annotation
+
+        for annotatorUser in self.getAnnotators(study):
+            Annotation().createAnnotation(study, image, annotatorUser)
+
+    def removeImage(self, study, image):
+        # Avoid circular import
+        from .annotation import Annotation
+
+        for annotation in self.childAnnotations(study, image=image):
+            Annotation().remove(annotation)
+
+    def hasImage(self, study, image):
+        return self.childAnnotations(study, image=image).count() > 0
 
     def getFeatureset(self, study):
         return Featureset().load(study['meta']['featuresetId'], exc=True)
 
     def getAnnotators(self, study):
-        annotatorFolders = Folder().find({'parentId': study['_id']})
+        userIds = self.childAnnotations(study).distinct('userId')
         return User().find({
-            '_id': {'$in': annotatorFolders.distinct('meta.userId')}
+            '_id': {'$in': userIds}
         })
 
     def getImages(self, study):
-        # Avoid circular import
-        from .annotation import Annotation
-
-        imageIds = Annotation().find({
-            'meta.studyId': study['_id']}).distinct('meta.imageId')
+        imageIds = self.childAnnotations(study).distinct('imageId')
         return Image().find({'_id': {'$in': imageIds}})
 
     def addParticipationRequest(self, study, user):
@@ -199,10 +164,15 @@ class Study(Folder):
         """
         Remove a request from a user to participate in the study.
         """
-        self.update(
-            {'_id': study['_id']},
-            {'$pull': {'meta.participationRequests': user['_id']}}
-        )
+        if user['_id'] in study['meta']['participationRequests']:
+            # The update query is a no-op if the value isn't found, but there's no reason to run it
+            # unless necessary
+            self.update(
+                {'_id': study['_id']},
+                {'$pull': {'meta.participationRequests': user['_id']}}
+            )
+            study['meta']['participationRequests'].remove(user['_id'])
+        return study
 
     def hasParticipationRequest(self, study, user):
         """
@@ -226,16 +196,16 @@ class Study(Folder):
 
         query = {}
         if study:
-            query['meta.studyId'] = study['_id']
+            query['studyId'] = study['_id']
         if annotatorUser:
-            query['meta.userId'] = annotatorUser['_id']
+            query['userId'] = annotatorUser['_id']
         if image:
-            query['meta.imageId'] = image['_id']
+            query['imageId'] = image['_id']
         if state:
             if state == self.State.ACTIVE:
-                query['meta.stopTime'] = None
+                query['stopTime'] = None
             elif state == self.State.COMPLETE:
-                query['meta.stopTime'] = {'$ne': None}
+                query['stopTime'] = {'$ne': None}
             else:
                 raise ValueError('"state" must be "active" or "complete".')
         return Annotation().find(query, **kwargs)
@@ -251,7 +221,7 @@ class Study(Folder):
                 state=state
             )
             newQuery.update({
-                '_id': {'$in': annotations.distinct('meta.studyId')}
+                '_id': {'$in': annotations.distinct('studyId')}
             })
         return newQuery
 
@@ -301,23 +271,23 @@ class Study(Folder):
             'featureset': Featureset().load(
                 id=study['meta']['featuresetId'],
                 fields=Featureset().summaryFields, exc=True),
-            'users': getSortedUserList(Study().getAnnotators(study)),
+            'users': getSortedUserList(self.getAnnotators(study)),
             'images': list(
                 Image().filterSummary(image, user)
                 for image in
-                Study().getImages(study).sort('name', SortDir.ASCENDING)
+                self.getImages(study).sort('name', SortDir.ASCENDING)
             ),
             'userCompletion': {
                 str(annotatorComplete['_id']): annotatorComplete['count']
                 for annotatorComplete in
                 Annotation().collection.aggregate([
                     {'$match': {
-                        'meta.studyId': study['_id'],
+                        'studyId': study['_id'],
                     }},
                     {'$group': {
-                        '_id': '$meta.userId',
+                        '_id': '$userId',
                         'count': {'$sum': {'$cond': {
-                            'if': '$meta.stopTime',
+                            'if': '$stopTime',
                             'then': 1,
                             'else': 0
                         }}}
@@ -339,6 +309,15 @@ class Study(Folder):
             'description': study['description'],
             'updated': study['updated'],
         }
+
+    def remove(self, study):
+        # Avoid circular import
+        from .annotation import Annotation
+
+        for annotation in self.childAnnotations(study):
+            Annotation().remove(annotation)
+
+        return super(Study, self).remove(study)
 
     def validate(self, doc, **kwargs):
         # TODO: implement

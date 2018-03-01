@@ -30,6 +30,7 @@ from girder.models.collection import Collection
 from girder.models.folder import Folder
 
 from .base import IsicResource
+from ..models.annotation import Annotation
 from ..models.dataset import Dataset
 from ..models.image import Image
 from ..models.segmentation import Segmentation
@@ -386,13 +387,7 @@ class TaskResource(IsicResource):
         random.seed()
         nextAnnotation = activeAnnotations[nextAnnotationIndex]
 
-        return {
-            '_id': nextAnnotation['_id'],
-            'name': nextAnnotation['name'],
-            'studyId': nextAnnotation['meta']['studyId'],
-            'userId': nextAnnotation['meta']['userId'],
-            'imageId': nextAnnotation['meta']['imageId']
-        }
+        return Annotation().filterSummary(nextAnnotation, user)
 
     @describeRoute(
         Description('Redirect to the next annotation task.')

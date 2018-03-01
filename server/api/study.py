@@ -30,7 +30,6 @@ from girder.api.rest import loadmodel, setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 from girder.exceptions import RestException, ValidationException
-from girder.models.folder import Folder
 from girder.utility import mail_utils
 
 from .base import IsicResource
@@ -158,8 +157,8 @@ class StudyResource(IsicResource):
                 state=Study().State.COMPLETE
             ):
                 elapsedSeconds = \
-                    int((annotation['meta']['stopTime'] -
-                         annotation['meta']['startTime']).total_seconds())
+                    int((annotation['stopTime'] -
+                         annotation['startTime']).total_seconds())
 
                 filteredAnnotatorUser = User().filterSummary(annotatorUser, currentUser)
                 annotatorUserName = filteredAnnotatorUser['name']
@@ -176,30 +175,30 @@ class StudyResource(IsicResource):
                     'user_id': str(annotatorUser['_id']),
                     'image_name': image['name'],
                     'image_id': str(image['_id']),
-                    'flag_status': annotation['meta']['status'],
+                    'flag_status': annotation['status'],
                     'elapsed_seconds': elapsedSeconds
                 }
 
                 outDict = outDictBase.copy()
                 for globalFeature in featureset['globalFeatures']:
-                    if globalFeature['id'] in annotation['meta']['annotations']:
+                    if globalFeature['id'] in annotation['annotations']:
                         outDict[globalFeature['id']] = \
-                            annotation['meta']['annotations'][globalFeature['id']]
+                            annotation['annotations'][globalFeature['id']]
                 csvWriter.writerow(outDict)
                 yield responseBody.getvalue()
                 responseBody.seek(0)
                 responseBody.truncate()
 
                 # TODO: move this into the query
-                if 'localFeatures' in annotation['meta']['annotations']:
+                if 'localFeatures' in annotation['annotations']:
                     superpixelCount = len(next(six.viewvalues(
-                        annotation['meta']['annotations']['localFeatures'])))
+                        annotation['annotations']['localFeatures'])))
                     for superpixelMum in xrange(superpixelCount):
 
                         outDict = outDictBase.copy()
                         outDict['superpixel_id'] = superpixelMum
                         for featureName, featureValue in six.viewitems(
-                                annotation['meta']['annotations']['localFeatures']):
+                                annotation['annotations']['localFeatures']):
                             outDict[featureName] = featureValue[superpixelMum]
 
                         csvWriter.writerow(outDict)
@@ -233,6 +232,9 @@ class StudyResource(IsicResource):
             raise ValidationException('Invalid featureset ID.', 'featuresetId')
         featureset = Featureset().load(featuresetId, exc=True)
 
+        if not params['userIds']:
+            # TODO: Remove this restriction, once users / images are not stored implicitly
+            raise ValidationException('A study may not be created without users.', 'userIds')
         if len(set(params['userIds'])) != len(params['userIds']):
             raise ValidationException('Duplicate user IDs.', 'userIds')
         annotatorUsers = [
@@ -240,6 +242,9 @@ class StudyResource(IsicResource):
             for annotatorUserId in params['userIds']
         ]
 
+        if not params['imageIds']:
+            # TODO: Remove this restriction, once users / images are not stored implicitly
+            raise ValidationException('A study may not be created without images.', 'imageIds')
         if len(set(params['imageIds'])) != len(params['imageIds']):
             raise ValidationException('Duplicate image IDs.', 'imageIds')
         images = [
@@ -283,23 +288,17 @@ class StudyResource(IsicResource):
             User().load(userId, user=creatorUser, level=AccessType.READ, exc=True)
             for userId in params['userIds']
         ]
-        # Existing duplicate Annotators are tricky to check for, because it's
-        # possible to have a Study with multiple annotator Users (each with a
-        # sub-Folder), but with no Images yet, and thus no Annotation (Items)
-        # inside yet
-        duplicateAnnotatorFolders = Folder().find({
-            'parentId': study['_id'],
-            'meta.userId': {'$in': [annotatorUser['_id'] for annotatorUser in annotatorUsers]}
+        duplicateAnnotations = Annotation().find({
+            'studyId': study['_id'],
+            'userId': {'$in': [annotatorUser['_id'] for annotatorUser in annotatorUsers]}
         })
-        if duplicateAnnotatorFolders.count():
+        if duplicateAnnotations.count():
             # Just list the first duplicate
-            duplicateAnnotatorFolder = next(iter(duplicateAnnotatorFolders))
-            raise ValidationException('Annotator user "%s" is already part of the study.' %
-                                      duplicateAnnotatorFolder['meta']['userId'])
-        # Look up images only once for efficiency
-        images = Study().getImages(study)
+            duplicateAnnotation = next(iter(duplicateAnnotations))
+            raise ValidationException(
+                'Annotator user "%s" is already part of the study.' % duplicateAnnotation['userId'])
         for annotatorUser in annotatorUsers:
-            Study().addAnnotator(study, annotatorUser, creatorUser, images)
+            study = Study().addAnnotator(study, annotatorUser)
 
         return self.getStudy(id=study['_id'], params={})
 
@@ -330,16 +329,16 @@ class StudyResource(IsicResource):
             for imageId in params['imageIds']
         ]
         duplicateAnnotations = Annotation().find({
-            'meta.studyId': study['_id'],
-            'meta.imageId': {'$in': [image['_id'] for image in images]}
+            'studyId': study['_id'],
+            'imageId': {'$in': [image['_id'] for image in images]}
         })
         if duplicateAnnotations.count():
             # Just list the first duplicate
             duplicateAnnotation = next(iter(duplicateAnnotations))
             raise ValidationException(
-                'Image "%s" is already part of the study.' % duplicateAnnotation['meta']['imageId'])
+                'Image "%s" is already part of the study.' % duplicateAnnotation['imageId'])
         for image in images:
-            Study().addImage(study, image, creatorUser)
+            Study().addImage(study, image)
 
         return self.getStudy(id=study['_id'], params={})
 
@@ -419,10 +418,11 @@ class StudyResource(IsicResource):
                 study=study, annotatorUser=annotatorUser, state=Study().State.COMPLETE).count():
             raise RestException('Annotator user has completed annotations.', 409)
 
-        try:
-            Study().removeAnnotator(study, annotatorUser)
-        except ValidationException as e:
-            raise ValidationException(str(e), 'userId')
+        # Check if user is already an annotator in the study
+        if not Study().hasAnnotator(study, user):
+            raise ValidationException('User "%s" is not part of the study.' % user['_id'])
+
+        Study().removeAnnotator(study, annotatorUser)
 
         # No Content
         cherrypy.response.status = 204

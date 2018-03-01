@@ -120,7 +120,7 @@ class AnnotationResource(IsicResource):
     @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
                level=AccessType.READ)
     def getAnnotationFeature(self, annotation, featureId, params):
-        study = Study().load(annotation['meta']['studyId'], force=True, exc=True)
+        study = Study().load(annotation['studyId'], force=True, exc=True)
         featureset = Study().getFeatureset(study)
 
         if not any(featureId == feature['id'] for feature in featureset['localFeatures']):
@@ -128,7 +128,7 @@ class AnnotationResource(IsicResource):
         if Annotation().getState(annotation) != Study().State.COMPLETE:
             raise RestException('Only complete annotations have superpixel data.')
 
-        featureValues = annotation['meta']['annotations'].get(featureId, [])
+        featureValues = annotation['annotations'].get(featureId, [])
         return featureValues
 
     @describeRoute(
@@ -143,7 +143,7 @@ class AnnotationResource(IsicResource):
     @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
                level=AccessType.READ)
     def getAnnotationFeatureMask(self, annotation, featureId, params):
-        study = Study().load(annotation['meta']['studyId'], force=True, exc=True)
+        study = Study().load(annotation['studyId'], force=True, exc=True)
         featureset = Study().getFeatureset(study)
 
         if not any(featureId == feature['id'] for feature in featureset['localFeatures']):
@@ -190,7 +190,7 @@ class AnnotationResource(IsicResource):
             raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
                                       'contentDisposition')
 
-        study = Study().load(annotation['meta']['studyId'], force=True, exc=True)
+        study = Study().load(annotation['studyId'], force=True, exc=True)
         featureset = Study().getFeatureset(study)
 
         if not any(featureId == feature['id'] for feature in featureset['localFeatures']):
@@ -233,23 +233,20 @@ class AnnotationResource(IsicResource):
     @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
                level=AccessType.READ)
     def submitAnnotation(self, annotation, params):
-        if annotation['baseParentId'] != Study().loadStudyCollection()['_id']:
-            raise RestException('Annotation id references a non-annotation item.')
-
-        if annotation['meta']['userId'] != self.getCurrentUser()['_id']:
+        if annotation['userId'] != self.getCurrentUser()['_id']:
             raise RestException('Current user does not own this annotation.')
 
-        if annotation['meta'].get('stopTime'):
+        if annotation.get('stopTime'):
             raise RestException('Annotation is already complete.')
 
         bodyJson = self.getBodyJson()
         self.requireParams(['status', 'startTime', 'stopTime', 'annotations'], bodyJson)
 
-        annotation['meta']['status'] = bodyJson['status']
-        annotation['meta']['startTime'] = datetime.datetime.utcfromtimestamp(
+        annotation['status'] = bodyJson['status']
+        annotation['startTime'] = datetime.datetime.utcfromtimestamp(
             bodyJson['startTime'] / 1000.0)
-        annotation['meta']['stopTime'] = datetime.datetime.utcfromtimestamp(
+        annotation['stopTime'] = datetime.datetime.utcfromtimestamp(
             bodyJson['stopTime'] / 1000.0)
-        annotation['meta']['annotations'] = bodyJson['annotations']
+        annotation['annotations'] = bodyJson['annotations']
 
         Annotation().save(annotation)
