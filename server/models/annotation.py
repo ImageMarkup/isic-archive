@@ -49,7 +49,8 @@ class Annotation(AccessControlMixin, Model):
             'startTime': None,
             'stopTime': None,
             'status': None,
-            'annotations': None
+            'responses': {},
+            'markups': {},
         })
 
         return annotation
@@ -63,7 +64,7 @@ class Annotation(AccessControlMixin, Model):
         if self.getState(annotation) != Study().State.COMPLETE:
             raise GirderException('Annotation is incomplete.')
 
-        featureValues = annotation['annotations'].get(featureId, [])
+        featureValues = annotation['markups'].get(featureId, [])
         if not isinstance(featureValues, list):
             raise GirderException(
                 'Feature %s is not a superpixel annotation.' % featureId)
@@ -98,7 +99,7 @@ class Annotation(AccessControlMixin, Model):
 
         return possibleMask, definiteMask
 
-    def renderMask(self, annotation, featureId):
+    def maskMarkup(self, annotation, featureId):
         possibleMask, definiteMask = self._getImageMasks(annotation, featureId)
 
         renderedMask = numpy.zeros(possibleMask.shape, dtype=numpy.uint)
@@ -107,7 +108,7 @@ class Annotation(AccessControlMixin, Model):
 
         return renderedMask
 
-    def renderAnnotation(self, annotation, featureId):
+    def renderMarkup(self, annotation, featureId):
         image = Image().load(annotation['imageId'], force=True, exc=True)
         renderData = Image().imageData(image)
 
@@ -136,18 +137,23 @@ class Annotation(AccessControlMixin, Model):
             'state': Annotation().getState(annotation)
         }
         if Annotation().getState(annotation) == Study().State.COMPLETE:
+            boolMarkups = {
+                featureId: any(markup)
+                for featureId, markup
+                in six.viewitems(annotation['markups'])
+            }
+
             output.update({
-                'annotations': {
-                    featureId:
-                        featureValue
-                        if not isinstance(featureValue, list) else
-                        any(featureValue)
-                    for featureId, featureValue in
-                    six.viewitems(annotation['annotations'])
-                },
+                # TODO: "annotations" is deprecated and will be removed
+                'annotations': dict(
+                    annotation['responses'],
+                    **boolMarkups
+                ),
                 'status': annotation['status'],
                 'startTime': annotation['startTime'],
                 'stopTime': annotation['stopTime'],
+                'responses': annotation['responses'],
+                'markups': boolMarkups
             })
 
         return output
@@ -179,46 +185,52 @@ class Annotation(AccessControlMixin, Model):
                 if not isinstance(doc.get(field), datetime.datetime):
                     raise ValidationException('Annotation field "%s" must be a datetime.' % field)
 
-            if not isinstance(doc.get('annotations'), dict):
-                raise ValidationException(
-                    'Annotation field "annotations" must be a mapping (dict).')
             featureset = Study().getFeatureset(study)
-            featuresetGlobalFeatures = {
+            featuresetQuestions = {
                 feature['id']: feature
                 for feature in
                 featureset['globalFeatures']
             }
-            featuresetLocalFeatures = {
+            featuresetFeatures = {
                 feature['id']: feature
                 for feature in
                 featureset['localFeatures']
             }
-            if featuresetLocalFeatures:
+            if featuresetFeatures:
                 image = Image().load(doc['imageId'], force=True)
                 superpixels = Image().superpixelsData(image)
                 maxSuperpixel = superpixels.max()
             else:
                 maxSuperpixel = None
-            for featureId, featureValue in six.viewitems(doc['annotations']):
-                if featureId in featuresetGlobalFeatures:
-                    featureOptions = set(
+
+            if not isinstance(doc.get('responses'), dict):
+                raise ValidationException('Annotation field "responses" must be a mapping (dict).')
+            for questionId, response in six.viewitems(doc['responses']):
+                if questionId in featuresetQuestions:
+                    questionOptions = set(
                         option['id']
                         for option in
-                        featuresetGlobalFeatures[featureId]['options'])
-                    if featureValue not in featureOptions:
+                        featuresetQuestions[questionId]['options'])
+                    if response not in questionOptions:
                         raise ValidationException(
-                            'Annotation feature "%s" has invalid value "%s".' %
-                            (featureId, featureValue))
-                elif featureId in featuresetLocalFeatures:
+                            'Annotation question "%s" has invalid response "%s".' %
+                            (questionId, response))
+                else:
+                    raise ValidationException('Annotation has invalid question "%s".' % questionId)
+
+            if not isinstance(doc.get('markups'), dict):
+                raise ValidationException('Annotation field "markups" must be a mapping (dict).')
+            for featureId, markup in six.viewitems(doc['markups']):
+                if featureId in featuresetFeatures:
                     if not (
-                        isinstance(featureValue, list) and
-                        len(featureValue) == maxSuperpixel + 1 and
+                        isinstance(markup, list) and
+                        len(markup) == maxSuperpixel + 1 and
                         all(superpixelValue in [0.0, 0.5, 1.0]
-                            for superpixelValue in featureValue)
+                            for superpixelValue in markup)
                     ):
                         raise ValidationException(
-                            'Annotation feature "%s" has invalid value "%s".' %
-                            (featureId, featureValue))
+                            'Annotation feature "%s" has invalid markup "%s".' %
+                            (featureId, markup))
                 else:
                     raise ValidationException(
                         'Annotation has invalid feature "%s".' % featureId)

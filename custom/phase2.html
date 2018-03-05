@@ -93,24 +93,24 @@
                     <div class="isic-annotation-body">
                         <uib-accordion close-others="false">
                             <uib-accordion-group
-                                        ng-repeat="feature in featureset.globalFeatures track by feature.id"
-                                        heading="{{ feature.name.join(': ') }}"
+                                        ng-repeat="question in featureset.globalFeatures track by question.id"
+                                        heading="{{ question.name.join(': ') }}"
                                         is-open="true">
                                 <div ng-show="!showReview">
-                                    <div ng-repeat="feature_option in feature.options track by feature_option.id">
-                                        <label class="isic-annotation-feature-option"
-                                               ng-class="{selected: feature_option.id === annotation_values[feature.id]}">
+                                    <div ng-repeat="questionOption in question.options track by questionOption.id">
+                                        <label class="isic-annotation-question-option"
+                                               ng-class="{selected: questionOption.id === responses[question.id]}">
                                             <input
                                                     type="radio"
-                                                    ng-model="annotation_values[feature.id]"
-                                                    name="{{ feature.id }}"
-                                                    value="{{ feature_option.id }}">
-                                            {{ feature_option.name }}
+                                                    ng-model="responses[question.id]"
+                                                    name="{{ question.id }}"
+                                                    value="{{ questionOption.id }}">
+                                            {{ questionOption.name }}
                                         </label>
                                     </div>
                                 </div>
                                 <div ng-show="showReview">
-                                    <label class="isic-annotation-feature-option selected">{{ feature_selected_option_name(feature) }}</label>
+                                    <label class="isic-annotation-question-option selected">{{ selectedResponseName(question) }}</label>
                                 </div>
                             </uib-accordion-group>
                         </uib-accordion>

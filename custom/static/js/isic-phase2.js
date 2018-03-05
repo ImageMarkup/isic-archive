@@ -26,11 +26,13 @@ derm_app.controller('AnnotationController', [
     'Annotation', 'Study', 'Featureset', 'Image',
     function ($scope, $rootScope, $location, $http,
               Annotation, Study, Featureset, Image) {
-        $scope.annotation_values = {};
+        $scope.responses = {};
+        $scope.markups = {};
         $scope.clearAnnotations = function () {
-            // annotation_values should be set before initialization,
+            // responses and markups should be set before initialization,
             //   but must also be re-cleared after child controllers run
-            $scope.annotation_values = {};
+            $scope.responses = {};
+            $scope.markups = {};
             $scope.$broadcast('reset');
             $scope.showReview = false;
         };
@@ -87,7 +89,8 @@ derm_app.controller('AnnotationController', [
                 imageId: $scope.image._id,
                 startTime: start_time,
                 stopTime: Date.now(),
-                annotations: $scope.annotation_values
+                responses: $scope.responses,
+                markups: $scope.markups
             };
             $http.put(submit_url, annotation_to_store).success(function () {
                 // window.location.replace('/#tasks');
@@ -112,16 +115,16 @@ derm_app.controller('GlobalFeatureAnnotationController', ['$scope',
             // TODO: reset drop-downs
         });
 
-        $scope.feature_selected_option_name = function (feature) {
-            var selected_option_id = $scope.annotation_values[feature.id];
-            var selected_option = feature.options.find(function (option) {
-                return option.id === selected_option_id;
+        $scope.selectedResponseName = function (question) {
+            var selectedResponseId = $scope.responses[question.id];
+            var selectedResponse = question.options.find(function (questionOption) {
+                return questionOption.id === selectedResponseId;
             });
-            return selected_option ? selected_option.name : '';
+            return selectedResponse ? selectedResponse.name : '';
         };
 
         $scope.selected = function () {
-            console.log('selected', $scope.annotation_values);
+            console.log('selected', $scope.responses);
         };
     }
 ]);
@@ -166,7 +169,7 @@ derm_app.controller('LocalFeatureAnnotationController', ['$scope', '$rootScope',
         $scope.activateFeature = function (featureId) {
             // store the previously active feature
             if ($scope.activeFeatureId) {
-                $scope.annotation_values[$scope.activeFeatureId] =
+                $scope.markups[$scope.activeFeatureId] =
                     $rootScope.pixelmap.getActiveValues();
             }
 
@@ -174,26 +177,26 @@ derm_app.controller('LocalFeatureAnnotationController', ['$scope', '$rootScope',
 
             if ($scope.activeFeatureId) {
                 $rootScope.pixelmap.activate(
-                    $scope.annotation_values[$scope.activeFeatureId]);
+                    $scope.markups[$scope.activeFeatureId]);
             } else {
                 $rootScope.pixelmap.clear();
             }
         };
 
         $scope.featureIsSet = function (featureId) {
-            return $scope.annotation_values[featureId] !== undefined;
+            return $scope.markups[featureId] !== undefined;
         };
 
         $scope.deleteFeature = function (featureId) {
             if ($scope.isActive(featureId)) {
                 $scope.activateFeature(null);
             }
-            delete $scope.annotation_values[featureId];
+            delete $scope.markups[featureId];
         };
 
         $scope.displayFeature = function (featureId) {
             if (featureId) {
-                $rootScope.pixelmap.display($scope.annotation_values[featureId]);
+                $rootScope.pixelmap.display($scope.markups[featureId]);
             } else {
                 $rootScope.pixelmap.clear();
             }

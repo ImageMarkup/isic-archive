@@ -40,11 +40,21 @@ class AnnotationResource(IsicResource):
 
         self.route('GET', (), self.find)
         self.route('GET', (':annotationId',), self.getAnnotation)
-        self.route('GET', (':annotationId', ':featureId'), self.getAnnotationFeature)
-        self.route('GET', (':annotationId', ':featureId', 'mask'), self.getAnnotationFeatureMask)
-        self.route('GET', (':annotationId', ':featureId', 'render'),
-                   self.getAnnotationFeatureRendered)
+        self.route('GET', (':annotationId', 'markup', ':featureId'),
+                   self.getAnnotationMarkupMask)
+        self.route('GET', (':annotationId', 'markup', ':featureId', 'rendered'),
+                   self.getAnnotationMarkupRendered)
+        self.route('GET', (':annotationId', 'markup', ':featureId', 'superpixels'),
+                   self.getAnnotationMarkupSuperpixels)
         self.route('PUT', (':annotationId',), self.submitAnnotation)
+
+        # TODO: These are all deprecated
+        self.route('GET', (':annotationId', ':featureId'),
+                   self.getAnnotationMarkupSuperpixels)
+        self.route('GET', (':annotationId', ':featureId', 'mask'),
+                   self.getAnnotationMarkupMask)
+        self.route('GET', (':annotationId', ':featureId', 'render'),
+                   self.getAnnotationMarkupRendered)
 
     @describeRoute(
         Description('Return a list of annotations.')
@@ -110,31 +120,31 @@ class AnnotationResource(IsicResource):
         return Annotation().filter(annotation, user)
 
     @describeRoute(
-        Description('Return an annotation feature as a raw superpixel array.')
+        Description('Return an annotation\'s markup as a raw superpixel array.')
         .param('annotationId', 'The ID of the annotation.', paramType='path')
-        .param('featureId', 'The feature ID within the annotation.', paramType='path')
+        .param('featureId', 'The feature ID for the markup.', paramType='path')
         .errorResponse()
     )
     @access.cookie
     @access.public
     @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
                level=AccessType.READ)
-    def getAnnotationFeature(self, annotation, featureId, params):
+    def getAnnotationMarkupSuperpixels(self, annotation, featureId, params):
         study = Study().load(annotation['studyId'], force=True, exc=True)
         featureset = Study().getFeatureset(study)
 
         if not any(featureId == feature['id'] for feature in featureset['localFeatures']):
             raise ValidationException('Invalid featureId.', 'featureId')
         if Annotation().getState(annotation) != Study().State.COMPLETE:
-            raise RestException('Only complete annotations have superpixel data.')
+            raise RestException('Only complete annotations have markup.')
 
-        featureValues = annotation['annotations'].get(featureId, [])
+        featureValues = annotation['markups'].get(featureId, [])
         return featureValues
 
     @describeRoute(
-        Description('Return an annotation feature as a mask.')
+        Description('Return an annotation\'s markup as a mask.')
         .param('annotationId', 'The ID of the annotation.', paramType='path')
-        .param('featureId', 'The feature ID within the annotation.', paramType='path')
+        .param('featureId', 'The feature ID for the markup.', paramType='path')
         .produces('image/png')
         .errorResponse()
     )
@@ -142,16 +152,16 @@ class AnnotationResource(IsicResource):
     @access.public
     @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
                level=AccessType.READ)
-    def getAnnotationFeatureMask(self, annotation, featureId, params):
+    def getAnnotationMarkupMask(self, annotation, featureId, params):
         study = Study().load(annotation['studyId'], force=True, exc=True)
         featureset = Study().getFeatureset(study)
 
         if not any(featureId == feature['id'] for feature in featureset['localFeatures']):
             raise ValidationException('Invalid featureId.', 'featureId')
         if Annotation().getState(annotation) != Study().State.COMPLETE:
-            raise RestException('Only complete annotations have superpixel data.')
+            raise RestException('Only complete annotations have markup.')
 
-        renderData = Annotation().renderMask(annotation, featureId)
+        renderData = Annotation().maskMarkup(annotation, featureId)
 
         renderEncodedStream = ScikitSegmentationHelper.writeImage(renderData, 'png')
         renderEncodedData = renderEncodedStream.getvalue()
@@ -171,9 +181,9 @@ class AnnotationResource(IsicResource):
         return renderEncodedData
 
     @describeRoute(
-        Description('Render an annotation feature, overlaid on its image.')
+        Description('Render an annotation\'s markup, overlaid on its image.')
         .param('annotationId', 'The ID of the annotation to be rendered.', paramType='path')
-        .param('featureId', 'The feature ID to be rendered.', paramType='path')
+        .param('featureId', 'The feature ID for the markup.', paramType='path')
         .param('contentDisposition',
                'Specify the Content-Disposition response header disposition-type value.',
                required=False, enum=['inline', 'attachment'])
@@ -184,7 +194,7 @@ class AnnotationResource(IsicResource):
     @access.public
     @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
                level=AccessType.READ)
-    def getAnnotationFeatureRendered(self, annotation, featureId, params):
+    def getAnnotationMarkupRendered(self, annotation, featureId, params):
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
             raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
@@ -196,9 +206,9 @@ class AnnotationResource(IsicResource):
         if not any(featureId == feature['id'] for feature in featureset['localFeatures']):
             raise ValidationException('Invalid featureId.', 'featureId')
         if Annotation().getState(annotation) != Study().State.COMPLETE:
-            raise RestException('Only complete annotations can be rendered.')
+            raise RestException('Only complete annotations have markup.')
 
-        renderData = Annotation().renderAnnotation(annotation, featureId)
+        renderData = Annotation().renderMarkup(annotation, featureId)
 
         renderEncodedStream = ScikitSegmentationHelper.writeImage(renderData, 'jpeg')
         renderEncodedData = renderEncodedStream.getvalue()
@@ -240,13 +250,14 @@ class AnnotationResource(IsicResource):
             raise RestException('Annotation is already complete.')
 
         bodyJson = self.getBodyJson()
-        self.requireParams(['status', 'startTime', 'stopTime', 'annotations'], bodyJson)
+        self.requireParams(['status', 'startTime', 'stopTime', 'responses', 'markups'], bodyJson)
 
         annotation['status'] = bodyJson['status']
         annotation['startTime'] = datetime.datetime.utcfromtimestamp(
             bodyJson['startTime'] / 1000.0)
         annotation['stopTime'] = datetime.datetime.utcfromtimestamp(
             bodyJson['stopTime'] / 1000.0)
-        annotation['annotations'] = bodyJson['annotations']
+        annotation['responses'] = bodyJson['responses']
+        annotation['markups'] = bodyJson['markups']
 
         Annotation().save(annotation)
