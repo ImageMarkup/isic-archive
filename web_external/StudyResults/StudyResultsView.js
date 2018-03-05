@@ -389,7 +389,7 @@ const StudyResultsGlobalFeaturesView = View.extend({
 
     updateResults: function () {
         this.results.update(
-            this.annotation.get('annotations'),
+            this.annotation.get('responses'),
             this.featureset.get('globalFeatures')
         );
     }
@@ -501,11 +501,11 @@ const StudyResultsLocalFeaturesView = View.extend({
     },
 
     featureAnnotated: function (featureId) {
-        if (!featureId || !this.annotation.has('annotations')) {
+        if (!featureId || !this.annotation.has('markups')) {
             return false;
         }
-        let annotations = this.annotation.get('annotations');
-        return _.has(annotations, featureId);
+        let markups = this.annotation.get('markups');
+        return _.has(markups, featureId);
     }
 });
 

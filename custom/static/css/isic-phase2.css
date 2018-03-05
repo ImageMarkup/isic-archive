@@ -48,10 +48,10 @@
     display: inline-block;
 }
 
-.isic-annotation-feature-option {
+.isic-annotation-question-option {
     font-weight: 300;
 }
-.isic-annotation-feature-option.selected {
+.isic-annotation-question-option.selected {
     font-weight: 700;
     color: #ffcc00;
 }

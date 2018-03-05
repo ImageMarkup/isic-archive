@@ -23,7 +23,6 @@ import functools
 import itertools
 
 import cherrypy
-import six
 
 from girder.api import access
 from girder.api.rest import loadmodel, setResponseHeader
@@ -180,31 +179,13 @@ class StudyResource(IsicResource):
                 }
 
                 outDict = outDictBase.copy()
-                for globalFeature in featureset['globalFeatures']:
-                    if globalFeature['id'] in annotation['annotations']:
-                        outDict[globalFeature['id']] = \
-                            annotation['annotations'][globalFeature['id']]
+                for question in featureset['globalFeatures']:
+                    if question['id'] in annotation['responses']:
+                        outDict[question['id']] = annotation['responses'][question['id']]
                 csvWriter.writerow(outDict)
                 yield responseBody.getvalue()
                 responseBody.seek(0)
                 responseBody.truncate()
-
-                # TODO: move this into the query
-                if 'localFeatures' in annotation['annotations']:
-                    superpixelCount = len(next(six.viewvalues(
-                        annotation['annotations']['localFeatures'])))
-                    for superpixelMum in xrange(superpixelCount):
-
-                        outDict = outDictBase.copy()
-                        outDict['superpixel_id'] = superpixelMum
-                        for featureName, featureValue in six.viewitems(
-                                annotation['annotations']['localFeatures']):
-                            outDict[featureName] = featureValue[superpixelMum]
-
-                        csvWriter.writerow(outDict)
-                        yield responseBody.getvalue()
-                        responseBody.seek(0)
-                        responseBody.truncate()
 
     @describeRoute(
         Description('Create an annotation study.')
