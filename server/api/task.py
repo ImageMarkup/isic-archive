@@ -399,5 +399,5 @@ class TaskResource(IsicResource):
         nextResp = self.nextAnnotationTask(params)
         annotationId = nextResp['_id']
 
-        annotationUrl = '/markup/annotate#/%s' % annotationId
+        annotationUrl = '/#tasks/annotate/%s' % annotationId
         self._doRedirect(annotationUrl)

@@ -2,6 +2,8 @@ import Vue from 'vue';
 
 import View from './view';
 
+import store from './vue/store';
+
 // Backbone view that wraps a Vue component
 const VueComponentView = View.extend({
     initialize: function (settings) {
@@ -16,6 +18,7 @@ const VueComponentView = View.extend({
 
         new Vue({ // eslint-disable-line no-new
             el: vueContainer,
+            store,
             render: (createElement) => {
                 return createElement(this.component, {
                     props: this.props
