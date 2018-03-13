@@ -289,7 +289,9 @@ class Study(Folder):
                 for question in featureset['globalFeatures']
             ],
             'features': [
-                ' : '.join(feature['name'])
+                {
+                    'id': ' : '.join(feature['name'])
+                }
                 for feature in featureset['localFeatures']
             ],
             'userCompletion': {
