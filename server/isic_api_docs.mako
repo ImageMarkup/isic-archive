@@ -50,9 +50,9 @@ accomplish the most common tasks is provided here:</p>
     for that given study. From the list of annotations, select the "_id"
     (annotationId) variable of the desired annotation and use the
     <span style="font-family: monospace">/annotation/{annotationId}</span>
-    endpoint to get a list of annotated features for that annotation. You can
+    endpoint to get a list of feature markups for that annotation. You can
     then use the annotationId and the feature name with the
-    <span style="font-family: monospace">/annotation/{annotationId}/{featureId}/mask</span> endpoint to download an annotation
+    <span style="font-family: monospace">/annotation/{annotationId}/markup/{featureId}</span> endpoint to download a markup
     mask. Data can be returned for only one mask at a time.</p>
 </div>
 </%block>

@@ -420,8 +420,8 @@ const StudyResultsFeatureImageView = View.extend({
             imageUrl = [
                 getApiRoot(),
                 'annotation', annotationId,
-                encodeURIComponent(featureId),
-                'render'
+                'markup', encodeURIComponent(featureId),
+                'rendered'
             ].join('/') + '?contentDisposition=inline';
         }
 

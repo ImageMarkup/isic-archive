@@ -187,14 +187,12 @@ class Annotation(AccessControlMixin, Model):
 
             featureset = Study().getFeatureset(study)
             featuresetQuestions = {
-                feature['id']: feature
-                for feature in
-                featureset['globalFeatures']
+                question['id']: question
+                for question in featureset['globalFeatures']
             }
             featuresetFeatures = {
                 feature['id']: feature
-                for feature in
-                featureset['localFeatures']
+                for feature in featureset['localFeatures']
             }
             if featuresetFeatures:
                 image = Image().load(doc['imageId'], force=True)
@@ -203,36 +201,85 @@ class Annotation(AccessControlMixin, Model):
             else:
                 maxSuperpixel = None
 
+            # Validate responses
             if not isinstance(doc.get('responses'), dict):
                 raise ValidationException('Annotation field "responses" must be a mapping (dict).')
+            try:
+                for questionId, response in six.viewitems(doc['responses']):
+                    if questionId not in featuresetQuestions:
+                        raise ValidationException(
+                            'Annotation has invalid question "%s".' % questionId)
+            except ValidationException as e:
+                # New-style annotation submissions index content by featureset names, not id, so
+                # try to remap from these
+                featuresetQuestionIdsByName = {
+                    ' : '.join(question['name']): question['id']
+                    for question in six.itervalues(featuresetQuestions)
+                }
+                try:
+                    doc['responses'] = {
+                        # This lookup in featuresetQuestionIdsByName may raise a KeyError
+                        featuresetQuestionIdsByName[questionName]: response
+                        for questionName, response in six.viewitems(doc['responses'])
+                    }
+                except KeyError:
+                    # Re-raise the original failure, for a cleaner error message
+                    raise e
             for questionId, response in six.viewitems(doc['responses']):
-                if questionId in featuresetQuestions:
-                    questionOptions = set(
-                        option['id']
-                        for option in
-                        featuresetQuestions[questionId]['options'])
+                questionOptions = set(
+                    option['id']
+                    for option in featuresetQuestions[questionId]['options']
+                )
+                try:
                     if response not in questionOptions:
                         raise ValidationException(
                             'Annotation question "%s" has invalid response "%s".' %
                             (questionId, response))
-                else:
-                    raise ValidationException('Annotation has invalid question "%s".' % questionId)
+                except ValidationException:
+                    # New-style annotation submissions have responses as option / choice names, not
+                    # ids, so try to remap from these
+                    questionOptionIdsByName = {
+                        option['name']: option['id']
+                        for option in featuresetQuestions[questionId]['options']
+                    }
+                    if response in questionOptionIdsByName:
+                        doc['responses'][questionId] = questionOptionIdsByName[response]
+                    else:
+                        # Re-raise the original failure, for a cleaner error message
+                        raise
 
+            # Validate markups
             if not isinstance(doc.get('markups'), dict):
                 raise ValidationException('Annotation field "markups" must be a mapping (dict).')
-            for featureId, markup in six.viewitems(doc['markups']):
-                if featureId in featuresetFeatures:
-                    if not (
-                        isinstance(markup, list) and
-                        len(markup) == maxSuperpixel + 1 and
-                        all(superpixelValue in [0.0, 0.5, 1.0]
-                            for superpixelValue in markup)
-                    ):
+            try:
+                for featureId, markup in six.viewitems(doc['markups']):
+                    if featureId not in featuresetFeatures:
                         raise ValidationException(
-                            'Annotation feature "%s" has invalid markup "%s".' %
-                            (featureId, markup))
-                else:
+                            'Annotation has invalid feature "%s".' % featureId)
+            except ValidationException as e:
+                # New-style annotation submissions index content by featureset names, not id, so
+                # try to remap from these
+                featuresetFeatureIdsByName = {
+                    ' : '.join(feature['name']): feature['id']
+                    for feature in six.itervalues(featuresetFeatures)
+                }
+                try:
+                    doc['markups'] = {
+                        # This lookup in featuresetFeatureIdsByName may raise a KeyError
+                        featuresetFeatureIdsByName[featureName]: markup
+                        for featureName, markup in six.viewitems(doc['markups'])
+                    }
+                except KeyError:
+                    # Re-raise the original failure, for a cleaner error message
+                    raise e
+            for featureId, markup in six.viewitems(doc['markups']):
+                if not (
+                    isinstance(markup, list) and
+                    len(markup) == maxSuperpixel + 1 and
+                    all(superpixelValue in [0.0, 0.5, 1.0]
+                        for superpixelValue in markup)
+                ):
                     raise ValidationException(
-                        'Annotation has invalid feature "%s".' % featureId)
+                        'Annotation feature "%s" has invalid markup "%s".' % (featureId, markup))
 
         return doc

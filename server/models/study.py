@@ -257,6 +257,8 @@ class Study(Folder):
                 # Sort by the obfuscated name
                 key=lambda user: user['name'])
 
+        featureset = Featureset().load(id=study['meta']['featuresetId'], exc=True)
+
         output = {
             '_id': study['_id'],
             '_modelType': 'study',
@@ -268,15 +270,30 @@ class Study(Folder):
                 user),
             # TODO: verify that "updated" is set correctly
             'updated': study['updated'],
-            'featureset': Featureset().load(
-                id=study['meta']['featuresetId'],
-                fields=Featureset().summaryFields, exc=True),
+            'featureset': featureset,
             'users': getSortedUserList(self.getAnnotators(study)),
             'images': list(
                 Image().filterSummary(image, user)
                 for image in
                 self.getImages(study).sort('name', SortDir.ASCENDING)
             ),
+            'questions': [
+                {
+                    'id': ' : '.join(question['name']),
+                    'type': 'select',
+                    'choices': [
+                        questionOption['name']
+                        for questionOption in question['options']
+                    ]
+                }
+                for question in featureset['globalFeatures']
+            ],
+            'features': [
+                {
+                    'id': ' : '.join(feature['name'])
+                }
+                for feature in featureset['localFeatures']
+            ],
             'userCompletion': {
                 str(annotatorComplete['_id']): annotatorComplete['count']
                 for annotatorComplete in
