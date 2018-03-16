@@ -131,10 +131,9 @@ class AnnotationResource(IsicResource):
                level=AccessType.READ)
     def getAnnotationMarkupSuperpixels(self, annotation, featureId, params):
         study = Study().load(annotation['studyId'], force=True, exc=True)
-        featureset = Study().getFeatureset(study)
 
-        if not any(featureId == feature['id'] for feature in featureset['localFeatures']):
-            raise ValidationException('Invalid featureId.', 'featureId')
+        if not any(featureId == feature['id'] for feature in study['meta']['features']):
+            raise ValidationException('That featureId is not present in the study.', 'featureId')
         if Annotation().getState(annotation) != Study().State.COMPLETE:
             raise RestException('Only complete annotations have markup.')
 
@@ -154,10 +153,9 @@ class AnnotationResource(IsicResource):
                level=AccessType.READ)
     def getAnnotationMarkupMask(self, annotation, featureId, params):
         study = Study().load(annotation['studyId'], force=True, exc=True)
-        featureset = Study().getFeatureset(study)
 
-        if not any(featureId == feature['id'] for feature in featureset['localFeatures']):
-            raise ValidationException('Invalid featureId.', 'featureId')
+        if not any(featureId == feature['id'] for feature in study['meta']['features']):
+            raise ValidationException('That featureId is not present in the study.', 'featureId')
         if Annotation().getState(annotation) != Study().State.COMPLETE:
             raise RestException('Only complete annotations have markup.')
 
@@ -201,10 +199,9 @@ class AnnotationResource(IsicResource):
                                       'contentDisposition')
 
         study = Study().load(annotation['studyId'], force=True, exc=True)
-        featureset = Study().getFeatureset(study)
 
-        if not any(featureId == feature['id'] for feature in featureset['localFeatures']):
-            raise ValidationException('Invalid featureId.', 'featureId')
+        if not any(featureId == feature['id'] for feature in study['meta']['features']):
+            raise ValidationException('That featureId is not present in the study.', 'featureId')
         if Annotation().getState(annotation) != Study().State.COMPLETE:
             raise RestException('Only complete annotations have markup.')
 

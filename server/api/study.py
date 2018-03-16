@@ -33,7 +33,6 @@ from girder.utility import mail_utils
 
 from .base import IsicResource
 from ..models.annotation import Annotation
-from ..models.featureset import Featureset
 from ..models.image import Image
 from ..models.study import Study
 from ..models.user import User
@@ -120,15 +119,12 @@ class StudyResource(IsicResource):
     def _getStudyCSVStream(self, study):
         currentUser = self.getCurrentUser()
 
-        featureset = Featureset().load(study['meta']['featuresetId'], exc=True)
         csvFields = tuple(itertools.chain(
             ('study_name', 'study_id',
              'user_name', 'user_id',
              'image_name', 'image_id',
              'flag_status', 'elapsed_seconds'),
-            (feature['id'] for feature in featureset['globalFeatures']),
-            ('superpixel_id',),
-            (feature['id'] for feature in featureset['localFeatures'])
+            (question['id'] for question in study['meta']['questions'])
         ))
 
         responseBody = StringIO()
@@ -179,7 +175,7 @@ class StudyResource(IsicResource):
                 }
 
                 outDict = outDictBase.copy()
-                for question in featureset['globalFeatures']:
+                for question in study['meta']['questions']:
                     if question['id'] in annotation['responses']:
                         outDict[question['id']] = annotation['responses'][question['id']]
                 csvWriter.writerow(outDict)
@@ -190,10 +186,11 @@ class StudyResource(IsicResource):
     @describeRoute(
         Description('Create an annotation study.')
         .param('name', 'The name of the study.', paramType='form')
-        .param('featuresetId', 'The featureset ID of the study.', paramType='form')
         .param('userIds', 'The annotators user IDs of the study, as a JSON array.',
                paramType='form')
         .param('imageIds', 'The image IDs of the study, as a JSON array.', paramType='form')
+        .param('questions', 'A list of questions for the study, as a JSON array.', paramType='form')
+        .param('features', 'A list of features for the study, as a JSON array.', paramType='form')
         .errorResponse('Write access was denied on the parent folder.', 403)
     )
     @access.user
@@ -202,16 +199,11 @@ class StudyResource(IsicResource):
         User().requireAdminStudy(creatorUser)
 
         params = self._decodeParams(params)
-        self.requireParams(['name', 'featuresetId', 'userIds', 'imageIds'], params)
+        self.requireParams(['name', 'userIds', 'imageIds', 'questions', 'features'], params)
 
         studyName = params['name'].strip()
         if not studyName:
             raise ValidationException('Name must not be empty.', 'name')
-
-        featuresetId = params['featuresetId']
-        if not featuresetId:
-            raise ValidationException('Invalid featureset ID.', 'featuresetId')
-        featureset = Featureset().load(featuresetId, exc=True)
 
         if not params['userIds']:
             # TODO: Remove this restriction, once users / images are not stored implicitly
@@ -235,12 +227,16 @@ class StudyResource(IsicResource):
             for imageId in params['imageIds']
         ]
 
-        study = Study().createStudy(
-            name=studyName,
-            creatorUser=creatorUser,
-            featureset=featureset,
-            annotatorUsers=annotatorUsers,
-            images=images)
+        try:
+            study = Study().createStudy(
+                name=studyName,
+                creatorUser=creatorUser,
+                questions=params['questions'],
+                features=params['features'],
+                annotatorUsers=annotatorUsers,
+                images=images)
+        except ValidationException as e:
+            raise RestException(e.message)
 
         return self.getStudy(id=study['_id'], params={})
 

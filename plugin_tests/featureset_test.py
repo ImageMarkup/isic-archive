@@ -42,7 +42,6 @@ class FeaturesetTestCase(IsicTestCase):
     def testFeatureset(self):
         Featureset = self.model('featureset', 'isic_archive')
         Group = self.model('group')
-        Study = self.model('study', 'isic_archive')
         User = self.model('user', 'isic_archive')
 
         # Create a basic user
@@ -232,26 +231,6 @@ class FeaturesetTestCase(IsicTestCase):
             path='/featureset/%s' % basicFeatureset['_id'], method='DELETE',
             user=basicUser)
         self.assertStatus(resp, 403)
-
-        # Try to delete a featureset being used by a study
-        testStudy = Study.createStudy(
-            name='Test Study',
-            creatorUser=studyAdminUser,
-            featureset=basicFeatureset,
-            annotatorUsers=[],
-            images=[]
-        )
-        resp = self.request(
-            path='/featureset/%s' % basicFeatureset['_id'], method='DELETE',
-            user=studyAdminUser)
-        self.assertStatus(resp, 409)
-        resp = self.request(
-            path='/featureset', method='GET')
-        self.assertStatusOk(resp)
-        self.assertEqual(len(resp.json), 1)
-
-        # TODO: Use the Study API, once it exists
-        Study.remove(testStudy)
 
         # Delete an unused featureset
         resp = self.request(
