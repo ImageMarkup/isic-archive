@@ -33,7 +33,7 @@ class Batch(Model):
         batch = self.save({
             'datasetId': dataset['_id'],
             'created': now,
-            'creatorId': creator,
+            'creatorId': creator['_id'],
             'signature': signature
         })
         return batch
