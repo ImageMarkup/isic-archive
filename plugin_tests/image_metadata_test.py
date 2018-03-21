@@ -670,7 +670,8 @@ class ImageMetadataTestCase(base.TestCase):
         for value in [
             'histopathology',
             'serial imaging showing no change',
-            'SINGLE IMAGE EXPERT CONSENSUS'
+            'SINGLE IMAGE EXPERT CONSENSUS',
+            '  confocal microscopy WITH consensus dermoscopy  '
         ]:
             data = {'diagnosis_confirm_type': value}
             image = self._createImage()
@@ -678,7 +679,7 @@ class ImageMetadataTestCase(base.TestCase):
             self.assertDictEqual({}, data)
             self.assertDictEqual({}, image['meta']['unstructured'])
             self.assertDictEqual(
-                {'diagnosis_confirm_type': value.lower()},
+                {'diagnosis_confirm_type': value.strip().lower()},
                 image['meta']['clinical'])
             self.assertDictEqual({}, image['privateMeta'])
 

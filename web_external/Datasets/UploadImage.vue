@@ -210,6 +210,7 @@ export default {
                     {value: 'histopathology', description: 'Histopathology'},
                     {value: 'serial imaging showing no change', description: 'Serial Imaging Showing No Change'},
                     {value: 'single image expert consensus', description: 'Expert Consensus (3 raters)'},
+                    {value: 'confocal microscopy with consensus dermoscopy', description: 'Confocal Microscopy with Consensus Dermoscopy'},
                     {value: 'unknown', description: 'Unknown'}
                 ],
                 diagnosis: [
