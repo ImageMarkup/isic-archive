@@ -464,6 +464,8 @@ class DiagnosisFieldParser(FieldParser):
                     'verruca',
                     'atypical melanocytic proliferation',
                     'epidermal nevus',
+                    'pigmented benign keratosis',
+                    'vascular lesion',
                     'other'})
         return value
 
