@@ -30,10 +30,9 @@ from girder.models.collection import Collection
 from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.group import Group
-from girder.models.assetstore import Assetstore
 from girder.models.model_base import AccessControlledModel
 from girder.models.notification import ProgressState
-from girder.utility import assetstore_utilities, mail_utils
+from girder.utility import mail_utils
 from girder.utility.progress import ProgressContext
 from backports import csv
 
@@ -348,13 +347,8 @@ class Dataset(AccessControlledModel):
         # Avoid circular import
         from .image import Image
 
-        # Get full path of zip file in assetstore
-        assetstore = Assetstore().getCurrent()
-        assetstore_adapter = assetstore_utilities.getAssetstoreAdapter(
-            assetstore)
-        fullPath = assetstore_adapter.fullPath(zipFile)
-
-        with ZipFileOpener(fullPath) as (fileList, fileCount):
+        zipFileLocalPath = File().getLocalFilePath(zipFile)
+        with ZipFileOpener(zipFileLocalPath) as (fileList, fileCount):
             with ProgressContext(
                     on=True,
                     user=user,
