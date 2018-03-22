@@ -34,12 +34,12 @@
           span.flag-status
             span #[b Flag Status:]&nbsp;{{ flagStatus }}
       .annotation(v-if='questions.length > 0')
-        h3.annotation-header Global Features
-        annotation-tool-global-features
-      .annotation(v-if='questions.length > 0')
-        h3.annotation-header Local Features
+        h3.annotation-header Questions
+        annotation-tool-questions
+      .annotation(v-if='features.length > 0')
+        h3.annotation-header Features
         .annotation-section
-          annotation-tool-local-features(
+          annotation-tool-features(
             :activeFeatureId='activeFeatureId',
             @featureActivated='onFeatureActivated',
             @featureDeactivated='onFeatureDeactivated',
@@ -82,8 +82,8 @@ import { createNamespacedHelpers } from 'vuex';
 import { getApiRoot } from 'girder/rest';
 import { getCurrentUser } from 'girder/auth';
 
-import AnnotationToolGlobalFeatures from './AnnotationToolGlobalFeatures.vue';
-import AnnotationToolLocalFeatures from './AnnotationToolLocalFeatures.vue';
+import AnnotationToolQuestions from './AnnotationToolQuestions.vue';
+import AnnotationToolFeatures from './AnnotationToolFeatures.vue';
 import AnnotationToolViewer from './AnnotationToolViewer.vue';
 
 import { MarkupState, SubmissionState } from '../store/modules/annotate';
@@ -95,8 +95,8 @@ const { mapState, mapGetters, mapMutations, mapActions } = createNamespacedHelpe
 // TODO: make viewer more reactive? (i.e. remove this.$refs.viewer calls where possible)
 export default {
     components: {
-        AnnotationToolGlobalFeatures: AnnotationToolGlobalFeatures,
-        AnnotationToolLocalFeatures: AnnotationToolLocalFeatures,
+        AnnotationToolQuestions: AnnotationToolQuestions,
+        AnnotationToolFeatures: AnnotationToolFeatures,
         AnnotationToolViewer: AnnotationToolViewer
     },
     props: {
@@ -121,7 +121,8 @@ export default {
         'activeFeatureId',
         'submissionState'
     ]), mapGetters([
-        'questions'
+        'questions',
+        'features'
     ])),
     watch: {
         questions() {

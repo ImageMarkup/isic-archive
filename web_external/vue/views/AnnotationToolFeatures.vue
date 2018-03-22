@@ -1,5 +1,5 @@
 <template lang="pug">
-.annotation-tool-local-features
+.annotation-tool-features
   .alert.alert-warning.annotation-body-help
     i.icon-help-circled
     template(v-if='showReview')
@@ -44,11 +44,11 @@
         span 50%?
   div.annotation-section
     template(v-if='showReview')
-      span.annotation-features-local(
+      span(
         v-for='feature in markedupFeatures',
         :key='feature.id',
       )
-        button.annotation-radio-btn.annotation-features-local-activate.btn.btn-default(
+        button.annotation-radio-btn.annotation-features-activate.btn.btn-default(
           type='button',
           @mouseenter='onMouseEnter(feature.id)',
           @mouseleave='onMouseLeave(feature.id)'
@@ -56,17 +56,17 @@
           span {{ feature.id }}
 
     template(v-else)
-      span.annotation-features-local(
+      span(
         v-for='feature in features',
         :key='feature.id'
       )
-        button.annotation-radio-btn.annotation-features-local-activate.btn.btn-default(
+        button.annotation-radio-btn.annotation-features-activate.btn.btn-default(
           type='button',
           :class='{active: isActive(feature.id)}',
           @click='onClick(feature.id)'
         )
           span {{ feature.id }}
-        button.annotation-radio-btn.annotation-features-local-delete.btn.btn-default(
+        button.annotation-radio-btn.annotation-features-delete.btn.btn-default(
           v-if='markedupFeatureIds.includes(feature.id)',
           type='button',
           @click='onDelete(feature.id)'
@@ -156,13 +156,13 @@ export default {
     &.active
       background-color #f0ad4e
 
-.annotation-features-local-activate
+.annotation-features-activate
     width 80%
     text-align left
     white-space normal
     margin-right 3px
 
-.annotation-features-local-delete
+.annotation-features-delete
     color #ffffff
     background-color #99190d
     &:hover
