@@ -6,36 +6,33 @@
         .info-group
           span.title ISIC Annotation Tool
           a.pull-right(href='/') Return home.
-        .info-group
-          div(v-if='image')
+        .info-group(v-if='image')
             span #[b Image:]&nbsp;{{ image.name }}
-        .info-group
-          div(v-if='user')
+        .info-group(v-if='user')
             span #[b User:]&nbsp;{{ user.name() }}
-        .info-group
-          .dropdown
-            button.btn.btn-warning.dropdown-toggle(
-              type='button',
-              data-toggle='dropdown'
-            )
-              span Flag Image&nbsp;
-              span.caret
-            ul.dropdown-menu
-              li
-                a(@click='setFlagStatus("ok")') Unflagged
-              li
-                a(@click='setFlagStatus("phi")') Contains PHI
-              li
-                a(@click='setFlagStatus("quality")') Low optical quality
-              li
-                a(@click='setFlagStatus("zoom")') Inadequate zoom factor
-              li
-                a(@click='setFlagStatus("inappropriate")') Clinically inappropriate
-              li.divider
-              li
-                a(@click='flag("other")') Other reason
-            span.flag-status
-              span #[b Flag Status:]&nbsp;{{ flagStatus }}
+        .info-group.dropdown
+          button.btn.btn-warning.dropdown-toggle(
+            type='button',
+            data-toggle='dropdown'
+          )
+            span Flag Image&nbsp;
+            span.caret
+          ul.dropdown-menu
+            li
+              a(@click='setFlagStatus("ok")') Unflagged
+            li
+              a(@click='setFlagStatus("phi")') Contains PHI
+            li
+              a(@click='setFlagStatus("quality")') Low optical quality
+            li
+              a(@click='setFlagStatus("zoom")') Inadequate zoom factor
+            li
+              a(@click='setFlagStatus("inappropriate")') Clinically inappropriate
+            li.divider
+            li
+              a(@click='flag("other")') Other reason
+          span.flag-status
+            span #[b Flag Status:]&nbsp;{{ flagStatus }}
       .annotation(v-if='questions.length > 0')
         h3.annotation-header Global Features
         annotation-tool-global-features
