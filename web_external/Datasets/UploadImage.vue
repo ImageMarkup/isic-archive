@@ -210,6 +210,7 @@ export default {
                     {value: 'histopathology', description: 'Histopathology'},
                     {value: 'serial imaging showing no change', description: 'Serial Imaging Showing No Change'},
                     {value: 'single image expert consensus', description: 'Expert Consensus (3 raters)'},
+                    {value: 'confocal microscopy with consensus dermoscopy', description: 'Confocal Microscopy with Consensus Dermoscopy'},
                     {value: 'unknown', description: 'Unknown'}
                 ],
                 diagnosis: [
@@ -246,6 +247,8 @@ export default {
                     {value: 'solar lentigo', description: 'Solar Lentigo', melanocytic: true},
                     {value: 'squamous cell carcinoma', description: 'Squamous Cell Carcinoma', melanocytic: false},
                     {value: 'verruca', description: 'Verruca', melanocytic: false},
+                    {value: 'pigmented benign keratosis', description: 'Pigmented Benign Keratosis', melanocytic: false},
+                    {value: 'vascular lesion', description: 'Vascular Lesion', melanocytic: false},
                     {value: 'other', description: 'Other', melanocytic: null},
                     {value: 'unknown', description: 'Unknown', melanocytic: null}
                 ],

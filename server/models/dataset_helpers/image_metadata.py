@@ -361,7 +361,8 @@ class DiagnosisConfirmTypeFieldParser(FieldParser):
                 cls._assertEnumerated(value, {
                     'histopathology',
                     'serial imaging showing no change',
-                    'single image expert consensus'})
+                    'single image expert consensus',
+                    'confocal microscopy with consensus dermoscopy'})
         return value
 
     @classmethod
@@ -463,6 +464,8 @@ class DiagnosisFieldParser(FieldParser):
                     'verruca',
                     'atypical melanocytic proliferation',
                     'epidermal nevus',
+                    'pigmented benign keratosis',
+                    'vascular lesion',
                     'other'})
         return value
 
