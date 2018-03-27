@@ -9,7 +9,7 @@
         .info-group(v-if='image')
             span #[b Image:]&nbsp;{{ image.name }}
         .info-group(v-if='user')
-            span #[b User:]&nbsp;{{ user.name() }}
+          span #[b User:]&nbsp;{{ user.name() }}
         .info-group.dropdown
           button.btn.btn-warning.dropdown-toggle(
             type='button',
