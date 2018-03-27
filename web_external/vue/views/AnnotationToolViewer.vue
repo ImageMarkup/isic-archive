@@ -32,12 +32,22 @@ export default {
     ])),
     watch: {
         image(newImage) {
-            restRequest({
-                url: `image/${this.image._id}/tiles`,
-                method: 'GET'
-            }).done((resp) => {
-                this.initializeMap(resp);
-            });
+            if (this.viewer) {
+                this.viewer.exit();
+                this.viewer = null;
+                this.imageLayer = null;
+                this.annotationLayer = null;
+                this.pixelmap = null;
+            }
+
+            if (newImage) {
+                restRequest({
+                    url: `image/${newImage._id}/tiles`,
+                    method: 'GET'
+                }).done((resp) => {
+                    this.initializeMap(resp);
+                });
+            }
         }
     },
     created() {
@@ -47,6 +57,11 @@ export default {
         this.pixelmap = null;
     },
     mounted() {
+    },
+    beforeDestroy() {
+        if (this.viewer) {
+            this.viewer.exit();
+        }
     },
     methods: {
         initializeMap(resp) {
