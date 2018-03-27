@@ -16,7 +16,7 @@ const VueComponentView = View.extend({
         const vueContainer = $('<div></div>').get(0);
         this.$el.append(vueContainer);
 
-        new Vue({ // eslint-disable-line no-new
+        this.vue = new Vue({
             el: vueContainer,
             store,
             render: (createElement) => {
@@ -27,6 +27,14 @@ const VueComponentView = View.extend({
         });
 
         return this;
+    },
+
+    destroy: function () {
+        if (this.vue) {
+            this.vue.$destroy();
+        }
+
+        View.prototype.destroy.call(this);
     }
 });
 
