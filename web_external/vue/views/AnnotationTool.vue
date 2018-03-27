@@ -78,9 +78,10 @@
 
 <script>
 import { createNamespacedHelpers } from 'vuex';
-
-import { getApiRoot } from 'girder/rest';
 import { getCurrentUser } from 'girder/auth';
+
+import { showAlertDialog } from '../../common/utilities';
+import router from '../../router';
 
 import AnnotationToolQuestions from './AnnotationToolQuestions.vue';
 import AnnotationToolFeatures from './AnnotationToolFeatures.vue';
@@ -100,7 +101,7 @@ export default {
         AnnotationToolViewer: AnnotationToolViewer
     },
     props: {
-        annotationId: {
+        studyId: {
             type: String,
             required: true
         }
@@ -136,8 +137,22 @@ export default {
         },
         submissionState(newState) {
             if (newState === SubmissionState.SUBMITTED) {
-                const redirectUrl = `${getApiRoot()}/task/me/annotation/redirect?studyId=${this.study._id}`;
-                window.location.replace(redirectUrl);
+                this.$refs.viewer.clear();
+
+                // Reset state, preserving study
+                const study = this.study;
+                this.resetState();
+                this.setStudy(study);
+
+                this.getNextAnnotation({studyId: this.studyId});
+            } else if (newState === SubmissionState.FINISHED) {
+                showAlertDialog({
+                    text: '<h4>All images in this study have been annotated.</h4>',
+                    escapedHtml: true,
+                    callback: () => {
+                        router.navigate('tasks', {trigger: true});
+                    }
+                });
             }
         }
     },
@@ -145,7 +160,8 @@ export default {
     },
     mounted() {
         this.user = getCurrentUser();
-        this.getAnnotation({id: this.annotationId});
+        this.getStudy({id: this.studyId});
+        this.getNextAnnotation({studyId: this.studyId});
     },
     methods: Object.assign({
         reset() {
@@ -215,6 +231,8 @@ export default {
             });
         }
     }, mapMutations([
+        'resetState',
+        'setStudy',
         'setFlagStatus',
         'setShowReview',
         'setMarkupState',
@@ -223,7 +241,8 @@ export default {
         'setMarkup',
         'setActiveFeatureId'
     ]), mapActions([
-        'getAnnotation',
+        'getNextAnnotation',
+        'getStudy',
         'submitAnnotation'
     ]))
 };

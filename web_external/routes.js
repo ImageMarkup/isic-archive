@@ -230,7 +230,7 @@ router.route('tasks/annotate/:id', 'annotate', (id) => {
     navigateToIfLoggedIn(VueComponentView, {
         component: AnnotationTool,
         props: {
-            annotationId: id
+            studyId: id
         }
     });
 });

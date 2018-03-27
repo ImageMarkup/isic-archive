@@ -8,6 +8,7 @@ import Vue from 'vue';
 import AnnotationService from '../../api/annotation';
 import ImageService from '../../api/image';
 import StudyService from '../../api/study';
+import TaskService from '../../api/task';
 
 export const MarkupState = {
     ABSENT: 0.0,
@@ -19,7 +20,8 @@ export const SubmissionState = {
     UNSUBMITTED: 'unsubmitted',
     SUBMITTING: 'submitting',
     SUBMITTED: 'submitted',
-    FAILED: 'failed'
+    FAILED: 'failed',
+    FINISHED: 'finished'
 };
 
 function initialState() {
@@ -101,13 +103,17 @@ export default {
         }
     },
     actions: {
-        getAnnotation({ state, dispatch, commit }, { id }) {
-            AnnotationService.get(id)
+        getNextAnnotation({ state, dispatch, commit }, { studyId }) {
+            TaskService.getNextAnnotation(studyId)
                 .done((resp) => {
                     commit('setAnnotation', resp);
                     commit('setStartTime', Date.now());
-                    dispatch('getStudy', {id: state.annotation.studyId});
-                    dispatch('getImage', {id: state.annotation.image._id});
+                    dispatch('getImage', {id: state.annotation.imageId});
+                })
+                .fail((resp) => {
+                    if (resp.status === 404) {
+                        commit('setSubmissionState', SubmissionState.FINISHED);
+                    }
                 });
         },
         getStudy({ commit }, { id }) {

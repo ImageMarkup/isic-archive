@@ -396,8 +396,7 @@ class TaskResource(IsicResource):
     @access.cookie
     @access.user
     def redirectAnnotationTask(self, params):
-        nextResp = self.nextAnnotationTask(params)
-        annotationId = nextResp['_id']
+        self.requireParams(['studyId'], params)
 
-        annotationUrl = '/#tasks/annotate/%s' % annotationId
-        self._doRedirect(annotationUrl)
+        url = '/#tasks/annotate/%s' % str(params['studyId'])
+        self._doRedirect(url)
