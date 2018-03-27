@@ -22,9 +22,8 @@ export const SubmissionState = {
     FAILED: 'failed'
 };
 
-export default {
-    namespaced: true,
-    state: {
+function initialState() {
+    return {
         annotation: null,
         study: null,
         image: null,
@@ -36,7 +35,12 @@ export default {
         markups: {},
         activeFeatureId: null,
         submissionState: SubmissionState.UNSUBMITTED
-    },
+    };
+}
+
+export default {
+    namespaced: true,
+    state: initialState(),
     getters: {
         questions(state) {
             return state.study ? state.study.questions : [];
@@ -49,6 +53,9 @@ export default {
         }
     },
     mutations: {
+        resetState(state) {
+            state = Object.assign(state, initialState());
+        },
         setAnnotation(state, annotation) {
             state.annotation = annotation;
         },
