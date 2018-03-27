@@ -378,7 +378,7 @@ class TaskResource(IsicResource):
         studyIdInt = int(str(study['_id']), 16)
         activeAnnotationsCount = activeAnnotations.count()
         if activeAnnotationsCount == 0:
-            raise RestException('No annotations are needed for this study.')
+            raise RestException('No annotations are needed for this study.', code=404)
         # We can't persist the state of the PRNG across requests, so ensure that for a given
         # study, each amount of remaining annotations returns a deterministic random offset
         random.seed(studyIdInt + activeAnnotationsCount)
