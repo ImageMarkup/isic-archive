@@ -6,8 +6,9 @@
         .info-group
           span.title ISIC Annotation Tool
           a.pull-right(href='/') Return home.
-        .info-group(v-if='image')
-            span #[b Image:]&nbsp;{{ image.name }}
+        .info-group #[b Image:]&nbsp;
+          transition(name='image-name')
+            span(v-if='image') {{ image.name }}
         .info-group(v-if='user')
           span #[b User:]&nbsp;{{ user.name() }}
         .info-group.dropdown
@@ -294,4 +295,12 @@ export default {
 .annotation-section
   margin 0px
   padding 5px
+
+.image-name-enter-active
+.image-name-leave-active
+  transition opacity .25s
+
+.image-name-enter
+.image-name-leave-to
+  opacity 0
 </style>
