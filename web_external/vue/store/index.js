@@ -5,7 +5,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 
-import annotate from './modules/annotate';
+import annotate from '../components/AnnotationTool/AnnotationToolStore';
 
 Vue.use(Vuex);
 

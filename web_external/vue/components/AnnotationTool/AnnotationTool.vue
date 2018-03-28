@@ -28,7 +28,7 @@
               a(@click='setFlagStatus("inappropriate")') Clinically inappropriate
             li.divider
             li
-              a(@click='flag("other")') Other reason
+              a(@click='setFlagStatus("other")') Other reason
           span.flag-status
             span #[b Flag Status:]&nbsp;{{ flagStatus }}
       .annotation(v-if='questions.length > 0')
@@ -77,14 +77,14 @@
 <script>
 import { createNamespacedHelpers } from 'vuex';
 
-import { showAlertDialog } from '../../common/utilities';
-import router from '../../router';
+import { showAlertDialog } from '../../../common/utilities';
+import router from '../../../router';
 
 import AnnotationToolQuestions from './AnnotationToolQuestions.vue';
 import AnnotationToolFeatures from './AnnotationToolFeatures.vue';
 import AnnotationToolViewer from './AnnotationToolViewer.vue';
 
-import { MarkupState, SubmissionState } from '../store/modules/annotate';
+import { MarkupState, SubmissionState } from './AnnotationToolStore';
 
 const { mapState, mapGetters, mapMutations, mapActions } = createNamespacedHelpers('annotate');
 

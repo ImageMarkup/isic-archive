@@ -9,7 +9,7 @@ import { createNamespacedHelpers } from 'vuex';
 
 import { restRequest, getApiRoot } from 'girder/rest';
 
-import { MarkupState } from '../store/modules/annotate';
+import { MarkupState } from './AnnotationToolStore';
 
 const { mapState } = createNamespacedHelpers('annotate');
 
