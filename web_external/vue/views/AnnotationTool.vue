@@ -5,12 +5,9 @@
       .header
         .info-group
           span.title ISIC Annotation Tool
-          a.pull-right(href='/') Return home.
         .info-group #[b Image:]&nbsp;
           transition(name='image-name')
             span(v-if='image') {{ image.name }}
-        .info-group(v-if='user')
-          span #[b User:]&nbsp;{{ user.name() }}
         .info-group.dropdown
           button.btn.btn-warning.dropdown-toggle(
             type='button',
@@ -79,7 +76,6 @@
 
 <script>
 import { createNamespacedHelpers } from 'vuex';
-import { getCurrentUser } from 'girder/auth';
 
 import { showAlertDialog } from '../../common/utilities';
 import router from '../../router';
@@ -108,9 +104,7 @@ export default {
         }
     },
     data() {
-        return {
-            user: null
-        };
+        return {};
     },
     computed: Object.assign({
     }, mapState([
@@ -160,7 +154,6 @@ export default {
     created() {
     },
     mounted() {
-        this.user = getCurrentUser();
         this.getStudy({id: this.studyId});
         this.getNextAnnotation({studyId: this.studyId});
     },
