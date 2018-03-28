@@ -3,8 +3,7 @@
   .isic-page.row
     .isic-pane.col-sm-3
       .header
-        .info-group
-          span.title ISIC Annotation Tool
+        .info-group.title ISIC Annotation Tool
         .info-group #[b Image:]&nbsp;
           transition(name='image-name')
             span(v-if='image') {{ image.name }}
