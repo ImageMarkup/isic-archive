@@ -37,26 +37,24 @@ const ImageDetailsPane = View.extend({
         // Get image data
         let created = this.formatDate(this.image.get('created'));
 
-        // Get license, default to CC-0
-        let license;
-        if (this.image.has('license')) {
-            license = {
-                name: this.image.get('license'),
-                url: null
-            };
-        } else {
-            license = {
-                name: 'CC-0',
-                url: 'https://creativecommons.org/publicdomain/zero/1.0/'
-            };
-        }
+        // Get license
+        const licenseType = this.image.get('dataset').license;
+        const licenseUrl = {
+            'CC-0': 'https://creativecommons.org/publicdomain/zero/1.0/',
+            'CC-BY': 'https://creativecommons.org/licenses/by/4.0/',
+            'CC-BY-NC': 'https://creativecommons.org/licenses/by-nc/4.0/',
+            'CC-BY-NC-SA': 'https://creativecommons.org/licenses/by-nc-sa/4.0/'
+        }[licenseType];
 
         this.$el.html(ImageDetailsPageTemplate({
             _: _,
             apiRoot: getApiRoot(),
             image: this.image,
             created: created,
-            license: license
+            license: {
+                name: licenseType,
+                url: licenseUrl
+            }
         }));
 
         this.segmentationsDisplayView = new SegmentationsDisplayView({
