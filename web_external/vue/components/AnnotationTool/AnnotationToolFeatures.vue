@@ -122,10 +122,6 @@ export default {
                 this.$emit('featureActivated', featureId);
             }
         },
-        onCertaintyChanged(event) {
-            const value = parseFloat(event.target.value);
-            this.setMarkupState(value);
-        },
         onMouseEnter(featureId) {
             this.$emit('displayFeature', featureId);
         },
