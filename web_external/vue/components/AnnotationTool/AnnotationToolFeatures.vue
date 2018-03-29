@@ -28,9 +28,8 @@
         input(
           type='radio',
           name='certainty',
-          :value='1.0',
-          :checked='markupState === 1.0',
-          @change='onCertaintyChanged'
+          v-model.number='certainty'
+          :value='1.0'
         )
         span 100%
       label.annotation-radio-btn.btn.btn-default(
@@ -39,9 +38,8 @@
         input(
           type='radio',
           name='certainty',
-          :value='0.5',
-          :checked='markupState === 0.5',
-          @change='onCertaintyChanged'
+          v-model.number='certainty'
+          :value='0.5'
         )
         span 50%?
   div.annotation-section
@@ -97,6 +95,14 @@ export default {
         },
         markedupFeatures() {
             return this.features.filter((feature) => this.markedupFeatureIds.includes(feature.id));
+        },
+        certainty: {
+            get() {
+                return this.markupState;
+            },
+            set(value) {
+                this.setMarkupState(value);
+            }
         }
     }, mapState([
         'showReview',
