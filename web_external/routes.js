@@ -225,3 +225,12 @@ import TasksView from './Tasks/TasksView';
 router.route('tasks', 'tasks', () => {
     navigateToIfLoggedIn(TasksView);
 });
+import AnnotationTool from './vue/components/AnnotationTool/AnnotationTool.vue';
+router.route('tasks/annotate/:id', 'annotate', (id) => {
+    navigateToIfLoggedIn(VueComponentView, {
+        component: AnnotationTool,
+        props: {
+            studyId: id
+        }
+    });
+});
