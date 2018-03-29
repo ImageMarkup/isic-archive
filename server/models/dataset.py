@@ -236,7 +236,7 @@ class Dataset(AccessControlledModel):
         # License
         assert isinstance(doc['license'], six.string_types)
         doc['license'] = doc['license'].strip()
-        if doc['license'] not in {'CC-0', 'CC-BY', 'CC-BY-NC'}:
+        if doc['license'] not in {'CC-0', 'CC-BY', 'CC-BY-NC', 'CC-BY-NC-SA'}:
             raise ValidationException('Unknown license type.', 'license')
 
         # Attribution

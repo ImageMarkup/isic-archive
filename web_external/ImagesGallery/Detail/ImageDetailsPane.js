@@ -42,7 +42,8 @@ const ImageDetailsPane = View.extend({
         const licenseUrl = {
             'CC-0': 'https://creativecommons.org/publicdomain/zero/1.0/',
             'CC-BY': 'https://creativecommons.org/licenses/by/4.0/',
-            'CC-BY-NC': 'https://creativecommons.org/licenses/by-nc/4.0/'
+            'CC-BY-NC': 'https://creativecommons.org/licenses/by-nc/4.0/',
+            'CC-BY-NC-SA': 'https://creativecommons.org/licenses/by-nc-sa/4.0/'
         }[licenseType];
 
         this.$el.html(ImageDetailsPageTemplate({
