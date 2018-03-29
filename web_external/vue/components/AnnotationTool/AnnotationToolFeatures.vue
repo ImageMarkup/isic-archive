@@ -152,27 +152,27 @@ export default {
   border-radius 0px
 
 .annotation-radio-btn
+  color #ffffff
+  background-color #333333
+  border-radius 0px
+  &:focus
     color #ffffff
     background-color #333333
-    border-radius 0px
-    &:focus
-      color #ffffff
-      background-color #333333
-    &:hover
-      color #ffffff
-      background-color #f2b866
-    &.active
-      background-color #f0ad4e
+  &:hover
+    color #ffffff
+    background-color #f2b866
+  &.active
+    background-color #f0ad4e
 
 .annotation-features-activate
-    width 80%
-    text-align left
-    white-space normal
-    margin-right 3px
+  width 80%
+  text-align left
+  white-space normal
+  margin-right 3px
 
 .annotation-features-delete
-    color #ffffff
-    background-color #99190d
-    &:hover
-      background-color #f05c4e
+  color #ffffff
+  background-color #99190d
+  &:hover
+    background-color #f05c4e
 </style>
