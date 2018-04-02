@@ -35,7 +35,7 @@
           td.isic-image-details-table-section-header(colspan=2) Technological Attributes
         tr
           td Dimensions (pixels)
-          td #{meta.acquisition.pixelsX} &times; #{meta.acquisition.pixelsX}
+          td #{meta.acquisition.pixelsX} &times; #{meta.acquisition.pixelsY}
         each value, key in _.omit(meta.acquisition, 'pixelsX', 'pixelsY')
           tr
             td= key
