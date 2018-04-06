@@ -20,7 +20,7 @@
         //- Add comma after each name except the last. Use code to represent space to avoid ending a line with a space.
         template(v-if='index < flaggedImages.length - 1') ,&#x20;
   .row
-    .col-lg-12.col-md-12
+    .image-container.col-lg-12.col-md-12
       dataset-review-image(
         v-for='(image, index) in images',
         :image='image',
@@ -95,4 +95,8 @@ export default {
   .submit-info
     padding-right 10px
     margin-left auto
+
+.image-container
+  display flex // enable flex context for children
+  flex-wrap wrap // wrap children onto multiple lines
 </style>

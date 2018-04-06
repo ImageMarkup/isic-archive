@@ -1,6 +1,9 @@
 <template lang="pug">
 .isic-gallery-image(@click='toggleFlagged')
-  img.img-responsive(:src='image.thumbnail')
+  img.img-responsive(
+    :src='image.thumbnail',
+    :style='imageStyle'
+  )
   .overlay
     .flagged(v-show='image.flagged')
       .shade
@@ -13,6 +16,10 @@
 </template>
 
 <script>
+import { createNamespacedHelpers } from 'vuex';
+
+const { mapState } = createNamespacedHelpers('datasetReview');
+
 export default {
     props: {
         image: {
@@ -23,6 +30,15 @@ export default {
     data() {
         return {};
     },
+    computed: Object.assign({
+        imageStyle() {
+            return {
+                width: `${this.thumbnailWidth}px`
+            };
+        }
+    }, mapState([
+        'thumbnailWidth'
+    ])),
     methods: {
         toggleFlagged() {
             this.$emit('toggleFlagged');
@@ -33,13 +49,13 @@ export default {
 
 <style lang="stylus" scoped>
 .isic-gallery-image
+  flex none
   position relative // ensure children can have absolute position
-  float left
   margin 20px 20px
   cursor pointer
+  height 0% // allow height to expand only to that of child image
 
   img
-    width 768px
     border 1px solid black
 
   .overlay
