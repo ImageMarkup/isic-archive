@@ -4,11 +4,12 @@
     .col-md-12
       h2 Dataset Review
   .row
-    .header.col-md-12
-      template(v-if='dataset')
-        .dataset-info Name:&nbsp;#[b {{ dataset.name }}]
-        .dataset-info Created:&nbsp;#[b {{ dataset.created }}]
-        .dataset-info Updated:&nbsp;#[b {{ dataset.updated }}]
+    .col-md-6
+      dataset-info(
+        v-if='dataset',
+        :dataset='dataset'
+      )
+    .submit-container.col-md-6
       .submit-info Flagged images will be quarantined. Non-flagged images will be submitted for segmentation.
       .submit-button.btn.btn-success(@click='submitReview') Submit
   .row
@@ -33,6 +34,7 @@ import { createNamespacedHelpers } from 'vuex';
 
 import { getApiRoot } from 'girder/rest';
 
+import DatasetInfo from './DatasetInfo.vue';
 import DatasetReviewImage from './DatasetReviewImage.vue';
 import { SubmissionState } from './DatasetReviewStore';
 
@@ -40,6 +42,7 @@ const { mapState, mapGetters, mapMutations, mapActions } = createNamespacedHelpe
 
 export default {
     components: {
+        DatasetInfo: DatasetInfo,
         DatasetReviewImage: DatasetReviewImage
     },
     props: {
@@ -85,16 +88,13 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
-.header
-  display flex
-  align-items center
-
-  .dataset-info
-    padding-right 10px
+.submit-container
+  display flex // enable flex context for children
+  justify-content flex-end // align children to right
+  align-items flex-start // align children to top
 
   .submit-info
     padding-right 10px
-    margin-left auto
 
 .image-container
   display flex // enable flex context for children
