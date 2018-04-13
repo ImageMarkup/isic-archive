@@ -123,7 +123,7 @@ class TaskResource(IsicResource):
         if not Image().find({'folderId': prereviewFolder['_id']}).count():
             raise RestException('No Pre-review images are available for this dataset.')
 
-        reviewUrl = '/markup/gallery#/qc/%s' % dataset['_id']
+        reviewUrl = '/#tasks/review/%s' % dataset['_id']
         self._doRedirect(reviewUrl)
 
     def _pipeline1AllImages(self, user):

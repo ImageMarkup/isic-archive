@@ -225,6 +225,15 @@ import TasksView from './Tasks/TasksView';
 router.route('tasks', 'tasks', () => {
     navigateToIfLoggedIn(TasksView);
 });
+import DatasetReview from './vue/components/DatasetReview/DatasetReview.vue';
+router.route('tasks/review/:id', 'review', (id) => {
+    navigateToIfLoggedIn(VueComponentView, {
+        component: DatasetReview,
+        props: {
+            datasetId: id
+        }
+    });
+});
 import AnnotationTool from './vue/components/AnnotationTool/AnnotationTool.vue';
 router.route('tasks/annotate/:id', 'annotate', (id) => {
     navigateToIfLoggedIn(VueComponentView, {

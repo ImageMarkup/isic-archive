@@ -230,7 +230,7 @@ class UploadTestCase(IsicTestCase):
                 params={'datasetId': reviewId}, user=reviewerUser, isJson=False)
             self.assertStatus(resp, 307)
             self.assertDictContainsSubset({
-                'Location': '/markup/gallery#/qc/%s' % reviewId
+                'Location': '/#tasks/review/%s' % reviewId
             }, resp.headers)
 
         # Accept all images
