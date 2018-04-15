@@ -1,0 +1,12 @@
+table.table.table-condensed.isic-study-results-responses-table
+  thead
+    tr
+      th ID
+      th Value
+  tbody
+    each response in responses
+      tr
+        td.isic-study-results-response-id(class={disabled: !response.has('value')})
+          code= response.get('id')
+        td.isic-study-results-response-value
+          = response.get('value') || ''

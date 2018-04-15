@@ -13,9 +13,40 @@
     tr
       td.isic-listing-item-table-label Created
       td= formatDate(study.get('created'))
+
+  table.table.table-condensed.isic-listing-item-table
     tr
-      td.isic-listing-item-table-label Featureset
-      td= study.featureset().name()
+      td.isic-listing-item-table-section-header Questions
+        |  (#{study.get('questions').length})
+    tr
+      td.isic-study-questions-content
+        if study.get('questions').length > 0
+          table
+            tr
+              th.isic-study-questions-content-id Question Name
+              th.isic-study-questions-content-choices Question Choices
+            each question in study.get('questions')
+              tr
+                td.isic-study-questions-content-id= question.id
+                td.isic-study-questions-content-choices
+                  ul
+                    each choice in question.choices
+                      li= choice
+        else
+          | (no questions)
+
+  table.table.table-condensed.isic-listing-item-table
+    tr
+      td.isic-listing-item-table-section-header Features
+        |  (#{study.get('features').length})
+    tr
+      td.isic-study-features-content
+        if study.get('features').length > 0
+          ul
+            each feature in study.get('features')
+              li= feature.id
+        else
+          | (no features)
 
   table.table.table-condensed.isic-listing-item-table
     tr
