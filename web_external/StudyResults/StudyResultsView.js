@@ -265,7 +265,7 @@ const StudyResultsSelectMarkupView = View.extend({
 
     render: function () {
         // Destroy previous select2
-        let select = this.$('#sic-study-results-select-markup-select');
+        let select = this.$('#isic-study-results-select-markup-select');
         select.select2('destroy');
 
         this.$el.html(StudyResultsSelectMarkupPageTemplate({

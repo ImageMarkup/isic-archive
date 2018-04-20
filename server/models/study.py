@@ -36,7 +36,6 @@ _masterFeaturesPath = os.path.normpath(os.path.join(
     os.path.dirname(__file__), '..', '..', 'web_external', 'masterFeatures.json'
 ))
 with open(_masterFeaturesPath, 'rb') as _masterFeaturesStream:
-    # TODO: maybe make this a list?
     MASTER_FEATURES = [
         feature['id'] for feature in json.load(_masterFeaturesStream)
     ]
