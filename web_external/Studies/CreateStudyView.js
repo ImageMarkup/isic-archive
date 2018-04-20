@@ -4,14 +4,12 @@ import _ from 'underscore';
 import SearchFieldWidget from 'girder/views/widgets/SearchFieldWidget';
 import {restRequest} from 'girder/rest';
 
-import FeaturesetModel from '../models/FeaturesetModel';
 import View from '../view';
 import {showAlertDialog} from '../common/utilities';
 import router from '../router';
 
 import CreateStudyPageTemplate from './createStudyPage.pug';
 import './createStudyPage.styl';
-import FeaturesetListEntryTemplate from './featuresetListEntry.pug';
 import UserListEntryTemplate from './userListEntry.pug';
 import '../common/Listing/listingPage.styl';
 
@@ -31,21 +29,11 @@ const CreateStudyView = View.extend({
             listEntry.remove();
 
             this._removeUser(userId);
-        },
-
-        'click a.isic-featureset-list-entry-action-remove': function (event) {
-            let target = $(event.currentTarget);
-
-            let listEntry = target.closest('.isic-list-entry');
-            listEntry.remove();
-
-            this._removeFeatureset();
         }
     },
 
     initialize: function (settings) {
         this.userIds = [];
-        this.featuresetId = null;
 
         this.userSearchWidget = new SearchFieldWidget({
             placeholder: 'Search users...',
@@ -53,22 +41,6 @@ const CreateStudyView = View.extend({
             types: ['user'],
             parentView: this
         }).on('g:resultClicked', this._addUser, this);
-
-        this.featuresetSearchWidget = new SearchFieldWidget({
-            placeholder: 'Search featuresets...',
-            modes: ['prefix', 'text'],
-            types: ['featureset.isic_archive'],
-            getInfoCallback: function (type, obj) {
-                if (type === 'featureset.isic_archive') {
-                    let featureset = new FeaturesetModel(obj);
-                    return {
-                        text: featureset.name(),
-                        icon: 'th'
-                    };
-                }
-            },
-            parentView: this
-        }).on('g:resultClicked', this._addFeatureset, this);
 
         this.render();
     },
@@ -78,8 +50,6 @@ const CreateStudyView = View.extend({
 
         this.userSearchWidget.setElement(
             this.$('.isic-study-user-search-field-container')).render();
-        this.featuresetSearchWidget.setElement(
-            this.$('.isic-study-featureset-search-field-container')).render();
 
         this.$('input#isic-study-name').focus();
 
@@ -112,28 +82,8 @@ const CreateStudyView = View.extend({
         }
     },
 
-    _addFeatureset: function (featureset) {
-        this.featuresetSearchWidget.resetState();
-
-        // Remove existing entries
-        this.$('.isic-featureset-list-entry').remove();
-
-        // Add new entry
-        // TODO show or link to featureset details
-        this.$('#isic-study-featureset-list').append(FeaturesetListEntryTemplate({
-            featureset: featureset
-        }));
-
-        this.featuresetId = featureset.id;
-    },
-
-    _removeFeatureset: function () {
-        this.featuresetId = null;
-    },
-
     submitStudy: function () {
         let name = $('#isic-study-name').val();
-        let featuresetId = this.featuresetId;
         let userIds = JSON.stringify(this.userIds);
         let imageIds = JSON.stringify([]);
 
@@ -143,7 +93,6 @@ const CreateStudyView = View.extend({
             url: 'study',
             data: {
                 name: name,
-                featuresetId: featuresetId,
                 userIds: userIds,
                 imageIds: imageIds
             },

@@ -17,14 +17,28 @@
 #  limitations under the License.
 ###############################################################################
 
+import json
+import os
+
+import jsonschema
+
 from girder.constants import AccessType, SortDir
+from girder.exceptions import ValidationException
 from girder.models.collection import Collection
 from girder.models.folder import Folder
 from girder.models.group import Group
 
-from .featureset import Featureset
 from .image import Image
 from .user import User
+
+
+_masterFeaturesPath = os.path.normpath(os.path.join(
+    os.path.dirname(__file__), '..', '..', 'web_external', 'masterFeatures.json'
+))
+with open(_masterFeaturesPath, 'rb') as _masterFeaturesStream:
+    MASTER_FEATURES = [
+        feature['id'] for feature in json.load(_masterFeaturesStream)
+    ]
 
 
 class Study(Folder):
@@ -43,9 +57,17 @@ class Study(Folder):
         # TODO: cache this value
         return Collection().findOne({'name': 'Annotation Studies'})
 
-    def createStudy(self, name, creatorUser, featureset, annotatorUsers, images):
+    def createStudy(self, name, creatorUser, questions, features, annotatorUsers, images):
         # Avoid circular import
         from .annotation import Annotation
+
+        # validate the new questions and features before anything else
+        studyMeta = {
+            'questions': questions,
+            'features': features,
+            'participationRequests': []
+        }
+        self.validate({'meta': studyMeta})
 
         # this may raise a ValidationException if the name already exists
         study = self.createFolder(
@@ -76,14 +98,8 @@ class Study(Folder):
                 level=AccessType.READ,
                 save=False)
 
-        # "setMetadata" will always save
-        study = self.setMetadata(
-            folder=study,
-            metadata={
-                'featuresetId': featureset['_id'],
-                'participationRequests': []
-            }
-        )
+        study['meta'] = studyMeta
+        study = self.save(study)
 
         for annotatorUser in annotatorUsers:
             for image in images:
@@ -137,9 +153,6 @@ class Study(Folder):
 
     def hasImage(self, study, image):
         return self.childAnnotations(study, image=image).count() > 0
-
-    def getFeatureset(self, study):
-        return Featureset().load(study['meta']['featuresetId'], exc=True)
 
     def getAnnotators(self, study):
         userIds = self.childAnnotations(study).distinct('userId')
@@ -257,8 +270,6 @@ class Study(Folder):
                 # Sort by the obfuscated name
                 key=lambda user: user['name'])
 
-        featureset = Featureset().load(id=study['meta']['featuresetId'], exc=True)
-
         output = {
             '_id': study['_id'],
             '_modelType': 'study',
@@ -270,30 +281,14 @@ class Study(Folder):
                 user),
             # TODO: verify that "updated" is set correctly
             'updated': study['updated'],
-            'featureset': featureset,
             'users': getSortedUserList(self.getAnnotators(study)),
             'images': list(
                 Image().filterSummary(image, user)
                 for image in
                 self.getImages(study).sort('name', SortDir.ASCENDING)
             ),
-            'questions': [
-                {
-                    'id': ' : '.join(question['name']),
-                    'type': 'select',
-                    'choices': [
-                        questionOption['name']
-                        for questionOption in question['options']
-                    ]
-                }
-                for question in featureset['globalFeatures']
-            ],
-            'features': [
-                {
-                    'id': ' : '.join(feature['name'])
-                }
-                for feature in featureset['localFeatures']
-            ],
+            'questions': study['meta']['questions'],
+            'features': study['meta']['features'],
             'userCompletion': {
                 str(annotatorComplete['_id']): annotatorComplete['count']
                 for annotatorComplete in
@@ -337,5 +332,92 @@ class Study(Folder):
         return super(Study, self).remove(study)
 
     def validate(self, doc, **kwargs):
-        # TODO: implement
+        metaSchema = {
+            # '$schema': 'http://json-schema.org/draft-07/schema#',
+            'title': 'study.meta',
+            'type': 'object',
+            'properties': {
+                'questions': {
+                    'title': 'questions',
+                    'description': 'A list of questions',
+                    'type': 'array',
+                    'items': {
+                        'type': 'object',
+                        'properties': {
+                            'id': {
+                                'description': 'The question text',
+                                'type': 'string',
+                                'minLength': 1
+                            },
+                            'type': {
+                                'description': 'The question type',
+                                'type': 'string',
+                                'enum': ['select']
+                            },
+                            'choices': {
+                                'type': 'array',
+                                'items': {
+                                    'description': 'A possible response value',
+                                    'type': 'string',
+                                    'minLength': 1
+                                },
+                                'minItems': 2,
+                                'uniqueItems': True,
+                            },
+                        },
+                        'required': ['id', 'type'],
+                        'additionalProperties': False,
+                        'anyOf': [
+                            {
+                                'properties': {
+                                    'type': {
+                                        'enum': ['select']
+                                    }
+                                },
+                                'required': ['choices']
+                            }
+                            # Add validators for other types here
+                        ]
+                    },
+                    'uniqueItems': True,
+                },
+                'features': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'object',
+                        'properties': {
+                            'id': {
+                                'type': 'string',
+                                'enum': MASTER_FEATURES
+                            }
+                        },
+                        'required': ['id'],
+                        'additionalProperties': False
+                    },
+                    'uniqueItems': True,
+                },
+                'participationRequests': {
+                    'type': 'array',
+                    'items': {
+                        # TODO: each is an ObjectId for a user
+                    },
+                    'uniqueItems': True,
+                },
+            },
+            'required': ['questions', 'features', 'participationRequests'],
+            'additionalProperties': False
+        }
+        if 'meta' in doc:
+            # When first saved, the the doc does not have 'meta'
+            try:
+                jsonschema.validate(doc['meta'], metaSchema)
+            except jsonschema.ValidationError as e:
+                raise ValidationException('Invalid study: ' + e.message)
+
+        if 'name' not in doc:
+            # This is a pre-validation
+            return
+
+        # TODO: implement the remainder
+
         return super(Study, self).validate(doc, **kwargs)

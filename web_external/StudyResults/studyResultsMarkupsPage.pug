@@ -1,0 +1,15 @@
+- let hasMarkupsClass = hasMarkups ? '' : 'hidden';
+- let noMarkupsClass = hasMarkups ? 'hidden' : '';
+
+.isic-study-results-markups-content(class=noMarkupsClass)
+  span N/A
+
+.isic-study-results-markups-content(class=hasMarkupsClass)
+  #isic-study-results-select-markup-container
+  .isic-study-results-markups-legend
+    .isic-study-results-markups-legend-possible
+      i &#9632;
+      span  50% confidence
+    .isic-study-results-markups-legend-definite
+      i &#9632;
+      span  100% confidence

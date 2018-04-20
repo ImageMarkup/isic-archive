@@ -1,0 +1,6 @@
+.isic-study-results-select-markup-container
+  //- For select2, add width in style attribute, see https://select2.github.io/examples.html#responsive
+  select#isic-study-results-select-markup-select.form-control.input(style='width:100%')
+    option(selected, disabled, value='')
+    each markup in markups
+      option(value=markup.id)= markup.id

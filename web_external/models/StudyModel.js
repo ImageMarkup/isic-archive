@@ -4,7 +4,6 @@ import {getCurrentUser} from 'girder/auth';
 import {restRequest} from 'girder/rest';
 
 import Model from './Model';
-import FeaturesetModel from './FeaturesetModel';
 import UserCollection from '../collections/UserCollection';
 import UserModel from './UserModel';
 
@@ -13,17 +12,6 @@ const StudyModel = Model.extend({
 
     creator: function () {
         return new UserModel(this.get('creator'));
-    },
-
-    /**
-     * Return the featureset for this study.
-     *
-     * This returns a FeaturesetModel with only a few summary properties of
-     * the featureset. To retrieve all properties of the featureset, call
-     * ".fetch()" on the FeaturesetModel.
-     */
-    featureset: function () {
-        return new FeaturesetModel(this.get('featureset'));
     },
 
     users: function () {
