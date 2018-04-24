@@ -26,7 +26,6 @@ module.exports = function (grunt) {
         bower.commands
             .install([
                 'jquery#2.1.0',
-                'underscore#~1.5',
                 'flatstrap#3.1.1',
                 'font-awesome#4.0.3',
                 'angular#1.4.5',
@@ -46,7 +45,6 @@ module.exports = function (grunt) {
         cwd: 'bower_components',
         src: [
             'jquery/dist/jquery.min.js',
-            'underscore/underscore-min.js',
             'bootstrap/dist/js/bootstrap.min.js',
             'bootstrap/dist/css/bootstrap.min.css',
             'bootstrap/dist/fonts/glyphicons-halflings-regular.woff',
@@ -60,20 +58,10 @@ module.exports = function (grunt) {
         ],
         dest: staticLibPath
     });
-    grunt.config.set('copy.isic_archive-legacy-libs-npm', {
-        expand: true,
-        nonull: true,
-        cwd: 'node_modules',
-        src: [
-            'geojs/geo.min.js'
-        ],
-        dest: staticLibPath
-    });
     grunt.registerTask('isic_archive-legacy', [
         // 'npm-install:isic_archive:false:bower@^1.8.0',
         'isic_archive-legacy-bower-install',
-        'copy:isic_archive-legacy-libs-bower',
-        'copy:isic_archive-legacy-libs-npm'
+        'copy:isic_archive-legacy-libs-bower'
     ]);
 
     grunt.registerTask('isic_archive-web', [

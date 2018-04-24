@@ -48,7 +48,6 @@ h2, h3, h4 {
 
     padding: 0px;
     background: black;
-    /*background-image:url('/uda/static/dark_fish_skin.png') !important;*/
     background-repeat: repeat;
     /*box-shadow: 0px 0px 10px rgba(0,0,0,0.9);*/
 }
@@ -413,7 +412,6 @@ nav {
 .markupwell {
     padding-left: 7px;
     /*background: #111;*/
-    /*background-image:url('/uda/static/dark_fish_skin.png') !important;*/
     /*background-repeat:repeat;*/
     /*box-shadow: inset 0px 0px 5px rgba(0,0,0,0.3) ;*/
 }
