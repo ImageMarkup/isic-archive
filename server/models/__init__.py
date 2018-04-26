@@ -21,11 +21,11 @@
 # flake8: noqa
 
 from .annotation import Annotation
+from .batch import Batch
 from .dataset import Dataset
-from .featureset import Featureset
 from .image import Image
 from .segmentation import Segmentation
 from .study import Study
 from .user import User
 
-__all__ = [Annotation, Dataset, Featureset, Image, Segmentation, Study, User]
+__all__ = [Annotation, Batch, Dataset, Image, Segmentation, Study, User]

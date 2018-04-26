@@ -194,12 +194,6 @@ router.route('images', 'images', () => {
     navigateToIfTermsAccepted(ImagesView);
 });
 
-// Featureset
-import FeaturesetsView from './Featuresets/FeaturesetsView';
-router.route('featuresets', 'featuresets', () => {
-    navigateToIfTermsAccepted(FeaturesetsView);
-});
-
 // Study
 import StudiesView from './Studies/StudiesView';
 router.route('studies', 'studies', () => {
