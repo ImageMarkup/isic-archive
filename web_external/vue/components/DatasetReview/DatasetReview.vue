@@ -73,15 +73,13 @@ export default {
     created() {
     },
     mounted() {
-        this.getDataset({id: this.datasetId});
-        this.getReviewImages({id: this.datasetId});
+        this.loadDataset({id: this.datasetId});
     },
     methods: Object.assign({
     }, mapMutations([
         'toggleFlagged'
     ]), mapActions([
-        'getDataset',
-        'getReviewImages',
+        'loadDataset',
         'submitReview'
     ]))
 };

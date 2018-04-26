@@ -51,13 +51,22 @@ export default {
         }
     },
     actions: {
-        getDataset({ commit }, { id }) {
+        loadDataset({ dispatch, commit }, { id }) {
+            // Reset state
+            commit('setDataset', null);
+            commit('setImages', []);
+            commit('setSubmissionState', SubmissionState.UNSUBMITTED);
+
+            // Fetch dataset
             DatasetService.get(id)
                 .done((resp) => {
                     commit('setDataset', resp);
                 });
+
+            // Fetch review images
+            dispatch('loadReviewImages', {id: id});
         },
-        getReviewImages({ state, commit }, { id }) {
+        loadReviewImages({ state, commit }, { id }) {
             DatasetService.getReviewImages(id)
                 .done((resp) => {
                     const images = resp.map((image) => {
