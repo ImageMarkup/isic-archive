@@ -164,12 +164,8 @@ def load(info):
     class Root(object):
         pass
     legacyWebroot = Root()
-    legacyWebroot.gallery = staticFile(
-        os.path.join(info['pluginRootDir'], 'custom', 'gallery.html'))
     legacyWebroot.segment = staticFile(
         os.path.join(info['pluginRootDir'], 'custom', 'phase1.html'))
-    legacyWebroot.annotate = staticFile(
-        os.path.join(info['pluginRootDir'], 'custom', 'phase2.html'))
     registerPluginWebroot(legacyWebroot, 'markup')
 
     # create all necessary users, groups, collections, etc
