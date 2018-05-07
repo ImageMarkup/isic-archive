@@ -41,10 +41,15 @@ class IsicResource(Resource):
             if not isinstance(decodedParams, dict):
                 raise RestException('JSON content should be an object at the top level.')
         else:
+            # Return parameter unchanged
+            def passthrough(param):
+                return param
+
             decodedParams = {}
             for field, value in six.viewitems(params):
                 try:
-                    decodedValue = json.loads(value)
+                    # Decode parameter, parsing numbers as strings
+                    decodedValue = json.loads(value, parse_float=passthrough, parse_int=passthrough)
                 except ValueError:
                     # Assume this was just a simple string; invalid JSON should
                     # be caught later by type checking validation
