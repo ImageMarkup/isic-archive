@@ -19,11 +19,16 @@
 
 import datetime
 
+import jsonschema
+import numpy
+import six
+
 from girder.api import access
 from girder.api.rest import loadmodel, setRawResponse, setResponseHeader
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType
 from girder.exceptions import RestException, ValidationException
+from girder.models.file import File
 
 from .base import IsicResource
 from ..models.annotation import Annotation
@@ -119,6 +124,18 @@ class AnnotationResource(IsicResource):
         user = self.getCurrentUser()
         return Annotation().filter(annotation, user)
 
+    def _ensureMarkup(self, annotation, featureId):
+        # Validate pre-conditions for getting markup
+        if Annotation().getState(annotation) != Study().State.COMPLETE:
+            raise RestException('Annotation is incomplete.')
+
+        study = Study().load(annotation['studyId'], force=True, exc=True)
+
+        if not any(featureId == feature['id'] for feature in study['meta']['features']):
+            raise RestException('That featureId is not present in the study.', 'featureId')
+        if Annotation().getState(annotation) != Study().State.COMPLETE:
+            raise RestException('Only complete annotations have markup.')
+
     @describeRoute(
         Description('Return an annotation\'s markup as a raw superpixel array.')
         .param('annotationId', 'The ID of the annotation.', paramType='path')
@@ -130,15 +147,17 @@ class AnnotationResource(IsicResource):
     @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
                level=AccessType.READ)
     def getAnnotationMarkupSuperpixels(self, annotation, featureId, params):
-        study = Study().load(annotation['studyId'], force=True, exc=True)
+        self._ensureMarkup(annotation, featureId)
 
-        if not any(featureId == feature['id'] for feature in study['meta']['features']):
-            raise ValidationException('That featureId is not present in the study.', 'featureId')
-        if Annotation().getState(annotation) != Study().State.COMPLETE:
-            raise RestException('Only complete annotations have markup.')
+        markupFile = Annotation().getMarkupFile(annotation, featureId, includeSuperpixels=True)
+        if markupFile:
+            return markupFile['superpixels']
+        else:
+            image = Image().load(annotation['imageId'], force=True, exc=True)
+            superpixelsData = Image().superpixelsData(image)
+            maxSuperpixel = int(superpixelsData.max())
 
-        featureValues = annotation['markups'].get(featureId, [])
-        return featureValues
+            return [0.0] * (maxSuperpixel + 1)
 
     @describeRoute(
         Description('Return an annotation\'s markup as a mask.')
@@ -152,31 +171,35 @@ class AnnotationResource(IsicResource):
     @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
                level=AccessType.READ)
     def getAnnotationMarkupMask(self, annotation, featureId, params):
-        study = Study().load(annotation['studyId'], force=True, exc=True)
+        self._ensureMarkup(annotation, featureId)
 
-        if not any(featureId == feature['id'] for feature in study['meta']['features']):
-            raise ValidationException('That featureId is not present in the study.', 'featureId')
-        if Annotation().getState(annotation) != Study().State.COMPLETE:
-            raise RestException('Only complete annotations have markup.')
+        markupFile = Annotation().getMarkupFile(annotation, featureId)
 
-        renderData = Annotation().maskMarkup(annotation, featureId)
+        if markupFile:
+            return File().download(markupFile, headers=True, contentDisposition='inline')
+        else:
+            image = Image().load(annotation['imageId'], force=True, exc=True)
+            markupMask = numpy.zeros(
+                (
+                    image['meta']['acquisition']['pixelsX'],
+                    image['meta']['acquisition']['pixelsY']
+                ),
+                dtype=numpy.uint
+            )
+            markupMaskEncodedStream = ScikitSegmentationHelper.writeImage(markupMask, 'png')
+            markupMaskEncodedData = markupMaskEncodedStream.getvalue()
 
-        renderEncodedStream = ScikitSegmentationHelper.writeImage(renderData, 'png')
-        renderEncodedData = renderEncodedStream.getvalue()
+            setRawResponse()
+            setResponseHeader('Content-Type', 'image/png')
+            contentName = 'annotation_%s_%s.png' % (
+                annotation['_id'],
+                # Rename features to ensure the file is downloadable on Windows
+                featureId.replace(' : ', ' ; ').replace('/', ',')
+            )
+            setResponseHeader('Content-Disposition', 'inline; filename="%s"' % contentName)
+            setResponseHeader('Content-Length', len(markupMaskEncodedData))
 
-        # Only setRawResponse now, as this handler may return a JSON error earlier
-        setRawResponse()
-        setResponseHeader('Content-Type', 'image/png')
-        contentName = '%s_%s_annotation.png' % (
-            annotation['_id'],
-            featureId.replace('/', ',')  # TODO: replace with a better character
-        )
-        setResponseHeader(
-            'Content-Disposition',
-            'inline; filename="%s"' % contentName)
-        setResponseHeader('Content-Length', len(renderEncodedData))
-
-        return renderEncodedData
+            return markupMaskEncodedData
 
     @describeRoute(
         Description('Render an annotation\'s markup, overlaid on its image.')
@@ -198,12 +221,7 @@ class AnnotationResource(IsicResource):
             raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
                                       'contentDisposition')
 
-        study = Study().load(annotation['studyId'], force=True, exc=True)
-
-        if not any(featureId == feature['id'] for feature in study['meta']['features']):
-            raise ValidationException('That featureId is not present in the study.', 'featureId')
-        if Annotation().getState(annotation) != Study().State.COMPLETE:
-            raise RestException('Only complete annotations have markup.')
+        self._ensureMarkup(annotation, featureId)
 
         renderData = Annotation().renderMarkup(annotation, featureId)
 
@@ -213,9 +231,10 @@ class AnnotationResource(IsicResource):
         # Only setRawResponse now, as this handler may return a JSON error earlier
         setRawResponse()
         setResponseHeader('Content-Type', 'image/jpeg')
-        contentName = '%s_%s_annotation.jpg' % (
+        contentName = 'annotation_%s_%s.jpg' % (
             annotation['_id'],
-            featureId.replace('/', ',')  # TODO: replace with a better character
+            # Rename features to ensure the file is downloadable on Windows
+            featureId.replace(' : ', ' ; ').replace('/', ',')
         )
         if contentDisp == 'inline':
             setResponseHeader(
@@ -255,6 +274,40 @@ class AnnotationResource(IsicResource):
         annotation['stopTime'] = datetime.datetime.utcfromtimestamp(
             bodyJson['stopTime'] / 1000.0)
         annotation['responses'] = bodyJson['responses']
-        annotation['markups'] = bodyJson['markups']
 
-        Annotation().save(annotation)
+        # Before anything is saved, validate all the other (non-'markups') fields
+        Annotation().validate(annotation)
+
+        # Validate superpixel markups
+        study = Study().load(annotation['studyId'], force=True, exc=True)
+        image = Image().load(annotation['imageId'], force=True, exc=True)
+        superpixelsData = Image().superpixelsData(image)
+        maxSuperpixel = int(superpixelsData.max())
+        jsonschema.validate(
+            bodyJson['markups'],
+            {
+                # '$schema': 'http://json-schema.org/draft-07/schema#',
+                'type': 'object',
+                'properties': {
+                    feature['id']: {
+                        'type': 'array',
+                        'items': {
+                            'type': 'number',
+                            'enum': [0.0, 0.5, 1.0]
+
+                        },
+                        'minItems': maxSuperpixel + 1,
+                        'maxItems': maxSuperpixel + 1
+                    }
+                    for feature in study['meta']['features']
+                },
+                'additionalProperties': False
+            }
+        )
+
+        # Everything has passed input validation, so save
+        annotation = Annotation().save(annotation)
+
+        # Convert markup superpixels to masks and save
+        for featureId, superpixelValues in six.viewitems(bodyJson['markups']):
+            annotation = Annotation().saveSuperpixelMarkup(annotation, featureId, superpixelValues)

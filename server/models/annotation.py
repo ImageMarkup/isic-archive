@@ -17,17 +17,20 @@
 #  limitations under the License.
 ###############################################################################
 
-import datetime
+import jsonschema
 import numpy
 import six
 
 from bson import ObjectId
 
-from girder.exceptions import GirderException, ValidationException
+from girder.exceptions import ValidationException
+from girder.models.file import File
 from girder.models.model_base import Model
+from girder.models.upload import Upload
 from girder.utility.acl_mixin import AccessControlMixin
 
 from .image import Image
+from .segmentation_helpers import ScikitSegmentationHelper
 from .study import Study
 from .user import User
 
@@ -60,60 +63,108 @@ class Annotation(AccessControlMixin, Model):
                 if annotation['stopTime'] is not None
                 else Study().State.ACTIVE)
 
-    def _getImageMasks(self, annotation, featureId, image=None):
-        if self.getState(annotation) != Study().State.COMPLETE:
-            raise GirderException('Annotation is incomplete.')
-
-        featureValues = annotation['markups'].get(featureId, [])
-        if not isinstance(featureValues, list):
-            raise GirderException(
-                'Feature %s is not a superpixel annotation.' % featureId)
-
+    def _superpixelsToMasks(self, superpixelValues, image):
         possibleSuperpixelNums = numpy.array([
             superpixelNum
             for superpixelNum, featureValue
-            in enumerate(featureValues)
+            in enumerate(superpixelValues)
             if featureValue == 0.5
         ])
         definiteSuperpixelNums = numpy.array([
             superpixelNum
             for superpixelNum, featureValue
-            in enumerate(featureValues)
+            in enumerate(superpixelValues)
             if featureValue == 1.0
         ])
 
-        if not image:
-            image = Image().load(annotation['imageId'], force=True, exc=True)
-        superpixelsData = Image().superpixelsData(image)
+        superpixelsLabelData = Image().superpixelsData(image)
 
         possibleMask = numpy.in1d(
-            superpixelsData.flat,
+            superpixelsLabelData.flat,
             possibleSuperpixelNums
-        ).reshape(superpixelsData.shape)
+        ).reshape(superpixelsLabelData.shape)
         possibleMask = possibleMask.astype(numpy.bool_)
         definiteMask = numpy.in1d(
-            superpixelsData.flat,
+            superpixelsLabelData.flat,
             definiteSuperpixelNums
-        ).reshape(superpixelsData.shape)
+        ).reshape(superpixelsLabelData.shape)
         definiteMask = definiteMask.astype(numpy.bool_)
 
         return possibleMask, definiteMask
 
-    def maskMarkup(self, annotation, featureId):
-        possibleMask, definiteMask = self._getImageMasks(annotation, featureId)
+    def _superpixelsToMaskMarkup(self, superpixelValues, image):
+        possibleMask, definiteMask = self._superpixelsToMasks(superpixelValues, image)
 
-        renderedMask = numpy.zeros(possibleMask.shape, dtype=numpy.uint)
-        renderedMask[possibleMask] = 128
-        renderedMask[definiteMask] = 255
+        markupMask = numpy.zeros(possibleMask.shape, dtype=numpy.uint)
+        markupMask[possibleMask] = 128
+        markupMask[definiteMask] = 255
 
-        return renderedMask
+        return markupMask
+
+    def saveSuperpixelMarkup(self, annotation, featureId, superpixelValues):
+        image = Image().load(annotation['imageId'], force=True, exc=True)
+        annotator = User().load(annotation['userId'], force=True, exc=True)
+
+        markupMask = self._superpixelsToMaskMarkup(superpixelValues, image)
+        markupMaskEncodedStream = ScikitSegmentationHelper.writeImage(markupMask, 'png')
+
+        markupFile = Upload().uploadFromFile(
+            obj=markupMaskEncodedStream,
+            size=len(markupMaskEncodedStream.getvalue()),
+            name='annotation_%s_%s.png' % (
+                annotation['_id'],
+                # Rename features to ensure the file is downloadable on Windows
+                featureId.replace(' : ', ' ; ').replace('/', ',')
+            ),
+            # TODO: change this once a bug in upstream Girder is fixed
+            parentType='annotation',
+            parent=annotation,
+            attachParent=True,
+            user=annotator,
+            mimeType='image/png'
+        )
+        markupFile['superpixels'] = superpixelValues
+        # TODO: remove this once a bug in upstream Girder is fixed
+        markupFile['attachedToType'] = ['segmentation', 'isic_archive']
+        markupFile = File().save(markupFile)
+
+        annotation['markups'][featureId] = {
+            'fileId': markupFile['_id'],
+            'present': bool(markupMask.any())
+        }
+        return Annotation().save(annotation)
+
+    def getMarkupFile(self, annotation, featureId, includeSuperpixels=False):
+        if featureId in annotation['markups']:
+            markupFile = File().load(
+                annotation['markups'][featureId]['fileId'],
+                force=True,
+                exc=True,
+                fields={'superpixels': includeSuperpixels}
+            )
+            return markupFile
+        else:
+            return None
 
     def renderMarkup(self, annotation, featureId):
         image = Image().load(annotation['imageId'], force=True, exc=True)
         renderData = Image().imageData(image)
 
-        possibleMask, definiteMask = self._getImageMasks(
-            annotation, featureId, image)
+        markupFile = Annotation().getMarkupFile(annotation, featureId)
+        if markupFile:
+            markupMask = Image()._decodeDataFromFile(markupFile)
+        else:
+            image = Image().load(annotation['imageId'], force=True, exc=True)
+            markupMask = numpy.zeros(
+                (
+                    image['meta']['acquisition']['pixelsY'],
+                    image['meta']['acquisition']['pixelsX']
+                ),
+                dtype=numpy.uint
+            )
+
+        possibleMask = markupMask == 128
+        definiteMask = markupMask == 255
 
         POSSIBLE_OVERLAY_COLOR = numpy.array([250, 250, 0])
         DEFINITE_OVERLAY_COLOR = numpy.array([0, 0, 255])
@@ -137,18 +188,16 @@ class Annotation(AccessControlMixin, Model):
             'state': Annotation().getState(annotation)
         }
         if Annotation().getState(annotation) == Study().State.COMPLETE:
-            boolMarkups = {
-                featureId: any(markup)
-                for featureId, markup
-                in six.viewitems(annotation['markups'])
-            }
-
             output.update({
                 'status': annotation['status'],
                 'startTime': annotation['startTime'],
                 'stopTime': annotation['stopTime'],
                 'responses': annotation['responses'],
-                'markups': boolMarkups
+                'markups': {
+                    featureId: markup['present']
+                    for featureId, markup
+                    in six.viewitems(annotation['markups'])
+                }
             })
 
         return output
@@ -174,53 +223,75 @@ class Annotation(AccessControlMixin, Model):
 
         # If annotation is complete
         if doc.get('stopTime'):
-            if not isinstance(doc.get('status'), six.string_types):
-                raise ValidationException('Annotation field "status" must be a string.')
-            for field in ['startTime', 'stopTime']:
-                if not isinstance(doc.get(field), datetime.datetime):
-                    raise ValidationException('Annotation field "%s" must be a datetime.' % field)
+            jsonschema.validate(
+                doc,
+                {
+                    # '$schema': 'http://json-schema.org/draft-07/schema#',
+                    'title': 'annotation',
+                    'type': 'object',
+                    'properties': {
+                        '_id': {
+                            # TODO
+                        },
+                        'studyId': {
+                            # TODO
+                        },
+                        'imageId': {
+                            # TODO
+                        },
+                        'userId': {
+                            # TODO
+                        },
+                        'startTime': {
+                            # TODO
+                        },
+                        'stopTime': {
+                            # TODO
+                        },
+                        'status': {
+                            'type': 'string',
+                            'enum': ['ok', 'phi', 'quality', 'zoom', 'inappropriate', 'other']
+                        },
+                        'responses': {
+                            'type': 'object',
+                            'properties': {
+                                question['id']: {
+                                    'type': 'string',
+                                    # TODO: Support non-'select' question types
+                                    'enum': question['choices']
+                                }
+                                for question in study['meta']['questions']
+                            },
+                            'additionalProperties': False
+                        },
+                        'markups': {
+                            'type': 'object',
+                            'properties': {
+                                feature['id']: {
+                                    'type': 'object',
+                                    'properties': {
+                                        'fileId': {
+                                            # TODO
+                                        },
+                                        'present': {
+                                            'type': 'boolean'
+                                        }
+                                    },
+                                    'required': ['fileId', 'present'],
+                                    'additionalProperties': False
+                                }
+                                for feature in study['meta']['features']
+                            },
+                            'additionalProperties': False
+                        }
 
-            studyQuestionsById = {
-                question['id']: question
-                for question in study['meta']['questions']
-            }
-            studyFeaturesById = {
-                feature['id']: feature
-                for feature in study['meta']['features']
-            }
-            if studyFeaturesById:
-                image = Image().load(doc['imageId'], force=True)
-                superpixels = Image().superpixelsData(image)
-                maxSuperpixel = superpixels.max()
-            else:
-                maxSuperpixel = None
-
-            # Validate responses
-            if not isinstance(doc.get('responses'), dict):
-                raise ValidationException('Annotation field "responses" must be a mapping (dict).')
-            for questionId, response in six.viewitems(doc['responses']):
-                if questionId not in studyQuestionsById:
-                    raise ValidationException(
-                        'Annotation has invalid question "%s".' % questionId)
-                if response not in studyQuestionsById[questionId]['choices']:
-                    raise ValidationException(
-                        'Annotation question "%s" has invalid response "%s".' %
-                        (questionId, response))
-
-            # Validate markups
-            if not isinstance(doc.get('markups'), dict):
-                raise ValidationException('Annotation field "markups" must be a mapping (dict).')
-            for featureId, markup in six.viewitems(doc['markups']):
-                if featureId not in studyFeaturesById:
-                    raise ValidationException(
-                        'Annotation has invalid feature "%s".' % featureId)
-                if not (
-                    isinstance(markup, list) and
-                    len(markup) == maxSuperpixel + 1 and
-                    all(superpixelValue in [0.0, 0.5, 1.0]
-                        for superpixelValue in markup)
-                ):
-                    raise ValidationException(
-                        'Annotation feature "%s" has invalid markup "%s".' % (featureId, markup))
+                    },
+                    'required': [
+                        '_id', 'studyId', 'imageId', 'userId', 'startTime', 'stopTime', 'status',
+                        'responses', 'markups'
+                    ],
+                    'additionalProperties': False
+                }
+            )
 
         return doc
