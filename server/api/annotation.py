@@ -181,8 +181,8 @@ class AnnotationResource(IsicResource):
             image = Image().load(annotation['imageId'], force=True, exc=True)
             markupMask = numpy.zeros(
                 (
-                    image['meta']['acquisition']['pixelsX'],
-                    image['meta']['acquisition']['pixelsY']
+                    image['meta']['acquisition']['pixelsY'],
+                    image['meta']['acquisition']['pixelsX']
                 ),
                 dtype=numpy.uint
             )
@@ -283,27 +283,30 @@ class AnnotationResource(IsicResource):
         image = Image().load(annotation['imageId'], force=True, exc=True)
         superpixelsData = Image().superpixelsData(image)
         maxSuperpixel = int(superpixelsData.max())
-        jsonschema.validate(
-            bodyJson['markups'],
-            {
-                # '$schema': 'http://json-schema.org/draft-07/schema#',
-                'type': 'object',
-                'properties': {
-                    feature['id']: {
-                        'type': 'array',
-                        'items': {
-                            'type': 'number',
-                            'enum': [0.0, 0.5, 1.0]
+        try:
+            jsonschema.validate(
+                bodyJson['markups'],
+                {
+                    # '$schema': 'http://json-schema.org/draft-07/schema#',
+                    'type': 'object',
+                    'properties': {
+                        feature['id']: {
+                            'type': 'array',
+                            'items': {
+                                'type': 'number',
+                                'enum': [0.0, 0.5, 1.0]
 
-                        },
-                        'minItems': maxSuperpixel + 1,
-                        'maxItems': maxSuperpixel + 1
-                    }
-                    for feature in study['meta']['features']
-                },
-                'additionalProperties': False
-            }
-        )
+                            },
+                            'minItems': maxSuperpixel + 1,
+                            'maxItems': maxSuperpixel + 1
+                        }
+                        for feature in study['meta']['features']
+                    },
+                    'additionalProperties': False
+                }
+            )
+        except jsonschema.ValidationError as e:
+            raise ValidationException('Invalid markups: ' + e.message)
 
         # Everything has passed input validation, so save
         annotation = Annotation().save(annotation)

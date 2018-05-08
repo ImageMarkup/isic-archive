@@ -13,5 +13,5 @@ for study in Study().find():
         oldSuperpixelsMarkups = annotation['markups']
 
         annotation['markups'] = {}
-        for featureId, superpixelValues in oldSuperpixelsMarkups:
+        for featureId, superpixelValues in oldSuperpixelsMarkups.viewitems():
             annotation = Annotation().saveSuperpixelMarkup(annotation, featureId, superpixelValues)

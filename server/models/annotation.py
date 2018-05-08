@@ -223,75 +223,76 @@ class Annotation(AccessControlMixin, Model):
 
         # If annotation is complete
         if doc.get('stopTime'):
-            jsonschema.validate(
-                doc,
-                {
-                    # '$schema': 'http://json-schema.org/draft-07/schema#',
-                    'title': 'annotation',
-                    'type': 'object',
-                    'properties': {
-                        '_id': {
-                            # TODO
-                        },
-                        'studyId': {
-                            # TODO
-                        },
-                        'imageId': {
-                            # TODO
-                        },
-                        'userId': {
-                            # TODO
-                        },
-                        'startTime': {
-                            # TODO
-                        },
-                        'stopTime': {
-                            # TODO
-                        },
-                        'status': {
-                            'type': 'string',
-                            'enum': ['ok', 'phi', 'quality', 'zoom', 'inappropriate', 'other']
-                        },
-                        'responses': {
-                            'type': 'object',
-                            'properties': {
-                                question['id']: {
-                                    'type': 'string',
-                                    # TODO: Support non-'select' question types
-                                    'enum': question['choices']
-                                }
-                                for question in study['meta']['questions']
-                            },
-                            'additionalProperties': False
-                        },
-                        'markups': {
-                            'type': 'object',
-                            'properties': {
-                                feature['id']: {
-                                    'type': 'object',
-                                    'properties': {
-                                        'fileId': {
-                                            # TODO
-                                        },
-                                        'present': {
-                                            'type': 'boolean'
-                                        }
-                                    },
-                                    'required': ['fileId', 'present'],
-                                    'additionalProperties': False
-                                }
-                                for feature in study['meta']['features']
-                            },
-                            'additionalProperties': False
-                        }
-
+            schema = {
+                # '$schema': 'http://json-schema.org/draft-07/schema#',
+                'title': 'annotation',
+                'type': 'object',
+                'properties': {
+                    '_id': {
+                        # TODO
                     },
-                    'required': [
-                        '_id', 'studyId', 'imageId', 'userId', 'startTime', 'stopTime', 'status',
-                        'responses', 'markups'
-                    ],
-                    'additionalProperties': False
-                }
-            )
+                    'studyId': {
+                        # TODO
+                    },
+                    'imageId': {
+                        # TODO
+                    },
+                    'userId': {
+                        # TODO
+                    },
+                    'startTime': {
+                        # TODO
+                    },
+                    'stopTime': {
+                        # TODO
+                    },
+                    'status': {
+                        'type': 'string',
+                        'enum': ['ok', 'phi', 'quality', 'zoom', 'inappropriate', 'other']
+                    },
+                    'responses': {
+                        'type': 'object',
+                        'properties': {
+                            question['id']: {
+                                'type': 'string',
+                                # TODO: Support non-'select' question types
+                                'enum': question['choices']
+                            }
+                            for question in study['meta']['questions']
+                        },
+                        'additionalProperties': False
+                    },
+                    'markups': {
+                        'type': 'object',
+                        'properties': {
+                            feature['id']: {
+                                'type': 'object',
+                                'properties': {
+                                    'fileId': {
+                                        # TODO
+                                    },
+                                    'present': {
+                                        'type': 'boolean'
+                                    }
+                                },
+                                'required': ['fileId', 'present'],
+                                'additionalProperties': False
+                            }
+                            for feature in study['meta']['features']
+                        },
+                        'additionalProperties': False
+                    }
+
+                },
+                'required': [
+                    '_id', 'studyId', 'imageId', 'userId', 'startTime', 'stopTime', 'status',
+                    'responses', 'markups'
+                ],
+                'additionalProperties': False
+            }
+            try:
+                jsonschema.validate(doc, schema)
+            except jsonschema.ValidationError as e:
+                raise ValidationException('Invalid annotation: ' + e.message)
 
         return doc
