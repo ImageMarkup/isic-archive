@@ -125,7 +125,7 @@ class Annotation(AccessControlMixin, Model):
         )
         markupFile['superpixels'] = superpixelValues
         # TODO: remove this once a bug in upstream Girder is fixed
-        markupFile['attachedToType'] = ['segmentation', 'isic_archive']
+        markupFile['attachedToType'] = ['annotation', 'isic_archive']
         markupFile = File().save(markupFile)
 
         annotation['markups'][featureId] = {
