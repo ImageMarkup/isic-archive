@@ -228,6 +228,15 @@ router.route('tasks/review/:id', 'review', (id) => {
         }
     });
 });
+import SegmentationReview from './vue/components/SegmentationReview/SegmentationReview.vue';
+router.route('tasks/segmentationreview/:id', 'segmentationReview', (id) => {
+    navigateToIfLoggedIn(VueComponentView, {
+        component: SegmentationReview,
+        props: {
+            datasetId: id
+        }
+    });
+});
 import AnnotationTool from './vue/components/AnnotationTool/AnnotationTool.vue';
 router.route('tasks/annotate/:id', 'annotate', (id) => {
     navigateToIfLoggedIn(VueComponentView, {

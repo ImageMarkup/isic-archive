@@ -311,7 +311,7 @@ class TaskResource(IsicResource):
 
         results = list(Image().collection.aggregate(pipeline))
         if not results:
-            raise RestException('No segmentations are needed for this dataset.')
+            raise RestException('No segmentations are needed for this dataset.', code=404)
         nextImage = results[0]
 
         return Image().filterSummary(nextImage, user)

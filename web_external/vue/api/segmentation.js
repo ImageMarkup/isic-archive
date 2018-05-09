@@ -1,27 +1,28 @@
 /**
- * Task resource.
+ * Segmentations resource.
  */
 
 import { restRequest } from 'girder/rest';
 
 export default {
-    getNextImageForSegmentation(id) {
+    getSegmentationsForImage(id) {
         return restRequest({
-            url: `task/me/segmentation/next`,
+            url: `segmentation`,
             data: {
-                datasetId: id
+                imageId: id,
+                limit: 0
             },
             method: 'GET',
             error: null
         });
     },
-    getNextAnnotation(id) {
+    submitReview(id, approved) {
         return restRequest({
-            url: `task/me/annotation/next`,
+            url: `segmentation/${id}/review`,
             data: {
-                studyId: id
+                approved: approved
             },
-            method: 'GET',
+            method: 'POST',
             error: null
         });
     }
