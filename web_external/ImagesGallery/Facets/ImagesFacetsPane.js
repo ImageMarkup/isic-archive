@@ -47,6 +47,8 @@ const ImagesFacetsPane = View.extend({
                 headerEl = this.$('.isic-images-facets-clinical');
             } else if (facetId.startsWith('meta.acquisition')) {
                 headerEl = this.$('.isic-images-facets-acquisition');
+            } else if (facetId.startsWith('markups')) {
+                headerEl = this.$('.isic-images-facets-markup');
             } else {
                 headerEl = this.$('.isic-images-facets-database');
             }

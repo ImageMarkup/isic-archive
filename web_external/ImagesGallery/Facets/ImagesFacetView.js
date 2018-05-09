@@ -722,6 +722,13 @@ const FACET_SCHEMA = {
         coerceToType: 'string',
         title: 'Tags',
         collapsed: true
+    },
+    'markups': {
+        FacetView: ImagesFacetCategoricalTagsView,
+        FacetFilter: TagsCategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Feature Markups',
+        collapsed: true
     }
 };
 
