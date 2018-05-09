@@ -12,6 +12,15 @@ for study in Study().find():
 
         oldSuperpixelsMarkups = annotation['markups']
 
+        # Skip migrations that are complete
+        if all(
+            isinstance(superpixelValues, dict)
+            for superpixelValues in oldSuperpixelsMarkups.viewvalues()
+        ):
+            print '  skipped'
+            continue
+
         annotation['markups'] = {}
         for featureId, superpixelValues in oldSuperpixelsMarkups.viewitems():
+
             annotation = Annotation().saveSuperpixelMarkup(annotation, featureId, superpixelValues)
