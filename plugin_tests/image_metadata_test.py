@@ -119,7 +119,8 @@ class ImageMetadataTestCase(base.TestCase):
             'meta': {
                 'acquisition': {},
                 'clinical': {},
-                'unstructured': {}
+                'unstructured': {},
+                'unstructuredExif': {}
             },
             'privateMeta': {}
         }
@@ -1853,6 +1854,19 @@ class ImageMetadataTestCase(base.TestCase):
         errors, warnings = addImageMetadata(image, data)
         self.assertEqual([], errors)
         self.assertEqual(1, len(warnings))
+
+    def testAddImageMetadataExif(self):
+        data = {
+            'exif_1': 'value1',
+            'exif_2': 'value2',
+            'EXIF_3': 'value3'
+        }
+        image = self._createImage()
+        errors, _ = addImageMetadata(image, data)
+        self.assertEqual([], errors)
+        self.assertEqual('value1', image['meta']['unstructuredExif']['exif_1'])
+        self.assertEqual('value2', image['meta']['unstructuredExif']['exif_2'])
+        self.assertEqual('value3', image['meta']['unstructuredExif']['EXIF_3'])
 
     def testMelanocyticValidation(self):
         # Test populating melanocytic field based on diagnosis

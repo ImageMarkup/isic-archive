@@ -858,6 +858,20 @@ def _checkMetadataWarnings(clinical):
     return warnings
 
 
+def _extractExifMetadata(data, unstructuredExif):
+    """
+    Add EXIF-related metadata to its own unstructured field.
+
+    :param data: The image metadata.
+    :type data: dict
+    :param unstructuredExif: The dictionary of unstructured EXIF metadata.
+    :type unstructuredExif: dict
+    """
+    for key in list(six.iterkeys(data)):
+        if key.lower().startswith('exif_'):
+            unstructuredExif[key] = data.pop(key)
+
+
 def addImageMetadata(image, data):
     """
     Add acquisition and clinical metadata to an image. Data is expected to be a
@@ -936,6 +950,9 @@ def addImageMetadata(image, data):
 
     # Check metadata for warnings
     warnings.extend(_checkMetadataWarnings(clinical))
+
+    # Add EXIF-related metadata to its own unstructured field
+    _extractExifMetadata(data, image['meta']['unstructuredExif'])
 
     # Add remaining data as unstructured metadata
     image['meta']['unstructured'].update(data)

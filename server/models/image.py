@@ -73,6 +73,7 @@ class Image(Item):
             'acquisition': {},
             'clinical': {},
             'unstructured': {},
+            'unstructuredExif': {},
             'tags': [],
             'datasetId': dataset['_id'],
             'batchId': batch['_id']
@@ -316,7 +317,8 @@ class Image(Item):
             'meta': {
                 'acquisition': image['meta']['acquisition'],
                 'clinical': image['meta']['clinical'],
-                'unstructured': image['meta']['unstructured']
+                'unstructured': image['meta']['unstructured'],
+                'unstructuredExif': image['meta']['unstructuredExif']
             },
             'notes': {
                 'reviewed': image['meta'].get('reviewed', None),
