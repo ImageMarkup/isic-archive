@@ -8,14 +8,18 @@ import DatasetCollection from '../../collections/DatasetCollection';
 import View from '../../view';
 
 import HistogramScale from './HistogramScale';
+import masterFeatures from '../../masterFeatures.json';
 
 /* eslint-disable import/order */
 import ImagesFacetHistogramTemplate from './imagesFacetHistogram.pug';
 import ImagesFacetCategoricalTemplate from './imagesFacetCategorical.pug';
+import ImagesFacetMarkupsTemplate from './imagesFacetMarkups.pug';
 import checkImageUrl from '!url-loader!svg-fill-loader!./check.svg?fill=#999999'; // eslint-disable-line import/no-webpack-loader-syntax
 import dashImageUrl from '!url-loader!svg-fill-loader!./dash.svg?fill=#999999'; // eslint-disable-line import/no-webpack-loader-syntax
 import exImageUrl from '!url-loader!svg-fill-loader!./ex.svg?fill=#999999'; // eslint-disable-line import/no-webpack-loader-syntax
 /* eslint-enable import/order */
+
+import ImagesFacetMarkupLevelTemplate from './imagesFacetMarkupLevel.pug';
 
 const ImagesFacetView = View.extend({
     className: 'isic-images-facet',
@@ -151,6 +155,8 @@ const ImagesFacetHistogramView = ImagesFacetView.extend({
         }));
         this._renderHistogram();
         this._applyInitialCollapseState();
+
+        return this;
     },
 
     _renderHistogram: function () {
@@ -459,6 +465,8 @@ const ImagesFacetCategoricalView = ImagesFacetView.extend({
         this._applyInitialCollapseState();
         this._rerenderCounts();
         this._rerenderSelections();
+
+        return this;
     },
 
     _rerenderCounts: function () {
@@ -552,6 +560,8 @@ const ImagesFacetCategoricalDatasetView = ImagesFacetCategoricalView.extend({
                 'show': 100
             }
         });
+
+        return this;
     },
 
     _getBinTitle: function (completeBin) {
@@ -567,6 +577,158 @@ const ImagesFacetCategoricalTagsView = ImagesFacetCategoricalView.extend({
         } else {
             return completeBin.label;
         }
+    }
+});
+
+const ImagesFacetMarkupGroupView = View.extend({
+    /**
+     * @param {ImagesFacetModel} settings.completeFacet
+     * @param {ImagesFacetModel} settings.filteredFacet
+     * @param {String[]} settings.featureIds
+     * @param {Number} settings.depth
+     * @param {String} settings.featureLevelLabel
+     */
+    initialize: function (settings) {
+        this.completeFacet = settings.completeFacet;
+        this.filteredFacet = settings.filteredFacet;
+
+        this.featureIds = settings.featureIds;
+        this.depth = settings.depth;
+        this.featureLevelLabel = settings.featureLevelLabel;
+
+        this.childViews = _.chain(this.featureIds)
+            .groupBy((featureId) => {
+                const featureLevelLabels = featureId.split(' : ');
+                const childFeatureLevelLabel = featureLevelLabels[this.depth + 1];
+                return childFeatureLevelLabel;
+            })
+            .map((childFeatureIds, childFeatureLevelLabel) => {
+                const childDepth = this.depth + 1;
+
+                if (childFeatureIds.length === 1
+                    && childFeatureIds[0].split(' : ').length - 1 === childDepth) {
+                    // If this is the single and last child, then it's a leaf
+                    return new ImagesFacetMarkupLeafView({
+                        completeFacet: this.completeFacet,
+                        filteredFacet: this.filteredFacet,
+                        featureId: childFeatureIds[0],
+                        depth: childDepth,
+                        featureLevelLabel: childFeatureLevelLabel,
+                        parentView: this
+                    });
+                } else {
+                    return new ImagesFacetMarkupGroupView({
+                        completeFacet: this.completeFacet,
+                        filteredFacet: this.filteredFacet,
+                        featureIds: childFeatureIds,
+                        depth: childDepth,
+                        featureLevelLabel: childFeatureLevelLabel,
+                        parentView: this
+                    });
+                }
+            })
+            .value();
+    },
+
+    render: function () {
+        this.$el.html(ImagesFacetMarkupLevelTemplate({
+            featureLevelLabel: this.featureLevelLabel,
+            count: 0
+        }));
+
+        _.each(this.childViews, (childView) => {
+            childView
+                .render()
+                // To avoid selecting deep children, use '.children'
+                .$el.appendTo(this.$el.children('.isic-images-facet-childMarkups'));
+        });
+
+        this.completeCount = this.childViews.reduce(
+            (sum, childView) => sum + childView.completeCount,
+            0
+        );
+        this.$el
+            .children('.isic-images-facet-bin')
+            .children('.isic-images-facet-bin-count')
+            .text(this.completeCount);
+
+        return this;
+    }
+});
+
+const ImagesFacetMarkupLeafView = View.extend({
+    /**
+     * @param {ImagesFacetModel} settings.completeFacet
+     * @param {ImagesFacetModel} settings.filteredFacet
+     * @param {String} settings.featureId
+     * @param {Number} settings.depth
+     * @param {String} settings.featureLevelLabel
+     */
+    initialize: function (settings) {
+        this.completeFacet = settings.completeFacet;
+        this.filteredFacet = settings.filteredFacet;
+
+        this.featureId = settings.featureId;
+        this.depth = settings.depth;
+        this.featureLevelLabel = settings.featureLevelLabel;
+    },
+
+    render: function () {
+        const getFeatureBinCount = (facet) => {
+            const featureBin = _.findWhere(facet.get('bins'), {label: this.featureId});
+            const count = featureBin ? featureBin.count : 0;
+            return count;
+        };
+        this.completeCount = getFeatureBinCount(this.completeFacet);
+        this.filteredCount = getFeatureBinCount(this.filteredFacet);
+
+        this.$el.html(ImagesFacetMarkupLevelTemplate({
+            featureLevelLabel: this.featureLevelLabel,
+            count: this.completeCount
+        }));
+
+        return this;
+    }
+});
+
+const ImagesFacetMarkupsView = ImagesFacetView.extend({
+    initialize: function (settings) {
+        ImagesFacetView.prototype.initialize.call(this, settings);
+
+        const featureIds = _.pluck(masterFeatures, 'id');
+        this.childViews = _.chain(featureIds)
+            .groupBy((featureId) => {
+                const featureLevelLabels = featureId.split(' : ');
+                const childFeatureLevelLabel = featureLevelLabels[0];
+                return childFeatureLevelLabel;
+            })
+            .map((childFeatureIds, childFeatureLevelLabel) => {
+                return new ImagesFacetMarkupGroupView({
+                    completeFacet: this.completeFacet,
+                    filteredFacet: this.filteredFacet,
+                    featureIds: childFeatureIds,
+                    depth: 0,
+                    featureLevelLabel: childFeatureLevelLabel,
+                    parentView: this
+                });
+            })
+            .value();
+    },
+
+
+    render: function () {
+        this.$el.html(ImagesFacetMarkupsTemplate({
+            title: this.title,
+            facetContentId: this.facetContentId,
+        }));
+
+        _.each(this.childViews, (childView) => {
+            childView
+                .render()
+                .$el.appendTo(this.$('.isic-images-facet-markups-content'));
+        });
+
+        return this;
     }
 });
 
@@ -724,8 +886,8 @@ const FACET_SCHEMA = {
         collapsed: true
     },
     'markups': {
-        FacetView: ImagesFacetCategoricalTagsView,
-        FacetFilter: TagsCategoricalFacetFilter,
+        FacetView: ImagesFacetMarkupsView,
+        FacetFilter: CategoricalFacetFilter,
         coerceToType: 'string',
         title: 'Feature Markups',
         collapsed: true
