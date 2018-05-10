@@ -49,6 +49,14 @@
             td= key
             td= value
 
+      if !_.isEmpty(meta.unstructuredExif)
+        tr
+          td.isic-image-details-table-section-header(colspan=2) Unstructured EXIF Attributes
+        each value, key in meta.unstructuredExif
+          tr
+            td= key
+            td= value
+
       if _.has(meta, 'private')
         tr
           td.isic-image-details-table-section-header(colspan=2) Private Attributes
