@@ -5,11 +5,6 @@
     name: python-virtualenv
   become: yes
 
-- name: Create virtualenv
-  pip:
-    virtualenv: "{{ python_dist_path }}"
-    name: []
-
 - name: Upgrade pip
   pip:
     name: "{{ item }}"
