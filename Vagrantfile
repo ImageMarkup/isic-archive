@@ -15,16 +15,18 @@ Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |virtualbox|
     virtualbox.name = "isic-archive.devel"
     virtualbox.memory = 2048
+    # Prevent 'xenial-16.04-cloudimg-console.log' from being created
+    virtualbox.customize [ "modifyvm", :id, "--uartmode1", "disconnected" ]
   end
 
   config.vm.network "forwarded_port", guest: 80, host: 8080
   config.vm.post_up_message = "ISIC Archive is running at http://localhost:8080"
 
   config.vm.synced_folder ".", "/vagrant", disabled: true
-  config.vm.synced_folder ".", "/home/ubuntu/isic_archive"
+  config.vm.synced_folder ".", "/home/vagrant/isic_archive"
 
   config.vm.provision "ansible_local" do |ansible|
-    ansible.provisioning_path = "/home/ubuntu/isic_archive/ansible"
+    ansible.provisioning_path = "/home/vagrant/isic_archive/ansible"
     ansible.galaxy_role_file = "requirements.yml"
     ansible.playbook = "vagrant-playbook.yml"
     ansible.extra_vars = {
