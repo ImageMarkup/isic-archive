@@ -376,6 +376,7 @@ class Image(Item):
             'meta.clinical.mel_type',
             'meta.clinical.mel_mitotic_index',
             'meta.clinical.mel_ulcer',
+            'meta.clinical.anatom_site_general',
             'meta.acquisition.image_type',
             'meta.acquisition.dermoscopic_type'
         ]
