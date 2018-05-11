@@ -96,6 +96,12 @@
               select.form-control(v-model='personalHistoryOfMelanoma')
                 option(selected, disabled, hidden, value='null')
                 option(v-for='option in options.personalHistoryOfMelanoma', :value='option.value') {{ option.description }}
+          .form-group
+            label.control-label.col-sm-2 General Anatomic Site
+            .col-sm-10
+              select.form-control(v-model='anatomSiteGeneral')
+                option(selected, disabled, hidden, value='null')
+                option(v-for='option in options.anatomSiteGeneral', :value='option.value') {{ option.description }}
           .row
             .col-lg-12
               h4 Melanoma Type
@@ -183,6 +189,7 @@ export default {
             melanomaThicknessMmRaw: null,
             melanomaTypeRaw: null,
             melanomaUlcerRaw: null,
+            anatomSiteGeneral: null,
 
             // Interaction state
             submitted: false,
@@ -318,6 +325,15 @@ export default {
                 melanomaUlcer: [
                     {value: 'true', description: 'Yes'},
                     {value: 'false', description: 'No'},
+                    {value: 'unknown', description: 'Unknown'}
+                ],
+                anatomSiteGeneral: [
+                    {value: 'head/neck', description: 'Head/Neck'},
+                    {value: 'upper extremity', description: 'Upper Extremity'},
+                    {value: 'lower extremity', description: 'Lower Extremity'},
+                    {value: 'anterior torso', description: 'Anterior Torso'},
+                    {value: 'posterior torso', description: 'Posterior Torso'},
+                    {value: 'palms/soles', description: 'Palms/Soles'},
                     {value: 'unknown', description: 'Unknown'}
                 ]
             },
@@ -538,7 +554,8 @@ export default {
                 mel_mitotic_index: this.mitoticIndex,
                 mel_thick_mm: this.melanomaThicknessMm,
                 mel_type: this.melanomaType,
-                mel_ulcer: this.melanomaUlcer
+                mel_ulcer: this.melanomaUlcer,
+                anatom_site_general: this.anatomSiteGeneral
             };
 
             // Remove unspecified or not applicable values
