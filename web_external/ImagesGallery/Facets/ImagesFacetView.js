@@ -695,6 +695,13 @@ const FACET_SCHEMA = {
         title: 'Melanoma Ulceration',
         collapsed: true
     },
+    'meta.clinical.anatom_site_general': {
+        FacetView: ImagesFacetHistogramView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'General Anatomic Site',
+        collapsed: true
+    },
     'meta.acquisition.image_type': {
         FacetView: ImagesFacetHistogramView,
         FacetFilter: CategoricalFacetFilter,
