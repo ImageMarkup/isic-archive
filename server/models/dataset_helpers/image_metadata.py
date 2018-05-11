@@ -719,6 +719,33 @@ class MelUlcerFieldParser(FieldParser):
         clinical[cls.name] = value
 
 
+class GeneralAnatomicSiteFieldParser(FieldParser):
+    name = 'anatom_site_general'
+    allowedFields = {'anatom_site_general'}
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.lower()
+            if value in ['', 'unknown']:
+                value = None
+            else:
+                cls._assertEnumerated(value, {
+                    'head/neck',
+                    'upper extremity',
+                    'lower extremity',
+                    'anterior torso',
+                    'posterior torso',
+                    'palms/soles'})
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(clinical, cls.name, value)
+        clinical[cls.name] = value
+
+
 def _populateMetadata(acquisition, clinical):
     """
     Populate empty metadata fields that can be determined based on other fields.
@@ -917,6 +944,7 @@ def addImageMetadata(image, data):
         MelTypeFieldParser,
         MelMitoticIndexFieldParser,
         MelUlcerFieldParser,
+        GeneralAnatomicSiteFieldParser,
     ]:
         acquisition = image['meta']['acquisition']
         clinical = image['meta']['clinical']

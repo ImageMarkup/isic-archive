@@ -45,6 +45,7 @@ MelClassFieldParser = None
 MelTypeFieldParser = None
 MelMitoticIndexFieldParser = None
 MelUlcerFieldParser = None
+GeneralAnatomicSiteFieldParser = None
 
 addImageMetadata = None
 
@@ -78,6 +79,7 @@ def setUpModule():
         MelTypeFieldParser, \
         MelMitoticIndexFieldParser, \
         MelUlcerFieldParser, \
+        GeneralAnatomicSiteFieldParser, \
         addImageMetadata
     from dataset_helpers.image_metadata import \
         MetadataFieldException, \
@@ -102,6 +104,7 @@ def setUpModule():
         MelTypeFieldParser, \
         MelMitoticIndexFieldParser, \
         MelUlcerFieldParser, \
+        GeneralAnatomicSiteFieldParser, \
         addImageMetadata
 
 
@@ -1628,6 +1631,14 @@ class ImageMetadataTestCase(base.TestCase):
         data = {'mel_ulcer': '1'}
         image = self._createImage()
 
+    def testGeneralAnatomicSiteFieldParser(self):
+        parser = GeneralAnatomicSiteFieldParser
+
+        data = {'anatom_site_general': 'head/neck'}
+        image = self._createImage()
+        self.assertRunParser(image, data, parser)
+        self.assertDictEqual({'anatom_site_general': 'head/neck'}, image['meta']['clinical'])
+
     def testAddImageClinicalMetadata(self):
         # Empty data
         data = {}
@@ -1646,7 +1657,7 @@ class ImageMetadataTestCase(base.TestCase):
             'diagnosis_confirm_type': 'histopathology',
             'benign_malignant': 'malignant',
             'diagnosis': 'melanoma',
-            'anatom_site_general': 'head',
+            'anatom_site_general': 'head/neck',
             'anatomic': 'neck'
         }
         image = self._createImage()
@@ -1655,12 +1666,12 @@ class ImageMetadataTestCase(base.TestCase):
         errors, warnings = addImageMetadata(image, data)
         self.assertEquals([], errors)
         self.assertDictEqual({
-            'anatom_site_general': 'head',
             'anatomic': 'neck',
             'laterality': 'left'
         }, image['meta']['unstructured'])
         self.assertDictEqual({
             'age_approx': 45,
+            'anatom_site_general': 'head/neck',
             'sex': 'female',
             'family_hx_mm': False,
             'personal_hx_mm': False,
@@ -1673,12 +1684,9 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertDictEqual({
             'age': 45
         }, image['privateMeta'])
-        self.assertEquals(2, len(warnings))
+        self.assertEquals(1, len(warnings))
         self.assertIn(
             "unrecognized field 'anatomic' will be added to unstructured metadata",
-            warnings)
-        self.assertIn(
-            "unrecognized field 'anatom_site_general' will be added to unstructured metadata",
             warnings)
 
         # Data with errors
@@ -1700,7 +1708,7 @@ class ImageMetadataTestCase(base.TestCase):
         image['meta']['clinical']['sex'] = 'male'
         image['meta']['clinical']['melanocytic'] = False
         errors, warnings = addImageMetadata(image, data)
-        self.assertEquals(4, len(errors))
+        self.assertEquals(5, len(errors))
         self.assertIn(
             "value already exists for field 'sex' (old: 'male', new: u'female')",
             errors)
