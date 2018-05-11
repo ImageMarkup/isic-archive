@@ -597,14 +597,14 @@ const FACET_SCHEMA = {
         collapsed: true
     },
     'meta.clinical.sex': {
-        FacetView: ImagesFacetHistogramView,
+        FacetView: ImagesFacetCategoricalView,
         FacetFilter: CategoricalFacetFilter,
         coerceToType: 'string',
         title: 'Sex',
         collapsed: true
     },
     'meta.clinical.diagnosis_confirm_type': {
-        FacetView: ImagesFacetHistogramView,
+        FacetView: ImagesFacetCategoricalView,
         FacetFilter: CategoricalFacetFilter,
         coerceToType: 'string',
         title: 'Type of Diagnosis',
@@ -696,21 +696,21 @@ const FACET_SCHEMA = {
         collapsed: true
     },
     'meta.clinical.anatom_site_general': {
-        FacetView: ImagesFacetHistogramView,
+        FacetView: ImagesFacetCategoricalView,
         FacetFilter: CategoricalFacetFilter,
         coerceToType: 'string',
         title: 'General Anatomic Site',
         collapsed: true
     },
     'meta.acquisition.image_type': {
-        FacetView: ImagesFacetHistogramView,
+        FacetView: ImagesFacetCategoricalView,
         FacetFilter: CategoricalFacetFilter,
         coerceToType: 'string',
         title: 'Image Type',
         collapsed: true
     },
     'meta.acquisition.dermoscopic_type': {
-        FacetView: ImagesFacetHistogramView,
+        FacetView: ImagesFacetCategoricalView,
         FacetFilter: CategoricalFacetFilter,
         coerceToType: 'string',
         title: 'Dermoscopic Type',
