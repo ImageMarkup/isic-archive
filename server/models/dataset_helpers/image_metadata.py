@@ -737,7 +737,8 @@ class GeneralAnatomicSiteFieldParser(FieldParser):
                     'lower extremity',
                     'anterior torso',
                     'posterior torso',
-                    'palms/soles'})
+                    'palms/soles',
+                    'lateral torso'})
         return value
 
     @classmethod
