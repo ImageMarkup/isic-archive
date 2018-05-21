@@ -2,7 +2,7 @@ import $ from 'jquery';
 
 import {getCurrentUser} from 'girder/auth';
 import {AccessType} from 'girder/constants';
-import {restRequest} from 'girder/rest';
+import {restRequest, getApiRoot} from 'girder/rest';
 
 import {AccessControlledModel} from './Model';
 import UserModel from './UserModel';
@@ -54,21 +54,22 @@ const DatasetModel = AccessControlledModel.extend({
     },
 
     /**
-     * Register a metadata file with the dataset.
-     * @param [metadataFileId] The ID of the metadata file.
+     * Register metadata with the dataset.
+     * @param [filename] Metadata filename.
+     * @param [metadataData] Metadata data.
      */
-    registerMetadata: function (metadataFileId) {
-        restRequest({
-            url: `${this.resourceName}/${this.id}/metadata`,
+    registerMetadata: function (filename, metadataData) {
+        const params = {
+            filename: filename
+        };
+
+        return restRequest({
+            url: `${this.resourceName}/${this.id}/metadata?` + $.param(params),
             method: 'POST',
-            data: {
-                metadataFileId: metadataFileId
-            },
+            data: metadataData,
+            contentType: false,
+            processData: false,
             error: null
-        }).done((resp) => {
-            this.trigger('isic:registerMetadata:success', resp);
-        }).fail((err) => {
-            this.trigger('isic:registerMetadata:error', err);
         });
     },
 
@@ -104,6 +105,15 @@ const DatasetModel = AccessControlledModel.extend({
             deferred.reject(err);
         });
         return deferred.promise();
+    },
+
+    /**
+     * Download a registered metadata file.
+     * @param [metadataFileId] The ID of the metadata file.
+     */
+    downloadMetadata: function (metadataFileId) {
+        const downloadUrl = `${getApiRoot()}/${this.resourceName}/${this.id}/metadata/${metadataFileId}`;
+        window.location.assign(downloadUrl);
     },
 
     canWrite: function () {

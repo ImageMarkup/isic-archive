@@ -1,21 +1,22 @@
 .isic-form-page.isic-register-metadata-container
   h2.isic-page-title Register metadata
 
-  .isic-form-container
+  form#isic-register-metadata-form.isic-form-container
     .isic-form-group
       include datasetInfoWidget
     .isic-form-group
       h3 Upload metadata
-      .isic-upload-description-container
+      .isic-register-metadata-upload-description-container
         | Upload a CSV file of image metadata. The #[i filename] column
         | should contain an image filename (including file extension). All
         | other columns are considered to be clinical metadata; these other
         | column names may not contain the period (.) character.
-      .isic-upload-container
-        .isic-upload-widget-container
-        .isic-upload-reset-container
-          .isic-upload-list
-          button#isic-upload-reset.btn.btn-secondary.btn-md Reset
+      .isic-register-metadata-upload-container
+        label.btn.btn-default.button-md
+          | Browse
+          input.isic-register-metadata-file-input(type='file', accept='.csv')
+        .isic-register-metadata-csv-file
+          | No file selected
 
-  p
-    button#isic-register-metadata-submit.btn.btn-primary.btn-md Submit
+    p
+      button#isic-register-metadata-submit.btn.btn-primary.btn-md Submit
