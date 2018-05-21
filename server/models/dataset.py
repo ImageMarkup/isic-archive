@@ -32,6 +32,7 @@ from girder.models.folder import Folder
 from girder.models.group import Group
 from girder.models.model_base import AccessControlledModel
 from girder.models.notification import ProgressState
+from girder.models.upload import Upload
 from girder.utility import mail_utils
 from girder.utility.progress import ProgressContext
 from backports import csv
@@ -440,12 +441,31 @@ class Dataset(AccessControlledModel):
                 Folder().countFolders(prereviewFolder)) == 0:
             Folder().remove(prereviewFolder)
 
-    def registerMetadata(self, dataset, metadataFile, user, sendMail=False):
-        """Register a .csv file containing metadata about images."""
-        # Check if image metadata is already registered
-        if self.findOne({'metadataFiles.fileId': metadataFile['_id']}):
-            raise ValidationException(
-                'Metadata file is already registered on a dataset.')
+    def registerMetadata(self, dataset, metadataDataStream, filename, user, sendMail=False):
+        """Register CSV data containing metadata about images."""
+        # Create folder under user to store metadata .csv files
+        # TODO: Could store metadata .csv files in shared folder associated with
+        # dataset and/or with group access control
+        folder = Folder().createFolder(
+            parent=user,
+            name='ISIC Dataset Metadata',
+            parentType='user',
+            public=False,
+            creator=user,
+            allowRename=False,
+            reuseExisting=True
+        )
+
+        # Store metadata data in a file
+        metadataFile = Upload().uploadFromFile(
+            obj=metadataDataStream,
+            size=len(metadataDataStream),
+            name=filename,
+            parentType='folder',
+            parent=folder,
+            user=user,
+            mimeType='text/csv'
+        )
 
         # Add image metadata file information to list
         now = datetime.datetime.utcnow()
