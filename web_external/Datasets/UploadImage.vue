@@ -334,6 +334,7 @@ export default {
                     {value: 'anterior torso', description: 'Anterior Torso'},
                     {value: 'posterior torso', description: 'Posterior Torso'},
                     {value: 'palms/soles', description: 'Palms/Soles'},
+                    {value: 'lateral torso', description: 'Lateral Torso'},
                     {value: 'unknown', description: 'Unknown'}
                 ]
             },
