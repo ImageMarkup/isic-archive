@@ -63,7 +63,7 @@ class DatasetResource(IsicResource):
         self.route('GET', (':id', 'metadata'), self.getRegisteredMetadata)
         self.route('POST', (':id', 'metadata'), self.registerMetadata)
         self.route('GET', (':id', 'metadata', ':metadataFileId'), self.downloadMetadata)
-        self.route('POST', (':id', 'metadata', ':metadataFileId'), self.applyMetadata)
+        self.route('POST', (':id', 'metadata', ':metadataFileId', 'apply'), self.applyMetadata)
 
     @describeRoute(
         Description('Return a list of lesion image datasets.')

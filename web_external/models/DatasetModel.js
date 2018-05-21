@@ -93,7 +93,7 @@ const DatasetModel = AccessControlledModel.extend({
     applyMetadata: function (metadataFileId, save) {
         let deferred = $.Deferred();
         restRequest({
-            url: `${this.resourceName}/${this.id}/metadata/${metadataFileId}`,
+            url: `${this.resourceName}/${this.id}/metadata/${metadataFileId}/apply`,
             method: 'POST',
             data: {
                 save: save

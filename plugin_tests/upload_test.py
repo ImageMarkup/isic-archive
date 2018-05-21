@@ -331,7 +331,7 @@ class UploadTestCase(IsicTestCase):
 
         # Test applying metadata
         resp = self.request(
-            path='/dataset/%s/metadata/%s' % (publicDataset['_id'], metadataFileId),
+            path='/dataset/%s/metadata/%s/apply' % (publicDataset['_id'], metadataFileId),
             method='POST', user=uploaderUser, params={
                 'save': False
             })
