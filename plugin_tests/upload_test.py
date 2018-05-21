@@ -166,9 +166,6 @@ class UploadTestCase(IsicTestCase):
         return dataset
 
     def testUploadDataset(self):
-        File = self.model('file')
-        Folder = self.model('folder')
-        Upload = self.model('upload')
         User = self.model('user', 'isic_archive')
 
         # Create users
@@ -247,65 +244,34 @@ class UploadTestCase(IsicTestCase):
             })
         self.assertStatusOk(resp)
 
-        # Test metadata registration
-        resp = self.request(
-            path='/folder', method='POST', user=uploaderUser, params={
-                'parentType': 'user',
-                'parentId': str(uploaderUser['_id']),
-                'name': 'test_1_metadata_folder'
-            })
-        self.assertStatusOk(resp)
-        uploadCsvFolder = Folder.load(resp.json['_id'], force=True)
-
-        # Upload the CSV metadata file
+        # Attempt to register metadata as invalid users
         csvPath = os.path.join(self.testDataDir, 'test_1_metadata.csv')
         with open(csvPath, 'rb') as csvStream:
-            metadataFile = Upload.uploadFromFile(
-                obj=csvStream,
-                size=os.path.getsize(csvPath),
-                name='test_1_metadata.csv',
-                parentType='folder',
-                parent=uploadCsvFolder,
-                user=uploaderUser,
-                mimeType='text/csv'
-            )
-
-        # Attempt to register metadata as invalid users
-        resp = self.request(
-            path='/dataset/%s/metadata' % publicDataset['_id'], method='POST',
-            params={
-                'metadataFileId': metadataFile['_id']
-            })
-        self.assertStatus(resp, 401)
-        resp = self.request(
-            path='/dataset/%s/metadata' % publicDataset['_id'], method='POST',
-            user=reviewerUser, params={
-                'metadataFileId': metadataFile['_id']
-            })
-        self.assertStatus(resp, 403)
+            resp = self.request(
+                path='/dataset/%s/metadata' % publicDataset['_id'], method='POST',
+                body=csvStream.read(), type='text/csv',
+                params={
+                    'filename': 'test_1_metadata.csv'
+                })
+            self.assertStatus(resp, 401)
 
         # Attempt to register metadata with invalid parameters
-        resp = self.request(
-            path='/dataset/%s/metadata' % publicDataset['_id'], method='POST',
-            user=uploaderUser)
+        with open(csvPath, 'rb') as csvStream:
+            resp = self.request(
+                path='/dataset/%s/metadata' % publicDataset['_id'], method='POST',
+                body=csvStream.read(), type='text/csv',
+                user=uploaderUser)
+            self.assertStatus(resp, 400)
+        self.assertIn('"filename" is required', resp.json['message'].lower())
+        with open(csvPath, 'rb') as csvStream:
+            resp = self.request(
+                path='/dataset/%s/metadata' % publicDataset['_id'], method='POST',
+                body=csvStream.read(), type='text/csv',
+                user=uploaderUser, params={
+                    'filename': ' '
+                })
         self.assertStatus(resp, 400)
-        self.assertIn('required', resp.json['message'].lower())
-        resp = self.request(
-            path='/dataset/%s/metadata' % publicDataset['_id'], method='POST',
-            user=uploaderUser, params={
-                'metadataFileId': 'bad_id'
-            })
-        self.assertStatus(resp, 400)
-        self.assertIn('invalid', resp.json['message'].lower())
-        resp = self.request(
-            path='/dataset/%s/metadata' % publicDataset['_id'], method='POST',
-            user=uploaderUser, params={
-                # TODO: find a cleaner way to pass a file with the wrong format
-                'metadataFileId': File.findOne({
-                    'mimeType': 'application/zip'})['_id'],
-            })
-        self.assertStatus(resp, 400)
-        self.assertIn('format', resp.json['message'].lower())
+        self.assertIn('filename must be specified', resp.json['message'].lower())
 
         # Attempt to list registered metadata as invalid users
         resp = self.request(
@@ -325,14 +291,16 @@ class UploadTestCase(IsicTestCase):
 
         # Register metadata with dataset
         self.assertNoMail()
-        resp = self.request(
-            path='/dataset/%s/metadata' % publicDataset['_id'], method='POST',
-            user=uploaderUser, params={
-                'metadataFileId': metadataFile['_id']
-            })
-        self.assertStatusOk(resp)
-        # Reviewer user should receive email
-        self.assertMails(count=1)
+        with open(csvPath, 'rb') as csvStream:
+            resp = self.request(
+                path='/dataset/%s/metadata' % publicDataset['_id'], method='POST',
+                body=csvStream.read(), type='text/csv', isJson=False,
+                user=uploaderUser, params={
+                    'filename': 'test_1_metadata.csv'
+                })
+            self.assertStatusOk(resp)
+            # Reviewer user should receive email
+            self.assertMails(count=1)
 
         # List registered metadata
         resp = self.request(
@@ -341,26 +309,29 @@ class UploadTestCase(IsicTestCase):
         self.assertStatusOk(resp)
         self.assertIsInstance(resp.json, list)
         self.assertEqual(len(resp.json), 1)
-        # Check the 'time' field separately, as we don't know what it will be
+
+        # Check file field
+        self.assertIn('file', resp.json[0])
+        self.assertIn('_id', resp.json[0]['file'])
+        self.assertIn('name', resp.json[0]['file'])
+        self.assertEqual('test_1_metadata.csv', resp.json[0]['file']['name'])
+        self.assertIn('user', resp.json[0])
+
+        # Check user field
+        self.assertDictEqual({
+            '_id': str(uploaderUser['_id']),
+            'name': User.obfuscatedName(uploaderUser)
+        }, resp.json[0]['user'])
+
+        # Check time field
         self.assertIn('time', resp.json[0])
         self.assertLess(parseTimestamp(resp.json[0]['time']),
                         datetime.datetime.utcnow())
-        self.assertDictEqual({
-            'file': {
-                '_id': str(metadataFile['_id']),
-                'name': metadataFile['name']
-            },
-            'user': {
-                '_id': str(uploaderUser['_id']),
-                'name': User.obfuscatedName(uploaderUser)
-            },
-            # This is actually checked above
-            'time': resp.json[0]['time']
-        }, resp.json[0])
+        metadataFileId = resp.json[0]['file']['_id']
 
         # Test applying metadata
         resp = self.request(
-            path='/dataset/%s/metadata/%s' % (publicDataset['_id'], metadataFile['_id']),
+            path='/dataset/%s/metadata/%s' % (publicDataset['_id'], metadataFileId),
             method='POST', user=uploaderUser, params={
                 'save': False
             })
