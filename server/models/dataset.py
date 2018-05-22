@@ -484,6 +484,21 @@ class Dataset(AccessControlledModel):
 
         return dataset
 
+    def removeMetadata(self, dataset, metadataFile):
+        # Remove metadata file registration from database
+        self.update(
+            {'_id': dataset['_id']},
+            {'$pull': {'metadataFiles': {'fileId': metadataFile['_id']}}}
+        )
+
+        # Remove file
+        File().remove(metadataFile)
+
+        # Update document in-place
+        dataset['metadataFiles'][:] = [registration for registration in dataset['metadataFiles']
+                                       if registration['fileId'] != metadataFile['_id']]
+        return dataset
+
     def applyMetadata(self, dataset, metadataFile, save):
         """
         Apply metadata in a .csv file to a dataset.

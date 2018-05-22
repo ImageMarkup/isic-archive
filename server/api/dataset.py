@@ -62,6 +62,7 @@ class DatasetResource(IsicResource):
         self.route('POST', (':id', 'review'), self.submitReviewImages)
         self.route('GET', (':id', 'metadata'), self.getRegisteredMetadata)
         self.route('POST', (':id', 'metadata'), self.registerMetadata)
+        self.route('DELETE', (':id', 'metadata', ':metadataFileId'), self.removeMetadata)
         self.route('GET', (':id', 'metadata', ':metadataFileId', 'download'), self.downloadMetadata)
         self.route('POST', (':id', 'metadata', ':metadataFileId', 'apply'), self.applyMetadata)
 
@@ -417,6 +418,21 @@ class DatasetResource(IsicResource):
                 mimetypes.guess_type(file['name'], strict=False)[0] in formats:
             return True
         return False
+
+    @describeRoute(
+        Description('Delete metadata registered with a dataset.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('metadataFileId', 'The ID of the .csv metadata file.', paramType='path')
+    )
+    @access.admin
+    @loadmodel(model='file', map={'metadataFileId': 'metadataFile'}, force=True)
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.ADMIN)
+    def removeMetadata(self, dataset, metadataFile, params):
+        self._requireMetadataFile(dataset, metadataFile)
+        Dataset().removeMetadata(dataset=dataset, metadataFile=metadataFile)
+
+        # No Content
+        cherrypy.response.status = 204
 
     @describeRoute(
         Description('Download metadata registered with dataset.')

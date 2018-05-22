@@ -98,6 +98,19 @@ class UploadTestCase(IsicTestCase):
 
         return uploaderUser
 
+    def _createSiteAdminUser(self):
+        """Create a site admin user."""
+        User = self.model('user', 'isic_archive')
+        params = {
+            'email': 'admin-user@isic-archive.com',
+            'login': 'admin-user',
+            'firstName': 'admin',
+            'lastName': 'user',
+            'password': 'password',
+            'admin': True
+        }
+        return User.createUser(**params)
+
     def _uploadDataset(self, uploaderUser, zipName, zipContentNames,
                        datasetName, datasetDescription):
         Dataset = self.model('dataset', 'isic_archive')
@@ -171,6 +184,7 @@ class UploadTestCase(IsicTestCase):
         # Create users
         reviewerUser = self._createReviewerUser()
         uploaderUser = self._createUploaderUser()
+        adminUser = self._createSiteAdminUser()
 
         # Create and upload two ZIP files of images
         publicDataset = self._uploadDataset(
@@ -367,6 +381,18 @@ class UploadTestCase(IsicTestCase):
                 {'description':
                  'unrecognized field u\'isic_source_name\' will be added to unstructured metadata'}
             ])
+
+        # Test removing metadata as site admin
+        resp = self.request(
+            path='/dataset/%s/metadata/%s' % (publicDataset['_id'], metadataFileId),
+            method='DELETE', user=adminUser, isJson=False)
+        self.assertStatus(resp, 204)
+        resp = self.request(
+            path='/dataset/%s/metadata' % publicDataset['_id'],
+            user=reviewerUser)
+        self.assertStatusOk(resp)
+        self.assertIsInstance(resp.json, list)
+        self.assertEqual(len(resp.json), 0)
 
     def testUploadImages(self):
         """
