@@ -329,6 +329,23 @@ class UploadTestCase(IsicTestCase):
                         datetime.datetime.utcnow())
         metadataFileId = resp.json[0]['file']['_id']
 
+        # Test downloading metadata as invalid users
+        resp = self.request(
+            path='/dataset/%s/metadata/%s/download' % (publicDataset['_id'], metadataFileId),
+            method='GET', isJson=False)
+        self.assertStatus(resp, 401)
+        resp = self.request(
+            path='/dataset/%s/metadata/%s/download' % (publicDataset['_id'], metadataFileId),
+            method='GET', user=uploaderUser, isJson=False)
+        self.assertStatus(resp, 403)
+
+        # Test downloading metadata
+        resp = self.request(
+            path='/dataset/%s/metadata/%s/download' % (publicDataset['_id'], metadataFileId),
+            method='GET', user=reviewerUser, isJson=False)
+        with open(csvPath, 'rb') as csvStream:
+            self.assertEqual(csvStream.read(), self.getBody(resp))
+
         # Test applying metadata
         resp = self.request(
             path='/dataset/%s/metadata/%s/apply' % (publicDataset['_id'], metadataFileId),

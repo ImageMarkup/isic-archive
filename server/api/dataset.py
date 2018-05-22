@@ -425,19 +425,14 @@ class DatasetResource(IsicResource):
     )
     @access.cookie
     @access.public(scope=TokenScope.DATA_READ)
-    @loadmodel(model='file', map={'metadataFileId': 'metadataFile'}, force=True, exc=False)
+    @loadmodel(model='file', map={'metadataFileId': 'metadataFile'}, level=AccessType.READ,
+               exc=False)
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
     def downloadMetadata(self, dataset, metadataFile, params):
         user = self.getCurrentUser()
+        User().requireReviewDataset(user)
 
-        # Re-load file to check permissions and use custom error message
-        if metadataFile is not None:
-            metadataFile = File().load(
-                metadataFile['_id'], user=user, level=AccessType.WRITE, exc=False)
-
-        if not metadataFile:
-            raise ValidationException('Invalid metadata file ID.', 'metadataFileId')
-
+        self._requireMetadataFile(dataset, metadataFile)
         return File().download(metadataFile)
 
     @describeRoute(
@@ -461,3 +456,9 @@ class DatasetResource(IsicResource):
             'errors': [{'description': description} for description in errors],
             'warnings': [{'description': description} for description in warnings]
         }
+
+    def _requireMetadataFile(self, dataset, metadataFile):
+        """Raise a ValidationException if the metadata file is not registered with the dataset."""
+        if metadataFile is None or not any(registration['fileId'] == metadataFile['_id']
+                                           for registration in dataset['metadataFiles']):
+            raise ValidationException('Metadata file ID is not registered.', 'metadataFileId')

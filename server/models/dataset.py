@@ -443,29 +443,20 @@ class Dataset(AccessControlledModel):
 
     def registerMetadata(self, dataset, metadataDataStream, filename, user, sendMail=False):
         """Register CSV data containing metadata about images."""
-        # Create folder under user to store metadata .csv files
-        # TODO: Could store metadata .csv files in shared folder associated with
-        # dataset and/or with group access control
-        folder = Folder().createFolder(
-            parent=user,
-            name='ISIC Dataset Metadata',
-            parentType='user',
-            public=False,
-            creator=user,
-            allowRename=False,
-            reuseExisting=True
-        )
-
-        # Store metadata data in a file
+        # Store metadata data in a .csv file attached to the dataset
         metadataFile = Upload().uploadFromFile(
             obj=metadataDataStream,
             size=len(metadataDataStream),
             name=filename,
-            parentType='folder',
-            parent=folder,
+            parentType='dataset',
+            parent=dataset,
+            attachParent=True,
             user=user,
             mimeType='text/csv'
         )
+        # TODO: remove this once a bug in upstream Girder is fixed
+        metadataFile['attachedToType'] = ['dataset', 'isic_archive']
+        metadataFile = File().save(metadataFile)
 
         # Add image metadata file information to list
         now = datetime.datetime.utcnow()
