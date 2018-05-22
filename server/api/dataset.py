@@ -460,7 +460,7 @@ class DatasetResource(IsicResource):
     )
     @access.user
     @loadmodel(model='file', map={'metadataFileId': 'metadataFile'}, force=True)
-    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.ADMIN)
     def applyMetadata(self, dataset, metadataFile, params):
         params = self._decodeParams(params)
         self.requireParams('save', params)

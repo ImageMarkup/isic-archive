@@ -366,6 +366,12 @@ class UploadTestCase(IsicTestCase):
             method='POST', user=uploaderUser, params={
                 'save': False
             })
+        self.assertStatus(resp, 403)
+        resp = self.request(
+            path='/dataset/%s/metadata/%s/apply' % (publicDataset['_id'], metadataFileId),
+            method='POST', user=reviewerUser, params={
+                'save': False
+            })
         self.assertStatusOk(resp)
         self.assertIn('errors', resp.json)
         self.assertIn('warnings', resp.json)
