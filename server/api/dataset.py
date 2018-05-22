@@ -62,7 +62,7 @@ class DatasetResource(IsicResource):
         self.route('POST', (':id', 'review'), self.submitReviewImages)
         self.route('GET', (':id', 'metadata'), self.getRegisteredMetadata)
         self.route('POST', (':id', 'metadata'), self.registerMetadata)
-        self.route('GET', (':id', 'metadata', ':metadataFileId'), self.downloadMetadata)
+        self.route('GET', (':id', 'metadata', ':metadataFileId', 'download'), self.downloadMetadata)
         self.route('POST', (':id', 'metadata', ':metadataFileId', 'apply'), self.applyMetadata)
 
     @describeRoute(

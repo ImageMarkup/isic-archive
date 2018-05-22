@@ -112,7 +112,7 @@ const DatasetModel = AccessControlledModel.extend({
      * @param [metadataFileId] The ID of the metadata file.
      */
     downloadMetadata: function (metadataFileId) {
-        const downloadUrl = `${getApiRoot()}/${this.resourceName}/${this.id}/metadata/${metadataFileId}`;
+        const downloadUrl = `${getApiRoot()}/${this.resourceName}/${this.id}/metadata/${metadataFileId}/download`;
         window.location.assign(downloadUrl);
     },
 
