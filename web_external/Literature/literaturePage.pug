@@ -47,15 +47,17 @@
                   div= entryTags.author
 
                   div
-                    i= entryTags.booktitle || entryTags.journal || entryTags.school
-                    if entryTags.publisher
-                      span , #{entryTags.publisher}
-                    if entryTags.organization
-                      span , #{entryTags.organization}
-                    if entryTags.volume
-                      span , #{entryTags.volume}
-                    if entryTags.number
-                      span (#{entryTags.number})
-                    if entryTags.pages
-                      span , #{entryTags.pages}
-                    span .
+                    - const entryTitle = entryTags.booktitle || entryTags.journal || entryTags.school;
+                    if entryTitle
+                      i= entryTitle
+                      if entryTags.publisher
+                        span , #{entryTags.publisher}
+                      if entryTags.organization
+                        span , #{entryTags.organization}
+                      if entryTags.volume
+                        span , #{entryTags.volume}
+                      if entryTags.number
+                        span (#{entryTags.number})
+                      if entryTags.pages
+                        span , #{entryTags.pages}
+                      span .
