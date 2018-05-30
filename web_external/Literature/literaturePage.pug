@@ -26,10 +26,14 @@
                     td Book Section
                   when 'inproceedings'
                     td Conference
+                  when 'manual'
+                    td Documentation
                   when 'mastersthesis'
                     case entryTags.type
                       when '{B.S.} thesis'
                         td B.S. Thesis
+                      when 'Academic project'
+                        td Academic Project
                       default
                         td Master's Thesis
                   when 'misc'
