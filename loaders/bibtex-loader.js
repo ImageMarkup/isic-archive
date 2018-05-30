@@ -53,6 +53,9 @@ module.exports = function (content) {
         if (publication.entryTags.title) {
             publication.entryTags.title = unescapeLatexUnicode(publication.entryTags.title);
         }
+        if (publication.entryTags.booktitle) {
+            publication.entryTags.booktitle = unescapeLatexUnicode(publication.entryTags.booktitle);
+        }
     });
 
     return `module.exports = ${JSON.stringify(publications)}`;
