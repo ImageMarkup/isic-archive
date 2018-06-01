@@ -13,6 +13,9 @@ const ConfigView = View.extend({
             this._saveSettings([{
                 key: 'isic.demo_mode',
                 value: this.$('#isic-config-demo-mode').prop('checked')
+            }, {
+                key: 'isic.zip_upload_s3_assetstore_id',
+                value: this.$('#isic-config-zip-upload-s3-assetstore-id').val().trim()
             }]);
         }
     },
@@ -22,7 +25,8 @@ const ConfigView = View.extend({
             path: 'system/setting',
             data: {
                 list: JSON.stringify([
-                    'isic.demo_mode'
+                    'isic.demo_mode',
+                    'isic.zip_upload_s3_assetstore_id'
                 ])
             }
         }).done((resp) => {
@@ -31,6 +35,8 @@ const ConfigView = View.extend({
                 'checked',
                 resp['isic.demo_mode']
             );
+            this.$('#isic-config-zip-upload-s3-assetstore-id').val(
+                resp['isic.zip_upload_s3_assetstore_id']);
         });
     },
 
