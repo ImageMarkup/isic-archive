@@ -21,7 +21,7 @@ const DatasetModel = AccessControlledModel.extend({
      */
     uploadBatch: function (zipFileId, signature) {
         return restRequest({
-            url: `${this.resourceName}/${this.id}/zip`,
+            url: `${this.resourceName}/${this.id}/imageZip`,
             method: 'POST',
             data: {
                 zipFileId: zipFileId,

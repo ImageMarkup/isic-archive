@@ -155,8 +155,9 @@ class UploadTestCase(IsicTestCase):
 
         self.assertNoMail()
         resp = self.request(
-            path='/dataset/%s/zip' % dataset['_id'], method='POST', user=uploaderUser, params={
-                'zipFileId': str(zipFile['_id']),
+            path='/dataset/%s/imageZip' % dataset['_id'], method='POST', user=uploaderUser,
+            params={
+                'zipFileId': zipFile['_id'],
                 'signature': 'Test Uploader'
             })
         self.assertStatusOk(resp)

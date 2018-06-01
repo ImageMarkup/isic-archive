@@ -57,7 +57,7 @@ class DatasetResource(IsicResource):
         self.route('PUT', (':id', 'access'), self.setDatasetAccess)
         self.route('POST', (), self.createDataset)
         self.route('POST', (':id', 'image'), self.addImage)
-        self.route('POST', (':id', 'zip'), self.addZipBatch)
+        self.route('POST', (':id', 'imageZip'), self.addImageZip)
         self.route('GET', (':id', 'review'), self.getReviewImages)
         self.route('POST', (':id', 'review'), self.submitReviewImages)
         self.route('GET', (':id', 'metadata'), self.getRegisteredMetadata)
@@ -252,14 +252,14 @@ class DatasetResource(IsicResource):
         return Image().filter(image, user=user)
 
     @describeRoute(
-        Description('Upload a batch of ZIP images to a dataset.')
+        Description('Add images from a ZIP file to a dataset.')
         .param('id', 'The ID of the dataset.', paramType='path')
         .param('zipFileId', 'The ID of the .zip file of images.', paramType='form')
         .param('signature', 'Signature of license agreement.', paramType='form')
     )
     @access.user
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
-    def addZipBatch(self, dataset, params):
+    def addImageZip(self, dataset, params):
         params = self._decodeParams(params)
         self.requireParams(['zipFileId', 'signature'], params)
 
