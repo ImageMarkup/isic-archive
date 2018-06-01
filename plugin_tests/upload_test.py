@@ -18,15 +18,22 @@
 ###############################################################################
 
 import datetime
+import hashlib
 import json
+import moto
 import os
+import re
+import requests
+import six
 
-from six import BytesIO
+from functools import wraps
+from xml.etree import ElementTree
 
 from girder.constants import AccessType
 from girder.utility import parseTimestamp
+from girder.utility.s3_assetstore_adapter import makeBotoConnectParams, S3AssetstoreAdapter
 from girder.utility.ziputil import ZipGenerator
-from tests import base
+from tests import base, mock_s3
 
 from .isic_base import IsicTestCase
 
@@ -38,6 +45,31 @@ def setUpModule():
 
 def tearDownModule():
     base.stopServer()
+
+
+def moto_reduce_upload_part_min_size(f):
+    """
+    Decorator to temporarily decrease the minimum multipart upload part size.
+    This avoids the following error response when sending the Complete Multipart
+    Upload request:
+
+        <Code>EntityTooSmall</Code>
+        <Message>Your proposed upload is smaller than the minimum allowed object size.</Message>
+
+    Based on https://github.com/spulec/moto/blob/b0d5eaf/tests/test_s3/test_s3.py#L40.
+    """
+    origSize = moto.s3.models.UPLOAD_PART_MIN_SIZE
+    reducedSize = 1024
+
+    @wraps(f)
+    def wrapped(*args, **kwargs):
+        try:
+            moto.s3.models.UPLOAD_PART_MIN_SIZE = reducedSize
+            return f(*args, **kwargs)
+        finally:
+            moto.s3.models.UPLOAD_PART_MIN_SIZE = origSize
+
+    return wrapped
 
 
 class UploadTestCase(IsicTestCase):
@@ -173,6 +205,12 @@ class UploadTestCase(IsicTestCase):
         self.assertMails(count=2)
 
         return dataset
+
+    def _base64MD5(self, data):
+        """Return Base64-encoded MD5 digest of the data."""
+        md5 = hashlib.md5()
+        md5.update(data)
+        return md5.digest().encode('base64')
 
     def testUploadDataset(self):
         File = self.model('file')
@@ -490,3 +528,292 @@ class UploadTestCase(IsicTestCase):
         self.assertEqual('malignant', resp.json['meta']['clinical']['benign_malignant'])
         self.assertEqual('histopathology', resp.json['meta']['clinical']['diagnosis_confirm_type'])
         self.assertEqual('111-222-3334', resp.json['meta']['unstructured']['custom_id'])
+
+    @moto.mock_s3
+    def testUploadDatasetS3(self):
+        Assetstore = self.model('assetstore')
+        Image = self.model('image', 'isic_archive')
+        Setting = self.model('setting')
+
+        # Create user
+        user = self._createUploaderUser()
+
+        # Create an S3 bucket to use with the assetstore
+        botoParams = makeBotoConnectParams('access', 'secret')
+        mock_s3.createBucket(botoParams, 'zip-uploads')
+
+        # Create an S3 assetstore
+        assetstore = Assetstore.createS3Assetstore(
+            name='test', bucket='zip-uploads', accessKeyId='access', secret='secret', prefix='test')
+
+        # Configure the ZIP upload S3 assetstore
+        Setting.set('isic.zip_upload_s3_assetstore_id', assetstore['_id'])
+
+        # Create a ZIP file of images
+        zipName = 'test_zip_1'
+        zipStream, zipSize = self._createZipFile(
+            zipName=zipName, zipContentNames=['test_1_small_1.jpg', 'test_1_small_2.jpg'])
+        self.assertLessEqual(zipSize, S3AssetstoreAdapter.CHUNK_LEN)
+
+        # Create a dataset
+        datasetName = 'test_dataset_1'
+        resp = self.request(
+            path='/dataset', method='POST', user=user, params={
+                'name': datasetName,
+                'description': 'A public test dataset',
+                'license': 'CC-0',
+                'attribution': 'Test Organization',
+                'owner': 'Test Organization'
+            })
+        self.assertStatusOk(resp)
+        dataset = resp.json
+
+        # Start a new upload of the ZIP file and get S3 request information from server
+        resp = self.request(
+            path='/dataset/%s/zip' % dataset['_id'], method='POST', user=user, params={
+                'name': zipName,
+                'size': zipSize
+            })
+        self.assertStatusOk(resp)
+        upload = resp.json
+        self.assertIn('s3', upload)
+        self.assertHasKeys(upload['s3'], ['chunked', 'request'])
+        self.assertFalse(upload['s3']['chunked'])
+        s3Request = upload['s3']['request']
+        self.assertHasKeys(s3Request, ['method', 'url', 'headers'])
+
+        # Upload directly to S3 using request information from server
+        # https://docs.aws.amazon.com/AmazonS3/latest/dev/UploadObjSingleOpREST.html
+        chunk = zipStream.read()
+        s3Request['headers'].update({
+            'Content-Length': str(zipSize),
+            'Content-MD5': self._base64MD5(chunk)
+        })
+        resp = requests.request(
+            s3Request['method'], headers=s3Request['headers'], url=s3Request['url'], data=chunk)
+        resp.raise_for_status()
+
+        # Finalize upload
+        resp = self.request(
+            path='/dataset/%s/zip/%s/completion' % (dataset['_id'], upload['_id']), method='POST',
+            user=user)
+        self.assertStatusOk(resp)
+        zipFile = resp.json
+        self.assertEqual('file', zipFile['_modelType'])
+        self.assertIn('itemId', zipFile)
+        self.assertEqual(zipName, zipFile['name'])
+        self.assertEqual(zipSize, zipFile['size'])
+        self.assertNotIn('s3', zipFile)
+
+        # Add the images in the ZIP file to the dataset
+        self.assertEqual(0, Image.find().count())
+        resp = self.request(
+            path='/dataset/%s/imageZip' % dataset['_id'], method='POST', user=user,
+            params={
+                'zipFileId': zipFile['_id'],
+                'signature': 'Test Uploader'
+            })
+        self.assertStatusOk(resp)
+        self.assertEqual(2, Image.find().count())
+
+    @moto_reduce_upload_part_min_size
+    @moto.mock_s3
+    def testUploadDatasetS3Chunked(self):
+        Assetstore = self.model('assetstore')
+        Image = self.model('image', 'isic_archive')
+        Setting = self.model('setting')
+
+        # Create user
+        user = self._createUploaderUser()
+
+        # Create an S3 bucket to use with the assetstore
+        botoParams = makeBotoConnectParams('access', 'secret')
+        mock_s3.createBucket(botoParams, 'zip-uploads')
+
+        # Create an S3 assetstore
+        assetstore = Assetstore.createS3Assetstore(
+            name='test', bucket='zip-uploads', accessKeyId='access', secret='secret', prefix='test')
+
+        # Configure the ZIP upload S3 assetstore
+        Setting.set('isic.zip_upload_s3_assetstore_id', assetstore['_id'])
+
+        # Create a ZIP file of images
+        zipName = 'test_zip_1'
+        zipStream, zipSize = self._createZipFile(
+            zipName=zipName, zipContentNames=['test_1_small_1.jpg', 'test_1_small_2.jpg'])
+
+        # Set assetstore adapter chunk length so that 2 chunks are required for this file
+        chunkLength = (zipSize + 1) // 2
+        S3AssetstoreAdapter.CHUNK_LEN = chunkLength
+
+        # Create a dataset
+        datasetName = 'test_dataset_1'
+        resp = self.request(
+            path='/dataset', method='POST', user=user, params={
+                'name': datasetName,
+                'description': 'A public test dataset',
+                'license': 'CC-0',
+                'attribution': 'Test Organization',
+                'owner': 'Test Organization'
+            })
+        self.assertStatusOk(resp)
+        dataset = resp.json
+
+        # Start a new upload of the ZIP file
+        # https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingRESTAPImpUpload.html
+        resp = self.request(
+            path='/dataset/%s/zip' % dataset['_id'], method='POST', user=user, params={
+                'name': zipName,
+                'size': zipSize
+            })
+        self.assertStatusOk(resp)
+        upload = resp.json
+        self.assertIn('s3', upload)
+        self.assertHasKeys(upload['s3'], ['chunked', 'chunkLength', 'request'])
+        self.assertTrue(upload['s3']['chunked'])
+        self.assertEqual(chunkLength, upload['s3']['chunkLength'])
+        s3Request = upload['s3']['request']
+        self.assertHasKeys(s3Request, ['method', 'url', 'headers'])
+
+        # Initialize direct upload to S3 using request information from server
+        # https://docs.aws.amazon.com/AmazonS3/latest/API/mpUploadInitiate.html
+        resp = requests.request(
+            s3Request['method'], headers=s3Request['headers'], url=s3Request['url'])
+        resp.raise_for_status()
+
+        # Parse upload ID from S3 response
+        searchResult = re.search(r'<UploadId>(.+)<\/UploadId>', resp.content)
+        self.assertIsNotNone(searchResult)
+        s3UploadId = searchResult.group(1)
+
+        eTags = []
+        contentLength = chunkLength
+
+        # Get S3 request information from server
+        resp = self.request(
+            path='/dataset/%s/zip/%s/part' % (dataset['_id'], upload['_id']), method='POST',
+            user=user, params={
+                's3UploadId': s3UploadId,
+                'partNumber': 1,
+                'contentLength': contentLength
+            })
+        self.assertStatusOk(resp)
+        upload = resp.json
+        self.assertIn('s3', upload)
+        self.assertIn('chunked', upload['s3'])
+        self.assertTrue(upload['s3']['chunked'])
+        self.assertIn('request', upload['s3'])
+        s3Request = upload['s3']['request']
+        self.assertHasKeys(s3Request, ['method', 'url', 'headers'])
+
+        # Upload part directly to S3 using request information from server
+        # https://docs.aws.amazon.com/AmazonS3/latest/API/mpUploadUploadPart.html
+        part = zipStream.read(contentLength)
+        s3Request['headers'].update({
+            'Content-Length': str(contentLength),
+            'Content-MD5': self._base64MD5(part)
+        })
+        resp = requests.request(
+            s3Request['method'], headers=s3Request['headers'], url=s3Request['url'], data=part)
+        resp.raise_for_status()
+        self.assertIn('ETag', resp.headers)
+
+        # Store entity tag
+        eTags.append(resp.headers['ETag'])
+
+        contentLength = zipSize - chunkLength
+
+        # Check that this is the last chunk
+        self.assertLessEqual(contentLength, chunkLength)
+
+        # Get S3 request information from server
+        resp = self.request(
+            path='/dataset/%s/zip/%s/part' % (dataset['_id'], upload['_id']), method='POST',
+            user=user, params={
+                's3UploadId': s3UploadId,
+                'partNumber': 2,
+                'contentLength': contentLength
+            })
+        self.assertStatusOk(resp)
+        upload = resp.json
+        self.assertIn('s3', upload)
+        self.assertHasKeys(upload['s3'], ['chunked', 'chunkLength', 'request'])
+        self.assertTrue(upload['s3']['chunked'])
+        self.assertEqual(chunkLength, upload['s3']['chunkLength'])
+        s3Request = upload['s3']['request']
+        self.assertHasKeys(s3Request, ['method', 'url', 'headers'])
+
+        # Upload next part to S3
+        part = zipStream.read(contentLength)
+        s3Request['headers'].update({
+            'Content-Length': str(contentLength),
+            'Content-MD5': self._base64MD5(part)
+        })
+        resp = requests.request(
+            s3Request['method'], headers=s3Request['headers'], url=s3Request['url'], data=part)
+        resp.raise_for_status()
+        self.assertIn('ETag', resp.headers)
+
+        # Store entity tag
+        eTags.append(resp.headers['ETag'])
+
+        # Finalize upload and get S3 request information from server
+        resp = self.request(
+            path='/dataset/%s/zip/%s/completion' % (dataset['_id'], upload['_id']), method='POST',
+            user=user)
+        self.assertStatusOk(resp)
+        zipFile = resp.json
+        self.assertEqual('file', zipFile['_modelType'])
+        self.assertIn('itemId', zipFile)
+        self.assertEqual(zipName, zipFile['name'])
+        self.assertEqual(zipSize, zipFile['size'])
+        self.assertIn('s3', zipFile)
+        self.assertIn('request', zipFile['s3'])
+        s3Request = zipFile['s3']['request']
+        self.assertHasKeys(s3Request, ['method', 'url', 'headers'])
+
+        # Complete S3 multipart upload using request information from server
+        # and data from previous S3 responses
+        # https://docs.aws.amazon.com/AmazonS3/latest/API/mpUploadComplete.html
+
+        # Generate S3 completion request content XML string:
+        #     <CompleteMultipartUpload>
+        #     <Part>
+        #         <PartNumber>PartNumber</PartNumber>
+        #         <ETag>ETag</ETag>
+        #     </Part>
+        #     ...
+        #     </CompleteMultipartUpload>
+        rootElement = ElementTree.Element('CompleteMultipartUpload')
+        for partNumber, eTag in enumerate(eTags, 1):
+            partElement = ElementTree.SubElement(rootElement, 'Part')
+            partNumberElement = ElementTree.SubElement(partElement, 'PartNumber')
+            partNumberElement.text = str(partNumber)
+            eTagElement = ElementTree.SubElement(partElement, 'ETag')
+            eTagElement.text = eTag
+
+        # Convert ElementTree to string, removing <xml></xml> header
+        data = ElementTree.tostring(rootElement, encoding='UTF-8')
+        matchResult = re.match(r'<\?xml.*\?>\n?(.*)', data)
+        self.assertIsNotNone(matchResult)
+        data = matchResult.group(1)
+
+        # Send S3 completion request
+        s3Request['headers'].update({
+            'Content-Length': str(len(data)),
+            'Content-MD5': self._base64MD5(data)
+        })
+        resp = requests.request(
+            s3Request['method'], headers=s3Request['headers'], url=s3Request['url'], data=data)
+        resp.raise_for_status()
+
+        # Add the images in the ZIP file to the dataset
+        self.assertEqual(0, Image.find().count())
+        resp = self.request(
+            path='/dataset/%s/imageZip' % dataset['_id'], method='POST', user=user,
+            params={
+                'zipFileId': zipFile['_id'],
+                'signature': 'Test Uploader'
+            })
+        self.assertStatusOk(resp)
+        self.assertEqual(2, Image.find().count())

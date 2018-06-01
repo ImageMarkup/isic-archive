@@ -17,13 +17,16 @@
 #  limitations under the License.
 ###############################################################################
 
+from girder.constants import AssetstoreType
 from girder.exceptions import ValidationException
+from girder.models.assetstore import Assetstore
 from girder.utility import setting_utilities
 
 
 class PluginSettings(object):
     DEMO_MODE = 'isic.demo_mode'
     MAX_ISIC_ID = 'isic.max_isic_id'
+    ZIP_UPLOAD_S3_ASSETSTORE_ID = 'isic.zip_upload_s3_assetstore_id'
 
 
 @setting_utilities.validator(PluginSettings.DEMO_MODE)
@@ -47,3 +50,22 @@ def _validateMaxIsicIdSetting(doc):
 @setting_utilities.default(PluginSettings.MAX_ISIC_ID)
 def _defaultMaxIsicIdSetting():
     return -1
+
+
+@setting_utilities.validator(PluginSettings.ZIP_UPLOAD_S3_ASSETSTORE_ID)
+def _validateZipUploadS3AssetstoreId(doc):
+    # Allow clearing setting
+    if not doc['value']:
+        return
+
+    # Require S3 assetstore
+    assetstore = Assetstore().load(doc['value'], exc=False)
+    if assetstore is None:
+        raise ValidationException('Invalid assetstore ID.', 'value')
+    if assetstore['type'] != AssetstoreType.S3:
+        raise ValidationException('ZIP upload assetstore must be an S3 assetstore.', 'value')
+
+
+@setting_utilities.default(PluginSettings.ZIP_UPLOAD_S3_ASSETSTORE_ID)
+def _defaultZipUploadS3AssetstoreId():
+    return None
