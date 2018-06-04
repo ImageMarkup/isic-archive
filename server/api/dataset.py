@@ -425,8 +425,9 @@ class DatasetResource(IsicResource):
         .param('metadataFileId', 'The ID of the .csv metadata file.', paramType='path')
     )
     @access.admin
-    @loadmodel(model='file', map={'metadataFileId': 'metadataFile'}, force=True)
-    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.ADMIN)
+    # File is attached to dataset, so access level refers to permission on dataset
+    @loadmodel(model='file', map={'metadataFileId': 'metadataFile'}, level=AccessType.SITE_ADMIN)
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.SITE_ADMIN)
     def removeMetadata(self, dataset, metadataFile, params):
         self._requireMetadataFile(dataset, metadataFile)
         Dataset().removeMetadata(dataset=dataset, metadataFile=metadataFile)
@@ -441,8 +442,8 @@ class DatasetResource(IsicResource):
     )
     @access.cookie
     @access.public(scope=TokenScope.DATA_READ)
-    @loadmodel(model='file', map={'metadataFileId': 'metadataFile'}, level=AccessType.READ,
-               exc=False)
+    # File is attached to dataset, so access level refers to permission on dataset
+    @loadmodel(model='file', map={'metadataFileId': 'metadataFile'}, level=AccessType.WRITE)
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
     def downloadMetadata(self, dataset, metadataFile, params):
         user = self.getCurrentUser()
@@ -459,7 +460,8 @@ class DatasetResource(IsicResource):
                dataType='boolean', default=False, paramType='form')
     )
     @access.user
-    @loadmodel(model='file', map={'metadataFileId': 'metadataFile'}, force=True)
+    # File is attached to dataset, so access level refers to permission on dataset
+    @loadmodel(model='file', map={'metadataFileId': 'metadataFile'}, level=AccessType.ADMIN)
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.ADMIN)
     def applyMetadata(self, dataset, metadataFile, params):
         params = self._decodeParams(params)
