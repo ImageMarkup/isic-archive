@@ -17,6 +17,7 @@
 #  limitations under the License.
 ###############################################################################
 
+import base64
 import datetime
 import hashlib
 import json
@@ -210,7 +211,7 @@ class UploadTestCase(IsicTestCase):
         """Return Base64-encoded MD5 digest of the data."""
         md5 = hashlib.md5()
         md5.update(data)
-        return md5.digest().encode('base64')
+        return base64.b64encode(md5.digest())
 
     def testUploadDataset(self):
         File = self.model('file')
