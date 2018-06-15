@@ -511,25 +511,11 @@ class DatasetResource(IsicResource):
 
         file = Upload().finalizeUpload(upload)
 
-        # For consistency with other upload endpoints, move S3 completion request information
-        # to the s3.request field. Delay adding the field until after the document is saved below.
-        s3Request = None
-        additionalKeys = file.get('additionalFinalizeKeys', [])
-        if 's3FinalizeRequest' in additionalKeys:
-            s3Request = file['s3FinalizeRequest']
-            del file['s3FinalizeRequest']
-            # Update additionalKeys, assuming it might be a list, tuple, or set
-            additionalKeys = list(additionalKeys)
-            index = additionalKeys.index('s3FinalizeRequest')
-            additionalKeys[index] = 's3'
-
         # TODO: remove this once a bug in upstream Girder is fixed
         file['attachedToType'] = ['dataset', 'isic_archive']
         file = File().save(file)
 
-        if s3Request is not None:
-            file.setdefault('s3', {})['request'] = s3Request
-
+        additionalKeys = file.get('additionalFinalizeKeys', [])
         return File().filter(file, user=user, additionalKeys=additionalKeys)
 
     @describeRoute(
