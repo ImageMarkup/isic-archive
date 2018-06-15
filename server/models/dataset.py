@@ -20,19 +20,21 @@
 import datetime
 import itertools
 import os
+import tempfile
 
 import six
 from natsort import natsorted
 
 from girder.constants import AccessType
-from girder.exceptions import GirderException, ValidationException
+from girder.exceptions import FilePathException, GirderException, ValidationException
+from girder.models.assetstore import Assetstore
 from girder.models.collection import Collection
 from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.group import Group
 from girder.models.model_base import AccessControlledModel
 from girder.models.notification import ProgressState
-from girder.utility import mail_utils
+from girder.utility import assetstore_utilities, mail_utils
 from girder.utility.progress import ProgressContext
 from backports import csv
 
@@ -347,32 +349,51 @@ class Dataset(AccessControlledModel):
         # Avoid circular import
         from .image import Image
 
-        zipFileLocalPath = File().getLocalFilePath(zipFile)
-        with ZipFileOpener(zipFileLocalPath) as (fileList, fileCount):
-            with ProgressContext(
-                    on=True,
-                    user=user,
-                    title='Processing "%s"' % zipFile['name'],
-                    total=fileCount,
-                    state=ProgressState.ACTIVE,
-                    current=0) as progress:
-                for originalFilePath, originalFileRelpath in fileList:
-                    originalFileName = os.path.basename(originalFileRelpath)
+        removeZipFile = False
 
-                    progress.update(
-                        increment=1,
-                        message='Extracting "%s"' % originalFileName)
+        try:
+            zipFileLocalPath = File().getLocalFilePath(zipFile)
+        except FilePathException:
+            # Assetstore containing ZIP file doesn't provide file paths;
+            # download to temporary file
+            assetstore = Assetstore().getCurrent()
+            assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(assetstore)
+            zipFileStream = File().download(zipFile, headers=False)()
+            with tempfile.NamedTemporaryFile(dir=assetstoreAdapter.tempDir, delete=False) as f:
+                for chunk in zipFileStream:
+                    f.write(chunk)
+            zipFileLocalPath = f.name
+            removeZipFile = True
 
-                    with open(originalFilePath, 'rb') as originalFileStream:
-                        Image().createImage(
-                            imageDataStream=originalFileStream,
-                            imageDataSize=os.path.getsize(originalFilePath),
-                            originalName=originalFileName,
-                            parentFolder=prereviewFolder,
-                            creator=user,
-                            dataset=dataset,
-                            batch=batch
-                        )
+        try:
+            with ZipFileOpener(zipFileLocalPath) as (fileList, fileCount):
+                with ProgressContext(
+                        on=True,
+                        user=user,
+                        title='Processing "%s"' % zipFile['name'],
+                        total=fileCount,
+                        state=ProgressState.ACTIVE,
+                        current=0) as progress:
+                    for originalFilePath, originalFileRelpath in fileList:
+                        originalFileName = os.path.basename(originalFileRelpath)
+
+                        progress.update(
+                            increment=1,
+                            message='Extracting "%s"' % originalFileName)
+
+                        with open(originalFilePath, 'rb') as originalFileStream:
+                            Image().createImage(
+                                imageDataStream=originalFileStream,
+                                imageDataSize=os.path.getsize(originalFilePath),
+                                originalName=originalFileName,
+                                parentFolder=prereviewFolder,
+                                creator=user,
+                                dataset=dataset,
+                                batch=batch
+                            )
+        finally:
+            if removeZipFile:
+                os.remove(zipFileLocalPath)
 
     def imagesFolder(self, dataset):
         return Folder().load(dataset['folderId'], force=True, exc=True)

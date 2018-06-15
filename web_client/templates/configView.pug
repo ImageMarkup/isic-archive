@@ -4,5 +4,9 @@ form#isic-config-form
     label.control-label(for="isic-config-demo-mode") Demo Mode
     p Newly registered users will automatically have full access to all phases.
     input#isic-config-demo-mode.input-sm.form-control(type="checkbox")
+  .form-group
+    label.control-label(for="isic-config-zip-upload-s3-assetstore-id") ZIP Upload S3 Assetstore ID
+    input#isic-config-zip-upload-s3-assetstore-id.input-sm.form-control(
+      type="text", placeholder="Enter S3 assetstore ID")
   p#isic-config-error-message.g-validation-failed-message
   input.btn.btn-sm.btn-primary(type="submit", value="Save")

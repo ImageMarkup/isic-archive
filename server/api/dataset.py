@@ -18,6 +18,7 @@
 ###############################################################################
 
 import cherrypy
+import json
 import mimetypes
 
 from girder.api import access
@@ -25,13 +26,17 @@ from girder.api.rest import RestException, loadmodel
 from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 from girder.exceptions import AccessException, ValidationException
+from girder.models.assetstore import Assetstore
 from girder.models.file import File
+from girder.models.setting import Setting
+from girder.models.upload import Upload
 from girder.utility import RequestBodyStream
 
 from .base import IsicResource
 from ..models.dataset import Dataset
 from ..models.image import Image
 from ..models.user import User
+from ..settings import PluginSettings
 
 CSV_FORMATS = [
     'text/csv',
@@ -57,7 +62,11 @@ class DatasetResource(IsicResource):
         self.route('PUT', (':id', 'access'), self.setDatasetAccess)
         self.route('POST', (), self.createDataset)
         self.route('POST', (':id', 'image'), self.addImage)
-        self.route('POST', (':id', 'zip'), self.addZipBatch)
+        self.route('POST', (':id', 'imageZip'), self.addImageZip)
+        self.route('POST', (':id', 'zip'), self.initZipUpload)
+        self.route('POST', (':id', 'zip', ':zipUploadId', 'part'), self.addZipUploadPart)
+        self.route('POST', (':id', 'zip', ':zipUploadId', 'completion'), self.finalizeZipUpload)
+        self.route('DELETE', (':id', 'zip', ':zipUploadId'), self.cancelZipUpload)
         self.route('GET', (':id', 'review'), self.getReviewImages)
         self.route('POST', (':id', 'review'), self.submitReviewImages)
         self.route('GET', (':id', 'metadata'), self.getRegisteredMetadata)
@@ -252,14 +261,14 @@ class DatasetResource(IsicResource):
         return Image().filter(image, user=user)
 
     @describeRoute(
-        Description('Upload a batch of ZIP images to a dataset.')
+        Description('Add images from a ZIP file to a dataset.')
         .param('id', 'The ID of the dataset.', paramType='path')
         .param('zipFileId', 'The ID of the .zip file of images.', paramType='form')
         .param('signature', 'Signature of license agreement.', paramType='form')
     )
     @access.user
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
-    def addZipBatch(self, dataset, params):
+    def addImageZip(self, dataset, params):
         params = self._decodeParams(params)
         self.requireParams(['zipFileId', 'signature'], params)
 
@@ -282,6 +291,253 @@ class DatasetResource(IsicResource):
         # TODO: make this return something
         Dataset().addZipBatch(
             dataset=dataset, zipFile=zipFile, signature=signature, user=user, sendMail=True)
+
+    @describeRoute(
+        Description('Start a new direct-to-S3 upload of a ZIP file of images.')
+        .notes('This endpoint returns information for the client to make a subsequent HTTP '
+               'request to S3 either to upload the file--if the file is less than 32 MB in '
+               'size--or to initiate a multi-part upload. For details on the S3 upload '
+               'workflow, see the AWS S3 documentation: '
+               'https://docs.aws.amazon.com/AmazonS3/latest/dev/UploadingObjects.html'
+               '\n\n'
+               'More specifically, this endpoint returns a JSON response in which the '
+               '`_id` field contains the ZIP file upload ID to use in subsequent requests '
+               'and in which the `s3` field contains the S3 request information. The client '
+               'should use the value of `s3.chunked` (boolean) to determine which upload '
+               'method to use.'
+               '\n\n'
+               '#### Single-part upload\n'
+               'When `s3.chunked` is false, the client should make an HTTP request with the '
+               'following properties to upload the file:\n\n'
+               '|             |                                                     |\n'
+               '|-------------|-----------------------------------------------------|\n'
+               '| **Method**  | `s3.request.method`                                 |\n'
+               '| **URL**     | `s3.request.url`                                    |\n'
+               '| **Headers** | One for each key-value pair in `s3.request.headers` |\n'
+               '|             | `Content-Length`: &lt;file size, in bytes&gt;       |\n'
+               '|             | `Content-MD5`: base64-encoded MD5 digest of data    |\n'
+               '| **Data**    | File content                                        |\n'
+               '|             |                                                     |\n'
+               '\n\n'
+               'This S3 request is documented at '
+               'https://docs.aws.amazon.com/AmazonS3/latest/dev/UploadObjSingleOpREST.html.'
+               '\n\n'
+               'To finalize the upload, the client should call '
+               '`POST /dataset/{id}/zip/{zipUploadId}/completion`.'
+               '\n\n'
+               '#### Multi-part upload\n'
+               'When `s3.chunked` is true, `s3.chunkLength` contains the size of each part '
+               'to be uploaded, and the client should make an HTTP request with the following '
+               'properties to initiate the multi-part upload:\n\n'
+               '|             |                                                     |\n'
+               '|-------------|-----------------------------------------------------|\n'
+               '| **Method**  | `s3.request.method`                                 |\n'
+               '| **URL**     | `s3.request.url`                                    |\n'
+               '| **Headers** | One for each key-value pair in `s3.request.headers` |\n'
+               '|             |                                                     |\n'
+               '\n\n'
+               'This request returns an XML document. The client should parse the XML to '
+               'get the multi-part upload ID. The XPath expression for the ID is '
+               '`/InitiateMultipartUploadResult/UploadId`.'
+               '\n\n'
+               'This S3 request is documented at '
+               'https://docs.aws.amazon.com/AmazonS3/latest/API/mpUploadInitiate.html.'
+               '\n\n'
+               'To continue the upload, the client should call '
+               '`POST /dataset/{id}/zip/{zipUploadId}/part`.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('name', 'The name of the ZIP file.', paramType='form')
+        .param('size', 'The size of the ZIP file, in bytes.', paramType='form', dataType='integer')
+    )
+    @access.user
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
+    def initZipUpload(self, dataset, params):
+        params = self._decodeParams(params)
+        self.requireParams(['name', 'size'], params)
+
+        user = self.getCurrentUser()
+        User().requireCreateDataset(user)
+
+        # Require file name
+        name = params['name'].strip()
+        if not name:
+            raise ValidationException('File name must be specified.', 'name')
+
+        # Require integer size
+        try:
+            size = int(params['size'])
+        except ValueError:
+            raise RestException('Invalid file size.')
+
+        # Require positive size
+        if size <= 0:
+            raise ValidationException('File size must be greater than zero.', 'size')
+
+        # Create upload in the configured ZIP upload S3 assetstore
+        assetstore = Assetstore().findOne(
+            {'_id': Setting().get(PluginSettings.ZIP_UPLOAD_S3_ASSETSTORE_ID)})
+        if not assetstore:
+            raise RestException('ZIP upload S3 assetstore not configured.')
+
+        upload = Upload().createUpload(
+            user=user, name=name, parentType='dataset', parent=dataset, size=size,
+            mimeType='application/zip', assetstore=assetstore, attachParent=True)
+
+        return upload
+
+    @describeRoute(
+        Description('Upload a part of a ZIP file of images in a multi-part direct-to-S3 upload.')
+        .notes('After the client initiates a multi-part upload of a ZIP file of images, '
+               'this endpoint returns information for the client to make a subsequent HTTP '
+               'request to upload a part of the file directly to S3.'
+               '\n\n'
+               'More specifically, this endpoint returns a JSON response in which the `s3` field '
+               'contains the S3 request information. The client should make an HTTP request with '
+               'the following properties to update a part of the file:\n\n'
+               '|             |                                                     |\n'
+               '|-------------|-----------------------------------------------------|\n'
+               '| **Method**  | `s3.request.method`                                 |\n'
+               '| **URL**     | `s3.request.url`                                    |\n'
+               '| **Headers** | One for each key-value pair in `s3.request.headers` |\n'
+               '|             | `Content-Length`: &lt;part size, in bytes&gt;       |\n'
+               '|             | `Content-MD5`: base64-encoded MD5 digest of data    |\n'
+               '| **Data**    | Part content                                        |\n'
+               '|             |                                                     |\n'
+               '\n\n'
+               'This response to this request includes an `ETag` header. The client should parse '
+               'this header and store its value along with the associated part number. The '
+               'client will use these values later, when finalizing the upload.'
+               '\n\n'
+               'This S3 request is documented at '
+               'https://docs.aws.amazon.com/AmazonS3/latest/API/mpUploadUploadPart.html.'
+               '\n\n'
+               'After uploading all the parts of the file, the client should call '
+               '`POST /dataset/{id}/zip/{zipUploadId}/completion` to finalize the upload.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('zipUploadId', 'The ID of the ZIP file upload.', paramType='path')
+        .param('s3UploadId', 'S3 upload ID.', paramType='form')
+        .param('partNumber', 'Part number, starting at 1.', paramType='form', dataType='integer')
+        .param('contentLength', 'The size of the part, in bytes.', paramType='form',
+               dataType='integer')
+    )
+    @access.user
+    @loadmodel(map={'zipUploadId': 'upload'}, model='upload')
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
+    def addZipUploadPart(self, dataset, upload, params):
+        params = self._decodeParams(params)
+        self.requireParams(['s3UploadId', 'partNumber', 'contentLength'], params)
+
+        user = self.getCurrentUser()
+        User().requireCreateDataset(user)
+
+        if upload['userId'] != user['_id']:
+            raise AccessException('You did not initiate this upload.')
+
+        try:
+            partNumber = int(params['partNumber'])
+        except ValueError:
+            raise RestException('Invalid part number.')
+
+        try:
+            contentLength = int(params['contentLength'])
+        except ValueError:
+            raise RestException('Invalid content length.')
+
+        # For direct-to-S3 upload, S3AssetstoreAdapter expects its 'chunk' argument to be
+        # a string representation of the JSON object with keys: 's3UploadId', 'parentNumber',
+        # and 'contentLength'.
+        strParams = json.dumps({
+            's3UploadId': params['s3UploadId'],
+            'partNumber': partNumber,
+            'contentLength': contentLength
+        })
+        upload = Upload().handleChunk(upload, chunk=strParams, filter=False, user=user)
+
+        # Ensure 's3.request.headers' field exists
+        upload['s3']['request'].setdefault('headers', {})
+
+        return upload
+
+    @describeRoute(
+        Description('Finalize a direct-to-S3 upload of a ZIP file of images.')
+        .notes('The client should call this endpoint once all the parts of the ZIP file are '
+               'uploaded to S3.'
+               '\n\n'
+               'This endpoint returns a JSON response in which the `_id` field contains the '
+               'ZIP file ID to use in subsequent requests, such as '
+               '`POST /dataset/{id}/imageZip`.'
+               '\n\n'
+               '#### Single-part upload\n'
+               'For a single-part upload, no further requests are necessary.'
+               '\n\n'
+               '#### Multi-part upload\n'
+               '\n\n'
+               'For a multi-part upload, this endpoint additionally returns an '
+               '`s3` field that contains information to make an S3 request to complete the '
+               'upload by assembling the parts. The client should make an HTTP request with '
+               'the following properties to complete the upload:\n\n'
+               '|             |                                                            |\n'
+               '|-------------|------------------------------------------------------------|\n'
+               '| **Method**  | `s3.request.method`                                        |\n'
+               '| **URL**     | `s3.request.url`                                           |\n'
+               '| **Headers** | One for each key-value pair in `s3.request.headers`        |\n'
+               '|             | `Content-Length`: &lt;data size, in bytes&gt;              |\n'
+               '|             | `Content-MD5`: base64-encoded MD5 digest of data           |\n'
+               '| **Data**    | (See below)                                                |\n'
+               '|             |                                                            |\n'
+               '\n\n'
+               'The data for this request is an XML string with root element '
+               '`CompleteMultipartUpload`, and child `Part` elements, one for '
+               'each uploaded part. Each `Part` element has two children: '
+               '`PartNumber` and `ETag`. `PartNumber` elements should contain '
+               'an integer that indicates the position of the part in the file, '
+               'starting at 1. `ETag` elements should contain the ETag returned '
+               'after uploading the part to S3.'
+               '\n\n'
+               'This S3 request is documented at '
+               'https://docs.aws.amazon.com/AmazonS3/latest/API/mpUploadComplete.html.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('zipUploadId', 'The ID of the ZIP file upload.', paramType='path')
+    )
+    @access.user
+    @loadmodel(map={'zipUploadId': 'upload'}, model='upload')
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
+    def finalizeZipUpload(self, dataset, upload, params):
+        user = self.getCurrentUser()
+        User().requireCreateDataset(user)
+
+        if upload['userId'] != user['_id']:
+            raise AccessException('You did not initiate this upload.')
+
+        file = Upload().finalizeUpload(upload)
+
+        # TODO: remove this once a bug in upstream Girder is fixed
+        file['attachedToType'] = ['dataset', 'isic_archive']
+        file = File().save(file)
+
+        additionalKeys = file.get('additionalFinalizeKeys', [])
+        return File().filter(file, user=user, additionalKeys=additionalKeys)
+
+    @describeRoute(
+        Description('Cancel a partially completed direct-to-S3 upload of a ZIP file of images.')
+        .notes('The client should call this endpoint to cancel a ZIP file upload before '
+               'finalizing it. This deletes the uploaded parts from S3 and removes the '
+               'ZIP file upload from the server.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('zipUploadId', 'The ID of the ZIP file upload.', paramType='path')
+    )
+    @access.user
+    @loadmodel(map={'zipUploadId': 'upload'}, model='upload')
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
+    def cancelZipUpload(self, dataset, upload, params):
+        user = self.getCurrentUser()
+        User().requireCreateDataset(user)
+
+        if upload['userId'] != user['_id'] and not user['admin']:
+            raise AccessException('You did not initiate this upload.')
+
+        Upload().cancelUpload(upload)
+        return {'message': 'Upload canceled.'}
 
     @describeRoute(
         Description('Get a list of images in this dataset to QC Review.')
