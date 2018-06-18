@@ -149,8 +149,7 @@ const ApplyMetadataView = View.extend({
     events: {
         'click #isic-apply-metadata-download-button': function () {
             // Download selected metadata file
-            let fileModel = new FileModel({_id: this.file.id});
-            fileModel.download();
+            this.dataset.downloadMetadata(this.file.id);
         },
 
         'click #isic-apply-metadata-validate-button': function () {

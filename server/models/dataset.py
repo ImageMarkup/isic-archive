@@ -32,6 +32,7 @@ from girder.models.folder import Folder
 from girder.models.group import Group
 from girder.models.model_base import AccessControlledModel
 from girder.models.notification import ProgressState
+from girder.models.upload import Upload
 from girder.utility import mail_utils
 from girder.utility.progress import ProgressContext
 from backports import csv
@@ -440,12 +441,22 @@ class Dataset(AccessControlledModel):
                 Folder().countFolders(prereviewFolder)) == 0:
             Folder().remove(prereviewFolder)
 
-    def registerMetadata(self, dataset, metadataFile, user, sendMail=False):
-        """Register a .csv file containing metadata about images."""
-        # Check if image metadata is already registered
-        if self.findOne({'metadataFiles.fileId': metadataFile['_id']}):
-            raise ValidationException(
-                'Metadata file is already registered on a dataset.')
+    def registerMetadata(self, dataset, metadataDataStream, filename, user, sendMail=False):
+        """Register CSV data containing metadata about images."""
+        # Store metadata data in a .csv file attached to the dataset
+        metadataFile = Upload().uploadFromFile(
+            obj=metadataDataStream,
+            size=len(metadataDataStream),
+            name=filename,
+            parentType='dataset',
+            parent=dataset,
+            attachParent=True,
+            user=user,
+            mimeType='text/csv'
+        )
+        # TODO: remove this once a bug in upstream Girder is fixed
+        metadataFile['attachedToType'] = ['dataset', 'isic_archive']
+        metadataFile = File().save(metadataFile)
 
         # Add image metadata file information to list
         now = datetime.datetime.utcnow()
@@ -471,6 +482,21 @@ class Dataset(AccessControlledModel):
                 },
                 subject='ISIC Archive: Dataset Metadata Notification')
 
+        return dataset
+
+    def removeMetadata(self, dataset, metadataFile):
+        # Remove metadata file registration from database
+        self.update(
+            {'_id': dataset['_id']},
+            {'$pull': {'metadataFiles': {'fileId': metadataFile['_id']}}}
+        )
+
+        # Remove file
+        File().remove(metadataFile)
+
+        # Update document in-place
+        dataset['metadataFiles'][:] = [registration for registration in dataset['metadataFiles']
+                                       if registration['fileId'] != metadataFile['_id']]
         return dataset
 
     def applyMetadata(self, dataset, metadataFile, save):

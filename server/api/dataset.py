@@ -23,7 +23,7 @@ import mimetypes
 from girder.api import access
 from girder.api.rest import RestException, loadmodel
 from girder.api.describe import Description, describeRoute
-from girder.constants import AccessType, SortDir
+from girder.constants import AccessType, SortDir, TokenScope
 from girder.exceptions import AccessException, ValidationException
 from girder.models.file import File
 from girder.utility import RequestBodyStream
@@ -62,7 +62,9 @@ class DatasetResource(IsicResource):
         self.route('POST', (':id', 'review'), self.submitReviewImages)
         self.route('GET', (':id', 'metadata'), self.getRegisteredMetadata)
         self.route('POST', (':id', 'metadata'), self.registerMetadata)
-        self.route('POST', (':id', 'metadata', ':fileId'), self.applyMetadata)
+        self.route('DELETE', (':id', 'metadata', ':metadataFileId'), self.removeMetadata)
+        self.route('GET', (':id', 'metadata', ':metadataFileId', 'download'), self.downloadMetadata)
+        self.route('POST', (':id', 'metadata', ':metadataFileId', 'apply'), self.applyMetadata)
 
     @describeRoute(
         Description('Return a list of lesion image datasets.')
@@ -376,25 +378,29 @@ class DatasetResource(IsicResource):
 
     @describeRoute(
         Description('Register metadata with a dataset.')
+        .notes('Send the CSV metadata data in the request body with '
+               'the `Content-Type` header set to `text/csv`.')
         .param('id', 'The ID of the dataset.', paramType='path')
-        .param('metadataFileId', 'The ID of the .csv metadata file.', paramType='form')
+        .param('filename', 'The metadata filename.', paramType='query')
     )
     @access.user
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
     def registerMetadata(self, dataset, params):
         params = self._decodeParams(params)
-        self.requireParams(['metadataFileId'], params)
+        self.requireParams(['filename'], params)
         user = self.getCurrentUser()
 
-        metadataFile = File().load(
-            params['metadataFileId'], user=user, level=AccessType.WRITE, exc=False)
-        if not metadataFile:
-            raise ValidationException('Invalid metadata file ID.', 'metadataFileId')
-        if not self._checkFileFormat(metadataFile, CSV_FORMATS):
-            raise ValidationException('File must be in .csv format.', 'metadataFileId')
+        filename = params['filename'].strip()
+        if not filename:
+            raise ValidationException('Filename must be specified.', 'filename')
+
+        metadataDataStream = RequestBodyStream(cherrypy.request.body)
+        if not len(metadataDataStream):
+            raise RestException('No data provided in request body.')
 
         Dataset().registerMetadata(
-            dataset=dataset, user=user, metadataFile=metadataFile, sendMail=True)
+            dataset=dataset, user=user, metadataDataStream=metadataDataStream, filename=filename,
+            sendMail=True)
         # TODO: return value?
         return {'status': 'success'}
 
@@ -414,15 +420,49 @@ class DatasetResource(IsicResource):
         return False
 
     @describeRoute(
+        Description('Delete metadata registered with a dataset.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('metadataFileId', 'The ID of the .csv metadata file.', paramType='path')
+    )
+    @access.admin
+    # File is attached to dataset, so access level refers to permission on dataset
+    @loadmodel(model='file', map={'metadataFileId': 'metadataFile'}, level=AccessType.SITE_ADMIN)
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.SITE_ADMIN)
+    def removeMetadata(self, dataset, metadataFile, params):
+        self._requireMetadataFile(dataset, metadataFile)
+        Dataset().removeMetadata(dataset=dataset, metadataFile=metadataFile)
+
+        # No Content
+        cherrypy.response.status = 204
+
+    @describeRoute(
+        Description('Download metadata registered with dataset.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('metadataFileId', 'The ID of the .csv metadata file.', paramType='path')
+    )
+    @access.cookie
+    @access.public(scope=TokenScope.DATA_READ)
+    # File is attached to dataset, so access level refers to permission on dataset
+    @loadmodel(model='file', map={'metadataFileId': 'metadataFile'}, level=AccessType.WRITE)
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
+    def downloadMetadata(self, dataset, metadataFile, params):
+        user = self.getCurrentUser()
+        User().requireReviewDataset(user)
+
+        self._requireMetadataFile(dataset, metadataFile)
+        return File().download(metadataFile)
+
+    @describeRoute(
         Description('Apply registered metadata to a dataset.')
         .param('id', 'The ID of the dataset.', paramType='path')
-        .param('fileId', 'The ID of the .csv metadata file.', paramType='path')
+        .param('metadataFileId', 'The ID of the .csv metadata file.', paramType='path')
         .param('save', 'Whether to save the metadata to the dataset if validation succeeds.',
                dataType='boolean', default=False, paramType='form')
     )
     @access.user
-    @loadmodel(model='file', map={'fileId': 'metadataFile'}, force=True)
-    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
+    # File is attached to dataset, so access level refers to permission on dataset
+    @loadmodel(model='file', map={'metadataFileId': 'metadataFile'}, level=AccessType.ADMIN)
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.ADMIN)
     def applyMetadata(self, dataset, metadataFile, params):
         params = self._decodeParams(params)
         self.requireParams('save', params)
@@ -434,3 +474,9 @@ class DatasetResource(IsicResource):
             'errors': [{'description': description} for description in errors],
             'warnings': [{'description': description} for description in warnings]
         }
+
+    def _requireMetadataFile(self, dataset, metadataFile):
+        """Raise a ValidationException if the metadata file is not registered with the dataset."""
+        if metadataFile is None or not any(registration['fileId'] == metadataFile['_id']
+                                           for registration in dataset['metadataFiles']):
+            raise ValidationException('Metadata file ID is not registered.', 'metadataFileId')
