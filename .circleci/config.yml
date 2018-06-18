@@ -7,7 +7,7 @@ jobs:
     working_directory: /home/circleci/project # as $CIRCLE_WORKING_DIRECTORY
 
     environment:
-      - GIRDER_VERSION: 79c6e17c1be3f46b524f777f8e22ae936c6c6387
+      - GIRDER_VERSION: 195137753b74ba8b9c35be5c47dd650c14262f0f
       - WORKER_VERSION: 042a69d6ae7d472e32242d98f8b7acb3148980f9
       - LARGE_IMAGE_VERSION: 4dc82976d58b2a6e6542863e2e410628649a040c
 
