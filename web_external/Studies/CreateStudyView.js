@@ -39,6 +39,7 @@ const CreateStudyView = View.extend({
             placeholder: 'Search users...',
             modes: ['prefix', 'text'],
             types: ['user'],
+            noResultsPage: true,
             parentView: this
         }).on('g:resultClicked', this._addUser, this);
 
