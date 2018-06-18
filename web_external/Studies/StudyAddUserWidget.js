@@ -45,6 +45,7 @@ const StudyAddUserWidget = View.extend({
             placeholder: 'Start typing a name...',
             modes: ['prefix', 'text'],
             types: ['user'],
+            noResultsPage: true,
             parentView: this
         }).on('g:resultClicked', this._addUser, this);
     },
