@@ -111,18 +111,15 @@ class UploadTestCase(IsicTestCase):
         }
         return User.createUser(**params)
 
-    def _uploadDataset(self, uploaderUser, zipName, zipContentNames,
-                       datasetName, datasetDescription):
-        Dataset = self.model('dataset', 'isic_archive')
-        Folder = self.model('folder')
-        Upload = self.model('upload')
-
-        # Create a ZIP file of images
+    def _createZipFile(self, zipName, zipContentNames):
+        """
+        Create a zip file of images.
+        Returns (stream, size).
+        """
         zipStream = BytesIO()
         zipGen = ZipGenerator(zipName)
         for fileName in zipContentNames:
-            with open(os.path.join(self.testDataDir, fileName), 'rb') as \
-                    fileObj:
+            with open(os.path.join(self.testDataDir, fileName), 'rb') as fileObj:
                 for data in zipGen.addFile(lambda: fileObj, fileName):
                     zipStream.write(data)
         zipStream.write(zipGen.footer())
@@ -130,6 +127,16 @@ class UploadTestCase(IsicTestCase):
         zipStream.seek(0, 2)
         zipSize = zipStream.tell()
         zipStream.seek(0)
+        return zipStream, zipSize
+
+    def _uploadDataset(self, uploaderUser, zipName, zipContentNames,
+                       datasetName, datasetDescription):
+        Dataset = self.model('dataset', 'isic_archive')
+        Folder = self.model('folder')
+        Upload = self.model('upload')
+
+        # Create a ZIP file of images
+        zipStream, zipSize = self._createZipFile(zipName, zipContentNames)
 
         # Create new folders in the uploader user's home
         resp = self.request(
