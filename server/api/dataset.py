@@ -22,7 +22,7 @@ import mimetypes
 
 from girder.api import access
 from girder.api.rest import RestException, loadmodel
-from girder.api.describe import Description, describeRoute
+from girder.api.describe import Description, autoDescribeRoute, describeRoute
 from girder.constants import AccessType, SortDir, TokenScope
 from girder.exceptions import AccessException, ValidationException
 from girder.models.file import File
@@ -112,20 +112,21 @@ class DatasetResource(IsicResource):
             'public': dataset['public']
         }
 
-    @describeRoute(
+    @autoDescribeRoute(
         Description('Set the access control list for a dataset.')
-        .param('id', 'The ID of the dataset.', paramType='path')
-        .param('access', 'The JSON-encoded access control list.', paramType='form')
-        .param('public', 'Whether the dataset should be publicly visible.', paramType='form')
+        .modelParam('id', description='The ID of the dataset.', paramType='path',
+                    model='dataset', plugin='isic_archive', level=AccessType.ADMIN)
+        .jsonParam('access', 'The JSON-encoded access control list.', paramType='form',
+                   requireObject=True)
+        .param('public', 'Whether the dataset should be publicly visible.', paramType='form',
+               dataType='boolean')
         .errorResponse('ID was invalid.')
     )
     @access.user
-    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.ADMIN)
-    def setDatasetAccess(self, dataset, params):
-        params = self._decodeParams(params)
-        self.requireParams(['access', 'public'], params)
-        access = params['access']
-        public = self.boolParam('public', params)
+    def setDatasetAccess(self, dataset, access, public, params):
+        # Since this is often submitted as a URLEncoded form by upstream Girder's client widget,
+        # the integer in the 'access' field is not decoded correctly by 'self._decodeParams'; so,
+        # use autoDescribeRoute to decode fields
 
         Dataset().setAccessList(dataset, access)
         Dataset().setPublic(dataset, public)
