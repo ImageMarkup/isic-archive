@@ -17,9 +17,11 @@
 #  limitations under the License.
 ###############################################################################
 
+import boto3
 import datetime
 import json
 import os
+import unittest
 
 from six import BytesIO
 
@@ -508,3 +510,155 @@ class UploadTestCase(IsicTestCase):
         self.assertEqual('malignant', resp.json['meta']['clinical']['benign_malignant'])
         self.assertEqual('histopathology', resp.json['meta']['clinical']['diagnosis_confirm_type'])
         self.assertEqual('111-222-3334', resp.json['meta']['unstructured']['custom_id'])
+
+    @unittest.skip('Test must be configured and run manually.')
+    def testZipUploadToS3(self):
+        """
+        Test uploading a ZIP file of images directly to S3 and adding them to a dataset.
+
+        Note that Moto, the library to mock Boto calls, currently ignores AWS credentials;
+        all calls will succeed. Therefore, this test is intended to be run manually against
+        real AWS resources.
+        """
+        Image = self.model('image', 'isic_archive')
+        Setting = self.model('setting')
+
+        # Create user
+        user = self._createUploaderUser()
+
+        # Read settings from environment variables
+        if not all(key in os.environ for key in [
+                'ISIC_ZIP_UPLOAD_ROLE_ARN',
+                'ISIC_ZIP_UPLOAD_S3_BUCKET_NAME',
+                'ISIC_ZIP_UPLOAD_USER_ACCESS_KEY_ID',
+                'ISIC_ZIP_UPLOAD_USER_SECRET_ACCESS_KEY'
+                ]):
+            self.fail('Test requires environment variables for AWS configuration to be set.')
+        Setting.set('isic.zip_upload_role_arn',
+                    os.environ['ISIC_ZIP_UPLOAD_ROLE_ARN'])
+        Setting.set('isic.zip_upload_s3_bucket_name',
+                    os.environ['ISIC_ZIP_UPLOAD_S3_BUCKET_NAME'])
+        Setting.set('isic.zip_upload_user_access_key_id',
+                    os.environ['ISIC_ZIP_UPLOAD_USER_ACCESS_KEY_ID'])
+        Setting.set('isic.zip_upload_user_secret_access_key',
+                    os.environ['ISIC_ZIP_UPLOAD_USER_SECRET_ACCESS_KEY'])
+        Setting.set('isic.zip_upload_assume_role_duration_seconds', 900)
+
+        # Create a dataset
+        datasetName = 'test_dataset_1'
+        resp = self.request(
+            path='/dataset', method='POST', user=user, params={
+                'name': datasetName,
+                'description': 'A public test dataset',
+                'license': 'CC-0',
+                'attribution': 'Test Organization',
+                'owner': 'Test Organization'
+            })
+        self.assertStatusOk(resp)
+        dataset = resp.json
+
+        #
+        # Initiate and finalize a direct-to-s3 upload of a ZIP file of images.
+        #
+
+        # Initiate upload
+        resp = self.request(
+            path='/dataset/%s/zipS3' % dataset['_id'], method='POST', user=user, params={
+                'signature': 'Test Uploader'
+            })
+        self.assertStatusOk(resp)
+        self.assertHasKeys(resp.json, ['accessKeyId', 'secretAccessKey', 'sessionToken',
+                                       'bucketName', 'objectKey', 'zipId'])
+        accessKeyId = resp.json['accessKeyId']
+        secretAccessKey = resp.json['secretAccessKey']
+        sessionToken = resp.json['sessionToken']
+        bucketName = resp.json['bucketName']
+        objectKey = resp.json['objectKey']
+        zipId = resp.json['zipId']
+
+        # Upload ZIP file to S3
+        zipName = 'test_zip_1'
+        zipStream, zipSize = self._createZipFile(
+            zipName=zipName, zipContentNames=['test_1_small_1.jpg', 'test_1_small_2.jpg'])
+        s3 = boto3.client(
+            's3',
+            aws_access_key_id=accessKeyId,
+            aws_secret_access_key=secretAccessKey,
+            aws_session_token=sessionToken)
+        s3.upload_fileobj(
+            Fileobj=zipStream,
+            Bucket=bucketName,
+            Key=objectKey)
+
+        # Finalize upload
+        self.assertEqual(0, Image.find().count())
+        resp = self.request(
+            path='/dataset/%s/zipS3/%s/finalize' % (dataset['_id'], zipId),
+            method='POST', user=user)
+        self.assertStatusOk(resp)
+        self.assertEqual(2, Image.find().count())
+
+        #
+        # Initiate and cancel a direct-to-s3 upload of a ZIP file of images, without uploading
+        # the file.
+        #
+
+        # Initiate upload
+        resp = self.request(
+            path='/dataset/%s/zipS3' % dataset['_id'], method='POST', user=user, params={
+                'signature': 'Test Uploader'
+            })
+        self.assertStatusOk(resp)
+        self.assertHasKeys(resp.json, ['accessKeyId', 'secretAccessKey', 'sessionToken',
+                                       'bucketName', 'objectKey', 'zipId'])
+        accessKeyId = resp.json['accessKeyId']
+        secretAccessKey = resp.json['secretAccessKey']
+        sessionToken = resp.json['sessionToken']
+        bucketName = resp.json['bucketName']
+        objectKey = resp.json['objectKey']
+        zipId = resp.json['zipId']
+
+        # Don't upload file
+
+        # Cancel upload
+        resp = self.request(
+            path='/dataset/%s/zipS3/%s/cancel' % (dataset['_id'], zipId), method='POST', user=user)
+        self.assertStatusOk(resp)
+
+        #
+        # Initiate and cancel a direct-to-s3 upload of a ZIP file of images.
+        #
+
+        # Initiate upload
+        resp = self.request(
+            path='/dataset/%s/zipS3' % dataset['_id'], method='POST', user=user, params={
+                'signature': 'Test Uploader'
+            })
+        self.assertStatusOk(resp)
+        self.assertHasKeys(resp.json, ['accessKeyId', 'secretAccessKey', 'sessionToken',
+                                       'bucketName', 'objectKey', 'zipId'])
+        accessKeyId = resp.json['accessKeyId']
+        secretAccessKey = resp.json['secretAccessKey']
+        sessionToken = resp.json['sessionToken']
+        bucketName = resp.json['bucketName']
+        objectKey = resp.json['objectKey']
+        zipId = resp.json['zipId']
+
+        # Upload ZIP file to S3
+        zipName = 'test_zip_1'
+        zipStream, zipSize = self._createZipFile(
+            zipName=zipName, zipContentNames=['test_1_small_1.jpg', 'test_1_small_2.jpg'])
+        s3 = boto3.client(
+            's3',
+            aws_access_key_id=accessKeyId,
+            aws_secret_access_key=secretAccessKey,
+            aws_session_token=sessionToken)
+        s3.upload_fileobj(
+            Fileobj=zipStream,
+            Bucket=bucketName,
+            Key=objectKey)
+
+        # Cancel upload
+        resp = self.request(
+            path='/dataset/%s/zipS3/%s/cancel' % (dataset['_id'], zipId), method='POST', user=user)
+        self.assertStatusOk(resp)
