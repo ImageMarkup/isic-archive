@@ -304,7 +304,9 @@ class Dataset(AccessControlledModel):
         """
         Initiate a direct-to-S3 upload of a ZIP file of images.
 
-        The expected AWS resources must already be configured.
+        The AWS resources created by the following AWS CloudFormation template must exist:
+          aws/AWS-CloudFormation-Template-ZipUpload.yaml
+        Note that the template includes outputs for the various ZIP upload settings.
         """
         # Get ZIP upload settings
         accessKeyId = Setting().get(
