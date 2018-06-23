@@ -157,22 +157,41 @@ class Segmentation(Model):
         if not image:
             image = Image().load(segmentation['imageId'], force=True, exc=True)
 
+        # An alternative approach to the below method is to use OpenCV to create a morphological
+        # gradient image of the mask (using a square or cross structuring element, a circle is
+        # slower), which produces a mask of the outline. However, while this part is quite fast,
+        # using NumPy to set the pixels of the rendered image is not quite as fast as Pillow's line
+        # drawing and encoding the image as JPEG is also faster with Pillow than NumPy.
+
         mask = self.maskData(segmentation)
         if mask is None:
             return None
         contour = OpenCVSegmentationHelper.maskToContour(
             mask, paddedInput=False)
 
-        pilImageData = PIL_Image.fromarray(Image().imageData(image))
+        pilImageData = PIL_Image.open(
+            File().getLocalFilePath(Image().originalFile(image))
+        )
         pilDraw = PIL_ImageDraw.Draw(pilImageData)
         pilDraw.line(
             list(six.moves.map(tuple, contour)),
             fill=(0, 255, 0),  # TODO: make color an option
-            width=5
+            width=int(pilImageData.size[0] / 300.0)
         )
 
-        return ScikitSegmentationHelper.writeImage(
-            numpy.asarray(pilImageData), 'jpeg', width)
+        # Saving using native PIL is much faster than converting to a NumPy array to save with
+        # ScikitSegmentationHelper
+        if width is not None:
+            height = width * pilImageData.size[1] / pilImageData.size[0]
+            pilImageData = pilImageData.resize(
+                size=(width, height),
+                # A PIL_Image.LANCZOS downsampling filter takes ~350ms to resize a 7k image to 700,
+                # whereas default downsampling filter (nearest neighbor) is <1ms with minimal
+                # noticable difference in quality.
+            )
+        imageStream = six.BytesIO()
+        pilImageData.save(imageStream, format='jpeg')
+        return imageStream
 
     def review(self, segmentation, approved, user, time=None):
         skill = User().getSegmentationSkill(user)

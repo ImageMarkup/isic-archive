@@ -247,12 +247,9 @@ class Image(Item):
             image['superpixelsId'], force=True, exc=True)
 
     def _decodeDataFromFile(self, fileObj):
-        fileStream = six.BytesIO()
-        fileStream.writelines(
-            File().download(fileObj, headers=False)()
-        )
+        filePath = File().getLocalFilePath(fileObj)
         # Scikit-Image is ~70ms faster at decoding image data
-        data = ScikitSegmentationHelper.loadImage(fileStream)
+        data = ScikitSegmentationHelper.loadImage(filePath)
         return data
 
     def imageData(self, image):
