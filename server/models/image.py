@@ -21,7 +21,6 @@ import itertools
 import mimetypes
 import os
 import re
-import six
 
 from girder import events
 from girder.constants import AccessType, TokenScope
