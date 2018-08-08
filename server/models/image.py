@@ -57,6 +57,11 @@ class Image(Item):
 
     def createImage(self, imageDataStream, imageDataSize, originalName,
                     parentFolder, creator, dataset, batch):
+        if not imageDataSize:
+            # Upload().uploadFromFile will do nothing if the image is empty
+            # See: https://github.com/girder/girder/issues/2773
+            return
+        
         newIsicId = Setting().get(PluginSettings.MAX_ISIC_ID) + 1
         image = self.createItem(
             name='ISIC_%07d' % newIsicId,
