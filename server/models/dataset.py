@@ -305,7 +305,7 @@ class Dataset(AccessControlledModel):
         Initiate a direct-to-S3 upload of a ZIP file of images.
 
         The AWS resources created by the following AWS CloudFormation template must exist:
-          aws/AWS-CloudFormation-Template-ZipUpload.yaml
+          aws/AWS-CloudFormation-Template-DataUpload.yaml
         Note that the template includes outputs for the various data upload settings.
         """
         # Get data upload settings
