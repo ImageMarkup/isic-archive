@@ -343,7 +343,7 @@ class Dataset(AccessControlledModel):
         }
 
         # Get temporary security credentials with permission to upload into the
-        # object in the S3 bucket. The AWS Security Token Server (STS) provides
+        # object in the S3 bucket. The AWS Security Token Service (STS) provides
         # the credentials when the upload user assumes the upload role.
         sts = boto3.client(
             'sts',
