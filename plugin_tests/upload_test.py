@@ -562,18 +562,18 @@ class UploadTestCase(IsicTestCase):
 
         # Initiate upload
         resp = self.request(
-            path='/dataset/%s/zipS3' % dataset['_id'], method='POST', user=user, params={
+            path='/dataset/%s/zip' % dataset['_id'], method='POST', user=user, params={
                 'signature': 'Test Uploader'
             })
         self.assertStatusOk(resp)
         self.assertHasKeys(resp.json, ['accessKeyId', 'secretAccessKey', 'sessionToken',
-                                       'bucketName', 'objectKey', 'zipId'])
+                                       'bucketName', 'objectKey', 'batchId'])
         accessKeyId = resp.json['accessKeyId']
         secretAccessKey = resp.json['secretAccessKey']
         sessionToken = resp.json['sessionToken']
         bucketName = resp.json['bucketName']
         objectKey = resp.json['objectKey']
-        zipId = resp.json['zipId']
+        batchId = resp.json['batchId']
 
         # Upload ZIP file to S3
         zipName = 'test_zip_1'
@@ -592,7 +592,7 @@ class UploadTestCase(IsicTestCase):
         # Finalize upload
         self.assertEqual(0, Image.find().count())
         resp = self.request(
-            path='/dataset/%s/zipS3/%s/finalize' % (dataset['_id'], zipId),
+            path='/dataset/%s/zip/%s' % (dataset['_id'], batchId),
             method='POST', user=user)
         self.assertStatusOk(resp)
         self.assertEqual(2, Image.find().count())
@@ -604,24 +604,24 @@ class UploadTestCase(IsicTestCase):
 
         # Initiate upload
         resp = self.request(
-            path='/dataset/%s/zipS3' % dataset['_id'], method='POST', user=user, params={
+            path='/dataset/%s/zip' % dataset['_id'], method='POST', user=user, params={
                 'signature': 'Test Uploader'
             })
         self.assertStatusOk(resp)
         self.assertHasKeys(resp.json, ['accessKeyId', 'secretAccessKey', 'sessionToken',
-                                       'bucketName', 'objectKey', 'zipId'])
+                                       'bucketName', 'objectKey', 'batchId'])
         accessKeyId = resp.json['accessKeyId']
         secretAccessKey = resp.json['secretAccessKey']
         sessionToken = resp.json['sessionToken']
         bucketName = resp.json['bucketName']
         objectKey = resp.json['objectKey']
-        zipId = resp.json['zipId']
+        batchId = resp.json['batchId']
 
         # Don't upload file
 
         # Cancel upload
         resp = self.request(
-            path='/dataset/%s/zipS3/%s/cancel' % (dataset['_id'], zipId), method='POST', user=user)
+            path='/dataset/%s/zip/%s' % (dataset['_id'], batchId), method='DELETE', user=user)
         self.assertStatusOk(resp)
 
         #
@@ -630,18 +630,18 @@ class UploadTestCase(IsicTestCase):
 
         # Initiate upload
         resp = self.request(
-            path='/dataset/%s/zipS3' % dataset['_id'], method='POST', user=user, params={
+            path='/dataset/%s/zip' % dataset['_id'], method='POST', user=user, params={
                 'signature': 'Test Uploader'
             })
         self.assertStatusOk(resp)
         self.assertHasKeys(resp.json, ['accessKeyId', 'secretAccessKey', 'sessionToken',
-                                       'bucketName', 'objectKey', 'zipId'])
+                                       'bucketName', 'objectKey', 'batchId'])
         accessKeyId = resp.json['accessKeyId']
         secretAccessKey = resp.json['secretAccessKey']
         sessionToken = resp.json['sessionToken']
         bucketName = resp.json['bucketName']
         objectKey = resp.json['objectKey']
-        zipId = resp.json['zipId']
+        batchId = resp.json['batchId']
 
         # Upload ZIP file to S3
         zipName = 'test_zip_1'
@@ -659,5 +659,5 @@ class UploadTestCase(IsicTestCase):
 
         # Cancel upload
         resp = self.request(
-            path='/dataset/%s/zipS3/%s/cancel' % (dataset['_id'], zipId), method='POST', user=user)
+            path='/dataset/%s/zip/%s' % (dataset['_id'], batchId), method='DELETE', user=user)
         self.assertStatusOk(resp)

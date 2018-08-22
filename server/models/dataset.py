@@ -381,7 +381,7 @@ class Dataset(AccessControlledModel):
             'sessionToken': credentials['SessionToken'],
             'bucketName': s3BucketName,
             'objectKey': s3ObjectKey,
-            'zipId': batch['_id']
+            'batchId': batch['_id']
         }
 
     def cancelZipUploadS3(self, dataset, batch, user):

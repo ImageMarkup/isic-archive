@@ -58,9 +58,9 @@ class DatasetResource(IsicResource):
         self.route('POST', (), self.createDataset)
         self.route('POST', (':id', 'image'), self.addImage)
         self.route('POST', (':id', 'zipBatch'), self.addZipBatch)
-        self.route('POST', (':id', 'zipS3'), self.initiateZipUploadToS3)
-        self.route('POST', (':id', 'zipS3', ':zipId', 'cancel'), self.cancelZipUploadToS3)
-        self.route('POST', (':id', 'zipS3', ':zipId', 'finalize'), self.finalizeZipUploadToS3)
+        self.route('POST', (':id', 'zip'), self.initiateZipUploadToS3)
+        self.route('DELETE', (':id', 'zip', ':batchId'), self.cancelZipUploadToS3)
+        self.route('POST', (':id', 'zip', ':batchId'), self.finalizeZipUploadToS3)
         self.route('GET', (':id', 'review'), self.getReviewImages)
         self.route('POST', (':id', 'review'), self.submitReviewImages)
         self.route('GET', (':id', 'metadata'), self.getRegisteredMetadata)
@@ -307,8 +307,8 @@ class DatasetResource(IsicResource):
                '- An S3 bucket name and object key in which to upload the file:\n'
                '  - `bucketName`\n'
                '  - `objectKey`\n'
-               '- A ZIP file identifier for subsequent API calls:\n'
-               '  - `zipId`\n'
+               '- A batch identifier for subsequent API calls:\n'
+               '  - `batchId`\n'
                '\n\n'
                'After calling this endpoint, the client should use this information to upload '
                'the ZIP file directly to S3, as shown in the examples below.'
@@ -330,8 +330,8 @@ class DatasetResource(IsicResource):
                '        Key=response[\'objectKey\']\n'
                '    )\n'
                '\n'
-               '# Store ZIP file identifier\n'
-               'zipId = response[\'zipId\']\n'
+               '# Store batch identifier\n'
+               'batchId = response[\'batchId\']\n'
                '```\n\n'
                '#### Example using AWS SDK for JavaScript\n'
                '```\n'
@@ -341,8 +341,8 @@ class DatasetResource(IsicResource):
                '    sessionToken: response.sessionToken\n'
                '});\n'
                '\n'
-               '// Store ZIP file identifier\n'
-               'var zipId = response.zipId;\n'
+               '// Store batch identifier\n'
+               'var batchId = response.batchId;\n'
                '\n'
                'var s3 = new AWS.S3({\n'
                '    apiVersion: \'2006-03-01\'\n'
@@ -364,10 +364,10 @@ class DatasetResource(IsicResource):
                '#### Finalizing the upload\n'
                '\n\n'
                'To finalize the upload, the client should call '
-               '`POST /dataset/{id}/zipS3/{zipId}/finalize`.'
+               '`POST /dataset/{id}/zip/{batchId}`.'
                '\n\n'
                'To cancel the upload, the client should call '
-               '`POST /dataset/{id}/zipS3/{zipId}/cancel`.'
+               '`DELETE /dataset/{id}/zip/{batchId}`.'
                )
         .param('id', 'The ID of the dataset.', paramType='path')
         .param('signature', 'Signature of license agreement.', paramType='form')
@@ -394,10 +394,10 @@ class DatasetResource(IsicResource):
         Description('Cancel a direct-to-S3 upload of a ZIP file of images.')
         .notes('Call this to cancel a direct-to-S3 upload instead of finalizing it.')
         .param('id', 'The ID of the dataset.', paramType='path')
-        .param('zipId', 'The ID of the .zip file of images.', paramType='path')
+        .param('batchId', 'The ID of the batch.', paramType='path')
     )
     @access.user
-    @loadmodel(map={'zipId': 'batch'}, model='batch', plugin='isic_archive')
+    @loadmodel(map={'batchId': 'batch'}, model='batch', plugin='isic_archive')
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
     def cancelZipUploadToS3(self, dataset, batch, params):
         user = self.getCurrentUser()
@@ -413,10 +413,10 @@ class DatasetResource(IsicResource):
         .notes('Call this after uploading the ZIP file of images to S3. '
                'The images in the ZIP file will be added to the dataset.')
         .param('id', 'The ID of the dataset.', paramType='path')
-        .param('zipId', 'The ID of the .zip file of images.', paramType='path')
+        .param('batchId', 'The ID of the batch.', paramType='path')
     )
     @access.user
-    @loadmodel(map={'zipId': 'batch'}, model='batch', plugin='isic_archive')
+    @loadmodel(map={'batchId': 'batch'}, model='batch', plugin='isic_archive')
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
     def finalizeZipUploadToS3(self, dataset, batch, params):
         user = self.getCurrentUser()
