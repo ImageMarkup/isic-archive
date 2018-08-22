@@ -41,22 +41,25 @@ Description: Resources for ISIC Archive data upload
 Resources:
   DataUploadBucket:
     Type: 'AWS::S3::Bucket'
-    Properties: {}
+    Properties:
+      BucketName: !Sub 'isic-data-upload-${AWS::StackName}'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 45e858b2-e2f1-43f4-8836-5ad4c06a5500
   DataUploadUser:
     Type: 'AWS::IAM::User'
     Properties:
-      UserName: isic-data-uploader
+      UserName: !Sub 'isic-data-upload-user-${AWS::StackName}'
       Policies:
-        - PolicyName: DataUploadBucketFullAccess
+        - PolicyName: DataUploadBucketObjectAccess
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
-                  - 's3:*'
+                  - 's3:PutObject'
+                  - 's3:GetObject'
+                  - 's3:DeleteObject'
                 Resource:
                   - !GetAtt DataUploadBucket.Arn
                   - !Sub '${DataUploadBucket.Arn}/*'
@@ -73,7 +76,7 @@ Resources:
   DataUploadRole:
     Type: 'AWS::IAM::Role'
     Properties:
-      RoleName: DataUploadRole
+      RoleName: !Sub 'isic-data-upload-role-${AWS::StackName}'
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
