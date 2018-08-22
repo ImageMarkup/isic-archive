@@ -26,7 +26,6 @@ from girder.utility import setting_utilities
 class PluginSettings(object):
     DEMO_MODE = 'isic.demo_mode'
     MAX_ISIC_ID = 'isic.max_isic_id'
-    ZIP_UPLOAD_ASSUME_ROLE_DURATION_SECONDS = 'isic.zip_upload_assume_role_duration_seconds'
     ZIP_UPLOAD_ROLE_ARN = 'isic.zip_upload_role_arn'
     ZIP_UPLOAD_S3_BUCKET_NAME = 'isic.zip_upload_s3_bucket_name'
     ZIP_UPLOAD_USER_ACCESS_KEY_ID = 'isic.zip_upload_user_access_key_id'
@@ -54,17 +53,6 @@ def _validateMaxIsicIdSetting(doc):
 @setting_utilities.default(PluginSettings.MAX_ISIC_ID)
 def _defaultMaxIsicIdSetting():
     return -1
-
-
-@setting_utilities.validator(PluginSettings.ZIP_UPLOAD_ASSUME_ROLE_DURATION_SECONDS)
-def _validateZipUploadAssumeRoleDurationSeconds(doc):
-    if not isinstance(doc['value'], int):
-        raise ValidationException('ZIP upload assume role duration must be an integer.', 'value')
-
-
-@setting_utilities.default(PluginSettings.ZIP_UPLOAD_ASSUME_ROLE_DURATION_SECONDS)
-def _defaultZipUploadAssumeRoleDurationSeconds():
-    return 3600
 
 
 @setting_utilities.validator({

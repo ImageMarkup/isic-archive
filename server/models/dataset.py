@@ -317,10 +317,7 @@ class Dataset(AccessControlledModel):
             PluginSettings.ZIP_UPLOAD_S3_BUCKET_NAME)
         uploadRoleArn = Setting().get(
             PluginSettings.ZIP_UPLOAD_ROLE_ARN)
-        assumeRoleDurationSeconds = Setting().get(
-            PluginSettings.ZIP_UPLOAD_ASSUME_ROLE_DURATION_SECONDS)
-        if not all([accessKeyId, secretAccessKey, s3BucketName, uploadRoleArn,
-                    assumeRoleDurationSeconds]):
+        if not all([accessKeyId, secretAccessKey, s3BucketName, uploadRoleArn]):
             raise GirderException('ZIP upload not configured.')
 
         # Create new batch
@@ -357,7 +354,7 @@ class Dataset(AccessControlledModel):
                 RoleArn=uploadRoleArn,
                 RoleSessionName='ZipUploadSession-%d' % int(time.time()),
                 Policy=json.dumps(s3BucketPutObjectInKeyPolicy),
-                DurationSeconds=assumeRoleDurationSeconds
+                DurationSeconds=12*60*60  # 12 hours
             )
         except botocore.exceptions.ClientError as e:
             raise GirderException('Error acquiring temporary security credentials: %s' %

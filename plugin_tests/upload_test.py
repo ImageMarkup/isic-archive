@@ -542,7 +542,6 @@ class UploadTestCase(IsicTestCase):
                     os.environ['ISIC_ZIP_UPLOAD_USER_ACCESS_KEY_ID'])
         Setting.set('isic.zip_upload_user_secret_access_key',
                     os.environ['ISIC_ZIP_UPLOAD_USER_SECRET_ACCESS_KEY'])
-        Setting.set('isic.zip_upload_assume_role_duration_seconds', 900)
 
         # Create a dataset
         datasetName = 'test_dataset_1'

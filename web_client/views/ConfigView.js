@@ -25,9 +25,6 @@ const ConfigView = View.extend({
             }, {
                 key: 'isic.zip_upload_role_arn',
                 value: this.$('#isic-config-zip-upload-role-arn').val().trim()
-            }, {
-                key: 'isic.zip_upload_assume_role_duration_seconds',
-                value: this.$('#isic-config-zip-upload-assume-role-duration-seconds').val().trim()
             }]);
         }
     },
@@ -41,8 +38,7 @@ const ConfigView = View.extend({
                     'isic.zip_upload_user_access_key_id',
                     'isic.zip_upload_user_secret_access_key',
                     'isic.zip_upload_s3_bucket_name',
-                    'isic.zip_upload_role_arn',
-                    'isic.zip_upload_assume_role_duration_seconds'
+                    'isic.zip_upload_role_arn'
                 ])
             }
         }).done((resp) => {
@@ -59,8 +55,6 @@ const ConfigView = View.extend({
                 resp['isic.zip_upload_s3_bucket_name']);
             this.$('#isic-config-zip-upload-role-arn').val(
                 resp['isic.zip_upload_role_arn']);
-            this.$('#isic-config-zip-upload-assume-role-duration-seconds').val(
-                resp['isic.zip_upload_assume_role_duration_seconds']);
         });
     },
 
