@@ -57,7 +57,7 @@ class DatasetResource(IsicResource):
         self.route('PUT', (':id', 'access'), self.setDatasetAccess)
         self.route('POST', (), self.createDataset)
         self.route('POST', (':id', 'image'), self.addImage)
-        self.route('POST', (':id', 'zip'), self.addZipBatch)
+        self.route('POST', (':id', 'zipBatch'), self.addZipBatch)
         self.route('POST', (':id', 'zipS3'), self.initiateZipUploadToS3)
         self.route('POST', (':id', 'zipS3', ':zipId', 'cancel'), self.cancelZipUploadToS3)
         self.route('POST', (':id', 'zipS3', ':zipId', 'finalize'), self.finalizeZipUploadToS3)
