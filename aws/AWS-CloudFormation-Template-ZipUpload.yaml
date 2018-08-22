@@ -37,20 +37,20 @@ Metadata:
         'y': 80
       z: 0
       embeds: []
-Description: Resources for ISIC Archive ZIP upload
+Description: Resources for ISIC Archive data upload
 Resources:
-  ZipUploadBucket:
+  DataUploadBucket:
     Type: 'AWS::S3::Bucket'
     Properties: {}
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 45e858b2-e2f1-43f4-8836-5ad4c06a5500
-  ZipUploadUser:
+  DataUploadUser:
     Type: 'AWS::IAM::User'
     Properties:
-      UserName: isic-zip-uploader
+      UserName: isic-data-uploader
       Policies:
-        - PolicyName: ZipUploadsBucketFullAccess
+        - PolicyName: DataUploadBucketFullAccess
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -58,32 +58,32 @@ Resources:
                 Action:
                   - 's3:*'
                 Resource:
-                  - !GetAtt ZipUploadBucket.Arn
-                  - !Join ['', [!GetAtt ZipUploadBucket.Arn, '/*']]
+                  - !GetAtt DataUploadBucket.Arn
+                  - !Sub '${DataUploadBucket.Arn}/*'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: f41d472a-361a-4dc7-b9dc-612ad6924bd1
-  ZipUploadUserAccessKey:
+  DataUploadUserAccessKey:
     Type: 'AWS::IAM::AccessKey'
     Properties:
-      UserName: !Ref ZipUploadUser
+      UserName: !Ref DataUploadUser
     Metadata:
       'AWS::CloudFormation::Designer':
         id: c7e02f6b-ec1f-4f55-bb0a-e882661c0c34
-  ZipUploadRole:
+  DataUploadRole:
     Type: 'AWS::IAM::Role'
     Properties:
-      RoleName: ZipUploadRole
+      RoleName: DataUploadRole
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
           - Effect: Allow
             Principal:
-              AWS: !GetAtt ZipUploadUser.Arn
+              AWS: !GetAtt DataUploadUser.Arn
             Action:
               - 'sts:AssumeRole'
       Policies:
-        - PolicyName: ZipUploadsBucketPutObjectOnly
+        - PolicyName: DataUploadBucketPutObjectOnly
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -91,21 +91,21 @@ Resources:
                 Action:
                   - 's3:PutObject'
                 Resource:
-                  - !Join ['', [!GetAtt ZipUploadBucket.Arn, '/*']]
+                  - !Sub '${DataUploadBucket.Arn}/*'
       MaxSessionDuration: 43200
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 47377fcc-9f07-408a-885a-310f0712c2df
 Outputs:
-  ZipUploadRoleArn:
-    Value: !GetAtt ZipUploadRole.Arn
-    Description: ZIP upload role ARN
-  ZipUploadS3BucketName:
-    Value: !Ref ZipUploadBucket
-    Description: ZIP upload S3 bucket name
-  ZipUploadUserAccessKeyId:
-    Value: !Ref ZipUploadUserAccessKey
-    Description: ZIP upload user access key ID
-  ZipUploadUserSecretAccessKey:
-    Value: !GetAtt ZipUploadUserAccessKey.SecretAccessKey
-    Description: ZIP upload user secret access key
+  DataUploadRoleArn:
+    Value: !GetAtt DataUploadRole.Arn
+    Description: Data upload role ARN
+  DataUploadBucketName:
+    Value: !Ref DataUploadBucket
+    Description: Data upload bucket name
+  DataUploadUserAccessKeyId:
+    Value: !Ref DataUploadUserAccessKey
+    Description: Data upload user access key ID
+  DataUploadUserSecretAccessKey:
+    Value: !GetAtt DataUploadUserAccessKey.SecretAccessKey
+    Description: Data upload user secret access key

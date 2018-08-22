@@ -26,10 +26,10 @@ from girder.utility import setting_utilities
 class PluginSettings(object):
     DEMO_MODE = 'isic.demo_mode'
     MAX_ISIC_ID = 'isic.max_isic_id'
-    ZIP_UPLOAD_ROLE_ARN = 'isic.zip_upload_role_arn'
-    ZIP_UPLOAD_S3_BUCKET_NAME = 'isic.zip_upload_s3_bucket_name'
-    ZIP_UPLOAD_USER_ACCESS_KEY_ID = 'isic.zip_upload_user_access_key_id'
-    ZIP_UPLOAD_USER_SECRET_ACCESS_KEY = 'isic.zip_upload_user_secret_access_key'
+    DATA_UPLOAD_ROLE_ARN = 'isic.data_upload_role_arn'
+    DATA_UPLOAD_BUCKET_NAME = 'isic.data_upload_bucket_name'
+    DATA_UPLOAD_USER_ACCESS_KEY_ID = 'isic.data_upload_user_access_key_id'
+    DATA_UPLOAD_USER_SECRET_ACCESS_KEY = 'isic.data_upload_user_secret_access_key'
 
 
 @setting_utilities.validator(PluginSettings.DEMO_MODE)
@@ -56,28 +56,28 @@ def _defaultMaxIsicIdSetting():
 
 
 @setting_utilities.validator({
-    PluginSettings.ZIP_UPLOAD_ROLE_ARN,
-    PluginSettings.ZIP_UPLOAD_S3_BUCKET_NAME,
-    PluginSettings.ZIP_UPLOAD_USER_ACCESS_KEY_ID,
-    PluginSettings.ZIP_UPLOAD_USER_SECRET_ACCESS_KEY
+    PluginSettings.DATA_UPLOAD_ROLE_ARN,
+    PluginSettings.DATA_UPLOAD_BUCKET_NAME,
+    PluginSettings.DATA_UPLOAD_USER_ACCESS_KEY_ID,
+    PluginSettings.DATA_UPLOAD_USER_SECRET_ACCESS_KEY
 })
-def _validateZipUploadSettings(doc):
+def _validateDataUploadSettings(doc):
     if not isinstance(doc['value'], six.string_types):
         descriptions = {
-            PluginSettings.ZIP_UPLOAD_ROLE_ARN: 'role ARN',
-            PluginSettings.ZIP_UPLOAD_S3_BUCKET_NAME: 'S3 bucket name',
-            PluginSettings.ZIP_UPLOAD_USER_ACCESS_KEY_ID: 'user access key ID',
-            PluginSettings.ZIP_UPLOAD_USER_SECRET_ACCESS_KEY: 'user secret access key'
+            PluginSettings.DATA_UPLOAD_ROLE_ARN: 'role ARN',
+            PluginSettings.DATA_UPLOAD_BUCKET_NAME: 'S3 bucket name',
+            PluginSettings.DATA_UPLOAD_USER_ACCESS_KEY_ID: 'user access key ID',
+            PluginSettings.DATA_UPLOAD_USER_SECRET_ACCESS_KEY: 'user secret access key'
         }
         description = descriptions[doc['key']]
-        raise ValidationException('ZIP upload %s must be a string.' % description, 'value')
+        raise ValidationException('Data upload %s must be a string.' % description, 'value')
 
 
 @setting_utilities.default({
-    PluginSettings.ZIP_UPLOAD_ROLE_ARN,
-    PluginSettings.ZIP_UPLOAD_S3_BUCKET_NAME,
-    PluginSettings.ZIP_UPLOAD_USER_ACCESS_KEY_ID,
-    PluginSettings.ZIP_UPLOAD_USER_SECRET_ACCESS_KEY
+    PluginSettings.DATA_UPLOAD_ROLE_ARN,
+    PluginSettings.DATA_UPLOAD_BUCKET_NAME,
+    PluginSettings.DATA_UPLOAD_USER_ACCESS_KEY_ID,
+    PluginSettings.DATA_UPLOAD_USER_SECRET_ACCESS_KEY
 })
-def _defaultZipUploadSettings():
+def _defaultDataUploadSettings():
     return ''

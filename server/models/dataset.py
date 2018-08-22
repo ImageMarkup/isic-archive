@@ -306,19 +306,19 @@ class Dataset(AccessControlledModel):
 
         The AWS resources created by the following AWS CloudFormation template must exist:
           aws/AWS-CloudFormation-Template-ZipUpload.yaml
-        Note that the template includes outputs for the various ZIP upload settings.
+        Note that the template includes outputs for the various data upload settings.
         """
-        # Get ZIP upload settings
+        # Get data upload settings
         accessKeyId = Setting().get(
-            PluginSettings.ZIP_UPLOAD_USER_ACCESS_KEY_ID)
+            PluginSettings.DATA_UPLOAD_USER_ACCESS_KEY_ID)
         secretAccessKey = Setting().get(
-            PluginSettings.ZIP_UPLOAD_USER_SECRET_ACCESS_KEY)
+            PluginSettings.DATA_UPLOAD_USER_SECRET_ACCESS_KEY)
         s3BucketName = Setting().get(
-            PluginSettings.ZIP_UPLOAD_S3_BUCKET_NAME)
+            PluginSettings.DATA_UPLOAD_BUCKET_NAME)
         uploadRoleArn = Setting().get(
-            PluginSettings.ZIP_UPLOAD_ROLE_ARN)
+            PluginSettings.DATA_UPLOAD_ROLE_ARN)
         if not all([accessKeyId, secretAccessKey, s3BucketName, uploadRoleArn]):
-            raise GirderException('ZIP upload not configured.')
+            raise GirderException('Data upload not configured.')
 
         # Create new batch
         batch = Batch().createBatch(
@@ -388,13 +388,13 @@ class Dataset(AccessControlledModel):
         """
         Cancel a direct-to-S3 upload of a ZIP file of images.
         """
-        # Get ZIP upload settings
+        # Get data upload settings
         accessKeyId = Setting().get(
-            PluginSettings.ZIP_UPLOAD_USER_ACCESS_KEY_ID)
+            PluginSettings.DATA_UPLOAD_USER_ACCESS_KEY_ID)
         secretAccessKey = Setting().get(
-            PluginSettings.ZIP_UPLOAD_USER_SECRET_ACCESS_KEY)
+            PluginSettings.DATA_UPLOAD_USER_SECRET_ACCESS_KEY)
         if not all([accessKeyId, secretAccessKey]):
-            raise GirderException('ZIP upload not configured.')
+            raise GirderException('Data upload not configured.')
 
         # Get upload information stored on batch
         s3BucketName = batch.get('s3BucketName')
@@ -427,13 +427,13 @@ class Dataset(AccessControlledModel):
         - Delete the ZIP file from S3.
         - Ingest images from the ZIP file into the dataset.
         """
-        # Get ZIP upload settings
+        # Get data upload settings
         accessKeyId = Setting().get(
-            PluginSettings.ZIP_UPLOAD_USER_ACCESS_KEY_ID)
+            PluginSettings.DATA_UPLOAD_USER_ACCESS_KEY_ID)
         secretAccessKey = Setting().get(
-            PluginSettings.ZIP_UPLOAD_USER_SECRET_ACCESS_KEY)
+            PluginSettings.DATA_UPLOAD_USER_SECRET_ACCESS_KEY)
         if not all([accessKeyId, secretAccessKey]):
-            raise GirderException('ZIP upload not configured.')
+            raise GirderException('Data upload not configured.')
 
         # Get upload information stored on batch
         s3BucketName = batch.get('s3BucketName')
