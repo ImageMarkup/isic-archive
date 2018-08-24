@@ -153,6 +153,11 @@ def load(info):
     })
     registerPluginWebroot(externalWebroot, info['name'])
 
+    integrationWebroot = WebrootBase(os.path.join(
+        info['pluginRootDir'], 'server', 'webroot_integration.mako'))
+    integrationWebroot.updateHtmlVars(externalWebroot.vars)
+    registerPluginWebroot(integrationWebroot, info['name'] + '_integration')
+
     # add static file serving
     info['config']['/uda'] = {
         'tools.staticdir.on': 'True',
@@ -187,6 +192,7 @@ def load(info):
     info['apiRoot'].annotation = api.AnnotationResource()
     info['apiRoot'].dataset = api.DatasetResource()
     info['apiRoot'].image = api.ImageResource()
+    info['apiRoot'].redirects = api.RedirectsResource()
     info['apiRoot'].segmentation = api.SegmentationResource()
     info['apiRoot'].study = api.StudyResource()
     info['apiRoot'].task = api.TaskResource()

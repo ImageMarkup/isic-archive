@@ -38,7 +38,8 @@
     "webpack": {
         "main": {
             "plugin": "web_client/main.js",
-            "app": "web_external/main.js"
+            "app": "web_external/main.js",
+            "app_integration": "web_external/integration/main.js"
         },
         "configHelper": "webpack.helper.js",
         "defaultLoaders": true

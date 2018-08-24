@@ -23,6 +23,7 @@
 from .annotation import AnnotationResource
 from .dataset import DatasetResource
 from .image import ImageResource
+from .redirects import RedirectsResource
 from .segmentation import SegmentationResource
 from .study import StudyResource
 from .task import TaskResource
