@@ -13,6 +13,18 @@ const ConfigView = View.extend({
             this._saveSettings([{
                 key: 'isic.demo_mode',
                 value: this.$('#isic-config-demo-mode').prop('checked')
+            }, {
+                key: 'isic.data_upload_user_access_key_id',
+                value: this.$('#isic-config-data-upload-user-access-key-id').val().trim()
+            }, {
+                key: 'isic.data_upload_user_secret_access_key',
+                value: this.$('#isic-config-data-upload-user-secret-access-key').val().trim()
+            }, {
+                key: 'isic.data_upload_bucket_name',
+                value: this.$('#isic-config-data-upload-s3-bucket-name').val().trim()
+            }, {
+                key: 'isic.data_upload_role_arn',
+                value: this.$('#isic-config-data-upload-role-arn').val().trim()
             }]);
         }
     },
@@ -22,7 +34,11 @@ const ConfigView = View.extend({
             path: 'system/setting',
             data: {
                 list: JSON.stringify([
-                    'isic.demo_mode'
+                    'isic.demo_mode',
+                    'isic.data_upload_user_access_key_id',
+                    'isic.data_upload_user_secret_access_key',
+                    'isic.data_upload_bucket_name',
+                    'isic.data_upload_role_arn'
                 ])
             }
         }).done((resp) => {
@@ -31,6 +47,14 @@ const ConfigView = View.extend({
                 'checked',
                 resp['isic.demo_mode']
             );
+            this.$('#isic-config-data-upload-user-access-key-id').val(
+                resp['isic.data_upload_user_access_key_id']);
+            this.$('#isic-config-data-upload-user-secret-access-key').val(
+                resp['isic.data_upload_user_secret_access_key']);
+            this.$('#isic-config-data-upload-s3-bucket-name').val(
+                resp['isic.data_upload_bucket_name']);
+            this.$('#isic-config-data-upload-role-arn').val(
+                resp['isic.data_upload_role_arn']);
         });
     },
 

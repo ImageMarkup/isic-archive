@@ -1,0 +1,114 @@
+AWSTemplateFormatVersion: 2010-09-09
+Metadata:
+  'AWS::CloudFormation::Designer':
+    45e858b2-e2f1-43f4-8836-5ad4c06a5500:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: -130
+        'y': 120
+      z: 0
+      embeds: []
+    f41d472a-361a-4dc7-b9dc-612ad6924bd1:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: -130
+        'y': 40
+      z: 0
+      embeds: []
+    c7e02f6b-ec1f-4f55-bb0a-e882661c0c34:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: -230
+        'y': 40
+      z: 0
+      embeds: []
+    47377fcc-9f07-408a-885a-310f0712c2df:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: -10
+        'y': 80
+      z: 0
+      embeds: []
+Description: Resources for ISIC Archive data upload
+Resources:
+  DataUploadBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub 'isic-data-upload-${AWS::StackName}'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 45e858b2-e2f1-43f4-8836-5ad4c06a5500
+  DataUploadUser:
+    Type: 'AWS::IAM::User'
+    Properties:
+      UserName: !Sub 'isic-data-upload-user-${AWS::StackName}'
+      Policies:
+        - PolicyName: DataUploadBucketObjectAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:PutObject'
+                  - 's3:GetObject'
+                  - 's3:DeleteObject'
+                Resource:
+                  - !GetAtt DataUploadBucket.Arn
+                  - !Sub '${DataUploadBucket.Arn}/*'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: f41d472a-361a-4dc7-b9dc-612ad6924bd1
+  DataUploadUserAccessKey:
+    Type: 'AWS::IAM::AccessKey'
+    Properties:
+      UserName: !Ref DataUploadUser
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: c7e02f6b-ec1f-4f55-bb0a-e882661c0c34
+  DataUploadRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Sub 'isic-data-upload-role-${AWS::StackName}'
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !GetAtt DataUploadUser.Arn
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: DataUploadBucketPutObjectOnly
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:PutObject'
+                Resource:
+                  - !Sub '${DataUploadBucket.Arn}/*'
+      MaxSessionDuration: 43200
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 47377fcc-9f07-408a-885a-310f0712c2df
+Outputs:
+  DataUploadRoleArn:
+    Value: !GetAtt DataUploadRole.Arn
+    Description: Data upload role ARN
+  DataUploadBucketName:
+    Value: !Ref DataUploadBucket
+    Description: Data upload bucket name
+  DataUploadUserAccessKeyId:
+    Value: !Ref DataUploadUserAccessKey
+    Description: Data upload user access key ID
+  DataUploadUserSecretAccessKey:
+    Value: !GetAtt DataUploadUserAccessKey.SecretAccessKey
+    Description: Data upload user secret access key

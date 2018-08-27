@@ -24,7 +24,7 @@ from girder.api import access
 from girder.api.rest import RestException, loadmodel
 from girder.api.describe import Description, autoDescribeRoute, describeRoute
 from girder.constants import AccessType, SortDir, TokenScope
-from girder.exceptions import AccessException, ValidationException
+from girder.exceptions import AccessException, GirderException, ValidationException
 from girder.models.file import File
 from girder.utility import RequestBodyStream
 
@@ -57,7 +57,10 @@ class DatasetResource(IsicResource):
         self.route('PUT', (':id', 'access'), self.setDatasetAccess)
         self.route('POST', (), self.createDataset)
         self.route('POST', (':id', 'image'), self.addImage)
-        self.route('POST', (':id', 'zip'), self.addZipBatch)
+        self.route('POST', (':id', 'zipBatch'), self.addZipBatch)
+        self.route('POST', (':id', 'zip'), self.initiateZipUploadToS3)
+        self.route('DELETE', (':id', 'zip', ':batchId'), self.cancelZipUploadToS3)
+        self.route('POST', (':id', 'zip', ':batchId'), self.finalizeZipUploadToS3)
         self.route('GET', (':id', 'review'), self.getReviewImages)
         self.route('POST', (':id', 'review'), self.submitReviewImages)
         self.route('GET', (':id', 'metadata'), self.getRegisteredMetadata)
@@ -285,6 +288,145 @@ class DatasetResource(IsicResource):
         # TODO: make this return something
         Dataset().addZipBatch(
             dataset=dataset, zipFile=zipFile, signature=signature, user=user, sendMail=True)
+
+    @describeRoute(
+        Description('Initiate a direct-to-S3 upload of a ZIP file of images.')
+        .notes('This endpoint returns information that allows the client to upload a '
+               'ZIP file of images directly to an Amazon Web Services (AWS) S3 bucket.'
+               '\n\n'
+               'It\'s recommended that the client use an AWS SDK, such as '
+               '[Boto 3](https://github.com/boto/boto3) or '
+               '[AWS SDK for JavaScript](https://github.com/aws/aws-sdk-js), '
+               'to simplify authenticating and uploading the file.'
+               '\n\n'
+               'More specifically, this endpoint returns a JSON response that includes:\n'
+               '- Temporary security credentials to authenticate with AWS:\n'
+               '  - `accessKeyId`\n'
+               '  - `secretAccessKey`\n'
+               '  - `sessionToken`\n'
+               '- An S3 bucket name and object key in which to upload the file:\n'
+               '  - `bucketName`\n'
+               '  - `objectKey`\n'
+               '- A batch identifier for subsequent API calls:\n'
+               '  - `batchId`\n'
+               '\n\n'
+               'After calling this endpoint, the client should use this information to upload '
+               'the ZIP file directly to S3, as shown in the examples below.'
+               '\n\n'
+               '#### Example using Boto 3\n'
+               '```\n'
+               'import boto3\n'
+               's3 = boto3.client(\n'
+               '    \'s3\',\n'
+               '    aws_access_key_id=response[\'accessKeyId\'],\n'
+               '    aws_secret_access_key=response[\'secretAccessKey\'],\n'
+               '    aws_session_token=response[\'sessionToken\']\n'
+               ')\n'
+               '\n'
+               'with open(\'images.zip\', \'rb\') as data:\n'
+               '    s3.upload_fileobj(\n'
+               '        FileObj=data,\n'
+               '        Bucket=response[\'bucketName\'],\n'
+               '        Key=response[\'objectKey\']\n'
+               '    )\n'
+               '\n'
+               '# Store batch identifier\n'
+               'batchId = response[\'batchId\']\n'
+               '```\n\n'
+               '#### Example using AWS SDK for JavaScript\n'
+               '```\n'
+               'AWS.config.update({\n'
+               '    accessKeyId: response.accessKeyId,\n'
+               '    secretAccessKey: response.secretAccessKey,\n'
+               '    sessionToken: response.sessionToken\n'
+               '});\n'
+               '\n'
+               '// Store batch identifier\n'
+               'var batchId = response.batchId;\n'
+               '\n'
+               'var s3 = new AWS.S3({\n'
+               '    apiVersion: \'2006-03-01\'\n'
+               '});\n'
+               '\n'
+               'var params = {\n'
+               '    Bucket: response.bucketName,\n'
+               '    Key: response.objectKey,\n'
+               '    Body: data\n'
+               '};\n'
+               's3.upload(params, function (err, data) {\n'
+               '    if (err) {\n'
+               '        console.log(\"Error\", err);\n'
+               '    } else {\n'
+               '        // Uploaded\n'
+               '    }\n'
+               '});\n'
+               '```\n\n'
+               '#### Finalizing the upload\n'
+               '\n\n'
+               'To finalize the upload, the client should call '
+               '`POST /dataset/{id}/zip/{batchId}`.'
+               '\n\n'
+               'To cancel the upload, the client should call '
+               '`DELETE /dataset/{id}/zip/{batchId}`.'
+               )
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('signature', 'Signature of license agreement.', paramType='form')
+    )
+    @access.user
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
+    def initiateZipUploadToS3(self, dataset, params):
+        params = self._decodeParams(params)
+        self.requireParams(['signature'], params)
+
+        user = self.getCurrentUser()
+        User().requireCreateDataset(user)
+
+        signature = params['signature'].strip()
+        if not signature:
+            raise ValidationException('Signature must be specified.', 'signature')
+
+        try:
+            return Dataset().initiateZipUploadS3(dataset=dataset, signature=signature, user=user)
+        except GirderException as e:
+            raise RestException(e.message)
+
+    @describeRoute(
+        Description('Cancel a direct-to-S3 upload of a ZIP file of images.')
+        .notes('Call this to cancel a direct-to-S3 upload instead of finalizing it.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('batchId', 'The ID of the batch.', paramType='path')
+    )
+    @access.user
+    @loadmodel(map={'batchId': 'batch'}, model='batch', plugin='isic_archive')
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
+    def cancelZipUploadToS3(self, dataset, batch, params):
+        user = self.getCurrentUser()
+        User().requireCreateDataset(user)
+
+        try:
+            Dataset().cancelZipUploadS3(dataset=dataset, batch=batch, user=user)
+        except GirderException as e:
+            raise RestException(e.message)
+
+    @describeRoute(
+        Description('Finalize a direct-to-S3 upload of a ZIP file of images.')
+        .notes('Call this after uploading the ZIP file of images to S3. '
+               'The images in the ZIP file will be added to the dataset.')
+        .param('id', 'The ID of the dataset.', paramType='path')
+        .param('batchId', 'The ID of the batch.', paramType='path')
+    )
+    @access.user
+    @loadmodel(map={'batchId': 'batch'}, model='batch', plugin='isic_archive')
+    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
+    def finalizeZipUploadToS3(self, dataset, batch, params):
+        user = self.getCurrentUser()
+        User().requireCreateDataset(user)
+
+        # TODO: Run as asynchronous celery task
+        try:
+            Dataset().finalizeZipUploadS3(dataset=dataset, batch=batch, user=user, sendMail=True)
+        except GirderException as e:
+            raise RestException(e.message)
 
     @describeRoute(
         Description('Get a list of images in this dataset to QC Review.')

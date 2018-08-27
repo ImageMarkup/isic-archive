@@ -17,9 +17,13 @@
 #  limitations under the License.
 ###############################################################################
 
+import boto3
+import botocore
 import datetime
 import itertools
+import json
 import os
+import time
 
 import six
 from natsort import natsorted
@@ -32,6 +36,7 @@ from girder.models.folder import Folder
 from girder.models.group import Group
 from girder.models.model_base import AccessControlledModel
 from girder.models.notification import ProgressState
+from girder.models.setting import Setting
 from girder.models.upload import Upload
 from girder.utility import mail_utils
 from girder.utility.progress import ProgressContext
@@ -41,7 +46,8 @@ from .batch import Batch
 from .dataset_helpers import matchFilenameRegex
 from .dataset_helpers.image_metadata import addImageMetadata
 from .user import User
-from ..upload import ZipFileOpener
+from ..settings import PluginSettings
+from ..upload import TempDir, ZipFileOpener
 from ..utility import generateLines
 from ..utility import mail_utils as isic_mail_utils
 
@@ -294,10 +300,201 @@ class Dataset(AccessControlledModel):
 
         return image
 
+    def initiateZipUploadS3(self, dataset, signature, user):
+        """
+        Initiate a direct-to-S3 upload of a ZIP file of images.
+
+        The AWS resources created by the following AWS CloudFormation template must exist:
+          aws/AWS-CloudFormation-Template-DataUpload.yaml
+        Note that the template includes outputs for the various data upload settings.
+        """
+        # Get data upload settings
+        accessKeyId = Setting().get(
+            PluginSettings.DATA_UPLOAD_USER_ACCESS_KEY_ID)
+        secretAccessKey = Setting().get(
+            PluginSettings.DATA_UPLOAD_USER_SECRET_ACCESS_KEY)
+        s3BucketName = Setting().get(
+            PluginSettings.DATA_UPLOAD_BUCKET_NAME)
+        uploadRoleArn = Setting().get(
+            PluginSettings.DATA_UPLOAD_ROLE_ARN)
+        if not all([accessKeyId, secretAccessKey, s3BucketName, uploadRoleArn]):
+            raise GirderException('Data upload not configured.')
+
+        # Create new batch
+        batch = Batch().createBatch(
+            dataset=dataset,
+            creator=user,
+            signature=signature)
+
+        # Add policy that restricts uploads to only the specific key
+        s3BucketArn = 'arn:aws:s3:::%s' % s3BucketName
+        s3ObjectKey = 'zip-uploads/%s' % batch['_id']
+        s3BucketPutObjectInKeyPolicy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "s3:PutObject",
+                    ],
+                    "Resource": "%s/%s" % (s3BucketArn, s3ObjectKey)
+                }
+            ]
+        }
+
+        # Get temporary security credentials with permission to upload into the
+        # object in the S3 bucket. The AWS Security Token Service (STS) provides
+        # the credentials when the upload user assumes the upload role.
+        sts = boto3.client(
+            'sts',
+            aws_access_key_id=accessKeyId,
+            aws_secret_access_key=secretAccessKey)
+        try:
+            resp = sts.assume_role(
+                RoleArn=uploadRoleArn,
+                RoleSessionName='ZipUploadSession-%d' % int(time.time()),
+                Policy=json.dumps(s3BucketPutObjectInKeyPolicy),
+                DurationSeconds=12*60*60  # 12 hours
+            )
+        except botocore.exceptions.ClientError as e:
+            raise GirderException('Error acquiring temporary security credentials: %s' %
+                                  e.response['Error']['Message'])
+
+        # TODO: Could store assumed role user ARN on batch for use as principal in a bucket policy
+        # that effectively revokes the temporary security credentials, before they expire,
+        # on cancel/finalize:
+        # https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_disable-perms.html
+        # assumedRoleUserArn = resp['AssumedRoleUser']['Arn']
+
+        credentials = resp['Credentials']
+
+        # Store upload information on batch
+        batch.update({
+            's3BucketName': s3BucketName,
+            's3ObjectKey': s3ObjectKey
+        })
+        batch = Batch().save(batch)
+
+        return {
+            'accessKeyId': credentials['AccessKeyId'],
+            'secretAccessKey': credentials['SecretAccessKey'],
+            'sessionToken': credentials['SessionToken'],
+            'bucketName': s3BucketName,
+            'objectKey': s3ObjectKey,
+            'batchId': batch['_id']
+        }
+
+    def cancelZipUploadS3(self, dataset, batch, user):
+        """
+        Cancel a direct-to-S3 upload of a ZIP file of images.
+        """
+        # Get data upload settings
+        accessKeyId = Setting().get(
+            PluginSettings.DATA_UPLOAD_USER_ACCESS_KEY_ID)
+        secretAccessKey = Setting().get(
+            PluginSettings.DATA_UPLOAD_USER_SECRET_ACCESS_KEY)
+        if not all([accessKeyId, secretAccessKey]):
+            raise GirderException('Data upload not configured.')
+
+        # Get upload information stored on batch
+        s3BucketName = batch.get('s3BucketName')
+        s3ObjectKey = batch.get('s3ObjectKey')
+        if not all([s3BucketName, s3ObjectKey]):
+            raise GirderException('Error retrieving upload information.')
+
+        # Delete file from S3 as upload user
+        s3 = boto3.client(
+            's3',
+            aws_access_key_id=accessKeyId,
+            aws_secret_access_key=secretAccessKey)
+        try:
+            s3.delete_object(
+                Bucket=s3BucketName,
+                Key=s3ObjectKey
+            )
+        except botocore.exceptions.ClientError as e:
+            raise GirderException('Error deleting object: %s' % e.response['Error']['Message'])
+
+        Batch().remove(batch)
+
+        # TODO: Could update bucket policy to effectively revoke temporary security credentials
+
+    def finalizeZipUploadS3(self, dataset, batch, user, sendMail=False):
+        """
+        Finalize a direct-to-S3 upload of a ZIP file of images. This involves several
+        steps:
+        - Download the ZIP file from S3 and add it as a file attached to the dataset.
+        - Delete the ZIP file from S3.
+        - Ingest images from the ZIP file into the dataset.
+        """
+        # Get data upload settings
+        accessKeyId = Setting().get(
+            PluginSettings.DATA_UPLOAD_USER_ACCESS_KEY_ID)
+        secretAccessKey = Setting().get(
+            PluginSettings.DATA_UPLOAD_USER_SECRET_ACCESS_KEY)
+        if not all([accessKeyId, secretAccessKey]):
+            raise GirderException('Data upload not configured.')
+
+        # Get upload information stored on batch
+        s3BucketName = batch.get('s3BucketName')
+        s3ObjectKey = batch.get('s3ObjectKey')
+        if not all([s3BucketName, s3ObjectKey]):
+            raise GirderException('Error retrieving upload information.')
+
+        # Move file from S3 to the assetstore, attached to the dataset
+        s3 = boto3.client(
+            's3',
+            aws_access_key_id=accessKeyId,
+            aws_secret_access_key=secretAccessKey)
+        try:
+            with TempDir() as tempDir:
+                # Download file from S3 as upload user
+                fileName = os.path.join(tempDir, str(batch['_id']) + '.zip')
+                s3.download_file(
+                    Bucket=s3BucketName,
+                    Key=s3ObjectKey,
+                    Filename=fileName
+                )
+
+                # Attach file to dataset
+                fileSize = os.path.getsize(fileName)
+                with open(fileName, 'rb') as fileStream:
+                    zipFile = Upload().uploadFromFile(
+                        obj=fileStream,
+                        size=fileSize,
+                        name=fileName,
+                        parentType='dataset',
+                        parent=dataset,
+                        attachParent=True,
+                        user=user,
+                        mimeType='application/zip'
+                    )
+                # TODO: remove this once a bug in upstream Girder is fixed
+                zipFile['attachedToType'] = ['dataset', 'isic_archive']
+                zipFile = File().save(zipFile)
+
+                # Delete file from S3 as upload user
+                s3.delete_object(
+                    Bucket=s3BucketName,
+                    Key=s3ObjectKey
+                )
+
+                # Remove upload information from batch
+                del batch['s3BucketName']
+                del batch['s3ObjectKey']
+                batch = Batch().save(batch)
+
+                # TODO: Could update bucket policy to effectively revoke temporary security
+                # credentials
+        except botocore.exceptions.ClientError as e:
+            raise GirderException('Error downloading object: %s' % e.response['Error']['Message'])
+
+        # Ingest images from ZIP file into dataset
+        self._ingestZip(dataset, zipFile, batch, user, sendMail)
+
     def addZipBatch(self, dataset, zipFile, signature, user, sendMail=False):
         """
-        Ingest an uploaded dataset from a .zip file of images. The images are
-        extracted to a "Pre-review" folder within the dataset folder.
+        Create a new batch and ingest images from a ZIP file into the dataset.
         """
         batch = Batch().createBatch(
             dataset=dataset,
@@ -305,6 +502,13 @@ class Dataset(AccessControlledModel):
             signature=signature
         )
 
+        self._ingestZip(dataset, zipFile, batch, user, sendMail)
+
+    def _ingestZip(self, dataset, zipFile, batch, user, sendMail):
+        """
+        Ingest images from a ZIP file into a dataset. The images are
+        extracted to a "Pre-review" folder within the dataset folder.
+        """
         prereviewFolder = Folder().createFolder(
             parent=self.imagesFolder(dataset),
             name='Pre-review',

@@ -4,5 +4,26 @@ form#isic-config-form
     label.control-label(for="isic-config-demo-mode") Demo Mode
     p Newly registered users will automatically have full access to all phases.
     input#isic-config-demo-mode.input-sm.form-control(type="checkbox")
+  .g-settings-form-container
+    h4 Data Upload to S3
+    p.
+      Amazon Web Services (AWS) resource configuration to support clients
+      uploading data directly to S3.
+    .form-group
+      label.control-label(for="isic-config-data-upload-user-access-key-id") User access key ID
+      input#isic-config-data-upload-user-access-key-id.input-sm.form-control(
+        type="text", placeholder="Enter AWS user access key ID")
+    .form-group
+      label.control-label(for="isic-config-data-upload-user-secret-access-key") User secret access key
+      input#isic-config-data-upload-user-secret-access-key.input-sm.form-control(
+        type="text", placeholder="Enter AWS user secret access key")
+    .form-group
+      label.control-label(for="isic-config-data-upload-s3-bucket-name") S3 bucket name
+      input#isic-config-data-upload-s3-bucket-name.input-sm.form-control(
+        type="text", placeholder="Enter AWS S3 bucket name")
+    .form-group
+      label.control-label(for="isic-config-data-upload-role-arn") Upload role ARN
+      input#isic-config-data-upload-role-arn.input-sm.form-control(
+        type="text", placeholder="Enter AWS IAM role ARN")
   p#isic-config-error-message.g-validation-failed-message
   input.btn.btn-sm.btn-primary(type="submit", value="Save")
