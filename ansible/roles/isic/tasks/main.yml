@@ -1,13 +1,13 @@
 ---
 
-#- name: Download
-#  git:
-#    repo: "https://github.com/ImageMarkup/isic-archive.git"
-#    dest: "{{ isic_archive_path }}"
-##    version: "{{ isic_archive_version }}"
-#    update: no
-#    force: yes
-#  notify: Build Girder
+- name: Download
+  git:
+    repo: "https://github.com/imagemarkup/isic-archive.git"
+    dest: "{{ isic_archive_path }}"
+    version: "{{ isic_archive_version }}"
+    update: no
+    force: yes
+  notify: Build Girder
 
 - name: Install package dependencies
   apt:
