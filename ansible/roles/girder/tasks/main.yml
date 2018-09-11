@@ -5,14 +5,14 @@
     name: "{{ item }}"
   become: yes
   with_items:
+    - curl
     - git
-    - build-essential
-    - python-dev
-    - python-tk
-    - tcl8.6-dev
-    - tk8.6-dev
     - libffi-dev
+    - build-essential
+    - libgif-dev
+    - libjpeg-dev
     - libssl-dev
+    - zlib1g-dev
 
 - name: Download
   git:
