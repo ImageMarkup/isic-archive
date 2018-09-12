@@ -1,7 +1,4 @@
 ---
 
-- src: DigitalSlideArchive.vips
-  version: v0.3
-
 - src: girder.girder
   version: master

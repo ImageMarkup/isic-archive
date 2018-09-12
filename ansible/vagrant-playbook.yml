@@ -1,5 +1,4 @@
 ---
-
 - name: vagrant setup
   hosts: all
   # TODO: setup SSH reverse lookup

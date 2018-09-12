@@ -10,7 +10,7 @@ end
 Vagrant.configure("2") do |config|
   bind_node_modules = true?(ENV.fetch("BIND_NODE_MODULES", Vagrant::Util::Platform.windows?))
 
-  config.vm.box = "bento/ubuntu-16.04"
+  config.vm.box = "ubuntu/bionic64"
   config.vm.hostname = "isic-archive.devel"
   config.vm.provider "virtualbox" do |virtualbox|
     virtualbox.name = "isic-archive.devel"
@@ -31,7 +31,9 @@ Vagrant.configure("2") do |config|
     ansible.galaxy_role_file = "requirements.yml"
     ansible.playbook = "vagrant-playbook.yml"
     ansible.extra_vars = {
-      bind_node_modules: bind_node_modules
+      ansible_python_interpreter: "/usr/bin/python2.7",
+      bind_node_modules: bind_node_modules,
+      isic_archive_clone: false
     }
   end
 

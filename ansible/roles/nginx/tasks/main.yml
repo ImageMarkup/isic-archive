@@ -8,7 +8,7 @@
 - name: Remove default site config file
   file:
     state: absent
-    path: "/etc/nginx/sites-available/default"
+    path: "/etc/nginx/sites-enabled/default"
   become: yes
 
 - name: Deploy base config file

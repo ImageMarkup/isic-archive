@@ -2,3 +2,4 @@
 
 isic_archive_path: "{{ ansible_user_dir }}/isic_archive"
 isic_archive_version: "master"
+isic_archive_clone: yes

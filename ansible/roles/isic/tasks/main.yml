@@ -5,6 +5,7 @@
     repo: "https://github.com/imagemarkup/isic-archive.git"
     dest: "{{ isic_archive_path }}"
     version: "{{ isic_archive_version }}"
+    clone: "{{ isic_archive_clone }}"
     update: no
     force: yes
   notify: Build Girder
@@ -15,6 +16,12 @@
   become: yes
   with_items:
     - p7zip-full
+
+- name: Install large_image plugin
+  command: "{{ python_dist_path }}/bin/girder-install plugin --force --symlink {{ large_image_path }}"
+  notify:
+    - Restart Girder
+    - Build Girder
 
 - name: Install ISIC Archive
   command: "{{ python_dist_path }}/bin/girder-install plugin --force --symlink {{ isic_archive_path }}"

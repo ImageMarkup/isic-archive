@@ -5,3 +5,8 @@ dependencies:
   - role: supervisor
   - role: worker
   - role: large_image
+    large_image_virtualenv: "{{ python_dist_path }}"
+    large_image_tile_sources:
+      - tiff
+    large_image_include_vips: true
+    large_image_version: "4dc82976d58b2a6e6542863e2e410628649a040c"
