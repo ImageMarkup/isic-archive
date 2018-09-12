@@ -20,6 +20,8 @@ Prerequisites
    If Vagrant < 1.8.3 is used, then Ansible_ version > 2.0 must also be installed on the
    host development machine.
 
+* vagrant-hostsupdater_
+
 * VirtualBox_ (this may sometimes be installed automatically by Vagrant)
 
 Installation
@@ -102,6 +104,8 @@ Development
     :alt: License
 
 .. _Vagrant: https://www.vagrantup.com/downloads.html
+
+.. _vagrant-hostsupdater: https://github.com/cogitatio/vagrant-hostsupdater#installation
 
 .. _Ansible: https://docs.ansible.com/ansible/intro_installation.html
 

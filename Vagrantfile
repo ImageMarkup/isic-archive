@@ -19,6 +19,7 @@ Vagrant.configure("2") do |config|
     virtualbox.customize [ "modifyvm", :id, "--uartmode1", "disconnected" ]
   end
 
+  config.vm.network :private_network, ip: "192.168.3.10"
   config.vm.network "forwarded_port", guest: 80, host: 8080
   config.vm.post_up_message = "ISIC Archive is running at http://localhost:8080"
 
