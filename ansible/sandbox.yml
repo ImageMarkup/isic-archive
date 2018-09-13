@@ -86,9 +86,14 @@
       isic_archive_path: "{{ ansible_user_dir }}/isic_archive"
       isic_archive_assetstore_path: "/storage/girder/assetstore"
 
+    - role: certbot
+      domain: sandbox.isic-archive.com
+      email: brian.helba@kitware.com
+
     - role: nginx
       site_hostname: sandbox.isic-archive.com
       upstream_proxy: true
+      ssl: true
 
   post_tasks:
     - name: Activate virtualenv on login

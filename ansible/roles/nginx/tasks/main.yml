@@ -31,28 +31,6 @@
   become: yes
   notify: Restart Nginx
 
-- name: Deploy SSL certificate file
-  copy:
-    src: "{{ ssl.certificate_file }}"
-    dest: "/etc/ssl/certs/{{ site_hostname }}.pem"
-    owner: root
-    group: root
-    mode: 0644
-  become: yes
-  notify: Restart Nginx
-  when: ssl
-
-- name: Deploy SSL key file
-  copy:
-    src: "{{ ssl.key_file }}"
-    dest: "/etc/ssl/private/{{ site_hostname }}.key"
-    owner: root
-    group: root
-    mode: 0600
-  become: yes
-  notify: Restart Nginx
-  when: ssl
-
 - name: Deploy supervisor site config file
   template:
     src: "supervisor.conf.j2"
