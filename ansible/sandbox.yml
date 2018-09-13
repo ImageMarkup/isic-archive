@@ -1,0 +1,98 @@
+---
+- hosts: all
+  gather_facts: no
+
+  tasks:
+  - name: install python 2
+    raw: test -e /usr/bin/python || (apt -y update && apt install -y python2.7)
+    become: yes
+
+- name: Provision ISIC Archive
+  hosts: sandbox
+
+  vars:
+    # TODO figure out how to programatically detect this:
+    # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nvme-ebs-volumes.html
+    volume_path: "/dev/nvme1n1"
+    mongo_data_path: "/storage/mongodb"
+
+  pre_tasks:
+    - name: Check if volume is attached
+      stat:
+        path: "{{ volume_path }}"
+      register: dev
+
+    - fail:
+        msg: "Volume isn't attached at {{ volume_path }}, cannot mount."
+      when: not dev.stat.exists
+
+    - name: Create partition for volume
+      parted:
+        device: "{{ volume_path }}"
+        number: 1
+        state: present
+      when: dev.stat.exists
+      become: yes
+      become_user: root
+
+    - name: Create filesystem for volume
+      filesystem:
+        dev: "{{ volume_path }}p1"
+        fstype: ext4
+      when: dev.stat.exists
+      become: yes
+      become_user: root
+
+    - name: Add fstab entry for volume
+      mount:
+        path: /storage
+        src: "{{ volume_path }}p1"
+        fstype: ext4
+        state: present
+      become: yes
+      become_user: root
+
+    - name: Mount storage filesystem
+      mount:
+        path: /storage
+        src: "{{ volume_path }}p1"
+        fstype: ext4
+        state: mounted
+      become: yes
+      become_user: root
+
+    - name: Chown mongodb data dir
+      file:
+        path: /storage/mongodb
+        mode: 0700
+        owner: mongodb
+        group: mongodb
+        state: directory
+      become: yes
+      become_user: root
+
+    - name: Chown Girder assetstore dir
+      file:
+        path: /storage/girder/assetstore
+        mode: 0755
+        owner: ubuntu
+        group: ubuntu
+        state: directory
+      become: yes
+      become_user: root
+
+  roles:
+    - role: isic
+      isic_archive_path: "{{ ansible_user_dir }}/isic_archive"
+      isic_archive_assetstore_path: "/storage/girder/assetstore"
+
+    - role: nginx
+      site_hostname: sandbox.isic-archive.com
+      upstream_proxy: true
+
+  post_tasks:
+    - name: Activate virtualenv on login
+      lineinfile:
+        line: 'source {{ python_dist_path }}/bin/activate'
+        path: "{{ ansible_user_dir }}/.profile"
+        state: present

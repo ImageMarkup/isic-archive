@@ -59,8 +59,7 @@
     assetstore:
       name: "Default"
       type: "filesystem"
-      # TODO: make "root" a variable
-      root: "{{ ansible_user_dir }}/assetstores/default"
+      root: "{{ isic_archive_assetstore_path }}"
       current: true
     state: present
 

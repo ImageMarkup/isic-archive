@@ -5,6 +5,14 @@
     name: mongodb-server
   become: yes
 
+- name: Configure mongodb path
+  lineinfile:
+    path: "/etc/mongodb.conf"
+    regexp: "^dbpath="
+    line: "dbpath={{ mongo_data_path }}"
+  become: yes
+  become_user: root
+
 - name: Start and enable service
   service:
     name: mongodb
