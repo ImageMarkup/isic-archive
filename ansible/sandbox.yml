@@ -15,6 +15,7 @@
     # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nvme-ebs-volumes.html
     volume_path: "/dev/nvme1n1"
     mongo_data_path: "/storage/mongodb"
+    bind_node_modules: false
 
   pre_tasks:
     - name: Check if volume is attached
