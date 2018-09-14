@@ -94,6 +94,7 @@
     - role: nginx
       site_hostname: sandbox.isic-archive.com
       upstream_proxy: true
+      redirect_canonical: true
       ssl: true
 
   post_tasks:
