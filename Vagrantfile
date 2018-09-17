@@ -10,7 +10,7 @@ end
 Vagrant.configure("2") do |config|
   bind_node_modules = true?(ENV.fetch("BIND_NODE_MODULES", Vagrant::Util::Platform.windows?))
 
-  config.vm.box = "ubuntu/bionic64"
+  config.vm.box = "bento/ubuntu-18.04"
   config.vm.hostname = "isic-archive.devel"
   config.vm.provider "virtualbox" do |virtualbox|
     virtualbox.name = "isic-archive.devel"
