@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: primary
   gather_facts: no
 
   tasks:
@@ -8,11 +8,12 @@
     become: yes
 
 - name: Provision ISIC Archive
-  hosts: sandbox
+  hosts: primary
 
   vars:
     mongo_data_path: "/storage/mongodb"
     bind_node_modules: false
+    ansible_python_interpreter: /usr/bin/python2.7
 
   pre_tasks:
     - name: Find path to storage volume
@@ -69,16 +70,6 @@
       become: yes
       become_user: root
 
-    - name: Chown mongodb data dir
-      file:
-        path: /storage/mongodb
-        mode: 0700
-        owner: mongodb
-        group: mongodb
-        state: directory
-      become: yes
-      become_user: root
-
     - name: Chown Girder assetstore dir
       file:
         path: /storage/girder/assetstore
@@ -105,6 +96,16 @@
       ssl: true
 
   post_tasks:
+    - name: Chown mongodb data dir
+      file:
+        path: /storage/mongodb
+        mode: 0700
+        owner: mongodb
+        group: mongodb
+        state: directory
+      become: yes
+      become_user: root
+
     - name: Activate virtualenv on login
       lineinfile:
         line: 'source {{ python_dist_path }}/bin/activate'
