@@ -14,6 +14,7 @@
     mongo_data_path: "/storage/mongodb"
     bind_node_modules: false
     ansible_python_interpreter: /usr/bin/python2.7
+    domain_name: "sandbox.isic-archive.com"
 
   pre_tasks:
     - name: Find path to storage volume
@@ -86,11 +87,11 @@
       isic_archive_assetstore_path: "/storage/girder/assetstore"
 
     - role: certbot
-      domain: sandbox.isic-archive.com
+      domain: "{{ domain_name }}"
       email: brian.helba@kitware.com
 
     - role: nginx
-      site_hostname: sandbox.isic-archive.com
+      site_hostname: "{{ domain_name }}"
       upstream_proxy: true
       redirect_canonical: true
       ssl: true
