@@ -11,13 +11,20 @@
   hosts: sandbox
 
   vars:
-    # TODO figure out how to programatically detect this:
-    # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nvme-ebs-volumes.html
-    volume_path: "/dev/nvme1n1"
     mongo_data_path: "/storage/mongodb"
     bind_node_modules: false
 
   pre_tasks:
+    - name: Find path to storage volume
+      shell: |
+        readlink -f $(ls /dev/disk/by-id/nvme-Amazon_Elastic_Block_Store_{{ storage_volume_id }})
+      changed_when: false
+      become: yes
+      register: volume_path_cmd
+
+    - set_fact:
+        volume_path: "{{ volume_path_cmd.stdout }}"
+
     - name: Check if volume is attached
       stat:
         path: "{{ volume_path }}"
