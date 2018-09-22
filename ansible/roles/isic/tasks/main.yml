@@ -91,6 +91,22 @@
     - "worker.broker"
   notify: Restart Girder
 
+- name: Set CORS settings
+  girder:
+    username: "{{ girder_admin_username }}"
+    password: "{{ girder_admin_password }}"
+    port: "{{ girder_port }}"
+    setting:
+      key: "{{ item.key }}"
+      value: "{{ item.value }}"
+    state: present
+  with_items:
+    - key: "core.cors.allow_origin"
+      value: "{{ isic_cors_allow_origin }}"
+    - key: "core.cors.allow_methods"
+      value: "{{ isic_cors_allow_methods }}"
+  notify: Restart Girder
+
 - name: Remount webroots
   girder:
     username: "{{ girder_admin_username }}"

@@ -5,3 +5,6 @@ isic_archive_version: "master"
 isic_archive_clone: yes
 
 isic_archive_assetstore_path: "{{ ansible_user_dir }}/assetstores/default"
+
+isic_cors_allow_origin: ""
+isic_cors_allow_methods: ""
