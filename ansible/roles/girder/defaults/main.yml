@@ -4,3 +4,5 @@ girder_version: "master"
 girder_path: "{{ ansible_user_dir }}/girder"
 
 girder_port: 8080
+
+build_girder: yes
