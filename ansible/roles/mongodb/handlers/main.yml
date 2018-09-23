@@ -1,0 +1,7 @@
+---
+
+- listen: Restart Mongo
+  service:
+    name: mongodb
+    state: restarted
+  become: yes

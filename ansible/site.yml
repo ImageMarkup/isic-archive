@@ -11,10 +11,9 @@
   hosts: primary
 
   vars:
-    mongo_data_path: "/storage/mongodb"
+    mongo_data_path: "/srv/mongodb"
     bind_node_modules: false
     ansible_python_interpreter: /usr/bin/python2.7
-    domain_name: "sandbox.isic-archive.com"
 
   pre_tasks:
     - name: Find path to storage volume
@@ -27,64 +26,22 @@
     - set_fact:
         volume_path: "{{ volume_path_cmd.stdout }}"
 
-    - name: Check if volume is attached
-      stat:
-        path: "{{ volume_path }}"
-      register: dev
-
-    - fail:
-        msg: "Volume isn't attached at {{ volume_path }}, cannot mount."
-      when: not dev.stat.exists
-
-    - name: Create partition for volume
-      parted:
-        device: "{{ volume_path }}"
-        number: 1
-        state: present
-      when: dev.stat.exists
-      become: yes
-      become_user: root
-
-    - name: Create filesystem for volume
-      filesystem:
-        dev: "{{ volume_path }}p1"
-        fstype: ext4
-      when: dev.stat.exists
-      become: yes
-      become_user: root
-
-    - name: Add fstab entry for volume
-      mount:
-        path: /storage
-        src: "{{ volume_path }}p1"
-        fstype: ext4
-        state: present
-      become: yes
-      become_user: root
-
     - name: Mount storage filesystem
       mount:
-        path: /storage
-        src: "{{ volume_path }}p1"
+        path: /srv
+        src: "{{ volume_path }}"
         fstype: ext4
         state: mounted
-      become: yes
-      become_user: root
-
-    - name: Chown Girder assetstore dir
-      file:
-        path: /storage/girder/assetstore
-        mode: 0755
-        owner: ubuntu
-        group: ubuntu
-        state: directory
+      notify: Restart Mongo
       become: yes
       become_user: root
 
   roles:
     - role: isic
       isic_archive_path: "{{ ansible_user_dir }}/isic_archive"
-      isic_archive_assetstore_path: "/storage/girder/assetstore"
+      isic_archive_assetstore_path: "/srv/girder/default"
+      isic_cors_allow_origin: "https://dermannotator.org, https://www.isic-archive.com, http://display.isic-archive.com"
+      isic_cors_allow_methods: "HEAD, GET, POST, PUT, DELETE"
 
     - role: certbot
       domain: "{{ domain_name }}"
@@ -97,13 +54,24 @@
       ssl: true
 
   post_tasks:
+    - name: Chown Girder assetstore dir
+      file:
+        path: /srv/girder
+        mode: 0755
+        owner: ubuntu
+        group: ubuntu
+        state: directory
+      become: yes
+      become_user: root
+
     - name: Chown mongodb data dir
       file:
-        path: /storage/mongodb
+        path: "{{ mongo_data_path }}"
         mode: 0700
         owner: mongodb
         group: mongodb
         state: directory
+        recurse: yes
       become: yes
       become_user: root
 
