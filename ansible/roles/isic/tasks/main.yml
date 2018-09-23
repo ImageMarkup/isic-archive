@@ -105,7 +105,23 @@
       value: "{{ isic_cors_allow_origin }}"
     - key: "core.cors.allow_methods"
       value: "{{ isic_cors_allow_methods }}"
-  notify: Restart Girder
+
+- name: Set SMTP settings
+  girder:
+    username: "{{ girder_admin_username }}"
+    password: "{{ girder_admin_password }}"
+    port: "{{ girder_port }}"
+    setting:
+      key: "{{ item.key }}"
+      value: "{{ item.value }}"
+    state: present
+  with_items:
+    - key: "core.smtp_host"
+      value: "localhost"
+    - key: "core.smtp.username"
+      value: ""
+    - key: "core.smtp.password"
+      value: ""
 
 - name: Remount webroots
   girder:
