@@ -1,0 +1,26 @@
+---
+- name: Download MailHog
+  get_url:
+    url: "https://github.com/mailhog/MailHog/releases/download/v1.0.0/MailHog_linux_amd64"
+    dest: "/usr/local/bin/mailhog"
+    owner: root
+    group: root
+    mode: 0755
+  become: true
+
+- name: Copy mailhog systemd unit file into place (for systemd systems).
+  template:
+    src: mailhog.service.j2
+    dest: /etc/systemd/system/mailhog.service
+    owner: root
+    group: root
+    mode: 0755
+  become: true
+
+- name: Start/enable mailhog
+  systemd:
+    name: "mailhog"
+    daemon_reload: true
+    state: "started"
+    enabled: true
+  become: true

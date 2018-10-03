@@ -1,0 +1,15 @@
+[Unit]
+Description=MailHog Email Catcher
+After=syslog.target network.target
+
+[Service]
+Type=simple
+Environment=MH_API_BIND_ADDR=127.0.0.1:8025
+Environment=MH_UI_BIND_ADDR=127.0.0.1:8025
+Environment=MH_SMTP_BIND_ADDR=127.0.0.1:1025
+ExecStart=/usr/local/bin/mailhog
+StandardOutput=journal
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

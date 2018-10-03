@@ -106,7 +106,7 @@
     - key: "core.cors.allow_methods"
       value: "{{ isic_cors_allow_methods }}"
 
-- name: Set SMTP settings
+- name: Set ISIC settings
   girder:
     username: "{{ girder_admin_username }}"
     password: "{{ girder_admin_password }}"
@@ -116,12 +116,20 @@
       value: "{{ item.value }}"
     state: present
   with_items:
+    - key: "core.email_host"
+      value: "{{ isic_email_host }}"
     - key: "core.smtp_host"
-      value: "localhost"
+      value: "{{ isic_smtp_host }}"
+    - key: "core.smtp.port"
+      value: "{{ isic_smtp_port }}"
     - key: "core.smtp.username"
-      value: ""
+      value: "{{ isic_smtp_username }}"
     - key: "core.smtp.password"
-      value: ""
+      value: "{{ isic_smtp_password }}"
+    - key: "core.smtp.encryption"
+      value: "{{ isic_smtp_encryption }}"
+    - key: "core.email_verification"
+      value: "{{ isic_email_verification }}"
 
 - name: Remount webroots
   girder:
