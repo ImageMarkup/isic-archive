@@ -337,15 +337,11 @@ class Dataset(AccessControlledModel):
         Note that the template includes outputs for the various data upload settings.
         """
         # Get data upload settings
-        accessKeyId = Setting().get(
-            PluginSettings.DATA_UPLOAD_USER_ACCESS_KEY_ID)
-        secretAccessKey = Setting().get(
-            PluginSettings.DATA_UPLOAD_USER_SECRET_ACCESS_KEY)
         s3BucketName = Setting().get(
             PluginSettings.DATA_UPLOAD_BUCKET_NAME)
         uploadRoleArn = Setting().get(
             PluginSettings.DATA_UPLOAD_ROLE_ARN)
-        if not all([accessKeyId, secretAccessKey, s3BucketName, uploadRoleArn]):
+        if not all([s3BucketName, uploadRoleArn]):
             raise GirderException('Data upload not configured.')
 
         # Create new batch
@@ -372,17 +368,14 @@ class Dataset(AccessControlledModel):
 
         # Get temporary security credentials with permission to upload into the
         # object in the S3 bucket. The AWS Security Token Service (STS) provides
-        # the credentials when the upload user assumes the upload role.
-        sts = boto3.client(
-            'sts',
-            aws_access_key_id=accessKeyId,
-            aws_secret_access_key=secretAccessKey)
+        # the credentials when the machine assumes the upload role.
+        sts = boto3.client('sts')
         try:
             resp = sts.assume_role(
                 RoleArn=uploadRoleArn,
                 RoleSessionName='ZipUploadSession-%d' % int(time.time()),
                 Policy=json.dumps(s3BucketPutObjectInKeyPolicy),
-                DurationSeconds=12*60*60  # 12 hours
+                DurationSeconds=12*60*60  # 12 hours, also limited by the MaxSessionDuration of the role
             )
         except botocore.exceptions.ClientError as e:
             raise GirderException('Error acquiring temporary security credentials: %s' %
@@ -416,14 +409,6 @@ class Dataset(AccessControlledModel):
         """
         Cancel a direct-to-S3 upload of a ZIP file of images.
         """
-        # Get data upload settings
-        accessKeyId = Setting().get(
-            PluginSettings.DATA_UPLOAD_USER_ACCESS_KEY_ID)
-        secretAccessKey = Setting().get(
-            PluginSettings.DATA_UPLOAD_USER_SECRET_ACCESS_KEY)
-        if not all([accessKeyId, secretAccessKey]):
-            raise GirderException('Data upload not configured.')
-
         # Get upload information stored on batch
         s3BucketName = batch.get('s3BucketName')
         s3ObjectKey = batch.get('s3ObjectKey')
@@ -431,10 +416,7 @@ class Dataset(AccessControlledModel):
             raise GirderException('Error retrieving upload information.')
 
         # Delete file from S3 as upload user
-        s3 = boto3.client(
-            's3',
-            aws_access_key_id=accessKeyId,
-            aws_secret_access_key=secretAccessKey)
+        s3 = boto3.client('s3')
         try:
             s3.delete_object(
                 Bucket=s3BucketName,
@@ -455,14 +437,6 @@ class Dataset(AccessControlledModel):
         - Delete the ZIP file from S3.
         - Ingest images from the ZIP file into the dataset.
         """
-        # Get data upload settings
-        accessKeyId = Setting().get(
-            PluginSettings.DATA_UPLOAD_USER_ACCESS_KEY_ID)
-        secretAccessKey = Setting().get(
-            PluginSettings.DATA_UPLOAD_USER_SECRET_ACCESS_KEY)
-        if not all([accessKeyId, secretAccessKey]):
-            raise GirderException('Data upload not configured.')
-
         # Get upload information stored on batch
         s3BucketName = batch.get('s3BucketName')
         s3ObjectKey = batch.get('s3ObjectKey')
@@ -470,10 +444,7 @@ class Dataset(AccessControlledModel):
             raise GirderException('Error retrieving upload information.')
 
         # Move file from S3 to the assetstore, attached to the dataset
-        s3 = boto3.client(
-            's3',
-            aws_access_key_id=accessKeyId,
-            aws_secret_access_key=secretAccessKey)
+        s3 = boto3.client('s3')
         try:
             with TempDir() as tempDir:
                 # Download file from S3 as upload user
