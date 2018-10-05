@@ -8,7 +8,7 @@
       isic_archive_path: "{{ ansible_user_dir }}/isic_archive"
 
     - role: nginx
-      site_hostname: isic-archive.devel
+      site_hostname: isic-archive.localhost
       upstream_proxy: true
 
   post_tasks:

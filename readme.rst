@@ -39,7 +39,7 @@ Installation
     # from within the "isic-archive" sub-directory
     vagrant up
 
-* Use a web browser to visit ``http://127.0.0.1:8080/`` from your host
+* Use a web browser to visit ``http://isic-archive.localhost/`` from your host
   development machine.
 
 * Login as the user ``admin`` with password ``password``. This user can be also used for granting
@@ -49,13 +49,7 @@ Installation
 Development
 ~~~~~~~~~~~
   **Note**:
-  Optionally, after adding the following line to your host systems's
-  ``/etc/hosts`` file:
-  ::
-
-    127.0.0.1 isic-archive.upstream
-
-  you can visit ``http://isic-archive.upstream:8080/`` on your host development
+  You can visit ``http://isic-archive.test:8080/`` on your host development
   machine to access a version of the site that uses the local instance for all
   static front-end code, but proxies all API calls to the instance at
   ``isic-archive.com``.
