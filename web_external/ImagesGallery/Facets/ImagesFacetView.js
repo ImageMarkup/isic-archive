@@ -508,13 +508,12 @@ const ImagesFacetCategoricalDatasetView = ImagesFacetCategoricalView.extend({
         ImagesFacetCategoricalView.prototype.initialize.call(this, settings);
 
         this.datasetCollection = new DatasetCollection();
+        this.datasetCollection.pageLimit = Number.MAX_SAFE_INTEGER;
         this.datasetCollection
             .once('g:changed', () => {
                 this.render();
             })
-            .fetch({
-                limit: 0
-            });
+            .fetch();
     },
 
     render: function () {
