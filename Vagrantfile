@@ -36,9 +36,7 @@ eos
     ansible.galaxy_role_file = "requirements.yml"
     ansible.playbook = "vagrant-playbook.yml"
     ansible.extra_vars = {
-      ansible_python_interpreter: "/usr/bin/python2.7",
-      bind_node_modules: bind_node_modules,
-      isic_archive_clone: false
+      bind_node_modules: bind_node_modules
     }
   end
 

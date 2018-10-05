@@ -1,6 +1,11 @@
 ---
 - name: vagrant setup
   hosts: all
+
+  vars:
+      ansible_python_interpreter: "/usr/bin/python2.7"
+      isic_archive_clone: false
+
   # TODO: setup SSH reverse lookup
   # TODO: set hostname
   roles:
