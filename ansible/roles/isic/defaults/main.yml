@@ -8,3 +8,11 @@ isic_archive_assetstore_path: "{{ ansible_user_dir }}/assetstores/default"
 
 isic_cors_allow_origin: ""
 isic_cors_allow_methods: ""
+
+isic_email_host: "http://localhost:8080"
+isic_smtp_host: "localhost"
+isic_smtp_port: "25"
+isic_smtp_username: ""
+isic_smtp_password: ""
+isic_smtp_encryption: "none"
+isic_email_verification: "optional"

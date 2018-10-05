@@ -20,9 +20,13 @@ Vagrant.configure("2") do |config|
     virtualbox.customize [ "modifyvm", :id, "--uartmode1", "disconnected" ]
   end
 
-  config.vm.network "forwarded_port", guest: 80, host: 8080
   config.vm.network :private_network, ip: "172.16.0.10"
-  config.vm.post_up_message = "ISIC Archive is running at http://isic-archive.localhost"
+  config.vm.network "forwarded_port", guest: 80, host: 8080  # ISIC Archive
+  config.vm.network "forwarded_port", guest: 8025, host: 8025  # MailHog
+  config.vm.post_up_message = <<-eos
+ISIC Archive is running at http://isic-archive.localhost
+MailHog is running at http://isic-archive.localhost:8025
+eos
 
   config.vm.synced_folder ".", "/vagrant", disabled: true
   config.vm.synced_folder ".", "/home/vagrant/isic_archive"

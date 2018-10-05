@@ -4,8 +4,13 @@
   # TODO: setup SSH reverse lookup
   # TODO: set hostname
   roles:
+    - role: mailhog
+
     - role: isic
       isic_archive_path: "{{ ansible_user_dir }}/isic_archive"
+      isic_email_host: "http://isic-archive.localhost"
+      isic_smtp_host: "localhost"
+      isic_smtp_port: "1025"
 
     - role: nginx
       site_hostname: isic-archive.localhost
