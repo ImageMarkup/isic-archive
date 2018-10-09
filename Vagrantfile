@@ -21,8 +21,6 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.network :private_network, ip: "172.16.0.10"
-  config.vm.network "forwarded_port", guest: 80, host: 8080  # ISIC Archive
-  config.vm.network "forwarded_port", guest: 8025, host: 8025  # MailHog
   config.vm.post_up_message = <<-eos
 ISIC Archive is running at http://isic-archive.localhost
 MailHog is running at http://isic-archive.localhost:8025

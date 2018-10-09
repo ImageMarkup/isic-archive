@@ -49,7 +49,7 @@ Installation
 Development
 ~~~~~~~~~~~
   **Note**:
-  You can visit ``http://isic-archive.test:8080/`` on your host development
+  You can visit ``http://isic-archive.test/`` on your host development
   machine to access a version of the site that uses the local instance for all
   static front-end code, but proxies all API calls to the instance at
   ``isic-archive.com``.
