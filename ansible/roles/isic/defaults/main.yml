@@ -16,3 +16,6 @@ isic_smtp_username: ""
 isic_smtp_password: ""
 isic_smtp_encryption: "none"
 isic_email_verification: "optional"
+
+isic_upload_role_arn: ""
+isic_upload_bucket_name: ""
