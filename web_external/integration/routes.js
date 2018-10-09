@@ -66,6 +66,10 @@ import UploadBatchView from '../Datasets/UploadBatchView';
 router.route('dataset/upload/batch', 'uploadBatch', () => {
     navigateToIfCanCreateDataset(UploadBatchView);
 });
+router.route('dataset/create', 'createDataset', () => {
+    navigateToIfCanCreateDataset(UploadBatchView);
+    window.location.replace('https://www.isic-archive.com/#!/topWithHeader/tightContentTop/createDataset');
+});
 import ApplyMetadataView from '../Datasets/ApplyMetadataView';
 router.route('dataset/:id/metadata/apply', 'applyMetadata', (id) => {
     // Fetch the dataset, then navigate to the view

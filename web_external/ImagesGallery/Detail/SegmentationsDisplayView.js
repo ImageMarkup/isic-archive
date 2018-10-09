@@ -70,14 +70,14 @@ const SegmentationsDisplayView = View.extend({
         this.image = settings.image;
 
         this.segmentations = new SelectableSegmentationCollection();
+        this.segmentations.pageLimit = Number.MAX_SAFE_INTEGER;
         this.listenTo(this.segmentations, 'g:changed', this.render);
         this.listenTo(this.segmentations, 'select:one', this.onSelected);
 
         this.segmentationDisplayView = null;
 
         this.segmentations.fetch({
-            imageId: this.image.id,
-            limit: 0
+            imageId: this.image.id
         });
     },
 

@@ -64,6 +64,7 @@ const UploadBatchView = View.extend({
         this.uploadFolder = null;
 
         this.datasets = new SelectableDatasetCollection();
+        this.datasets.pageLimit = Number.MAX_SAFE_INTEGER;
 
         this.selectDatasetView = new SelectDatasetView({
             collection: this.datasets,
@@ -83,9 +84,7 @@ const UploadBatchView = View.extend({
 
         // Show only datasets for which the user has write access
         this.datasets
-            .fetch({
-                limit: 0
-            })
+            .fetch()
             .done((resp) => {
                 this.datasets.reset(
                     _.filter(resp, (dataset) => {
