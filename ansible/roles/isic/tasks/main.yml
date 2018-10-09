@@ -51,6 +51,16 @@
       admin: yes
     state: present
 
+- name: Create Girder assetstore dir
+  file:
+    path: "{{ isic_archive_assetstore_path }}"
+    owner: ubuntu
+    group: ubuntu
+    state: directory
+    recurse: yes
+  become: yes
+  become_user: root
+
 - name: Create assetstore
   girder:
     username: "{{ girder_admin_username }}"

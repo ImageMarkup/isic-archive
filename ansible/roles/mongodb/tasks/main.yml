@@ -16,6 +16,16 @@
     name: mongodb-org-server
   become: yes
 
+- name: Create Mongo data directory
+  file:
+    path: "{{ mongo_data_path }}"
+    owner: mongodb
+    group: mongodb
+    state: directory
+    recurse: yes
+  become: yes
+  become_user: root
+
 - name: Install Mongo configuration
   template:
     src: mongod.conf.j2
