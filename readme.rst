@@ -20,6 +20,8 @@ Prerequisites
    If Vagrant < 1.8.3 is used, then Ansible_ version > 2.0 must also be installed on the
    host development machine.
 
+* vagrant-hostsupdater_
+
 * VirtualBox_ (this may sometimes be installed automatically by Vagrant)
 
 Installation
@@ -37,7 +39,7 @@ Installation
     # from within the "isic-archive" sub-directory
     vagrant up
 
-* Use a web browser to visit ``http://127.0.0.1:8080/`` from your host
+* Use a web browser to visit ``http://isic-archive.localhost/`` from your host
   development machine.
 
 * Login as the user ``admin`` with password ``password``. This user can be also used for granting
@@ -47,13 +49,7 @@ Installation
 Development
 ~~~~~~~~~~~
   **Note**:
-  Optionally, after adding the following line to your host systems's
-  ``/etc/hosts`` file:
-  ::
-
-    127.0.0.1 isic-archive.upstream
-
-  you can visit ``http://isic-archive.upstream:8080/`` on your host development
+  You can visit ``http://isic-archive.test/`` on your host development
   machine to access a version of the site that uses the local instance for all
   static front-end code, but proxies all API calls to the instance at
   ``isic-archive.com``.
@@ -102,6 +98,8 @@ Development
     :alt: License
 
 .. _Vagrant: https://www.vagrantup.com/downloads.html
+
+.. _vagrant-hostsupdater: https://github.com/cogitatio/vagrant-hostsupdater#installation
 
 .. _Ansible: https://docs.ansible.com/ansible/intro_installation.html
 

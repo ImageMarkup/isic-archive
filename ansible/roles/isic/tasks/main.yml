@@ -1,13 +1,14 @@
 ---
 
-#- name: Download
-#  git:
-#    repo: "https://github.com/ImageMarkup/isic-archive.git"
-#    dest: "{{ isic_archive_path }}"
-##    version: "{{ isic_archive_version }}"
-#    update: no
-#    force: yes
-#  notify: Build Girder
+- name: Download
+  git:
+    repo: "https://github.com/ImageMarkup/isic-archive.git"
+    dest: "{{ isic_archive_path }}"
+    version: "{{ isic_archive_version }}"
+    clone: "{{ isic_archive_clone }}"
+    update: no
+    force: yes
+  notify: Build Girder
 
 - name: Install package dependencies
   apt:
@@ -15,6 +16,12 @@
   become: yes
   with_items:
     - p7zip-full
+
+- name: Install large_image plugin
+  command: "{{ python_dist_path }}/bin/girder-install plugin --force --symlink {{ large_image_path }}"
+  notify:
+    - Restart Girder
+    - Build Girder
 
 - name: Install ISIC Archive
   command: "{{ python_dist_path }}/bin/girder-install plugin --force --symlink {{ isic_archive_path }}"
@@ -52,8 +59,7 @@
     assetstore:
       name: "Default"
       type: "filesystem"
-      # TODO: make "root" a variable
-      root: "{{ ansible_user_dir }}/assetstores/default"
+      root: "{{ isic_archive_assetstore_path }}"
       current: true
     state: present
 
@@ -84,6 +90,46 @@
     - "worker.backend"
     - "worker.broker"
   notify: Restart Girder
+
+- name: Set CORS settings
+  girder:
+    username: "{{ girder_admin_username }}"
+    password: "{{ girder_admin_password }}"
+    port: "{{ girder_port }}"
+    setting:
+      key: "{{ item.key }}"
+      value: "{{ item.value }}"
+    state: present
+  with_items:
+    - key: "core.cors.allow_origin"
+      value: "{{ isic_cors_allow_origin }}"
+    - key: "core.cors.allow_methods"
+      value: "{{ isic_cors_allow_methods }}"
+
+- name: Set ISIC settings
+  girder:
+    username: "{{ girder_admin_username }}"
+    password: "{{ girder_admin_password }}"
+    port: "{{ girder_port }}"
+    setting:
+      key: "{{ item.key }}"
+      value: "{{ item.value }}"
+    state: present
+  with_items:
+    - key: "core.email_host"
+      value: "{{ isic_email_host }}"
+    - key: "core.smtp_host"
+      value: "{{ isic_smtp_host }}"
+    - key: "core.smtp.port"
+      value: "{{ isic_smtp_port }}"
+    - key: "core.smtp.username"
+      value: "{{ isic_smtp_username }}"
+    - key: "core.smtp.password"
+      value: "{{ isic_smtp_password }}"
+    - key: "core.smtp.encryption"
+      value: "{{ isic_smtp_encryption }}"
+    - key: "core.email_verification"
+      value: "{{ isic_email_verification }}"
 
 - name: Remount webroots
   girder:

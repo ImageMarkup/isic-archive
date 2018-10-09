@@ -1,0 +1,34 @@
+---
+- name: Download MailHog
+  get_url:
+    url: "https://github.com/mailhog/MailHog/releases/download/v1.0.0/MailHog_linux_amd64"
+    dest: /usr/local/bin/mailhog
+    owner: root
+    group: root
+    mode: 0755
+  become: true
+
+- name: Add MailHog basic authentication file
+  copy:
+    content: |
+      {{ mailhog_username }}:{{ mailhog_password_bcrypt }}
+    dest: /etc/mailhog-auth
+  when: mailhog_username is defined and mailhog_password_bcrypt is defined
+  become: true
+
+- name: Copy mailhog systemd unit file into place (for systemd systems).
+  template:
+    src: mailhog.service.j2
+    dest: /etc/systemd/system/mailhog.service
+    owner: root
+    group: root
+    mode: 0755
+  become: true
+
+- name: Start/enable mailhog
+  systemd:
+    name: mailhog
+    daemon_reload: true
+    state: started
+    enabled: true
+  become: true

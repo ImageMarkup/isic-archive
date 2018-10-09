@@ -2,7 +2,10 @@
 
 - name: Install virtualenv dependencies
   apt:
-    name: python-virtualenv
+    name:
+      - python-virtualenv
+      - python-dev
+
   become: yes
 
 - name: Upgrade pip

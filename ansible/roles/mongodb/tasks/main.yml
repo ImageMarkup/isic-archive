@@ -1,14 +1,14 @@
 ---
-
 - name: Add PPA key
   apt_key:
-    id: "2930ADAE8CAF5059EE73BB4B58712A2291FA4AD5"
+    id: "9DA31620334BD75D9DCB49F368818C72E52529D4"
     keyserver: "keyserver.ubuntu.com"
   become: yes
 
 - name: Add PPA
   apt_repository:
-    repo: "deb https://repo.mongodb.org/apt/ubuntu {{ ansible_distribution_release }}/mongodb-org/3.6 multiverse"
+    repo: "deb https://repo.mongodb.org/apt/ubuntu {{ ansible_distribution_release }}/mongodb-org/4.0 multiverse"
+    update_cache: yes
   become: yes
 
 - name: Install package
@@ -16,7 +16,14 @@
     name: mongodb-org-server
   become: yes
 
-- name: Start service
+- name: Install Mongo configuration
+  template:
+    src: mongod.conf.j2
+    dest: /etc/mongod.conf
+  become: yes
+  become_user: root
+
+- name: Start and enable service
   service:
     name: mongod
     enabled: yes

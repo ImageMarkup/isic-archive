@@ -1,5 +1,0 @@
----
-
-dependencies:
-  - role: DigitalSlideArchive.vips
-  - role: girder

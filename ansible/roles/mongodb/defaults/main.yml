@@ -1,0 +1,3 @@
+---
+
+mongo_data_path: "/var/lib/mongodb"
