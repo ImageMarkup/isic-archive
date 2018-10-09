@@ -38,6 +38,10 @@ class Batch(Model):
         })
         return batch
 
+    def remove(self, batch, **kwargs):
+        # TODO: Remove the associated ZIP file, if one exists
+        return super(Batch, self).remove(batch)
+
     def validate(self, doc, **kwargs):
         # TODO: implement
         return doc

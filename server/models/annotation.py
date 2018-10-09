@@ -211,6 +211,12 @@ class Annotation(AccessControlMixin, Model):
             'state': self.getState(annotation)
         }
 
+    def remove(self, annotation, **kwargs):
+        for featureId in six.viewkeys(annotation['markups']):
+            File().remove(self.getMarkupFile(annotation, featureId))
+
+        return super(Annotation, self).remove(annotation)
+
     def validate(self, doc):  # noqa - C901
         for field in ['studyId', 'userId', 'imageId']:
             if not isinstance(doc.get(field), ObjectId):

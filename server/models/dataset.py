@@ -224,6 +224,34 @@ class Dataset(AccessControlledModel):
             'license': dataset['license'],
         }
 
+    def remove(self, dataset, **kwargs):
+        # Avoid circular import
+        from .image import Image
+
+        for image in Image().find({'meta.datasetId': dataset['_id']}):
+            Image().remove(image)
+
+        for metadataFileInfo in dataset['metadataFiles']:
+            self.removeMetadata(dataset, metadataFileInfo['fileId'])
+
+        for batch in Batch().find({'datasetId': dataset['_id']}):
+            Batch().remove(batch)
+
+        imagesFolder = self.imagesFolder(dataset)
+        Folder().remove(imagesFolder)
+
+        flaggedCollection = Collection().findOne({'name': 'Flagged Images'})
+        flaggedFolder = Folder().findOne({
+            'name': dataset['name'],
+            'parentId': flaggedCollection['_id'],
+            'parentCollection': 'collection'
+        })
+        if flaggedFolder:
+            # TODO: If there are any flagged images with segmentations, those won't be removed
+            Folder().remove(flaggedFolder)
+
+        return super(Dataset, self).remove(dataset)
+
     def validate(self, doc, **kwargs):
         # Name
         assert isinstance(doc['name'], six.string_types)

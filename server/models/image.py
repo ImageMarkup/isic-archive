@@ -485,6 +485,19 @@ class Image(Item):
 
         return histogram
 
+    def remove(self, image, **kwargs):
+        # Avoid circular import
+        from .segmentation import Segmentation
+        from .annotation import Annotation
+
+        for annotation in Annotation().find({'imageId': image['_id']}):
+            Annotation().remove(annotation)
+
+        for segmentation in Segmentation().find({'imageId': image['_id']}):
+            Segmentation().remove(segmentation)
+
+        return super(Image, self).remove(image)
+
     def validate(self, doc):
         # TODO: implement
         return super(Image, self).validate(doc)
