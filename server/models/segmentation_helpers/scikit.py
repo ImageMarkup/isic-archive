@@ -45,9 +45,10 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         """
         imageData = skimage.io.imread(imageDataStream)
 
-        if imageData.shape == (2,):
-            # Some images seem to have a 2nd layer, which should be ignored
+        if len(imageData.shape) == 1 and imageData.shape[0] > 1:
+            # Some images seem to have a 2nd (or 3rd+) layer, which should be ignored
             # https://github.com/scikit-image/scikit-image/issues/2154
+            # The first element within the result should be the main image
             imageData = imageData[0]
 
         if len(imageData.shape) == 3 and imageData.shape[2] == 4:
