@@ -232,7 +232,8 @@ class Dataset(AccessControlledModel):
             Image().remove(image)
 
         for metadataFileInfo in dataset['metadataFiles']:
-            self.removeMetadata(dataset, metadataFileInfo['fileId'])
+            metadataFile = File().load(metadataFileInfo['fileId'], force=True, exc=True)
+            self.removeMetadata(dataset, metadataFile)
 
         for batch in Batch().find({'datasetId': dataset['_id']}):
             Batch().remove(batch)
