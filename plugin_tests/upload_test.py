@@ -528,20 +528,14 @@ class UploadTestCase(IsicTestCase):
 
         # Read settings from environment variables
         if not all(key in os.environ for key in [
-                'ISIC_DATA_UPLOAD_ROLE_ARN',
-                'ISIC_DATA_UPLOAD_BUCKET_NAME',
-                'ISIC_DATA_UPLOAD_USER_ACCESS_KEY_ID',
-                'ISIC_DATA_UPLOAD_USER_SECRET_ACCESS_KEY'
+                'ISIC_UPLOAD_ROLE_ARN',
+                'ISIC_UPLOAD_BUCKET_NAME'
                 ]):
             self.fail('Test requires environment variables for AWS configuration to be set.')
-        Setting.set('isic.data_upload_role_arn',
-                    os.environ['ISIC_DATA_UPLOAD_ROLE_ARN'])
-        Setting.set('isic.data_upload_bucket_name',
-                    os.environ['ISIC_DATA_UPLOAD_BUCKET_NAME'])
-        Setting.set('isic.data_upload_user_access_key_id',
-                    os.environ['ISIC_DATA_UPLOAD_USER_ACCESS_KEY_ID'])
-        Setting.set('isic.data_upload_user_secret_access_key',
-                    os.environ['ISIC_DATA_UPLOAD_USER_SECRET_ACCESS_KEY'])
+        Setting.set('isic.upload_role_arn',
+                    os.environ['ISIC_UPLOAD_ROLE_ARN'])
+        Setting.set('isic.upload_bucket_name',
+                    os.environ['ISIC_UPLOAD_BUCKET_NAME'])
 
         # Create a dataset
         datasetName = 'test_dataset_1'

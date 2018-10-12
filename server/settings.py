@@ -26,11 +26,8 @@ from girder.utility import setting_utilities
 class PluginSettings(object):
     DEMO_MODE = 'isic.demo_mode'
     MAX_ISIC_ID = 'isic.max_isic_id'
-    DATA_UPLOAD_ROLE_ARN = 'isic.data_upload_role_arn'
-    DATA_UPLOAD_BUCKET_NAME = 'isic.data_upload_bucket_name'
-    DATA_UPLOAD_USER_ACCESS_KEY_ID = 'isic.data_upload_user_access_key_id'
-    DATA_UPLOAD_USER_SECRET_ACCESS_KEY = 'isic.data_upload_user_secret_access_key'
-
+    UPLOAD_ROLE_ARN = 'isic.upload_role_arn'
+    UPLOAD_BUCKET_NAME = 'isic.upload_bucket_name'
 
 @setting_utilities.validator(PluginSettings.DEMO_MODE)
 def _validateDemoModeSetting(doc):
@@ -56,28 +53,22 @@ def _defaultMaxIsicIdSetting():
 
 
 @setting_utilities.validator({
-    PluginSettings.DATA_UPLOAD_ROLE_ARN,
-    PluginSettings.DATA_UPLOAD_BUCKET_NAME,
-    PluginSettings.DATA_UPLOAD_USER_ACCESS_KEY_ID,
-    PluginSettings.DATA_UPLOAD_USER_SECRET_ACCESS_KEY
+    PluginSettings.UPLOAD_ROLE_ARN,
+    PluginSettings.UPLOAD_BUCKET_NAME
 })
 def _validateDataUploadSettings(doc):
     if not isinstance(doc['value'], six.string_types):
         descriptions = {
-            PluginSettings.DATA_UPLOAD_ROLE_ARN: 'role ARN',
-            PluginSettings.DATA_UPLOAD_BUCKET_NAME: 'S3 bucket name',
-            PluginSettings.DATA_UPLOAD_USER_ACCESS_KEY_ID: 'user access key ID',
-            PluginSettings.DATA_UPLOAD_USER_SECRET_ACCESS_KEY: 'user secret access key'
+            PluginSettings.UPLOAD_ROLE_ARN: 'role ARN',
+            PluginSettings.UPLOAD_BUCKET_NAME: 'S3 bucket name'
         }
         description = descriptions[doc['key']]
-        raise ValidationException('Data upload %s must be a string.' % description, 'value')
+        raise ValidationException('Upload %s must be a string.' % description, 'value')
 
 
 @setting_utilities.default({
-    PluginSettings.DATA_UPLOAD_ROLE_ARN,
-    PluginSettings.DATA_UPLOAD_BUCKET_NAME,
-    PluginSettings.DATA_UPLOAD_USER_ACCESS_KEY_ID,
-    PluginSettings.DATA_UPLOAD_USER_SECRET_ACCESS_KEY
+    PluginSettings.UPLOAD_ROLE_ARN,
+    PluginSettings.UPLOAD_BUCKET_NAME
 })
 def _defaultDataUploadSettings():
     return ''

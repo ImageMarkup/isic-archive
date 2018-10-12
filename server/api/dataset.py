@@ -325,7 +325,7 @@ class DatasetResource(IsicResource):
                '\n'
                'with open(\'images.zip\', \'rb\') as data:\n'
                '    s3.upload_fileobj(\n'
-               '        FileObj=data,\n'
+               '        Fileobj=data,\n'
                '        Bucket=response[\'bucketName\'],\n'
                '        Key=response[\'objectKey\']\n'
                '    )\n'

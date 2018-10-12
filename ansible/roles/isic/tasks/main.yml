@@ -140,6 +140,10 @@
       value: "{{ isic_smtp_encryption }}"
     - key: "core.email_verification"
       value: "{{ isic_email_verification }}"
+    - key: "isic.upload_role_arn"
+      value: "{{ isic_upload_role_arn }}"
+    - key: "isic.upload_bucket_name"
+      value: "{{ isic_upload_bucket_name }}"
 
 - name: Remount webroots
   girder:
