@@ -2,17 +2,16 @@
 
 - name: Install build dependencies
   apt:
-    name: "{{ item }}"
+    name:
+      - curl
+      - git
+      - libffi-dev
+      - build-essential
+      - libgif-dev
+      - libjpeg-dev
+      - libssl-dev
+      - zlib1g-dev
   become: yes
-  with_items:
-    - curl
-    - git
-    - libffi-dev
-    - build-essential
-    - libgif-dev
-    - libjpeg-dev
-    - libssl-dev
-    - zlib1g-dev
 
 - name: Download
   git:

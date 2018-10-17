@@ -10,10 +10,9 @@
 
 - name: Upgrade pip
   pip:
-    name: "{{ item }}"
+    name:
+      - pip
+      # setuptools is needed to parse the new syntax in some requirements.txt
+      - setuptools
     state: latest
     virtualenv: "{{ python_dist_path }}"
-  with_items:
-    - pip
-    # setuptools is needed to parse the new syntax in some requirements.txt
-    - setuptools
