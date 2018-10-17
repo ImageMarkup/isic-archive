@@ -54,8 +54,8 @@
 - name: Create Girder assetstore dir
   file:
     path: "{{ isic_archive_assetstore_path }}"
-    owner: ubuntu
-    group: ubuntu
+    owner: "{{ girder_user|default(ansible_user_id) }}"
+    group: "{{ girder_user|default(ansible_user_id) }}"
     state: directory
     recurse: yes
   become: yes
