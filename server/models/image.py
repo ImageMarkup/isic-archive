@@ -362,6 +362,9 @@ class Image(Item):
                 raise
 
     def getHistograms(self, filterQuery, user):
+        # Avoid circular import
+        from .study import Study
+
         # Define facets
         categorialFacets = [
             'meta.datasetId',
@@ -407,15 +410,7 @@ class Image(Item):
             'folderId': {'$in': [
                 dataset['folderId'] for dataset in Dataset().list(user=user)]}
         }
-        if filterQuery:
-            query = {
-                '$and': [
-                    folderQuery,
-                    filterQuery
-                ]
-            }
-        else:
-            query = folderQuery
+
         facetStages = {
             '__passedFilters__': [
                 {'$count': 'count'}],
@@ -443,9 +438,125 @@ class Image(Item):
                     'default': None
                 }}
             ]
+        facetStages['markups'] = [
+            {
+                '$unwind': '$markups'
+            },
+            {
+                '$group': {
+                    '_id': '$markups',
+                    'count': {'$sum': 1}
+                }
+            },
+            {
+                '$project': {
+                    '_id': False,
+                    'label': '$_id',
+                    'count': True
+                }
+            }
+        ]
+
         histogram = next(self.collection.aggregate([
-            {'$match': query},
-            {'$facet': facetStages}
+            {
+                '$match': (
+                    {
+                        '$and': [
+                            folderQuery,
+                            filterQuery
+                        ]
+                    }
+                    if filterQuery else
+                    folderQuery
+                )
+            },
+            {
+                '$lookup': {
+                    'from': 'annotation',
+                    'localField': '_id',
+                    'foreignField': 'imageId',
+                    'as': 'annotations'
+                }
+            },
+            {
+                '$project': {
+                    '_id': True,
+                    'name': True,
+                    'meta': True,
+                    'markups': {
+                        # (6) Concatinate all annotations' markup IDs together, eliminating
+                        # duplicates
+                        '$reduce': {
+                            'input': {
+                                # (2) Extract only the markup from each annotation
+                                '$map': {
+                                    'input': {
+                                        # (1) Remove incomplete, flagged, or inaccessable
+                                        # annotations
+                                        '$filter': {
+                                            'input': '$annotations',
+                                            'cond': {
+                                                '$and': [
+                                                    '$$this.stopTime',
+                                                    {
+                                                        '$eq': [
+                                                            '$$this.status',
+                                                            'ok'
+                                                        ]
+                                                    },
+                                                    {
+                                                        '$in': [
+                                                            '$$this.studyId',
+                                                            [
+                                                                study['_id']
+                                                                for study in Study().list(user=user)
+                                                            ]
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    'as': 'annotation',
+                                    'in': '$$annotation.markups'
+                                }
+                            },
+                            'initialValue': [],
+                            'in': {
+                                # (6a) Eliminate duplicates when extending array
+                                '$setUnion': [
+                                    '$$value',
+                                    {
+                                        # (5) Make an array of just markup IDs
+                                        '$map': {
+                                            'input': {
+                                                # (4) Exclude false / empty markup
+                                                # TODO: if an annotation has no markups, mark it as a special value
+                                                '$filter': {
+                                                    'input': {
+                                                        # (3) Convert the markup object to an array
+                                                        # of markupItem
+                                                        # '$$this' uses the (6) context, which is
+                                                        # the output of (2)
+                                                        '$objectToArray': '$$this'
+                                                    },
+                                                    'as': 'markupItem',
+                                                    'cond': '$$markupItem.v.present'
+                                                }
+                                            },
+                                            'as': 'markupItem',
+                                            'in': '$$markupItem.k'
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                '$facet': facetStages
+            }
         ]))
 
         # Fix up the pipeline result
