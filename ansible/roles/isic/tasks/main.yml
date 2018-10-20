@@ -12,10 +12,9 @@
 
 - name: Install package dependencies
   apt:
-    name: "{{ item }}"
+    name:
+      - p7zip-full
   become: yes
-  with_items:
-    - p7zip-full
 
 - name: Install large_image plugin
   command: "{{ python_dist_path }}/bin/girder-install plugin --force --symlink {{ large_image_path }}"
@@ -54,8 +53,8 @@
 - name: Create Girder assetstore dir
   file:
     path: "{{ isic_archive_assetstore_path }}"
-    owner: ubuntu
-    group: ubuntu
+    owner: "{{ girder_user|default(ansible_user_id) }}"
+    group: "{{ girder_user|default(ansible_user_id) }}"
     state: directory
     recurse: yes
   become: yes

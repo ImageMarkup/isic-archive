@@ -11,10 +11,10 @@ Vagrant.configure("2") do |config|
   bind_node_modules = true?(ENV.fetch("BIND_NODE_MODULES", Vagrant::Util::Platform.windows?))
 
   config.vm.box = "bento/ubuntu-18.04"
-  config.vm.hostname = "isic-archive.localhost"
-  config.hostsupdater.aliases = ["isic-archive.test"]
+  config.vm.hostname = "isic-archive.test"
+  config.hostsupdater.aliases = ["proxy.isic-archive.test"]
   config.vm.provider "virtualbox" do |virtualbox|
-    virtualbox.name = "isic-archive.localhost"
+    virtualbox.name = "isic-archive.test"
     virtualbox.memory = 2048
     # Prevent 'xenial-16.04-cloudimg-console.log' from being created
     virtualbox.customize [ "modifyvm", :id, "--uartmode1", "disconnected" ]
@@ -22,8 +22,8 @@ Vagrant.configure("2") do |config|
 
   config.vm.network :private_network, ip: "172.16.0.10"
   config.vm.post_up_message = <<-eos
-ISIC Archive is running at http://isic-archive.localhost
-MailHog is running at http://isic-archive.localhost:8025
+ISIC Archive is running at http://isic-archive.test
+MailHog is running at http://isic-archive.test:8025
 eos
 
   config.vm.synced_folder ".", "/vagrant", disabled: true

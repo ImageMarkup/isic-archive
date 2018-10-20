@@ -39,7 +39,7 @@ Installation
     # from within the "isic-archive" sub-directory
     vagrant up
 
-* Use a web browser to visit ``http://isic-archive.localhost/`` from your host
+* Use a web browser to visit ``http://isic-archive.test/`` from your host
   development machine.
 
 * Login as the user ``admin`` with password ``password``. This user can be also used for granting
@@ -49,7 +49,7 @@ Installation
 Development
 ~~~~~~~~~~~
   **Note**:
-  You can visit ``http://isic-archive.test/`` on your host development
+  You can visit ``http://proxy.isic-archive.test/`` on your host development
   machine to access a version of the site that uses the local instance for all
   static front-end code, but proxies all API calls to the instance at
   ``isic-archive.com``.

@@ -4,7 +4,7 @@ dependencies:
   - role: girder
   - role: supervisor
   - role: worker
-  - role: large-image
+  - role: large_image
     large_image_virtualenv: "{{ python_dist_path }}"
     large_image_tile_sources:
       - tiff

@@ -41,7 +41,7 @@ server {
 {% if upstream_proxy %}
 server {
     listen 80;
-    server_name isic-archive.test;
+    server_name proxy.isic-archive.test;
 
     location / {
         proxy_pass http://localhost:{{ girder_port }};
