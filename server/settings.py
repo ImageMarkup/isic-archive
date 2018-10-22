@@ -29,6 +29,7 @@ class PluginSettings(object):
     UPLOAD_ROLE_ARN = 'isic.upload_role_arn'
     UPLOAD_BUCKET_NAME = 'isic.upload_bucket_name'
 
+
 @setting_utilities.validator(PluginSettings.DEMO_MODE)
 def _validateDemoModeSetting(doc):
     if not isinstance(doc['value'], bool):
