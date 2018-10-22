@@ -372,7 +372,8 @@ class Dataset(AccessControlledModel):
                 RoleArn=uploadRoleArn,
                 RoleSessionName='ZipUploadSession-%d' % int(time.time()),
                 Policy=json.dumps(s3BucketPutObjectInKeyPolicy),
-                DurationSeconds=12*60*60  # 12 hours, also limited by the MaxSessionDuration of the role
+                # 12 hours, also limited by the MaxSessionDuration of the role
+                DurationSeconds=12*60*60
             )
         except botocore.exceptions.ClientError as e:
             raise GirderException('Error acquiring temporary security credentials: %s' %
