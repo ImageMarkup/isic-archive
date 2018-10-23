@@ -132,6 +132,11 @@ class ImageResource(IsicResource):
             query = self._parseImageIds(params['imageIds'])
         else:
             query = {}
+        # Exclude images that haven't passed QC review (though they can still be accessed by more
+        # direct endpoints if the user has permission)
+        query.update({
+            'meta.reviewed.accepted': True
+        })
 
         filterFunc = Image().filter if detail else Image().filterSummary
         return [
