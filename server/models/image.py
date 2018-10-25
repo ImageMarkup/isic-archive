@@ -225,7 +225,7 @@ class Image(Item):
             return
 
         superpixelsFileNameMatch = re.match(
-            '^%s_superpixels_v([0-9.]+)\.png' % image['name'],
+            r'^%s_superpixels_v([0-9.]+)\.png' % image['name'],
             superpixelsFile['name'])
         if not superpixelsFileNameMatch:
             return
