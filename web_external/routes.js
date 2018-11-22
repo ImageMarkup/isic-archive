@@ -246,3 +246,9 @@ router.route('tasks/annotate/:id', 'annotate', (id) => {
         }
     });
 });
+
+// Segmentation
+import SegmentationTaskView from './Segmentation/SegmentationTaskView';
+router.route('tasks/segmentation/:id', 'segmentationTask', (id) => {
+    navigateToIfTermsAccepted(SegmentationTaskView);
+});
