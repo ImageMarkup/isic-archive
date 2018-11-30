@@ -111,7 +111,7 @@ export default {
             TaskService.getNextAnnotation(studyId)
                 .done((resp) => {
                     commit('setAnnotation', resp);
-                    commit('setStartTime', Date.now());
+                    commit('setStartTime', new Date());
                     dispatch('getImage', {id: state.annotation.imageId});
                 })
                 .fail((resp) => {
@@ -130,7 +130,7 @@ export default {
         },
         submitAnnotation({ state, commit }) {
             commit('setSubmissionState', SubmissionState.SUBMITTING);
-            commit('setStopTime', Date.now());
+            commit('setStopTime', new Date());
 
             // Submit only responses to questions that user answered
             const responses = _.omit(state.responses, (value) => _.isNull(value));
@@ -138,8 +138,8 @@ export default {
             const annotation = {
                 status: state.flagStatus,
                 imageId: state.image._id,
-                startTime: state.startTime,
-                stopTime: state.stopTime,
+                startTime: state.startTime.getTime(),
+                stopTime: state.stopTime.getTime(),
                 responses: responses,
                 markups: state.markups
             };
