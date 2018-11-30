@@ -31,6 +31,7 @@ function initialState() {
         image: null,
         flagStatus: 'ok',
         startTime: null,
+        stopTime: null,
         showReview: false,
         markupState: MarkupState.DEFINITE,
         responses: {},
@@ -72,6 +73,9 @@ export default {
         },
         setStartTime(state, data) {
             state.startTime = data;
+        },
+        setStopTime(state, data) {
+            state.stopTime = data;
         },
         setShowReview(state, data) {
             state.showReview = data;
@@ -126,16 +130,16 @@ export default {
         },
         submitAnnotation({ state, commit }) {
             commit('setSubmissionState', SubmissionState.SUBMITTING);
+            commit('setStopTime', Date.now());
 
             // Submit only responses to questions that user answered
             const responses = _.omit(state.responses, (value) => _.isNull(value));
-            const stopTime = Date.now();
 
             const annotation = {
                 status: state.flagStatus,
                 imageId: state.image._id,
                 startTime: state.startTime,
-                stopTime: stopTime,
+                stopTime: state.stopTime,
                 responses: responses,
                 markups: state.markups
             };
