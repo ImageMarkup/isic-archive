@@ -387,17 +387,17 @@ class StudyResource(IsicResource):
     @loadmodel(model='user', plugin='isic_archive', map={'userId': 'annotatorUser'},
                level=AccessType.READ)
     def deleteAnnotator(self, study, annotatorUser, params):
-        user = self.getCurrentUser()
+        currentUser = self.getCurrentUser()
         # For now, study admins will be the ones that can delete annotators
-        User().requireAdminStudy(user)
+        User().requireAdminStudy(currentUser)
 
         if Study().childAnnotations(
                 study=study, annotatorUser=annotatorUser, state=Study().State.COMPLETE).count():
             raise RestException('Annotator user has completed annotations.', 409)
 
         # Check if user is already an annotator in the study
-        if not Study().hasAnnotator(study, user):
-            raise ValidationException('User "%s" is not part of the study.' % user['_id'])
+        if not Study().hasAnnotator(study, annotatorUser):
+            raise ValidationException('User "%s" is not part of the study.' % annotatorUser['_id'])
 
         Study().removeAnnotator(study, annotatorUser)
 
