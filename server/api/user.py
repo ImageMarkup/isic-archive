@@ -23,7 +23,7 @@ import cherrypy
 
 from girder import events
 from girder.api import access
-from girder.api.describe import Description, describeRoute
+from girder.api.describe import describeRoute, Description
 from girder.api.rest import boundHandler
 from girder.constants import AccessType, TokenScope
 from girder.exceptions import RestException, ValidationException

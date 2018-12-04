@@ -24,10 +24,7 @@ import dateutil.parser
 
 
 def cast(value, typename):
-    """
-    Cast a value to a type, including special-purpose semantic processing
-    for some values.
-    """
+    """Cast a value to a type, including special-purpose semantic processing for some values."""
     if typename is None:
         return value
     elif typename == 'objectid':
@@ -168,8 +165,5 @@ def _eliminate_not(ast):
 
 
 def astToMongo(ast):
-    """
-    Run the AST-to-mongo helper function above after converting it to a
-    not-free equivalent AST.
-    """
+    """Run the AST-to-mongo helper function after converting it to a not-free equivalent AST."""
     return _astToMongo_helper(_eliminate_not(ast))

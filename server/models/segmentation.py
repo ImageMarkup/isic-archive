@@ -18,11 +18,11 @@
 ###############################################################################
 
 import datetime
-import six
 
 from bson import ObjectId
 import numpy
 from PIL import Image as PIL_Image, ImageDraw as PIL_ImageDraw
+import six
 
 from girder import events
 from girder.constants import AccessType
@@ -32,7 +32,7 @@ from girder.models.model_base import Model
 from girder.models.upload import Upload
 
 from .image import Image
-from .segmentation_helpers import ScikitSegmentationHelper, OpenCVSegmentationHelper
+from .segmentation_helpers import OpenCVSegmentationHelper, ScikitSegmentationHelper
 from .user import User
 
 

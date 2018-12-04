@@ -23,8 +23,7 @@ import re
 
 def matchFilenameRegex(filename):
     """
-    Generate a regular expression to match image filenames in a metadata CSV
-    file to original image filenames.
+    Generate a regex to match image filenames in a metadata CSV file to original image filenames.
 
     The filenames in the CSV may or may not include file extensions. When the
     filename does include an extension, it must match the extension of the

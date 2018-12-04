@@ -24,7 +24,7 @@ segmentation_helpersPath = globals()['segmentation_helpersPath']
 segmentation_helpersDirPath = os.path.dirname(segmentation_helpersPath)
 if segmentation_helpersDirPath not in sys.path:
     sys.path.append(segmentation_helpersDirPath)
-from segmentation_helpers.scikit import ScikitSegmentationHelper  # noqa
+from segmentation_helpers.scikit import ScikitSegmentationHelper  # noqa E402
 
 
 with open(originalFile, 'rb') as originalFileStream:

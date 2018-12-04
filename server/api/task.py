@@ -23,7 +23,7 @@ import random
 import cherrypy
 
 from girder.api import access
-from girder.api.describe import Description, describeRoute
+from girder.api.describe import describeRoute, Description
 from girder.constants import AccessType, SortDir
 from girder.exceptions import AccessException, GirderException, RestException
 from girder.models.collection import Collection

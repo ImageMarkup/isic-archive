@@ -17,12 +17,12 @@
 #  limitations under the License.
 ###############################################################################
 
-import boto3
 import datetime
 import json
 import os
 import unittest
 
+import boto3
 from six import BytesIO
 
 from girder.constants import AccessType
@@ -116,6 +116,7 @@ class UploadTestCase(IsicTestCase):
     def _createZipFile(self, zipName, zipContentNames):
         """
         Create a zip file of images.
+
         Returns (stream, size).
         """
         zipStream = BytesIO()
@@ -411,6 +412,8 @@ class UploadTestCase(IsicTestCase):
 
     def testUploadImages(self):
         """
+        Test the single image upload lifecycle.
+
         Test creating dataset, uploading images to the dataset individually, and applying metadata
         to an uploading image.
         """

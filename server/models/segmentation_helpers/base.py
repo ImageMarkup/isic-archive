@@ -23,6 +23,7 @@ class BaseSegmentationHelper(object):
     def loadImage(cls, imageDataStream):
         """
         Load an image into an RGB array.
+
         :param imageDataStream: A file-like object containing the encoded
         (JPEG, etc.) image data.
         :type imageDataStream: file-like object

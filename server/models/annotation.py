@@ -17,11 +17,10 @@
 #  limitations under the License.
 ###############################################################################
 
+from bson import ObjectId
 import jsonschema
 import numpy
 import six
-
-from bson import ObjectId
 
 from girder.exceptions import ValidationException
 from girder.models.file import File
@@ -217,7 +216,7 @@ class Annotation(AccessControlMixin, Model):
 
         return super(Annotation, self).remove(annotation)
 
-    def validate(self, doc):  # noqa - C901
+    def validate(self, doc):  # noqa C901
         for field in ['studyId', 'userId', 'imageId']:
             if not isinstance(doc.get(field), ObjectId):
                 raise ValidationException('Annotation field "%s" must be an ObjectId' % field)

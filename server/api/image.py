@@ -17,8 +17,8 @@
 #  limitations under the License.
 ###############################################################################
 
-import os
 import json
+import os
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -26,21 +26,20 @@ import geojson
 import six
 
 from girder.api import access
+from girder.api.describe import autoDescribeRoute, describeRoute, Description
 from girder.api.rest import loadmodel, setRawResponse, setResponseHeader
-from girder.api.describe import Description, autoDescribeRoute, describeRoute
 from girder.constants import AccessType
 from girder.exceptions import GirderException, RestException, ValidationException
 from girder.models.file import File
-from girder.utility import mail_utils, ziputil
-
 from girder.plugins.large_image.models import TileGeneralException
 from girder.plugins.large_image.models.image_item import ImageItem
+from girder.utility import mail_utils, ziputil
 
 from .base import IsicResource
 from ..models.dataset import Dataset
 from ..models.image import Image
-from ..models.user import User
 from ..models.segmentation import Segmentation
+from ..models.user import User
 from ..utility import querylang
 
 

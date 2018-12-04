@@ -17,11 +17,14 @@
 #  limitations under the License.
 ###############################################################################
 
+import six
+
 
 def generateLines(stream):
     """
-    Generate individual unicode lines of text from a stream. Newlines are
-    retained in the output. Decoding using 'utf-8-sig' removes Unicode BOM
+    Generate individual unicode lines of text from a stream.
+
+    Newlines are retained in the output. Decoding using 'utf-8-sig' removes Unicode BOM
     (byte order mark).
     """
     lastLine = None
@@ -37,8 +40,8 @@ def generateLines(stream):
             lines = chunk.splitlines(keepends)
             lastLine = lines.pop()
             for line in lines:
-                yield unicode(line, 'utf-8-sig')
+                yield six.text_type(line, encoding='utf-8-sig')
     except StopIteration:
         if lastLine is not None:
-            yield unicode(lastLine, 'utf-8-sig')
+            yield six.text_type(lastLine, encoding='utf-8-sig')
         raise StopIteration

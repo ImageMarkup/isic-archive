@@ -165,18 +165,14 @@ class Study(Folder):
         return Image().find({'_id': {'$in': imageIds}})
 
     def addParticipationRequest(self, study, user):
-        """
-        Add a request from a user to participate in the study.
-        """
+        """Add a request from a user to participate in the study."""
         self.update(
             {'_id': study['_id']},
             {'$addToSet': {'meta.participationRequests': user['_id']}}
         )
 
     def removeParticipationRequest(self, study, user):
-        """
-        Remove a request from a user to participate in the study.
-        """
+        """Remove a request from a user to participate in the study."""
         if user['_id'] in study['meta']['participationRequests']:
             # The update query is a no-op if the value isn't found, but there's no reason to run it
             # unless necessary
@@ -188,16 +184,12 @@ class Study(Folder):
         return study
 
     def hasParticipationRequest(self, study, user):
-        """
-        Check whether a user requested to participate in the study.
-        """
+        """Check whether a user requested to participate in the study."""
         participationRequests = study['meta']['participationRequests']
         return user['_id'] in participationRequests
 
     def participationRequests(self, study):
-        """
-        Get the list of users requesting to participate in the study.
-        """
+        """Get the list of users requesting to participate in the study."""
         return User().find({
             '_id': {'$in': study['meta']['participationRequests']}
         })
@@ -239,9 +231,7 @@ class Study(Folder):
         return newQuery
 
     def list(self, user=None, limit=0, offset=0, sort=None):
-        """
-        Return a paginated list of studies that a user may access.
-        """
+        """Return a paginated list of studies that a user may access."""
         cursor = self.find({}, sort=sort)
         return self.filterResultsByPermission(
             cursor=cursor, user=user, level=AccessType.READ, limit=limit,

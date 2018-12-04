@@ -31,18 +31,17 @@ from girder.models.item import Item
 from girder.models.setting import Setting
 from girder.models.token import Token
 from girder.models.upload import Upload
-
-from girder.plugins.large_image.models.image_item import ImageItem
 from girder.plugins.jobs.models.job import Job
+from girder.plugins.large_image.models.image_item import ImageItem
 from girder.plugins.worker import utils as workerUtils
 
 from . import segmentation_helpers
 from .dataset import Dataset
 from .dataset_helpers.image_metadata import addImageMetadata
-from .user import User
-from ..settings import PluginSettings
-from ..provision_utility import getAdminUser
 from .segmentation_helpers import ScikitSegmentationHelper
+from .user import User
+from ..provision_utility import getAdminUser
+from ..settings import PluginSettings
 
 
 class Image(Item):
@@ -505,6 +504,7 @@ class Image(Item):
     def applyMetadata(self, image, metadata, save):
         """
         Apply metadata to an image.
+
         :param image: Image document.
         :param metadata: Image metadata.
         :param save: Whether to save the metadata to the image if validation succeeds.
