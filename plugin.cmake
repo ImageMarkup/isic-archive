@@ -28,7 +28,7 @@ function(add_eslint_test_ext name input)
   set_property(TEST "eslint_${name}" PROPERTY LABELS girder_browser)
 endfunction()
 
-add_standard_plugin_tests()
+add_standard_plugin_tests(NO_SERVER)
 
 # Fetch external data
 set(_data_files "")
@@ -44,11 +44,6 @@ foreach(_data_file
 endforeach()
 girder_ExternalData_expand_arguments("${name}_data" _tmp ${_data_files})
 girder_ExternalData_add_target("${name}_data")
-
-# Other Python code
-add_python_style_test(
-  python_static_analysis_isic_archive_scripts
-  "${CMAKE_CURRENT_LIST_DIR}/scripts")
 
 # External client static analysis
 add_eslint_test_ext(

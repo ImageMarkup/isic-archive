@@ -116,6 +116,11 @@ jobs:
           working_directory: girder_build
 
       - run:
+          name: Run Tox
+          command: tox
+          working_directory: girder/plugins/isic_archive
+
+      - run:
           name: Upload coverage
           command: codecov --disable search pycov gcov --root girder/plugins/isic_archive --file girder/build/test/coverage/py_coverage.xml
 
