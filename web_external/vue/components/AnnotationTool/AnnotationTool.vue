@@ -162,7 +162,9 @@ export default {
                 this.deactivateFeature(this.activeFeatureId);
             }
             this.setActiveFeatureId(null);
-            this.setShowReview(false);
+            if (this.showReview) {
+                this.setShowReview(false);
+            }
             this.setMarkupState(MarkupState.DEFINITE);
             this.resetResponses();
             this.resetMarkups();
