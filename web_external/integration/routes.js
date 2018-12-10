@@ -1,6 +1,6 @@
 /* eslint-disable import/first, import/order */
 
-import {getCurrentUser} from 'girder/auth';
+import {getCurrentUser, setCurrentToken} from 'girder/auth';
 import events from 'girder/events';
 
 import router from '../router';
@@ -22,6 +22,67 @@ function navigateToIfLoggedIn(View, settings) {
         navigateTo(View, settings);
     }
 }
+
+// User management
+import UserAccountView from 'girder/views/body/UserAccountView';
+import eventStream from 'girder/utilities/EventStream';
+import { restRequest } from 'girder/rest';
+router.route('useraccount/:id/:tab', 'accountTab', (id, tab) => {
+    UserAccountView.fetchAndInit(id, tab);
+});
+router.route('users', 'users', (id, tab) => {
+    // This is routed to when UserAccountView wants to return, so redirect home
+    router.navigate('', {trigger: true});
+});
+router.route('useraccount/:id/token/:token', 'accountToken', (id, token) => {
+    // This allows reset password links to work
+    UserModel.fromTemporaryToken(id, token)
+        .done((resp) => {
+            // TODO: Move this upstream
+            setCurrentToken(resp.authToken.token)
+        })
+        .done((resp) => {
+            events.trigger('g:navigateTo', UserAccountView, {
+                user: getCurrentUser(),
+                tab: 'password',
+                temporary: token
+            });
+        }).fail(() => {
+            router.navigate('', {trigger: true});
+        });
+});
+import InviteUserView from '../User/InviteUserView';
+router.route('user/invite', 'inviteUser', () => {
+    let currentUser = getCurrentUser();
+    if (currentUser && currentUser.canAdminStudy()) {
+        navigateTo(InviteUserView);
+    } else {
+        router.navigate('', {trigger: true});
+    }
+});
+import UserModel from '../models/UserModel';
+import RsvpUserView from '../User/RsvpUserView';
+import {showAlertDialog} from '../common/utilities';
+router.route('user/:id/rsvp/:token', 'rsvpUser', (id, token) => {
+    UserModel.fromTemporaryToken(id, token)
+        .done((resp) => {
+            // TODO: Move this upstream
+            setCurrentToken(resp.authToken.token)
+        })
+        .done((resp) => {
+            events.trigger('g:navigateTo', RsvpUserView, {
+                user: getCurrentUser(),
+                token: token
+            });
+        })
+        .fail((resp) => {
+            showAlertDialog({
+                text: `<h4>Error loading user from token</h4><br>${_.escape(resp.responseJSON.message)}`,
+                escapedHtml: true
+            });
+            router.navigate('', {trigger: true});
+        });
+});
 
 import CreateDatasetRequestView from '../Datasets/CreateDatasetRequestView';
 function navigateToIfCanCreateDataset(View, settings) {
