@@ -170,13 +170,6 @@ export default {
         resetMarkups() {
             this.setMarkups({});
         },
-        resetResponses() {
-            const responses = {};
-            this.questions.forEach((question) => {
-                responses[question.id] = null;
-            });
-            this.setResponses(responses);
-        },
         deactivateFeature(featureId) {
             // Save feature markup
             // Optimization: freeze array so that it isn't reactive
@@ -229,13 +222,13 @@ export default {
         'setFlagStatus',
         'setShowReview',
         'setMarkupState',
-        'setResponses',
         'setMarkups',
         'setMarkup',
         'setActiveFeatureId'
     ]), mapActions([
         'getNextAnnotation',
         'getStudy',
+        'resetResponses',
         'submitAnnotation'
     ]))
 };

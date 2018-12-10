@@ -83,9 +83,6 @@ export default {
         setMarkupState(state, data) {
             state.markupState = data;
         },
-        setResponses(state, data) {
-            state.responses = data;
-        },
         setResponse(state, { questionId, response }) {
             state.responses[questionId] = response;
         },
@@ -104,7 +101,7 @@ export default {
         },
         setSubmissionState(state, data) {
             state.submissionState = data;
-        }
+        },
     },
     actions: {
         getNextAnnotation({ state, dispatch, commit }, { studyId }) {
@@ -127,6 +124,14 @@ export default {
         getImage({ commit }, { id }) {
             ImageService.get(id)
                 .done((resp) => commit('setImage', resp));
+        },
+        resetResponses ({ state, commit }) {
+            _.each(state.responses, (response, questionId) => {
+                commit('setResponse', {
+                    questionId,
+                    response: null,
+                });
+            });
         },
         submitAnnotation({ state, commit }) {
             commit('setSubmissionState', SubmissionState.SUBMITTING);
