@@ -167,9 +167,6 @@ export default {
             this.resetResponses();
             this.resetMarkups();
         },
-        resetMarkups() {
-            this.setMarkups({});
-        },
         deactivateFeature(featureId) {
             // Save feature markup
             // Optimization: freeze array so that it isn't reactive
@@ -222,13 +219,13 @@ export default {
         'setFlagStatus',
         'setShowReview',
         'setMarkupState',
-        'setMarkups',
         'setMarkup',
         'setActiveFeatureId'
     ]), mapActions([
         'getNextAnnotation',
         'getStudy',
         'resetResponses',
+        'resetMarkups',
         'submitAnnotation'
     ]))
 };

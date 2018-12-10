@@ -86,9 +86,6 @@ export default {
         setResponse(state, { questionId, response }) {
             state.responses[questionId] = response;
         },
-        setMarkups(state, data) {
-            state.markups = data;
-        },
         setMarkup(state, { featureId, values }) {
             if (values) {
                 Vue.set(state.markups, featureId, values);
@@ -130,6 +127,14 @@ export default {
                 commit('setResponse', {
                     questionId,
                     response: null,
+                });
+            });
+        },
+        resetMarkups ({ state, commit }) {
+            _.each(state.markups, (values, featureId) => {
+                commit('setMarkup', {
+                    featureId,
+                    values: null,
                 });
             });
         },
