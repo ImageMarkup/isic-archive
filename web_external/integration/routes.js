@@ -1,6 +1,6 @@
 /* eslint-disable import/first, import/order */
 
-import {getCurrentUser} from 'girder/auth';
+import {getCurrentUser, setCurrentToken} from 'girder/auth';
 import events from 'girder/events';
 
 import router from '../router';
@@ -36,25 +36,20 @@ router.route('users', 'users', (id, tab) => {
 });
 router.route('useraccount/:id/token/:token', 'accountToken', (id, token) => {
     // This allows reset password links to work
-    // TODO: push this logic into the user model in upstream Girder
-    restRequest({
-        url: `user/password/temporary/${id}`,
-        data: {token: token},
-        error: null
-    }).done((resp) => {
-        resp.user.token = resp.authToken.token;
-        eventStream.close();
-        setCurrentUser(new UserModel(resp.user));
-        eventStream.open();
-        events.trigger('g:login-changed');
-        events.trigger('g:navigateTo', UserAccountView, {
-            user: getCurrentUser(),
-            tab: 'password',
-            temporary: token
+    UserModel.fromTemporaryToken(id, token)
+        .done((resp) => {
+            // TODO: Move this upstream
+            setCurrentToken(resp.authToken.token)
+        })
+        .done((resp) => {
+            events.trigger('g:navigateTo', UserAccountView, {
+                user: getCurrentUser(),
+                tab: 'password',
+                temporary: token
+            });
+        }).fail(() => {
+            router.navigate('', {trigger: true});
         });
-    }).fail(() => {
-        router.navigate('', {trigger: true});
-    });
 });
 import InviteUserView from '../User/InviteUserView';
 router.route('user/invite', 'inviteUser', () => {
@@ -70,6 +65,10 @@ import RsvpUserView from '../User/RsvpUserView';
 import {showAlertDialog} from '../common/utilities';
 router.route('user/:id/rsvp/:token', 'rsvpUser', (id, token) => {
     UserModel.fromTemporaryToken(id, token)
+        .done((resp) => {
+            // TODO: Move this upstream
+            setCurrentToken(resp.authToken.token)
+        })
         .done((resp) => {
             events.trigger('g:navigateTo', RsvpUserView, {
                 user: getCurrentUser(),
