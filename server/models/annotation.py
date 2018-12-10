@@ -51,6 +51,7 @@ class Annotation(AccessControlMixin, Model):
             'startTime': None,
             'stopTime': None,
             'status': None,
+            'log': [],
             'responses': {},
             'markups': {},
         })
@@ -196,7 +197,8 @@ class Annotation(AccessControlMixin, Model):
                     featureId: markup['present']
                     for featureId, markup
                     in six.viewitems(annotation['markups'])
-                }
+                },
+                'log': annotation.get('log', [])
             })
 
         return output
@@ -286,12 +288,14 @@ class Annotation(AccessControlMixin, Model):
                             for feature in study['meta']['features']
                         },
                         'additionalProperties': False
+                    },
+                    'log': {
+                        # TODO
                     }
-
                 },
                 'required': [
                     '_id', 'studyId', 'imageId', 'userId', 'startTime', 'stopTime', 'status',
-                    'responses', 'markups'
+                    'responses', 'markups', 'log'
                 ],
                 'additionalProperties': False
             }

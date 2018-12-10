@@ -37,8 +37,17 @@ function initialState() {
         responses: {},
         markups: {},
         activeFeatureId: null,
-        submissionState: SubmissionState.UNSUBMITTED
+        submissionState: SubmissionState.UNSUBMITTED,
+        log: [],
     };
+}
+
+function logEvent(state, type, detail) {
+    state.log.push({
+        'type': type,
+        'time': new Date().toISOString(),
+        'detail': detail,
+    });
 }
 
 export default {
@@ -70,15 +79,23 @@ export default {
         },
         setFlagStatus(state, data) {
             state.flagStatus = data;
+            logEvent(state, 'flag', {
+                'flag': state.flagStatus,
+            });
         },
         setStartTime(state, data) {
             state.startTime = data;
+            logEvent(state, 'annotation_start', {});
         },
         setStopTime(state, data) {
             state.stopTime = data;
+            logEvent(state, 'annotation_stop', {});
         },
         setShowReview(state, data) {
             state.showReview = data;
+
+            const eventType = state.showReview ? 'annotation_edit_stop' : 'annotation_edit_resume';
+            logEvent(state, eventType, {});
         },
         setMarkupState(state, data) {
             state.markupState = data;
@@ -86,19 +103,38 @@ export default {
         setResponse(state, { questionId, response }) {
             if (response) {
                 Vue.set(state.responses, questionId, response);
+                logEvent(state, 'response_set', {
+                    'questionId': questionId,
+                    'response': state.responses[questionId],
+                });
             } else {
                 Vue.delete(state.responses, questionId);
+                logEvent(state, 'response_clear', {
+                    'questionId': questionId,
+                });
             }
         },
         setMarkup(state, { featureId, values }) {
             if (values) {
                 Vue.set(state.markups, featureId, values);
+                logEvent(state, 'markup_set', {
+                    'featureId': featureId,
+                });
             } else {
                 Vue.delete(state.markups, featureId);
+                logEvent(state, 'markup_clear', {
+                    'featureId': featureId,
+                });
             }
         },
         setActiveFeatureId(state, data) {
             state.activeFeatureId = data;
+            if (data !== null) {
+                // Don't log on deactivation (that's handled by setMarkup)
+                logEvent(state, 'markup_select', {
+                    'featureId': data,
+                });
+            }
         },
         setSubmissionState(state, data) {
             state.submissionState = data;
@@ -155,7 +191,8 @@ export default {
                 startTime: state.startTime.getTime(),
                 stopTime: state.stopTime.getTime(),
                 responses: responses,
-                markups: state.markups
+                markups: state.markups,
+                log: state.log,
             };
 
             AnnotationService.submit(state.annotation._id, annotation)

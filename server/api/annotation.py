@@ -266,7 +266,8 @@ class AnnotationResource(IsicResource):
             raise RestException('Annotation is already complete.')
 
         bodyJson = self.getBodyJson()
-        self.requireParams(['status', 'startTime', 'stopTime', 'responses', 'markups'], bodyJson)
+        self.requireParams(
+            ['status', 'startTime', 'stopTime', 'responses', 'markups', 'log'], bodyJson)
 
         annotation['status'] = bodyJson['status']
         annotation['startTime'] = datetime.datetime.utcfromtimestamp(
@@ -274,6 +275,7 @@ class AnnotationResource(IsicResource):
         annotation['stopTime'] = datetime.datetime.utcfromtimestamp(
             bodyJson['stopTime'] / 1000.0)
         annotation['responses'] = bodyJson['responses']
+        annotation['log'] = bodyJson['log']
 
         # Before anything is saved, validate all the other (non-'markups') fields
         Annotation().validate(annotation)
