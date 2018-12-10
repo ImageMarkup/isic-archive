@@ -84,7 +84,11 @@ export default {
             state.markupState = data;
         },
         setResponse(state, { questionId, response }) {
-            state.responses[questionId] = response;
+            if (response) {
+                Vue.set(state.responses, questionId, response);
+            } else {
+                Vue.delete(state.responses, questionId);
+            }
         },
         setMarkup(state, { featureId, values }) {
             if (values) {
