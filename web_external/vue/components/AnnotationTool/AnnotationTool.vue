@@ -30,9 +30,6 @@
               a(@click='setFlagStatus("other")') Other reason
           span.flag-status
             span #[b Flag Status:]&nbsp;{{ flagStatus }}
-      .annotation(v-if='questions.length > 0')
-        h3.annotation-header Questions
-        annotation-tool-questions
       .annotation(v-if='features.length > 0')
         h3.annotation-header Features
         .annotation-section
@@ -43,6 +40,9 @@
             @displayFeature='onDisplayFeature',
             @deleteFeature='onDeleteFeature'
           )
+      .annotation(v-if='questions.length > 0')
+        h3.annotation-header Questions
+        annotation-tool-questions
       .annotation-section
         .btn-group
           template(v-if='showReview')
