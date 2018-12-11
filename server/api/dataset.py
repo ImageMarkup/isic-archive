@@ -17,12 +17,13 @@
 #  limitations under the License.
 ###############################################################################
 
-import cherrypy
 import mimetypes
 
+import cherrypy
+
 from girder.api import access
-from girder.api.rest import RestException, loadmodel
-from girder.api.describe import Description, autoDescribeRoute, describeRoute
+from girder.api.describe import autoDescribeRoute, describeRoute, Description
+from girder.api.rest import loadmodel, RestException
 from girder.constants import AccessType, SortDir, TokenScope
 from girder.exceptions import AccessException, GirderException, ValidationException
 from girder.models.file import File

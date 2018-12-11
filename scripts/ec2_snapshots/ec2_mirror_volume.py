@@ -26,17 +26,19 @@ the instance should be stopped before creating a snapshot of the root volume.
 [1] http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-creating-snapshot.html
 """
 
-import boto3
-import click
 import datetime
 import logging
+
+import boto3
+import click
 import six
 
 
 def _getNameTagValue(obj):
     """
-    Given an object with a 'tags' attribute, get the value of the tag with key 'Name'. Tags are
-    in format: [{'Key': 'string','Value': 'string'}, ...].
+    Given an object with a 'tags' attribute, get the value of the tag with key 'Name'.
+
+    Tags are in format: [{'Key': 'string','Value': 'string'}, ...].
     """
     if not hasattr(obj, 'tags') or obj.tags is None:
         return None
@@ -57,9 +59,7 @@ def main():
 @click.option('--dry-run', default=False, is_flag=True,
               help='Log actions without performing them')
 def mirror(from_instance_id, to_instance_id, dry_run):
-    """
-    Create snapshots of all volumes of an instance except the root volume.
-    """
+    """Create snapshots of all volumes of an instance except the root volume."""
     ec2 = boto3.resource('ec2')
     ec2Client = boto3.client('ec2')
 

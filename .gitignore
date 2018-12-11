@@ -2,9 +2,6 @@
 __pycache__/
 *.py[cod]
 
-# C extensions
-*.so
-
 # Distribution / packaging
 .Python
 env/
@@ -23,6 +20,9 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# Tox
+*.tox
 
 # PyCharm
 .idea/*

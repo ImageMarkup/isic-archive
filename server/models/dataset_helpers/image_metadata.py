@@ -21,16 +21,19 @@ import copy
 import functools
 import math
 import re
+
 import six
 
 
 class MetadataFieldException(Exception):
     """Base class for exceptions raised while parsing metadata fields."""
+
     pass
 
 
 class MetadataFieldNotFoundException(MetadataFieldException):
     """Exception raised when none of the fields that a parser supports are found."""
+
     def __init__(self, fields):
         super(MetadataFieldNotFoundException, self).__init__()
         self.fields = fields
@@ -38,6 +41,7 @@ class MetadataFieldNotFoundException(MetadataFieldException):
 
 class MetadataValueExistsException(MetadataFieldException):
     """Exception raised when a value for a field already exists and can't be safely overwritten."""
+
     def __init__(self, name, oldValue, newValue):
         super(MetadataValueExistsException, self).__init__()
         self.name = name
@@ -47,6 +51,7 @@ class MetadataValueExistsException(MetadataFieldException):
 
 class MultipleFieldException(MetadataFieldException):
     """Exception raised when more than one fields that a parser supports are found."""
+
     def __init__(self, name, fields):
         super(MultipleFieldException, self).__init__()
         self.name = name
@@ -55,6 +60,7 @@ class MultipleFieldException(MetadataFieldException):
 
 class BadFieldTypeException(MetadataFieldException):
     """Exception raised when the value for a field is the wrong type."""
+
     def __init__(self, name, fieldType, value):
         super(BadFieldTypeException, self).__init__()
         self.name = name
@@ -63,10 +69,8 @@ class BadFieldTypeException(MetadataFieldException):
 
 
 class InconsistentValuesException(MetadataFieldException):
-    """
-    Exception raised when the values of a group of fields don't adhere to the
-    defined validation rules.
-    """
+    """Exception raised when the values of a group of fields don't adhere to validation rules."""
+
     def __init__(self, names, values):
         super(InconsistentValuesException, self).__init__()
         self.names = names
@@ -92,6 +96,7 @@ class FieldParser(object):
     def extract(cls, data):
         """
         Extract the value for this parser's field.
+
         Field keys in data are matched case insensitively.
         A MetadataFieldNotFoundException is raised if none of the allowed fields are found.
         A MultipleFieldException is raised if more than one of the allowed fields are found.
@@ -121,8 +126,10 @@ class FieldParser(object):
     @classmethod
     def transform(cls, value):
         """
-        Implement in subclasses. Values that are None, match the empty string,
-        'unknown', or sometimes 'not applicable' (ignoring case) should be coerced to None.
+        Implement in subclasses.
+
+        Values that are None, match the empty string, 'unknown', or sometimes 'not applicable'
+        (ignoring case) should be coerced to None.
         """
         raise NotImplementedError()
 
@@ -167,8 +174,9 @@ class FieldParser(object):
     @classmethod
     def _checkWrite(cls, metadata, key, value):
         """
-        Check that the value for the key can safely be written. The following scenarios allow
-        writes:
+        Check that the value for the key can safely be written.
+
+        The following scenarios allow writes:
         - the old value doesn't exist in the metadata dictionary
         - the old value is None
         - the old value matches the new value
@@ -269,8 +277,11 @@ class PersonalHxMmFieldParser(HxMmFieldParser):
 
 class ClinicalSizeFieldParser(FieldParser):
     """
-    Parse clinical size field. Expects units to be specified (um, mm, or cm).
+    Parse clinical size field.
+
+    Expects units to be specified (um, mm, or cm).
     """
+
     name = 'clin_size_long_diam_mm'
     allowedFields = {'clin_size_long_diam_mm'}
     _formatRegex = re.compile(r'(.+)(um|mm|cm)$')
@@ -750,6 +761,7 @@ class GeneralAnatomicSiteFieldParser(FieldParser):
 def _populateMetadata(acquisition, clinical):
     """
     Populate empty metadata fields that can be determined based on other fields.
+
     In some cases, populates inconsistent fields and emits a warning.
     Returns a list of warnings.
     """
@@ -799,6 +811,7 @@ def _populateMetadata(acquisition, clinical):
 def _checkMetadataErrors(acquisition, clinical):
     """
     Check metadata for fatal errors with respect to consistency between fields.
+
     Raises an InconsistentValuesException is raised if a value violates a rule.
     """
     dermoscopicType = acquisition.get('dermoscopic_type')
@@ -866,8 +879,9 @@ def _checkMetadataErrors(acquisition, clinical):
 
 def _checkMetadataWarnings(clinical):
     """
-    Check metadata for non-fatal warnings with respect to consistency between
-    fields. Returns a list of warnings.
+    Check metadata for non-fatal warnings with respect to consistency between fields.
+
+    Returns a list of warnings.
     """
     warnings = []
 
@@ -902,11 +916,11 @@ def _extractExifMetadata(data, unstructuredExif):
 
 def addImageMetadata(image, data):
     """
-    Add acquisition and clinical metadata to an image. Data is expected to be a
-    dict, such as a row from csv.DictReader. Values for recognized fields are
-    parsed and added to the image's clinical metadata field and private metadata
-    field. Unrecognized fields are added to the image's unstructured metadata
-    field.
+    Add acquisition and clinical metadata to an image.
+
+    Data is expected to be a dict, such as a row from csv.DictReader. Values for recognized fields
+    are parsed and added to the image's clinical metadata field and private metadata
+    field. Unrecognized fields are added to the image's unstructured metadata field.
 
     Returns a tuple of:
     - List of descriptive errors with the metadata. An empty list indicates that

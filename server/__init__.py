@@ -20,8 +20,8 @@
 import itertools
 import os
 
-import six
 from bson import json_util
+import six
 
 from girder import events
 from girder.api.v1 import resource

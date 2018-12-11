@@ -18,8 +18,9 @@
 ###############################################################################
 
 import os
-import six
 import sys
+
+import six
 
 from tests import base
 
@@ -49,9 +50,10 @@ class DatasetHelpersTestCase(base.TestCase):
 
     def testMatchFilenameRegex(self):
         """
-        Test the function that generates a regular expression to match image
-        filenames in a metadata CSV file to original image filenames in the
-        database.
+        Test matchFilenameRegex.
+
+        The matchFilenameRegex function generates a regular expression to match image
+        filenames in a metadata CSV file to original image filenames in the database.
         """
         originalFilename = 'ABC-6D.JPG'
         self.assertMatch(originalFilename, 'ABC-6D')

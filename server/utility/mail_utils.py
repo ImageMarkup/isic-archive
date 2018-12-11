@@ -24,6 +24,7 @@ from girder.utility import mail_utils
 def sendEmailToGroup(groupName, templateFilename, templateParams, subject=None):
     """
     Send a single email with all members of a group as the recipients.
+
     :param groupName: The name of the group.
     :param templateFilename: The name of the Make template file used to format
         the email.

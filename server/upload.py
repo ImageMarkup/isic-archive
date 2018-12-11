@@ -19,8 +19,8 @@
 
 import os
 import shutil
-import sys
 import subprocess
+import sys
 import tempfile
 import zipfile
 

@@ -17,9 +17,10 @@
 #  limitations under the License.
 ###############################################################################
 
+import unittest
+
 import dateutil
 import mock
-import unittest
 
 from ec2_snapshots import getRetainedDaily, getRetainedMonthly, getRetainedWeekly, getRetainedYearly
 
@@ -52,10 +53,7 @@ class EC2SnapshotsTestCase(unittest.TestCase):
         return next((snapshot for snapshot in self.snapshots if snapshot.start_time == date), None)
 
     def _createDatetime(self, date):
-        """
-        Helper to convert datetime objects or ISO 8601-formatted strings to
-        datetime objects in UTC.
-        """
+        """Convert datetime objects or ISO 8601-formatted strings to datetime objects in UTC."""
         date = str(date).strip()
         try:
             date = dateutil.parser.parse(date)
@@ -67,9 +65,7 @@ class EC2SnapshotsTestCase(unittest.TestCase):
         return date
 
     def _createSnapshot(self, start_time):
-        """
-        Helper to create a mock EC2.Snapshot instance that has a start_date attribute.
-        """
+        """Create a mock EC2.Snapshot instance that has a start_date attribute."""
         snapshot = mock.NonCallableMock()
         snapshot.start_time = self._createDatetime(start_time)
         return snapshot

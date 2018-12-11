@@ -17,16 +17,17 @@
 #  limitations under the License.
 ###############################################################################
 
-import boto3
-import botocore
 import datetime
 import itertools
 import json
 import os
 import time
 
-import six
+from backports import csv
+import boto3
+import botocore
 from natsort import natsorted
+import six
 
 from girder.constants import AccessType
 from girder.exceptions import GirderException, ValidationException
@@ -40,7 +41,6 @@ from girder.models.setting import Setting
 from girder.models.upload import Upload
 from girder.utility import mail_utils
 from girder.utility.progress import ProgressContext
-from backports import csv
 
 from .batch import Batch
 from .dataset_helpers import matchFilenameRegex
@@ -297,8 +297,9 @@ class Dataset(AccessControlledModel):
 
     def addImage(self, dataset, imageDataStream, imageDataSize, filename, signature, user):
         """
-        Add an image to a dataset. The image is stored in a "Pre-review" folder
-        within the dataset folder.
+        Add an image to a dataset.
+
+        The image is stored in a "Pre-review" folder within the dataset folder.
         """
         # Avoid circular import
         from .image import Image
@@ -330,9 +331,7 @@ class Dataset(AccessControlledModel):
         return image
 
     def initiateZipUploadS3(self, dataset, signature, user):
-        """
-        Initiate a direct-to-S3 upload of a ZIP file of images.
-        """
+        """Initiate a direct-to-S3 upload of a ZIP file of images."""  # noqa: D401
         # Get upload settings
         s3BucketName = Setting().get(
             PluginSettings.UPLOAD_BUCKET_NAME)
@@ -373,7 +372,7 @@ class Dataset(AccessControlledModel):
                 RoleSessionName='ZipUploadSession-%d' % int(time.time()),
                 Policy=json.dumps(s3BucketPutObjectInKeyPolicy),
                 # 12 hours, also limited by the MaxSessionDuration of the role
-                DurationSeconds=12*60*60
+                DurationSeconds=12 * 60 * 60
             )
         except botocore.exceptions.ClientError as e:
             raise GirderException('Error acquiring temporary security credentials: %s' %
@@ -404,9 +403,7 @@ class Dataset(AccessControlledModel):
         }
 
     def cancelZipUploadS3(self, dataset, batch, user):
-        """
-        Cancel a direct-to-S3 upload of a ZIP file of images.
-        """
+        """Cancel a direct-to-S3 upload of a ZIP file of images."""
         # Get upload information stored on batch
         s3BucketName = batch.get('s3BucketName')
         s3ObjectKey = batch.get('s3ObjectKey')
@@ -429,8 +426,9 @@ class Dataset(AccessControlledModel):
 
     def finalizeZipUploadS3(self, dataset, batch, user, sendMail=False):
         """
-        Finalize a direct-to-S3 upload of a ZIP file of images. This involves several
-        steps:
+        Finalize a direct-to-S3 upload of a ZIP file of images.
+
+        This involves several steps:
         - Download the ZIP file from S3 and add it as a file attached to the dataset.
         - Delete the ZIP file from S3.
         - Ingest images from the ZIP file into the dataset.
@@ -490,9 +488,7 @@ class Dataset(AccessControlledModel):
         self._ingestZip(dataset, zipFile, batch, user, sendMail)
 
     def addZipBatch(self, dataset, zipFile, signature, user, sendMail=False):
-        """
-        Create a new batch and ingest images from a ZIP file into the dataset.
-        """
+        """Create a new batch and ingest images from a ZIP file into the dataset."""
         batch = Batch().createBatch(
             dataset=dataset,
             creator=user,
@@ -503,8 +499,9 @@ class Dataset(AccessControlledModel):
 
     def _ingestZip(self, dataset, zipFile, batch, user, sendMail):
         """
-        Ingest images from a ZIP file into a dataset. The images are
-        extracted to a "Pre-review" folder within the dataset folder.
+        Ingest images from a ZIP file into a dataset.
+
+        The images are extracted to a "Pre-review" folder within the dataset folder.
         """
         prereviewFolder = Folder().createFolder(
             parent=self.imagesFolder(dataset),
@@ -703,6 +700,7 @@ class Dataset(AccessControlledModel):
     def applyMetadata(self, dataset, metadataFile, save):
         """
         Apply metadata in a .csv file to a dataset.
+
         :return: Tuple of:
             - List of strings describing parsing or validation errors.
             - List of strings describing metadata warnings.
@@ -783,6 +781,7 @@ class Dataset(AccessControlledModel):
                                    isicIdField):
         """
         Get the image specified in the CSV row.
+
         Indicate a warning if no matching images are found.
         Indicate an error if more than one matching images are found.
         """

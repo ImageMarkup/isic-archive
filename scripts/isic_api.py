@@ -18,6 +18,7 @@
 ###############################################################################
 
 import requests
+from six.moves import input
 
 
 class ISICApi(object):
@@ -28,7 +29,7 @@ class ISICApi(object):
 
         if username is not None:
             if password is None:
-                password = raw_input('Password for user "%s":' % username)
+                password = input('Password for user "%s":' % username)
             self.authToken = self._login(username, password)
 
     def _makeUrl(self, endpoint):

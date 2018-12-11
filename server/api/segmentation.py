@@ -24,8 +24,8 @@ import numpy
 import six
 
 from girder.api import access
+from girder.api.describe import describeRoute, Description
 from girder.api.rest import loadmodel, setRawResponse, setResponseHeader
-from girder.api.describe import Description, describeRoute
 from girder.constants import AccessType, SortDir
 from girder.exceptions import RestException, ValidationException
 from girder.models.file import File

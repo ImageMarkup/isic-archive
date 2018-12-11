@@ -110,6 +110,7 @@ def setUpModule():
 
 class ImageMetadataTestCase(base.TestCase):
     """Test image metadata parsers and error reporting."""
+
     def setUp(self):
         # A Girder instance is not required for this test case
 
@@ -149,8 +150,9 @@ class ImageMetadataTestCase(base.TestCase):
 
     def _testFieldNotFound(self, parser):
         """
-        Convenience method to test that a parser makes no changes if none of its
-        allowed fields are given in the metadata.
+        Test that a parser makes no changes if none of its allowed fields are given in the metadata.
+
+        This is a convenience method.
         """
         data = {'other': 'value'}
         image = self._createImage()

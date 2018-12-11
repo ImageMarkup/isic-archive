@@ -26,20 +26,18 @@ the instance should be stopped before creating a snapshot of the root volume.
 [1] http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-creating-snapshot.html
 """
 
-import boto3
-import click
 import datetime
-import dateutil
 import functools
 import logging
 
+import boto3
+import click
+import dateutil
 from dateutil.relativedelta import relativedelta, SU
 
 
 def _getInstance(instance_id):
-    """
-    Get the EC2 instance.
-    """
+    """Get the EC2 instance."""
     ec2 = boto3.resource('ec2')
 
     # Get EC2 instance
@@ -51,9 +49,7 @@ def _getInstance(instance_id):
 
 
 def _getRootVolumeId(instance):
-    """
-    Get the ID of the root volume on the given instance.
-    """
+    """Get the ID of the root volume on the given instance."""
     rootVolumeId = [mapping['Ebs']['VolumeId']
                     for mapping in instance.block_device_mappings
                     if mapping['DeviceName'] == instance.root_device_name]
@@ -68,8 +64,9 @@ def _getRootVolumeId(instance):
 
 def _getNameTagValue(obj):
     """
-    Given an object with a 'tags' attribute, get the value of the tag with key 'Name'. Tags are
-    in format: [{'Key': 'string','Value': 'string'}, ...].
+    Given an object with a 'tags' attribute, get the value of the tag with key 'Name'.
+
+    Tags are in format: [{'Key': 'string','Value': 'string'}, ...].
     """
     if not hasattr(obj, 'tags') or obj.tags is None:
         return None
@@ -80,9 +77,7 @@ def _getNameTagValue(obj):
 
 
 def _common_options(func):
-    """
-    Function that can be used as a decorator to add common options to commands.
-    """
+    """Decorate a command to add common options."""
     @click.option('--instance-id', required=True, help='AWS EC2 Instance ID')
     @click.option('--dry-run', default=False, is_flag=True,
                   help='Log actions without performing them')
@@ -100,9 +95,7 @@ def main():
 @main.command()
 @_common_options
 def create(instance_id, dry_run):
-    """
-    Create snapshots of all volumes of an instance except the root volume.
-    """
+    """Create snapshots of all volumes of an instance except the root volume."""
     instance = _getInstance(instance_id)
     rootVolumeId = _getRootVolumeId(instance)
 
@@ -138,8 +131,9 @@ def create(instance_id, dry_run):
 @_common_options
 def clean(instance_id, dry_run):
     """
-    Clean snapshots of all volumes of an instance except the root volume according to
-    a hard-coded retention policy:
+    Clean snapshots of all volumes of an instance except the root volume.
+
+    This uses a hard-coded retention policy:
     - Keep daily snapshots for five days.
     - Keep weekly snapshots for two weeks.
     - Keep monthly snapshots for six months.
@@ -189,6 +183,7 @@ def clean(instance_id, dry_run):
 def _getLastSnapshot(snapshots, start, end):
     """
     Get the last snapshot in the given date range.
+
     :param snapshots: Candidate snapshots
     :type snapshots: iterable of EC2.Snapshot
     :param start: start of date range
@@ -206,7 +201,9 @@ def _getLastSnapshot(snapshots, start, end):
 def getRetainedYearly(years, now, snapshots):
     """
     Get snapshots to retain as yearly snapshots.
+
     A yearly snapshot is the last snapshot in a given calendar year.
+
     :param years: The number of years for which to retain snapshots
     :type years: int
     :param now: The current date/time
@@ -216,7 +213,7 @@ def getRetainedYearly(years, now, snapshots):
     """
     retained = set()
     for year in range(years):
-        start = now.replace(now.year, 1, 1, 0, 0, 0, 0) + relativedelta(years=-(year+1))
+        start = now.replace(now.year, 1, 1, 0, 0, 0, 0) + relativedelta(years=-(year + 1))
         end = start + relativedelta(years=1)
         snapshot = _getLastSnapshot(snapshots, start, end)
         if snapshot:
@@ -227,7 +224,9 @@ def getRetainedYearly(years, now, snapshots):
 def getRetainedMonthly(months, now, snapshots):
     """
     Get snapshots to retain as monthly snapshots.
+
     A monthly snapshot is the last snapshot in a given calendar month.
+
     :param months: The number of months for which to retain snapshots
     :type months: int
     :param now: The current date/time
@@ -237,7 +236,7 @@ def getRetainedMonthly(months, now, snapshots):
     """
     retained = set()
     for month in range(months):
-        start = now.replace(now.year, now.month, 1, 0, 0, 0, 0) + relativedelta(months=-(month+1))
+        start = now.replace(now.year, now.month, 1, 0, 0, 0, 0) + relativedelta(months=-(month + 1))
         end = start + relativedelta(months=1)
         snapshot = _getLastSnapshot(snapshots, start, end)
         if snapshot:
@@ -248,7 +247,9 @@ def getRetainedMonthly(months, now, snapshots):
 def getRetainedWeekly(weeks, now, snapshots):
     """
     Get snapshots to retain as weekly snapshots.
+
     A weekly snapshot is the last snapshot on Sunday.
+
     :param weeks: The number of weeks for which to retain snapshots
     :type weeks: int
     :param now: The current date/time
@@ -271,7 +272,9 @@ def getRetainedWeekly(weeks, now, snapshots):
 def getRetainedDaily(days, now, snapshots):
     """
     Get snapshots to retain as daily snapshots.
+
     A daily snapshot is the last snapshot on a given day.
+
     :param days: The number of days for which to retain snapshots
     :type days: int
     :param now: The current date/time

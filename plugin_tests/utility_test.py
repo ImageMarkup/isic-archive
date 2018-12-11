@@ -21,13 +21,13 @@ import os
 import sys
 
 from six.moves import range
+
 from tests import base
 
 
 class DataIterator(object):
-    """
-    For testing, an iterator that returns data in chunks of the specified size.
-    """
+    """For testing, an iterator that returns data in chunks of the specified size."""
+
     def __init__(self, data, chunkSize):
         self.data = data
         self.chunkSize = chunkSize
@@ -66,8 +66,9 @@ class UtilityTestCase(base.TestCase):
 
     def testGenerateLines(self):
         """
-        Test generateLines with all chunk sizes up to a maximum larger than the
-        longest input data. To control the chunk size we use the helper class
+        Test generateLines with all chunk sizes up to a maximum larger than the longest input data.
+
+        To control the chunk size we use the helper class
         DataIterator in place of something like StringIO. Testing with chunk
         sizes smaller than the data size is necessary to effective test the
         implementation of generateLines.
@@ -76,10 +77,7 @@ class UtilityTestCase(base.TestCase):
             self._testGenerateLines(chunkSize)
 
     def _generateLines(self, data, chunkSize):
-        """
-        Helper method to return the result of generateLines() on input data
-        retrieved from an iterator that uses specified chunk size.
-        """
+        """Return generateLines() on input data retrieved with a specified chunk size."""
         return generateLines(DataIterator(data, chunkSize))
 
     def _testGenerateLines(self, chunkSize):

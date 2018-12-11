@@ -28,6 +28,7 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
     def loadImage(cls, imageDataStream):
         """
         Load an image into an RGB array.
+
         :param imageDataStream: A file-like object containing the encoded
         (JPEG, etc.) image data.
         :type imageDataStream: file-like object
@@ -60,8 +61,7 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
     @classmethod
     def segment(cls, image, seedCoord, tolerance):
         """
-        Do a flood-fill segmentation of an image, yielding a single contiguous
-        region with no holes.
+        Do a flood-fill segmentation of an image, yielding a single contiguous region with no holes.
 
         :param image: A Numpy array with the image to be segmented.
         :type image: numpy.ndarray
@@ -197,14 +197,11 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         """
         Extract the contour lines within a segmented label mask, using OpenCV.
 
-        :param maskImage: A binary label mask. Values are considered as only 0
-        or non-0.
+        :param maskImage: A binary label mask. Values are considered as only 0 or non-0.
         :type maskImage: numpy.ndarray of numpy.uint8
-        :param paddedInput: Whether the mask_image already includes a 1-pixel
-        wide padded border.
+        :param paddedInput: Whether the mask_image already includes a 1-pixel wide padded border.
         :type paddedInput: bool
-        :param safe: Guarantee that the image_mask will not be modified. This is
-        slower.
+        :param safe: Guarantee that the image_mask will not be modified. This is slower.
         :type safe: bool
         :return: An array of point pairs.
         :rtype: numpy.ndarray
@@ -247,8 +244,16 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
     @classmethod
     def maskToContour(cls, maskImage, paddedInput=False, safe=True):
         """
-        Extract the longest contour line within a segmented label mask,
-        using OpenCV.
+        Extract the longest contour line within a segmented label mask, using OpenCV.
+
+        :param maskImage: A binary label mask.
+        :type maskImage: numpy.ndarray of numpy.uint8
+        :param paddedInput: Whether the mask_image already includes a 1-pixel wide padded border.
+        :type paddedInput: bool
+        :param safe: Guarantee that the image_mask will not be modified. This is slower.
+        :type safe: bool
+        :return: An array of point pairs.
+        :rtype: numpy.ndarray
         """
         contours = cls._maskToContours(maskImage, paddedInput, safe)
 

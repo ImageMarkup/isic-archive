@@ -37,6 +37,7 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
     def loadImage(cls, imageDataStream):
         """
         Load an image into an RGB array.
+
         :param imageDataStream: A file-like object containing the encoded
         (JPEG, etc.) image data or a file path.
         :type imageDataStream: file-like object or str
@@ -73,8 +74,7 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
     @classmethod
     def segment(cls, image, seedCoord, tolerance):
         """
-        Do a flood-fill segmentation of an image, yielding a single contiguous
-        region with no holes.
+        Do a flood-fill segmentation of an image, yielding a single contiguous region with no holes.
 
         :param image: A Numpy array with the image to be segmented.
         :type image: numpy.ndarray
@@ -216,8 +216,7 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
     @classmethod
     def maskToContour(cls, maskImage):
         """
-        Extract the contour line within a segmented label mask, using
-        Scikit-Image.
+        Extract the contour line within a segmented label mask, using Scikit-Image.
 
         :param maskImage: A binary label mask.
         :type maskImage: numpy.ndarray of numpy.uint8
@@ -305,8 +304,8 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
     @classmethod
     def _RGBTounit64(cls, val):
         """
-        Decode an RGB representation of a superpixel label into its native
-        scalar value.
+        Decode an RGB representation of a superpixel label into its native scalar value.
+
         :param val: A single pixel, or a 3-channel image.
         :type val: numpy.ndarray of uint8, with a shape [3] or [n, m, 3]
         """

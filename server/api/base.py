@@ -29,8 +29,10 @@ from girder.exceptions import RestException
 class IsicResource(Resource):
     def _decodeParams(self, params):
         """
-        Decode POSTed or PUTed JSON parameters, from either
-        "application/x-www-form-urlencoded" or "application/json" bodies.
+        Decode POSTed or PUTed JSON parameters.
+
+        Supports either "application/x-www-form-urlencoded" or "application/json" bodies.
+
         :param params: The "params" parameter from a Resource route handler.
         :type params: dict
         :return: The decoded parameters.
