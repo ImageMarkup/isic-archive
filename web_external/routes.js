@@ -2,7 +2,7 @@
 
 import _ from 'underscore';
 
-import {getCurrentUser, setCurrentToken, setCurrentUser} from 'girder/auth';
+import {getCurrentUser, setCurrentToken} from 'girder/auth';
 import events from 'girder/events';
 
 import router from './router';
@@ -67,8 +67,6 @@ router.route('literature', 'literature', () => {
 
 // User management
 import UserAccountView from 'girder/views/body/UserAccountView';
-import eventStream from 'girder/utilities/EventStream';
-import { restRequest } from 'girder/rest';
 router.route('useraccount/:id/:tab', 'accountTab', (id, tab) => {
     UserAccountView.fetchAndInit(id, tab);
 });
@@ -81,15 +79,15 @@ router.route('useraccount/:id/token/:token', 'accountToken', (id, token) => {
     UserModel.fromTemporaryToken(id, token)
         .done((resp) => {
             // TODO: Move this upstream
-            setCurrentToken(resp.authToken.token)
-        })
-        .done((resp) => {
+            setCurrentToken(resp.authToken.token);
+
             events.trigger('g:navigateTo', UserAccountView, {
                 user: getCurrentUser(),
                 tab: 'password',
                 temporary: token
             });
-        }).fail(() => {
+        })
+        .fail(() => {
             router.navigate('', {trigger: true});
         });
 });
@@ -108,9 +106,8 @@ router.route('user/:id/rsvp/:token', 'rsvpUser', (id, token) => {
     UserModel.fromTemporaryToken(id, token)
         .done((resp) => {
             // TODO: Move this upstream
-            setCurrentToken(resp.authToken.token)
-        })
-        .done((resp) => {
+            setCurrentToken(resp.authToken.token);
+
             events.trigger('g:navigateTo', RsvpUserView, {
                 user: getCurrentUser(),
                 token: token
