@@ -38,7 +38,7 @@ function initialState() {
         markups: {},
         activeFeatureId: null,
         submissionState: SubmissionState.UNSUBMITTED,
-        log: [],
+        log: []
     };
 }
 
@@ -46,7 +46,7 @@ function logEvent(state, type, detail) {
     state.log.push({
         'type': type,
         'time': new Date().toISOString(),
-        'detail': detail,
+        'detail': detail
     });
 }
 
@@ -80,7 +80,7 @@ export default {
         setFlagStatus(state, data) {
             state.flagStatus = data;
             logEvent(state, 'flag', {
-                'flag': state.flagStatus,
+                'flag': state.flagStatus
             });
         },
         setStartTime(state, data) {
@@ -105,12 +105,12 @@ export default {
                 Vue.set(state.responses, questionId, response);
                 logEvent(state, 'response_set', {
                     'questionId': questionId,
-                    'response': state.responses[questionId],
+                    'response': state.responses[questionId]
                 });
             } else {
                 Vue.delete(state.responses, questionId);
                 logEvent(state, 'response_clear', {
-                    'questionId': questionId,
+                    'questionId': questionId
                 });
             }
         },
@@ -118,12 +118,12 @@ export default {
             if (values) {
                 Vue.set(state.markups, featureId, values);
                 logEvent(state, 'markup_set', {
-                    'featureId': featureId,
+                    'featureId': featureId
                 });
             } else {
                 Vue.delete(state.markups, featureId);
                 logEvent(state, 'markup_clear', {
-                    'featureId': featureId,
+                    'featureId': featureId
                 });
             }
         },
@@ -132,13 +132,13 @@ export default {
             if (data !== null) {
                 // Don't log on deactivation (that's handled by setMarkup)
                 logEvent(state, 'markup_select', {
-                    'featureId': data,
+                    'featureId': data
                 });
             }
         },
         setSubmissionState(state, data) {
             state.submissionState = data;
-        },
+        }
     },
     actions: {
         getNextAnnotation({ state, dispatch, commit }, { studyId }) {
@@ -162,19 +162,19 @@ export default {
             ImageService.get(id)
                 .done((resp) => commit('setImage', resp));
         },
-        resetResponses ({ state, commit }) {
+        resetResponses({ state, commit }) {
             _.each(state.responses, (response, questionId) => {
                 commit('setResponse', {
                     questionId,
-                    response: null,
+                    response: null
                 });
             });
         },
-        resetMarkups ({ state, commit }) {
+        resetMarkups({ state, commit }) {
             _.each(state.markups, (values, featureId) => {
                 commit('setMarkup', {
                     featureId,
-                    values: null,
+                    values: null
                 });
             });
         },
@@ -192,7 +192,7 @@ export default {
                 stopTime: state.stopTime.getTime(),
                 responses: responses,
                 markups: state.markups,
-                log: state.log,
+                log: state.log
             };
 
             AnnotationService.submit(state.annotation._id, annotation)
