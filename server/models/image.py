@@ -442,10 +442,10 @@ class Image(Item):
                     'default': None
                 }}
             ]
-        histogram = next(self.collection.aggregate([
+        histogram = next(iter(self.collection.aggregate([
             {'$match': query},
             {'$facet': facetStages}
-        ]))
+        ])))
 
         # Fix up the pipeline result
         if not histogram['__passedFilters__']:
