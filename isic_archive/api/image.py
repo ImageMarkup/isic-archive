@@ -1,3 +1,5 @@
+import csv
+import io
 import json
 import os
 
@@ -125,9 +127,32 @@ class ImageResource(IsicResource):
                 user=user, level=AccessType.READ, limit=limit, offset=offset)
         ]
 
-    def _imagesZipGenerator(self, downloadFileName, images, include):
+    def _imagesZipGenerator(self, downloadFileName, images, include):  # noqa C901
         datasetCache = {}
         zipGenerator = ziputil.ZipGenerator(downloadFileName)
+
+        if include in {'all', 'metadata'}:
+            metadataFieldnames = [
+                '_id',
+                'name'
+            ]
+            for k in sorted([
+                'age_approx', 'anatom_site_general', 'benign_malignant',
+                'clin_size_long_diam_mm', 'diagnosis', 'diagnosis_confirm_type',
+                'family_hx_mm', 'lesion_id', 'mel_class', 'mel_mitotic_index', 'mel_thick_mm',
+                'mel_type', 'mel_ulcer', 'melanocytic', 'nevus_type', 'patient_id',
+                'personal_hx_mm', 'sex',
+            ]):
+                metadataFieldnames.append(f'meta.clinical.{k}')
+            for k in sorted([
+                'acquisition_day', 'blurry', 'color_tint', 'dermoscopic_type', 'hairy',
+                'image_type', 'marker_pen', 'pixelsX', 'pixelsY',
+            ]):
+                metadataFieldnames.append(f'meta.acquisition.{k}')
+
+            csvStream = io.StringIO()
+            csvWriter = csv.DictWriter(csvStream, metadataFieldnames)
+            csvWriter.writeheader()
 
         for image in images:
             datasetId = image['meta']['datasetId']
@@ -143,20 +168,24 @@ class ImageResource(IsicResource):
                         path=os.path.join(dataset['name'], imageFile['name'])):
                     yield data
             if include in {'all', 'metadata'}:
-                def metadataGenerator():
-                    # TODO: Consider replacing this with Image().filter
-                    yield json.dumps({
-                        '_id': str(image['_id']),
-                        'name': image['name'],
-                        'meta': {
-                            'acquisition': image['meta']['acquisition'],
-                            'clinical': image['meta']['clinical']
-                        }
-                    })
-                for data in zipGenerator.addFile(
-                        metadataGenerator,
-                        path=os.path.join(dataset['name'], f'{image["name"]}.json')):
-                    yield data
+                flattenedMetadata = {
+                    '_id': str(image['_id']),
+                    'name': image['name']
+                }
+                for metaType in ['acquisition', 'clinical']:
+                    for k, v in image['meta'][metaType].items():
+                        flattenedMetadata[f'meta.{metaType}.{k}'] = v
+                csvWriter.writerow(flattenedMetadata)
+
+        if include in {'all', 'metadata'}:
+            csvStream.seek(0)
+            csvStreamChunks = iter(csvStream.readline, '')
+            for data in zipGenerator.addFile(
+                # Girder expects a callable function instead of an actual generator
+                lambda: csvStreamChunks,
+                path='metadata.csv'
+            ):
+                yield data
 
         for dataset in datasetCache.values():
             licenseText = mail_utils.renderTemplate(
