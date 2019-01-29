@@ -20,12 +20,11 @@
 import datetime
 import itertools
 import json
-import os
 import time
 
 from backports import csv
-import boto3
 import botocore
+import cherrypy
 from natsort import natsorted
 import six
 
@@ -36,20 +35,19 @@ from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.group import Group
 from girder.models.model_base import AccessControlledModel
-from girder.models.notification import ProgressState
 from girder.models.setting import Setting
 from girder.models.upload import Upload
 from girder.utility import mail_utils
-from girder.utility.progress import ProgressContext
+
+from isic_archive_tasks.zip import ingestBatchFromZipfile
 
 from .batch import Batch
 from .dataset_helpers import matchFilenameRegex
 from .dataset_helpers.image_metadata import addImageMetadata
 from .user import User
 from ..settings import PluginSettings
-from ..upload import TempDir, ZipFileOpener
-from ..utility import generateLines
-from ..utility import mail_utils as isic_mail_utils
+from ..utility import generateLines, mail_utils as isic_mail_utils
+from ..utility.boto import s3, sts
 
 
 class Dataset(AccessControlledModel):
@@ -321,7 +319,7 @@ class Dataset(AccessControlledModel):
         image = Image().createImage(
             imageDataStream=imageDataStream,
             imageDataSize=imageDataSize,
-            originalName=filename,
+            originalFileRelpath=filename,
             parentFolder=prereviewFolder,
             creator=user,
             dataset=dataset,
@@ -365,7 +363,6 @@ class Dataset(AccessControlledModel):
         # Get temporary security credentials with permission to upload into the
         # object in the S3 bucket. The AWS Security Token Service (STS) provides
         # the credentials when the machine assumes the upload role.
-        sts = boto3.client('sts')
         try:
             resp = sts.assume_role(
                 RoleArn=uploadRoleArn,
@@ -389,7 +386,8 @@ class Dataset(AccessControlledModel):
         # Store upload information on batch
         batch.update({
             's3BucketName': s3BucketName,
-            's3ObjectKey': s3ObjectKey
+            's3ObjectKey': s3ObjectKey,
+            'ingestStatus': 'uploading'
         })
         batch = Batch().save(batch)
 
@@ -411,7 +409,6 @@ class Dataset(AccessControlledModel):
             raise GirderException('Error retrieving upload information.')
 
         # Delete file from S3 as upload user
-        s3 = boto3.client('s3')
         try:
             s3.delete_object(
                 Bucket=s3BucketName,
@@ -422,9 +419,7 @@ class Dataset(AccessControlledModel):
 
         Batch().remove(batch)
 
-        # TODO: Could update bucket policy to effectively revoke temporary security credentials
-
-    def finalizeZipUploadS3(self, dataset, batch, user, sendMail=False):
+    def finalizeZipUploadS3(self, batch):
         """
         Finalize a direct-to-S3 upload of a ZIP file of images.
 
@@ -433,145 +428,21 @@ class Dataset(AccessControlledModel):
         - Delete the ZIP file from S3.
         - Ingest images from the ZIP file into the dataset.
         """
-        # Get upload information stored on batch
-        s3BucketName = batch.get('s3BucketName')
-        s3ObjectKey = batch.get('s3ObjectKey')
-        if not all([s3BucketName, s3ObjectKey]):
-            raise GirderException('Error retrieving upload information.')
-
-        # Move file from S3 to the assetstore, attached to the dataset
-        s3 = boto3.client('s3')
-        try:
-            with TempDir() as tempDir:
-                # Download file from S3 as upload user
-                fileName = os.path.join(tempDir, str(batch['_id']) + '.zip')
-                s3.download_file(
-                    Bucket=s3BucketName,
-                    Key=s3ObjectKey,
-                    Filename=fileName
-                )
-
-                # Attach file to dataset
-                fileSize = os.path.getsize(fileName)
-                with open(fileName, 'rb') as fileStream:
-                    zipFile = Upload().uploadFromFile(
-                        obj=fileStream,
-                        size=fileSize,
-                        name=fileName,
-                        parentType='dataset',
-                        parent=dataset,
-                        attachParent=True,
-                        user=user,
-                        mimeType='application/zip'
-                    )
-                # TODO: remove this once a bug in upstream Girder is fixed
-                zipFile['attachedToType'] = ['dataset', 'isic_archive']
-                zipFile = File().save(zipFile)
-
-                # Delete file from S3 as upload user
-                s3.delete_object(
-                    Bucket=s3BucketName,
-                    Key=s3ObjectKey
-                )
-
-                # Remove upload information from batch
-                del batch['s3BucketName']
-                del batch['s3ObjectKey']
-                batch = Batch().save(batch)
-
-                # TODO: Could update bucket policy to effectively revoke temporary security
-                # credentials
-        except botocore.exceptions.ClientError as e:
-            raise GirderException('Error downloading object: %s' % e.response['Error']['Message'])
+        updateResult = Batch().collection.update_one(
+            {
+                '_id': batch['_id'],
+                'ingestStatus': 'uploading',
+            },
+            {
+                '$set': {'ingestStatus': 'queued'}
+            }
+        )
+        if updateResult.modified_count != 1:
+            raise GirderException('Trying to finalize a batch which isn\'t uploading')
 
         # Ingest images from ZIP file into dataset
-        self._ingestZip(dataset, zipFile, batch, user, sendMail)
-
-    def addZipBatch(self, dataset, zipFile, signature, user, sendMail=False):
-        """Create a new batch and ingest images from a ZIP file into the dataset."""
-        batch = Batch().createBatch(
-            dataset=dataset,
-            creator=user,
-            signature=signature
-        )
-
-        self._ingestZip(dataset, zipFile, batch, user, sendMail)
-
-    def _ingestZip(self, dataset, zipFile, batch, user, sendMail):
-        """
-        Ingest images from a ZIP file into a dataset.
-
-        The images are extracted to a "Pre-review" folder within the dataset folder.
-        """
-        prereviewFolder = Folder().createFolder(
-            parent=self.imagesFolder(dataset),
-            name='Pre-review',
-            parentType='folder',
-            creator=user,
-            public=False,
-            reuseExisting=True)
-
-        # Process zip file
-        # TODO: gracefully clean up after exceptions in handleZip
-        self._handleZip(dataset, batch, prereviewFolder, user, zipFile)
-
-        # Send email confirmations
-        if sendMail:
-            host = mail_utils.getEmailUrlPrefix()
-            params = {
-                'group': False,
-                'host': host,
-                'dataset': dataset,
-                # We intentionally leak full user details here, even though all
-                # email recipients may not have access permissions to the user
-                'user': user,
-                'batch': batch,
-            }
-            subject = 'ISIC Archive: Dataset Upload Confirmation'
-            templateFilename = 'ingestDatasetConfirmation.mako'
-
-            # Mail user
-            html = mail_utils.renderTemplate(templateFilename, params)
-            mail_utils.sendEmail(to=user['email'], subject=subject, text=html)
-
-            # Mail 'Dataset QC Reviewers' group
-            params['group'] = True
-            isic_mail_utils.sendEmailToGroup(
-                groupName='Dataset QC Reviewers',
-                templateFilename=templateFilename,
-                templateParams=params,
-                subject=subject)
-
-    def _handleZip(self, dataset, batch, prereviewFolder, user, zipFile):
-        # Avoid circular import
-        from .image import Image
-
-        zipFileLocalPath = File().getLocalFilePath(zipFile)
-        with ZipFileOpener(zipFileLocalPath) as (fileList, fileCount):
-            with ProgressContext(
-                    on=True,
-                    user=user,
-                    title='Processing "%s"' % zipFile['name'],
-                    total=fileCount,
-                    state=ProgressState.ACTIVE,
-                    current=0) as progress:
-                for originalFilePath, originalFileRelpath in fileList:
-                    originalFileName = os.path.basename(originalFileRelpath)
-
-                    progress.update(
-                        increment=1,
-                        message='Extracting "%s"' % originalFileName)
-
-                    with open(originalFilePath, 'rb') as originalFileStream:
-                        Image().createImage(
-                            imageDataStream=originalFileStream,
-                            imageDataSize=os.path.getsize(originalFilePath),
-                            originalName=originalFileName,
-                            parentFolder=prereviewFolder,
-                            creator=user,
-                            dataset=dataset,
-                            batch=batch
-                        )
+        ingestBatchFromZipfile.delay(batch['_id'])
+        cherrypy.response.status = 201
 
     def imagesFolder(self, dataset):
         return Folder().load(dataset['folderId'], force=True, exc=True)

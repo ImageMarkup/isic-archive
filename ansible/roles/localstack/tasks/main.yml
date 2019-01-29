@@ -1,0 +1,26 @@
+---
+
+- name: Install localstack
+  pip:
+    name:
+      - localstack
+      - awscli-local
+    virtualenv: "{{ python_dist_path }}"
+
+- name: Daemonize localstack
+  template:
+    src: "localstack.service.j2"
+    dest: "/etc/systemd/system/localstack.service"
+  become: true
+
+- name: Start localstack
+  systemd:
+    name: localstack
+    daemon_reload: true
+    enabled: true
+    state: started
+  become: true
+
+- name: Create default bucket
+  command:
+    awslocal s3api create-bucket --bucket {{ isic_upload_bucket_name }}

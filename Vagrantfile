@@ -24,6 +24,7 @@ Vagrant.configure("2") do |config|
   config.vm.post_up_message = <<-eos
 ISIC Archive is running at http://isic-archive.test
 MailHog is running at http://isic-archive.test:8025
+S3 (via localstack) is running at http://isic-archive.test:4572
 eos
 
   config.vm.synced_folder ".", "/vagrant", disabled: true

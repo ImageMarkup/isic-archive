@@ -20,6 +20,11 @@
     - role: nginx
       site_hostname: isic-archive.test
       upstream_proxy: true
+      # S3 development is mocked with localstack
+      isic_upload_bucket_name: "test-upload-bucket"
+      isic_upload_role_arn: "fake-arn"
+
+    - role: localstack
 
   post_tasks:
     - name: Activate virtualenv on login

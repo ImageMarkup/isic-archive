@@ -1,0 +1,12 @@
+[Unit]
+Description=Localstack
+After=network.target
+
+[Service]
+Restart=always
+Environment=SERVICES=s3
+Environment=HOST=0.0.0.0
+ExecStart=/home/vagrant/env/bin/localstack start
+
+[Install]
+WantedBy=multi-user.target
