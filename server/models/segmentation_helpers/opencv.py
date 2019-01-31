@@ -220,7 +220,7 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         elif safe:
             maskImage = numpy.copy(maskImage)
 
-        imageOut, contours, hierarchy = cv2.findContours(
+        contours, hierarchy = cv2.findContours(
             image=maskImage,
             mode=cv2.RETR_EXTERNAL,
             method=cv2.CHAIN_APPROX_SIMPLE,

@@ -9,4 +9,4 @@ Pillow==3.4.*
 scipy>=0.16.0
 scikit-image>=0.12.3
 
-opencv-python
+opencv-python>=4
