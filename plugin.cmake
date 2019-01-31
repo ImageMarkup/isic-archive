@@ -48,17 +48,12 @@ girder_ExternalData_add_target("${name}_data")
 # External client static analysis
 add_eslint_test_ext(
   isic_archive_external
-  "${CMAKE_CURRENT_LIST_DIR}/web_external")
+  "${CMAKE_CURRENT_LIST_DIR}/isic-archive-gui/src")
 add_test(
   NAME puglint_isic_archive_external
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-  COMMAND npx pug-lint -c "${CMAKE_CURRENT_LIST_DIR}/.pug-lintrc" "${CMAKE_CURRENT_LIST_DIR}/web_external")
+  COMMAND npx pug-lint -c "${CMAKE_CURRENT_LIST_DIR}/isic-archive-gui/.pug-lintrc" "${CMAKE_CURRENT_LIST_DIR}/isic-archive-gui/src")
 set_property(TEST puglint_isic_archive_external PROPERTY LABELS girder_browser)
 add_stylint_test(
   isic_archive_external
-  "${CMAKE_CURRENT_LIST_DIR}/web_external")
-
-# Other Javascript code
-add_eslint_test(
-  isic_archive_grunt
-  "${CMAKE_CURRENT_LIST_DIR}/Gruntfile.js")
+  "${CMAKE_CURRENT_LIST_DIR}/isic-archive-gui/src")

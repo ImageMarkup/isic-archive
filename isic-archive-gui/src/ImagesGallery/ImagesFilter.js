@@ -1,13 +1,10 @@
 import Backbone from 'backbone';
-import peg from 'pegjs';
 import _ from 'underscore';
 
 import {FACET_SCHEMA} from './Facets/ImagesFacetView';
-import queryGrammar from './query.pegjs';
+import queryParser from './query.pegjs';
 
 const ImagesFilter = function (completeFacets) {
-    this.astParser = peg.generate(queryGrammar);
-
     if (completeFacets) {
         this.initialize(completeFacets);
     }
@@ -50,7 +47,7 @@ _.extend(ImagesFilter.prototype, Backbone.Events, {
     asAst: function () {
         let fullExpression = this.asExpression();
         if (fullExpression) {
-            let ast = this.astParser.parse(fullExpression);
+            let ast = queryParser.parse(fullExpression);
             ast = SerializeFilterHelpers._dehexify(ast);
             // TODO: "__null__" values in range facets get their type set as "number" here
             return SerializeFilterHelpers._specifyAttrTypes(ast);

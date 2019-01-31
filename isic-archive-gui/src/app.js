@@ -30,11 +30,6 @@ import LayoutTemplate from './layout/layout.pug';
 import './layout/layout.styl';
 import BrowserAlertView from './layout/BrowserAlertView';
 
-// The 'girder/rest' import will always overwrite the publicPath to Girder's static root, which we
-// don't want; so re-overwrite it with the original value from the build configuration (which
-// cannot be captured here at load-time, due to import hoisting)
-__webpack_public_path__ = '/static/built/plugins/isic_archive/'; // eslint-disable-line no-undef, camelcase
-
 const IsicApp = GirderApp.extend({
     start: function () {
         // Set select2 default options

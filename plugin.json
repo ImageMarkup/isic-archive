@@ -3,45 +3,5 @@
     "description": "The ISIC dermoscopy image archive.",
     "url": "https://github.com/ImageMarkup/isic-archive",
     "version": "1.0.0",
-    "dependencies": ["gravatar", "large_image", "worker"],
-    "npm": {
-        "dependencies": {
-            "backbone.select": "~2.1.0",
-            "bibtex-parse-js": "~0.0.23",
-            "d3": "~3.5.17",
-            "eslint-plugin-vue": "~4.2.0",
-            "geojs": "~0.15.1",
-            "mathy-unicode-characters": "^0.9.3",
-            "pegjs": "~0.10.0",
-            "raw-loader": "~0.5.1",
-            "select2": "~4.0.3",
-            "select2-bootstrap-theme": ">=0.1.0-beta.10",
-            "svg-fill-loader": "~0.0.8",
-            "ua-parser-js": "~0.7.17",
-            "url-loader": "~0.6.2",
-            "vue": "~2.5.0",
-            "vue-loader": "~14.1.0",
-            "vue-simple-spinner": "~1.2.0",
-            "vue-template-compiler": "~2.5.0",
-            "vue2-dropzone": "~3.0.0",
-            "vuex": "~3.0.0"
-        }
-    },
-    "grunt": {
-        "autobuild": true,
-        "dependencies": {
-            "bower": "^1.8.0"
-        },
-        "file": "Gruntfile.js",
-        "defaultTargets": ["isic_archive-web"]
-    },
-    "webpack": {
-        "main": {
-            "plugin": "web_client/main.js",
-            "app": "web_external/main.js",
-            "app_integration": "web_external/integration/main.js"
-        },
-        "configHelper": "webpack.helper.js",
-        "defaultLoaders": true
-    }
+    "dependencies": ["gravatar", "large_image", "worker"]
 }
