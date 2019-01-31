@@ -1,8 +1,8 @@
 import $ from 'jquery';
 import _ from 'underscore';
 
-import SearchFieldWidget from 'girder/views/widgets/SearchFieldWidget';
-import {restRequest} from 'girder/rest';
+import SearchFieldWidget from '@girder/core/views/widgets/SearchFieldWidget';
+import {restRequest} from '@girder/core/rest';
 
 import View from '../view';
 import {showAlertDialog} from '../common/utilities';

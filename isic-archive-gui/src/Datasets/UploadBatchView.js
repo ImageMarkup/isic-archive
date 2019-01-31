@@ -1,9 +1,9 @@
 import _ from 'underscore';
 
-import FolderModel from 'girder/models/FolderModel';
-import UploadWidget from 'girder/views/widgets/UploadWidget';
-import {getCurrentUser} from 'girder/auth';
-import {AccessType} from 'girder/constants';
+import FolderModel from '@girder/core/models/FolderModel';
+import UploadWidget from '@girder/core/views/widgets/UploadWidget';
+import {getCurrentUser} from '@girder/core/auth';
+import {AccessType} from '@girder/core/constants';
 
 import {SelectableDatasetCollection} from '../collections/DatasetCollection';
 import TermsOfUseWidget from '../common/TermsOfUse/TermsOfUseWidget';

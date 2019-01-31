@@ -5,7 +5,7 @@
 import _ from 'underscore';
 import Vue from 'vue';
 
-import { getApiRoot } from 'girder/rest';
+import { getApiRoot } from '@girder/core/rest';
 
 import DatasetService from '../../api/dataset';
 

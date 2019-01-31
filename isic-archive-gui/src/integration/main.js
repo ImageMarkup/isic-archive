@@ -1,6 +1,6 @@
 import $ from 'jquery';
 
-import events from 'girder/events';
+import events from '@girder/core/events';
 
 import IsicApp from './app.js';
 

@@ -1,6 +1,6 @@
 import $ from 'jquery';
 
-import {restRequest} from 'girder/rest';
+import {restRequest} from '@girder/core/rest';
 
 import Model from './Model';
 

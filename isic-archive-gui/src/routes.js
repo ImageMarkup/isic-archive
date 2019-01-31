@@ -2,8 +2,8 @@
 
 import _ from 'underscore';
 
-import {getCurrentUser, setCurrentToken} from 'girder/auth';
-import events from 'girder/events';
+import {getCurrentUser, setCurrentToken} from '@girder/core/auth';
+import events from '@girder/core/events';
 
 import router from './router';
 import VueComponentView from './vueComponentView';
@@ -66,7 +66,7 @@ router.route('literature', 'literature', () => {
 });
 
 // User management
-import UserAccountView from 'girder/views/body/UserAccountView';
+import UserAccountView from '@girder/core/views/body/UserAccountView';
 router.route('useraccount/:id/:tab', 'accountTab', (id, tab) => {
     UserAccountView.fetchAndInit(id, tab);
 });

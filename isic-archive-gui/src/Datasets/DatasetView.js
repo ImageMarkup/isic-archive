@@ -1,5 +1,5 @@
-import LoadingAnimation from 'girder/views/widgets/LoadingAnimation';
-import AccessWidget from 'girder/views/widgets/AccessWidget';
+import LoadingAnimation from '@girder/core/views/widgets/LoadingAnimation';
+import AccessWidget from '@girder/core/views/widgets/AccessWidget';
 
 import View from '../view';
 import router from '../router';

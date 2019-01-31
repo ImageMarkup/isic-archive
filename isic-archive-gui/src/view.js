@@ -1,5 +1,5 @@
-import GirderView from 'girder/views/View';
-import {formatDate, DATE_SECOND} from 'girder/misc';
+import GirderView from '@girder/core/views/View';
+import {formatDate, DATE_SECOND} from '@girder/core/misc';
 
 const View = GirderView.extend({
     formatDate: function (date) {

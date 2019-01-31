@@ -1,6 +1,6 @@
 import $ from 'jquery';
 
-import {getApiRoot} from 'girder/rest';
+import {getApiRoot} from '@girder/core/rest';
 
 import View from '../view';
 

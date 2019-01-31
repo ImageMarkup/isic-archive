@@ -2,7 +2,7 @@ import _ from 'underscore';
 
 import geo from 'geojs';
 
-import {getApiRoot, restRequest} from 'girder/rest';
+import {getApiRoot, restRequest} from '@girder/core/rest';
 
 import View from '../../view';
 

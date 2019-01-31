@@ -16,10 +16,10 @@ import 'select2/dist/css/select2.css';
 import 'select2-bootstrap-theme/dist/select2-bootstrap.css';
 import _ from 'underscore';
 
-import GirderApp from 'girder/views/App';
-import { getCurrentUser } from 'girder/auth';
-import eventStream from 'girder/utilities/EventStream';
-import { splitRoute } from 'girder/misc';
+import GirderApp from '@girder/core/views/App';
+import { getCurrentUser } from '@girder/core/auth';
+import eventStream from '@girder/core/utilities/EventStream';
+import { splitRoute } from '@girder/core/misc';
 
 import './global.styl';
 import LayoutFooterView from './layout/FooterView';

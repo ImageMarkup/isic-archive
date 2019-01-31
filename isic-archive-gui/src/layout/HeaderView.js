@@ -1,7 +1,7 @@
 import $ from 'jquery';
 
-import {getCurrentUser} from 'girder/auth';
-import events from 'girder/events';
+import {getCurrentUser} from '@girder/core/auth';
+import events from '@girder/core/events';
 
 import LayoutHeaderUserView from './HeaderUserView';
 import View from '../view';

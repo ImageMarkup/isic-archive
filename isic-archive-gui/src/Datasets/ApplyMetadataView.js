@@ -2,10 +2,10 @@ import Backbone from 'backbone';
 import $ from 'jquery';
 import _ from 'underscore';
 
-import {SORT_DESC} from 'girder/constants';
-import {DATE_SECOND, formatDate} from 'girder/misc';
-import FileModel from 'girder/models/FileModel';
-import {confirm} from 'girder/dialog';
+import {SORT_DESC} from '@girder/core/constants';
+import {DATE_SECOND, formatDate} from '@girder/core/misc';
+import FileModel from '@girder/core/models/FileModel';
+import {confirm} from '@girder/core/dialog';
 
 import Collection from '../collections/Collection';
 import Model from '../models/Model';

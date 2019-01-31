@@ -63,7 +63,7 @@
 
 <script>
 import { createNamespacedHelpers } from 'vuex';
-import { getApiRoot } from 'girder/rest';
+import { getApiRoot } from '@girder/core/rest';
 import Spinner from 'vue-simple-spinner';
 
 import router from '../../../router';

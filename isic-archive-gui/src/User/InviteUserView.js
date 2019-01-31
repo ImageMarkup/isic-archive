@@ -1,6 +1,6 @@
 import _ from 'underscore';
 
-import {restRequest} from 'girder/rest';
+import {restRequest} from '@girder/core/rest';
 
 import View from '../view';
 import router from '../router';

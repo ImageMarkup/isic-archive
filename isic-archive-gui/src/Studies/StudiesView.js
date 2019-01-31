@@ -1,7 +1,7 @@
 import $ from 'jquery';
 
-import LoadingAnimation from 'girder/views/widgets/LoadingAnimation';
-import PaginateWidget from 'girder/views/widgets/PaginateWidget';
+import LoadingAnimation from '@girder/core/views/widgets/LoadingAnimation';
+import PaginateWidget from '@girder/core/views/widgets/PaginateWidget';
 
 import StudyCollection from '../collections/StudyCollection';
 import StudyView from './StudyView';

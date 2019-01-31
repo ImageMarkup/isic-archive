@@ -7,7 +7,7 @@ import _ from 'underscore';
 import geo from 'geojs';
 import { createNamespacedHelpers } from 'vuex';
 
-import { restRequest, getApiRoot } from 'girder/rest';
+import { restRequest, getApiRoot } from '@girder/core/rest';
 
 import { MarkupState } from './AnnotationToolStore';
 

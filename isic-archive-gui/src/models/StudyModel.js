@@ -1,7 +1,7 @@
 import _ from 'underscore';
 
-import {getCurrentUser} from 'girder/auth';
-import {restRequest} from 'girder/rest';
+import {getCurrentUser} from '@girder/core/auth';
+import {restRequest} from '@girder/core/rest';
 
 import Model from './Model';
 import UserCollection from '../collections/UserCollection';

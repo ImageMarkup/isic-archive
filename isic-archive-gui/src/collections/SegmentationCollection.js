@@ -1,7 +1,7 @@
 import Backbone from 'backbone';
 import 'backbone.select';
 
-import {SORT_DESC} from 'girder/constants';
+import {SORT_DESC} from '@girder/core/constants';
 
 import Collection from './Collection';
 import SegmentationModel from '../models/SegmentationModel';

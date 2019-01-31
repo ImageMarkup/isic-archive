@@ -147,7 +147,7 @@ import _ from 'underscore';
 import vue2Dropzone from 'vue2-dropzone';
 import 'vue2-dropzone/dist/vue2Dropzone.css';
 
-import {AccessType} from 'girder/constants';
+import {AccessType} from '@girder/core/constants';
 
 import router from '../router';
 import {showAlertDialog} from '../common/utilities';

@@ -1,5 +1,5 @@
-import {getCurrentUser, logout} from 'girder/auth';
-import events from 'girder/events';
+import {getCurrentUser, logout} from '@girder/core/auth';
+import events from '@girder/core/events';
 
 import 'girder_plugins/gravatar/models/UserModel';
 

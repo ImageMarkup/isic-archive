@@ -1,7 +1,7 @@
 import _ from 'underscore';
 
-import { restRequest } from 'girder/rest';
-import GirderCollection from 'girder/collections/Collection';
+import { restRequest } from '@girder/core/rest';
+import GirderCollection from '@girder/core/collections/Collection';
 
 const Collection = GirderCollection.extend({
     model: null,

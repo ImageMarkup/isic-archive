@@ -2,7 +2,7 @@
  * Annotation resource.
  */
 
-import { restRequest } from 'girder/rest';
+import { restRequest } from '@girder/core/rest';
 
 import AnnotationModel from '../../models/AnnotationModel';
 

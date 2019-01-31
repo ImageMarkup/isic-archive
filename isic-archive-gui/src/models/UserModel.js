@@ -1,9 +1,9 @@
 import _ from 'underscore';
 import $ from 'jquery';
 
-import {getCurrentUser} from 'girder/auth';
-import UserModel from 'girder/models/UserModel';
-import {restRequest} from 'girder/rest';
+import {getCurrentUser} from '@girder/core/auth';
+import UserModel from '@girder/core/models/UserModel';
+import {restRequest} from '@girder/core/rest';
 
 // Fallback variable for anonymous user with no local storage
 let acceptTerms = null;

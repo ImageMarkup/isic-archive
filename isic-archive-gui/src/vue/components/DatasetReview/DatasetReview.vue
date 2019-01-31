@@ -32,7 +32,7 @@
 <script>
 import { createNamespacedHelpers } from 'vuex';
 
-import { getApiRoot } from 'girder/rest';
+import { getApiRoot } from '@girder/core/rest';
 
 import DatasetInfo from './DatasetInfo.vue';
 import DatasetReviewImage from './DatasetReviewImage.vue';

@@ -16,14 +16,14 @@ import 'select2/dist/css/select2.css';
 import 'select2-bootstrap-theme/dist/select2-bootstrap.css';
 import _ from 'underscore';
 
-import GirderApp from 'girder/views/App';
-import { getCurrentUser } from 'girder/auth';
-import eventStream from 'girder/utilities/EventStream';
-import FileCollection from 'girder/collections/FileCollection';
-import FolderModel from 'girder/models/FolderModel';
-import ItemModel from 'girder/models/ItemModel';
-import {restRequest} from 'girder/rest';
-import { splitRoute } from 'girder/misc';
+import GirderApp from '@girder/core/views/App';
+import { getCurrentUser } from '@girder/core/auth';
+import eventStream from '@girder/core/utilities/EventStream';
+import FileCollection from '@girder/core/collections/FileCollection';
+import FolderModel from '@girder/core/models/FolderModel';
+import ItemModel from '@girder/core/models/ItemModel';
+import {restRequest} from '@girder/core/rest';
+import { splitRoute } from '@girder/core/misc';
 
 import '../global.styl';
 import LayoutHeaderView from './HeaderView';

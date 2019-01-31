@@ -1,8 +1,8 @@
 import $ from 'jquery';
 
-import {getCurrentUser} from 'girder/auth';
-import {AccessType} from 'girder/constants';
-import {restRequest, getApiRoot} from 'girder/rest';
+import {getCurrentUser} from '@girder/core/auth';
+import {AccessType} from '@girder/core/constants';
+import {restRequest, getApiRoot} from '@girder/core/rest';
 
 import {AccessControlledModel} from './Model';
 import UserModel from './UserModel';

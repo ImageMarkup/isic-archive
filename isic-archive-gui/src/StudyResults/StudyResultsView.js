@@ -2,7 +2,7 @@ import Backbone from 'backbone';
 import $ from 'jquery';
 import _ from 'underscore';
 
-import {getApiRoot} from 'girder/rest';
+import {getApiRoot} from '@girder/core/rest';
 
 import AnnotationCollection from '../collections/AnnotationCollection';
 import ImageCollection from '../collections/ImageCollection';

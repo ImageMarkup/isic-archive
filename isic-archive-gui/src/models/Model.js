@@ -1,7 +1,7 @@
 import Backbone from 'backbone';
 
-import GirderModel from 'girder/models/Model';
-import GirderAccessControlledModel from 'girder/models/AccessControlledModel';
+import GirderModel from '@girder/core/models/Model';
+import GirderAccessControlledModel from '@girder/core/models/AccessControlledModel';
 
 const patchedMethods = {
     urlRoot: function () {

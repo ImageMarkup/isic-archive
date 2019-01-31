@@ -2,7 +2,7 @@
  * Dataset resource.
  */
 
-import { restRequest } from 'girder/rest';
+import { restRequest } from '@girder/core/rest';
 
 import DatasetModel from '../../models/DatasetModel';
 

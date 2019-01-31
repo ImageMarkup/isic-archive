@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import 'bootstrap/js/tooltip';
 
-import {getApiRoot} from 'girder/rest';
+import {getApiRoot} from '@girder/core/rest';
 
 import ImageFullscreenWidget from '../../common/Viewer/ImageFullscreenWidget';
 import View from '../../view';

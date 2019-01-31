@@ -1,8 +1,8 @@
 import $ from 'jquery';
 import _ from 'underscore';
 
-import SearchFieldWidget from 'girder/views/widgets/SearchFieldWidget';
-import {handleClose, handleOpen} from 'girder/dialog';
+import SearchFieldWidget from '@girder/core/views/widgets/SearchFieldWidget';
+import {handleClose, handleOpen} from '@girder/core/dialog';
 
 import StudyModel from '../models/StudyModel';
 import View from '../view';

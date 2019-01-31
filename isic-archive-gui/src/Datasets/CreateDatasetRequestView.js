@@ -1,6 +1,6 @@
 import Backbone from 'backbone';
 
-import {getCurrentUser} from 'girder/auth';
+import {getCurrentUser} from '@girder/core/auth';
 
 import View from '../view';
 import {showAlertDialog} from '../common/utilities';

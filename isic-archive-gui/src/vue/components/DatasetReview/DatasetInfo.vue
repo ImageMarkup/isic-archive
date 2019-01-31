@@ -22,7 +22,7 @@ table.table.table-condensed
 </template>
 
 <script>
-import { formatDate as girderFormatDate, DATE_SECOND } from 'girder/misc';
+import { formatDate as girderFormatDate, DATE_SECOND } from '@girder/core/misc';
 
 export default {
     filters: {

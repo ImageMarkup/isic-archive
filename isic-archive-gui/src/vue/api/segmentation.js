@@ -2,7 +2,7 @@
  * Segmentations resource.
  */
 
-import { restRequest } from 'girder/rest';
+import { restRequest } from '@girder/core/rest';
 
 export default {
     getSegmentationsForImage(id) {

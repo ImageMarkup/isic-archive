@@ -1,8 +1,8 @@
 import $ from 'jquery';
 import _ from 'underscore';
 
-import LoadingAnimation from 'girder/views/widgets/LoadingAnimation';
-import {confirm} from 'girder/dialog';
+import LoadingAnimation from '@girder/core/views/widgets/LoadingAnimation';
+import {confirm} from '@girder/core/dialog';
 
 import StudyAddUserWidget from './StudyAddUserWidget';
 import View from '../view';

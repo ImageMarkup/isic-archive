@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import _ from 'underscore';
 
-import {getApiRoot} from 'girder/rest';
+import {getApiRoot} from '@girder/core/rest';
 
 import SegmentationsDisplayView from './SegmentationsDisplayView';
 import ImageFullscreenWidget from '../../common/Viewer/ImageFullscreenWidget';

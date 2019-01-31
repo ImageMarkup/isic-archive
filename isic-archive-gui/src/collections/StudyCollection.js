@@ -1,4 +1,4 @@
-import {getCurrentUser} from 'girder/auth';
+import {getCurrentUser} from '@girder/core/auth';
 
 import Collection from './Collection';
 import StudyModel from '../models/StudyModel';
