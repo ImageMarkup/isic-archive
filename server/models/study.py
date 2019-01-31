@@ -69,16 +69,23 @@ class Study(Folder):
         }
         self.validate({'meta': studyMeta})
 
-        # this may raise a ValidationException if the name already exists
-        study = self.createFolder(
-            parent=self.loadStudyCollection(),
-            name=name,
-            description='',
-            parentType='collection',
-            public=False,
-            creator=creatorUser,
-            allowRename=False
-        )
+        try:
+            study = self.createFolder(
+                parent=self.loadStudyCollection(),
+                name=name,
+                description='',
+                parentType='collection',
+                public=False,
+                creator=creatorUser,
+                allowRename=False
+            )
+        except ValidationException as e:
+            # Reword the validation error message
+            if e.message == 'A folder with that name already exists here.':
+                raise ValidationException('A study with that name already exists.', 'name')
+            else:
+                raise
+
         # Clear all inherited accesses
         study = self.setAccessList(
             doc=study,
