@@ -16,6 +16,8 @@ server {
     add_header Strict-Transport-Security max-age=15552000;
     {% endif %}
 
+    large_client_header_buffers 10 20k;
+
     location / {
         proxy_pass http://localhost:{{ girder_port }};
 
@@ -42,6 +44,8 @@ server {
 server {
     listen 80;
     server_name proxy.isic-archive.test;
+
+    large_client_header_buffers 4 20k;
 
     location / {
         proxy_pass http://localhost:{{ girder_port }};
