@@ -25,20 +25,20 @@ table.table.table-condensed
 import { formatDate as girderFormatDate, DATE_SECOND } from '@girder/core/misc';
 
 export default {
-    filters: {
-        formatDate(value) {
-            return girderFormatDate(value, DATE_SECOND);
-        }
+  filters: {
+    formatDate(value) {
+      return girderFormatDate(value, DATE_SECOND);
     },
-    props: {
-        dataset: {
-            type: Object,
-            required: true
-        }
+  },
+  props: {
+    dataset: {
+      type: Object,
+      required: true,
     },
-    data() {
-        return {};
-    }
+  },
+  data() {
+    return {};
+  },
 };
 </script>
 

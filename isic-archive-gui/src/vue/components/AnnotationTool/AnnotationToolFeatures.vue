@@ -80,60 +80,60 @@ import { createNamespacedHelpers } from 'vuex';
 const { mapState, mapGetters, mapMutations } = createNamespacedHelpers('annotate');
 
 export default {
-    props: {
-        activeFeatureId: {
-            type: String,
-            default: null
-        }
+  props: {
+    activeFeatureId: {
+      type: String,
+      default: null,
     },
-    data() {
-        return {};
+  },
+  data() {
+    return {};
+  },
+  computed: Object.assign({
+    anyActive() {
+      return this.activeFeatureId !== null;
     },
-    computed: Object.assign({
-        anyActive() {
-            return this.activeFeatureId !== null;
-        },
-        markedupFeatures() {
-            return this.features.filter((feature) => this.markedupFeatureIds.includes(feature.id));
-        },
-        certainty: {
-            get() {
-                return this.markupState;
-            },
-            set(value) {
-                this.setMarkupState(value);
-            }
-        }
-    }, mapState([
-        'showReview',
-        'markupState'
-    ]), mapGetters([
-        'features',
-        'markedupFeatureIds'
-    ])),
-    methods: Object.assign({
-        isActive(featureId) {
-            return this.activeFeatureId === featureId;
-        },
-        onClick(featureId) {
-            if (this.isActive(featureId)) {
-                this.$emit('featureDeactivated', featureId);
-            } else {
-                this.$emit('featureActivated', featureId);
-            }
-        },
-        onMouseEnter(featureId) {
-            this.$emit('displayFeature', featureId);
-        },
-        onMouseLeave(featureId) {
-            this.$emit('displayFeature', null);
-        },
-        onDelete(featureId) {
-            this.$emit('deleteFeature', featureId);
-        }
-    }, mapMutations([
-        'setMarkupState'
-    ]))
+    markedupFeatures() {
+      return this.features.filter(feature => this.markedupFeatureIds.includes(feature.id));
+    },
+    certainty: {
+      get() {
+        return this.markupState;
+      },
+      set(value) {
+        this.setMarkupState(value);
+      },
+    },
+  }, mapState([
+    'showReview',
+    'markupState',
+  ]), mapGetters([
+    'features',
+    'markedupFeatureIds',
+  ])),
+  methods: Object.assign({
+    isActive(featureId) {
+      return this.activeFeatureId === featureId;
+    },
+    onClick(featureId) {
+      if (this.isActive(featureId)) {
+        this.$emit('featureDeactivated', featureId);
+      } else {
+        this.$emit('featureActivated', featureId);
+      }
+    },
+    onMouseEnter(featureId) {
+      this.$emit('displayFeature', featureId);
+    },
+    onMouseLeave() {
+      this.$emit('displayFeature', null);
+    },
+    onDelete(featureId) {
+      this.$emit('deleteFeature', featureId);
+    },
+  }, mapMutations([
+    'setMarkupState',
+  ])),
 };
 </script>
 

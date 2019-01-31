@@ -85,151 +85,152 @@ import AnnotationToolViewer from './AnnotationToolViewer.vue';
 
 import { MarkupState, SubmissionState } from './AnnotationToolStore';
 
-const { mapState, mapGetters, mapMutations, mapActions } = createNamespacedHelpers('annotate');
+const {
+  mapState, mapGetters, mapMutations, mapActions,
+} = createNamespacedHelpers('annotate');
 
 // TODO: fix compilation using object spread operator
 // TODO: fix compilation using async/await
 // TODO: make viewer more reactive? (i.e. remove this.$refs.viewer calls where possible)
 export default {
-    components: {
-        AnnotationToolQuestions: AnnotationToolQuestions,
-        AnnotationToolFeatures: AnnotationToolFeatures,
-        AnnotationToolViewer: AnnotationToolViewer
+  components: {
+    AnnotationToolQuestions,
+    AnnotationToolFeatures,
+    AnnotationToolViewer,
+  },
+  props: {
+    studyId: {
+      type: String,
+      required: true,
     },
-    props: {
-        studyId: {
-            type: String,
-            required: true
-        }
+  },
+  data() {
+    return {};
+  },
+  computed: Object.assign({
+  }, mapState([
+    'study',
+    'image',
+    'flagStatus',
+    'showReview',
+    'responses',
+    'markups',
+    'activeFeatureId',
+    'submissionState',
+  ]), mapGetters([
+    'questions',
+    'features',
+  ])),
+  watch: {
+    questions() {
+      this.resetResponses();
+      this.resetMarkups();
     },
-    data() {
-        return {};
+    showReview(newValue) {
+      if (newValue && this.activeFeatureId) {
+        this.deactivateFeature(this.activeFeatureId);
+      }
     },
-    computed: Object.assign({
-    }, mapState([
-        'study',
-        'image',
-        'flagStatus',
-        'showReview',
-        'responses',
-        'markups',
-        'activeFeatureId',
-        'submissionState'
-    ]), mapGetters([
-        'questions',
-        'features'
-    ])),
-    watch: {
-        questions() {
-            this.resetResponses();
-            this.resetMarkups();
-        },
-        showReview(newValue) {
-            if (newValue && this.activeFeatureId) {
-                this.deactivateFeature(this.activeFeatureId);
-            }
-        },
-        submissionState(newState) {
-            if (newState === SubmissionState.SUBMITTED) {
-                this.$refs.viewer.clear();
+    submissionState(newState) {
+      if (newState === SubmissionState.SUBMITTED) {
+        this.$refs.viewer.clear();
 
-                // Reset state, preserving study
-                const study = this.study;
-                this.resetState();
-                this.setStudy(study);
+        // Reset state, preserving study
+        this.resetState();
+        this.setStudy(this.study);
 
-                this.getNextAnnotation({studyId: this.studyId});
-            } else if (newState === SubmissionState.FINISHED) {
-                showAlertDialog({
-                    text: '<h4>All images in this study have been annotated.</h4>',
-                    escapedHtml: true,
-                    callback: () => {
-                        router.navigate('tasks', {trigger: true});
-                    }
-                });
-            }
-        }
+        this.getNextAnnotation({ studyId: this.studyId });
+      } else if (newState === SubmissionState.FINISHED) {
+        showAlertDialog({
+          text: '<h4>All images in this study have been annotated.</h4>',
+          escapedHtml: true,
+          callback: () => {
+            router.navigate('tasks', { trigger: true });
+          },
+        });
+      }
     },
-    created() {
+  },
+  created() {
+  },
+  mounted() {
+    this.getStudy({ id: this.studyId });
+    this.getNextAnnotation({ studyId: this.studyId });
+  },
+  methods: Object.assign({
+    reset() {
+      if (this.activeFeatureId) {
+        this.deactivateFeature(this.activeFeatureId);
+      }
+      this.setActiveFeatureId(null);
+      if (this.showReview) {
+        this.setShowReview(false);
+      }
+      this.setMarkupState(MarkupState.DEFINITE);
+      this.resetResponses();
+      this.resetMarkups();
     },
-    mounted() {
-        this.getStudy({id: this.studyId});
-        this.getNextAnnotation({studyId: this.studyId});
+    deactivateFeature(featureId) {
+      // Save feature markup
+      // Optimization: freeze array so that it isn't reactive
+      const values = this.$refs.viewer.getActiveValues();
+      this.setMarkup({
+        featureId,
+        values: Object.freeze(values),
+      });
+      this.$refs.viewer.clear();
+
+      this.setActiveFeatureId(null);
     },
-    methods: Object.assign({
-        reset() {
-            if (this.activeFeatureId) {
-                this.deactivateFeature(this.activeFeatureId);
-            }
-            this.setActiveFeatureId(null);
-            if (this.showReview) {
-                this.setShowReview(false);
-            }
-            this.setMarkupState(MarkupState.DEFINITE);
-            this.resetResponses();
-            this.resetMarkups();
-        },
-        deactivateFeature(featureId) {
-            // Save feature markup
-            // Optimization: freeze array so that it isn't reactive
-            const values = this.$refs.viewer.getActiveValues();
-            this.setMarkup({
-                featureId: featureId,
-                values: Object.freeze(values)
-            });
-            this.$refs.viewer.clear();
+    onFeatureActivated(featureId) {
+      if (this.activeFeatureId) {
+        this.deactivateFeature(this.activeFeatureId);
+      }
+      this.setActiveFeatureId(featureId);
 
-            this.setActiveFeatureId(null);
-        },
-        onFeatureActivated(featureId) {
-            if (this.activeFeatureId) {
-                this.deactivateFeature(this.activeFeatureId);
-            }
-            this.setActiveFeatureId(featureId);
+      let markup = null;
+      if (Object.prototype.hasOwnProperty.call(this.markups, featureId)) {
+        // Copy frozen array to allow editing
+        markup = this.markups[featureId].slice(0);
+      }
+      this.$refs.viewer.activate(markup);
+    },
+    onFeatureDeactivated(featureId) {
+      this.deactivateFeature(featureId);
+    },
+    onDisplayFeature(featureId) {
+      if (featureId) {
+        const markup = this.markups[featureId];
+        this.$refs.viewer.display(markup);
+      } else {
+        this.$refs.viewer.clear();
+      }
+    },
+    onDeleteFeature(featureId) {
+      if (this.activeFeatureId === featureId) {
+        this.deactivateFeature(featureId);
+      }
 
-            let markup = null;
-            if (this.markups.hasOwnProperty(featureId)) {
-                // Copy frozen array to allow editing
-                markup = this.markups[featureId].slice(0);
-            }
-            this.$refs.viewer.activate(markup);
-        },
-        onFeatureDeactivated(featureId) {
-            this.deactivateFeature(featureId);
-        },
-        onDisplayFeature(featureId) {
-            if (featureId) {
-                const markup = this.markups[featureId];
-                this.$refs.viewer.display(markup);
-            } else {
-                this.$refs.viewer.clear();
-            }
-        },
-        onDeleteFeature(featureId) {
-            if (this.activeFeatureId === featureId) {
-                this.deactivateFeature(featureId);
-            }
-
-            this.setMarkup({
-                featureId: featureId,
-                values: null
-            });
-        }
-    }, mapMutations([
-        'resetState',
-        'setStudy',
-        'setFlagStatus',
-        'setShowReview',
-        'setMarkupState',
-        'setMarkup',
-        'setActiveFeatureId'
-    ]), mapActions([
-        'getNextAnnotation',
-        'getStudy',
-        'resetResponses',
-        'resetMarkups',
-        'submitAnnotation'
-    ]))
+      this.setMarkup({
+        featureId,
+        values: null,
+      });
+    },
+  }, mapMutations([
+    'resetState',
+    'setStudy',
+    'setFlagStatus',
+    'setShowReview',
+    'setMarkupState',
+    'setMarkup',
+    'setActiveFeatureId',
+  ]), mapActions([
+    'getNextAnnotation',
+    'getStudy',
+    'resetResponses',
+    'resetMarkups',
+    'submitAnnotation',
+  ])),
 };
 </script>
 

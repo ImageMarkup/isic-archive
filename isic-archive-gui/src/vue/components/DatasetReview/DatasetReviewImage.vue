@@ -21,29 +21,29 @@ import { createNamespacedHelpers } from 'vuex';
 const { mapState } = createNamespacedHelpers('datasetReview');
 
 export default {
-    props: {
-        image: {
-            type: Object,
-            required: true
-        }
+  props: {
+    image: {
+      type: Object,
+      required: true,
     },
-    data() {
-        return {};
+  },
+  data() {
+    return {};
+  },
+  computed: Object.assign({
+    imageStyle() {
+      return {
+        width: `${this.thumbnailWidth}px`,
+      };
     },
-    computed: Object.assign({
-        imageStyle() {
-            return {
-                width: `${this.thumbnailWidth}px`
-            };
-        }
-    }, mapState([
-        'thumbnailWidth'
-    ])),
-    methods: {
-        toggleFlagged() {
-            this.$emit('toggleFlagged');
-        }
-    }
+  }, mapState([
+    'thumbnailWidth',
+  ])),
+  methods: {
+    toggleFlagged() {
+      this.$emit('toggleFlagged');
+    },
+  },
 };
 </script>
 

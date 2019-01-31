@@ -10,7 +10,8 @@
         :dataset='dataset'
       )
     .submit-container.col-md-6
-      .submit-info Flagged images will be quarantined. Non-flagged images will be submitted for segmentation.
+      .submit-info.
+        Flagged images will be quarantined. Non-flagged images will be submitted for segmentation.
       .submit-button.btn.btn-success(@click='submitReview') Submit
   .row
     .col-md-12
@@ -18,7 +19,8 @@
       span(
         v-for='(image, index) in flaggedImages',
         :key='image._id') {{ image.name }}
-        //- Add comma after each name except the last. Use code to represent space to avoid ending a line with a space.
+        //- Add comma after each name except the last. Use code to represent space to avoid ending a
+            line with a space.
         template(v-if='index < flaggedImages.length - 1') ,&#x20;
   .row
     .image-container.col-lg-12.col-md-12
@@ -38,50 +40,52 @@ import DatasetInfo from './DatasetInfo.vue';
 import DatasetReviewImage from './DatasetReviewImage.vue';
 import { SubmissionState } from './DatasetReviewStore';
 
-const { mapState, mapGetters, mapMutations, mapActions } = createNamespacedHelpers('datasetReview');
+const {
+  mapState, mapGetters, mapMutations, mapActions,
+} = createNamespacedHelpers('datasetReview');
 
 export default {
-    components: {
-        DatasetInfo: DatasetInfo,
-        DatasetReviewImage: DatasetReviewImage
+  components: {
+    DatasetInfo,
+    DatasetReviewImage,
+  },
+  props: {
+    datasetId: {
+      type: String,
+      required: true,
     },
-    props: {
-        datasetId: {
-            type: String,
-            required: true
-        }
+  },
+  data() {
+    return {};
+  },
+  computed: Object.assign({
+  }, mapState([
+    'dataset',
+    'images',
+    'submissionState',
+  ]), mapGetters([
+    'flaggedImages',
+  ])),
+  watch: {
+    submissionState(newState) {
+      if (newState === SubmissionState.SUBMITTED) {
+        const redirectUrl = `${getApiRoot()}/task/me/review/redirect?datasetId=${this.dataset._id}`;
+        window.location.replace(redirectUrl);
+      }
     },
-    data() {
-        return {};
-    },
-    computed: Object.assign({
-    }, mapState([
-        'dataset',
-        'images',
-        'submissionState'
-    ]), mapGetters([
-        'flaggedImages'
-    ])),
-    watch: {
-        submissionState(newState) {
-            if (newState === SubmissionState.SUBMITTED) {
-                const redirectUrl = `${getApiRoot()}/task/me/review/redirect?datasetId=${this.dataset._id}`;
-                window.location.replace(redirectUrl);
-            }
-        }
-    },
-    created() {
-    },
-    mounted() {
-        this.loadDataset({id: this.datasetId});
-    },
-    methods: Object.assign({
-    }, mapMutations([
-        'toggleFlagged'
-    ]), mapActions([
-        'loadDataset',
-        'submitReview'
-    ]))
+  },
+  created() {
+  },
+  mounted() {
+    this.loadDataset({ id: this.datasetId });
+  },
+  methods: Object.assign({
+  }, mapMutations([
+    'toggleFlagged',
+  ]), mapActions([
+    'loadDataset',
+    'submitReview',
+  ])),
 };
 </script>
 

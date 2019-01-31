@@ -50,14 +50,26 @@
       "node": true
     },
     "extends": [
-      "plugin:vue/essential",
+      "plugin:vue/recommended",
       "@vue/airbnb"
     ],
-    "rules": {},
+    "rules": {
+      "no-underscore-dangle": [
+        "error",
+        {
+          "allow": [
+            "_id"
+          ]
+        }
+      ]
+    },
     "parserOptions": {
       "parser": "babel-eslint"
     }
   },
+  "eslintIgnore": [
+    "src/**/*.js"
+  ],
   "postcss": {
     "plugins": {
       "autoprefixer": {}

@@ -37,34 +37,34 @@ import { createNamespacedHelpers } from 'vuex';
 const { mapState, mapGetters, mapMutations } = createNamespacedHelpers('annotate');
 
 export default {
-    data() {
-        return {};
+  data() {
+    return {};
+  },
+  computed: Object.assign({
+  }, mapState([
+    'showReview',
+    'responses',
+  ]), mapGetters([
+    'questions',
+  ])),
+  methods: Object.assign({
+    selectedResponseName(question) {
+      if (!_.has(this.responses, question.id)) {
+        return null;
+      }
+      return this.responses[question.id];
     },
-    computed: Object.assign({
-    }, mapState([
-        'showReview',
-        'responses'
-    ]), mapGetters([
-        'questions'
-    ])),
-    methods: Object.assign({
-        selectedResponseName(question) {
-            if (!_.has(this.responses, question.id)) {
-                return null;
-            }
-            return this.responses[question.id];
-        },
-        onChange(event) {
-            if (event.target.checked) {
-                this.setResponse({
-                    questionId: event.target.name,
-                    response: event.target.value
-                });
-            }
-        }
-    }, mapMutations([
-        'setResponse'
-    ]))
+    onChange(event) {
+      if (event.target.checked) {
+        this.setResponse({
+          questionId: event.target.name,
+          response: event.target.value,
+        });
+      }
+    },
+  }, mapMutations([
+    'setResponse',
+  ])),
 };
 </script>
 

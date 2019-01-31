@@ -11,28 +11,28 @@ div
 import DatasetModel from '../models/DatasetModel';
 
 export default {
-    props: {
-        // Array of DatasetModel
-        datasets: {
-            type: Array,
-            required: true
-        }
+  props: {
+    // Array of DatasetModel
+    datasets: {
+      type: Array,
+      required: true,
     },
-    data: function () {
-        return {
-            dataset: null
-        };
+  },
+  data() {
+    return {
+      dataset: null,
+    };
+  },
+  computed: {
+    canCreateDataset() {
+      return DatasetModel.canCreate();
     },
-    computed: {
-        canCreateDataset: function () {
-            return DatasetModel.canCreate();
-        }
+  },
+  methods: {
+    onChange() {
+      this.$emit('input', this.dataset);
     },
-    methods: {
-        onChange: function () {
-            this.$emit('input', this.dataset);
-        }
-    }
+  },
 };
 </script>
 
