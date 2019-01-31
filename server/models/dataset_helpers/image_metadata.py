@@ -780,7 +780,7 @@ def _populateMetadata(acquisition, clinical):
             clinical['benign_malignant'] = 'malignant'
     elif diagnosis == 'nevus':
         if benignMalignant is None and diagnosisConfirmType not in [None, 'histopathology']:
-                    clinical['benign_malignant'] = 'benign'
+            clinical['benign_malignant'] = 'benign'
 
     # Set melanocytic field based on diagnosis
     if diagnosis in MelanocyticFieldParser.melanocyticDiagnoses:
