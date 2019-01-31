@@ -80,8 +80,8 @@ class ImageResource(IsicResource):
                 raise ValidationException('Could not decode JSON: %s' % str(e), 'imageIds')
         if not isinstance(imageIdsParam, list):
             raise ValidationException('"imageIds" must be a JSON-encoded array.', 'imageIds')
-        if len(imageIdsParam) > 100:
-            raise ValidationException('"imageIds" may not contain more than 100 IDs.', 'imageIds')
+        if len(imageIdsParam) > 300:
+            raise ValidationException('"imageIds" may not contain more than 300 IDs.', 'imageIds')
         imageIds = []
         for imageId in imageIdsParam:
             if not isinstance(imageId, six.string_types):
@@ -109,7 +109,7 @@ class ImageResource(IsicResource):
         .param('filter', 'Filter the images by a PegJS-specified grammar.',
                required=False)
         .param('imageIds',
-               'A JSON array of up to 100 image IDs, which will be exclusively included.',
+               'A JSON array of up to 300 image IDs, which will be exclusively included.',
                required=False)
         .errorResponse()
     )
@@ -206,7 +206,7 @@ class ImageResource(IsicResource):
         .param('filter', 'Filter the images by a PegJS-specified grammar.',
                required=False)
         .param('imageIds',
-               'A JSON array of up to 100 image IDs, which will be exclusively included.',
+               'A JSON array of up to 300 image IDs, which will be exclusively included.',
                required=False)
         .produces('application/zip')
         .errorResponse()
