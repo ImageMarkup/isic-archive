@@ -3,6 +3,10 @@ comment:
   require_changes: true
 coverage:
   status:
+    # Patch status gives meaningless results whenever a test is modified without changing the
+    # correspondingly tested code, and may be difficult to interpret without context. Disable
+    # posting it to GitHub.
     patch: false
     project:
-      default: true
+      default:
+        target: 50%
