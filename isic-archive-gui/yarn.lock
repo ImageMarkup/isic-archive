@@ -705,6 +705,11 @@
   resolved "https://registry.yarnpkg.com/@girder/fontello/-/fontello-3.0.0-alpha.1.tgz#420df38f07e9b57d48ac7ff98a76c5d08aeeeba6"
   integrity sha512-KCxVQn+9ic2z7PDAbAvFWafedJgUZAj4SwNVtAV6v1jAlWaDr5V5g8NR28W/O4nKKfegu1dFnlqsR6TlvbzhVQ==
 
+"@girder/gravatar@^3.0.0-alpha.1":
+  version "3.0.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@girder/gravatar/-/gravatar-3.0.0-alpha.1.tgz#ba1bd02a85ea0205d4c753757efe133de6ef086f"
+  integrity sha512-HkcqPaDI8LbmrqEYpaAEvm50ZMMWNJfs0j+YIB/QzDuixndUKd3R7fPNcCaThM/P1joTfcNePdj5MCa7SkPDoQ==
+
 "@intervolga/optimize-cssnano-plugin@^1.0.5":
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/@intervolga/optimize-cssnano-plugin/-/optimize-cssnano-plugin-1.0.6.tgz#be7c7846128b88f6a9b1d1261a0ad06eb5c0fdf8"

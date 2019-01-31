@@ -1,7 +1,7 @@
 import {getCurrentUser, logout} from '@girder/core/auth';
 import events from '@girder/core/events';
 
-import 'girder_plugins/gravatar/models/UserModel';
+import '@girder/gravatar/models/UserModel';
 
 import router from '../router';
 import View from '../view';

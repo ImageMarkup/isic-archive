@@ -12,6 +12,7 @@
     "d3": "3.5.17",
     "geojs": "0.15.2",
     "@girder/core": "^3.0.0-alpha.0.1",
+    "@girder/gravatar": "^3.0.0-alpha.1",
     "select2": "^4.0.6-rc.1",
     "select2-bootstrap-theme": "^0.1.0-beta.10",
     "svg-fill-loader": "^0.0.8",
