@@ -3,5 +3,5 @@
     "description": "The ISIC dermoscopy image archive.",
     "url": "https://github.com/ImageMarkup/isic-archive",
     "version": "1.0.0",
-    "dependencies": ["gravatar", "large_image", "worker"]
+    "dependencies": ["gravatar", "large_image", "oauth", "worker"]
 }

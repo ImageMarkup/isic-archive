@@ -710,6 +710,11 @@
   resolved "https://registry.yarnpkg.com/@girder/gravatar/-/gravatar-3.0.0-alpha.1.tgz#ba1bd02a85ea0205d4c753757efe133de6ef086f"
   integrity sha512-HkcqPaDI8LbmrqEYpaAEvm50ZMMWNJfs0j+YIB/QzDuixndUKd3R7fPNcCaThM/P1joTfcNePdj5MCa7SkPDoQ==
 
+"@girder/oauth@^3.0.0-alpha.1":
+  version "3.0.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@girder/oauth/-/oauth-3.0.0-alpha.1.tgz#3ec01c73b9cd6a29ce1d44057af1e216f7733ffb"
+  integrity sha512-M5c54KAertRwDO8Ey1nVUOxie4iZqM0CpUDUFxPpp8ny+UQIuLrk1hdFGcRWZ+6dFuKd7/Xw/pugPlVWWKUM6A==
+
 "@intervolga/optimize-cssnano-plugin@^1.0.5":
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/@intervolga/optimize-cssnano-plugin/-/optimize-cssnano-plugin-1.0.6.tgz#be7c7846128b88f6a9b1d1261a0ad06eb5c0fdf8"
