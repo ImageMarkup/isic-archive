@@ -20,6 +20,7 @@
 import mimetypes
 
 import cherrypy
+from isic_archive_tasks import ingestImage
 
 from girder.api import access
 from girder.api.describe import autoDescribeRoute, describeRoute, Description
@@ -29,12 +30,9 @@ from girder.exceptions import AccessException, GirderException, ValidationExcept
 from girder.models.file import File
 from girder.utility import RequestBodyStream
 
-from isic_archive_tasks.image import ingestImage
-from isic_archive_tasks.zip import ingestBatchFromZipfile
-
 from ..models.dataset import Dataset
 from ..models.image import Image
-from .base import IsicResource
+from .base import IsicResource  # noqa
 from ..models.user import User
 
 CSV_FORMATS = [

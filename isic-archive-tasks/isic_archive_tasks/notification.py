@@ -1,7 +1,8 @@
+from isic_archive_tasks import app
 import pymongo
+
 from girder.models.user import User
 from girder.utility import mail_utils
-from isic_archive_tasks import app
 
 
 @app.task()
@@ -70,4 +71,3 @@ def sendIngestionNotification(batchId, failedImages, skippedFilenames):
         templateFilename=templateFilename,
         templateParams=params,
         subject=subject)
-

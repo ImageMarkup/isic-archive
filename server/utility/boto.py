@@ -4,9 +4,11 @@ from girder.utility.config import getConfig
 
 developmentMode = getConfig()['server']['mode'] == 'development'
 
+s3Kwargs = {}
+
 if developmentMode:
     s3Kwargs = {
-        'endpoint_url': 'http://localhost:4572',
+        'endpoint_url': 'http://172.16.0.10:4572',
         'aws_access_key_id': 'foo',
         'aws_secret_access_key': 'bar'
     }

@@ -1,0 +1,141 @@
+---
+- name: Setup workers
+  hosts: all
+
+  vars:
+    ansible_python_interpreter: "/usr/bin/python2.7"
+    build_girder: false
+    celery_broker_url: "amqp://isicarchive:password@{{ broker_ip }}/isic-archive"
+    celery_result_backend: "redis://:password@{{ broker_ip }}/0"
+    girder_path: "{{ ansible_user_dir }}/girder"
+    girder_version: "933096b33334bb9c30c3c7a659dbab32691cba3d"
+    isic_archive_assetstore_path: "{{ ansible_user_dir }}/assetstores/default"
+    isic_archive_clone: false
+    isic_archive_path: "{{ ansible_user_dir }}/isic_archive"
+    isic_archive_version: "master"
+    python_dist_path: "{{ ansible_user_dir }}/env"
+    sentry_dsn: ""
+    sentry_environment: "development"
+
+  pre_tasks:
+    - name: Install dotenv configuration file
+      template:
+        src: "vagrant.env.j2"
+        dest: "{{ ansible_user_dir }}/.env"
+
+    - name: Install python, pip and virtualenv
+      apt:
+        name:
+          - python-dev
+          - python-pip
+          - python-virtualenv
+      become: true
+
+    - name: Install build dependencies
+      apt:
+        name:
+          - curl
+          - git
+          - libffi-dev
+          - build-essential
+          - libgif-dev
+          - libjpeg-dev
+          - libssl-dev
+          - zlib1g-dev
+      become: yes
+
+    - name: Download girder
+      git:
+        repo: "https://github.com/girder/girder.git"
+        dest: "{{ girder_path }}"
+        version: "{{ girder_version }}"
+        update: yes
+        force: yes
+      register: result
+
+    - name: Install Python package
+      pip:
+        name: "{{ girder_path }}"
+        #    editable: true
+        # TODO: The 'editable' option is broken until Ansible 2.4
+        # See: https://github.com/ansible/ansible/pull/19688
+        extra_args: '-e'
+        virtualenv: "{{ python_dist_path }}"
+      when: result.changed
+
+    - name: Download isic-archive
+      git:
+        repo: "https://github.com/ImageMarkup/isic-archive.git"
+        dest: "{{ isic_archive_path }}"
+        version: "{{ isic_archive_version }}"
+        clone: "{{ isic_archive_clone }}"
+        update: no
+        force: yes
+
+    - name: Install package dependencies
+      apt:
+        name:
+          - p7zip-full
+      become: yes
+
+    - name: Install isic-archive-tasks package
+      pip:
+        name: "{{ isic_archive_path }}/isic-archive-tasks"
+        virtualenv: "{{ python_dist_path }}"
+
+
+    - name: Configure mongo URI
+      ini_file:
+        path: "{{ girder_path }}/girder/conf/girder.local.cfg"
+        section: database
+        option: uri
+        value: '"mongodb://{{ webserver_ip }}/girder"'
+
+  roles:
+    - role: celery
+      archive_api_url: "http://isic-archive.test/api/v1"
+      celery_bin: "{{ python_dist_path }}/bin/celery"
+      celery_concurrency: 1
+      celery_user: vagrant
+
+    - role: large_image
+      large_image_virtualenv: "{{ python_dist_path }}"
+      large_image_tile_sources:
+        - tiff
+      large_image_include_vips: true
+
+  post_tasks:
+    - name: Install large_image plugin
+      command: "{{ python_dist_path }}/bin/girder-install plugin --force --symlink {{ large_image_path }}"
+
+    - name: Install ISIC Archive
+      command: "{{ python_dist_path }}/bin/girder-install plugin --force --symlink {{ isic_archive_path }}"
+      notify: Reload Celery
+
+    - name: Add hosts entry for isic-archive.test
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ webserver_ip }} isic-archive.test"
+      become: true
+
+    # The celery user needs to be able to write to the assetstore via tasks
+    - name: Add celery user to vagrant group
+      user:
+        name: celery
+        groups: vagrant
+        append: true
+      become: true
+
+    # This is required to spin up Girder with the database pointing to prod, even
+    # though workers will never use it.
+    - name: Create assetstore path
+      file:
+        path: "{{ isic_archive_assetstore_path }}"
+        state: directory
+
+    - name: Activate virtualenv on login
+      lineinfile:
+        line: 'source {{ python_dist_path }}/bin/activate'
+        path: "{{ ansible_user_dir }}/.profile"
+        state: present
+

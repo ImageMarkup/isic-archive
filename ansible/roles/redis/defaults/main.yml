@@ -1,0 +1,3 @@
+---
+redis_bind_all_interfaces: false
+redis_password: ""

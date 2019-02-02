@@ -1,0 +1,25 @@
+---
+- name: Install Redis
+  apt:
+    name:
+      - redis
+    update_cache: true
+  become: true
+
+- name: Configure redis password
+  lineinfile:
+    path: /etc/redis/redis.conf
+    line: "requirepass {{ redis_password }}"
+    state: present
+  when: redis_password != ""
+  become: true
+  notify: Restart redis
+
+- name: Bind redis to all interfaces
+  lineinfile:
+    path: /etc/redis/redis.conf
+    line: "bind 127.0.0.1 ::1"
+    state: absent
+  when: redis_bind_all_interfaces
+  become: true
+  notify: Restart redis

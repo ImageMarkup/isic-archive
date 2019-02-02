@@ -3,9 +3,12 @@ Description=Localstack
 After=network.target
 
 [Service]
+User={{ ansible_user }}
+Group={{ ansible_user }}
 Restart=always
 Environment=SERVICES=s3
 Environment=HOST=0.0.0.0
+Environment=DATA_DIR={{ localstack_data_dir }}
 ExecStart=/home/vagrant/env/bin/localstack start
 
 [Install]

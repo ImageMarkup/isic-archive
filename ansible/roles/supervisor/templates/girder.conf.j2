@@ -4,3 +4,4 @@ user={{ ansible_user_id }}
 command={{ python_dist_path }}/bin/girder-server
 stderr_logfile = /tmp/girder.stderr.log
 stdout_logfile = /tmp/girder.stdout.log
+environment=CELERY_BROKER_URL="{{ celery_broker_url }}",CELERY_RESULT_BACKEND="{{ celery_result_backend }}"

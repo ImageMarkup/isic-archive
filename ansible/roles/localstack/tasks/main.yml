@@ -22,5 +22,6 @@
   become: true
 
 - name: Create default bucket
-  command:
-    awslocal s3api create-bucket --bucket {{ isic_upload_bucket_name }}
+  shell: |
+    . {{ python_dist_path }}/bin/activate
+    {{ python_dist_path }}/bin/awslocal s3api create-bucket --bucket {{ isic_upload_bucket_name }}

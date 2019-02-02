@@ -8,7 +8,6 @@ jobs:
 
     environment:
       - GIRDER_VERSION: 933096b33334bb9c30c3c7a659dbab32691cba3d
-      - WORKER_VERSION: 042a69d6ae7d472e32242d98f8b7acb3148980f9
       - LARGE_IMAGE_VERSION: 4dc82976d58b2a6e6542863e2e410628649a040c
 
     steps:
@@ -27,12 +26,6 @@ jobs:
             git clone https://github.com/girder/girder.git girder
             git -C girder checkout $GIRDER_VERSION
       - run:
-          name: Clone girder_worker
-          #command: git clone --depth 1 --branch $WORKER_VERSION -- https://github.com/girder/girder_worker.git girder_worker
-          command: |
-            git clone https://github.com/girder/girder_worker.git girder_worker
-            git -C girder_worker checkout $WORKER_VERSION
-      - run:
           name: Clone large_image
           #command: git clone --depth 1 --branch $LARGE_IMAGE_VERSION -- https://github.com/girder/large_image.git girder/plugins/large_image
           command: |
@@ -48,7 +41,7 @@ jobs:
             echo "source $CIRCLE_WORKING_DIRECTORY/girder_env/bin/activate" >> $BASH_ENV
       - run:
           name: Create cache key
-          command: cat girder/setup.py girder/requirements-dev.txt girder_worker/setup.py girder/plugins/large_image/setup.py girder/plugins/isic_archive/requirements.txt | sha512sum > venv-req-hash.txt
+          command: cat girder/setup.py girder/requirements-dev.txt girder/plugins/large_image/setup.py girder/plugins/isic_archive/requirements.txt | sha512sum > venv-req-hash.txt
       - restore_cache:
           key: venv-{{ arch }}-{{ checksum "venv-req-hash.txt" }}
       - run:
@@ -57,11 +50,6 @@ jobs:
             pip install --upgrade --editable . --requirement requirements-dev.txt
           # pytest_girder requires that install be run from this directory
           working_directory: girder
-      - run:
-          name: Install girder_worker
-          command: pip install --upgrade --editable girder_worker
-        # TODO: set up worker.local.cfg
-        # cp $PWD/plugin_tests/test_files/girder_worker.cfg $girder_worker_path/girder_worker/worker.local.cfg
       - run:
           name: Install large_image
           command: |
@@ -109,7 +97,6 @@ jobs:
           name: Activate virtualenv
           command: echo "source $CIRCLE_WORKING_DIRECTORY/girder_env/bin/activate" >> $BASH_ENV
 
-      # TODO: start girder_worker?
       - run:
           name: Run CTest
           command: ctest -VV -L 'girder_python|girder_coverage' -E js_coverage

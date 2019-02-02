@@ -1,0 +1,6 @@
+---
+- listen: Restart redis
+  systemd:
+    name: redis
+    state: restarted
+  become: true

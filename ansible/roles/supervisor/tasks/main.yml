@@ -23,27 +23,9 @@
 #  when: result1.changed
 #  notify: Restart Girder
 
-- name: Deploy girder_worker Supervisor config file
-  template:
-    src: "worker.conf.j2"
-    dest: "/etc/supervisor/conf.d/worker.conf"
-    owner: root
-    group: root
-    mode: 0644
-  become: yes
-  register: result2
-
-#- name: Add girder_worker Supervisor config
-#  supervisorctl:
-#    name: worker
-#    state: present
-#  become: yes
-#  when: result2.changed
-#  notify: Restart girder_worker
-
 # TODO: Supervisor uses the wrong permissions if it's not restarted.
 - service:
     name: supervisor
     state: restarted
   become: yes
-  when: result1.changed or result2.changed
+  when: result1.changed

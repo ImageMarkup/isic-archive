@@ -1,28 +1,25 @@
 import io
 import os
-import re
 import subprocess
 import tempfile
-import time
 
 from bson import ObjectId
 from celery import chord
 from celery.utils.log import get_task_logger
-import requests
-import sentry_sdk
+from isic_archive_tasks.app import app
 
 from girder.models.file import File
-
-from isic_archive_tasks import app, CredentialedGirderTask
 
 
 SUPERPIXEL_VERSION = 3.0
 logger = get_task_logger(__name__)
 
 
-@app.task()
-def ingestImage(imageId):
+@app.task(bind=True)
+def ingestImage(self, imageId):
     from girder.plugins.isic_archive.models.image import Image
+    from girder.plugins.isic_archive.models.segmentation_helpers.scikit import \
+        ScikitSegmentationHelper
     image = Image().load(imageId, force=True)
 
     if image['ingested']:
@@ -30,7 +27,14 @@ def ingestImage(imageId):
         return
 
     try:
-        imageData = Image().imageData(image)
+        imageFile = Image().originalFile(image)
+        originalFileStreamResponse = self.session.get(
+            'file/%s/download' % imageFile['_id'])
+        originalFileStreamResponse.raise_for_status()
+        originalFileStreamResponse = io.BytesIO(originalFileStreamResponse.content)
+
+        # Scikit-Image is ~70ms faster at decoding image data
+        imageData = ScikitSegmentationHelper.loadImage(originalFileStreamResponse)
         image['meta']['acquisition']['pixelsY'] = imageData.shape[0]
         image['meta']['acquisition']['pixelsX'] = imageData.shape[1]
     except Exception:
@@ -111,8 +115,7 @@ def generateSuperpixels(self, imageId):
 @app.task(bind=True)
 def generateLargeImage(self, imageId):
     from girder.plugins.isic_archive.models.image import Image
-    from girder.plugins.large_image.models.image_item import ImageItem
-    imageItem = ImageItem().load(id=imageId, force=True)
+    imageItem = Image().load(id=imageId, force=True)
     imageFile = Image().originalFile(imageItem)
 
     # todo url
@@ -122,7 +125,7 @@ def generateLargeImage(self, imageId):
         originalFileStreamResponse.raise_for_status()
 
         with tempfile.NamedTemporaryFile() as inputFile, \
-            tempfile.NamedTemporaryFile() as outputFile:
+            tempfile.NamedTemporaryFile() as outputFile:  # noqa
             inputFile.write(originalFileStreamResponse.content)
             inputFile.flush()  # necessary
 
@@ -151,7 +154,8 @@ def generateLargeImage(self, imageId):
         'fileId': ObjectId(uploadLargeImageResp.json()['_id'])
     }
     imageItem['ingestionState']['largeImage'] = True
-    ImageItem().save(imageItem)
+    Image().save(imageItem)
+
 
 def vips_tiffsave(infilename, outfilename):
     convert_command = (

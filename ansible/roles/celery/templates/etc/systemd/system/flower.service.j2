@@ -1,0 +1,12 @@
+[Unit]
+Description=Flower Service
+
+[Service]
+User={{ celery_user }}
+Group={{ celery_user }}
+ExecStart={{ python_dist_path }}/bin/flower --port=5555 --loglevel=info -A isic_archive_tasks
+Restart=on-failure
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

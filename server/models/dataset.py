@@ -25,6 +25,7 @@ import time
 from backports import csv
 import botocore
 import cherrypy
+from isic_archive_tasks import ingestBatchFromZipfile
 from natsort import natsorted
 import six
 
@@ -38,8 +39,6 @@ from girder.models.model_base import AccessControlledModel
 from girder.models.setting import Setting
 from girder.models.upload import Upload
 from girder.utility import mail_utils
-
-from isic_archive_tasks.zip import ingestBatchFromZipfile
 
 from .batch import Batch
 from .dataset_helpers import matchFilenameRegex

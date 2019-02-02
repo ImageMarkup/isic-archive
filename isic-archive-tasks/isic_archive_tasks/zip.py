@@ -1,18 +1,16 @@
 import mimetypes
-
 import os
 
 from celery.utils.log import get_task_logger
-import requests
+from isic_archive_tasks.app import app
+from isic_archive_tasks.image import ingestImage
 
 from girder.models.folder import Folder
 from girder.models.user import User
 
-from isic_archive_tasks import app, CredentialedGirderTask
-from isic_archive_tasks.image import ingestImage
-
 
 logger = get_task_logger(__name__)
+
 
 @app.task(bind=True)
 def ingestBatchFromZipfile(self, batchId):

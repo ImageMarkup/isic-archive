@@ -6,7 +6,9 @@ setup(name='isic-archive-tasks',
       install_requires=[
           'celery[redis]',
           'jsonpickle',
+          'python-dotenv',
           'requests',
+          'requests_toolbelt',
           'sentry-sdk',
           'six'
       ])
