@@ -38,7 +38,7 @@ def getAdminUser():
             lastName='Admin',
             email='admin@isic-archive.com',
             admin=True,
-            public=False
+            public=False,
         )
         adminUser['status'] = 'disabled'
         # TODO: subsequent re-saves of this user will re-enable it, until another user is created
@@ -52,7 +52,7 @@ def _provisionImages():
             name='Dataset Contributors',
             creator=getAdminUser(),
             description='Users that can create datasets',
-            public=True
+            public=True,
         )
         Group().removeUser(contributorsGroup, getAdminUser())
 
@@ -62,7 +62,7 @@ def _provisionImages():
             name='Dataset QC Reviewers',
             creator=getAdminUser(),
             description='Users responsible for doing initial QC',
-            public=True
+            public=True,
         )
         Group().removeUser(reviewerGroup, getAdminUser())
 
@@ -72,19 +72,15 @@ def _provisionImages():
             creator=getAdminUser(),
             description='Images that have been flagged for any reason',
             public=False,
-            reuseExisting=False
+            reuseExisting=False,
         )
-        flaggedCollection = Collection().setAccessList(
-            doc=flaggedCollection,
-            access={},
-            save=False
-        )
+        flaggedCollection = Collection().setAccessList(doc=flaggedCollection, access={}, save=False)
         Collection().setGroupAccess(
             doc=flaggedCollection,
             group=reviewerGroup,
             # TODO: make this a special access level
             level=AccessType.READ,
-            save=True
+            save=True,
         )
 
     imageCollection = Collection().createCollection(
@@ -92,13 +88,9 @@ def _provisionImages():
         creator=getAdminUser(),
         description='All public lesion image datasets',
         public=True,
-        reuseExisting=True
+        reuseExisting=True,
     )
-    Collection().setAccessList(
-        doc=imageCollection,
-        access={},
-        save=True
-    )
+    Collection().setAccessList(doc=imageCollection, access={}, save=True)
 
 
 def _provisionSegmentationGroups():
@@ -107,7 +99,7 @@ def _provisionSegmentationGroups():
             name='Segmentation Novices',
             creator=getAdminUser(),
             description='Users able to tentatively segment lesion boundaries',
-            public=True
+            public=True,
         )
         Group().removeUser(segmentationNovicesGroup, getAdminUser())
 
@@ -116,7 +108,7 @@ def _provisionSegmentationGroups():
             name='Segmentation Experts',
             creator=getAdminUser(),
             description='Users able to definitively segment lesion boundaries',
-            public=True
+            public=True,
         )
         Group().removeUser(segmentationExpertsGroup, getAdminUser())
 
@@ -128,7 +120,7 @@ def _provisionStudies():
             name='Study Administrators',
             creator=getAdminUser(),
             description='Annotation study creators and administrators',
-            public=True
+            public=True,
         )
         Group().removeUser(studyAdminGroup, getAdminUser())
 
@@ -137,19 +129,15 @@ def _provisionStudies():
         creator=getAdminUser(),
         description='Clinical feature annotation studies',
         public=True,
-        reuseExisting=True
+        reuseExisting=True,
     )
-    studiesCollection = Collection().setAccessList(
-        doc=studiesCollection,
-        access={},
-        save=False
-    )
+    studiesCollection = Collection().setAccessList(doc=studiesCollection, access={}, save=False)
     Collection().setGroupAccess(
         doc=studiesCollection,
         group=studyAdminGroup,
         # TODO: make this a special access level
         level=AccessType.READ,
-        save=True
+        save=True,
     )
 
 

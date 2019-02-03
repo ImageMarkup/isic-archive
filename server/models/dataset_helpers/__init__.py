@@ -40,14 +40,7 @@ def matchFilenameRegex(filename):
 
     # If the detected extension isn't recognized, assume it's part of the
     # filename. This allows filenames to contain periods.
-    validExtensions = [
-        'bmp',
-        'jpeg',
-        'jpg',
-        'png',
-        'tif',
-        'tiff',
-    ]
+    validExtensions = ['bmp', 'jpeg', 'jpg', 'png', 'tif', 'tiff']
     if extension and extension.lower()[1:] not in validExtensions:
         root += extension
         extension = ''

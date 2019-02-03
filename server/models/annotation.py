@@ -44,50 +44,52 @@ class Annotation(AccessControlMixin, Model):
         self.resourceParent = 'studyId'
 
     def createAnnotation(self, study, image, user):
-        annotation = self.save({
-            'studyId': study['_id'],
-            'imageId': image['_id'],
-            'userId': user['_id'],
-            'startTime': None,
-            'stopTime': None,
-            'status': None,
-            'log': [],
-            'responses': {},
-            'markups': {},
-        })
+        annotation = self.save(
+            {
+                'studyId': study['_id'],
+                'imageId': image['_id'],
+                'userId': user['_id'],
+                'startTime': None,
+                'stopTime': None,
+                'status': None,
+                'log': [],
+                'responses': {},
+                'markups': {},
+            }
+        )
 
         return annotation
 
     def getState(self, annotation):
-        return (Study().State.COMPLETE
-                if annotation['stopTime'] is not None
-                else Study().State.ACTIVE)
+        return (
+            Study().State.COMPLETE if annotation['stopTime'] is not None else Study().State.ACTIVE
+        )
 
     def _superpixelsToMasks(self, superpixelValues, image):
-        possibleSuperpixelNums = numpy.array([
-            superpixelNum
-            for superpixelNum, featureValue
-            in enumerate(superpixelValues)
-            if featureValue == 0.5
-        ])
-        definiteSuperpixelNums = numpy.array([
-            superpixelNum
-            for superpixelNum, featureValue
-            in enumerate(superpixelValues)
-            if featureValue == 1.0
-        ])
+        possibleSuperpixelNums = numpy.array(
+            [
+                superpixelNum
+                for superpixelNum, featureValue in enumerate(superpixelValues)
+                if featureValue == 0.5
+            ]
+        )
+        definiteSuperpixelNums = numpy.array(
+            [
+                superpixelNum
+                for superpixelNum, featureValue in enumerate(superpixelValues)
+                if featureValue == 1.0
+            ]
+        )
 
         superpixelsLabelData = Image().superpixelsData(image)
 
-        possibleMask = numpy.in1d(
-            superpixelsLabelData.flat,
-            possibleSuperpixelNums
-        ).reshape(superpixelsLabelData.shape)
+        possibleMask = numpy.in1d(superpixelsLabelData.flat, possibleSuperpixelNums).reshape(
+            superpixelsLabelData.shape
+        )
         possibleMask = possibleMask.astype(numpy.bool_)
-        definiteMask = numpy.in1d(
-            superpixelsLabelData.flat,
-            definiteSuperpixelNums
-        ).reshape(superpixelsLabelData.shape)
+        definiteMask = numpy.in1d(superpixelsLabelData.flat, definiteSuperpixelNums).reshape(
+            superpixelsLabelData.shape
+        )
         definiteMask = definiteMask.astype(numpy.bool_)
 
         return possibleMask, definiteMask
@@ -111,17 +113,18 @@ class Annotation(AccessControlMixin, Model):
         markupFile = Upload().uploadFromFile(
             obj=markupMaskEncodedStream,
             size=len(markupMaskEncodedStream.getvalue()),
-            name='annotation_%s_%s.png' % (
+            name='annotation_%s_%s.png'
+            % (
                 annotation['_id'],
                 # Rename features to ensure the file is downloadable on Windows
-                featureId.replace(' : ', ' ; ').replace('/', ',')
+                featureId.replace(' : ', ' ; ').replace('/', ','),
             ),
             # TODO: change this once a bug in upstream Girder is fixed
             parentType='annotation',
             parent=annotation,
             attachParent=True,
             user=annotator,
-            mimeType='image/png'
+            mimeType='image/png',
         )
         markupFile['superpixels'] = superpixelValues
         # TODO: remove this once a bug in upstream Girder is fixed
@@ -130,7 +133,7 @@ class Annotation(AccessControlMixin, Model):
 
         annotation['markups'][featureId] = {
             'fileId': markupFile['_id'],
-            'present': bool(markupMask.any())
+            'present': bool(markupMask.any()),
         }
         return Annotation().save(annotation)
 
@@ -140,7 +143,7 @@ class Annotation(AccessControlMixin, Model):
                 annotation['markups'][featureId]['fileId'],
                 force=True,
                 exc=True,
-                fields={'superpixels': includeSuperpixels}
+                fields={'superpixels': includeSuperpixels},
             )
             return markupFile
         else:
@@ -156,11 +159,8 @@ class Annotation(AccessControlMixin, Model):
         else:
             image = Image().load(annotation['imageId'], force=True, exc=True)
             markupMask = numpy.zeros(
-                (
-                    image['meta']['acquisition']['pixelsY'],
-                    image['meta']['acquisition']['pixelsX']
-                ),
-                dtype=numpy.uint
+                (image['meta']['acquisition']['pixelsY'], image['meta']['acquisition']['pixelsX']),
+                dtype=numpy.uint,
             )
 
         possibleMask = markupMask == 128
@@ -180,26 +180,27 @@ class Annotation(AccessControlMixin, Model):
             '_modelType': 'annotation',
             'studyId': annotation['studyId'],
             'image': Image().filterSummary(
-                Image().load(annotation['imageId'], force=True, exc=True),
-                user),
+                Image().load(annotation['imageId'], force=True, exc=True), user
+            ),
             'user': User().filterSummary(
-                user=User().load(annotation['userId'], force=True, exc=True),
-                accessorUser=user),
-            'state': Annotation().getState(annotation)
+                user=User().load(annotation['userId'], force=True, exc=True), accessorUser=user
+            ),
+            'state': Annotation().getState(annotation),
         }
         if Annotation().getState(annotation) == Study().State.COMPLETE:
-            output.update({
-                'status': annotation['status'],
-                'startTime': annotation['startTime'],
-                'stopTime': annotation['stopTime'],
-                'responses': annotation['responses'],
-                'markups': {
-                    featureId: markup['present']
-                    for featureId, markup
-                    in six.viewitems(annotation['markups'])
-                },
-                'log': annotation.get('log', [])
-            })
+            output.update(
+                {
+                    'status': annotation['status'],
+                    'startTime': annotation['startTime'],
+                    'stopTime': annotation['stopTime'],
+                    'responses': annotation['responses'],
+                    'markups': {
+                        featureId: markup['present']
+                        for featureId, markup in six.viewitems(annotation['markups'])
+                    },
+                    'log': annotation.get('log', []),
+                }
+            )
 
         return output
 
@@ -209,7 +210,7 @@ class Annotation(AccessControlMixin, Model):
             'studyId': annotation['studyId'],
             'userId': annotation['userId'],
             'imageId': annotation['imageId'],
-            'state': self.getState(annotation)
+            'state': self.getState(annotation),
         }
 
     def remove(self, annotation, **kwargs):
@@ -226,7 +227,8 @@ class Annotation(AccessControlMixin, Model):
         study = Study().load(doc['studyId'], force=True, exc=False)
         if not study:
             raise ValidationException(
-                'Annotation field "studyId" must reference an existing Study.')
+                'Annotation field "studyId" must reference an existing Study.'
+            )
 
         # If annotation is complete
         if doc.get('stopTime'):
@@ -255,7 +257,7 @@ class Annotation(AccessControlMixin, Model):
                     },
                     'status': {
                         'type': 'string',
-                        'enum': ['ok', 'phi', 'quality', 'zoom', 'inappropriate', 'other']
+                        'enum': ['ok', 'phi', 'quality', 'zoom', 'inappropriate', 'other'],
                     },
                     'responses': {
                         'type': 'object',
@@ -263,11 +265,11 @@ class Annotation(AccessControlMixin, Model):
                             question['id']: {
                                 'type': 'string',
                                 # TODO: Support non-'select' question types
-                                'enum': question['choices']
+                                'enum': question['choices'],
                             }
                             for question in study['meta']['questions']
                         },
-                        'additionalProperties': False
+                        'additionalProperties': False,
                     },
                     'markups': {
                         'type': 'object',
@@ -278,26 +280,32 @@ class Annotation(AccessControlMixin, Model):
                                     'fileId': {
                                         # TODO
                                     },
-                                    'present': {
-                                        'type': 'boolean'
-                                    }
+                                    'present': {'type': 'boolean'},
                                 },
                                 'required': ['fileId', 'present'],
-                                'additionalProperties': False
+                                'additionalProperties': False,
                             }
                             for feature in study['meta']['features']
                         },
-                        'additionalProperties': False
+                        'additionalProperties': False,
                     },
                     'log': {
                         # TODO
-                    }
+                    },
                 },
                 'required': [
-                    '_id', 'studyId', 'imageId', 'userId', 'startTime', 'stopTime', 'status',
-                    'responses', 'markups', 'log'
+                    '_id',
+                    'studyId',
+                    'imageId',
+                    'userId',
+                    'startTime',
+                    'stopTime',
+                    'status',
+                    'responses',
+                    'markups',
+                    'log',
                 ],
-                'additionalProperties': False
+                'additionalProperties': False,
             }
             try:
                 jsonschema.validate(doc, schema)

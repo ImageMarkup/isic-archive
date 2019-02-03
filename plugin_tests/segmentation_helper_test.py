@@ -29,28 +29,31 @@ ScikitSegmentationHelper = None
 
 
 def setUpModule():
-    isicModelsModulePath = os.path.abspath(os.path.join(
-        os.path.dirname(__file__), '..', 'server', 'models'))
+    isicModelsModulePath = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), '..', 'server', 'models')
+    )
     if isicModelsModulePath not in sys.path:
         sys.path.append(isicModelsModulePath)
 
     global OpenCVSegmentationHelper, ScikitSegmentationHelper
-    from segmentation_helpers import OpenCVSegmentationHelper, \
-        ScikitSegmentationHelper
+    from segmentation_helpers import OpenCVSegmentationHelper, ScikitSegmentationHelper
 
 
 class SegmentationHelperTestCase(base.TestCase):
     def setUp(self):
         # A Girder instance is not required for this test case
 
-        self.testImage = numpy.array([
-            [128, 128, 0, 0, 0, 0],
-            [128, 128, 128, 128, 0, 0],
-            [0, 128, 0, 128, 128, 128],
-            [0, 128, 128, 128, 0, 0],
-            [0, 0, 128, 0, 0, 128],
-            [0, 0, 0, 128, 0, 128]
-        ], dtype=numpy.uint8)
+        self.testImage = numpy.array(
+            [
+                [128, 128, 0, 0, 0, 0],
+                [128, 128, 128, 128, 0, 0],
+                [0, 128, 0, 128, 128, 128],
+                [0, 128, 128, 128, 0, 0],
+                [0, 0, 128, 0, 0, 128],
+                [0, 0, 0, 128, 0, 128],
+            ],
+            dtype=numpy.uint8,
+        )
 
         # Will be used to make sure functions don't mutate inputs
         self.originalTestImage = self.testImage.copy()
@@ -59,11 +62,8 @@ class SegmentationHelperTestCase(base.TestCase):
         """Fail if the two NumPy arrays are unequal."""
         self.assertTrue(
             numpy.array_equal(first, second),
-            'NumPy arrays \n'
-            '%s\n'
-            'and\n'
-            '%s\n '
-            'are not equal' % (first, second))
+            'NumPy arrays \n' '%s\n' 'and\n' '%s\n ' 'are not equal' % (first, second),
+        )
 
     def testOpenCVSegmentationHelper(self):
         self._testFloodFill(OpenCVSegmentationHelper)
@@ -81,11 +81,13 @@ class SegmentationHelperTestCase(base.TestCase):
         originalTestImage = testImage.copy()
         self.assertArrayEqual(
             ScikitSegmentationHelper._clippedAdd(testImage, 5),
-            numpy.array([7, 133, 255], numpy.uint8))
+            numpy.array([7, 133, 255], numpy.uint8),
+        )
         self.assertArrayEqual(testImage, originalTestImage)
         self.assertArrayEqual(
             ScikitSegmentationHelper._clippedAdd(testImage, -5),
-            numpy.array([0, 123, 248], numpy.uint8))
+            numpy.array([0, 123, 248], numpy.uint8),
+        )
         self.assertArrayEqual(testImage, originalTestImage)
 
         self._testEasyMaskToContour(ScikitSegmentationHelper)
@@ -93,50 +95,59 @@ class SegmentationHelperTestCase(base.TestCase):
         # self._testHardMaskToContour(ScikitSegmentationHelper)
 
     def _testFloodFill(self, SegmentationHelper):
-        filledMask = SegmentationHelper._floodFill(
-            self.testImage, (1, 1), 5, connectivity=8)
+        filledMask = SegmentationHelper._floodFill(self.testImage, (1, 1), 5, connectivity=8)
         self.assertArrayEqual(
             filledMask,
-            numpy.array([
-                [255, 255, 0, 0, 0, 0],
-                [255, 255, 255, 255, 0, 0],
-                [0, 255, 0, 255, 255, 255],
-                [0, 255, 255, 255, 0, 0],
-                [0, 0, 255, 0, 0, 0],
-                [0, 0, 0, 255, 0, 0]
-            ], dtype=numpy.uint8))
+            numpy.array(
+                [
+                    [255, 255, 0, 0, 0, 0],
+                    [255, 255, 255, 255, 0, 0],
+                    [0, 255, 0, 255, 255, 255],
+                    [0, 255, 255, 255, 0, 0],
+                    [0, 0, 255, 0, 0, 0],
+                    [0, 0, 0, 255, 0, 0],
+                ],
+                dtype=numpy.uint8,
+            ),
+        )
         self.assertArrayEqual(self.testImage, self.originalTestImage)
 
         # Now, with connectivity=4
-        filledMask = SegmentationHelper._floodFill(
-            self.testImage, (1, 1), 5, connectivity=4)
+        filledMask = SegmentationHelper._floodFill(self.testImage, (1, 1), 5, connectivity=4)
         self.assertArrayEqual(
             filledMask,
-            numpy.array([
-                [255, 255, 0, 0, 0, 0],
-                [255, 255, 255, 255, 0, 0],
-                [0, 255, 0, 255, 255, 255],
-                [0, 255, 255, 255, 0, 0],
-                [0, 0, 255, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0]
-            ], dtype=numpy.uint8))
+            numpy.array(
+                [
+                    [255, 255, 0, 0, 0, 0],
+                    [255, 255, 255, 255, 0, 0],
+                    [0, 255, 0, 255, 255, 255],
+                    [0, 255, 255, 255, 0, 0],
+                    [0, 0, 255, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0],
+                ],
+                dtype=numpy.uint8,
+            ),
+        )
         self.assertArrayEqual(self.testImage, self.originalTestImage)
 
         # TODO: Test RGB images, particularly with SciKit
 
     def _testSegment(self, SegmentationHelper):
-        segmentedMask = SegmentationHelper.segment(
-            self.testImage, (1, 1), 5)
+        segmentedMask = SegmentationHelper.segment(self.testImage, (1, 1), 5)
         self.assertArrayEqual(
             segmentedMask,
-            numpy.array([
-                [255, 255, 0, 0, 0, 0],
-                [255, 255, 255, 255, 0, 0],
-                [0, 255, 255, 255, 255, 255],
-                [0, 255, 255, 255, 0, 0],
-                [0, 0, 255, 0, 0, 0],
-                [0, 0, 0, 255, 0, 0]
-            ], dtype=numpy.uint8))
+            numpy.array(
+                [
+                    [255, 255, 0, 0, 0, 0],
+                    [255, 255, 255, 255, 0, 0],
+                    [0, 255, 255, 255, 255, 255],
+                    [0, 255, 255, 255, 0, 0],
+                    [0, 0, 255, 0, 0, 0],
+                    [0, 0, 0, 255, 0, 0],
+                ],
+                dtype=numpy.uint8,
+            ),
+        )
         self.assertArrayEqual(self.testImage, self.originalTestImage)
 
         # TODO: test tolerance more thoroughly
@@ -164,6 +175,5 @@ class SegmentationHelperTestCase(base.TestCase):
         self._testMaskToContour(SegmentationHelper, inputMask)
 
     def _testHardMaskToContour(self, SegmentationHelper):
-        inputMask = SegmentationHelper.segment(
-            self.testImage, (1, 1), 5)
+        inputMask = SegmentationHelper.segment(self.testImage, (1, 1), 5)
         self._testMaskToContour(SegmentationHelper, inputMask)

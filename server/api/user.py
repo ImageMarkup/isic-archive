@@ -43,7 +43,7 @@ def attachUserPermissions(userResponse):
         'createDataset': User().canCreateDataset(user),
         'reviewDataset': User().canReviewDataset(user),
         'segmentationSkill': User().getSegmentationSkill(user),
-        'adminStudy': User().canAdminStudy(user)
+        'adminStudy': User().canAdminStudy(user),
     }
 
 
@@ -88,14 +88,13 @@ _sharedContext = IsicResource()
 
 
 @access.user
-@describeRoute(
-    Description('Request permission to create datasets.'))
+@describeRoute(Description('Request permission to create datasets.'))
 @boundHandler(_sharedContext)
 def requestCreateDatasetPermission(self, params):
     currentUser = self.getCurrentUser()
     resp = {}
     if User().canCreateDataset(currentUser):
-        resp['message'] = 'Dataset Contributor access granted.',
+        resp['message'] = ('Dataset Contributor access granted.',)
         resp['extra'] = 'hasPermission'
     else:
         # Request that user join group
@@ -103,8 +102,10 @@ def requestCreateDatasetPermission(self, params):
         group = Group().findOne({'name': groupName})
         if not group:
             raise RestException('Could not load group: %s' % groupName)
-        resp['message'] = 'Dataset Contributor access requested. An administrator may contact ' \
-                          'you via email (at %s) to process your request.' % currentUser['email']
+        resp['message'] = (
+            'Dataset Contributor access requested. An administrator may contact '
+            'you via email (at %s) to process your request.' % currentUser['email']
+        )
 
         for request in Group().getFullRequestList(group):
             if request['id'] == currentUser['_id']:
@@ -125,22 +126,19 @@ def requestCreateDatasetPermission(self, params):
                 host = mail_utils.getEmailUrlPrefix()
                 html = mail_utils.renderTemplate(
                     'datasetContributorRequest.mako',
-                    {
-                        'user': currentUser,
-                        'group': group,
-                        'host': host,
-                    })
+                    {'user': currentUser, 'group': group, 'host': host},
+                )
                 mail_utils.sendEmail(
                     to=groupModeratorEmails,
                     subject='ISIC Archive: Dataset Contributor Request',
-                    text=html)
+                    text=html,
+                )
 
     return resp
 
 
 @access.user
-@describeRoute(
-    Description('Accept Terms of Use.'))
+@describeRoute(Description('Accept Terms of Use.'))
 @boundHandler(_sharedContext)
 def acceptTerms(self, params):
     currentUser = self.getCurrentUser()
@@ -148,10 +146,7 @@ def acceptTerms(self, params):
         User().acceptTerms(currentUser)
         User().save(currentUser)
 
-    resp = {
-        'message': 'Terms of Use accepted.',
-        'extra': 'hasPermission'
-    }
+    resp = {'message': 'Terms of Use accepted.', 'extra': 'hasPermission'}
     return resp
 
 
@@ -162,8 +157,13 @@ def acceptTerms(self, params):
     .param('email', 'The user\'s email address.')
     .param('firstName', 'The user\'s first name.')
     .param('lastName', 'The user\'s last name.')
-    .param('validityPeriod', 'The number of days that the invite will remain valid.',
-           required=False, dataType='float', default=60.0)
+    .param(
+        'validityPeriod',
+        'The number of days that the invite will remain valid.',
+        required=False,
+        dataType='float',
+        default=60.0,
+    )
 )
 @boundHandler(_sharedContext)
 def inviteUser(self, params):
@@ -185,40 +185,38 @@ def inviteUser(self, params):
         password=None,
         email=params['email'],
         firstName=params['firstName'],
-        lastName=params['lastName']
+        lastName=params['lastName'],
     )
 
     token = Token().createToken(
-        newUser, days=validityPeriod,
-        scope=[TokenScope.TEMPORARY_USER_AUTH])
+        newUser, days=validityPeriod, scope=[TokenScope.TEMPORARY_USER_AUTH]
+    )
 
     inviteUrl = '%s/#user/%s/rsvp/%s' % (
-        mail_utils.getEmailUrlPrefix(), newUser['_id'], token['_id'])
+        mail_utils.getEmailUrlPrefix(),
+        newUser['_id'],
+        token['_id'],
+    )
 
     html = mail_utils.renderTemplate(
-        'inviteUser.mako',
-        {
-            'newUser': newUser,
-            'inviteUrl': inviteUrl,
-        })
-    mail_utils.sendEmail(
-        to=newUser['email'],
-        subject='ISIC Archive: Invitation',
-        text=html)
+        'inviteUser.mako', {'newUser': newUser, 'inviteUrl': inviteUrl}
+    )
+    mail_utils.sendEmail(to=newUser['email'], subject='ISIC Archive: Invitation', text=html)
 
-    return {
-        'newUser': User().filterSummary(newUser, currentUser),
-        'inviteUrl': inviteUrl
-    }
+    return {'newUser': User().filterSummary(newUser, currentUser), 'inviteUrl': inviteUrl}
 
 
 def attachUserApi(user):
-    events.bind('rest.get.user/authentication.after', 'onGetUserAuthentication',
-                onGetUserAuthentication)
+    events.bind(
+        'rest.get.user/authentication.after', 'onGetUserAuthentication', onGetUserAuthentication
+    )
     events.bind('rest.get.user/me.after', 'onGetUserMe', onGetUserMe)
     events.bind('rest.post.user.after', 'onPostUser', onPostUser)
-    events.bind('rest.get.user/password/temporary/:id.after', 'onGetPasswordTemporaryId',
-                onGetPasswordTemporaryId)
+    events.bind(
+        'rest.get.user/password/temporary/:id.after',
+        'onGetPasswordTemporaryId',
+        onGetPasswordTemporaryId,
+    )
 
     # TODO: Bind these in a more general way, as other places (e.g. OAuth) may also set the cookie
     events.bind('rest.post.user.after', 'onSetCookie', onSetCookie)

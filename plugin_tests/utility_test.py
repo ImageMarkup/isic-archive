@@ -41,7 +41,7 @@ class DataIterator(object):
         if self.pos >= self.dataLen:
             raise StopIteration
         nextPos = self.pos + self.chunkSize
-        curData = self.data[self.pos:nextPos]
+        curData = self.data[self.pos : nextPos]
         self.pos = nextPos
         return curData
 
@@ -50,8 +50,7 @@ class DataIterator(object):
 
 
 def setUpModule():
-    isicUtilityModulePath = os.path.abspath(os.path.join(
-        os.path.dirname(__file__), '..', 'server'))
+    isicUtilityModulePath = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'server'))
     if isicUtilityModulePath not in sys.path:
         sys.path.append(isicUtilityModulePath)
 

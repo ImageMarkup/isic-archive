@@ -31,6 +31,7 @@ from girder.utility.server import staticFile
 from girder.utility.webroot import WebrootBase
 
 from . import api
+
 # Import settings for side effects
 from . import settings  # noqa: F401
 from .provision_utility import provisionDatabase
@@ -80,17 +81,17 @@ def onJobSave(event):
         # in the database
         def replaceHost(url):
             # TODO: get this from the server config or the request
-            return 'http://127.0.0.1:8080' + url[url.find('/api/v1'):]
+            return 'http://127.0.0.1:8080' + url[url.find('/api/v1') :]
 
         job['kwargs'] = json_util.loads(job['kwargs'])
         for specValue in itertools.chain(
-                six.viewvalues(job['kwargs'].get('inputs', {})),
-                six.viewvalues(job['kwargs'].get('outputs', {}))):
+            six.viewvalues(job['kwargs'].get('inputs', {})),
+            six.viewvalues(job['kwargs'].get('outputs', {})),
+        ):
             if specValue['mode'] == 'girder':
                 specValue['api_url'] = replaceHost(specValue['api_url'])
         if job['kwargs'].get('jobInfo'):
-            job['kwargs']['jobInfo']['url'] = replaceHost(
-                job['kwargs']['jobInfo']['url'])
+            job['kwargs']['jobInfo']['url'] = replaceHost(job['kwargs']['jobInfo']['url'])
         job['kwargs'] = json_util.dumps(job['kwargs'])
 
 
@@ -130,47 +131,42 @@ def load(info):
     info['serverRoot'].updateHtmlVars({'title': 'ISIC Archive'})
 
     # add event listeners
-    events.bind('rest.get.describe/:resource.after',
-                'onDescribeResource', onDescribeResource)
+    events.bind('rest.get.describe/:resource.after', 'onDescribeResource', onDescribeResource)
     events.bind('model.job.save', 'onJobSave', onJobSave)
 
     # add custom model searching
-    resource.allowedSearchTypes.update({
-        'image.isic_archive',
-        'study.isic_archive',
-    })
+    resource.allowedSearchTypes.update({'image.isic_archive', 'study.isic_archive'})
 
     # register licenses for template usage
     mail_utils.addTemplateDirectory(
-        os.path.join(info['pluginRootDir'], 'server', 'license_templates'),
-        prepend=True)
+        os.path.join(info['pluginRootDir'], 'server', 'license_templates'), prepend=True
+    )
 
     externalWebroot = WebrootBase(os.path.join(info['pluginRootDir'], 'server', 'webroot.mako'))
-    externalWebroot.updateHtmlVars({
-        'apiRoot': '/api/v1',
-        'staticRoot': '/static',
-        'title': 'ISIC Archive'
-    })
+    externalWebroot.updateHtmlVars(
+        {'apiRoot': '/api/v1', 'staticRoot': '/static', 'title': 'ISIC Archive'}
+    )
     registerPluginWebroot(externalWebroot, info['name'])
 
-    integrationWebroot = WebrootBase(os.path.join(
-        info['pluginRootDir'], 'server', 'webroot_integration.mako'))
+    integrationWebroot = WebrootBase(
+        os.path.join(info['pluginRootDir'], 'server', 'webroot_integration.mako')
+    )
     integrationWebroot.updateHtmlVars(externalWebroot.vars)
     registerPluginWebroot(integrationWebroot, info['name'] + '_integration')
 
     # add static file serving
     info['config']['/uda'] = {
         'tools.staticdir.on': 'True',
-        'tools.staticdir.dir': os.path.join(info['pluginRootDir'], 'custom')
+        'tools.staticdir.dir': os.path.join(info['pluginRootDir'], 'custom'),
     }
 
     # add dynamic root routes
     # root endpoints -> where a user may go and expect a UI
     class Root(object):
         pass
+
     legacyWebroot = Root()
-    legacyWebroot.segment = staticFile(
-        os.path.join(info['pluginRootDir'], 'custom', 'phase1.html'))
+    legacyWebroot.segment = staticFile(os.path.join(info['pluginRootDir'], 'custom', 'phase1.html'))
     registerPluginWebroot(legacyWebroot, 'markup')
 
     # create all necessary users, groups, collections, etc
@@ -182,9 +178,7 @@ def load(info):
 
     # Customize API docs template
     baseTemplateFilename = info['apiRoot'].templateFilename
-    info['apiRoot'].updateHtmlVars({
-        'baseTemplateFilename': baseTemplateFilename
-    })
+    info['apiRoot'].updateHtmlVars({'baseTemplateFilename': baseTemplateFilename})
     templatePath = os.path.join(info['pluginRootDir'], 'server', 'isic_api_docs.mako')
     info['apiRoot'].setTemplatePath(templatePath)
 

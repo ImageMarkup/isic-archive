@@ -28,25 +28,28 @@ from ec2_snapshots import getRetainedDaily, getRetainedMonthly, getRetainedWeekl
 class EC2SnapshotsTestCase(unittest.TestCase):
     def setUp(self):
         # Create a list of assorted mock snapshots sorted by start_time.
-        self.snapshots = sorted([
-            self._createSnapshot('2011-02-12 18:30:00+00:00'),
-            self._createSnapshot('2013-01-12 18:30:00+00:00'),
-            self._createSnapshot('2014-02-04 11:59:30+00:00'),
-            self._createSnapshot('2014-08-04 11:59:30+00:00'),
-            self._createSnapshot('2015-01-12 18:30:00+00:00'),
-            self._createSnapshot('2016-01-12 18:30:00+00:00'),
-            self._createSnapshot('2016-03-22 18:30:00+00:00'),
-            self._createSnapshot('2016-12-01 18:30:00+00:00'),
-            self._createSnapshot('2016-12-03 18:30:00+00:00'),
-            self._createSnapshot('2017-01-12 18:30:00+00:00'),
-            self._createSnapshot('2017-01-14 18:30:00+00:00'),
-            self._createSnapshot('2017-02-01 18:30:00+00:00'),
-            self._createSnapshot('2017-04-15 18:30:00+00:00'),
-            self._createSnapshot('2017-04-16 18:30:00+00:00'),
-            self._createSnapshot('2017-04-17 18:30:00+00:00'),
-            self._createSnapshot('2017-08-04 11:59:30+00:00'),
-            self._createSnapshot('2017-08-14 18:30:00+00:00')
-        ], key=lambda s: s.start_time)
+        self.snapshots = sorted(
+            [
+                self._createSnapshot('2011-02-12 18:30:00+00:00'),
+                self._createSnapshot('2013-01-12 18:30:00+00:00'),
+                self._createSnapshot('2014-02-04 11:59:30+00:00'),
+                self._createSnapshot('2014-08-04 11:59:30+00:00'),
+                self._createSnapshot('2015-01-12 18:30:00+00:00'),
+                self._createSnapshot('2016-01-12 18:30:00+00:00'),
+                self._createSnapshot('2016-03-22 18:30:00+00:00'),
+                self._createSnapshot('2016-12-01 18:30:00+00:00'),
+                self._createSnapshot('2016-12-03 18:30:00+00:00'),
+                self._createSnapshot('2017-01-12 18:30:00+00:00'),
+                self._createSnapshot('2017-01-14 18:30:00+00:00'),
+                self._createSnapshot('2017-02-01 18:30:00+00:00'),
+                self._createSnapshot('2017-04-15 18:30:00+00:00'),
+                self._createSnapshot('2017-04-16 18:30:00+00:00'),
+                self._createSnapshot('2017-04-17 18:30:00+00:00'),
+                self._createSnapshot('2017-08-04 11:59:30+00:00'),
+                self._createSnapshot('2017-08-14 18:30:00+00:00'),
+            ],
+            key=lambda s: s.start_time,
+        )
 
     def _getSnapshot(self, date):
         date = self._createDatetime(date)

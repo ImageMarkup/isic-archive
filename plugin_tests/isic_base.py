@@ -37,8 +37,8 @@ class IsicTestCase(base.TestCase):
         # and fails.
         super(IsicTestCase, self).setUp()
 
-        from girder.plugins.isic_archive.provision_utility import \
-            provisionDatabase
+        from girder.plugins.isic_archive.provision_utility import provisionDatabase
+
         provisionDatabase()
 
     def assertNoMail(self):
@@ -65,7 +65,7 @@ class IsicTestCase(base.TestCase):
             if time.time() > startTime + timeout:
                 raise AssertionError(
                     'Failed to receive all emails within %s seconds '
-                    '(expected %s, received %s)' %
-                    (timeout, count, count - remaining))
+                    '(expected %s, received %s)' % (timeout, count, count - remaining)
+                )
 
             time.sleep(0.1)

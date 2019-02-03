@@ -42,9 +42,7 @@ def _getNameTagValue(obj):
     """
     if not hasattr(obj, 'tags') or obj.tags is None:
         return None
-    name = [tag['Value']
-            for tag in obj.tags
-            if tag['Key'] == 'Name']
+    name = [tag['Value'] for tag in obj.tags if tag['Key'] == 'Name']
     return name[0] if name else None
 
 
@@ -56,8 +54,7 @@ def main():
 @main.command()
 @click.option('--from-instance-id', required=True, help='Source AWS EC2 Instance ID')
 @click.option('--to-instance-id', required=True, help='Destination AWS EC2 Instance ID')
-@click.option('--dry-run', default=False, is_flag=True,
-              help='Log actions without performing them')
+@click.option('--dry-run', default=False, is_flag=True, help='Log actions without performing them')
 def mirror(from_instance_id, to_instance_id, dry_run):
     """Create snapshots of all volumes of an instance except the root volume."""
     ec2 = boto3.resource('ec2')
@@ -90,24 +87,17 @@ def mirror(from_instance_id, to_instance_id, dry_run):
         fromVolumeName = _getNameTagValue(fromVolume)
         now = datetime.datetime.utcnow()
         snapshotDescription = '%s:%s' % (
-            fromVolumeName, now.replace(microsecond=0, tzinfo=None).isoformat())
+            fromVolumeName,
+            now.replace(microsecond=0, tzinfo=None).isoformat(),
+        )
         if dry_run:
             continue
 
         logging.info('Creating snapshot (named %s)', snapshotDescription)
-        snapshot = fromVolume.create_snapshot(
-            Description=snapshotDescription,
-        )
+        snapshot = fromVolume.create_snapshot(Description=snapshotDescription)
         logging.info('Started snapshot %s (%s)', snapshot.id, snapshotDescription)
         logging.info('Started snapshot %s', snapshot)
-        snapshot.create_tags(
-            Tags=[
-                {
-                    'Key': 'Name',
-                    'Value': snapshotDescription
-                }
-            ]
-        )
+        snapshot.create_tags(Tags=[{'Key': 'Name', 'Value': snapshotDescription}])
         snapshot.wait_until_completed()
         logging.info('Snapshot completed %s', snapshot)
 
@@ -118,20 +108,10 @@ def mirror(from_instance_id, to_instance_id, dry_run):
             SnapshotId=snapshot.id,
             VolumeType='gp2',
             TagSpecifications=[
-                {
-                    'ResourceType': 'volume',
-                    'Tags': [
-                        {
-                            'Key': 'Name',
-                            'Value': toVolumeName
-                        }
-                    ]
-                }
-            ]
+                {'ResourceType': 'volume', 'Tags': [{'Key': 'Name', 'Value': toVolumeName}]}
+            ],
         )
-        ec2Client.get_waiter('volume_available').wait(
-            VolumeIds=[newToVolume.id]
-        )
+        ec2Client.get_waiter('volume_available').wait(VolumeIds=[newToVolume.id])
         logging.info('Created new volume %s', newToVolume)
 
         logging.info('Deleting snapshot %s', snapshot)
@@ -139,20 +119,14 @@ def mirror(from_instance_id, to_instance_id, dry_run):
 
         logging.info('Detaching old volume %s', oldToVolume)
         oldToVolume.detach_from_instance()
-        ec2Client.get_waiter('volume_available').wait(
-            VolumeIds=[oldToVolume.id]
-        )
+        ec2Client.get_waiter('volume_available').wait(VolumeIds=[oldToVolume.id])
         logging.info('Detached old volume %s', oldToVolume)
 
-        logging.info('Attaching new volume %s to instance %s at %r',
-                     newToVolume, toInstance, mapping)
-        newToVolume.attach_to_instance(
-            Device=mapping,
-            InstanceId=toInstance.id
+        logging.info(
+            'Attaching new volume %s to instance %s at %r', newToVolume, toInstance, mapping
         )
-        ec2Client.get_waiter('volume_in_use').wait(
-            VolumeIds=[newToVolume.id]
-        )
+        newToVolume.attach_to_instance(Device=mapping, InstanceId=toInstance.id)
+        ec2Client.get_waiter('volume_in_use').wait(VolumeIds=[newToVolume.id])
         logging.info('Attached new volume %s', oldToVolume)
 
         logging.info('Deleting old volume %s', oldToVolume)

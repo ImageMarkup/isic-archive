@@ -78,7 +78,8 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
             tolerance,
             # Leaving padOutput allows the next operation to reach around
             # edge-touching components
-            padOutput=True)
+            padOutput=True,
+        )
 
         # Now, fill in any holes in the maskImage
         maskImageBackground = cls._floodFill(
@@ -89,7 +90,8 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
             # also include the actual mask background, which has a value of 0
             tolerance=1,
             # A second additional layer of padding is not required
-            padOutput=False)
+            padOutput=False,
+        )
         # Remove the extra padding
         maskImageBackground = maskImageBackground[1:-1, 1:-1]
         # Flip the background, to get the mask with holes removed
@@ -98,8 +100,7 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         return maskImage
 
     @classmethod
-    def _floodFill(cls, image, seedCoord, tolerance, connectivity=8,
-                   padOutput=False):
+    def _floodFill(cls, image, seedCoord, tolerance, connectivity=8, padOutput=False):
         """
         Segment an image into a region connected to a seed point, using OpenCV.
 
@@ -124,13 +125,12 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         :rtype: numpy.ndarray
         """
         # create padded mask to store output
-        maskImage = numpy.zeros(
-            image.shape[:2] + numpy.array([2, 2]), numpy.uint8)
+        maskImage = numpy.zeros(image.shape[:2] + numpy.array([2, 2]), numpy.uint8)
         fillValue = 255
 
         flags = 0
         flags |= connectivity
-        flags |= (fillValue << 8)  # fill value is
+        flags |= fillValue << 8  # fill value is
         # compare each candidate to the seed, not its nearest neighbor; for
         #   lesion images, the gradient is too shallow for even very small
         #   tolerances to work with a nearest neighbor comparison
@@ -144,7 +144,8 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
             newVal=(0,) * 3,  # this is ignored, due to FLOODFILL_MASK_ONLY
             loDiff=(tolerance,) * 3,
             upDiff=(tolerance,) * 3,
-            flags=flags)
+            flags=flags,
+        )
 
         if not padOutput:
             maskImage = maskImage[1:-1, 1:-1]
@@ -170,21 +171,18 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         return element.astype(elementType)
 
     @classmethod
-    def _binaryOpening(cls, image, elementShape='circle', elementRadius=5,
-                       padded_input=False):
+    def _binaryOpening(cls, image, elementShape='circle', elementRadius=5, padded_input=False):
         if image.dtype != numpy.uint8:
             raise TypeError('image must be an array of uint8.')
 
         # This is the only version that returns a true circle
         from .scikit import ScikitSegmentationHelper
-        element = ScikitSegmentationHelper._structuringElement(
-            elementShape, elementRadius, image.dtype.type)
 
-        morphedImage = cv2.morphologyEx(
-            src=image,
-            op=cv2.MORPH_OPEN,
-            kernel=element
+        element = ScikitSegmentationHelper._structuringElement(
+            elementShape, elementRadius, image.dtype.type
         )
+
+        morphedImage = cv2.morphologyEx(src=image, op=cv2.MORPH_OPEN, kernel=element)
 
         if padded_input:
             morphedImage[[0, -1], :] = 1
@@ -210,10 +208,7 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
             raise TypeError('maskImage must be an array of uint8.')
 
         if not paddedInput:
-            paddedMaskImage = numpy.zeros(
-                maskImage.shape + numpy.array([2, 2]),
-                maskImage.dtype
-            )
+            paddedMaskImage = numpy.zeros(maskImage.shape + numpy.array([2, 2]), maskImage.dtype)
             paddedMaskImage[1:-1, 1:-1] = maskImage
             maskImage = paddedMaskImage
             del paddedMaskImage
@@ -225,19 +220,15 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
             mode=cv2.RETR_EXTERNAL,
             method=cv2.CHAIN_APPROX_SIMPLE,
             # compensate for the image's 1-pixel padding
-            offset=(-1, -1)
+            offset=(-1, -1),
         )
 
         # each contour initially looks like [ [[0,1]], [[0,2]] ], so squeeze it
         # note, don't use numpy.squeeze, as that will break singleton contours
-        contours = map(
-            lambda contour: contour[:, 0],
-            contours)
+        contours = map(lambda contour: contour[:, 0], contours)
 
         # place a duplicate of the first value at the end
-        contours = map(
-            lambda contour: numpy.append(contour, contour[0:1], axis=0),
-            contours)
+        contours = map(lambda contour: numpy.append(contour, contour[0:1], axis=0), contours)
 
         return contours
 
@@ -266,7 +257,7 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
             contours,
             # TODO: use a better measure of region size than simply the number
             #   of defining points
-            key=lambda contour: len(contour)
+            key=lambda contour: len(contour),
         )
 
         return largestContour
@@ -290,6 +281,6 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
             contourIdx=-1,  # all contours
             color=255,
             thickness=cv2.FILLED,
-            lineType=8  # allow diagonal lines
+            lineType=8,  # allow diagonal lines
         )
         return maskImage

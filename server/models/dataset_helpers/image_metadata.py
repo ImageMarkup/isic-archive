@@ -104,9 +104,7 @@ class FieldParser(object):
         availableFields = six.viewkeys(data)
         allowedFields = set(field.lower() for field in cls.allowedFields)
 
-        foundFields = [field for field
-                       in availableFields
-                       if field.lower() in allowedFields]
+        foundFields = [field for field in availableFields if field.lower() in allowedFields]
 
         if not foundFields:
             raise MetadataFieldNotFoundException(fields=cls.allowedFields)
@@ -119,7 +117,7 @@ class FieldParser(object):
         if value is not None:
             value = six.text_type(value)
 
-        assert(value is None or isinstance(value, six.string_types))
+        assert value is None or isinstance(value, six.string_types)
 
         return value
 
@@ -210,10 +208,7 @@ class AgeFieldParser(FieldParser):
 
     @classmethod
     def load(cls, value, acquisition, clinical, private):
-        approxAge = \
-            int(round(value / 5.0) * 5) \
-            if value is not None \
-            else None
+        approxAge = int(round(value / 5.0) * 5) if value is not None else None
 
         cls._checkWrite(private, cls.name, value)
         cls._checkWrite(clinical, cls.approxName, approxAge)
@@ -294,12 +289,15 @@ class ClinicalSizeFieldParser(FieldParser):
             if value in ['', 'unknown']:
                 value = None
             else:
+
                 def raiseBadFieldTypeExceptionWithValue(value):
                     raise BadFieldTypeException(
-                        name=cls.name, fieldType='float with units (um, mm, or cm)', value=value)
+                        name=cls.name, fieldType='float with units (um, mm, or cm)', value=value
+                    )
 
                 raiseBadFieldTypeException = functools.partial(
-                    raiseBadFieldTypeExceptionWithValue, value)
+                    raiseBadFieldTypeExceptionWithValue, value
+                )
 
                 # Parse value into floating point component and units
                 result = re.match(cls._formatRegex, value)
@@ -369,11 +367,15 @@ class DiagnosisConfirmTypeFieldParser(FieldParser):
             if value in ['', 'unknown']:
                 value = None
             else:
-                cls._assertEnumerated(value, {
-                    'histopathology',
-                    'serial imaging showing no change',
-                    'single image expert consensus',
-                    'confocal microscopy with consensus dermoscopy'})
+                cls._assertEnumerated(
+                    value,
+                    {
+                        'histopathology',
+                        'serial imaging showing no change',
+                        'single image expert consensus',
+                        'confocal microscopy with consensus dermoscopy',
+                    },
+                )
         return value
 
     @classmethod
@@ -396,18 +398,23 @@ class BenignMalignantFieldParser(FieldParser):
             else:
                 if value == 'indeterminable':
                     value = 'indeterminate'
-                cls._assertEnumerated(value, {
-                    'benign',
-                    'malignant',
-                    'indeterminate',
-                    'indeterminate/benign',
-                    'indeterminate/malignant'})
+                cls._assertEnumerated(
+                    value,
+                    {
+                        'benign',
+                        'malignant',
+                        'indeterminate',
+                        'indeterminate/benign',
+                        'indeterminate/malignant',
+                    },
+                )
         return value
 
     @classmethod
     def load(cls, value, acquisition, clinical, private):
         cls._checkWrite(clinical, cls.name, value)
         clinical[cls.name] = value
+
 
 #
 # if 'diagnosis_confirm_type' not in clinical:
@@ -441,43 +448,47 @@ class DiagnosisFieldParser(FieldParser):
                     # Deal with a possible unicode char in "cafe-au-lait macule"
                     # TODO: instead, actually use the unicode char here
                     value = 'cafe-au-lait macule'
-                cls._assertEnumerated(value, {
-                    'actinic keratosis',
-                    'adnexal tumor',
-                    'AIMP',
-                    'angiokeratoma',
-                    'angioma',
-                    'basal cell carcinoma',
-                    'cafe-au-lait macule',
-                    'dermatofibroma',
-                    'ephelis',
-                    'lentigo NOS',
-                    'lentigo simplex',
-                    'lichenoid keratosis',
-                    'melanoma',
-                    'melanoma metastasis',
-                    'merkel cell carcinoma',
-                    'mucosal melanosis',
-                    'nevus',
-                    'nevus spilus',
-                    'seborrheic keratosis',
-                    'solar lentigo',
-                    'squamous cell carcinoma',
-                    'clear cell acanthoma',
-                    'atypical spitz tumor',
-                    'acrochordon',
-                    'angiofibroma or fibrous papule',
-                    'neurofibroma',
-                    'pyogenic granuloma',
-                    'scar',
-                    'sebaceous adenoma',
-                    'sebaceous hyperplasia',
-                    'verruca',
-                    'atypical melanocytic proliferation',
-                    'epidermal nevus',
-                    'pigmented benign keratosis',
-                    'vascular lesion',
-                    'other'})
+                cls._assertEnumerated(
+                    value,
+                    {
+                        'actinic keratosis',
+                        'adnexal tumor',
+                        'AIMP',
+                        'angiokeratoma',
+                        'angioma',
+                        'basal cell carcinoma',
+                        'cafe-au-lait macule',
+                        'dermatofibroma',
+                        'ephelis',
+                        'lentigo NOS',
+                        'lentigo simplex',
+                        'lichenoid keratosis',
+                        'melanoma',
+                        'melanoma metastasis',
+                        'merkel cell carcinoma',
+                        'mucosal melanosis',
+                        'nevus',
+                        'nevus spilus',
+                        'seborrheic keratosis',
+                        'solar lentigo',
+                        'squamous cell carcinoma',
+                        'clear cell acanthoma',
+                        'atypical spitz tumor',
+                        'acrochordon',
+                        'angiofibroma or fibrous papule',
+                        'neurofibroma',
+                        'pyogenic granuloma',
+                        'scar',
+                        'sebaceous adenoma',
+                        'sebaceous hyperplasia',
+                        'verruca',
+                        'atypical melanocytic proliferation',
+                        'epidermal nevus',
+                        'pigmented benign keratosis',
+                        'vascular lesion',
+                        'other',
+                    },
+                )
         return value
 
     @classmethod
@@ -500,17 +511,21 @@ class NevusTypeFieldParser(FieldParser):
             else:
                 if value == 'nevus nos':
                     value = 'nevus NOS'
-                cls._assertEnumerated(value, {
-                    'blue',
-                    'combined',
-                    'nevus NOS',
-                    'deep penetrating',
-                    'halo',
-                    'persistent/recurrent',
-                    'pigmented spindle cell of reed',
-                    'plexiform spindle cell',
-                    'special site',
-                    'spitz'})
+                cls._assertEnumerated(
+                    value,
+                    {
+                        'blue',
+                        'combined',
+                        'nevus NOS',
+                        'deep penetrating',
+                        'halo',
+                        'persistent/recurrent',
+                        'pigmented spindle cell of reed',
+                        'plexiform spindle cell',
+                        'special site',
+                        'spitz',
+                    },
+                )
         return value
 
     @classmethod
@@ -531,10 +546,7 @@ class ImageTypeFieldParser(FieldParser):
             if value in ['', 'unknown']:
                 value = None
             else:
-                cls._assertEnumerated(value, {
-                    'dermoscopic',
-                    'clinical',
-                    'overview'})
+                cls._assertEnumerated(value, {'dermoscopic', 'clinical', 'overview'})
         return value
 
     @classmethod
@@ -559,10 +571,9 @@ class DermoscopicTypeFieldParser(FieldParser):
                     value = 'contact non-polarized'
                 elif value == 'non contact polarized':
                     value = 'non-contact polarized'
-                cls._assertEnumerated(value, {
-                    'contact polarized',
-                    'contact non-polarized',
-                    'non-contact polarized'})
+                cls._assertEnumerated(
+                    value, {'contact polarized', 'contact non-polarized', 'non-contact polarized'}
+                )
         return value
 
     @classmethod
@@ -574,11 +585,14 @@ class DermoscopicTypeFieldParser(FieldParser):
 class MelThickMmFieldParser(FieldParser):
     name = 'mel_thick_mm'
     allowedFields = {'mel_thick_mm', 'mel_thick'}
-    _formatRegex = re.compile(r"""
+    _formatRegex = re.compile(
+        r"""
         (.+?)    # Non-greedy
         (?:mm)?  # Optional units, non-capturing
         $
-        """, re.VERBOSE)
+        """,
+        re.VERBOSE,
+    )
 
     @classmethod
     def transform(cls, value):
@@ -588,12 +602,15 @@ class MelThickMmFieldParser(FieldParser):
             if value in ['', 'unknown', 'not applicable']:
                 value = None
             else:
+
                 def raiseBadFieldTypeExceptionWithValue(value):
                     raise BadFieldTypeException(
-                        name=cls.name, fieldType='float with optional units (mm)', value=value)
+                        name=cls.name, fieldType='float with optional units (mm)', value=value
+                    )
 
                 raiseBadFieldTypeException = functools.partial(
-                    raiseBadFieldTypeExceptionWithValue, value)
+                    raiseBadFieldTypeExceptionWithValue, value
+                )
 
                 # Parse value into floating point component and units
                 result = re.match(cls._formatRegex, value)
@@ -632,12 +649,16 @@ class MelClassFieldParser(FieldParser):
                     value = 'recurrent/persistent melanoma, invasive'
                 elif value == 'melanoma nos':
                     value = 'melanoma NOS'
-                cls._assertEnumerated(value, {
-                    'melanoma in situ',
-                    'invasive melanoma',
-                    'recurrent/persistent melanoma, in situ',
-                    'recurrent/persistent melanoma, invasive',
-                    'melanoma NOS'})
+                cls._assertEnumerated(
+                    value,
+                    {
+                        'melanoma in situ',
+                        'invasive melanoma',
+                        'recurrent/persistent melanoma, in situ',
+                        'recurrent/persistent melanoma, invasive',
+                        'melanoma NOS',
+                    },
+                )
         return value
 
     @classmethod
@@ -666,12 +687,16 @@ class MelTypeFieldParser(FieldParser):
                     value = 'acral lentiginous melanoma'
                 elif value == 'melanoma nos':
                     value = 'melanoma NOS'
-                cls._assertEnumerated(value, {
-                    'superficial spreading melanoma',
-                    'nodular melanoma',
-                    'lentigo maligna melanoma',
-                    'acral lentiginous melanoma',
-                    'melanoma NOS'})
+                cls._assertEnumerated(
+                    value,
+                    {
+                        'superficial spreading melanoma',
+                        'nodular melanoma',
+                        'lentigo maligna melanoma',
+                        'acral lentiginous melanoma',
+                        'melanoma NOS',
+                    },
+                )
         return value
 
     @classmethod
@@ -693,14 +718,9 @@ class MelMitoticIndexFieldParser(FieldParser):
                 value = None
             else:
                 value = re.sub(r'mm2$', 'mm^2', value)
-                cls._assertEnumerated(value, {
-                    '0/mm^2',
-                    '<1/mm^2',
-                    '1/mm^2',
-                    '2/mm^2',
-                    '3/mm^2',
-                    '4/mm^2',
-                    '>4/mm^2'})
+                cls._assertEnumerated(
+                    value, {'0/mm^2', '<1/mm^2', '1/mm^2', '2/mm^2', '3/mm^2', '4/mm^2', '>4/mm^2'}
+                )
         return value
 
     @classmethod
@@ -742,14 +762,18 @@ class GeneralAnatomicSiteFieldParser(FieldParser):
             if value in ['', 'unknown']:
                 value = None
             else:
-                cls._assertEnumerated(value, {
-                    'head/neck',
-                    'upper extremity',
-                    'lower extremity',
-                    'anterior torso',
-                    'posterior torso',
-                    'palms/soles',
-                    'lateral torso'})
+                cls._assertEnumerated(
+                    value,
+                    {
+                        'head/neck',
+                        'upper extremity',
+                        'lower extremity',
+                        'anterior torso',
+                        'posterior torso',
+                        'palms/soles',
+                        'lateral torso',
+                    },
+                )
         return value
 
     @classmethod
@@ -788,19 +812,33 @@ def _populateMetadata(acquisition, clinical):
             clinical['melanocytic'] = True
         elif not melanocytic:
             clinical['melanocytic'] = True
-            warnings.append('corrected inconsistent value for field %r based on field %r '
-                            '(new value: %r, %r: %r)' %
-                            (MelanocyticFieldParser.name, DiagnosisFieldParser.name,
-                             True, DiagnosisFieldParser.name, diagnosis))
+            warnings.append(
+                'corrected inconsistent value for field %r based on field %r '
+                '(new value: %r, %r: %r)'
+                % (
+                    MelanocyticFieldParser.name,
+                    DiagnosisFieldParser.name,
+                    True,
+                    DiagnosisFieldParser.name,
+                    diagnosis,
+                )
+            )
     elif diagnosis is not None and diagnosis != 'other':
         if melanocytic is None:
             clinical['melanocytic'] = False
         elif melanocytic:
             clinical['melanocytic'] = False
-            warnings.append('corrected inconsistent value for field %r based on field %r '
-                            '(new value: %r, %r: %r)' %
-                            (MelanocyticFieldParser.name, DiagnosisFieldParser.name,
-                             False, DiagnosisFieldParser.name, diagnosis))
+            warnings.append(
+                'corrected inconsistent value for field %r based on field %r '
+                '(new value: %r, %r: %r)'
+                % (
+                    MelanocyticFieldParser.name,
+                    DiagnosisFieldParser.name,
+                    False,
+                    DiagnosisFieldParser.name,
+                    diagnosis,
+                )
+            )
 
     if dermoscopicType is not None and imageType is None:
         acquisition['image_type'] = 'dermoscopic'
@@ -831,16 +869,14 @@ def _checkMetadataErrors(acquisition, clinical):
         if benignMalignant != 'malignant':
             raise InconsistentValuesException(
                 names=[DiagnosisFieldParser.name, BenignMalignantFieldParser.name],
-                values=[diagnosis, benignMalignant])
+                values=[diagnosis, benignMalignant],
+            )
     elif diagnosis == 'nevus':
-        if benignMalignant not in [
-            'benign',
-            'indeterminate/benign',
-            'indeterminate',
-        ]:
+        if benignMalignant not in ['benign', 'indeterminate/benign', 'indeterminate']:
             raise InconsistentValuesException(
                 names=[DiagnosisFieldParser.name, BenignMalignantFieldParser.name],
-                values=[diagnosis, benignMalignant])
+                values=[diagnosis, benignMalignant],
+            )
 
     # Verify melanoma-related fields with respect to diagnosis
     for value, parser in [
@@ -848,33 +884,35 @@ def _checkMetadataErrors(acquisition, clinical):
         (melClass, MelClassFieldParser),
         (melType, MelTypeFieldParser),
         (melMitoticIndex, MelMitoticIndexFieldParser),
-        (melUlcer, MelUlcerFieldParser)
+        (melUlcer, MelUlcerFieldParser),
     ]:
         if value is not None and diagnosis != 'melanoma':
             raise InconsistentValuesException(
-                names=[parser.name, DiagnosisFieldParser.name],
-                values=[value, diagnosis])
+                names=[parser.name, DiagnosisFieldParser.name], values=[value, diagnosis]
+            )
 
-    if benignMalignant in [
-        'indeterminate/benign',
-        'indeterminate/malignant',
-        'indeterminate',
-        'malignant',
-    ] and diagnosisConfirmType != 'histopathology':
+    if (
+        benignMalignant
+        in ['indeterminate/benign', 'indeterminate/malignant', 'indeterminate', 'malignant']
+        and diagnosisConfirmType != 'histopathology'
+    ):
         raise InconsistentValuesException(
             names=[BenignMalignantFieldParser.name, DiagnosisConfirmTypeFieldParser.name],
-            values=[benignMalignant, diagnosisConfirmType])
+            values=[benignMalignant, diagnosisConfirmType],
+        )
 
     # Verify nevus type field with respect to diagnosis
     if nevusType is not None and diagnosis not in ['nevus', 'nevus spilus']:
         raise InconsistentValuesException(
             names=[DiagnosisFieldParser.name, NevusTypeFieldParser.name],
-            values=[diagnosis, nevusType])
+            values=[diagnosis, nevusType],
+        )
 
     if imageType != 'dermoscopic' and dermoscopicType is not None:
         raise InconsistentValuesException(
             names=[ImageTypeFieldParser.name, DermoscopicTypeFieldParser.name],
-            values=[imageType, dermoscopicType])
+            values=[imageType, dermoscopicType],
+        )
 
 
 def _checkMetadataWarnings(clinical):
@@ -888,10 +926,7 @@ def _checkMetadataWarnings(clinical):
     diagnosis = clinical.get('diagnosis')
     benignMalignant = clinical.get('benign_malignant')
 
-    if diagnosis in [
-        'basal cell carcinoma',
-        'squamous cell carcinoma',
-    ] and benignMalignant in [
+    if diagnosis in ['basal cell carcinoma', 'squamous cell carcinoma'] and benignMalignant in [
         'benign',
         'indeterminate/benign',
     ]:
@@ -969,16 +1004,16 @@ def addImageMetadata(image, data):
             parser.run(data, acquisition, clinical, private)
         except MetadataValueExistsException as e:
             errors.append(
-                'value already exists for field %r (old: %r, new: %r)' %
-                (e.name, e.oldValue, e.newValue))
+                'value already exists for field %r (old: %r, new: %r)'
+                % (e.name, e.oldValue, e.newValue)
+            )
         except MultipleFieldException as e:
-            errors.append(
-                'only one of field %r may be present, found: %r' %
-                (e.name, e.fields))
+            errors.append('only one of field %r may be present, found: %r' % (e.name, e.fields))
         except BadFieldTypeException as e:
             errors.append(
-                'value is wrong type for field %r (expected %r, value: %r)' %
-                (e.name, e.fieldType, e.value))
+                'value is wrong type for field %r (expected %r, value: %r)'
+                % (e.name, e.fieldType, e.value)
+            )
 
     # TODO: handle contingently required fields
 
@@ -1002,8 +1037,11 @@ def addImageMetadata(image, data):
 
     # Report warnings for unrecognized fields when there are no errors
     if not errors:
-        warnings.extend([
-            'unrecognized field %r will be added to unstructured metadata' % (field)
-            for field in data])
+        warnings.extend(
+            [
+                'unrecognized field %r will be added to unstructured metadata' % (field)
+                for field in data
+            ]
+        )
 
     return errors, warnings

@@ -50,11 +50,11 @@ class Image(Item):
 
         self.prefixSearchFields = ['lowerName', 'name']
 
-        events.bind('data.process',
-                    'onSuperpixelsUpload', self.onSuperpixelsUpload)
+        events.bind('data.process', 'onSuperpixelsUpload', self.onSuperpixelsUpload)
 
-    def createImage(self, imageDataStream, imageDataSize, originalName,
-                    parentFolder, creator, dataset, batch):
+    def createImage(
+        self, imageDataStream, imageDataSize, originalName, parentFolder, creator, dataset, batch
+    ):
         if not imageDataSize:
             # Upload().uploadFromFile will do nothing if the image is empty
             # See: https://github.com/girder/girder/issues/2773
@@ -62,16 +62,11 @@ class Image(Item):
 
         newIsicId = Setting().get(PluginSettings.MAX_ISIC_ID) + 1
         image = self.createItem(
-            name='ISIC_%07d' % newIsicId,
-            creator=creator,
-            folder=parentFolder,
-            description=''
+            name='ISIC_%07d' % newIsicId, creator=creator, folder=parentFolder, description=''
         )
         Setting().set(PluginSettings.MAX_ISIC_ID, newIsicId)
 
-        image['privateMeta'] = {
-            'originalFilename': originalName
-        }
+        image['privateMeta'] = {'originalFilename': originalName}
         image['meta'] = {
             'acquisition': {},
             'clinical': {},
@@ -79,17 +74,14 @@ class Image(Item):
             'unstructuredExif': {},
             'tags': [],
             'datasetId': dataset['_id'],
-            'batchId': batch['_id']
+            'batchId': batch['_id'],
         }
         image = Image().save(image)
 
         originalFile = Upload().uploadFromFile(
             obj=imageDataStream,
             size=imageDataSize,
-            name='%s%s' % (
-                image['name'],
-                os.path.splitext(originalName)[1].lower()
-            ),
+            name='%s%s' % (image['name'], os.path.splitext(originalName)[1].lower()),
             parentType='item',
             parent=image,
             user=creator,
@@ -117,9 +109,8 @@ class Image(Item):
         user = User().load(image['creatorId'], force=True, exc=True)
         # Use admin user, to ensure that worker always has access
         token = Token().createToken(
-            user=getAdminUser(),
-            days=1,
-            scope=[TokenScope.DATA_READ, TokenScope.DATA_WRITE])
+            user=getAdminUser(), days=1, scope=[TokenScope.DATA_READ, TokenScope.DATA_WRITE]
+        )
 
         job = ImageItem().createImageItem(image, originalFile, user, token)
         return job
@@ -130,17 +121,15 @@ class Image(Item):
         user = User().load(image['creatorId'], force=True, exc=True)
         # Use admin user, to ensure that worker always has access
         token = Token().createToken(
-            user=getAdminUser(),
-            days=1,
-            scope=[TokenScope.DATA_READ, TokenScope.DATA_WRITE])
+            user=getAdminUser(), days=1, scope=[TokenScope.DATA_READ, TokenScope.DATA_WRITE]
+        )
 
-        with open(os.path.join(
-                os.path.dirname(__file__),
-                '_generate_superpixels.py'), 'r') as scriptStream:
+        with open(
+            os.path.join(os.path.dirname(__file__), '_generate_superpixels.py'), 'r'
+        ) as scriptStream:
             script = scriptStream.read()
 
-        title = 'superpixels v%s generation: %s' % (
-            SUPERPIXEL_VERSION, image['name'])
+        title = 'superpixels v%s generation: %s' % (SUPERPIXEL_VERSION, image['name'])
         job = Job().createJob(
             title=title,
             type='isic_archive_superpixels',
@@ -151,62 +140,59 @@ class Image(Item):
                     'mode': 'python',
                     'script': script,
                     'name': title,
-                    'inputs': [{
-                        'id': 'originalFile',
-                        'type': 'string',
-                        'format': 'text',
-                        'target': 'filepath'
-                    }, {
-                        'id': 'segmentation_helpersPath',
-                        'type': 'string',
-                        'format': 'text',
-                    }],
-                    'outputs': [{
-                        'id': 'superpixelsEncodedBytes',
-                        'type': 'string',
-                        'format': 'text',
-                        'target': 'memory'
-                    }]
+                    'inputs': [
+                        {
+                            'id': 'originalFile',
+                            'type': 'string',
+                            'format': 'text',
+                            'target': 'filepath',
+                        },
+                        {'id': 'segmentation_helpersPath', 'type': 'string', 'format': 'text'},
+                    ],
+                    'outputs': [
+                        {
+                            'id': 'superpixelsEncodedBytes',
+                            'type': 'string',
+                            'format': 'text',
+                            'target': 'memory',
+                        }
+                    ],
                 },
                 'inputs': {
                     'originalFile': workerUtils.girderInputSpec(
-                        resource=self.originalFile(image),
-                        resourceType='file',
-                        token=token),
+                        resource=self.originalFile(image), resourceType='file', token=token
+                    ),
                     'segmentation_helpersPath': {
                         'mode': 'inline',
                         'format': 'text',
-                        'data': segmentation_helpers.__path__[0]
-                    }
+                        'data': segmentation_helpers.__path__[0],
+                    },
                 },
                 'outputs': {
                     'superpixelsEncodedBytes': workerUtils.girderOutputSpec(
                         parent=image,
                         token=token,
                         parentType='item',
-                        name='%s_superpixels_v%s.png' %
-                             (image['name'], SUPERPIXEL_VERSION),
-                        reference=''
+                        name='%s_superpixels_v%s.png' % (image['name'], SUPERPIXEL_VERSION),
+                        reference='',
                     )
                 },
                 'auto_convert': False,
-                'validate': False
+                'validate': False,
             },
             user=user,
             public=False,
-            save=True  # must save to create an _id for workerUtils.jobInfoSpec
+            save=True,  # must save to create an _id for workerUtils.jobInfoSpec
         )
         job['kwargs']['jobInfo'] = workerUtils.jobInfoSpec(
-            job,
-            Job().createJobToken(job),
-            logPrint=True
+            job, Job().createJobToken(job), logPrint=True
         )
         job['meta'] = {
             'creator': 'isic_archive',
             'task': 'generateSuperpixels',
             'imageId': image['_id'],
             'imageName': image['name'],
-            'superpixelsVersion': SUPERPIXEL_VERSION
+            'superpixelsVersion': SUPERPIXEL_VERSION,
         }
         job = Job().save(job)
 
@@ -224,8 +210,8 @@ class Image(Item):
             return
 
         superpixelsFileNameMatch = re.match(
-            r'^%s_superpixels_v([0-9.]+)\.png' % image['name'],
-            superpixelsFile['name'])
+            r'^%s_superpixels_v([0-9.]+)\.png' % image['name'], superpixelsFile['name']
+        )
         if not superpixelsFileNameMatch:
             return
 
@@ -243,11 +229,13 @@ class Image(Item):
     def originalFile(self, image):
         return File().load(
             # TODO: this may fail if large_image allows "small images"
-            image['largeImage']['originalId'], force=True, exc=True)
+            image['largeImage']['originalId'],
+            force=True,
+            exc=True,
+        )
 
     def superpixelsFile(self, image):
-        return File().load(
-            image['superpixelsId'], force=True, exc=True)
+        return File().load(image['superpixelsId'], force=True, exc=True)
 
     def _decodeDataFromFile(self, fileObj):
         filePath = File().getLocalFilePath(fileObj)
@@ -273,23 +261,17 @@ class Image(Item):
         """
         superpixelsFile = self.superpixelsFile(image)
         superpixelsRGBData = self._decodeDataFromFile(superpixelsFile)
-        superpixelsLabelData = ScikitSegmentationHelper._RGBTounit64(
-            superpixelsRGBData)
+        superpixelsLabelData = ScikitSegmentationHelper._RGBTounit64(superpixelsRGBData)
         return superpixelsLabelData
 
     def _findQueryFilter(self, query):
         # assumes collection has been created by provision_utility
         # TODO: cache this value
-        imageCollection = Collection().findOne(
-            {'name': 'Lesion Images'},
-            fields={'_id': 1}
-        )
+        imageCollection = Collection().findOne({'name': 'Lesion Images'}, fields={'_id': 1})
 
         # TODO: this will also include Pre-review images; should it?
         newQuery = query.copy() if query is not None else {}
-        newQuery.update({
-            'baseParentId': imageCollection['_id']
-        })
+        newQuery.update({'baseParentId': imageCollection['_id']})
         return newQuery
 
     def find(self, query=None, **kwargs):
@@ -307,23 +289,23 @@ class Image(Item):
             'name': image['name'],
             'created': image['created'],
             'creator': User().filterSummary(
-                User().load(image['creatorId'], force=True, exc=True),
-                user),
+                User().load(image['creatorId'], force=True, exc=True), user
+            ),
             # TODO: verify that "updated" is set correctly
             'updated': image['updated'],
             'dataset': Dataset().filterSummary(
-                Dataset().load(image['meta']['datasetId'], force=True, exc=True),
-                user),
+                Dataset().load(image['meta']['datasetId'], force=True, exc=True), user
+            ),
             'meta': {
                 'acquisition': image['meta']['acquisition'],
                 'clinical': image['meta']['clinical'],
                 'unstructured': image['meta']['unstructured'],
-                'unstructuredExif': image['meta']['unstructuredExif']
+                'unstructuredExif': image['meta']['unstructuredExif'],
             },
             'notes': {
                 'reviewed': image['meta'].get('reviewed', None),
-                'tags': image['meta']['tags']
-            }
+                'tags': image['meta']['tags'],
+            },
         }
         if User().canReviewDataset(user):
             output['meta']['private'] = image['privateMeta']
@@ -331,14 +313,18 @@ class Image(Item):
         return output
 
     def filterSummary(self, image, user=None):
-        return {
-            '_id': image['_id'],
-            'name': image['name'],
-            'updated': image['updated'],
-        }
+        return {'_id': image['_id'], 'name': image['name'], 'updated': image['updated']}
 
-    def load(self, id, level=AccessType.ADMIN, user=None, objectId=True, force=False, fields=None,
-             exc=False):
+    def load(
+        self,
+        id,
+        level=AccessType.ADMIN,
+        user=None,
+        objectId=True,
+        force=False,
+        fields=None,
+        exc=False,
+    ):
         # Avoid circular import
         from .study import Study
 
@@ -352,7 +338,8 @@ class Image(Item):
 
         try:
             return super(Image, self).load(
-                id, level=level, user=user, objectId=objectId, force=force, fields=fields, exc=exc)
+                id, level=level, user=user, objectId=objectId, force=force, fields=fields, exc=exc
+            )
         except AccessException:
             image = self.load(id, objectId=objectId, force=True, fields=fields, exc=exc)
             if Study().childAnnotations(annotatorUser=user, image=image).count():
@@ -378,74 +365,46 @@ class Image(Item):
             'meta.clinical.mel_ulcer',
             'meta.clinical.anatom_site_general',
             'meta.acquisition.image_type',
-            'meta.acquisition.dermoscopic_type'
+            'meta.acquisition.dermoscopic_type',
         ]
-        tagFacets = [
-            'meta.tags'
-        ]
+        tagFacets = ['meta.tags']
         ordinalFacets = [
-            (
-                'meta.clinical.age_approx',
-                [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
-            ),
+            ('meta.clinical.age_approx', [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]),
             (
                 'meta.clinical.clin_size_long_diam_mm',
                 # [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0,
                 #  16.0, 18.0, 20.0, 100.0, 200.0, 1000.0])
-                [0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0,
-                 70.0, 80.0, 90.0, 100.0, 110.0]
+                [0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0, 110.0],
             ),
-            (
-                'meta.clinical.mel_thick_mm',
-                [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]
-            )
+            ('meta.clinical.mel_thick_mm', [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]),
         ]
 
         # Build and run the pipeline
         folderQuery = {
-            'folderId': {'$in': [
-                dataset['folderId'] for dataset in Dataset().list(user=user)]}
+            'folderId': {'$in': [dataset['folderId'] for dataset in Dataset().list(user=user)]}
         }
         if filterQuery:
-            query = {
-                '$and': [
-                    folderQuery,
-                    filterQuery
-                ]
-            }
+            query = {'$and': [folderQuery, filterQuery]}
         else:
             query = folderQuery
-        facetStages = {
-            '__passedFilters__': [
-                {'$count': 'count'}],
-        }
+        facetStages = {'__passedFilters__': [{'$count': 'count'}]}
         for facetName in categorialFacets:
             facetId = facetName.replace('.', '__')
-            facetStages[facetId] = [
-                {'$sortByCount': '$' + facetName}
-            ]
+            facetStages[facetId] = [{'$sortByCount': '$' + facetName}]
         for facetName in tagFacets:
             facetId = facetName.replace('.', '__')
             facetStages[facetId] = [
-                {'$unwind': {
-                    'path': '$' + facetName,
-                    'preserveNullAndEmptyArrays': True
-                }},
-                {'$sortByCount': '$' + facetName}
+                {'$unwind': {'path': '$' + facetName, 'preserveNullAndEmptyArrays': True}},
+                {'$sortByCount': '$' + facetName},
             ]
         for facetName, boundaries in ordinalFacets:
             facetId = facetName.replace('.', '__')
             facetStages[facetId] = [
-                {'$bucket': {
-                    'groupBy': '$' + facetName,
-                    'boundaries': boundaries,
-                    'default': None
-                }}
+                {'$bucket': {'groupBy': '$' + facetName, 'boundaries': boundaries, 'default': None}}
             ]
-        histogram = next(iter(self.collection.aggregate([
-            {'$match': query},
-            {'$facet': facetStages}
-        ])))
+        histogram = next(
+            iter(self.collection.aggregate([{'$match': query}, {'$facet': facetStages}]))
+        )
 
         # Fix up the pipeline result
         if not histogram['__passedFilters__']:
@@ -453,15 +412,14 @@ class Image(Item):
             histogram['__passedFilters__'] = [{'count': 0}]
         histogram['__passedFilters__'][0]['label'] = 'count'
         for facetName in itertools.chain(
-                categorialFacets,
-                tagFacets,
-                [facetName for facetName, boundaries in ordinalFacets]
+            categorialFacets, tagFacets, [facetName for facetName, boundaries in ordinalFacets]
         ):
             facetId = facetName.replace('.', '__')
             histogram[facetName] = histogram.pop(facetId, [])
             histogram[facetName].sort(
                 # Sort facet bins, placing "None" at the end
-                key=lambda facetBin: (facetBin['_id'] is None, facetBin['_id']))
+                key=lambda facetBin: (facetBin['_id'] is None, facetBin['_id'])
+            )
         for facetName in itertools.chain(categorialFacets, tagFacets):
             for facetBin in histogram[facetName]:
                 facetBin['label'] = facetBin.pop('_id')

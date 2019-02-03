@@ -34,10 +34,7 @@ from ..models.dataset import Dataset
 from ..models.image import Image
 from ..models.user import User
 
-CSV_FORMATS = [
-    'text/csv',
-    'application/vnd.ms-excel'
-]
+CSV_FORMATS = ['text/csv', 'application/vnd.ms-excel']
 
 ZIP_FORMATS = [
     'multipart/x-zip',
@@ -73,8 +70,13 @@ class DatasetResource(IsicResource):
     @describeRoute(
         Description('Return a list of lesion image datasets.')
         .pagingParams(defaultSort='name')
-        .param('detail', 'Display the full information for each image, instead of a summary.',
-               required=False, dataType='boolean', default=False)
+        .param(
+            'detail',
+            'Display the full information for each image, instead of a summary.',
+            required=False,
+            dataType='boolean',
+            default=False,
+        )
         .errorResponse()
     )
     @access.cookie
@@ -87,8 +89,7 @@ class DatasetResource(IsicResource):
         filterFunc = Dataset().filter if detail else Dataset().filterSummary
         return [
             filterFunc(dataset, user)
-            for dataset in
-            Dataset().list(user=user, limit=limit, offset=offset, sort=sort)
+            for dataset in Dataset().list(user=user, limit=limit, offset=offset, sort=sort)
         ]
 
     @describeRoute(
@@ -111,19 +112,27 @@ class DatasetResource(IsicResource):
     @access.user
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.ADMIN)
     def getDatasetAccess(self, dataset, params):
-        return {
-            'access': Dataset().getFullAccessList(dataset),
-            'public': dataset['public']
-        }
+        return {'access': Dataset().getFullAccessList(dataset), 'public': dataset['public']}
 
     @autoDescribeRoute(
         Description('Set the access control list for a dataset.')
-        .modelParam('id', description='The ID of the dataset.', paramType='path',
-                    model='dataset', plugin='isic_archive', level=AccessType.ADMIN)
-        .jsonParam('access', 'The JSON-encoded access control list.', paramType='form',
-                   requireObject=True)
-        .param('public', 'Whether the dataset should be publicly visible.', paramType='form',
-               dataType='boolean')
+        .modelParam(
+            'id',
+            description='The ID of the dataset.',
+            paramType='path',
+            model='dataset',
+            plugin='isic_archive',
+            level=AccessType.ADMIN,
+        )
+        .jsonParam(
+            'access', 'The JSON-encoded access control list.', paramType='form', requireObject=True
+        )
+        .param(
+            'public',
+            'Whether the dataset should be publicly visible.',
+            paramType='form',
+            dataType='boolean',
+        )
         .errorResponse('ID was invalid.')
     )
     @access.user
@@ -157,66 +166,68 @@ class DatasetResource(IsicResource):
             license=params['license'],
             attribution=params['attribution'],
             owner=params['owner'],
-            creatorUser=user
+            creatorUser=user,
         )
 
         return Dataset().filter(dataset, user)
 
     @describeRoute(
         Description('Upload an image to a dataset.')
-        .notes('Send the image data in the request body, as shown in the examples below, '
-               'and the parameters in the query string. '
-               'Note that the examples ignore authentication and error handling.\n\n'
-               'In the examples, `file` is a '
-               '[File](https://developer.mozilla.org/en-US/docs/Web/API/File) object, '
-               'for example from an [&lt;input type="file"&gt;]'
-               '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file) '
-               'element or a drag and drop operation\'s [DataTransfer]'
-               '(https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer) object.\n\n'
-               'Example using [XMLHttpRequest]'
-               '(https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest):\n'
-               '```\n'
-               'var req = new XMLHttpRequest();\n'
-               'req.open(\'POST\', url, true); // url includes parameters\n'
-               'req.onload = function (event) {\n'
-               '    // Uploaded\n'
-               '};\n'
-               'req.setRequestHeader(\'Content-Type\', \'image/jpeg\');\n'
-               'req.send(file);\n'
-               '```\n\n'
-               'Example using [jQuery.ajax()](http://api.jquery.com/jquery.ajax/):\n'
-               '```\n'
-               '$.ajax({\n'
-               '     url: url, // url includes parameters\n'
-               '     method: \'POST\',\n'
-               '     data: file,\n'
-               '     contentType: \'image/jpeg\',\n'
-               '     processData: false,\n'
-               '}).done(function (resp) {\n'
-               '    // Uploaded\n'
-               '});\n'
-               '```\n\n'
-               'Example using [axios](https://github.com/axios/axios):\n'
-               '```\n'
-               'axios({\n'
-               '    method: \'post\',\n'
-               '    url: url,\n'
-               '    params: {\n'
-               '        filename: \'my_image.jpg\',\n'
-               '        signature: \'my signature\',\n'
-               '    },\n'
-               '    data: file,\n'
-               '    headers: {\n'
-               '        \'Content-Type\': \'image/jpeg\',\n'
-               '    }\n'
-               '}).then(function (resp) {\n'
-               '    // Uploaded\n'
-               '});\n'
-               '```\n\n'
-               'Note that files uploaded in the request body are not supported by '
-               '[OpenAPI 2.0](https://swagger.io/docs/specification/2-0/file-upload/), '
-               'so it\'s currently not possible to use this endpoint from the Swagger UI '
-               'interface.')
+        .notes(
+            'Send the image data in the request body, as shown in the examples below, '
+            'and the parameters in the query string. '
+            'Note that the examples ignore authentication and error handling.\n\n'
+            'In the examples, `file` is a '
+            '[File](https://developer.mozilla.org/en-US/docs/Web/API/File) object, '
+            'for example from an [&lt;input type="file"&gt;]'
+            '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file) '
+            'element or a drag and drop operation\'s [DataTransfer]'
+            '(https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer) object.\n\n'
+            'Example using [XMLHttpRequest]'
+            '(https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest):\n'
+            '```\n'
+            'var req = new XMLHttpRequest();\n'
+            'req.open(\'POST\', url, true); // url includes parameters\n'
+            'req.onload = function (event) {\n'
+            '    // Uploaded\n'
+            '};\n'
+            'req.setRequestHeader(\'Content-Type\', \'image/jpeg\');\n'
+            'req.send(file);\n'
+            '```\n\n'
+            'Example using [jQuery.ajax()](http://api.jquery.com/jquery.ajax/):\n'
+            '```\n'
+            '$.ajax({\n'
+            '     url: url, // url includes parameters\n'
+            '     method: \'POST\',\n'
+            '     data: file,\n'
+            '     contentType: \'image/jpeg\',\n'
+            '     processData: false,\n'
+            '}).done(function (resp) {\n'
+            '    // Uploaded\n'
+            '});\n'
+            '```\n\n'
+            'Example using [axios](https://github.com/axios/axios):\n'
+            '```\n'
+            'axios({\n'
+            '    method: \'post\',\n'
+            '    url: url,\n'
+            '    params: {\n'
+            '        filename: \'my_image.jpg\',\n'
+            '        signature: \'my signature\',\n'
+            '    },\n'
+            '    data: file,\n'
+            '    headers: {\n'
+            '        \'Content-Type\': \'image/jpeg\',\n'
+            '    }\n'
+            '}).then(function (resp) {\n'
+            '    // Uploaded\n'
+            '});\n'
+            '```\n\n'
+            'Note that files uploaded in the request body are not supported by '
+            '[OpenAPI 2.0](https://swagger.io/docs/specification/2-0/file-upload/), '
+            'so it\'s currently not possible to use this endpoint from the Swagger UI '
+            'interface.'
+        )
         # Note: OpenAPI 3.0 supports files uploaded in the request body, but Swagger GUI may not
         # properly display the file upload UI. See:
         # - https://swagger.io/docs/specification/describing-request-body/file-upload/
@@ -254,7 +265,8 @@ class DatasetResource(IsicResource):
             imageDataSize=imageDataSize,
             filename=filename,
             signature=signature,
-            user=user)
+            user=user,
+        )
 
         return Image().filter(image, user=user)
 
@@ -288,88 +300,90 @@ class DatasetResource(IsicResource):
 
         # TODO: make this return something
         Dataset().addZipBatch(
-            dataset=dataset, zipFile=zipFile, signature=signature, user=user, sendMail=True)
+            dataset=dataset, zipFile=zipFile, signature=signature, user=user, sendMail=True
+        )
 
     @describeRoute(
         Description('Initiate a direct-to-S3 upload of a ZIP file of images.')
-        .notes('This endpoint returns information that allows the client to upload a '
-               'ZIP file of images directly to an Amazon Web Services (AWS) S3 bucket.'
-               '\n\n'
-               'It\'s recommended that the client use an AWS SDK, such as '
-               '[Boto 3](https://github.com/boto/boto3) or '
-               '[AWS SDK for JavaScript](https://github.com/aws/aws-sdk-js), '
-               'to simplify authenticating and uploading the file.'
-               '\n\n'
-               'More specifically, this endpoint returns a JSON response that includes:\n'
-               '- Temporary security credentials to authenticate with AWS:\n'
-               '  - `accessKeyId`\n'
-               '  - `secretAccessKey`\n'
-               '  - `sessionToken`\n'
-               '- An S3 bucket name and object key in which to upload the file:\n'
-               '  - `bucketName`\n'
-               '  - `objectKey`\n'
-               '- A batch identifier for subsequent API calls:\n'
-               '  - `batchId`\n'
-               '\n\n'
-               'After calling this endpoint, the client should use this information to upload '
-               'the ZIP file directly to S3, as shown in the examples below.'
-               '\n\n'
-               '#### Example using Boto 3\n'
-               '```\n'
-               'import boto3\n'
-               's3 = boto3.client(\n'
-               '    \'s3\',\n'
-               '    aws_access_key_id=response[\'accessKeyId\'],\n'
-               '    aws_secret_access_key=response[\'secretAccessKey\'],\n'
-               '    aws_session_token=response[\'sessionToken\']\n'
-               ')\n'
-               '\n'
-               'with open(\'images.zip\', \'rb\') as data:\n'
-               '    s3.upload_fileobj(\n'
-               '        Fileobj=data,\n'
-               '        Bucket=response[\'bucketName\'],\n'
-               '        Key=response[\'objectKey\']\n'
-               '    )\n'
-               '\n'
-               '# Store batch identifier\n'
-               'batchId = response[\'batchId\']\n'
-               '```\n\n'
-               '#### Example using AWS SDK for JavaScript\n'
-               '```\n'
-               'AWS.config.update({\n'
-               '    accessKeyId: response.accessKeyId,\n'
-               '    secretAccessKey: response.secretAccessKey,\n'
-               '    sessionToken: response.sessionToken\n'
-               '});\n'
-               '\n'
-               '// Store batch identifier\n'
-               'var batchId = response.batchId;\n'
-               '\n'
-               'var s3 = new AWS.S3({\n'
-               '    apiVersion: \'2006-03-01\'\n'
-               '});\n'
-               '\n'
-               'var params = {\n'
-               '    Bucket: response.bucketName,\n'
-               '    Key: response.objectKey,\n'
-               '    Body: data\n'
-               '};\n'
-               's3.upload(params, function (err, data) {\n'
-               '    if (err) {\n'
-               '        console.log(\"Error\", err);\n'
-               '    } else {\n'
-               '        // Uploaded\n'
-               '    }\n'
-               '});\n'
-               '```\n\n'
-               '#### Finalizing the upload\n'
-               '\n\n'
-               'To finalize the upload, the client should call '
-               '`POST /dataset/{id}/zip/{batchId}`.'
-               '\n\n'
-               'To cancel the upload, the client should call '
-               '`DELETE /dataset/{id}/zip/{batchId}`.'
-               )
+        .notes(
+            'This endpoint returns information that allows the client to upload a '
+            'ZIP file of images directly to an Amazon Web Services (AWS) S3 bucket.'
+            '\n\n'
+            'It\'s recommended that the client use an AWS SDK, such as '
+            '[Boto 3](https://github.com/boto/boto3) or '
+            '[AWS SDK for JavaScript](https://github.com/aws/aws-sdk-js), '
+            'to simplify authenticating and uploading the file.'
+            '\n\n'
+            'More specifically, this endpoint returns a JSON response that includes:\n'
+            '- Temporary security credentials to authenticate with AWS:\n'
+            '  - `accessKeyId`\n'
+            '  - `secretAccessKey`\n'
+            '  - `sessionToken`\n'
+            '- An S3 bucket name and object key in which to upload the file:\n'
+            '  - `bucketName`\n'
+            '  - `objectKey`\n'
+            '- A batch identifier for subsequent API calls:\n'
+            '  - `batchId`\n'
+            '\n\n'
+            'After calling this endpoint, the client should use this information to upload '
+            'the ZIP file directly to S3, as shown in the examples below.'
+            '\n\n'
+            '#### Example using Boto 3\n'
+            '```\n'
+            'import boto3\n'
+            's3 = boto3.client(\n'
+            '    \'s3\',\n'
+            '    aws_access_key_id=response[\'accessKeyId\'],\n'
+            '    aws_secret_access_key=response[\'secretAccessKey\'],\n'
+            '    aws_session_token=response[\'sessionToken\']\n'
+            ')\n'
+            '\n'
+            'with open(\'images.zip\', \'rb\') as data:\n'
+            '    s3.upload_fileobj(\n'
+            '        Fileobj=data,\n'
+            '        Bucket=response[\'bucketName\'],\n'
+            '        Key=response[\'objectKey\']\n'
+            '    )\n'
+            '\n'
+            '# Store batch identifier\n'
+            'batchId = response[\'batchId\']\n'
+            '```\n\n'
+            '#### Example using AWS SDK for JavaScript\n'
+            '```\n'
+            'AWS.config.update({\n'
+            '    accessKeyId: response.accessKeyId,\n'
+            '    secretAccessKey: response.secretAccessKey,\n'
+            '    sessionToken: response.sessionToken\n'
+            '});\n'
+            '\n'
+            '// Store batch identifier\n'
+            'var batchId = response.batchId;\n'
+            '\n'
+            'var s3 = new AWS.S3({\n'
+            '    apiVersion: \'2006-03-01\'\n'
+            '});\n'
+            '\n'
+            'var params = {\n'
+            '    Bucket: response.bucketName,\n'
+            '    Key: response.objectKey,\n'
+            '    Body: data\n'
+            '};\n'
+            's3.upload(params, function (err, data) {\n'
+            '    if (err) {\n'
+            '        console.log(\"Error\", err);\n'
+            '    } else {\n'
+            '        // Uploaded\n'
+            '    }\n'
+            '});\n'
+            '```\n\n'
+            '#### Finalizing the upload\n'
+            '\n\n'
+            'To finalize the upload, the client should call '
+            '`POST /dataset/{id}/zip/{batchId}`.'
+            '\n\n'
+            'To cancel the upload, the client should call '
+            '`DELETE /dataset/{id}/zip/{batchId}`.'
+        )
         .param('id', 'The ID of the dataset.', paramType='path')
         .param('signature', 'Signature of license agreement.', paramType='form')
     )
@@ -411,8 +425,10 @@ class DatasetResource(IsicResource):
 
     @describeRoute(
         Description('Finalize a direct-to-S3 upload of a ZIP file of images.')
-        .notes('Call this after uploading the ZIP file of images to S3. '
-               'The images in the ZIP file will be added to the dataset.')
+        .notes(
+            'Call this after uploading the ZIP file of images to S3. '
+            'The images in the ZIP file will be added to the dataset.'
+        )
         .param('id', 'The ID of the dataset.', paramType='path')
         .param('batchId', 'The ID of the batch.', paramType='path')
     )
@@ -448,15 +464,11 @@ class DatasetResource(IsicResource):
         limit = int(params.get('limit', 50))
 
         output = [
-            {
-                field: image[field]
-                for field in
-                ['_id', 'name', 'updated', 'description', 'meta']
-            }
-            for image in
-            Image().find(
+            {field: image[field] for field in ['_id', 'name', 'updated', 'description', 'meta']}
+            for image in Image().find(
                 {'folderId': prereviewFolder['_id']},
-                limit=limit, sort=[('name', SortDir.ASCENDING)]
+                limit=limit,
+                sort=[('name', SortDir.ASCENDING)],
             )
         ]
 
@@ -494,8 +506,9 @@ class DatasetResource(IsicResource):
         return {'status': 'success'}
 
     @describeRoute(
-        Description('Get registered metadata for a dataset.')
-        .param('id', 'The ID of the dataset.', paramType='path')
+        Description('Get registered metadata for a dataset.').param(
+            'id', 'The ID of the dataset.', paramType='path'
+        )
     )
     @access.user
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
@@ -508,22 +521,23 @@ class DatasetResource(IsicResource):
             # TODO: "File().load" can use the "fields" argument and be expressed
             # as a comprehension, once the fix from upstream Girder is available
             metadataFile = File().load(registration['fileId'], force=True, exc=True)
-            output.append({
-                'file': {
-                    '_id': metadataFile['_id'],
-                    'name': metadataFile['name']
-                },
-                'user': User().filterSummary(
-                    User().load(registration['userId'], force=True, exc=True),
-                    user),
-                'time': registration['time']
-            })
+            output.append(
+                {
+                    'file': {'_id': metadataFile['_id'], 'name': metadataFile['name']},
+                    'user': User().filterSummary(
+                        User().load(registration['userId'], force=True, exc=True), user
+                    ),
+                    'time': registration['time'],
+                }
+            )
         return output
 
     @describeRoute(
         Description('Register metadata with a dataset.')
-        .notes('Send the CSV metadata data in the request body with '
-               'the `Content-Type` header set to `text/csv`.')
+        .notes(
+            'Send the CSV metadata data in the request body with '
+            'the `Content-Type` header set to `text/csv`.'
+        )
         .param('id', 'The ID of the dataset.', paramType='path')
         .param('filename', 'The metadata filename.', paramType='query')
     )
@@ -543,8 +557,12 @@ class DatasetResource(IsicResource):
             raise RestException('No data provided in request body.')
 
         Dataset().registerMetadata(
-            dataset=dataset, user=user, metadataDataStream=metadataDataStream, filename=filename,
-            sendMail=True)
+            dataset=dataset,
+            user=user,
+            metadataDataStream=metadataDataStream,
+            filename=filename,
+            sendMail=True,
+        )
         # TODO: return value?
         return {'status': 'success'}
 
@@ -558,8 +576,10 @@ class DatasetResource(IsicResource):
         """
         if file['mimeType'] in formats:
             return True
-        if file['mimeType'] in ['application/octet-stream', None] and \
-                mimetypes.guess_type(file['name'], strict=False)[0] in formats:
+        if (
+            file['mimeType'] in ['application/octet-stream', None]
+            and mimetypes.guess_type(file['name'], strict=False)[0] in formats
+        ):
             return True
         return False
 
@@ -600,8 +620,13 @@ class DatasetResource(IsicResource):
         Description('Apply registered metadata to a dataset.')
         .param('id', 'The ID of the dataset.', paramType='path')
         .param('metadataFileId', 'The ID of the .csv metadata file.', paramType='path')
-        .param('save', 'Whether to save the metadata to the dataset if validation succeeds.',
-               dataType='boolean', default=False, paramType='form')
+        .param(
+            'save',
+            'Whether to save the metadata to the dataset if validation succeeds.',
+            dataType='boolean',
+            default=False,
+            paramType='form',
+        )
     )
     @access.user
     # File is attached to dataset, so access level refers to permission on dataset
@@ -613,14 +638,17 @@ class DatasetResource(IsicResource):
         save = self.boolParam('save', params)
 
         errors, warnings = Dataset().applyMetadata(
-            dataset=dataset, metadataFile=metadataFile, save=save)
+            dataset=dataset, metadataFile=metadataFile, save=save
+        )
         return {
             'errors': [{'description': description} for description in errors],
-            'warnings': [{'description': description} for description in warnings]
+            'warnings': [{'description': description} for description in warnings],
         }
 
     def _requireMetadataFile(self, dataset, metadataFile):
         """Raise a ValidationException if the metadata file is not registered with the dataset."""
-        if metadataFile is None or not any(registration['fileId'] == metadataFile['_id']
-                                           for registration in dataset['metadataFiles']):
+        if metadataFile is None or not any(
+            registration['fileId'] == metadataFile['_id']
+            for registration in dataset['metadataFiles']
+        ):
             raise ValidationException('Metadata file ID is not registered.', 'metadataFileId')

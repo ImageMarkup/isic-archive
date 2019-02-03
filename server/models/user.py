@@ -35,8 +35,7 @@ class User(GirderUser):
         # Note, this will not expose this field though the upstream User API
         self.exposeFields(level=AccessType.READ, fields=('acceptTerms',))
 
-        events.bind('model.user.save.created',
-                    'onUserCreated', self._onUserCreated)
+        events.bind('model.user.save.created', 'onUserCreated', self._onUserCreated)
 
     def _onUserCreated(self, event):
         user = event.info
@@ -48,7 +47,7 @@ class User(GirderUser):
                 doc=user,
                 group=Group().findOne({'name': 'Study Administrators'}),
                 level=AccessType.READ,
-                save=False
+                save=False,
             )
         self.save(user)
 
@@ -65,10 +64,7 @@ class User(GirderUser):
         return obfuscatedName
 
     def filterSummary(self, user, accessorUser):
-        userSummary = {
-            '_id': user['_id'],
-            'name': self.obfuscatedName(user)
-        }
+        userSummary = {'_id': user['_id'], 'name': self.obfuscatedName(user)}
         if self.hasAccess(user, accessorUser):
             for field in ['login', 'firstName', 'lastName']:
                 userSummary[field] = user[field]
@@ -92,8 +88,7 @@ class User(GirderUser):
 
     def requireAcceptTerms(self, user):
         if not self.canAcceptTerms(user):
-            raise AccessException(
-                'The user has not accepted the Terms of Use.')
+            raise AccessException('The user has not accepted the Terms of Use.')
 
     def canCreateDataset(self, user):
         return self._isAdminOrMember(user, 'Dataset Contributors')
@@ -101,8 +96,8 @@ class User(GirderUser):
     def requireCreateDataset(self, user):
         if not self.canCreateDataset(user):
             raise AccessException(
-                'Only members of the Dataset Contributors group can create '
-                'datasets.')
+                'Only members of the Dataset Contributors group can create ' 'datasets.'
+            )
 
     def canReviewDataset(self, user):
         return self._isAdminOrMember(user, 'Dataset QC Reviewers')
@@ -110,8 +105,8 @@ class User(GirderUser):
     def requireReviewDataset(self, user):
         if not self.canReviewDataset(user):
             raise AccessException(
-                'Only members of the Dataset QC Reviewers group can review '
-                'datasets.')
+                'Only members of the Dataset QC Reviewers group can review ' 'datasets.'
+            )
 
     def getSegmentationSkill(self, user):
         # Avoid circular import
@@ -131,7 +126,8 @@ class User(GirderUser):
         if self.getSegmentationSkill(user) is None:
             raise AccessException(
                 'Only members of the Segmentation Experts and Segmentation '
-                'Novices groups can create or review segmentations.')
+                'Novices groups can create or review segmentations.'
+            )
 
     def canAdminStudy(self, user):
         return self._isAdminOrMember(user, 'Study Administrators')
@@ -139,4 +135,5 @@ class User(GirderUser):
     def requireAdminStudy(self, user):
         if not self.canAdminStudy(user):
             raise AccessException(
-                'Only members of the Study Administrators group can perform this action.')
+                'Only members of the Study Administrators group can perform this action.'
+            )

@@ -30,12 +30,14 @@ class Batch(Model):
     def createBatch(self, dataset, creator, signature):
         now = datetime.datetime.utcnow()
 
-        batch = self.save({
-            'datasetId': dataset['_id'],
-            'created': now,
-            'creatorId': creator['_id'],
-            'signature': signature
-        })
+        batch = self.save(
+            {
+                'datasetId': dataset['_id'],
+                'created': now,
+                'creatorId': creator['_id'],
+                'signature': signature,
+            }
+        )
         return batch
 
     def remove(self, batch, **kwargs):

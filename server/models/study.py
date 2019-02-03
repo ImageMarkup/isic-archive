@@ -32,13 +32,11 @@ from .image import Image
 from .user import User
 
 
-_masterFeaturesPath = os.path.normpath(os.path.join(
-    os.path.dirname(__file__), '..', '..', 'web_external', 'masterFeatures.json'
-))
+_masterFeaturesPath = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), '..', '..', 'web_external', 'masterFeatures.json')
+)
 with open(_masterFeaturesPath, 'rb') as _masterFeaturesStream:
-    MASTER_FEATURES = [
-        feature['id'] for feature in json.load(_masterFeaturesStream)
-    ]
+    MASTER_FEATURES = [feature['id'] for feature in json.load(_masterFeaturesStream)]
 
 
 class Study(Folder):
@@ -62,11 +60,7 @@ class Study(Folder):
         from .annotation import Annotation
 
         # validate the new questions and features before anything else
-        studyMeta = {
-            'questions': questions,
-            'features': features,
-            'participationRequests': []
-        }
+        studyMeta = {'questions': questions, 'features': features, 'participationRequests': []}
         self.validate({'meta': studyMeta})
 
         try:
@@ -77,7 +71,7 @@ class Study(Folder):
                 parentType='collection',
                 public=False,
                 creator=creatorUser,
-                allowRename=False
+                allowRename=False,
             )
         except ValidationException as e:
             # Reword the validation error message
@@ -87,23 +81,19 @@ class Study(Folder):
                 raise
 
         # Clear all inherited accesses
-        study = self.setAccessList(
-            doc=study,
-            access={},
-            save=False)
+        study = self.setAccessList(doc=study, access={}, save=False)
         # Allow study admins to read
         study = self.setGroupAccess(
             doc=study,
             group=Group().findOne({'name': 'Study Administrators'}),
             level=AccessType.READ,
-            save=False)
+            save=False,
+        )
         # Allow annotators to read study (since annotations delegate their access to study)
         for annotatorUser in annotatorUsers:
             study = self.setUserAccess(
-                doc=study,
-                user=annotatorUser,
-                level=AccessType.READ,
-                save=False)
+                doc=study, user=annotatorUser, level=AccessType.READ, save=False
+            )
 
         study['meta'] = studyMeta
         study = self.save(study)
@@ -119,11 +109,7 @@ class Study(Folder):
         from .annotation import Annotation
 
         # Allow annotator to read parent study
-        study = self.setUserAccess(
-            doc=study,
-            user=annotatorUser,
-            level=AccessType.READ,
-            save=True)
+        study = self.setUserAccess(doc=study, user=annotatorUser, level=AccessType.READ, save=True)
 
         # Remove request from the user to participate in the study
         study = self.removeParticipationRequest(study, annotatorUser)
@@ -163,9 +149,7 @@ class Study(Folder):
 
     def getAnnotators(self, study):
         userIds = self.childAnnotations(study).distinct('userId')
-        return User().find({
-            '_id': {'$in': userIds}
-        })
+        return User().find({'_id': {'$in': userIds}})
 
     def getImages(self, study):
         imageIds = self.childAnnotations(study).distinct('imageId')
@@ -174,8 +158,7 @@ class Study(Folder):
     def addParticipationRequest(self, study, user):
         """Add a request from a user to participate in the study."""
         self.update(
-            {'_id': study['_id']},
-            {'$addToSet': {'meta.participationRequests': user['_id']}}
+            {'_id': study['_id']}, {'$addToSet': {'meta.participationRequests': user['_id']}}
         )
 
     def removeParticipationRequest(self, study, user):
@@ -184,8 +167,7 @@ class Study(Folder):
             # The update query is a no-op if the value isn't found, but there's no reason to run it
             # unless necessary
             self.update(
-                {'_id': study['_id']},
-                {'$pull': {'meta.participationRequests': user['_id']}}
+                {'_id': study['_id']}, {'$pull': {'meta.participationRequests': user['_id']}}
             )
             study['meta']['participationRequests'].remove(user['_id'])
         return study
@@ -197,12 +179,9 @@ class Study(Folder):
 
     def participationRequests(self, study):
         """Get the list of users requesting to participate in the study."""
-        return User().find({
-            '_id': {'$in': study['meta']['participationRequests']}
-        })
+        return User().find({'_id': {'$in': study['meta']['participationRequests']}})
 
-    def childAnnotations(self, study=None, annotatorUser=None,
-                         image=None, state=None, **kwargs):
+    def childAnnotations(self, study=None, annotatorUser=None, image=None, state=None, **kwargs):
         # Avoid circular import
         from .annotation import Annotation
 
@@ -224,25 +203,18 @@ class Study(Folder):
 
     def _findQueryFilter(self, query, annotatorUser, state):
         newQuery = query.copy() if query is not None else {}
-        newQuery.update({
-            'parentId': self.loadStudyCollection()['_id']
-        })
+        newQuery.update({'parentId': self.loadStudyCollection()['_id']})
         if state or annotatorUser:
-            annotations = self.childAnnotations(
-                annotatorUser=annotatorUser,
-                state=state
-            )
-            newQuery.update({
-                '_id': {'$in': annotations.distinct('studyId')}
-            })
+            annotations = self.childAnnotations(annotatorUser=annotatorUser, state=state)
+            newQuery.update({'_id': {'$in': annotations.distinct('studyId')}})
         return newQuery
 
     def list(self, user=None, limit=0, offset=0, sort=None):
         """Return a paginated list of studies that a user may access."""
         cursor = self.find({}, sort=sort)
         return self.filterResultsByPermission(
-            cursor=cursor, user=user, level=AccessType.READ, limit=limit,
-            offset=offset)
+            cursor=cursor, user=user, level=AccessType.READ, limit=limit, offset=offset
+        )
 
     def find(self, query=None, annotatorUser=None, state=None, **kwargs):
         studyQuery = self._findQueryFilter(query, annotatorUser, state)
@@ -259,13 +231,10 @@ class Study(Folder):
         # Get list of users sorted by name
         def getSortedUserList(users):
             return sorted(
-                (
-                    User().filterSummary(studyUser, user)
-                    for studyUser in
-                    users
-                ),
+                (User().filterSummary(studyUser, user) for studyUser in users),
                 # Sort by the obfuscated name
-                key=lambda user: user['name'])
+                key=lambda user: user['name'],
+            )
 
         output = {
             '_id': study['_id'],
@@ -274,35 +243,33 @@ class Study(Folder):
             'description': study['description'],
             'created': study['created'],
             'creator': User().filterSummary(
-                User().load(study['creatorId'], force=True, exc=True),
-                user),
+                User().load(study['creatorId'], force=True, exc=True), user
+            ),
             # TODO: verify that "updated" is set correctly
             'updated': study['updated'],
             'users': getSortedUserList(self.getAnnotators(study)),
             'images': list(
                 Image().filterSummary(image, user)
-                for image in
-                self.getImages(study).sort('name', SortDir.ASCENDING)
+                for image in self.getImages(study).sort('name', SortDir.ASCENDING)
             ),
             'questions': study['meta']['questions'],
             'features': study['meta']['features'],
             'userCompletion': {
                 str(annotatorComplete['_id']): annotatorComplete['count']
-                for annotatorComplete in
-                Annotation().collection.aggregate([
-                    {'$match': {
-                        'studyId': study['_id'],
-                    }},
-                    {'$group': {
-                        '_id': '$userId',
-                        'count': {'$sum': {'$cond': {
-                            'if': '$stopTime',
-                            'then': 1,
-                            'else': 0
-                        }}}
-                    }}
-                ])
-            }
+                for annotatorComplete in Annotation().collection.aggregate(
+                    [
+                        {'$match': {'studyId': study['_id']}},
+                        {
+                            '$group': {
+                                '_id': '$userId',
+                                'count': {
+                                    '$sum': {'$cond': {'if': '$stopTime', 'then': 1, 'else': 0}}
+                                },
+                            }
+                        },
+                    ]
+                )
+            },
         }
 
         if User().canAdminStudy(user):
@@ -344,19 +311,19 @@ class Study(Folder):
                             'id': {
                                 'description': 'The question text',
                                 'type': 'string',
-                                'minLength': 1
+                                'minLength': 1,
                             },
                             'type': {
                                 'description': 'The question type',
                                 'type': 'string',
-                                'enum': ['select']
+                                'enum': ['select'],
                             },
                             'choices': {
                                 'type': 'array',
                                 'items': {
                                     'description': 'A possible response value',
                                     'type': 'string',
-                                    'minLength': 1
+                                    'minLength': 1,
                                 },
                                 'minItems': 2,
                                 'uniqueItems': True,
@@ -365,16 +332,9 @@ class Study(Folder):
                         'required': ['id', 'type'],
                         'additionalProperties': False,
                         'anyOf': [
-                            {
-                                'properties': {
-                                    'type': {
-                                        'enum': ['select']
-                                    }
-                                },
-                                'required': ['choices']
-                            }
+                            {'properties': {'type': {'enum': ['select']}}, 'required': ['choices']}
                             # Add validators for other types here
-                        ]
+                        ],
                     },
                     'uniqueItems': True,
                 },
@@ -382,14 +342,9 @@ class Study(Folder):
                     'type': 'array',
                     'items': {
                         'type': 'object',
-                        'properties': {
-                            'id': {
-                                'type': 'string',
-                                'enum': MASTER_FEATURES
-                            }
-                        },
+                        'properties': {'id': {'type': 'string', 'enum': MASTER_FEATURES}},
                         'required': ['id'],
-                        'additionalProperties': False
+                        'additionalProperties': False,
                     },
                     'uniqueItems': True,
                 },
@@ -402,7 +357,7 @@ class Study(Folder):
                 },
             },
             'required': ['questions', 'features', 'participationRequests'],
-            'additionalProperties': False
+            'additionalProperties': False,
         }
         if 'meta' in doc:
             # When first saved, the the doc does not have 'meta'

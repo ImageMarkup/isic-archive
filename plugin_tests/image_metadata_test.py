@@ -51,61 +51,39 @@ addImageMetadata = None
 
 
 def setUpModule():
-    isicModelsModulePath = os.path.abspath(os.path.join(
-        os.path.dirname(__file__), '..', 'server', 'models'))
+    isicModelsModulePath = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), '..', 'server', 'models')
+    )
     if isicModelsModulePath not in sys.path:
         sys.path.append(isicModelsModulePath)
 
-    global \
-        MetadataFieldException, \
-        MetadataFieldNotFoundException, \
-        MetadataValueExistsException, \
-        MultipleFieldException, \
-        BadFieldTypeException, \
-        AgeFieldParser, \
-        SexFieldParser, \
-        FamilyHxMmFieldParser, \
-        PersonalHxMmFieldParser, \
-        ClinicalSizeFieldParser, \
-        MelanocyticFieldParser, \
-        DiagnosisConfirmTypeFieldParser, \
-        BenignMalignantFieldParser, \
-        DiagnosisFieldParser, \
-        NevusTypeFieldParser, \
-        ImageTypeFieldParser, \
-        DermoscopicTypeFieldParser, \
-        MelThickMmFieldParser, \
-        MelClassFieldParser, \
-        MelTypeFieldParser, \
-        MelMitoticIndexFieldParser, \
-        MelUlcerFieldParser, \
-        GeneralAnatomicSiteFieldParser, \
-        addImageMetadata
-    from dataset_helpers.image_metadata import \
-        MetadataFieldException, \
-        MetadataFieldNotFoundException, \
-        MetadataValueExistsException, \
-        MultipleFieldException, \
-        BadFieldTypeException, \
-        AgeFieldParser, \
-        SexFieldParser, \
-        FamilyHxMmFieldParser, \
-        PersonalHxMmFieldParser, \
-        ClinicalSizeFieldParser, \
-        MelanocyticFieldParser, \
-        DiagnosisConfirmTypeFieldParser, \
-        BenignMalignantFieldParser, \
-        DiagnosisFieldParser, \
-        NevusTypeFieldParser, \
-        ImageTypeFieldParser, \
-        DermoscopicTypeFieldParser, \
-        MelThickMmFieldParser, \
-        MelClassFieldParser, \
-        MelTypeFieldParser, \
-        MelMitoticIndexFieldParser, \
-        MelUlcerFieldParser, \
-        GeneralAnatomicSiteFieldParser, \
-        addImageMetadata
+    global MetadataFieldException, MetadataFieldNotFoundException, MetadataValueExistsException, MultipleFieldException, BadFieldTypeException, AgeFieldParser, SexFieldParser, FamilyHxMmFieldParser, PersonalHxMmFieldParser, ClinicalSizeFieldParser, MelanocyticFieldParser, DiagnosisConfirmTypeFieldParser, BenignMalignantFieldParser, DiagnosisFieldParser, NevusTypeFieldParser, ImageTypeFieldParser, DermoscopicTypeFieldParser, MelThickMmFieldParser, MelClassFieldParser, MelTypeFieldParser, MelMitoticIndexFieldParser, MelUlcerFieldParser, GeneralAnatomicSiteFieldParser, addImageMetadata
+    from dataset_helpers.image_metadata import (
+        MetadataFieldException,
+        MetadataFieldNotFoundException,
+        MetadataValueExistsException,
+        MultipleFieldException,
+        BadFieldTypeException,
+        AgeFieldParser,
+        SexFieldParser,
+        FamilyHxMmFieldParser,
+        PersonalHxMmFieldParser,
+        ClinicalSizeFieldParser,
+        MelanocyticFieldParser,
+        DiagnosisConfirmTypeFieldParser,
+        BenignMalignantFieldParser,
+        DiagnosisFieldParser,
+        NevusTypeFieldParser,
+        ImageTypeFieldParser,
+        DermoscopicTypeFieldParser,
+        MelThickMmFieldParser,
+        MelClassFieldParser,
+        MelTypeFieldParser,
+        MelMitoticIndexFieldParser,
+        MelUlcerFieldParser,
+        GeneralAnatomicSiteFieldParser,
+        addImageMetadata,
+    )
 
 
 class ImageMetadataTestCase(base.TestCase):
@@ -120,13 +98,8 @@ class ImageMetadataTestCase(base.TestCase):
     def _createImage(self):
         """Create an empty mock image object."""
         image = {
-            'meta': {
-                'acquisition': {},
-                'clinical': {},
-                'unstructured': {},
-                'unstructuredExif': {}
-            },
-            'privateMeta': {}
+            'meta': {'acquisition': {}, 'clinical': {}, 'unstructured': {}, 'unstructuredExif': {}},
+            'privateMeta': {},
         }
         return image
 
@@ -677,7 +650,7 @@ class ImageMetadataTestCase(base.TestCase):
             'histopathology',
             'serial imaging showing no change',
             'SINGLE IMAGE EXPERT CONSENSUS',
-            '  confocal microscopy WITH consensus dermoscopy  '
+            '  confocal microscopy WITH consensus dermoscopy  ',
         ]:
             data = {'diagnosis_confirm_type': value}
             image = self._createImage()
@@ -685,8 +658,8 @@ class ImageMetadataTestCase(base.TestCase):
             self.assertDictEqual({}, data)
             self.assertDictEqual({}, image['meta']['unstructured'])
             self.assertDictEqual(
-                {'diagnosis_confirm_type': value.strip().lower()},
-                image['meta']['clinical'])
+                {'diagnosis_confirm_type': value.strip().lower()}, image['meta']['clinical']
+            )
             self.assertDictEqual({}, image['privateMeta'])
 
         # Invalid value
@@ -712,8 +685,8 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
         self.assertDictEqual(
-            {'diagnosis_confirm_type': 'histopathology'},
-            image['meta']['clinical'])
+            {'diagnosis_confirm_type': 'histopathology'}, image['meta']['clinical']
+        )
         self.assertDictEqual({}, image['privateMeta'])
 
         # Update existing value with same value
@@ -724,8 +697,8 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
         self.assertDictEqual(
-            {'diagnosis_confirm_type': 'histopathology'},
-            image['meta']['clinical'])
+            {'diagnosis_confirm_type': 'histopathology'}, image['meta']['clinical']
+        )
         self.assertDictEqual({}, image['privateMeta'])
 
         # Update existing value with null value
@@ -759,7 +732,7 @@ class ImageMetadataTestCase(base.TestCase):
             'indeterminate/benign',
             'indeterminate/malignant',
             'BENIGN',
-            'INDETERMINATE/MALIGNANT'
+            'INDETERMINATE/MALIGNANT',
         ]:
             data = {'benign_malignant': value}
             image = self._createImage()
@@ -859,7 +832,7 @@ class ImageMetadataTestCase(base.TestCase):
             'EPHELIS',
             'lentigo simplex',
             'melanoma',
-            'nevus'
+            'nevus',
         ]:
             data = {'diagnosis': value}
             image = self._createImage()
@@ -978,7 +951,7 @@ class ImageMetadataTestCase(base.TestCase):
             'pigmented spindle cell of reed',
             'plexiform spindle cell',
             'special site',
-            'spitz'
+            'spitz',
         ]:
             data = {'nevus_type': value}
             image = self._createImage()
@@ -1056,11 +1029,7 @@ class ImageMetadataTestCase(base.TestCase):
         parser = ImageTypeFieldParser
 
         # Valid values with varying case
-        for value in [
-            'dermoscopic',
-            'CLINICAL',
-            'Overview'
-        ]:
+        for value in ['dermoscopic', 'CLINICAL', 'Overview']:
             data = {'image_type': value}
             image = self._createImage()
             self.assertRunParser(image, data, parser)
@@ -1123,11 +1092,7 @@ class ImageMetadataTestCase(base.TestCase):
         parser = DermoscopicTypeFieldParser
 
         # Valid values with varying case
-        for value in [
-            'contact polarized',
-            'CONTACT NON-POLARIZED',
-            'Non-contact Polarized'
-        ]:
+        for value in ['contact polarized', 'CONTACT NON-POLARIZED', 'Non-contact Polarized']:
             data = {'dermoscopic_type': value}
             image = self._createImage()
             self.assertRunParser(image, data, parser)
@@ -1142,8 +1107,9 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
-        self.assertDictEqual({'dermoscopic_type': 'contact non-polarized'},
-                             image['meta']['acquisition'])
+        self.assertDictEqual(
+            {'dermoscopic_type': 'contact non-polarized'}, image['meta']['acquisition']
+        )
         self.assertDictEqual({}, image['privateMeta'])
 
         data = {'dermoscopic_type': 'non contact polarized'}
@@ -1151,8 +1117,9 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
-        self.assertDictEqual({'dermoscopic_type': 'non-contact polarized'},
-                             image['meta']['acquisition'])
+        self.assertDictEqual(
+            {'dermoscopic_type': 'non-contact polarized'}, image['meta']['acquisition']
+        )
         self.assertDictEqual({}, image['privateMeta'])
 
         # Invalid value
@@ -1177,8 +1144,9 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
-        self.assertDictEqual({'dermoscopic_type': 'contact polarized'},
-                             image['meta']['acquisition'])
+        self.assertDictEqual(
+            {'dermoscopic_type': 'contact polarized'}, image['meta']['acquisition']
+        )
         self.assertDictEqual({}, image['privateMeta'])
 
         # Update existing value with same value
@@ -1188,8 +1156,9 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
-        self.assertDictEqual({'dermoscopic_type': 'contact polarized'},
-                             image['meta']['acquisition'])
+        self.assertDictEqual(
+            {'dermoscopic_type': 'contact polarized'}, image['meta']['acquisition']
+        )
         self.assertDictEqual({}, image['privateMeta'])
 
         # Update existing value with null value
@@ -1307,8 +1276,9 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
-        self.assertDictEqual({'mel_class': 'recurrent/persistent melanoma, in situ'},
-                             image['meta']['clinical'])
+        self.assertDictEqual(
+            {'mel_class': 'recurrent/persistent melanoma, in situ'}, image['meta']['clinical']
+        )
         self.assertDictEqual({}, image['privateMeta'])
 
         # Special case
@@ -1317,8 +1287,9 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
-        self.assertDictEqual({'mel_class': 'recurrent/persistent melanoma, invasive'},
-                             image['meta']['clinical'])
+        self.assertDictEqual(
+            {'mel_class': 'recurrent/persistent melanoma, invasive'}, image['meta']['clinical']
+        )
         self.assertDictEqual({}, image['privateMeta'])
 
         # Special case
@@ -1327,8 +1298,7 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
-        self.assertDictEqual({'mel_class': 'melanoma NOS'},
-                             image['meta']['clinical'])
+        self.assertDictEqual({'mel_class': 'melanoma NOS'}, image['meta']['clinical'])
         self.assertDictEqual({}, image['privateMeta'])
 
         # Invalid value
@@ -1353,8 +1323,7 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
-        self.assertDictEqual({'mel_class': 'melanoma in situ'},
-                             image['meta']['clinical'])
+        self.assertDictEqual({'mel_class': 'melanoma in situ'}, image['meta']['clinical'])
         self.assertDictEqual({}, image['privateMeta'])
 
         # Update existing value with same value
@@ -1364,8 +1333,7 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
-        self.assertDictEqual({'mel_class': 'melanoma in situ'},
-                             image['meta']['clinical'])
+        self.assertDictEqual({'mel_class': 'melanoma in situ'}, image['meta']['clinical'])
         self.assertDictEqual({}, image['privateMeta'])
 
         # Update existing value with null value
@@ -1391,7 +1359,7 @@ class ImageMetadataTestCase(base.TestCase):
             'superficial spreading melanoma',
             'nodular melanoma',
             'lentigo maligna melanoma',
-            'ACRAL LENTIGINOUS MELANOMA'
+            'ACRAL LENTIGINOUS MELANOMA',
         ]:
             data = {'mel_type': value}
             image = self._createImage()
@@ -1407,8 +1375,9 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
-        self.assertDictEqual({'mel_type': 'superficial spreading melanoma'},
-                             image['meta']['clinical'])
+        self.assertDictEqual(
+            {'mel_type': 'superficial spreading melanoma'}, image['meta']['clinical']
+        )
         self.assertDictEqual({}, image['privateMeta'])
 
         # Special case
@@ -1417,8 +1386,7 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
-        self.assertDictEqual({'mel_type': 'lentigo maligna melanoma'},
-                             image['meta']['clinical'])
+        self.assertDictEqual({'mel_type': 'lentigo maligna melanoma'}, image['meta']['clinical'])
         self.assertDictEqual({}, image['privateMeta'])
 
         # Special case
@@ -1427,8 +1395,7 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
-        self.assertDictEqual({'mel_type': 'acral lentiginous melanoma'},
-                             image['meta']['clinical'])
+        self.assertDictEqual({'mel_type': 'acral lentiginous melanoma'}, image['meta']['clinical'])
         self.assertDictEqual({}, image['privateMeta'])
 
         # Special case
@@ -1437,8 +1404,7 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
-        self.assertDictEqual({'mel_type': 'melanoma NOS'},
-                             image['meta']['clinical'])
+        self.assertDictEqual({'mel_type': 'melanoma NOS'}, image['meta']['clinical'])
         self.assertDictEqual({}, image['privateMeta'])
 
         # Invalid value
@@ -1463,8 +1429,7 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
-        self.assertDictEqual({'mel_type': 'nodular melanoma'},
-                             image['meta']['clinical'])
+        self.assertDictEqual({'mel_type': 'nodular melanoma'}, image['meta']['clinical'])
         self.assertDictEqual({}, image['privateMeta'])
 
         # Update existing value with same value
@@ -1474,8 +1439,7 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
-        self.assertDictEqual({'mel_type': 'nodular melanoma'},
-                             image['meta']['clinical'])
+        self.assertDictEqual({'mel_type': 'nodular melanoma'}, image['meta']['clinical'])
         self.assertDictEqual({}, image['privateMeta'])
 
         # Update existing value with null value
@@ -1497,15 +1461,7 @@ class ImageMetadataTestCase(base.TestCase):
         parser = MelMitoticIndexFieldParser
 
         # Valid values with varying case
-        for value in [
-            '0/mm^2',
-            '<1/mm^2',
-            '1/mm^2',
-            '2/mm^2',
-            '3/mm^2',
-            '4/MM^2',
-            '>4/mm^2'
-        ]:
+        for value in ['0/mm^2', '<1/mm^2', '1/mm^2', '2/mm^2', '3/mm^2', '4/MM^2', '>4/mm^2']:
             data = {'mel_mitotic_index': value}
             image = self._createImage()
             self.assertRunParser(image, data, parser)
@@ -1542,8 +1498,7 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
-        self.assertDictEqual({'mel_mitotic_index': '1/mm^2'},
-                             image['meta']['clinical'])
+        self.assertDictEqual({'mel_mitotic_index': '1/mm^2'}, image['meta']['clinical'])
         self.assertDictEqual({}, image['privateMeta'])
 
         # Update existing value with same value
@@ -1553,8 +1508,7 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertRunParser(image, data, parser)
         self.assertDictEqual({}, data)
         self.assertDictEqual({}, image['meta']['unstructured'])
-        self.assertDictEqual({'mel_mitotic_index': '1/mm^2'},
-                             image['meta']['clinical'])
+        self.assertDictEqual({'mel_mitotic_index': '1/mm^2'}, image['meta']['clinical'])
         self.assertDictEqual({}, image['privateMeta'])
 
         # Update existing value with null value
@@ -1660,36 +1614,36 @@ class ImageMetadataTestCase(base.TestCase):
             'benign_malignant': 'malignant',
             'diagnosis': 'melanoma',
             'anatom_site_general': 'head/neck',
-            'anatomic': 'neck'
+            'anatomic': 'neck',
         }
         image = self._createImage()
         image['meta']['clinical']['sex'] = 'female'
         image['meta']['unstructured']['laterality'] = 'left'
         errors, warnings = addImageMetadata(image, data)
         self.assertEquals([], errors)
-        self.assertDictEqual({
-            'anatomic': 'neck',
-            'laterality': 'left'
-        }, image['meta']['unstructured'])
-        self.assertDictEqual({
-            'age_approx': 45,
-            'anatom_site_general': 'head/neck',
-            'sex': 'female',
-            'family_hx_mm': False,
-            'personal_hx_mm': False,
-            'clin_size_long_diam_mm': 3.0,
-            'melanocytic': True,
-            'diagnosis_confirm_type': 'histopathology',
-            'benign_malignant': 'malignant',
-            'diagnosis': 'melanoma',
-        }, image['meta']['clinical'])
-        self.assertDictEqual({
-            'age': 45
-        }, image['privateMeta'])
+        self.assertDictEqual(
+            {'anatomic': 'neck', 'laterality': 'left'}, image['meta']['unstructured']
+        )
+        self.assertDictEqual(
+            {
+                'age_approx': 45,
+                'anatom_site_general': 'head/neck',
+                'sex': 'female',
+                'family_hx_mm': False,
+                'personal_hx_mm': False,
+                'clin_size_long_diam_mm': 3.0,
+                'melanocytic': True,
+                'diagnosis_confirm_type': 'histopathology',
+                'benign_malignant': 'malignant',
+                'diagnosis': 'melanoma',
+            },
+            image['meta']['clinical'],
+        )
+        self.assertDictEqual({'age': 45}, image['privateMeta'])
         self.assertEquals(1, len(warnings))
         self.assertIn(
-            "unrecognized field 'anatomic' will be added to unstructured metadata",
-            warnings)
+            "unrecognized field 'anatomic' will be added to unstructured metadata", warnings
+        )
 
         # Data with errors
         data = {
@@ -1704,39 +1658,40 @@ class ImageMetadataTestCase(base.TestCase):
             'ben_mal': 'malignant',
             'diagnosis': 'melanoma',
             'anatom_site_general': 'head',
-            'anatomic': 'neck'
+            'anatomic': 'neck',
         }
         image = self._createImage()
         image['meta']['clinical']['sex'] = 'male'
         image['meta']['clinical']['melanocytic'] = False
         errors, warnings = addImageMetadata(image, data)
         self.assertEquals(5, len(errors))
-        self.assertIn(
-            "value already exists for field 'sex' (old: 'male', new: u'female')",
-            errors)
+        self.assertIn("value already exists for field 'sex' (old: 'male', new: u'female')", errors)
         self.assertIn(
             "value is wrong type for field 'clin_size_long_diam_mm' "
             "(expected 'float with units (um, mm, or cm)', value: u'3.0+')",
-            errors)
+            errors,
+        )
         self.assertIn(
-            "value already exists for field 'melanocytic' (old: False, new: None)",
-            errors)
+            "value already exists for field 'melanocytic' (old: False, new: None)", errors
+        )
         self.assertIn(
             "only one of field 'benign_malignant' may be present, "
             "found: ['ben_mal', 'benign_malignant']",
-            errors)
+            errors,
+        )
         self.assertEqual(1, len(warnings))
         self.assertIn(
             "corrected inconsistent value for field 'melanocytic' based on field 'diagnosis' "
             "(new value: True, 'diagnosis': u'melanoma')",
-            warnings)
+            warnings,
+        )
 
     def testAddImageClinicalMetadataInterfieldValidation(self):
         # Valid cases
         data = {
             'benign_malignant': None,
             'diagnosis': 'melanoma',
-            'diagnosis_confirm_type': 'histopathology'
+            'diagnosis_confirm_type': 'histopathology',
         }
         image = self._createImage()
         errors, _ = addImageMetadata(image, data)
@@ -1746,7 +1701,7 @@ class ImageMetadataTestCase(base.TestCase):
         data = {
             'benign_malignant': None,
             'diagnosis': 'nevus',
-            'diagnosis_confirm_type': 'single image expert consensus'
+            'diagnosis_confirm_type': 'single image expert consensus',
         }
         image = self._createImage()
         errors, _ = addImageMetadata(image, data)
@@ -1756,7 +1711,7 @@ class ImageMetadataTestCase(base.TestCase):
         data = {
             'benign_malignant': 'indeterminate',
             'diagnosis': 'other',
-            'diagnosis_confirm_type': 'histopathology'
+            'diagnosis_confirm_type': 'histopathology',
         }
         image = self._createImage()
         errors, _ = addImageMetadata(image, data)
@@ -1765,59 +1720,40 @@ class ImageMetadataTestCase(base.TestCase):
         data = {
             'mel_thick_mm': '1.23 mm',
             'diagnosis': 'melanoma',
-            'diagnosis_confirm_type': 'histopathology'
+            'diagnosis_confirm_type': 'histopathology',
         }
         image = self._createImage()
         errors, _ = addImageMetadata(image, data)
         self.assertEqual([], errors)
 
-        data = {
-            'nevus_type': 'blue',
-            'diagnosis': 'nevus',
-            'benign_malignant': 'benign'
-        }
+        data = {'nevus_type': 'blue', 'diagnosis': 'nevus', 'benign_malignant': 'benign'}
         image = self._createImage()
         errors, _ = addImageMetadata(image, data)
         self.assertEqual([], errors)
 
-        data = {
-            'image_type': 'dermoscopic',
-            'dermoscopic_type': 'contact polarized'
-        }
+        data = {'image_type': 'dermoscopic', 'dermoscopic_type': 'contact polarized'}
         image = self._createImage()
         errors, _ = addImageMetadata(image, data)
         self.assertEqual([], errors)
 
-        data = {
-            'image_type': 'clinical',
-            'dermoscopic_type': None
-        }
+        data = {'image_type': 'clinical', 'dermoscopic_type': None}
         image = self._createImage()
         errors, _ = addImageMetadata(image, data)
         self.assertEqual([], errors)
 
-        data = {
-            'image_type': None,
-            'dermoscopic_type': 'contact non-polarized'
-        }
+        data = {'image_type': None, 'dermoscopic_type': 'contact non-polarized'}
         image = self._createImage()
         errors, _ = addImageMetadata(image, data)
         self.assertEqual([], errors)
         self.assertEqual('dermoscopic', image['meta']['acquisition']['image_type'])
 
         # Error cases
-        data = {
-            'benign_malignant': 'benign',
-            'diagnosis': 'melanoma',
-        }
+        data = {'benign_malignant': 'benign', 'diagnosis': 'melanoma'}
         image = self._createImage()
         errors, _ = addImageMetadata(image, data)
         self.assertEqual(1, len(errors))
 
-        data = {
-            'benign_malignant': 'malignant',
-            'diagnosis': 'nevus',
-        }
+        data = {'benign_malignant': 'malignant', 'diagnosis': 'nevus'}
         image = self._createImage()
         errors, _ = addImageMetadata(image, data)
         self.assertEqual(1, len(errors))
@@ -1825,52 +1761,36 @@ class ImageMetadataTestCase(base.TestCase):
         data = {
             'benign_malignant': 'indeterminate',
             'diagnosis': 'other',
-            'diagnosis_confirm_type': 'single image expert consensus'
+            'diagnosis_confirm_type': 'single image expert consensus',
         }
         image = self._createImage()
         errors, _ = addImageMetadata(image, data)
         self.assertEqual(1, len(errors))
 
-        data = {
-            'mel_thick_mm': '1.23 mm',
-            'diagnosis': 'other'
-        }
+        data = {'mel_thick_mm': '1.23 mm', 'diagnosis': 'other'}
         image = self._createImage()
         errors, _ = addImageMetadata(image, data)
         self.assertEqual(1, len(errors))
 
-        data = {
-            'nevus_type': 'blue',
-            'diagnosis': 'other'
-        }
+        data = {'nevus_type': 'blue', 'diagnosis': 'other'}
         image = self._createImage()
         errors, _ = addImageMetadata(image, data)
         self.assertEqual(1, len(errors))
 
-        data = {
-            'image_type': 'clinical',
-            'dermoscopic_type': 'contact polarized'
-        }
+        data = {'image_type': 'clinical', 'dermoscopic_type': 'contact polarized'}
         image = self._createImage()
         errors, _ = addImageMetadata(image, data)
         self.assertEqual(1, len(errors))
 
         # Warning cases
-        data = {
-            'benign_malignant': 'benign',
-            'diagnosis': 'basal cell carcinoma',
-        }
+        data = {'benign_malignant': 'benign', 'diagnosis': 'basal cell carcinoma'}
         image = self._createImage()
         errors, warnings = addImageMetadata(image, data)
         self.assertEqual([], errors)
         self.assertEqual(1, len(warnings))
 
     def testAddImageMetadataExif(self):
-        data = {
-            'exif_1': 'value1',
-            'exif_2': 'value2',
-            'EXIF_3': 'value3'
-        }
+        data = {'exif_1': 'value1', 'exif_2': 'value2', 'EXIF_3': 'value3'}
         image = self._createImage()
         errors, _ = addImageMetadata(image, data)
         self.assertEqual([], errors)
@@ -1884,7 +1804,7 @@ class ImageMetadataTestCase(base.TestCase):
             'benign_malignant': 'malignant',
             'diagnosis': 'melanoma',
             'diagnosis_confirm_type': 'histopathology',
-            'melanocytic': None
+            'melanocytic': None,
         }
         image = self._createImage()
         errors, warnings = addImageMetadata(image, data)
@@ -1897,7 +1817,7 @@ class ImageMetadataTestCase(base.TestCase):
             'benign_malignant': 'malignant',
             'diagnosis': 'melanoma',
             'diagnosis_confirm_type': 'histopathology',
-            'melanocytic': False
+            'melanocytic': False,
         }
         image = self._createImage()
         errors, warnings = addImageMetadata(image, data)
@@ -1906,10 +1826,7 @@ class ImageMetadataTestCase(base.TestCase):
         self.assertTrue(image['meta']['clinical']['melanocytic'])
 
         # Test autocorrecting inconsistent melanocytic field to False based on diagnosis
-        data = {
-            'diagnosis': 'verruca',
-            'melanocytic': True
-        }
+        data = {'diagnosis': 'verruca', 'melanocytic': True}
         image = self._createImage()
         errors, warnings = addImageMetadata(image, data)
         self.assertEqual([], errors)

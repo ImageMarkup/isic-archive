@@ -85,10 +85,7 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         :return: The mask image of the segmented region, with values 0 or 255.
         :rtype: numpy.ndarray
         """
-        maskImage = cls._floodFill(
-            image,
-            seedCoord,
-            tolerance)
+        maskImage = cls._floodFill(image, seedCoord, tolerance)
 
         # Now, fill in any holes in the maskImage
         # First, add a padded border, allowing the next operation to reach
@@ -100,7 +97,8 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
             seedCoord=(0, 0),
             # The seed point and border will have a value of 1, but we want to
             # also include the actual mask background, which has a value of 0
-            tolerance=1)
+            tolerance=1,
+        )
         # Remove the extra padding
         maskImageBackground = maskImageBackground[1:-1, 1:-1]
         # Flip the background, to get the mask with holes removed
@@ -151,23 +149,17 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         else:
             raise ValueError('Unknown connectivity value.')
 
-        binaryImage = numpy.logical_and(
-            image >= seedValueMin,
-            image <= seedValueMax
-        )
+        binaryImage = numpy.logical_and(image >= seedValueMin, image <= seedValueMax)
         if len(image.shape) == 3:
             # Reduce RGB components, requiring all to be within threshold
             binaryImage = numpy.all(binaryImage, 2)
 
         labelImage = skimage.measure.label(
-            binaryImage.astype(int),
-            return_num=False,
-            connectivity=connectivityArg
+            binaryImage.astype(int), return_num=False, connectivity=connectivityArg
         )
         del binaryImage
 
-        maskImage = numpy.equal(
-            labelImage, labelImage[seedCoord[1], seedCoord[0]])
+        maskImage = numpy.equal(labelImage, labelImage[seedCoord[1], seedCoord[0]])
         del labelImage
         maskImage = maskImage.astype(numpy.uint8) * 255
 
@@ -194,21 +186,21 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
     def _binaryOpening(cls, image, elementShape='circle', elementRadius=5):
         element = cls._structuringElement(elementShape, elementRadius, bool)
 
-        morphedImage = skimage.morphology.binary_opening(
-            image=image,
-            selem=element
-        )
+        morphedImage = skimage.morphology.binary_opening(image=image, selem=element)
         return morphedImage
 
     @classmethod
     def _collapseCoords(cls, coords):
         collapsedCoords = [coords[0]]
-        collapsedCoords.extend([
-            coord
-            for prevCoord, coord, nextCoord in itertools.izip(
-                coords[0:], coords[1:], coords[2:])
-            if numpy.cross(nextCoord - prevCoord, coord - prevCoord) != 0
-        ])
+        collapsedCoords.extend(
+            [
+                coord
+                for prevCoord, coord, nextCoord in itertools.izip(
+                    coords[0:], coords[1:], coords[2:]
+                )
+                if numpy.cross(nextCoord - prevCoord, coord - prevCoord) != 0
+            ]
+        )
         collapsedCoords.append(coords[-1])
         collapsedCoords = numpy.array(collapsedCoords)
         return collapsedCoords
@@ -231,7 +223,7 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
             array=maskImage.astype(bool).astype(numpy.double),
             level=0.5,
             fully_connected='low',
-            positive_orientation='low'
+            positive_orientation='low',
         )
         coords = numpy.fliplr(coords[0])
         coords = cls._collapseCoords(coords)
@@ -250,8 +242,7 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         :rtype: numpy.ndarray of numpy.uint8
         """
         maskImage = skimage.measure.grid_points_in_poly(
-            shape=imageShape,
-            verts=numpy.fliplr(coords)
+            shape=imageShape, verts=numpy.fliplr(coords)
         ).astype(numpy.uint8)
         maskImage *= 255
         return maskImage
@@ -263,8 +254,7 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         sigma = 2.0
 
         if numSegments and segmentSize:
-            raise ValueError(
-                'Only one of numSegments or segmentSize may be set.')
+            raise ValueError('Only one of numSegments or segmentSize may be set.')
         elif numSegments:
             pass
         elif segmentSize:
@@ -280,7 +270,7 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
             sigma=sigma,
             enforce_connectivity=True,
             min_size_factor=0.5,
-            slic_zero=True
+            slic_zero=True,
         )
         return labelImage
 
@@ -295,11 +285,13 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
 
     @classmethod
     def _uint64ToRGB(cls, val):
-        return numpy.dstack((
-            val.astype(numpy.uint8),
-            (val >> numpy.uint64(8)).astype(numpy.uint8),
-            (val >> numpy.uint64(16)).astype(numpy.uint8)
-        ))
+        return numpy.dstack(
+            (
+                val.astype(numpy.uint8),
+                (val >> numpy.uint64(8)).astype(numpy.uint8),
+                (val >> numpy.uint64(16)).astype(numpy.uint8),
+            )
+        )
 
     @classmethod
     def _RGBTounit64(cls, val):
@@ -309,10 +301,11 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         :param val: A single pixel, or a 3-channel image.
         :type val: numpy.ndarray of uint8, with a shape [3] or [n, m, 3]
         """
-        return \
-            (val[..., 0].astype(numpy.uint64)) + \
-            (val[..., 1].astype(numpy.uint64) << numpy.uint64(8)) + \
-            (val[..., 2].astype(numpy.uint64) << numpy.uint64(16))
+        return (
+            (val[..., 0].astype(numpy.uint64))
+            + (val[..., 1].astype(numpy.uint64) << numpy.uint64(8))
+            + (val[..., 2].astype(numpy.uint64) << numpy.uint64(16))
+        )
 
     @classmethod
     def superpixels(cls, image):
@@ -325,11 +318,10 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         maskImage = cls.contourToMask(image.shape[:2], coords)
 
         from .opencv import OpenCVSegmentationHelper
+
         # This operation is much faster in OpenCV
         maskImage = OpenCVSegmentationHelper._binaryOpening(
-            maskImage.astype(numpy.uint8),
-            elementShape='circle',
-            elementRadius=5
+            maskImage.astype(numpy.uint8), elementShape='circle', elementRadius=5
         ).astype(bool)
 
         insideImage = image.copy()
@@ -342,18 +334,16 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
 
         # https://stackoverflow.com/questions/16210738/implementation-of-numpy-in1d-for-2d-arrays
         insideSuperpixelMask = numpy.in1d(
-            insideSuperpixelLabels.flat,
-            numpy.unique(insideSuperpixelLabels[maskImage])
+            insideSuperpixelLabels.flat, numpy.unique(insideSuperpixelLabels[maskImage])
         ).reshape(insideSuperpixelLabels.shape)
 
         combinedSuperpixelLabels = outsideSuperpixelLabels.copy()
-        combinedSuperpixelLabels[insideSuperpixelMask] = \
-            insideSuperpixelLabels[insideSuperpixelMask] + \
-            outsideSuperpixelLabels.max() + 10000
+        combinedSuperpixelLabels[insideSuperpixelMask] = (
+            insideSuperpixelLabels[insideSuperpixelMask] + outsideSuperpixelLabels.max() + 10000
+        )
 
         labelValues = collections.defaultdict(cls._PersistentCounter())
-        for value in numpy.nditer(combinedSuperpixelLabels,
-                                  op_flags=['readwrite']):
+        for value in numpy.nditer(combinedSuperpixelLabels, op_flags=['readwrite']):
             value[...] = labelValues[value.item()]
 
         combinedSuperpixels = cls._uint64ToRGB(combinedSuperpixelLabels)

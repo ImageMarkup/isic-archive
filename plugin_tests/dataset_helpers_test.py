@@ -30,12 +30,14 @@ class DatasetHelpersTestCase(base.TestCase):
         # A Girder instance is not required for this test case
 
         # Load function under test
-        isicModelsModulePath = os.path.abspath(os.path.join(
-            os.path.dirname(__file__), '..', 'server', 'models'))
+        isicModelsModulePath = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), '..', 'server', 'models')
+        )
         if isicModelsModulePath not in sys.path:
             sys.path.append(isicModelsModulePath)
 
         from dataset_helpers import matchFilenameRegex
+
         self.matchFilenameRegex = matchFilenameRegex
 
     def assertMatch(self, originalFilename, csvFilename):

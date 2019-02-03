@@ -53,23 +53,17 @@ def _defaultMaxIsicIdSetting():
     return -1
 
 
-@setting_utilities.validator({
-    PluginSettings.UPLOAD_ROLE_ARN,
-    PluginSettings.UPLOAD_BUCKET_NAME
-})
+@setting_utilities.validator({PluginSettings.UPLOAD_ROLE_ARN, PluginSettings.UPLOAD_BUCKET_NAME})
 def _validateDataUploadSettings(doc):
     if not isinstance(doc['value'], six.string_types):
         descriptions = {
             PluginSettings.UPLOAD_ROLE_ARN: 'role ARN',
-            PluginSettings.UPLOAD_BUCKET_NAME: 'S3 bucket name'
+            PluginSettings.UPLOAD_BUCKET_NAME: 'S3 bucket name',
         }
         description = descriptions[doc['key']]
         raise ValidationException('Upload %s must be a string.' % description, 'value')
 
 
-@setting_utilities.default({
-    PluginSettings.UPLOAD_ROLE_ARN,
-    PluginSettings.UPLOAD_BUCKET_NAME
-})
+@setting_utilities.default({PluginSettings.UPLOAD_ROLE_ARN, PluginSettings.UPLOAD_BUCKET_NAME})
 def _defaultDataUploadSettings():
     return ''

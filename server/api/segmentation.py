@@ -61,14 +61,14 @@ class SegmentationResource(IsicResource):
     def find(self, params):
         self.requireParams(['imageId'], params)
         limit, offset, sort = self.getPagingParameters(
-            params, defaultSortField='created', defaultSortDir=SortDir.DESCENDING)
+            params, defaultSortField='created', defaultSortDir=SortDir.DESCENDING
+        )
 
         image = Image().load(
-            params['imageId'], level=AccessType.READ, user=self.getCurrentUser(), exc=True)
+            params['imageId'], level=AccessType.READ, user=self.getCurrentUser(), exc=True
+        )
 
-        filters = {
-            'imageId': image['_id']
-        }
+        filters = {'imageId': image['_id']}
         if 'creatorId' in params:
             # Ensure that the user exists
             creatorUser = User().load(params['creatorId'], force=True, exc=True)
@@ -79,29 +79,33 @@ class SegmentationResource(IsicResource):
                 '_id': segmentation['_id'],
                 'created': segmentation['created'],
                 'failed': segmentation['maskId'] is None,
-                'skill':
-                    'expert'
-                    if any(
-                        review['skill'] == Segmentation().Skill.EXPERT
-                        for review in segmentation['reviews']
-                    )
-                    else 'novice'
+                'skill': 'expert'
+                if any(
+                    review['skill'] == Segmentation().Skill.EXPERT
+                    for review in segmentation['reviews']
+                )
+                else 'novice',
             }
             for segmentation in Segmentation().find(
-                query=filters,
-                sort=sort,
-                limit=limit,
-                offset=offset,
+                query=filters, sort=sort, limit=limit, offset=offset
             )
         ]
 
     @describeRoute(
         Description('Add a segmentation to an image.')
         .param('imageId', 'The ID of the image.', paramType='body')
-        .param('mask', 'A Base64-encoded PNG 8-bit image, containing the segmentation mask.',
-               paramType='body')
-        .param('failed', 'Whether the segmentation should be marked as a failure.',
-               paramType='body', dataType='boolean', required=False)
+        .param(
+            'mask',
+            'A Base64-encoded PNG 8-bit image, containing the segmentation mask.',
+            paramType='body',
+        )
+        .param(
+            'failed',
+            'Whether the segmentation should be marked as a failure.',
+            paramType='body',
+            dataType='boolean',
+            required=False,
+        )
         .errorResponse('ID was invalid.')
     )
     @access.user
@@ -118,18 +122,13 @@ class SegmentationResource(IsicResource):
 
         if failed:
             segmentation = Segmentation().createSegmentation(
-                image=image,
-                creator=user,
-                mask=None,
-                meta={
-                    'flagged': 'could not segment'
-                }
+                image=image, creator=user, mask=None, meta={'flagged': 'could not segment'}
             )
         elif 'lesionBoundary' in params:
             lesionBoundary = params['lesionBoundary']
 
             meta = lesionBoundary['properties']
-            meta['startTime'] = datetime.datetime.utcfromtimestamp(meta['startTime'] / 1000.0),
+            meta['startTime'] = (datetime.datetime.utcfromtimestamp(meta['startTime'] / 1000.0),)
             meta['stopTime'] = datetime.datetime.utcfromtimestamp(meta['stopTime'] / 1000.0)
 
             if meta.get('source') == 'autofill':
@@ -140,9 +139,9 @@ class SegmentationResource(IsicResource):
                 # by the client.
                 seedCoord = meta['seedPoint']
                 if not (
-                    isinstance(seedCoord, list) and
-                    len(seedCoord) == 2 and
-                    all(isinstance(value, int) for value in seedCoord)
+                    isinstance(seedCoord, list)
+                    and len(seedCoord) == 2
+                    and all(isinstance(value, int) for value in seedCoord)
                 ):
                     raise ValidationException('Value must be a coordinate pair.', 'seedPoint')
 
@@ -156,16 +155,13 @@ class SegmentationResource(IsicResource):
                 mask = OpenCVSegmentationHelper.contourToMask(
                     (
                         image['meta']['acquisition']['pixelsY'],
-                        image['meta']['acquisition']['pixelsX']
+                        image['meta']['acquisition']['pixelsX'],
                     ),
-                    numpy.rint(numpy.array(coords)).astype(int)
+                    numpy.rint(numpy.array(coords)).astype(int),
                 )
 
             segmentation = Segmentation().createSegmentation(
-                image=image,
-                creator=user,
-                mask=mask,
-                meta=meta
+                image=image, creator=user, mask=mask, meta=meta
             )
         elif 'mask' in params:
             maskStream = six.BytesIO()
@@ -173,10 +169,7 @@ class SegmentationResource(IsicResource):
             mask = ScikitSegmentationHelper.loadImage(maskStream)
 
             segmentation = Segmentation().createSegmentation(
-                image=image,
-                creator=user,
-                mask=mask,
-                meta={}
+                image=image, creator=user, mask=mask, meta={}
             )
         else:
             raise RestException('One of "failed", "lesionBoundary", or "mask" must be present')
@@ -196,11 +189,12 @@ class SegmentationResource(IsicResource):
     def getSegmentation(self, segmentation, params):
         # TODO: convert this to make Segmentation use an AccessControlMixin
         Image().load(
-            segmentation['imageId'], level=AccessType.READ, user=self.getCurrentUser(), exc=True)
+            segmentation['imageId'], level=AccessType.READ, user=self.getCurrentUser(), exc=True
+        )
 
         segmentation['creator'] = User().filterSummary(
-            User().load(segmentation.pop('creatorId'), force=True, exc=True),
-            self.getCurrentUser())
+            User().load(segmentation.pop('creatorId'), force=True, exc=True), self.getCurrentUser()
+        )
 
         segmentation['failed'] = segmentation.pop('maskId') is None
 
@@ -209,9 +203,12 @@ class SegmentationResource(IsicResource):
     @describeRoute(
         Description('Get a segmentation, rendered as a binary mask.')
         .param('id', 'The ID of the segmentation.', paramType='path')
-        .param('contentDisposition',
-               'Specify the Content-Disposition response header disposition-type value.',
-               required=False, enum=['inline', 'attachment'])
+        .param(
+            'contentDisposition',
+            'Specify the Content-Disposition response header disposition-type value.',
+            required=False,
+            enum=['inline', 'attachment'],
+        )
         .produces('image/png')
         .errorResponse('ID was invalid.')
     )
@@ -221,12 +218,14 @@ class SegmentationResource(IsicResource):
     def mask(self, segmentation, params):
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
-            raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
-                                      'contentDisposition')
+            raise ValidationException(
+                'Unallowed contentDisposition type "%s".' % contentDisp, 'contentDisposition'
+            )
 
         # TODO: convert this to make Segmentation use an AccessControlMixin
         Image().load(
-            segmentation['imageId'], level=AccessType.READ, user=self.getCurrentUser(), exc=True)
+            segmentation['imageId'], level=AccessType.READ, user=self.getCurrentUser(), exc=True
+        )
 
         maskFile = Segmentation().maskFile(segmentation)
         if maskFile is None:
@@ -237,11 +236,19 @@ class SegmentationResource(IsicResource):
     @describeRoute(
         Description('Get a segmentation, rendered as a thumbnail with a boundary overlay.')
         .param('id', 'The ID of the segmentation.', paramType='path')
-        .param('width', 'The desired width for the thumbnail.', paramType='query', required=False,
-               default=256)
-        .param('contentDisposition',
-               'Specify the Content-Disposition response header disposition-type value.',
-               required=False, enum=['inline', 'attachment'])
+        .param(
+            'width',
+            'The desired width for the thumbnail.',
+            paramType='query',
+            required=False,
+            default=256,
+        )
+        .param(
+            'contentDisposition',
+            'Specify the Content-Disposition response header disposition-type value.',
+            required=False,
+            enum=['inline', 'attachment'],
+        )
         .produces('image/jpeg')
         .errorResponse('ID was invalid.')
     )
@@ -251,12 +258,14 @@ class SegmentationResource(IsicResource):
     def thumbnail(self, segmentation, params):
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
-            raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
-                                      'contentDisposition')
+            raise ValidationException(
+                'Unallowed contentDisposition type "%s".' % contentDisp, 'contentDisposition'
+            )
 
         # TODO: convert this to make Segmentation use an AccessControlMixin
         image = Image().load(
-            segmentation['imageId'], level=AccessType.READ, user=self.getCurrentUser(), exc=True)
+            segmentation['imageId'], level=AccessType.READ, user=self.getCurrentUser(), exc=True
+        )
 
         width = int(params.get('width', 256))
 
@@ -281,8 +290,12 @@ class SegmentationResource(IsicResource):
     @describeRoute(
         Description('Review a segmentation.')
         .param('id', 'The ID of the segmentation.', paramType='path')
-        .param('approved', 'Whether the segmentation was approved by the user.', paramType='body',
-               dataType='boolean')
+        .param(
+            'approved',
+            'Whether the segmentation was approved by the user.',
+            paramType='body',
+            dataType='boolean',
+        )
         .errorResponse('ID was invalid.')
     )
     @access.user

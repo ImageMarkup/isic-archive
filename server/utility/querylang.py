@@ -47,8 +47,7 @@ def cast(value, typename):
         if type(value) == int:
             return datetime.datetime.fromtimestamp(float(value) / 1000)
         else:
-            return dateutil.parser.parse(
-                value, default=datetime.datetime.fromtimestamp(0))
+            return dateutil.parser.parse(value, default=datetime.datetime.fromtimestamp(0))
     else:
         raise ValueError('Illegal value for argument "typename": %s' % typename)
 
@@ -63,7 +62,7 @@ _mongo_operators = {
     '>=': '$gte',
     '>': '$gt',
     '=': '$eq',
-    '!=': '$ne'
+    '!=': '$ne',
 }
 
 
@@ -86,8 +85,7 @@ def _astToMongo_helper(ast):
             value = operands['operands'][1]
             return {field: {'$not': {_mongo_operators[operator]: value}}}
 
-        raise TypeError(
-            '_astToMongo_helper() cannot operate on an AST with not-nodes.')
+        raise TypeError('_astToMongo_helper() cannot operate on an AST with not-nodes.')
     elif operator in ['in', 'not in', '<=', '<', '>=', '>', '=', '!=']:
         field = operands[0]['identifier']
         typename = operands[0].get('type')
@@ -97,12 +95,7 @@ def _astToMongo_helper(ast):
             value = map(lambda x: cast(x, 'objectid'), value)
 
         if operator in ['in', 'not in']:
-            value = map(
-                lambda x:
-                    None
-                    if x == '__null__'
-                    else x,
-                value)
+            value = map(lambda x: None if x == '__null__' else x, value)
 
         if typename == 'boolean':
             value = map(lambda x: cast(x, 'boolean') if x is not None else x, value)
@@ -121,27 +114,22 @@ def _invert(ast):
     elif operator in ['and', 'or']:
         # For and/or expressions, apply DeMorgan's laws.
         new_operator = 'and' if operator == 'or' else 'or'
-        new_operands = map(lambda x: {'operator': 'not', 'operands': x},
-                           operands)
+        new_operands = map(lambda x: {'operator': 'not', 'operands': x}, operands)
 
-        return {'operator': new_operator,
-                'operands': map(_eliminate_not, new_operands)}
+        return {'operator': new_operator, 'operands': map(_eliminate_not, new_operands)}
     elif operator in ['in', 'not in']:
         # For inclusion operators, just switch the one that was being used.
-        return {'operator': 'in' if operator == 'not in' else 'not in',
-                'operands': operands}
+        return {'operator': 'in' if operator == 'not in' else 'not in', 'operands': operands}
     elif operator[0] in ['<', '>']:
         # For comparison operators, flip the operator around.
         new_operator = '<' if operator[0] == '>' else '>'
         if len(operator) == 1:
             new_operator += '='
 
-        return {'operator': new_operator,
-                'operands': operands}
+        return {'operator': new_operator, 'operands': operands}
     else:
         # For equality operators, just switch the operator
-        return {'operator': '=' if operator == '!=' else '!=',
-                'operands': operands}
+        return {'operator': '=' if operator == '!=' else '!=', 'operands': operands}
 
 
 def _eliminate_not(ast):
@@ -152,8 +140,7 @@ def _eliminate_not(ast):
     if operator in ['and', 'or']:
         # And/or expressions have two boolean operands that must be processed
         # recursively.
-        return {'operator': operator,
-                'operands': map(_eliminate_not, operands)}
+        return {'operator': operator, 'operands': map(_eliminate_not, operands)}
     elif operator in ['in', 'not in', '<=', '<', '>=', '>', '=', '!=']:
         # Operator expressions that work on constant values stay unchanged.
         return ast

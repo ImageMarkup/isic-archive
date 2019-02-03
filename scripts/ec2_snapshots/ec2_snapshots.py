@@ -50,9 +50,11 @@ def _getInstance(instance_id):
 
 def _getRootVolumeId(instance):
     """Get the ID of the root volume on the given instance."""
-    rootVolumeId = [mapping['Ebs']['VolumeId']
-                    for mapping in instance.block_device_mappings
-                    if mapping['DeviceName'] == instance.root_device_name]
+    rootVolumeId = [
+        mapping['Ebs']['VolumeId']
+        for mapping in instance.block_device_mappings
+        if mapping['DeviceName'] == instance.root_device_name
+    ]
     if not rootVolumeId:
         raise Exception('Unable to identify root volume')
 
@@ -70,20 +72,21 @@ def _getNameTagValue(obj):
     """
     if not hasattr(obj, 'tags') or obj.tags is None:
         return None
-    name = [tag['Value']
-            for tag in obj.tags
-            if tag['Key'] == 'Name']
+    name = [tag['Value'] for tag in obj.tags if tag['Key'] == 'Name']
     return name[0] if name else None
 
 
 def _common_options(func):
     """Decorate a command to add common options."""
+
     @click.option('--instance-id', required=True, help='AWS EC2 Instance ID')
-    @click.option('--dry-run', default=False, is_flag=True,
-                  help='Log actions without performing them')
+    @click.option(
+        '--dry-run', default=False, is_flag=True, help='Log actions without performing them'
+    )
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
+
     return wrapper
 
 
@@ -113,18 +116,9 @@ def create(instance_id, dry_run):
         if dry_run:
             logging.info('Would create snapshot with description: %s', description)
             continue
-        snapshot = volume.create_snapshot(
-            Description=description,
-        )
+        snapshot = volume.create_snapshot(Description=description)
         logging.info('Created snapshot: %s (%s)', snapshot.id, description)
-        snapshot.create_tags(
-            Tags=[
-                {
-                    'Key': 'Name',
-                    'Value': description
-                }
-            ]
-        )
+        snapshot.create_tags(Tags=[{'Key': 'Name', 'Value': description}])
 
 
 @main.command()
@@ -169,9 +163,10 @@ def clean(instance_id, dry_run):
 
         # Delete snapshots that aren't selected to retain
         toDelete = set(snapshots) - retainedSnapshots
-        numSnapshots = (len(toDelete) + len(retainedSnapshots))
-        logging.info('Deleting %d of %d snapshot(s) for volume %s', len(toDelete), numSnapshots,
-                     volume.id)
+        numSnapshots = len(toDelete) + len(retainedSnapshots)
+        logging.info(
+            'Deleting %d of %d snapshot(s) for volume %s', len(toDelete), numSnapshots, volume.id
+        )
         for snapshot in toDelete:
             if dry_run:
                 logging.info('Would delete snapshot: %s (%s)', snapshot.id, snapshot.description)
@@ -260,8 +255,9 @@ def getRetainedWeekly(weeks, now, snapshots):
     retained = set()
     for week in range(weeks):
         # Start at most recent Sunday
-        start = now.replace(now.year, now.month, now.day, 0, 0, 0, 0) +\
-            relativedelta(weekday=SU(-1), weeks=-week)
+        start = now.replace(now.year, now.month, now.day, 0, 0, 0, 0) + relativedelta(
+            weekday=SU(-1), weeks=-week
+        )
         end = start + relativedelta(weeks=1)
         snapshot = _getLastSnapshot(snapshots, start, end)
         if snapshot:

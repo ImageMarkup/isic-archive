@@ -1,4 +1,5 @@
 from girder.utility import server as girder_server
+
 girder_server.configureServer()
 from girder.models.file import File  # noqa: E402, I100
 from girder.models.folder import Folder  # noqa: E402

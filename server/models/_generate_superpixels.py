@@ -32,7 +32,6 @@ with open(originalFile, 'rb') as originalFileStream:
     originalImageData = ScikitSegmentationHelper.loadImage(originalFileStream)
 
 superpixelsData = ScikitSegmentationHelper.superpixels(originalImageData)
-superpixelsEncodedStream = ScikitSegmentationHelper.writeImage(
-    superpixelsData, 'png')
+superpixelsEncodedStream = ScikitSegmentationHelper.writeImage(superpixelsData, 'png')
 
 superpixelsEncodedBytes = superpixelsEncodedStream.getvalue()

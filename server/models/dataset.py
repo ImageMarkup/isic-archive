@@ -61,27 +61,26 @@ class Dataset(AccessControlledModel):
         now = datetime.datetime.utcnow()
 
         # Validate before saving anything
-        dataset = self.save({
-            # Public informational data
-            'name': name,
-            'description': description,
-            'license': license,
-            'attribution': attribution,
-            # Public Girder data
-            'created': now,
-            'updated': now,
-            # Private informational data
-            'owner': owner,
-            'metadataFiles': [],
-            # Private Girder data
-            'creatorId': creatorUser['_id'],
-            'folderId': None,
-            'public': False,
-            'access': {
-                'users': [],
-                'groups': []
+        dataset = self.save(
+            {
+                # Public informational data
+                'name': name,
+                'description': description,
+                'license': license,
+                'attribution': attribution,
+                # Public Girder data
+                'created': now,
+                'updated': now,
+                # Private informational data
+                'owner': owner,
+                'metadataFiles': [],
+                # Private Girder data
+                'creatorId': creatorUser['_id'],
+                'folderId': None,
+                'public': False,
+                'access': {'users': [], 'groups': []},
             }
-        })
+        )
 
         # Create folder and add it to the dataset
         datasetFolder = Folder().createFolder(
@@ -91,12 +90,10 @@ class Dataset(AccessControlledModel):
             creator=creatorUser,
             public=dataset['public'],
             allowRename=False,
-            reuseExisting=False)
-        dataset['folderId'] = datasetFolder['_id']
-        self.update(
-            {'_id': dataset['_id']},
-            {'$set': {'folderId': dataset['folderId']}}
+            reuseExisting=False,
         )
+        dataset['folderId'] = datasetFolder['_id']
+        self.update({'_id': dataset['_id']}, {'$set': {'folderId': dataset['folderId']}})
 
         # Set default accesses (overwriting inherited accesses on the folder)
         dataset = self.setAccessList(
@@ -104,31 +101,29 @@ class Dataset(AccessControlledModel):
             access={
                 'users': [
                     # Allow the creator to write
-                    {
-                        'id': creatorUser['_id'],
-                        'level': AccessType.WRITE,
-                        'flags': []
-                    }
+                    {'id': creatorUser['_id'], 'level': AccessType.WRITE, 'flags': []}
                 ],
                 'groups': [
                     # Allow reviewers to admin (so they can delete the dataset)
                     {
                         'id': Group().findOne({'name': 'Dataset QC Reviewers'})['_id'],
                         'level': AccessType.ADMIN,
-                        'flags': []
+                        'flags': [],
                     }
-                ]
-            }
+                ],
+            },
         )
 
         return dataset
 
-    def setUserAccess(self, doc, user, level, save=False, flags=None, currentUser=None,
-                      force=False):
+    def setUserAccess(
+        self, doc, user, level, save=False, flags=None, currentUser=None, force=False
+    ):
         raise NotImplementedError('Use setAccessList instead')
 
-    def setGroupAccess(self, doc, group, level, save=False, flags=None, currentUser=None,
-                       force=False):
+    def setGroupAccess(
+        self, doc, group, level, save=False, flags=None, currentUser=None, force=False
+    ):
         raise NotImplementedError('Use setAccessList instead')
 
     def setAccessList(self, doc, access, save=True, user=None, force=False):
@@ -143,26 +138,18 @@ class Dataset(AccessControlledModel):
             self.imagesFolder(doc),
             {
                 'users': [
-                    {
-                        'id': accessElement['id'],
-                        'level': AccessType.READ,
-                        'flags': []
-                    }
+                    {'id': accessElement['id'], 'level': AccessType.READ, 'flags': []}
                     for accessElement in doc['access']['users']
                 ],
                 'groups': [
-                    {
-                        'id': accessElement['id'],
-                        'level': AccessType.READ,
-                        'flags': []
-                    }
+                    {'id': accessElement['id'], 'level': AccessType.READ, 'flags': []}
                     for accessElement in doc['access']['groups']
-                ]
+                ],
             },
             save=True,
             # Don't need user, since flags are not set
             user=None,
-            force=True
+            force=True,
         )
 
         return doc
@@ -171,14 +158,8 @@ class Dataset(AccessControlledModel):
         if not save:
             raise GirderException('"save" must always be True')
 
-        self.update(
-            {'_id': doc['_id']},
-            {'$set': {'public': public}}
-        )
-        Folder().update(
-            {'_id': doc['folderId']},
-            {'$set': {'public': public}}
-        )
+        self.update({'_id': doc['_id']}, {'$set': {'public': public}})
+        Folder().update({'_id': doc['folderId']}, {'$set': {'public': public}})
 
         return doc
 
@@ -198,17 +179,14 @@ class Dataset(AccessControlledModel):
             'attribution': dataset['attribution'],
             'created': dataset['created'],
             'creator': User().filterSummary(
-                User().load(dataset['creatorId'], force=True, exc=True),
-                user),
+                User().load(dataset['creatorId'], force=True, exc=True), user
+            ),
             # TODO: verify that "updated" is set correctly
             'updated': dataset['updated'],
-            'count': Image().find({'folderId': dataset['folderId']}).count()
+            'count': Image().find({'folderId': dataset['folderId']}).count(),
         }
         if self.hasAccess(dataset, user, level=AccessType.WRITE):
-            output.update({
-                'owner': dataset['owner'],
-                'metadataFiles': dataset['metadataFiles'],
-            })
+            output.update({'owner': dataset['owner'], 'metadataFiles': dataset['metadataFiles']})
 
         return output
 
@@ -242,11 +220,13 @@ class Dataset(AccessControlledModel):
         Folder().remove(imagesFolder)
 
         flaggedCollection = Collection().findOne({'name': 'Flagged Images'})
-        flaggedFolder = Folder().findOne({
-            'name': dataset['name'],
-            'parentId': flaggedCollection['_id'],
-            'parentCollection': 'collection'
-        })
+        flaggedFolder = Folder().findOne(
+            {
+                'name': dataset['name'],
+                'parentId': flaggedCollection['_id'],
+                'parentCollection': 'collection',
+            }
+        )
         if flaggedFolder:
             # TODO: If there are any flagged images with segmentations, those won't be removed
             Folder().remove(flaggedFolder)
@@ -259,10 +239,7 @@ class Dataset(AccessControlledModel):
         doc['name'] = doc['name'].strip()
         if not doc['name']:
             raise ValidationException('Name must not be empty.', 'name')
-        if self.find({
-            '_id': {'$ne': doc.get('_id')},
-            'name': doc['name']
-        }).count():
+        if self.find({'_id': {'$ne': doc.get('_id')}, 'name': doc['name']}).count():
             raise ValidationException('Name must be unique.', 'name')
 
         # Description
@@ -285,7 +262,8 @@ class Dataset(AccessControlledModel):
         if doc['attribution'] == 'Anonymous' and doc['license'] != 'CC-0':
             raise ValidationException(
                 'Attribution may not be anonymous with a %s license.' % doc['license'],
-                'attribution')
+                'attribution',
+            )
 
         # Owner
         assert isinstance(doc['owner'], six.string_types)
@@ -304,11 +282,7 @@ class Dataset(AccessControlledModel):
         # Avoid circular import
         from .image import Image
 
-        batch = Batch().createBatch(
-            dataset=dataset,
-            creator=user,
-            signature=signature
-        )
+        batch = Batch().createBatch(dataset=dataset, creator=user, signature=signature)
 
         prereviewFolder = Folder().createFolder(
             parent=self.imagesFolder(dataset),
@@ -316,7 +290,8 @@ class Dataset(AccessControlledModel):
             parentType='folder',
             creator=user,
             public=False,
-            reuseExisting=True)
+            reuseExisting=True,
+        )
 
         image = Image().createImage(
             imageDataStream=imageDataStream,
@@ -325,7 +300,7 @@ class Dataset(AccessControlledModel):
             parentFolder=prereviewFolder,
             creator=user,
             dataset=dataset,
-            batch=batch
+            batch=batch,
         )
 
         return image
@@ -333,18 +308,13 @@ class Dataset(AccessControlledModel):
     def initiateZipUploadS3(self, dataset, signature, user):
         """Initiate a direct-to-S3 upload of a ZIP file of images."""  # noqa: D401
         # Get upload settings
-        s3BucketName = Setting().get(
-            PluginSettings.UPLOAD_BUCKET_NAME)
-        uploadRoleArn = Setting().get(
-            PluginSettings.UPLOAD_ROLE_ARN)
+        s3BucketName = Setting().get(PluginSettings.UPLOAD_BUCKET_NAME)
+        uploadRoleArn = Setting().get(PluginSettings.UPLOAD_ROLE_ARN)
         if not all([s3BucketName, uploadRoleArn]):
             raise GirderException('Upload not configured.')
 
         # Create new batch
-        batch = Batch().createBatch(
-            dataset=dataset,
-            creator=user,
-            signature=signature)
+        batch = Batch().createBatch(dataset=dataset, creator=user, signature=signature)
 
         # Add policy that restricts uploads to only the specific key
         s3BucketArn = 'arn:aws:s3:::%s' % s3BucketName
@@ -354,12 +324,10 @@ class Dataset(AccessControlledModel):
             "Statement": [
                 {
                     "Effect": "Allow",
-                    "Action": [
-                        "s3:PutObject",
-                    ],
-                    "Resource": "%s/%s" % (s3BucketArn, s3ObjectKey)
+                    "Action": ["s3:PutObject"],
+                    "Resource": "%s/%s" % (s3BucketArn, s3ObjectKey),
                 }
-            ]
+            ],
         }
 
         # Get temporary security credentials with permission to upload into the
@@ -372,11 +340,13 @@ class Dataset(AccessControlledModel):
                 RoleSessionName='ZipUploadSession-%d' % int(time.time()),
                 Policy=json.dumps(s3BucketPutObjectInKeyPolicy),
                 # 12 hours, also limited by the MaxSessionDuration of the role
-                DurationSeconds=12 * 60 * 60
+                DurationSeconds=12 * 60 * 60,
             )
         except botocore.exceptions.ClientError as e:
-            raise GirderException('Error acquiring temporary security credentials: %s' %
-                                  e.response['Error']['Message'])
+            raise GirderException(
+                'Error acquiring temporary security credentials: %s'
+                % e.response['Error']['Message']
+            )
 
         # TODO: Could store assumed role user ARN on batch for use as principal in a bucket policy
         # that effectively revokes the temporary security credentials, before they expire,
@@ -387,10 +357,7 @@ class Dataset(AccessControlledModel):
         credentials = resp['Credentials']
 
         # Store upload information on batch
-        batch.update({
-            's3BucketName': s3BucketName,
-            's3ObjectKey': s3ObjectKey
-        })
+        batch.update({'s3BucketName': s3BucketName, 's3ObjectKey': s3ObjectKey})
         batch = Batch().save(batch)
 
         return {
@@ -399,7 +366,7 @@ class Dataset(AccessControlledModel):
             'sessionToken': credentials['SessionToken'],
             'bucketName': s3BucketName,
             'objectKey': s3ObjectKey,
-            'batchId': batch['_id']
+            'batchId': batch['_id'],
         }
 
     def cancelZipUploadS3(self, dataset, batch, user):
@@ -413,10 +380,7 @@ class Dataset(AccessControlledModel):
         # Delete file from S3 as upload user
         s3 = boto3.client('s3')
         try:
-            s3.delete_object(
-                Bucket=s3BucketName,
-                Key=s3ObjectKey
-            )
+            s3.delete_object(Bucket=s3BucketName, Key=s3ObjectKey)
         except botocore.exceptions.ClientError as e:
             raise GirderException('Error deleting object: %s' % e.response['Error']['Message'])
 
@@ -445,11 +409,7 @@ class Dataset(AccessControlledModel):
             with TempDir() as tempDir:
                 # Download file from S3 as upload user
                 fileName = os.path.join(tempDir, str(batch['_id']) + '.zip')
-                s3.download_file(
-                    Bucket=s3BucketName,
-                    Key=s3ObjectKey,
-                    Filename=fileName
-                )
+                s3.download_file(Bucket=s3BucketName, Key=s3ObjectKey, Filename=fileName)
 
                 # Attach file to dataset
                 fileSize = os.path.getsize(fileName)
@@ -462,17 +422,14 @@ class Dataset(AccessControlledModel):
                         parent=dataset,
                         attachParent=True,
                         user=user,
-                        mimeType='application/zip'
+                        mimeType='application/zip',
                     )
                 # TODO: remove this once a bug in upstream Girder is fixed
                 zipFile['attachedToType'] = ['dataset', 'isic_archive']
                 zipFile = File().save(zipFile)
 
                 # Delete file from S3 as upload user
-                s3.delete_object(
-                    Bucket=s3BucketName,
-                    Key=s3ObjectKey
-                )
+                s3.delete_object(Bucket=s3BucketName, Key=s3ObjectKey)
 
                 # Remove upload information from batch
                 del batch['s3BucketName']
@@ -489,11 +446,7 @@ class Dataset(AccessControlledModel):
 
     def addZipBatch(self, dataset, zipFile, signature, user, sendMail=False):
         """Create a new batch and ingest images from a ZIP file into the dataset."""
-        batch = Batch().createBatch(
-            dataset=dataset,
-            creator=user,
-            signature=signature
-        )
+        batch = Batch().createBatch(dataset=dataset, creator=user, signature=signature)
 
         self._ingestZip(dataset, zipFile, batch, user, sendMail)
 
@@ -509,7 +462,8 @@ class Dataset(AccessControlledModel):
             parentType='folder',
             creator=user,
             public=False,
-            reuseExisting=True)
+            reuseExisting=True,
+        )
 
         # Process zip file
         # TODO: gracefully clean up after exceptions in handleZip
@@ -540,7 +494,8 @@ class Dataset(AccessControlledModel):
                 groupName='Dataset QC Reviewers',
                 templateFilename=templateFilename,
                 templateParams=params,
-                subject=subject)
+                subject=subject,
+            )
 
     def _handleZip(self, dataset, batch, prereviewFolder, user, zipFile):
         # Avoid circular import
@@ -549,18 +504,17 @@ class Dataset(AccessControlledModel):
         zipFileLocalPath = File().getLocalFilePath(zipFile)
         with ZipFileOpener(zipFileLocalPath) as (fileList, fileCount):
             with ProgressContext(
-                    on=True,
-                    user=user,
-                    title='Processing "%s"' % zipFile['name'],
-                    total=fileCount,
-                    state=ProgressState.ACTIVE,
-                    current=0) as progress:
+                on=True,
+                user=user,
+                title='Processing "%s"' % zipFile['name'],
+                total=fileCount,
+                state=ProgressState.ACTIVE,
+                current=0,
+            ) as progress:
                 for originalFilePath, originalFileRelpath in fileList:
                     originalFileName = os.path.basename(originalFileRelpath)
 
-                    progress.update(
-                        increment=1,
-                        message='Extracting "%s"' % originalFileName)
+                    progress.update(increment=1, message='Extracting "%s"' % originalFileName)
 
                     with open(originalFilePath, 'rb') as originalFileStream:
                         Image().createImage(
@@ -570,17 +524,14 @@ class Dataset(AccessControlledModel):
                             parentFolder=prereviewFolder,
                             creator=user,
                             dataset=dataset,
-                            batch=batch
+                            batch=batch,
                         )
 
     def imagesFolder(self, dataset):
         return Folder().load(dataset['folderId'], force=True, exc=True)
 
     def prereviewFolder(self, dataset):
-        return Folder().findOne({
-            'name': 'Pre-review',
-            'parentId': dataset['folderId']
-        })
+        return Folder().findOne({'name': 'Pre-review', 'parentId': dataset['folderId']})
 
     def reviewImages(self, dataset, acceptedImages, flaggedImages, user):
         # Avoid circular import
@@ -592,28 +543,25 @@ class Dataset(AccessControlledModel):
             raise GirderException('No Pre-review folder for this dataset.')
         for image in itertools.chain(acceptedImages, flaggedImages):
             if image['folderId'] != prereviewFolder['_id']:
-                raise ValidationException(
-                    'Image %s is not in Pre-review.' % image['_id'])
+                raise ValidationException('Image %s is not in Pre-review.' % image['_id'])
 
         now = datetime.datetime.utcnow()
 
         imagesFolder = self.imagesFolder(dataset)
         for image in acceptedImages:
-            image['meta']['reviewed'] = {
-                'userId': user['_id'],
-                'time': now,
-                'accepted': True
-            }
+            image['meta']['reviewed'] = {'userId': user['_id'], 'time': now, 'accepted': True}
             # '.move' will save the image
             Image().move(image, imagesFolder)
 
         if flaggedImages:
             flaggedCollection = Collection().findOne({'name': 'Flagged Images'})
-            flaggedFolder = Folder().findOne({
-                'name': dataset['name'],
-                'parentId': flaggedCollection['_id'],
-                'parentCollection': 'collection'
-            })
+            flaggedFolder = Folder().findOne(
+                {
+                    'name': dataset['name'],
+                    'parentId': flaggedCollection['_id'],
+                    'parentCollection': 'collection',
+                }
+            )
             if not flaggedFolder:
                 flaggedFolder = Folder().createFolder(
                     parent=flaggedCollection,
@@ -622,21 +570,18 @@ class Dataset(AccessControlledModel):
                     public=None,
                     creator=user,
                     allowRename=False,
-                    reuseExisting=False)
+                    reuseExisting=False,
+                )
                 flaggedFolder = Folder().copyAccessPolicies(
-                    prereviewFolder, flaggedFolder, save=True)
+                    prereviewFolder, flaggedFolder, save=True
+                )
             for image in flaggedImages:
-                image['meta']['reviewed'] = {
-                    'userId': user['_id'],
-                    'time': now,
-                    'accepted': False
-                }
+                image['meta']['reviewed'] = {'userId': user['_id'], 'time': now, 'accepted': False}
                 # '.move' will save the image
                 Image().move(image, flaggedFolder)
 
         # Remove an empty Pre-review folder
-        if (Folder().countItems(prereviewFolder) +
-                Folder().countFolders(prereviewFolder)) == 0:
+        if (Folder().countItems(prereviewFolder) + Folder().countFolders(prereviewFolder)) == 0:
             Folder().remove(prereviewFolder)
 
     def registerMetadata(self, dataset, metadataDataStream, filename, user, sendMail=False):
@@ -650,7 +595,7 @@ class Dataset(AccessControlledModel):
             parent=dataset,
             attachParent=True,
             user=user,
-            mimeType='text/csv'
+            mimeType='text/csv',
         )
         # TODO: remove this once a bug in upstream Girder is fixed
         metadataFile['attachedToType'] = ['dataset', 'isic_archive']
@@ -658,11 +603,9 @@ class Dataset(AccessControlledModel):
 
         # Add image metadata file information to list
         now = datetime.datetime.utcnow()
-        dataset['metadataFiles'].append({
-            'fileId': metadataFile['_id'],
-            'userId': user['_id'],
-            'time': now
-        })
+        dataset['metadataFiles'].append(
+            {'fileId': metadataFile['_id'], 'userId': user['_id'], 'time': now}
+        )
         dataset = Dataset().save(dataset)
 
         # Send email notification
@@ -676,25 +619,28 @@ class Dataset(AccessControlledModel):
                     'dataset': dataset,
                     'user': user,
                     'metadataFile': metadataFile,
-                    'date': now.replace(microsecond=0)
+                    'date': now.replace(microsecond=0),
                 },
-                subject='ISIC Archive: Dataset Metadata Notification')
+                subject='ISIC Archive: Dataset Metadata Notification',
+            )
 
         return dataset
 
     def removeMetadata(self, dataset, metadataFile):
         # Remove metadata file registration from database
         self.update(
-            {'_id': dataset['_id']},
-            {'$pull': {'metadataFiles': {'fileId': metadataFile['_id']}}}
+            {'_id': dataset['_id']}, {'$pull': {'metadataFiles': {'fileId': metadataFile['_id']}}}
         )
 
         # Remove file
         File().remove(metadataFile)
 
         # Update document in-place
-        dataset['metadataFiles'][:] = [registration for registration in dataset['metadataFiles']
-                                       if registration['fileId'] != metadataFile['_id']]
+        dataset['metadataFiles'][:] = [
+            registration
+            for registration in dataset['metadataFiles']
+            if registration['fileId'] != metadataFile['_id']
+        ]
         return dataset
 
     def applyMetadata(self, dataset, metadataFile, save):
@@ -719,8 +665,7 @@ class Dataset(AccessControlledModel):
             csvReader = csv.DictReader(generateLines(metadataFileStream))
 
             if not csvReader.fieldnames:
-                raise FileMetadataException(
-                    'no field names found on the first line of the CSV')
+                raise FileMetadataException('no field names found on the first line of the CSV')
             originalNameField, isicIdField = self._getFilenameFields(csvReader)
 
             for rowNum, csvRow in enumerate(csvReader):
@@ -728,13 +673,14 @@ class Dataset(AccessControlledModel):
                 rowNum += 2
                 try:
                     image = self._getImageForMetadataCsvRow(
-                        dataset, csvRow, originalNameField, isicIdField)
-                    validationErrors, validationWarnings = \
-                        addImageMetadata(image, csvRow)
+                        dataset, csvRow, originalNameField, isicIdField
+                    )
+                    validationErrors, validationWarnings = addImageMetadata(image, csvRow)
 
                     # Add row information to validation error strings
                     validationErrors = [
-                        'on CSV row %s: %s' % (rowNum, error) for error in validationErrors]
+                        'on CSV row %s: %s' % (rowNum, error) for error in validationErrors
+                    ]
                     metadataErrors.extend(validationErrors)
 
                     # Update global collection of warnings
@@ -751,8 +697,9 @@ class Dataset(AccessControlledModel):
         except csv.Error as e:
             metadataErrors.append('parsing CSV: %s' % str(e))
         except UnicodeDecodeError as e:
-            metadataErrors.append('CSV is not UTF-8 encoded (%s at position %d in %r)' %
-                                  (e.reason, e.start, e.object))
+            metadataErrors.append(
+                'CSV is not UTF-8 encoded (%s at position %d in %r)' % (e.reason, e.start, e.object)
+            )
 
         # Save updated metadata to images
         if not metadataErrors and save:
@@ -773,12 +720,10 @@ class Dataset(AccessControlledModel):
         else:
             isicIdField = None
         if (not originalNameField) and (not isicIdField):
-            raise FileMetadataException(
-                'no \'filename\' or \'isic_id\' field found in CSV')
+            raise FileMetadataException('no \'filename\' or \'isic_id\' field found in CSV')
         return originalNameField, isicIdField
 
-    def _getImageForMetadataCsvRow(self, dataset, csvRow, originalNameField,
-                                   isicIdField):
+    def _getImageForMetadataCsvRow(self, dataset, csvRow, originalNameField, isicIdField):
         """
         Get the image specified in the CSV row.
 
@@ -795,16 +740,12 @@ class Dataset(AccessControlledModel):
         if originalNameField:
             originalName = csvRow.pop(originalNameField, None)
             originalNameRegex = matchFilenameRegex(originalName)
-            imageQuery.update({
-                'privateMeta.originalFilename': originalNameRegex
-            })
+            imageQuery.update({'privateMeta.originalFilename': originalNameRegex})
         else:
             originalName = None
         if isicIdField:
             isicId = csvRow.pop(isicIdField, None)
-            imageQuery.update({
-                'name': isicId
-            })
+            imageQuery.update({'name': isicId})
         else:
             isicId = None
 
@@ -813,13 +754,15 @@ class Dataset(AccessControlledModel):
         if numImages != 1:
             if originalNameField and isicIdField:
                 errorStr = 'that match both %r: %r and %r: %r' % (
-                    originalNameField, originalName, isicIdField, isicId)
+                    originalNameField,
+                    originalName,
+                    isicIdField,
+                    isicId,
+                )
             elif originalNameField:
-                errorStr = 'that match %r: %r' % (
-                    originalNameField, originalName)
+                errorStr = 'that match %r: %r' % (originalNameField, originalName)
             else:  # isicIdField
-                errorStr = 'that match %r: %r' % (
-                    isicIdField, isicId)
+                errorStr = 'that match %r: %r' % (isicIdField, isicId)
 
             # No images found
             if numImages == 0:

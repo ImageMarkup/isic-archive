@@ -45,31 +45,45 @@ class AnnotationResource(IsicResource):
 
         self.route('GET', (), self.find)
         self.route('GET', (':annotationId',), self.getAnnotation)
-        self.route('GET', (':annotationId', 'markup', ':featureId'),
-                   self.getAnnotationMarkupMask)
-        self.route('GET', (':annotationId', 'markup', ':featureId', 'rendered'),
-                   self.getAnnotationMarkupRendered)
-        self.route('GET', (':annotationId', 'markup', ':featureId', 'superpixels'),
-                   self.getAnnotationMarkupSuperpixels)
+        self.route('GET', (':annotationId', 'markup', ':featureId'), self.getAnnotationMarkupMask)
+        self.route(
+            'GET',
+            (':annotationId', 'markup', ':featureId', 'rendered'),
+            self.getAnnotationMarkupRendered,
+        )
+        self.route(
+            'GET',
+            (':annotationId', 'markup', ':featureId', 'superpixels'),
+            self.getAnnotationMarkupSuperpixels,
+        )
         self.route('PUT', (':annotationId',), self.submitAnnotation)
 
         # TODO: These are all deprecated
-        self.route('GET', (':annotationId', ':featureId'),
-                   self.getAnnotationMarkupSuperpixels)
-        self.route('GET', (':annotationId', ':featureId', 'mask'),
-                   self.getAnnotationMarkupMask)
-        self.route('GET', (':annotationId', ':featureId', 'render'),
-                   self.getAnnotationMarkupRendered)
+        self.route('GET', (':annotationId', ':featureId'), self.getAnnotationMarkupSuperpixels)
+        self.route('GET', (':annotationId', ':featureId', 'mask'), self.getAnnotationMarkupMask)
+        self.route(
+            'GET', (':annotationId', ':featureId', 'render'), self.getAnnotationMarkupRendered
+        )
 
     @describeRoute(
         Description('Return a list of annotations.')
         .param('studyId', 'The ID of the study to filter by.', paramType='query', required=True)
         .param('userId', 'The ID of the user to filter by.', paramType='query', required=False)
         .param('imageId', 'The ID of the image to filter by.', paramType='query', required=False)
-        .param('state', 'Filter annotations to those at a given state.', paramType='query',
-               required=False, enum=('active', 'complete'))
-        .param('detail', 'Display the full information for each annotation, instead of a summary.',
-               required=False, dataType='boolean', default=False)
+        .param(
+            'state',
+            'Filter annotations to those at a given state.',
+            paramType='query',
+            required=False,
+            enum=('active', 'complete'),
+        )
+        .param(
+            'detail',
+            'Display the full information for each annotation, instead of a summary.',
+            required=False,
+            dataType='boolean',
+            default=False,
+        )
         .errorResponse()
     )
     @access.cookie
@@ -79,16 +93,16 @@ class AnnotationResource(IsicResource):
 
         # check access here for simplicity
         study = Study().load(
-            params['studyId'], user=self.getCurrentUser(),
-            level=AccessType.READ, exc=True)
+            params['studyId'], user=self.getCurrentUser(), level=AccessType.READ, exc=True
+        )
 
-        annotatorUser = User().load(
-            params['userId'], force=True, exc=True) \
-            if 'userId' in params else None
+        annotatorUser = (
+            User().load(params['userId'], force=True, exc=True) if 'userId' in params else None
+        )
 
-        image = Image().load(
-            params['imageId'], force=True, exc=True) \
-            if 'imageId' in params else None
+        image = (
+            Image().load(params['imageId'], force=True, exc=True) if 'imageId' in params else None
+        )
 
         state = None
         if 'state' in params:
@@ -102,12 +116,8 @@ class AnnotationResource(IsicResource):
         # TODO: add limit, offset, sort
         return [
             filterFunc(annotation)
-            for annotation in
-            Study().childAnnotations(
-                study=study,
-                annotatorUser=annotatorUser,
-                image=image,
-                state=state
+            for annotation in Study().childAnnotations(
+                study=study, annotatorUser=annotatorUser, image=image, state=state
             )
         ]
 
@@ -118,8 +128,12 @@ class AnnotationResource(IsicResource):
     )
     @access.cookie
     @access.public
-    @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
-               level=AccessType.READ)
+    @loadmodel(
+        map={'annotationId': 'annotation'},
+        model='annotation',
+        plugin='isic_archive',
+        level=AccessType.READ,
+    )
     def getAnnotation(self, annotation, params):
         user = self.getCurrentUser()
         return Annotation().filter(annotation, user)
@@ -144,8 +158,12 @@ class AnnotationResource(IsicResource):
     )
     @access.cookie
     @access.public
-    @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
-               level=AccessType.READ)
+    @loadmodel(
+        map={'annotationId': 'annotation'},
+        model='annotation',
+        plugin='isic_archive',
+        level=AccessType.READ,
+    )
     def getAnnotationMarkupSuperpixels(self, annotation, featureId, params):
         self._ensureMarkup(annotation, featureId)
 
@@ -168,8 +186,12 @@ class AnnotationResource(IsicResource):
     )
     @access.cookie
     @access.public
-    @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
-               level=AccessType.READ)
+    @loadmodel(
+        map={'annotationId': 'annotation'},
+        model='annotation',
+        plugin='isic_archive',
+        level=AccessType.READ,
+    )
     def getAnnotationMarkupMask(self, annotation, featureId, params):
         self._ensureMarkup(annotation, featureId)
 
@@ -180,11 +202,8 @@ class AnnotationResource(IsicResource):
         else:
             image = Image().load(annotation['imageId'], force=True, exc=True)
             markupMask = numpy.zeros(
-                (
-                    image['meta']['acquisition']['pixelsY'],
-                    image['meta']['acquisition']['pixelsX']
-                ),
-                dtype=numpy.uint
+                (image['meta']['acquisition']['pixelsY'], image['meta']['acquisition']['pixelsX']),
+                dtype=numpy.uint,
             )
             markupMaskEncodedStream = ScikitSegmentationHelper.writeImage(markupMask, 'png')
             markupMaskEncodedData = markupMaskEncodedStream.getvalue()
@@ -194,7 +213,7 @@ class AnnotationResource(IsicResource):
             contentName = 'annotation_%s_%s.png' % (
                 annotation['_id'],
                 # Rename features to ensure the file is downloadable on Windows
-                featureId.replace(' : ', ' ; ').replace('/', ',')
+                featureId.replace(' : ', ' ; ').replace('/', ','),
             )
             setResponseHeader('Content-Disposition', 'inline; filename="%s"' % contentName)
             setResponseHeader('Content-Length', len(markupMaskEncodedData))
@@ -205,21 +224,29 @@ class AnnotationResource(IsicResource):
         Description('Render an annotation\'s markup, overlaid on its image.')
         .param('annotationId', 'The ID of the annotation to be rendered.', paramType='path')
         .param('featureId', 'The feature ID for the markup.', paramType='path')
-        .param('contentDisposition',
-               'Specify the Content-Disposition response header disposition-type value.',
-               required=False, enum=['inline', 'attachment'])
+        .param(
+            'contentDisposition',
+            'Specify the Content-Disposition response header disposition-type value.',
+            required=False,
+            enum=['inline', 'attachment'],
+        )
         .produces('image/jpeg')
         .errorResponse()
     )
     @access.cookie
     @access.public
-    @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
-               level=AccessType.READ)
+    @loadmodel(
+        map={'annotationId': 'annotation'},
+        model='annotation',
+        plugin='isic_archive',
+        level=AccessType.READ,
+    )
     def getAnnotationMarkupRendered(self, annotation, featureId, params):
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
-            raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
-                                      'contentDisposition')
+            raise ValidationException(
+                'Unallowed contentDisposition type "%s".' % contentDisp, 'contentDisposition'
+            )
 
         self._ensureMarkup(annotation, featureId)
 
@@ -234,16 +261,12 @@ class AnnotationResource(IsicResource):
         contentName = 'annotation_%s_%s.jpg' % (
             annotation['_id'],
             # Rename features to ensure the file is downloadable on Windows
-            featureId.replace(' : ', ' ; ').replace('/', ',')
+            featureId.replace(' : ', ' ; ').replace('/', ','),
         )
         if contentDisp == 'inline':
-            setResponseHeader(
-                'Content-Disposition',
-                'inline; filename="%s"' % contentName)
+            setResponseHeader('Content-Disposition', 'inline; filename="%s"' % contentName)
         else:
-            setResponseHeader(
-                'Content-Disposition',
-                'attachment; filename="%s"' % contentName)
+            setResponseHeader('Content-Disposition', 'attachment; filename="%s"' % contentName)
         setResponseHeader('Content-Length', len(renderEncodedData))
 
         return renderEncodedData
@@ -251,13 +274,18 @@ class AnnotationResource(IsicResource):
     @describeRoute(
         Description('Submit a completed annotation.')
         .param('annotationId', 'The ID of the annotation to be submitted.', paramType='path')
-        .param('body', 'JSON containing the annotation parameters.',
-               paramType='body', required=True)
+        .param(
+            'body', 'JSON containing the annotation parameters.', paramType='body', required=True
+        )
         .errorResponse()
     )
     @access.user
-    @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
-               level=AccessType.READ)
+    @loadmodel(
+        map={'annotationId': 'annotation'},
+        model='annotation',
+        plugin='isic_archive',
+        level=AccessType.READ,
+    )
     def submitAnnotation(self, annotation, params):
         if annotation['userId'] != self.getCurrentUser()['_id']:
             raise RestException('Current user does not own this annotation.')
@@ -267,13 +295,12 @@ class AnnotationResource(IsicResource):
 
         bodyJson = self.getBodyJson()
         self.requireParams(
-            ['status', 'startTime', 'stopTime', 'responses', 'markups', 'log'], bodyJson)
+            ['status', 'startTime', 'stopTime', 'responses', 'markups', 'log'], bodyJson
+        )
 
         annotation['status'] = bodyJson['status']
-        annotation['startTime'] = datetime.datetime.utcfromtimestamp(
-            bodyJson['startTime'] / 1000.0)
-        annotation['stopTime'] = datetime.datetime.utcfromtimestamp(
-            bodyJson['stopTime'] / 1000.0)
+        annotation['startTime'] = datetime.datetime.utcfromtimestamp(bodyJson['startTime'] / 1000.0)
+        annotation['stopTime'] = datetime.datetime.utcfromtimestamp(bodyJson['stopTime'] / 1000.0)
         annotation['responses'] = bodyJson['responses']
         annotation['log'] = bodyJson['log']
 
@@ -294,18 +321,14 @@ class AnnotationResource(IsicResource):
                     'properties': {
                         feature['id']: {
                             'type': 'array',
-                            'items': {
-                                'type': 'number',
-                                'enum': [0.0, 0.5, 1.0]
-
-                            },
+                            'items': {'type': 'number', 'enum': [0.0, 0.5, 1.0]},
                             'minItems': maxSuperpixel + 1,
-                            'maxItems': maxSuperpixel + 1
+                            'maxItems': maxSuperpixel + 1,
                         }
                         for feature in study['meta']['features']
                     },
-                    'additionalProperties': False
-                }
+                    'additionalProperties': False,
+                },
             )
         except jsonschema.ValidationError as e:
             raise ValidationException('Invalid markups: ' + e.message)

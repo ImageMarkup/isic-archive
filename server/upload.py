@@ -34,8 +34,7 @@ class TempDir(object):
 
     def __enter__(self):
         assetstore = Assetstore().getCurrent()
-        assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(
-            assetstore)
+        assetstoreAdapter = assetstore_utilities.getAssetstoreAdapter(assetstore)
         try:
             self.tempDir = tempfile.mkdtemp(dir=assetstoreAdapter.tempDir)
         except (AttributeError, OSError):
@@ -95,28 +94,18 @@ class ZipFileOpener(object):
             originalFileName = os.path.basename(originalFileRelpath)
             tempFilePath = os.path.join(self.tempDir, originalFileName)
             with open(tempFilePath, 'wb') as tempFileStream:
-                shutil.copyfileobj(
-                    zipFile.open(originalFile),
-                    tempFileStream
-                )
+                shutil.copyfileobj(zipFile.open(originalFile), tempFileStream)
             yield tempFilePath, originalFileRelpath
             os.remove(tempFilePath)
         zipFile.close()
 
     def _fallbackUnzip(self):
-        unzipCommand = (
-            '7z',
-            'x',
-            '-y',
-            '-o%s' % self.tempDir,
-            self.zipFilePath
-        )
+        unzipCommand = ('7z', 'x', '-y', '-o%s' % self.tempDir, self.zipFilePath)
         try:
-            with open(os.devnull, 'rb') as nullIn,\
-                    open(os.devnull, 'wb') as nullOut:
+            with open(os.devnull, 'rb') as nullIn, open(os.devnull, 'wb') as nullOut:
                 subprocess.check_call(
-                    unzipCommand, stdin=nullIn, stdout=nullOut,
-                    stderr=subprocess.STDOUT)
+                    unzipCommand, stdin=nullIn, stdout=nullOut, stderr=subprocess.STDOUT
+                )
         except subprocess.CalledProcessError:
             self.__exit__(*sys.exc_info())
             raise
@@ -125,8 +114,7 @@ class ZipFileOpener(object):
         for tempDirPath, _, tempFileNames in os.walk(self.tempDir):
             for tempFileName in tempFileNames:
                 tempFilePath = os.path.join(tempDirPath, tempFileName)
-                originalFileRelpath = os.path.relpath(
-                    tempFilePath, self.tempDir)
+                originalFileRelpath = os.path.relpath(tempFilePath, self.tempDir)
                 if tempFileName.startswith('._'):
                     # file is probably a macOS resource fork, skip
                     continue

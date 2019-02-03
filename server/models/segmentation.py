@@ -45,17 +45,11 @@ class Segmentation(Model):
         self.name = 'segmentation'
         self.ensureIndices(['imageId', 'created'])
 
-        self.exposeFields(AccessType.READ, [
-            'imageId',
-            'creatorId',
-            'created',
-            'reviews',
-            'meta'
-        ])
+        self.exposeFields(AccessType.READ, ['imageId', 'creatorId', 'created', 'reviews', 'meta'])
         self.summaryFields = ['_id', 'created']
-        events.bind('model.item.remove_with_kwargs',
-                    'isic_archive.gc_segmentation',
-                    self._onDeleteItem)
+        events.bind(
+            'model.item.remove_with_kwargs', 'isic_archive.gc_segmentation', self._onDeleteItem
+        )
 
     def doSegmentation(self, image, seedCoord, tolerance):
         """
@@ -71,26 +65,21 @@ class Segmentation(Model):
         """
         imageData = Image().imageData(image)
 
-        if not(
+        if not (
             # The imageData has a shape of (rows, cols), the seed is (x, y)
-            0.0 <= seedCoord[0] <= imageData.shape[1] and
-            0.0 <= seedCoord[1] <= imageData.shape[0]
+            0.0 <= seedCoord[0] <= imageData.shape[1]
+            and 0.0 <= seedCoord[1] <= imageData.shape[0]
         ):
             raise GirderException('seedCoord is out of bounds')
 
         # OpenCV is significantly faster at segmentation right now
-        mask = OpenCVSegmentationHelper.segment(
-            imageData, seedCoord, tolerance)
+        mask = OpenCVSegmentationHelper.segment(imageData, seedCoord, tolerance)
 
         return mask
 
     def doContourSegmentation(self, image, seedCoord, tolerance):
         mask = self.doSegmentation(image, seedCoord, tolerance)
-        contour = OpenCVSegmentationHelper.maskToContour(
-            mask,
-            paddedInput=False,
-            safe=False
-        )
+        contour = OpenCVSegmentationHelper.maskToContour(mask, paddedInput=False, safe=False)
         return contour
 
     def createSegmentation(self, image, creator, mask, meta=None):
@@ -98,17 +87,18 @@ class Segmentation(Model):
 
         if mask is not None:
             mask = self._validateMask(mask, image)
-            maskOutputStream = ScikitSegmentationHelper.writeImage(
-                mask, encoding='png')
+            maskOutputStream = ScikitSegmentationHelper.writeImage(mask, encoding='png')
 
-        segmentation = self.save({
-            'imageId': image['_id'],
-            'creatorId': creator['_id'],
-            'created': now,
-            'maskId': None,
-            'reviews': [],
-            'meta': meta or {}
-        })
+        segmentation = self.save(
+            {
+                'imageId': image['_id'],
+                'creatorId': creator['_id'],
+                'created': now,
+                'maskId': None,
+                'reviews': [],
+                'meta': meta or {},
+            }
+        )
 
         if mask is not None:
             maskFile = Upload().uploadFromFile(
@@ -120,7 +110,7 @@ class Segmentation(Model):
                 parent=segmentation,
                 attachParent=True,
                 user=creator,
-                mimeType='image/png'
+                mimeType='image/png',
             )
             # TODO: remove this once a bug in upstream Girder is fixed
             maskFile['attachedToType'] = ['segmentation', 'isic_archive']
@@ -130,10 +120,8 @@ class Segmentation(Model):
 
         # review will save the segmentation
         segmentation = self.review(
-            segmentation=segmentation,
-            approved=mask is not None,
-            user=creator,
-            time=now)
+            segmentation=segmentation, approved=mask is not None, user=creator, time=now
+        )
 
         return segmentation
 
@@ -166,17 +154,14 @@ class Segmentation(Model):
         mask = self.maskData(segmentation)
         if mask is None:
             return None
-        contour = OpenCVSegmentationHelper.maskToContour(
-            mask, paddedInput=False)
+        contour = OpenCVSegmentationHelper.maskToContour(mask, paddedInput=False)
 
-        pilImageData = PIL_Image.open(
-            File().getLocalFilePath(Image().originalFile(image))
-        )
+        pilImageData = PIL_Image.open(File().getLocalFilePath(Image().originalFile(image)))
         pilDraw = PIL_ImageDraw.Draw(pilImageData)
         pilDraw.line(
             list(six.moves.map(tuple, contour)),
             fill=(0, 255, 0),  # TODO: make color an option
-            width=int(pilImageData.size[0] / 300.0)
+            width=int(pilImageData.size[0] / 300.0),
         )
 
         # Saving using native PIL is much faster than converting to a NumPy array to save with
@@ -198,21 +183,16 @@ class Segmentation(Model):
         if time is None:
             time = datetime.datetime.utcnow()
 
-        segmentation['reviews'].append({
-            'userId': user['_id'],
-            'skill': skill,
-            'time': time,
-            'approved': approved
-        })
+        segmentation['reviews'].append(
+            {'userId': user['_id'], 'skill': skill, 'time': time, 'approved': approved}
+        )
 
         return self.save(segmentation)
 
     def _onDeleteItem(self, event):
         item = event.info['document']
         # TODO: can we tell if this item is an image?
-        for segmentation in self.find({
-            'imageId': item['_id']
-        }):
+        for segmentation in self.find({'imageId': item['_id']}):
             self.remove(segmentation, **event.info['kwargs'])
 
     def remove(self, segmentation, **kwargs):
@@ -225,10 +205,10 @@ class Segmentation(Model):
         if len(mask.shape) != 2:
             raise ValidationException('Mask must be a single-channel image.')
         if mask.shape != (
-                image['meta']['acquisition']['pixelsY'],
-                image['meta']['acquisition']['pixelsX']):
-            raise ValidationException(
-                'Mask must have the same dimensions as the image.')
+            image['meta']['acquisition']['pixelsY'],
+            image['meta']['acquisition']['pixelsX'],
+        ):
+            raise ValidationException('Mask must have the same dimensions as the image.')
         if mask.dtype != numpy.uint8:
             raise ValidationException('Mask may only contain 8-bit values.')
 
@@ -248,23 +228,33 @@ class Segmentation(Model):
             if highValue != 255:
                 mask[mask == highValue] = 255
         else:
-            raise ValidationException(
-                'Mask may only contain values of 0 and 255.')
+            raise ValidationException('Mask may only contain values of 0 and 255.')
 
         contours = OpenCVSegmentationHelper._maskToContours(mask)
         if len(contours) > 1:
-            raise ValidationException(
-                'Mask may not contain multiple disconnected components.')
+            raise ValidationException('Mask may not contain multiple disconnected components.')
 
         return mask
 
     def validate(self, doc):
         try:
             assert set(six.viewkeys(doc)) >= {
-                'imageId', 'creatorId', 'created', 'maskId', 'reviews', 'meta'}
+                'imageId',
+                'creatorId',
+                'created',
+                'maskId',
+                'reviews',
+                'meta',
+            }
             assert set(six.viewkeys(doc)) <= {
-                '_id', 'imageId', 'creatorId', 'created', 'maskId', 'reviews',
-                'meta'}
+                '_id',
+                'imageId',
+                'creatorId',
+                'created',
+                'maskId',
+                'reviews',
+                'meta',
+            }
 
             assert isinstance(doc['imageId'], ObjectId)
             assert Image().find({'_id': doc['imageId']}).count()
@@ -280,8 +270,7 @@ class Segmentation(Model):
 
             assert isinstance(doc['reviews'], list)
             for review in doc['reviews']:
-                assert set(six.viewkeys(review)) == {
-                    'userId', 'skill', 'time', 'approved'}
+                assert set(six.viewkeys(review)) == {'userId', 'skill', 'time', 'approved'}
                 assert isinstance(review['userId'], ObjectId)
                 assert User().find({'_id': review['userId']}).count()
                 assert review['skill'] in {self.Skill.NOVICE, self.Skill.EXPERT}

@@ -22,8 +22,7 @@ from six.moves import input
 
 
 class ISICApi(object):
-    def __init__(self, hostname='https://isic-archive.com',
-                 username=None, password=None):
+    def __init__(self, hostname='https://isic-archive.com', username=None, password=None):
         self.baseUrl = '%s/api/v1' % hostname
         self.authToken = None
 
@@ -36,10 +35,7 @@ class ISICApi(object):
         return '%s/%s' % (self.baseUrl, endpoint)
 
     def _login(self, username, password):
-        authResponse = requests.get(
-            self._makeUrl('user/authentication'),
-            auth=(username, password)
-        )
+        authResponse = requests.get(self._makeUrl('user/authentication'), auth=(username, password))
         if not authResponse.ok:
             raise Exception('Login error: %s' % authResponse.json()['message'])
 
@@ -59,9 +55,7 @@ class ISICApi(object):
         LIMIT = 50
         offset = 0
         while True:
-            resp = self.get(
-                '%slimit=%d&offset=%d' % (endpoint, LIMIT, offset)
-            ).json()
+            resp = self.get('%slimit=%d&offset=%d' % (endpoint, LIMIT, offset)).json()
             if not resp:
                 break
             for elem in resp:

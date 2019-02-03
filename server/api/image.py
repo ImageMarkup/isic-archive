@@ -95,22 +95,26 @@ class ImageResource(IsicResource):
         # raise a 403 error if now. Currently, we will silently exclude images that the user doesn't
         # have permission to READ.
 
-        query = {
-            '_id': {'$in': imageIds}
-        }
+        query = {'_id': {'$in': imageIds}}
         return query
 
     @describeRoute(
         Description('Return a list of lesion images.')
         .pagingParams(defaultSort='name')
-        .param('detail', 'Display the full information for each image, instead of a summary.',
-               required=False, dataType='boolean', default=False)
+        .param(
+            'detail',
+            'Display the full information for each image, instead of a summary.',
+            required=False,
+            dataType='boolean',
+            default=False,
+        )
         .param('name', 'Find an image with a specific name.', required=False)
-        .param('filter', 'Filter the images by a PegJS-specified grammar.',
-               required=False)
-        .param('imageIds',
-               'A JSON array of up to 300 image IDs, which will be exclusively included.',
-               required=False)
+        .param('filter', 'Filter the images by a PegJS-specified grammar.', required=False)
+        .param(
+            'imageIds',
+            'A JSON array of up to 300 image IDs, which will be exclusively included.',
+            required=False,
+        )
         .errorResponse()
     )
     @access.cookie
@@ -133,17 +137,18 @@ class ImageResource(IsicResource):
             query = {}
         # Exclude images that haven't passed QC review (though they can still be accessed by more
         # direct endpoints if the user has permission)
-        query.update({
-            'meta.reviewed.accepted': True
-        })
+        query.update({'meta.reviewed.accepted': True})
 
         filterFunc = Image().filter if detail else Image().filterSummary
         return [
             filterFunc(image, user)
-            for image in
-            Image().filterResultsByPermission(
+            for image in Image().filterResultsByPermission(
                 Image().find(query, sort=sort),
-                user=user, level=AccessType.READ, limit=limit, offset=offset)
+                user=user,
+                level=AccessType.READ,
+                limit=limit,
+                offset=offset,
+            )
         ]
 
     def _imagesZipGenerator(self, downloadFileName, images, include):
@@ -160,54 +165,61 @@ class ImageResource(IsicResource):
                 imageFile = Image().originalFile(image)
                 imageFileGenerator = File().download(imageFile, headers=False)
                 for data in zipGenerator.addFile(
-                        imageFileGenerator,
-                        path=os.path.join(dataset['name'], imageFile['name'])):
+                    imageFileGenerator, path=os.path.join(dataset['name'], imageFile['name'])
+                ):
                     yield data
             if include in {'all', 'metadata'}:
+
                 def metadataGenerator():
                     # TODO: Consider replacing this with Image().filter
-                    yield json.dumps({
-                        '_id': str(image['_id']),
-                        'name': image['name'],
-                        'meta': {
-                            'acquisition': image['meta']['acquisition'],
-                            'clinical': image['meta']['clinical']
+                    yield json.dumps(
+                        {
+                            '_id': str(image['_id']),
+                            'name': image['name'],
+                            'meta': {
+                                'acquisition': image['meta']['acquisition'],
+                                'clinical': image['meta']['clinical'],
+                            },
                         }
-                    })
+                    )
+
                 for data in zipGenerator.addFile(
-                        metadataGenerator,
-                        path=os.path.join(dataset['name'], '%s.json' % image['name'])):
+                    metadataGenerator, path=os.path.join(dataset['name'], '%s.json' % image['name'])
+                ):
                     yield data
 
         for dataset in six.viewvalues(datasetCache):
-            licenseText = mail_utils.renderTemplate(
-                'license_%s.mako' % dataset['license'])
+            licenseText = mail_utils.renderTemplate('license_%s.mako' % dataset['license'])
             attributionText = mail_utils.renderTemplate(
                 'attribution_%s.mako' % dataset['license'],
-                {
-                    'work': dataset['name'],
-                    'author': dataset['attribution']
-                })
+                {'work': dataset['name'], 'author': dataset['attribution']},
+            )
             for data in zipGenerator.addFile(
-                    lambda: [licenseText],
-                    path=os.path.join(dataset['name'], 'LICENSE.txt')):
+                lambda: [licenseText], path=os.path.join(dataset['name'], 'LICENSE.txt')
+            ):
                 yield data
             for data in zipGenerator.addFile(
-                    lambda: [attributionText],
-                    path=os.path.join(dataset['name'], 'ATTRIBUTION.txt')):
+                lambda: [attributionText], path=os.path.join(dataset['name'], 'ATTRIBUTION.txt')
+            ):
                 yield data
 
         yield zipGenerator.footer()
 
     @describeRoute(
         Description('Download multiple images as a ZIP file.')
-        .param('include', 'Which types of data to include.', required=False,
-               enum=['all', 'images', 'metadata'], default='all')
-        .param('filter', 'Filter the images by a PegJS-specified grammar.',
-               required=False)
-        .param('imageIds',
-               'A JSON array of up to 300 image IDs, which will be exclusively included.',
-               required=False)
+        .param(
+            'include',
+            'Which types of data to include.',
+            required=False,
+            enum=['all', 'images', 'metadata'],
+            default='all',
+        )
+        .param('filter', 'Filter the images by a PegJS-specified grammar.', required=False)
+        .param(
+            'imageIds',
+            'A JSON array of up to 300 image IDs, which will be exclusively included.',
+            required=False,
+        )
         .produces('application/zip')
         .errorResponse()
     )
@@ -217,7 +229,8 @@ class ImageResource(IsicResource):
         include = params.get('include', 'all')
         if include not in {'all', 'images', 'metadata'}:
             raise ValidationException(
-                'Param "include" must be one of: "all", "images", "metadata"', 'include')
+                'Param "include" must be one of: "all", "images", "metadata"', 'include'
+            )
 
         if 'filter' in params and 'imageIds' in params:
             raise RestException('Only one of "filter" or "imageIds" may be specified.')
@@ -234,7 +247,11 @@ class ImageResource(IsicResource):
 
         images = Image().filterResultsByPermission(
             Image().find(query, sort=[('name', 1)]),
-            user=user, level=AccessType.READ, limit=0, offset=0)
+            user=user,
+            level=AccessType.READ,
+            limit=0,
+            offset=0,
+        )
         imagesZipGenerator = self._imagesZipGenerator(downloadFileName, images, include)
 
         setResponseHeader('Content-Type', 'application/zip')
@@ -268,10 +285,20 @@ class ImageResource(IsicResource):
     @describeRoute(
         Description('Return an image\'s thumbnail.')
         .param('id', 'The ID of the image.', paramType='path')
-        .param('width', 'The desired maximum width for the thumbnail.', paramType='query',
-               required=False, default=256)
-        .param('height', 'The desired maximum height for the thumbnail.', paramType='query',
-               required=False, default=256)
+        .param(
+            'width',
+            'The desired maximum width for the thumbnail.',
+            paramType='query',
+            required=False,
+            default=256,
+        )
+        .param(
+            'height',
+            'The desired maximum height for the thumbnail.',
+            paramType='query',
+            required=False,
+            default=256,
+        )
         .produces('image/jpeg')
         .errorResponse('ID was invalid.')
     )
@@ -305,8 +332,9 @@ class ImageResource(IsicResource):
     @describeRoute(
         Description('Return a multiresolution tile for an image.')
         .param('id', 'The ID of the image.', paramType='path')
-        .param('z', 'The layer number of the tile (0 is the most zoomed-out layer).',
-               paramType='path')
+        .param(
+            'z', 'The layer number of the tile (0 is the most zoomed-out layer).', paramType='path'
+        )
         .param('x', 'The X coordinate of the tile (0 is the left side).', paramType='path')
         .param('y', 'The Y coordinate of the tile (0 is the top).', paramType='path')
         .produces('image/jpeg')
@@ -333,9 +361,12 @@ class ImageResource(IsicResource):
     @describeRoute(
         Description('Download an image\'s high-quality original binary data.')
         .param('id', 'The ID of the image.', paramType='path')
-        .param('contentDisposition',
-               'Specify the Content-Disposition response header disposition-type value.',
-               required=False, enum=['inline', 'attachment'])
+        .param(
+            'contentDisposition',
+            'Specify the Content-Disposition response header disposition-type value.',
+            required=False,
+            enum=['inline', 'attachment'],
+        )
         .produces(['image/jpeg', 'image/png', 'image/bmp'])
         .errorResponse('ID was invalid.')
     )
@@ -345,8 +376,9 @@ class ImageResource(IsicResource):
     def download(self, image, params):
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
-            raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
-                                      'contentDisposition')
+            raise ValidationException(
+                'Unallowed contentDisposition type "%s".' % contentDisp, 'contentDisposition'
+            )
 
         originalFile = Image().originalFile(image)
         fileStream = File().download(originalFile, headers=True, contentDisposition=contentDisp)
@@ -381,9 +413,9 @@ class ImageResource(IsicResource):
         # validate parameters
         seedCoord = params['seed']
         if not (
-            isinstance(seedCoord, list) and
-            len(seedCoord) == 2 and
-            all(isinstance(value, int) for value in seedCoord)
+            isinstance(seedCoord, list)
+            and len(seedCoord) == 2
+            and all(isinstance(value, int) for value in seedCoord)
         ):
             raise ValidationException('Value must be a coordinate pair.', 'seed')
 
@@ -397,61 +429,69 @@ class ImageResource(IsicResource):
             raise RestException(e.message)
 
         contourFeature = geojson.Feature(
-            geometry=geojson.Polygon(
-                coordinates=(contourCoords.tolist(),)
-            ),
-            properties={
-                'source': 'autofill',
-                'seedPoint': seedCoord,
-                'tolerance': tolerance
-            }
+            geometry=geojson.Polygon(coordinates=(contourCoords.tolist(),)),
+            properties={'source': 'autofill', 'seedPoint': seedCoord, 'tolerance': tolerance},
         )
 
         return contourFeature
 
     @autoDescribeRoute(
         Description('Apply metadata to an image.')
-        .notes('Validates and adds acquisition and clinical metadata to an image.\n'
-               'The `metadata` parameter is a JSON object which contains a name/value pair '
-               'for each field to add or update. The object should not contain nested structures.'
-               '\n\n'
-               'Example:\n'
-               '```\n'
-               '{\n'
-               '    "age": 45,\n'
-               '    "sex": "male",\n'
-               '    "benign_malignant": "malignant",\n'
-               '    "diagnosis": "melanoma",\n'
-               '    "diagnosis_confirm_type": "histopathology",\n'
-               '    "mel_class": "melanoma NOS",\n'
-               '    "mel_mitotic_index": "2/mm^2",\n'
-               '    "mel_thick_mm": "1.5 mm",\n'
-               '    "mel_type": "melanoma NOS",\n'
-               '    "mel_ulcer": "true"\n'
-               '}\n'
-               '```\n'
-               'Returns an object that has two fields: `errors` and `warnings`. Each contains a '
-               'list of objects that have a `description` field, which is a user-readable '
-               'string describing the error or warning.'
-               '\n\n'
-               'Validation is successful when the `errors` list is empty. Otherwise, the metadata '
-               'is not saved, regardless of the value of the `save` parameter, and the `errors` '
-               'list contains the validation errors. Validation can fail for several reasons, '
-               'including but not limited to:\n'
-               '- The value of a field is of the wrong type\n'
-               '- The values of two or more fields are inconsistent with one another\n'
-               '- A value of a field already exists and cannot be safely overwritten\n'
-               '\n'
-               'When there are no errors, the `warnings` list contains warnings that don\'t '
-               'prevent saving the metadata, but should be reviewed.')
-        .modelParam('id', description='The ID of the image.', model=Image, destName='image',
-                    level=AccessType.READ)
-        .jsonParam('metadata', 'The JSON object containing image metadata.', paramType='body',
-                   requireObject=True)
-        .param('save', 'Whether to save the metadata to the image if validation succeeds.',
-               dataType='boolean', default=False)
-        .errorResponse(('ID was invalid.',
-                        'Invalid JSON passed in request body.'))
+        .notes(
+            'Validates and adds acquisition and clinical metadata to an image.\n'
+            'The `metadata` parameter is a JSON object which contains a name/value pair '
+            'for each field to add or update. The object should not contain nested structures.'
+            '\n\n'
+            'Example:\n'
+            '```\n'
+            '{\n'
+            '    "age": 45,\n'
+            '    "sex": "male",\n'
+            '    "benign_malignant": "malignant",\n'
+            '    "diagnosis": "melanoma",\n'
+            '    "diagnosis_confirm_type": "histopathology",\n'
+            '    "mel_class": "melanoma NOS",\n'
+            '    "mel_mitotic_index": "2/mm^2",\n'
+            '    "mel_thick_mm": "1.5 mm",\n'
+            '    "mel_type": "melanoma NOS",\n'
+            '    "mel_ulcer": "true"\n'
+            '}\n'
+            '```\n'
+            'Returns an object that has two fields: `errors` and `warnings`. Each contains a '
+            'list of objects that have a `description` field, which is a user-readable '
+            'string describing the error or warning.'
+            '\n\n'
+            'Validation is successful when the `errors` list is empty. Otherwise, the metadata '
+            'is not saved, regardless of the value of the `save` parameter, and the `errors` '
+            'list contains the validation errors. Validation can fail for several reasons, '
+            'including but not limited to:\n'
+            '- The value of a field is of the wrong type\n'
+            '- The values of two or more fields are inconsistent with one another\n'
+            '- A value of a field already exists and cannot be safely overwritten\n'
+            '\n'
+            'When there are no errors, the `warnings` list contains warnings that don\'t '
+            'prevent saving the metadata, but should be reviewed.'
+        )
+        .modelParam(
+            'id',
+            description='The ID of the image.',
+            model=Image,
+            destName='image',
+            level=AccessType.READ,
+        )
+        .jsonParam(
+            'metadata',
+            'The JSON object containing image metadata.',
+            paramType='body',
+            requireObject=True,
+        )
+        .param(
+            'save',
+            'Whether to save the metadata to the image if validation succeeds.',
+            dataType='boolean',
+            default=False,
+        )
+        .errorResponse(('ID was invalid.', 'Invalid JSON passed in request body.'))
     )
     @access.user
     def applyMetadata(self, image, metadata, save):
@@ -465,5 +505,5 @@ class ImageResource(IsicResource):
 
         return {
             'errors': [{'description': description} for description in errors],
-            'warnings': [{'description': description} for description in warnings]
+            'warnings': [{'description': description} for description in warnings],
         }

@@ -51,18 +51,32 @@ class StudyResource(IsicResource):
         self.route('POST', (':id', 'images'), self.addImages)
         self.route('POST', (':id', 'participate'), self.requestToParticipate)
         self.route('DELETE', (':id',), self.deleteStudy)
-        self.route('DELETE', (':id', 'users', ':userId',), self.deleteAnnotator)
+        self.route('DELETE', (':id', 'users', ':userId'), self.deleteAnnotator)
         self.route('DELETE', (':id', 'participate', ':userId'), self.deleteParticipationRequest)
 
     @describeRoute(
         Description('Return a list of annotation studies.')
         .pagingParams(defaultSort='lowerName')
-        .param('detail', 'Display the full information for each image, instead of a summary.',
-               required=False, dataType='boolean', default=False)
-        .param('state', 'Filter studies to those at a given state', paramType='query',
-               required=False, enum=('active', 'complete'))
-        .param('userId', 'Filter studies to those containing a user ID, or "me".',
-               paramType='query', required=False)
+        .param(
+            'detail',
+            'Display the full information for each image, instead of a summary.',
+            required=False,
+            dataType='boolean',
+            default=False,
+        )
+        .param(
+            'state',
+            'Filter studies to those at a given state',
+            paramType='query',
+            required=False,
+            enum=('active', 'complete'),
+        )
+        .param(
+            'userId',
+            'Filter studies to those containing a user ID, or "me".',
+            paramType='query',
+            required=False,
+        )
         .errorResponse()
     )
     @access.cookie
@@ -88,18 +102,26 @@ class StudyResource(IsicResource):
         filterFunc = Study().filter if detail else Study().filterSummary
         return [
             filterFunc(study, currentUser)
-            for study in
-            Study().filterResultsByPermission(
+            for study in Study().filterResultsByPermission(
                 Study().find(query=None, annotatorUser=annotatorUser, state=state, sort=sort),
-                user=currentUser, level=AccessType.READ, limit=limit, offset=offset
+                user=currentUser,
+                level=AccessType.READ,
+                limit=limit,
+                offset=offset,
             )
         ]
 
     @describeRoute(
         Description('Get a study by ID.')
         .param('id', 'The ID of the study.', paramType='path')
-        .param('format', 'The output format.', paramType='query', required=False,
-               enum=('csv', 'json'), default='json')
+        .param(
+            'format',
+            'The output format.',
+            paramType='query',
+            required=False,
+            enum=('csv', 'json'),
+            default='json',
+        )
         .errorResponse()
     )
     @access.cookie
@@ -108,8 +130,9 @@ class StudyResource(IsicResource):
     def getStudy(self, study, params):
         if params.get('format') == 'csv':
             setResponseHeader('Content-Type', 'text/csv')
-            setResponseHeader('Content-Disposition',
-                              'attachment; filename="%s.csv"' % study['name'])
+            setResponseHeader(
+                'Content-Disposition', 'attachment; filename="%s.csv"' % study['name']
+            )
             return functools.partial(self._getStudyCSVStream, study)
 
         else:
@@ -119,13 +142,21 @@ class StudyResource(IsicResource):
     def _getStudyCSVStream(self, study):
         currentUser = self.getCurrentUser()
 
-        csvFields = tuple(itertools.chain(
-            ('study_name', 'study_id',
-             'user_name', 'user_id',
-             'image_name', 'image_id',
-             'flag_status', 'elapsed_seconds'),
-            (question['id'] for question in study['meta']['questions'])
-        ))
+        csvFields = tuple(
+            itertools.chain(
+                (
+                    'study_name',
+                    'study_id',
+                    'user_name',
+                    'user_id',
+                    'image_name',
+                    'image_id',
+                    'flag_status',
+                    'elapsed_seconds',
+                ),
+                (question['id'] for question in study['meta']['questions']),
+            )
+        )
 
         responseBody = StringIO()
         csvWriter = csv.DictWriter(responseBody, csvFields, restval='')
@@ -135,25 +166,22 @@ class StudyResource(IsicResource):
         responseBody.seek(0)
         responseBody.truncate()
 
-        images = list(
-            Study().getImages(study).sort('lowerName', SortDir.ASCENDING))
+        images = list(Study().getImages(study).sort('lowerName', SortDir.ASCENDING))
 
         for annotatorUser, image in itertools.product(
             sorted(
                 Study().getAnnotators(study),
-                key=lambda annotatorUser: User().obfuscatedName(annotatorUser)),
-            images
+                key=lambda annotatorUser: User().obfuscatedName(annotatorUser),
+            ),
+            images,
         ):
             # this will iterate either 0 or 1 times
             for annotation in Study().childAnnotations(
-                study=study,
-                annotatorUser=annotatorUser,
-                image=image,
-                state=Study().State.COMPLETE
+                study=study, annotatorUser=annotatorUser, image=image, state=Study().State.COMPLETE
             ):
-                elapsedSeconds = \
-                    int((annotation['stopTime'] -
-                         annotation['startTime']).total_seconds())
+                elapsedSeconds = int(
+                    (annotation['stopTime'] - annotation['startTime']).total_seconds()
+                )
 
                 filteredAnnotatorUser = User().filterSummary(annotatorUser, currentUser)
                 annotatorUserName = filteredAnnotatorUser['name']
@@ -161,7 +189,8 @@ class StudyResource(IsicResource):
                     annotatorUserName += ' [%s %s (%s)]' % (
                         filteredAnnotatorUser['firstName'],
                         filteredAnnotatorUser['lastName'],
-                        filteredAnnotatorUser['login'])
+                        filteredAnnotatorUser['login'],
+                    )
 
                 outDictBase = {
                     'study_name': study['name'],
@@ -171,7 +200,7 @@ class StudyResource(IsicResource):
                     'image_name': image['name'],
                     'image_id': str(image['_id']),
                     'flag_status': annotation['status'],
-                    'elapsed_seconds': elapsedSeconds
+                    'elapsed_seconds': elapsedSeconds,
                 }
 
                 outDict = outDictBase.copy()
@@ -186,8 +215,9 @@ class StudyResource(IsicResource):
     @describeRoute(
         Description('Create an annotation study.')
         .param('name', 'The name of the study.', paramType='form')
-        .param('userIds', 'The annotators user IDs of the study, as a JSON array.',
-               paramType='form')
+        .param(
+            'userIds', 'The annotators user IDs of the study, as a JSON array.', paramType='form'
+        )
         .param('imageIds', 'The image IDs of the study, as a JSON array.', paramType='form')
         .param('questions', 'A list of questions for the study, as a JSON array.', paramType='form')
         .param('features', 'A list of features for the study, as a JSON array.', paramType='form')
@@ -234,7 +264,8 @@ class StudyResource(IsicResource):
                 questions=params['questions'],
                 features=params['features'],
                 annotatorUsers=annotatorUsers,
-                images=images)
+                images=images,
+            )
         except ValidationException as e:
             raise RestException(e.message)
 
@@ -265,15 +296,18 @@ class StudyResource(IsicResource):
             User().load(userId, user=creatorUser, level=AccessType.READ, exc=True)
             for userId in params['userIds']
         ]
-        duplicateAnnotations = Annotation().find({
-            'studyId': study['_id'],
-            'userId': {'$in': [annotatorUser['_id'] for annotatorUser in annotatorUsers]}
-        })
+        duplicateAnnotations = Annotation().find(
+            {
+                'studyId': study['_id'],
+                'userId': {'$in': [annotatorUser['_id'] for annotatorUser in annotatorUsers]},
+            }
+        )
         if duplicateAnnotations.count():
             # Just list the first duplicate
             duplicateAnnotation = next(iter(duplicateAnnotations))
             raise ValidationException(
-                'Annotator user "%s" is already part of the study.' % duplicateAnnotation['userId'])
+                'Annotator user "%s" is already part of the study.' % duplicateAnnotation['userId']
+            )
         for annotatorUser in annotatorUsers:
             study = Study().addAnnotator(study, annotatorUser)
 
@@ -305,15 +339,15 @@ class StudyResource(IsicResource):
             Image().load(imageId, user=creatorUser, level=AccessType.READ, exc=True)
             for imageId in params['imageIds']
         ]
-        duplicateAnnotations = Annotation().find({
-            'studyId': study['_id'],
-            'imageId': {'$in': [image['_id'] for image in images]}
-        })
+        duplicateAnnotations = Annotation().find(
+            {'studyId': study['_id'], 'imageId': {'$in': [image['_id'] for image in images]}}
+        )
         if duplicateAnnotations.count():
             # Just list the first duplicate
             duplicateAnnotation = next(iter(duplicateAnnotations))
             raise ValidationException(
-                'Image "%s" is already part of the study.' % duplicateAnnotation['imageId'])
+                'Image "%s" is already part of the study.' % duplicateAnnotation['imageId']
+            )
         for image in images:
             Study().addImage(study, image)
 
@@ -321,9 +355,11 @@ class StudyResource(IsicResource):
 
     @describeRoute(
         Description('Request to participate in a study.')
-        .notes('Study administrators can accept the request by adding the user to the study '
-               'with `POST /study/{id}/users` or delete the request with '
-               '`DELETE /study/{id}/participate/{userId}`.')
+        .notes(
+            'Study administrators can accept the request by adding the user to the study '
+            'with `POST /study/{id}/users` or delete the request with '
+            '`DELETE /study/{id}/participate/{userId}`.'
+        )
         .param('id', 'The ID of the study.', paramType='path')
         .errorResponse('ID was invalid.')
     )
@@ -334,13 +370,15 @@ class StudyResource(IsicResource):
 
         # Check if user already requested to participate in the study
         if Study().hasParticipationRequest(study, currentUser):
-            raise ValidationException('User "%s" already requested to participate in the study.' %
-                                      currentUser['_id'])
+            raise ValidationException(
+                'User "%s" already requested to participate in the study.' % currentUser['_id']
+            )
 
         # Check if user is already an annotator in the study
         if Study().hasAnnotator(study, currentUser):
-            raise ValidationException('User "%s" is already part of the study.' %
-                                      currentUser['_id'])
+            raise ValidationException(
+                'User "%s" is already part of the study.' % currentUser['_id']
+            )
 
         Study().addParticipationRequest(study, currentUser)
 
@@ -349,12 +387,9 @@ class StudyResource(IsicResource):
         isic_mail_utils.sendEmailToGroup(
             groupName='Study Administrators',
             templateFilename='participateInStudyRequest.mako',
-            templateParams={
-                'host': host,
-                'study': study,
-                'user': currentUser
-            },
-            subject='ISIC Archive: Study Participation Request')
+            templateParams={'host': host, 'study': study, 'user': currentUser},
+            subject='ISIC Archive: Study Participation Request',
+        )
 
     @describeRoute(
         Description('Delete a study.')
@@ -384,15 +419,21 @@ class StudyResource(IsicResource):
     )
     @access.user
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
-    @loadmodel(model='user', plugin='isic_archive', map={'userId': 'annotatorUser'},
-               level=AccessType.READ)
+    @loadmodel(
+        model='user', plugin='isic_archive', map={'userId': 'annotatorUser'}, level=AccessType.READ
+    )
     def deleteAnnotator(self, study, annotatorUser, params):
         currentUser = self.getCurrentUser()
         # For now, study admins will be the ones that can delete annotators
         User().requireAdminStudy(currentUser)
 
-        if Study().childAnnotations(
-                study=study, annotatorUser=annotatorUser, state=Study().State.COMPLETE).count():
+        if (
+            Study()
+            .childAnnotations(
+                study=study, annotatorUser=annotatorUser, state=Study().State.COMPLETE
+            )
+            .count()
+        ):
             raise RestException('Annotator user has completed annotations.', 409)
 
         # Check if user is already an annotator in the study
@@ -412,15 +453,17 @@ class StudyResource(IsicResource):
     )
     @access.user
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
-    @loadmodel(model='user', plugin='isic_archive', map={'userId': 'otherUser'},
-               level=AccessType.READ)
+    @loadmodel(
+        model='user', plugin='isic_archive', map={'userId': 'otherUser'}, level=AccessType.READ
+    )
     def deleteParticipationRequest(self, study, otherUser, params):
         currentUser = self.getCurrentUser()
         User().requireAdminStudy(currentUser)
 
         # Check if user requested to participate in the study
         if not Study().hasParticipationRequest(study, otherUser):
-            raise ValidationException('User "%s" did not request to participate in the study.' %
-                                      otherUser['_id'])
+            raise ValidationException(
+                'User "%s" did not request to participate in the study.' % otherUser['_id']
+            )
 
         Study().removeParticipationRequest(study, otherUser)
