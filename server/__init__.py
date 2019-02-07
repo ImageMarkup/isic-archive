@@ -19,6 +19,7 @@
 
 import os
 
+import sentry_sdk
 import six
 
 from girder import events
@@ -75,6 +76,7 @@ def clearRouteDocs():
 
 
 def load(info):
+    sentry_sdk.init(environment=os.getenv('SENTRY_ENVIRONMENT'))
     # set the title of the HTML pages
     info['serverRoot'].updateHtmlVars({'title': 'ISIC Archive'})
 

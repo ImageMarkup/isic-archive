@@ -10,3 +10,5 @@ scipy>=0.16.0
 scikit-image>=0.12.3
 
 opencv-python>=4
+
+sentry-sdk>=0.7.2
