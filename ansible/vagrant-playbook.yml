@@ -19,7 +19,6 @@
 
     - role: nginx
       site_hostname: isic-archive.test
-      upstream_proxy: true
 
   post_tasks:
     - name: Activate virtualenv on login
