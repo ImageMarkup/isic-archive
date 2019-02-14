@@ -41,7 +41,7 @@ jobs:
             echo "source $CIRCLE_WORKING_DIRECTORY/girder_env/bin/activate" >> $BASH_ENV
       - run:
           name: Create cache key
-          command: cat girder/setup.py girder/requirements-dev.txt girder/plugins/large_image/setup.py girder/plugins/isic_archive/requirements.txt | sha512sum > venv-req-hash.txt
+          command: cat girder/setup.py girder/requirements-dev.txt girder/plugins/large_image/setup.py girder/plugins/isic_archive/requirements.txt girder/plugins/isic_archive/isic-archive-tasks/setup.py | sha512sum > venv-req-hash.txt
       - restore_cache:
           key: venv-{{ arch }}-{{ checksum "venv-req-hash.txt" }}
       - run:
@@ -58,6 +58,11 @@ jobs:
       - run:
           name: Install isic_archive
           command: girder-install plugin girder/plugins/isic_archive
+      - run:
+          name: Install isic-archive-tasks
+          command: |
+            pip install girder/plugins/isic_archive/isic-archive-tasks
+          working_directory: /home/circleci/project
       - run:
           name: Install coverage client
           command: pip install --upgrade codecov
