@@ -11,6 +11,12 @@
       sentry_dsn: ""
       sentry_environment: "development"
 
+  pre_tasks:
+    - name: Install dotenv configuration file
+      template:
+        src: "vagrant.env.j2"
+        dest: "{{ ansible_user_dir }}/.env"
+
   # TODO: setup SSH reverse lookup
   # TODO: set hostname
   roles:
