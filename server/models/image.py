@@ -48,6 +48,9 @@ class Image(Item):
     def initialize(self):
         super(Image, self).initialize()
 
+        # Ensure CSV metadata matching is fast
+        self.ensureIndices(['privateMeta.originalFilename'])
+
         self.prefixSearchFields = ['lowerName', 'name']
 
         events.bind('data.process',
