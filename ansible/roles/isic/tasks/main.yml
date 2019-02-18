@@ -28,6 +28,20 @@
     - Restart Girder
     - Build Girder
 
+- name: Install ISIC GUI dependencies
+  yarn:
+    path: "{{ isic_archive_path }}/isic-archive-gui"
+
+- name: Build ISIC Admin GUI
+  command: yarn run build
+  args:
+    chdir: "{{ isic_archive_path }}/isic-archive-gui"
+
+- name: Build ISIC Integration GUI
+  command: yarn run build:integration
+  args:
+    chdir: "{{ isic_archive_path }}/isic-archive-gui"
+
 - name: Install Girder client for Girder Ansible module
   block:
     - apt:

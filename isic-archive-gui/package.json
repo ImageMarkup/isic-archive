@@ -5,6 +5,7 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
+    "build:integration": "ISIC_INTEGRATION=true vue-cli-service build --dest dist-integration src/integration/main.js",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {

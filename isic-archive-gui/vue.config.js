@@ -3,6 +3,8 @@ const process = require('process');
 const webpack = require('webpack'); // eslint-disable-line import/no-extraneous-dependencies
 
 module.exports = {
+  publicPath: process.env.ISIC_INTEGRATION ? '/' : '/admin/',
+
   lintOnSave: false,
 
   devServer: {
@@ -31,6 +33,13 @@ module.exports = {
         /moment[/\\]locale$/,
         /en/,
       ]);
+
+    // Set the HTML title
+    config.plugin('html')
+      .tap(([args]) => [{
+        ...args,
+        title: process.env.ISIC_INTEGRATION ? 'ISIC Archive' : 'ISIC Admin',
+      }]);
 
     // Add PegJS loader
     config.module
