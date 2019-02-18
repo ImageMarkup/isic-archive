@@ -105,9 +105,6 @@ import {showAlertDialog} from './common/utilities';
 router.route('user/:id/rsvp/:token', 'rsvpUser', (id, token) => {
     UserModel.fromTemporaryToken(id, token)
         .done((resp) => {
-            // TODO: Move this upstream
-            setCurrentToken(resp.authToken.token);
-
             events.trigger('g:navigateTo', RsvpUserView, {
                 user: getCurrentUser(),
                 token: token

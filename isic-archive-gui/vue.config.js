@@ -1,7 +1,6 @@
 const path = require('path');
 const process = require('process');
 const webpack = require('webpack'); // eslint-disable-line import/no-extraneous-dependencies
-const autoprefixer = require('autoprefixer'); // eslint-disable-line import/no-extraneous-dependencies
 
 module.exports = {
   lintOnSave: false,
@@ -18,10 +17,6 @@ module.exports = {
   },
 
   chainWebpack: (config) => {
-    // Alias "@" to the "./src" directory for imports
-    config.resolve.alias
-      .set('@$', path.resolve(__dirname, 'src'));
-
     // Required to make many Girder imports work
     config.plugin('provide')
       .use(webpack.ProvidePlugin, [{
@@ -30,18 +25,12 @@ module.exports = {
         'window.jQuery': 'jquery',
       }]);
 
-    // Define the GIRDER_VERSION global, which upstream Girder expects
-    config.plugin('define')
-      .tap(([definitions]) => [{
-        GIRDER_VERSION: JSON.stringify({
-          git: false,
-          SHA: null,
-          shortSHA: null,
-          date: new Date().toISOString(),
-          apiVersion: null,
-        }),
-        ...definitions,
-      }]);
+    // Reduce the size of the Moment package
+    config.plugin('moment-locale')
+      .use(webpack.ContextReplacementPlugin, [
+        /moment[/\\]locale$/,
+        /en/,
+      ]);
 
     // Add PegJS loader
     config.module
@@ -89,31 +78,5 @@ module.exports = {
       .oneOf('pug-file')
       .use('pug-loader')
       .loader('pug-loader');
-
-    // postcss-loader is not picking up the config within 'package.json', causing errors
-    // This seems to work around the issue
-    // See: https://github.com/postcss/postcss-loader/issues/204
-    config.module
-      .rule('stylus')
-      .oneOf('normal')
-      .use('postcss-loader')
-      .tap(options => ({
-        ...options,
-        ident: 'postcss',
-        plugins: () => [
-          autoprefixer(),
-        ],
-      }));
-    config.module
-      .rule('css')
-      .oneOf('normal')
-      .use('postcss-loader')
-      .tap(options => ({
-        ...options,
-        ident: 'postcss',
-        plugins: () => [
-          autoprefixer(),
-        ],
-      }));
   },
 };
