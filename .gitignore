@@ -5,7 +5,6 @@ __pycache__/
 # Distribution / packaging
 .Python
 env/
-bower_components/
 build/
 develop-eggs/
 dist/
@@ -13,7 +12,6 @@ downloads/
 eggs/
 lib/
 lib64/
-node_modules/
 parts/
 sdist/
 var/
@@ -24,11 +22,14 @@ var/
 # Tox
 *.tox
 
-# PyCharm
-.idea/*
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw*
 
 # Vagrant
 .vagrant
-
-# Vim
-*.swp

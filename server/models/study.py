@@ -33,7 +33,7 @@ from .user import User
 
 
 _masterFeaturesPath = os.path.normpath(os.path.join(
-    os.path.dirname(__file__), '..', '..', 'web_external', 'masterFeatures.json'
+    os.path.dirname(__file__), '..', '..', 'isic-archive-gui', 'src', 'masterFeatures.json'
 ))
 with open(_masterFeaturesPath, 'rb') as _masterFeaturesStream:
     MASTER_FEATURES = [

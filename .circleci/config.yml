@@ -2,7 +2,7 @@ version: 2
 jobs:
   serverInstall:
     docker:
-      - image: girder/girder_test:latest-py2
+      - image: isic/isic_test:latest
 
     working_directory: /home/circleci/project # as $CIRCLE_WORKING_DIRECTORY
 
@@ -12,14 +12,7 @@ jobs:
       - LARGE_IMAGE_VERSION: 4dc82976d58b2a6e6542863e2e410628649a040c
 
     steps:
-      - run:
-          name: Install Pillow dependencies
-          # https://pillow.readthedocs.org/en/latest/installation.html)
-          command: sudo apt-get install -y libtiff5-dev libjpeg-dev zlib1g-dev libfreetype6-dev liblcms2-dev libwebp-dev tcl8.5-dev tk8.5-dev python-tk
-      - run:
-          name: Install isic_archive dependencies
-          command: sudo apt-get install -y p7zip-full
-
+      # Apt package dependencies are built into Docker image
       - run:
           name: Clone Girder
           #command: git clone --depth 1 --branch $GIRDER_VERSION -- https://github.com/girder/girder.git girder
@@ -96,7 +89,7 @@ jobs:
 
   serverTest:
     docker:
-      - image: girder/girder_test:latest-py2
+      - image: isic/isic_test:latest
       - image: circleci/mongo:3.6-ram
         command: ["mongod", "--storageEngine", "ephemeralForTest", "--dbpath", "/dev/shm/mongo"]
 
@@ -126,7 +119,7 @@ jobs:
 
   webBuild_webTest:
     docker:
-      - image: girder/girder_test:latest-py2
+      - image: isic/isic_test:latest
       #- image: circleci/mongo:3.6-ram
       #  command: ["mongod", "--storageEngine", "ephemeralForTest", "--dbpath", "/dev/shm/mongo"]
 
@@ -154,6 +147,28 @@ jobs:
           name: Run CTest
           command: ctest -VV -L girder_browser -E js_coverage
           working_directory: girder_build
+
+      - restore_cache:
+          key: yarn-{{ arch }}-{{ checksum "girder/plugins/isic_archive/isic-archive-gui/yarn.lock" }}
+      - run:
+          name: Install ISIC GUI dependencies
+          command: yarn install
+          working_directory: girder/plugins/isic_archive/isic-archive-gui
+      - run:
+          name: Build ISIC Admin GUI
+          command: yarn run build
+          working_directory: girder/plugins/isic_archive/isic-archive-gui
+      - run:
+          name: Build ISIC Integration GUI
+          command: yarn run build:integration
+          working_directory: girder/plugins/isic_archive/isic-archive-gui
+      - run:
+          name: Lint ISIC GUI
+          command: yarn run lint --no-fix
+          working_directory: girder/plugins/isic_archive/isic-archive-gui
+      - save_cache:
+          paths: /home/circleci/.cache/yarn
+          key: npm-{{ arch }}-{{ checksum "girder/package.json" }}-{{ checksum "girder/plugins/isic_archive/plugin.json" }}
 
 workflows:
   version: 2

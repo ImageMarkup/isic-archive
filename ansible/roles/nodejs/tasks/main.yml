@@ -22,3 +22,10 @@
     global: yes
     state: latest
   become: yes
+
+- name: Install Yarn
+  npm:
+    name: yarn
+    global: yes
+    state: latest
+  become: yes

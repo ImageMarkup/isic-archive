@@ -12,7 +12,6 @@ Vagrant.configure("2") do |config|
 
   config.vm.box = "bento/ubuntu-18.04"
   config.vm.hostname = "isic-archive.test"
-  config.hostsupdater.aliases = ["proxy.isic-archive.test"]
   config.vm.provider "virtualbox" do |virtualbox|
     virtualbox.name = "isic-archive.test"
     virtualbox.memory = 2048

@@ -18,8 +18,11 @@
       isic_smtp_port: "1025"
 
     - role: nginx
-      site_hostname: isic-archive.test
-      upstream_proxy: true
+      vars:
+        site_hostname: isic-archive.test
+        isic_gui_dir: "{{ ansible_user_dir }}/isic_archive/isic-archive-gui/dist"
+        isic_integration_gui_dir: "{{ ansible_user_dir }}/isic_archive/isic-archive-gui/dist-integration"
+
 
   post_tasks:
     - name: Activate virtualenv on login
