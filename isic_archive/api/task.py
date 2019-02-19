@@ -326,8 +326,8 @@ class TaskResource(IsicResource):
         nextResp = self.nextSegmentationTask(params)
         imageId = nextResp['_id']
 
-        segmentUrl = '/markup/segment#/%s' % imageId
-        self._doRedirect(segmentUrl)
+        url = '/#tasks/segment/%s' % imageId
+        self._doRedirect(url)
 
     @describeRoute(
         Description('Get the current user\'s annotation tasks.')
