@@ -26,8 +26,6 @@ import six
 from girder import events
 from girder.api.v1 import resource
 from girder.utility import mail_utils
-from girder.utility.plugin_utilities import registerPluginWebroot
-from girder.utility.server import staticFile
 
 from . import api
 # Import settings for side effects
@@ -143,21 +141,6 @@ def load(info):
     mail_utils.addTemplateDirectory(
         os.path.join(info['pluginRootDir'], 'server', 'license_templates'),
         prepend=True)
-
-    # add static file serving
-    info['config']['/uda'] = {
-        'tools.staticdir.on': 'True',
-        'tools.staticdir.dir': os.path.join(info['pluginRootDir'], 'custom')
-    }
-
-    # add dynamic root routes
-    # root endpoints -> where a user may go and expect a UI
-    class Root(object):
-        pass
-    legacyWebroot = Root()
-    legacyWebroot.segment = staticFile(
-        os.path.join(info['pluginRootDir'], 'custom', 'phase1.html'))
-    registerPluginWebroot(legacyWebroot, 'markup')
 
     # create all necessary users, groups, collections, etc
     provisionDatabase()

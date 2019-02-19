@@ -168,6 +168,5 @@
       value:
         core_girder: "/girder"
         core_static_root: "/static"
-        markup: "/markup"
     state: present
   notify: Restart Girder
