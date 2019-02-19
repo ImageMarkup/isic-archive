@@ -27,7 +27,6 @@ from girder.api.v1 import resource
 from girder.utility import mail_utils
 from girder.utility.plugin_utilities import registerPluginWebroot
 from girder.utility.server import staticFile
-from girder.utility.webroot import WebrootBase
 
 from . import api
 # Import settings for side effects
@@ -94,19 +93,6 @@ def load(info):
     mail_utils.addTemplateDirectory(
         os.path.join(info['pluginRootDir'], 'server', 'license_templates'),
         prepend=True)
-
-    externalWebroot = WebrootBase(os.path.join(info['pluginRootDir'], 'server', 'webroot.mako'))
-    externalWebroot.updateHtmlVars({
-        'apiRoot': '/api/v1',
-        'staticRoot': '/static',
-        'title': 'ISIC Archive'
-    })
-    registerPluginWebroot(externalWebroot, info['name'])
-
-    integrationWebroot = WebrootBase(os.path.join(
-        info['pluginRootDir'], 'server', 'webroot_integration.mako'))
-    integrationWebroot.updateHtmlVars(externalWebroot.vars)
-    registerPluginWebroot(integrationWebroot, info['name'] + '_integration')
 
     # add static file serving
     info['config']['/uda'] = {

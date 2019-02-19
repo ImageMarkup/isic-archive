@@ -32,8 +32,10 @@
       isic_upload_role_arn: "fake-arn"
 
     - role: nginx
-      site_hostname: isic-archive.test
-      upstream_proxy: true
+      vars:
+        site_hostname: isic-archive.test
+        isic_gui_dir: "{{ ansible_user_dir }}/isic_archive/isic-archive-gui/dist"
+        isic_integration_gui_dir: "{{ ansible_user_dir }}/isic_archive/isic-archive-gui/dist-integration"
 
     - role: localstack
       isic_upload_bucket_name: "test-upload-bucket"

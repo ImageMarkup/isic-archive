@@ -14,11 +14,7 @@ Prerequisites
 
 * Git
 
-* Vagrant_ (version >= 1.8.3 recommended)
-
-   **Warning**:
-   If Vagrant < 1.8.3 is used, then Ansible_ version > 2.0 must also be installed on the
-   host development machine.
+* Vagrant_
 
 * vagrant-hostsupdater_
 
@@ -39,7 +35,7 @@ Installation
     # from within the "isic-archive" sub-directory
     vagrant up
 
-* Use a web browser to visit ``http://isic-archive.test/`` from your host
+* Use a web browser to visit ``http://isic-archive.test/admin`` from your host
   development machine.
 
 * Login as the user ``admin`` with password ``password``. This user can be also used for granting
@@ -48,33 +44,26 @@ Installation
 
 Development
 ~~~~~~~~~~~
-  **Note**:
-  You can visit ``http://proxy.isic-archive.test/`` on your host development
-  machine to access a version of the site that uses the local instance for all
-  static front-end code, but proxies all API calls to the instance at
-  ``isic-archive.com``.
-
 * To rebuild the front-end code after development changes:
   ::
 
     # from within the "isic-archive" sub-directory
     vagrant ssh
-    ~/env/bin/girder-install web
+    cd ~/isic_archive/isic-archive-gui
+    yarn install
+    yarn run build
 
 * To automatically rebuild the front-end code as changed client files are saved,
   start and leave running:
   ::
 
-    # from within the "isic-archive" sub-directory
-    vagrant ssh
-    ~/env/bin/girder-install web --watch-plugin isic_archive --plugin-prefix app
+    yarn run serve
 
-* To restart the Girder server after changed server files are saved:
+* To proxy all API calls to an external instance during front-end development, run:
   ::
 
-    # from within the "isic-archive" sub-directory
-    vagrant ssh
-    sudo supervisorctl restart girder
+    export API_HOST=https://isic-archive.com
+    yarn run serve
 
 * To inspect various logs:
   ::

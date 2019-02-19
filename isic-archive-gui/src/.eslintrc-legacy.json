@@ -1,0 +1,27 @@
+{
+  "extends": "girder",
+  "rules": {
+    "for-direction": "error",
+    "getter-return": "error",
+    "multiline-ternary": [
+      "error",
+      "always-multiline"
+    ],
+    "no-alert": "error",
+    "switch-colon-spacing": "error",
+    "import/exports-last": "error",
+    "promise/no-native": "error",
+    "promise/no-return-in-finally": "error",
+    "promise/no-return-wrap": "error",
+    "backbone/event-scope": "off",
+    "backbone/no-native-jquery": ["off", "selector"],
+    "backbone/no-view-onoff-binding": "error"
+  },
+  "settings": {
+    "backbone": {
+      "Collection": ["GirderCollection", "Collection"],
+      "Model": ["GirderModel", "Model"],
+      "View": ["GirderView", "View"]
+    }
+  }
+}

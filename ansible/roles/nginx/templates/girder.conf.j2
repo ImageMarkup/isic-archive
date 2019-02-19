@@ -14,11 +14,21 @@ server {
     ssl_session_cache shared:SSL:10m;
     ssl_dhparam /etc/ssl/dhparams.pem;
     add_header Strict-Transport-Security max-age=15552000;
-    {% endif %}
+    {% endif -%}
 
     large_client_header_buffers 10 20k;
 
+    {% if isic_integration_gui_dir -%}
     location / {
+        root {{ isic_integration_gui_dir }};
+    }
+    {% endif -%}
+    {% if isic_gui_dir -%}
+    location /admin {
+        alias {{ isic_gui_dir }};
+    }
+    {% endif -%}
+    location ~ /(girder|api/v1|static|markup|uda) {
         proxy_pass http://localhost:{{ girder_port }};
 
         proxy_http_version 1.1;
@@ -40,40 +50,7 @@ server {
     }
 }
 
-{% if upstream_proxy %}
-server {
-    listen 80;
-    server_name proxy.isic-archive.test;
-
-    large_client_header_buffers 4 20k;
-
-    location / {
-        proxy_pass http://localhost:{{ girder_port }};
-    }
-    location /api/v1 {
-        proxy_pass https://isic-archive.com;
-
-        proxy_http_version 1.1;
-
-        proxy_set_header Host $proxy_host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Host $host;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        # fixes an issue with responses over 1024m
-        proxy_buffering off;
-
-        # Must set the following for SSE notifications to work
-        proxy_cache off;
-        proxy_set_header Connection '';
-        chunked_transfer_encoding off;
-        proxy_read_timeout 600s;
-        proxy_send_timeout 600s;
-    }
-}
-{% endif %}
-
-{% if redirect_canonical %}
+{% if redirect_canonical -%}
 server {
     listen 80 default_server;
     server_name {% if ssl %}{{ site_hostname }}{% endif %} www.{{ site_hostname }};
@@ -81,7 +58,7 @@ server {
     return 301 http{% if ssl %}s{% endif %}://{{ site_hostname }}$request_uri;
 }
 
-{% if ssl %}
+{% if ssl -%}
 server {
     listen 443 default_server;
     server_name www.{{ site_hostname }};
@@ -100,5 +77,5 @@ server {
 
     return 301 https://{{ site_hostname }}$request_uri;
 }
-{% endif %}
-{% endif %}
+{% endif -%}
+{% endif -%}

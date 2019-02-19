@@ -1,0 +1,108 @@
+{
+  "name": "isic-archive-gui",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "build:integration": "ISIC_INTEGRATION=true vue-cli-service build --dest dist-integration src/integration/main.js",
+    "lint": "vue-cli-service lint"
+  },
+  "dependencies": {
+    "@girder/core": "^3.0.0-alpha.0.2",
+    "@girder/gravatar": "^3.0.0-alpha.1",
+    "@girder/oauth": "^3.0.0-alpha.1",
+    "backbone.select": "^2.1.0",
+    "d3": "3.5.17",
+    "geojs": "0.15.2",
+    "jquery": "~3.2.1",
+    "select2": "^4.0.6-rc.1",
+    "select2-bootstrap-theme": "^0.1.0-beta.10",
+    "svg-fill-loader": "^0.0.8",
+    "ua-parser-js": "^0.7.19",
+    "underscore": "^1.9.1",
+    "vue": "^2.5.17",
+    "vue-router": "^3.0.1",
+    "vue-simple-spinner": "^1.2.8",
+    "vue2-dropzone": "^3.5.2",
+    "vuex": "^3.0.1"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "^3.2.0",
+    "@vue/cli-plugin-eslint": "^3.2.1",
+    "@vue/cli-service": "^3.2.0",
+    "@vue/eslint-config-airbnb": "^4.0.0",
+    "babel-eslint": "^10.0.1",
+    "bibtex-parse-js": "^0.0.24",
+    "eslint": "^5.8.0",
+    "eslint-plugin-vue": "^5.0.0-0",
+    "mathy-unicode-characters": "^0.9.3",
+    "pegjs": "^0.10.0",
+    "pegjs-loader": "^0.5.4",
+    "pug": "^2.0.3",
+    "pug-loader": "^2.4.0",
+    "pug-plain-loader": "^1.0.0",
+    "stylus": "^0.54.5",
+    "stylus-loader": "^3.0.2",
+    "vue-template-compiler": "^2.5.17"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/recommended",
+      "@vue/airbnb"
+    ],
+    "rules": {
+      "no-param-reassign": [
+        "error",
+        {
+          "props": true,
+          "ignorePropertyModificationsFor": [
+            "state"
+          ]
+        }
+      ],
+      "no-underscore-dangle": [
+        "error",
+        {
+          "allow": [
+            "_id"
+          ]
+        }
+      ]
+    },
+    "parserOptions": {
+      "parser": "babel-eslint"
+    }
+  },
+  "eslintIgnore": [
+    "src/*.js",
+    "src/collections/**/*.js",
+    "src/common/**/*.js",
+    "src/Datasets/**/*.js",
+    "src/Front/**/*.js",
+    "src/ImagesGallery/**/*.js",
+    "src/integration/**/*.js",
+    "src/layout/**/*.js",
+    "src/Legal/**/*.js",
+    "src/Literature/**/*.js",
+    "src/models/**/*.js",
+    "src/Studies/**/*.js",
+    "src/StudyResults/**/*.js",
+    "src/Tasks/**/*.js",
+    "src/User/**/*.js"
+  ],
+  "postcss": {
+    "plugins": {
+      "autoprefixer": {}
+    }
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not ie <= 8"
+  ]
+}
