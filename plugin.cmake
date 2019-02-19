@@ -23,7 +23,11 @@ function(add_eslint_test_ext name input)
   add_test(
     NAME "eslint_${name}"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    COMMAND npx eslint --ext .js,.vue "${input}"
+    COMMAND npx eslint
+      --no-eslintrc
+      --config "${CMAKE_CURRENT_LIST_DIR}/isic-archive-gui/src/.eslintrc-legacy.json"
+      --ignore-path "${CMAKE_CURRENT_LIST_DIR}/isic-archive-gui/src/.eslintignore-legacy"
+      "${input}"
   )
   set_property(TEST "eslint_${name}" PROPERTY LABELS girder_browser)
 endfunction()

@@ -292,7 +292,7 @@ form
   width 100%
 
 .submit-button-container
-  margin 15px 0px
+  margin 15px 0
 
 .segmentation-thumbnail
   border 1px solid #000

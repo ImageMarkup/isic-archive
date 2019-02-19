@@ -255,12 +255,12 @@ export default {
 
 .isic-map
   height 100%
-  padding 0px
+  padding 0
 
 .isic-pane
   height 100%
   overflow-y auto
-  padding 0px
+  padding 0
   color #fff
   background #000
 
@@ -278,7 +278,7 @@ export default {
     border-bottom 1px solid #333
 
 .annotation-section
-  margin 0px
+  margin 0
   padding 5px
 
 .image-name-enter-active

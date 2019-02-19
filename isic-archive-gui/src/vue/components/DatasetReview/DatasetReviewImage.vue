@@ -53,7 +53,7 @@ export default {
   position relative // ensure children can have absolute position
   margin 20px 20px
   cursor pointer
-  height 0% // allow height to expand only to that of child image
+  height 0 // allow height to expand only to that of child image
 
   img
     border 1px solid black

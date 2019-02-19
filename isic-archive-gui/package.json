@@ -56,6 +56,15 @@
       "@vue/airbnb"
     ],
     "rules": {
+      "no-param-reassign": [
+        "error",
+        {
+          "props": true,
+          "ignorePropertyModificationsFor": [
+            "state"
+          ]
+        }
+      ],
       "no-underscore-dangle": [
         "error",
         {
@@ -70,7 +79,21 @@
     }
   },
   "eslintIgnore": [
-    "src/**/*.js"
+    "src/*.js",
+    "src/collections/**/*.js",
+    "src/common/**/*.js",
+    "src/Datasets/**/*.js",
+    "src/Front/**/*.js",
+    "src/ImagesGallery/**/*.js",
+    "src/integration/**/*.js",
+    "src/layout/**/*.js",
+    "src/Legal/**/*.js",
+    "src/Literature/**/*.js",
+    "src/models/**/*.js",
+    "src/Studies/**/*.js",
+    "src/StudyResults/**/*.js",
+    "src/Tasks/**/*.js",
+    "src/User/**/*.js"
   ],
   "postcss": {
     "plugins": {

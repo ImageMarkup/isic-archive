@@ -12,9 +12,9 @@ import segmentationReview from '../components/SegmentationReview/SegmentationRev
 Vue.use(Vuex);
 
 export default new Vuex.Store({
-    modules: {
-        annotate,
-        datasetReview,
-        segmentationReview
-    }
+  modules: {
+    annotate,
+    datasetReview,
+    segmentationReview,
+  },
 });

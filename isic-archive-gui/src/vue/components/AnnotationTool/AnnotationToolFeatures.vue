@@ -139,18 +139,18 @@ export default {
 
 <style lang="stylus" scoped>
 .annotation-section
-  margin 0px
+  margin 0
   padding 5px
 
 .annotation-body-help
   display flex
-  margin-bottom 0px
-  border-radius 0px
+  margin-bottom 0
+  border-radius 0
 
 .annotation-radio-btn
   color #ffffff
   background-color #333333
-  border-radius 0px
+  border-radius 0
   &:focus
     color #ffffff
     background-color #333333

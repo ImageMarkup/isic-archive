@@ -74,7 +74,7 @@ export default {
   padding-right 6px
 
 .panel
-  border-radius 0px
+  border-radius 0
 
 .panel-heading
   background-color #f5f5f5
