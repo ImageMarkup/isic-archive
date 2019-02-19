@@ -37,8 +37,7 @@ class IsicTestCase(base.TestCase):
         # and fails.
         super(IsicTestCase, self).setUp()
 
-        from girder.plugins.isic_archive.provision_utility import \
-            provisionDatabase
+        from isic_archive.provision_utility import provisionDatabase
         provisionDatabase()
 
     def assertNoMail(self):

@@ -22,7 +22,7 @@ from girder.models.collection import Collection
 from girder.models.folder import Folder
 from girder.models.group import Group
 from girder.models.setting import Setting
-from girder.plugins.large_image.constants import PluginSettings as LargeImageSettings
+# from girder.plugins.large_image.constants import PluginSettings as LargeImageSettings
 
 from .models.user import User
 

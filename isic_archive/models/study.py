@@ -35,10 +35,11 @@ from .user import User
 _masterFeaturesPath = os.path.normpath(os.path.join(
     os.path.dirname(__file__), '..', '..', 'isic-archive-gui', 'src', 'masterFeatures.json'
 ))
-with open(_masterFeaturesPath, 'rb') as _masterFeaturesStream:
-    MASTER_FEATURES = [
-        feature['id'] for feature in json.load(_masterFeaturesStream)
-    ]
+# with open(_masterFeaturesPath, 'rb') as _masterFeaturesStream:
+#     MASTER_FEATURES = [
+#         feature['id'] for feature in json.load(_masterFeaturesStream)
+#     ]
+MASTER_FEATURES = []
 
 
 class Study(Folder):

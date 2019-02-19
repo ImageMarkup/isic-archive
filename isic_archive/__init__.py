@@ -16,18 +16,19 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 ###############################################################################
-
+from girder.utility.model_importer import ModelImporter
 import os
 
+import pkg_resources
 import sentry_sdk
 import six
 
 from girder import events
 from girder.api.v1 import resource
+from girder.plugin import getPlugin, GirderPlugin, registerPluginWebroot
 from girder.utility import mail_utils
-from girder.utility.plugin_utilities import registerPluginWebroot
-from girder.utility.server import staticFile
 
+from isic_archive.models import Annotation, Batch, Dataset, Image, Segmentation, Study, User
 from . import api
 # Import settings for side effects
 from . import settings  # noqa: F401
@@ -74,62 +75,78 @@ def clearRouteDocs():
         routes[routeResource][routePath][routeMethod] = routeOperation
 
 
-def load(info):
-    sentry_sdk.init(environment=os.getenv('SENTRY_ENVIRONMENT'))
-    # set the title of the HTML pages
-    info['serverRoot'].updateHtmlVars({'title': 'ISIC Archive'})
+class IsicArchive(GirderPlugin):
+    DISPLAY_NAME = 'ISIC Archive'
 
-    # add event listeners
-    events.bind('rest.get.describe/:resource.after',
-                'onDescribeResource', onDescribeResource)
+    def load(self, info):
+        sentry_sdk.init(environment=os.getenv('SENTRY_ENVIRONMENT'))
 
-    # add custom model searching
-    resource.allowedSearchTypes.update({
-        'image.isic_archive',
-        'study.isic_archive',
-    })
+        getPlugin('oauth').load(info)
+        getPlugin('large_image').load(info)
 
-    # register licenses for template usage
-    mail_utils.addTemplateDirectory(
-        os.path.join(info['pluginRootDir'], 'server', 'license_templates'),
-        prepend=True)
+        # set the title of the HTML pages
+        info['serverRoot'].updateHtmlVars({'title': 'ISIC Archive'})
 
-    # add static file serving
-    info['config']['/uda'] = {
-        'tools.staticdir.on': 'True',
-        'tools.staticdir.dir': os.path.join(info['pluginRootDir'], 'custom')
-    }
+        # register models
+        ModelImporter.registerModel('annotation', Annotation, 'isic_archive')
+        ModelImporter.registerModel('batch', Batch, 'isic_archive')
+        ModelImporter.registerModel('dataset', Dataset, 'isic_archive')
+        ModelImporter.registerModel('image', Image, 'isic_archive')
+        ModelImporter.registerModel('segmentation', Segmentation, 'isic_archive')
+        ModelImporter.registerModel('study', Study, 'isic_archive')
+        ModelImporter.registerModel('user', User, 'isic_archive')
 
-    # add dynamic root routes
-    # root endpoints -> where a user may go and expect a UI
-    class Root(object):
-        pass
-    legacyWebroot = Root()
-    legacyWebroot.segment = staticFile(
-        os.path.join(info['pluginRootDir'], 'custom', 'phase1.html'))
-    registerPluginWebroot(legacyWebroot, 'markup')
+        # add event listeners
+        events.bind('rest.get.describe/:resource.after',
+                    'onDescribeResource', onDescribeResource)
 
-    # create all necessary users, groups, collections, etc
-    provisionDatabase()
+        # add custom model searching
+        resource.allowedSearchTypes.update({
+            'image.isic_archive',
+            'study.isic_archive',
+        })
 
-    # add api routes
-    # remove docs for default Girder API, to simplify page
-    clearRouteDocs()
+        # register licenses for template usage
+        mail_utils.addTemplateDirectory(
+            pkg_resources.resource_filename('isic_archive', 'license_templates'),
+            prepend=True)
 
-    # Customize API docs template
-    baseTemplateFilename = info['apiRoot'].templateFilename
-    info['apiRoot'].updateHtmlVars({
-        'baseTemplateFilename': baseTemplateFilename
-    })
-    templatePath = os.path.join(info['pluginRootDir'], 'server', 'isic_api_docs.mako')
-    info['apiRoot'].setTemplatePath(templatePath)
+        # add static file serving
+        # info['config']['/uda'] = {
+        #     'tools.staticdir.on': 'True',
+        #     'tools.staticdir.dir': os.path.join(info['pluginRootDir'], 'custom')
+        # }
 
-    # TODO: nest these under a "/isic" path?
-    info['apiRoot'].annotation = api.AnnotationResource()
-    info['apiRoot'].dataset = api.DatasetResource()
-    info['apiRoot'].image = api.ImageResource()
-    info['apiRoot'].redirects = api.RedirectsResource()
-    info['apiRoot'].segmentation = api.SegmentationResource()
-    info['apiRoot'].study = api.StudyResource()
-    info['apiRoot'].task = api.TaskResource()
-    api.attachUserApi(info['apiRoot'].user)
+        # add dynamic root routes
+        # root endpoints -> where a user may go and expect a UI
+        # class Root(object):
+        #     pass
+        # legacyWebroot = Root()
+        # legacyWebroot.segment = staticFile(
+        #     os.path.join(info['pluginRootDir'], 'custom', 'phase1.html'))
+        # registerPluginWebroot(legacyWebroot, 'markup')
+
+        # create all necessary users, groups, collections, etc
+        provisionDatabase()
+
+        # add api routes
+        # remove docs for default Girder API, to simplify page
+        clearRouteDocs()
+
+        # Customize API docs template
+        baseTemplateFilename = info['apiRoot'].templateFilename
+        info['apiRoot'].updateHtmlVars({
+            'baseTemplateFilename': baseTemplateFilename
+        })
+        templatePath = pkg_resources.resource_filename('isic_archive', 'isic_api_docs.mako')
+        info['apiRoot'].setTemplatePath(templatePath)
+
+        # TODO: nest these under a "/isic" path?
+        info['apiRoot'].annotation = api.AnnotationResource()
+        info['apiRoot'].dataset = api.DatasetResource()
+        info['apiRoot'].image = api.ImageResource()
+        info['apiRoot'].redirects = api.RedirectsResource()
+        info['apiRoot'].segmentation = api.SegmentationResource()
+        info['apiRoot'].study = api.StudyResource()
+        info['apiRoot'].task = api.TaskResource()
+        api.attachUserApi(info['apiRoot'].user)
