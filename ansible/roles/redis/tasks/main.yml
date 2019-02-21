@@ -20,4 +20,4 @@
     regexp: "^ *#? *bind (?P<interfaces>.*)$"
     replace: "{{ redis_bind_all_interfaces | ternary('# ', '') }}bind \\g<interfaces>"
   become: true
-  notify: Restart redis
+  notify: Restart Redis
