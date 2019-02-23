@@ -35,7 +35,8 @@ class Batch(Model):
             'created': now,
             'creatorId': creator['_id'],
             'signature': signature,
-            'ingestStatus': None
+            'ingestStatus': None,
+            'uploadFileId': None
         })
         return batch
 

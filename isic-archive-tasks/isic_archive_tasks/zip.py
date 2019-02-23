@@ -5,11 +5,56 @@ from celery.utils.log import get_task_logger
 from isic_archive_tasks.app import app
 from isic_archive_tasks.image import ingestImage
 
+from girder.models.collection import Collection
+from girder.models.file import File
 from girder.models.folder import Folder
+from girder.models.item import Item
 from girder.models.user import User
 
 
 logger = get_task_logger(__name__)
+
+
+def _uploadZipfileToGirder(requestSession, filePath, dataset):
+    # Attach file to dataset
+    uploadCollection = Collection().findOne({
+        'name': 'Temporary ZIP Uploads'
+    })
+    uploadFolder = Folder().findOne({
+        'name': 'Temporary ZIP Uploads',
+        'baseParentId': uploadCollection['_id']
+    })
+
+    fileSize = os.path.getsize(filePath)
+    with open(filePath, 'rb') as fileStream:
+        uploadFile = requestSession.post(
+            'file',
+            params={
+                'parentType': 'folder',
+                'parentId': uploadFolder['_id'],
+                'name': filePath,
+                'size': fileSize,
+                'mimeType': 'application/zip'
+            },
+            data=fileStream,
+        )
+
+    uploadFile = File().load(uploadFile['_id'], force=True)
+    uploadItem = Item().load(uploadFile['itemId'], force=True)
+
+    uploadFile['itemId'] = None
+    uploadFile['attachedToType'] = ['dataset', 'isic_archive']
+    uploadFile['attachedToId'] = dataset['_id']
+    uploadFile = File().save(uploadFile)
+
+    File().propagateSizeChange(
+        item=uploadItem,
+        sizeIncrement=-uploadFile['size'],
+        updateItemSize=False
+    )
+    Item().remove(uploadItem)
+
+    return uploadFile
 
 
 @app.task(bind=True)
@@ -50,43 +95,27 @@ def ingestBatchFromZipfile(self, batchId):
     # Move file from S3 to the assetstore, attached to the dataset
     with TempDir() as tempDir:
         # Download file from S3 as upload user
-        fileName = os.path.join(tempDir, str(batch['_id']) + '.zip')
+        filePath = os.path.join(tempDir, str(batch['_id']) + '.zip')
         s3.download_file(
             Bucket=s3BucketName,
             Key=s3ObjectKey,
-            Filename=fileName
+            Filename=filePath
         )
 
-        # Attach file to dataset
-        # fileSize = os.path.getsize(fileName)
-        # with open(fileName, 'rb') as fileStream:
-        #     zipFile = Upload().uploadFromFile(
-        #         obj=fileStream,
-        #         size=fileSize,
-        #         name=fileName,
-        #         parentType='dataset',
-        #         parent=dataset,
-        #         attachParent=True,
-        #         user=user,
-        #         mimeType='application/zip'
-        #     )
-        # # TODO: remove this once a bug in upstream Girder is fixed
-        # zipFile['attachedToType'] = ['dataset', 'isic_archive']
-        # set item id to null
-        # zipFile = File().save(zipFile)
-        # propagatesizechange on the item -filesize
+        uploadFile = _uploadZipfileToGirder(self.session, filePath, dataset)
 
         # Delete file from S3 as upload user
-        # s3.delete_object(
-        #     Bucket=s3BucketName,
-        #     Key=s3ObjectKey
-        # )
+        s3.delete_object(
+            Bucket=s3BucketName,
+            Key=s3ObjectKey
+        )
 
         batch['ingestStatus'] = 'extracting'
+        batch['uploadFileId'] = uploadFile['_id']
         batch = Batch().save(batch)
 
         # Process zip file
-        with ZipFileOpener(fileName) as (fileList, fileCount):
+        with ZipFileOpener(filePath) as (fileList, fileCount):
             for originalFilePath, originalFileRelpath in fileList:
                 originalFileName = os.path.basename(originalFileRelpath)
                 with open(originalFilePath, 'rb') as originalFileStream:
