@@ -34,7 +34,9 @@ class Batch(Model):
             'datasetId': dataset['_id'],
             'created': now,
             'creatorId': creator['_id'],
-            'signature': signature
+            'signature': signature,
+            'ingestStatus': None,
+            'uploadFileId': None
         })
         return batch
 
@@ -45,3 +47,13 @@ class Batch(Model):
     def validate(self, doc, **kwargs):
         # TODO: implement
         return doc
+
+    def hasImagesPendingIngest(self, batch):
+        return self.imagesPendingIngest(batch).count() > 0
+
+    def imagesPendingIngest(self, batch):
+        from .image import Image
+        return Image().find({
+            'meta.batchId': batch['_id'],
+            'ingested': False
+        })

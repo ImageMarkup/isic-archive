@@ -1,0 +1,17 @@
+---
+- listen: Reload Celery
+  name: Reload Celery
+  systemd:
+    daemon_reload: true
+    name: celery
+    state: "reloaded"
+  become: true
+
+# Celerybeat can't be reloaded
+- listen: Reload Celery
+  name: Restart Celerybeat
+  systemd:
+    daemon_reload: true
+    name: celerybeat
+    state: "restarted"
+  become: true

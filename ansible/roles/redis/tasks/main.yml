@@ -1,0 +1,23 @@
+---
+- name: Install Redis
+  apt:
+    name: redis
+  become: true
+
+- name: Configure Redis password
+  replace:
+    path: /etc/redis/redis.conf
+    regexp: "^ *#? *requirepass ?.*$"
+    replace: "{{ (redis_password != '') | ternary('', '# ') }}requirepass {{ redis_password }}"
+  become: true
+  notify: Restart Redis
+
+- name: Bind Redis to all interfaces
+  replace:
+    path: /etc/redis/redis.conf
+    # A leading "^" causes this "after:" to not match, for some reason
+    after: "# IF YOU ARE SURE YOU WANT YOUR INSTANCE TO LISTEN TO ALL THE INTERFACES"
+    regexp: "^ *#? *bind (?P<interfaces>.*)$"
+    replace: "{{ redis_bind_all_interfaces | ternary('# ', '') }}bind \\g<interfaces>"
+  become: true
+  notify: Restart Redis

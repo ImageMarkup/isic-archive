@@ -1,0 +1,7 @@
+---
+- listen: Restart Redis
+  systemd:
+    name: redis
+    state: restarted
+  become: true
+  become_user: root

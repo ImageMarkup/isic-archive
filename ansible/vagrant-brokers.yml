@@ -1,0 +1,14 @@
+---
+- name: Setup brokers
+  hosts: all
+
+  roles:
+    - role: rabbitmq
+      rabbitmq_vhost: "isic-archive"
+      rabbitmq_username: "isicarchive"
+      rabbitmq_password: "password"
+
+    - role: redis
+      vars:
+        redis_bind_all_interfaces: true
+        redis_password: "password"

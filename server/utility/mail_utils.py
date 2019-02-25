@@ -16,9 +16,41 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 ###############################################################################
+from email.mime.text import MIMEText
 
+import six
+
+from girder import logger
+from girder.constants import SettingKey
 from girder.models.group import Group
+from girder.models.setting import Setting
 from girder.utility import mail_utils
+
+
+def sendEmail(to, subject, text):
+    if isinstance(to, six.string_types):
+        to = (to,)
+
+    if isinstance(text, six.text_type):
+        text = text.encode('utf8')
+
+    msg = MIMEText(text, 'html', 'UTF-8')
+    msg['Subject'] = subject or '[no subject]'
+    msg['To'] = ', '.join(to)
+    msg['From'] = Setting().get(SettingKey.EMAIL_FROM_ADDRESS)
+    recipients = list(set(to))
+    smtp = mail_utils._SMTPConnection(
+        host=Setting().get(SettingKey.SMTP_HOST, 'localhost'),
+        port=Setting().get(SettingKey.SMTP_PORT, None),
+        encryption=Setting().get(SettingKey.SMTP_ENCRYPTION, 'none'),
+        username=Setting().get(SettingKey.SMTP_USERNAME, None),
+        password=Setting().get(SettingKey.SMTP_PASSWORD, None)
+    )
+
+    logger.info('Sending email to %s through %s', ', '.join(recipients), smtp.host)
+
+    with smtp:
+        smtp.send(msg['From'], recipients, msg.as_string())
 
 
 def sendEmailToGroup(groupName, templateFilename, templateParams, subject=None):
@@ -37,4 +69,4 @@ def sendEmailToGroup(groupName, templateFilename, templateParams, subject=None):
     emails = [member['email'] for member in Group().listMembers(group)]
     if emails:
         html = mail_utils.renderTemplate(templateFilename, templateParams)
-        mail_utils.sendEmail(to=emails, subject=subject, text=html)
+        sendEmail(to=emails, subject=subject, text=html)

@@ -1,0 +1,16 @@
+[Unit]
+Description=Celery Beat Service
+After=network.target
+
+[Service]
+User={{ celery_user }}
+Group={{ celery_user }}
+EnvironmentFile=/etc/conf.d/celerybeat
+Environment=DOTENV_PATH=/home/{{ celery_user }}/.env
+ExecStart=/bin/sh -c '${CELERY_BIN} beat -A ${CELERY_APP} --pidfile=${CELERYBEAT_PID_FILE} \
+  --logfile=${CELERYBEAT_LOG_FILE} --schedule=${CELERYBEAT_SCHEDULE_FILE} --loglevel=${CELERYBEAT_LOG_LEVEL} \
+  ${CELERYBEAT_OPTS}'
+ExecStop=/bin/kill -s TERM $MAINPID
+
+[Install]
+WantedBy=multi-user.target

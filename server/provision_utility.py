@@ -19,6 +19,7 @@
 
 from girder.constants import AccessType, SettingKey
 from girder.models.collection import Collection
+from girder.models.folder import Folder
 from girder.models.group import Group
 from girder.models.setting import Setting
 from girder.plugins.large_image.constants import PluginSettings as LargeImageSettings
@@ -153,6 +154,35 @@ def _provisionStudies():
     )
 
 
+def _provisionTemporaryUploads():
+    uploadCollection = Collection().createCollection(
+        name='Temporary ZIP Uploads',
+        creator=getAdminUser(),
+        description='Temporary holding area for uploaded ZIP files',
+        public=False,
+        reuseExisting=True
+    )
+    uploadCollection = Collection().setAccessList(
+        doc=uploadCollection,
+        access={},
+        save=True
+    )
+
+    uploadFolder = Folder().createFolder(
+        name='Temporary ZIP Uploads',
+        parentType='collection',
+        parent=uploadCollection,
+        creator=getAdminUser(),
+        public=False,
+        reuseExisting=True
+    )
+    Folder().setAccessList(
+        doc=uploadFolder,
+        access={},
+        save=True
+    )
+
+
 def provisionDatabase():
     # set external settings
     Setting().set(SettingKey.USER_DEFAULT_FOLDERS, 'none')
@@ -166,3 +196,4 @@ def provisionDatabase():
     _provisionImages()
     _provisionSegmentationGroups()
     _provisionStudies()
+    _provisionTemporaryUploads()

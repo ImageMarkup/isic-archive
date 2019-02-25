@@ -1,6 +1,6 @@
 <%include file="_header.mako"/>
 
-% if group:
+% if not isOriginalUploader:
 <div style="font-size: 18px; font-weight: bold; color: #009933; margin-bottom: 12px;">
 A user added a ZIP image batch to the ISIC Archive.
 </div>
@@ -51,9 +51,25 @@ Thank you for contributing a ZIP image batch to the ISIC Archive.
     </tbody>
 </table>
 
-% if not group:
+% if skippedFilenames:
+    <h4>Skipped Files</h4>
+    Some files within your dataset were skipped. If you think this is a mistake, contact admin@isic-archive.com:<br>
+    % for skippedFilename in skippedFilenames:
+        ${skippedFilename['privateMeta']['originalFilename']}
+    % endfor
+% endif
+
+% if failedImages:
+    <h4>Failures</h4>
+    <br>Some files within your dataset failed to be completely imported into the archive:<br>
+    % for failedImage in failedImages:
+        ${failedImage['privateMeta']['originalFilename']}<br>
+    % endfor
+% endif
+
+% if isOriginalUploader:
 <p>
-The Terms of Use that you agreed to via electronic signature is available here:<br>
+The Terms of Use, which you agreed to via electronic signature, is available here:<br>
 <a href="${host}#termsOfUse">${host}#termsOfUse</a>
 </p>
 % endif

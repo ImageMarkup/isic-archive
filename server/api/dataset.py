@@ -20,6 +20,7 @@
 import mimetypes
 
 import cherrypy
+from isic_archive_tasks import ingestImage
 
 from girder.api import access
 from girder.api.describe import autoDescribeRoute, describeRoute, Description
@@ -29,9 +30,9 @@ from girder.exceptions import AccessException, GirderException, ValidationExcept
 from girder.models.file import File
 from girder.utility import RequestBodyStream
 
-from .base import IsicResource
 from ..models.dataset import Dataset
 from ..models.image import Image
+from .base import IsicResource  # noqa
 from ..models.user import User
 
 CSV_FORMATS = [
@@ -256,6 +257,8 @@ class DatasetResource(IsicResource):
             signature=signature,
             user=user)
 
+        ingestImage.delay(image['_id'])
+
         return Image().filter(image, user=user)
 
     @describeRoute(
@@ -421,13 +424,11 @@ class DatasetResource(IsicResource):
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
     def finalizeZipUploadToS3(self, dataset, batch, params):
         user = self.getCurrentUser()
+        # Note: we don't require the finalizer of the upload to be the creator of the batch
         User().requireCreateDataset(user)
 
-        # TODO: Run as asynchronous celery task
-        try:
-            Dataset().finalizeZipUploadS3(dataset=dataset, batch=batch, user=user, sendMail=True)
-        except GirderException as e:
-            raise RestException(e.message)
+        Dataset().finalizeZipUploadS3(batch)
+        cherrypy.response.status = 201
 
     @describeRoute(
         Description('Get a list of images in this dataset to QC Review.')

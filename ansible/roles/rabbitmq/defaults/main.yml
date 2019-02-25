@@ -1,0 +1,5 @@
+---
+
+rabbitmq_vhost: "default"
+rabbitmq_username: "default"
+rabbitmq_password: "default"

@@ -16,6 +16,13 @@
       - p7zip-full
   become: yes
 
+- name: Install isic-archive-tasks package
+  pip:
+    name: "{{ isic_archive_path }}/isic-archive-tasks"
+    virtualenv: "{{ python_dist_path }}"
+  notify:
+    - Restart Girder
+
 - name: Install large_image plugin
   command: "{{ python_dist_path }}/bin/girder-install plugin --force --symlink {{ large_image_path }}"
   notify:
@@ -93,26 +100,13 @@
     port: "{{ girder_port }}"
     plugins:
       - isic_archive
+      - worker
     state: present
   notify:
     - Restart Girder
     - Build Girder
 
 - meta: flush_handlers
-
-- name: Set girder_worker plugin settings
-  girder:
-    username: "{{ girder_admin_username }}"
-    password: "{{ girder_admin_password }}"
-    port: "{{ girder_port }}"
-    setting:
-      key: "{{ item }}"
-      value: "mongodb://localhost:27017/girder_worker"
-    state: present
-  with_items:
-    - "worker.backend"
-    - "worker.broker"
-  notify: Restart Girder
 
 - name: Set CORS settings
   girder:
