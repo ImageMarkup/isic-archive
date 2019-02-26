@@ -1,4 +1,3 @@
-vagrant-playbook.retry
 roles/DigitalSlideArchive.vips/
 roles/girder.girder/
 roles/large_image/
