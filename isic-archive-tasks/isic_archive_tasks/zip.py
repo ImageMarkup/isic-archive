@@ -65,12 +65,12 @@ def ingestBatchFromZipfile(self, batchId):
 
     The images are extracted to a "Pre-review" folder within the dataset folder.
     """
-    from girder.plugins.isic_archive.models.batch import Batch
-    from girder.plugins.isic_archive.models.dataset import Dataset
-    from girder.plugins.isic_archive.models.image import Image
-    from girder.plugins.isic_archive.upload import ZipFileOpener
-    from girder.plugins.isic_archive.upload import TempDir
-    from girder.plugins.isic_archive.utility.boto import s3
+    from isic_archive.models.batch import Batch
+    from isic_archive.models.dataset import Dataset
+    from isic_archive.models.image import Image
+    from isic_archive.upload import ZipFileOpener
+    from isic_archive.upload import TempDir
+    from isic_archive.utility.boto import s3
 
     batch = Batch().load(batchId)
     dataset = Dataset().load(batch['datasetId'], force=True)

@@ -7,8 +7,8 @@ from girder.utility import mail_utils
 
 @app.task()
 def maybeSendIngestionNotifications():
-    from girder.plugins.isic_archive.models.batch import Batch
-    from girder.plugins.isic_archive.models.image import Image
+    from isic_archive.models.batch import Batch
+    from isic_archive.models.image import Image
     for batch in Batch().find({'ingestStatus': 'extracted'}):
         if not Batch().hasImagesPendingIngest(batch):
             # TODO: Move sorting to templating since it's a rendering concern?
@@ -37,9 +37,9 @@ def maybeSendIngestionNotifications():
 
 @app.task()
 def sendIngestionNotification(batchId, failedImages, skippedFilenames):
-    from girder.plugins.isic_archive.models.batch import Batch
-    from girder.plugins.isic_archive.models.dataset import Dataset
-    from girder.plugins.isic_archive.utility.mail_utils import sendEmail, sendEmailToGroup
+    from isic_archive.models.batch import Batch
+    from isic_archive.models.dataset import Dataset
+    from isic_archive.utility.mail_utils import sendEmail, sendEmailToGroup
     batch = Batch().load(batchId)
     dataset = Dataset().load(batch['datasetId'], force=True)
     user = User().load(batch['creatorId'], force=True)

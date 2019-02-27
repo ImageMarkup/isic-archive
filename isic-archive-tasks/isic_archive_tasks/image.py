@@ -17,8 +17,8 @@ logger = get_task_logger(__name__)
 
 @app.task(bind=True)
 def ingestImage(self, imageId):
-    from girder.plugins.isic_archive.models.image import Image
-    from girder.plugins.isic_archive.models.segmentation_helpers.scikit import \
+    from isic_archive.models.image import Image
+    from isic_archive.models.segmentation_helpers.scikit import \
         ScikitSegmentationHelper
     image = Image().load(imageId, force=True)
 
@@ -58,7 +58,7 @@ def ingestImage(self, imageId):
 
 @app.task()
 def markImageIngested(results, imageId):
-    from girder.plugins.isic_archive.models.image import Image
+    from isic_archive.models.image import Image
     image = Image().load(imageId, force=True)
     image['ingested'] = True
     Image().save(image)
@@ -67,8 +67,8 @@ def markImageIngested(results, imageId):
 @app.task(bind=True)
 def generateSuperpixels(self, imageId):
     try:
-        from girder.plugins.isic_archive.models.image import Image
-        from girder.plugins.isic_archive.models.segmentation_helpers.scikit import \
+        from isic_archive.models.image import Image
+        from isic_archive.models.segmentation_helpers.scikit import \
             ScikitSegmentationHelper
         image = Image().load(imageId, force=True)
         imageFile = Image().originalFile(image)
@@ -114,7 +114,7 @@ def generateSuperpixels(self, imageId):
 
 @app.task(bind=True)
 def generateLargeImage(self, imageId):
-    from girder.plugins.isic_archive.models.image import Image
+    from isic_archive.models.image import Image
     imageItem = Image().load(id=imageId, force=True)
     imageFile = Image().originalFile(imageItem)
 

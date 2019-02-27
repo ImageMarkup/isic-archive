@@ -26,7 +26,7 @@ class CredentialedGirderTask(Task):
         The child class overrides run, so __call__ must be used to hook in before a task
         is executed.
         """
-        from girder.plugins.isic_archive.provision_utility import getAdminUser
+        from isic_archive.provision_utility import getAdminUser
         # TODO: Revoke token in post task signal
         self.token = Token().createToken(user=getAdminUser(), days=1,
                                          scope=[TokenScope.DATA_READ, TokenScope.DATA_WRITE])

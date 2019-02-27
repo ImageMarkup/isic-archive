@@ -3,7 +3,7 @@ girder_server.configureServer()
 from girder.models.file import File  # noqa: E402, I100
 from girder.models.folder import Folder  # noqa: E402
 from girder.models.item import Item  # noqa: E402
-from girder.plugins.isic_archive.models.dataset import Dataset  # noqa: E402
+from isic_archive.models.dataset import Dataset  # noqa: E402
 
 
 for dataset in Dataset().find():
