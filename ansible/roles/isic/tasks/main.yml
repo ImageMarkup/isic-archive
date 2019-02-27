@@ -19,21 +19,25 @@
 - name: Install isic-archive-tasks package
   pip:
     name: "{{ isic_archive_path }}/isic-archive-tasks"
+    editable: true
     virtualenv: "{{ python_dist_path }}"
   notify:
     - Restart Girder
 
-- name: Install large_image plugin
-  command: "{{ python_dist_path }}/bin/girder-install plugin --force --symlink {{ large_image_path }}"
+- name: Install isic-archive package
+  pip:
+    name: "{{ isic_archive_path }}"
+    editable: true
+    virtualenv: "{{ python_dist_path }}"
   notify:
     - Restart Girder
-    - Build Girder
 
-- name: Install ISIC Archive
-  command: "{{ python_dist_path }}/bin/girder-install plugin --force --symlink {{ isic_archive_path }}"
-  notify:
-    - Restart Girder
-    - Build Girder
+# TODO: Remove when girder-worker stops depending on networkx
+- name: Install networkx==1.9.0
+  pip:
+    name: "networkx"
+    version: "1.9.0"
+    virtualenv: "{{ python_dist_path }}"
 
 - name: Install ISIC GUI dependencies
   yarn:
@@ -100,6 +104,7 @@
     port: "{{ girder_port }}"
     plugins:
       - isic_archive
+      - large_image
       - worker
     state: present
   notify:

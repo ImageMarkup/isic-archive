@@ -12,5 +12,6 @@
     timeout: 20
 
 - listen: Build Girder
-  command: "{{ python_dist_path }}/bin/girder-install web"
+  command: "{{ python_dist_path }}/bin/girder build"
+  ignore_errors: true  # TODO: Remove when new alpha release of girder3 comes out
   when: build_girder
