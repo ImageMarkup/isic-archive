@@ -64,6 +64,13 @@
         version: "1.9.0"
         virtualenv: "{{ python_dist_path }}"
 
+    # TODO: Remove when https://github.com/girder/girder_worker/issues/330 is resolved
+    - name: Install celery==4.1.1
+      pip:
+        name: "celery"
+        version: "4.1.1"
+        virtualenv: "{{ python_dist_path }}"
+
     - name: Configure mongo URI
       ini_file:
         path: "{{ ansible_user_dir }}/.girder/girder.cfg"
