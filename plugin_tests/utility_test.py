@@ -17,12 +17,11 @@
 #  limitations under the License.
 ###############################################################################
 
-import os
-import sys
-
 from six.moves import range
 
-from tests import base
+import pytest
+
+from isic_archive.utility import generateLines
 
 
 class DataIterator(object):
@@ -49,108 +48,93 @@ class DataIterator(object):
     next = __next__
 
 
-def setUpModule():
-    isicUtilityModulePath = os.path.abspath(os.path.join(
-        os.path.dirname(__file__), '..', 'server'))
-    if isicUtilityModulePath not in sys.path:
-        sys.path.append(isicUtilityModulePath)
+def testGenerateLines():
+    """
+    Test generateLines with all chunk sizes up to a maximum larger than the longest input data.
 
-    global generateLines
-    from utility import generateLines
+    To control the chunk size we use the helper class
+    DataIterator in place of something like StringIO. Testing with chunk
+    sizes smaller than the data size is necessary to effective test the
+    implementation of generateLines.
+    """
+    for chunkSize in range(1, 21):
+        _testGenerateLines(chunkSize)
 
+def _generateLines(data, chunkSize):
+    """Return generateLines() on input data retrieved with a specified chunk size."""
+    return generateLines(DataIterator(data, chunkSize))
 
-class UtilityTestCase(base.TestCase):
-    def setUp(self):
-        # A Girder instance is not required for this test case
-        pass
+def _testGenerateLines(chunkSize):
+    """Run all generateLines tests for the specified chunk size."""
+    _testGenerateLinesEmpty(chunkSize)
+    _testGenerateLinesSingleLine(chunkSize)
+    _testGenerateLinesMultipleLines(chunkSize)
+    _testGenerateLinesBlankLines(chunkSize)
 
-    def testGenerateLines(self):
-        """
-        Test generateLines with all chunk sizes up to a maximum larger than the longest input data.
+def _testGenerateLinesEmpty(chunkSize):
+    """Test generateLines on empty input."""
+    # With newline at end
+    lines = _generateLines('\n', chunkSize)
+    line = lines.next()
+    assert len(line) == 1
+    with pytest.raises(StopIteration):
+        lines.next()
 
-        To control the chunk size we use the helper class
-        DataIterator in place of something like StringIO. Testing with chunk
-        sizes smaller than the data size is necessary to effective test the
-        implementation of generateLines.
-        """
-        for chunkSize in range(1, 21):
-            self._testGenerateLines(chunkSize)
+    # Without newline at end
+    lines = _generateLines('', chunkSize)
+    with pytest.raises(StopIteration):
+        lines.next()
 
-    def _generateLines(self, data, chunkSize):
-        """Return generateLines() on input data retrieved with a specified chunk size."""
-        return generateLines(DataIterator(data, chunkSize))
+def _testGenerateLinesSingleLine(chunkSize):
+    """Test generateLines on input with a single line."""
+    # With newline at end
+    lines = _generateLines('abc\n', chunkSize)
+    line = lines.next()
+    assert len(line) == 4
+    with pytest.raises(StopIteration):
+        lines.next()
 
-    def _testGenerateLines(self, chunkSize):
-        """Run all generateLines tests for the specified chunk size."""
-        self._testGenerateLinesEmpty(chunkSize)
-        self._testGenerateLinesSingleLine(chunkSize)
-        self._testGenerateLinesMultipleLines(chunkSize)
-        self._testGenerateLinesBlankLines(chunkSize)
+    # Without newline at end
+    lines = _generateLines('abc', chunkSize)
+    line = lines.next()
+    assert len(line) == 3
+    with pytest.raises(StopIteration):
+        lines.next()
 
-    def _testGenerateLinesEmpty(self, chunkSize):
-        """Test generateLines on empty input."""
-        # With newline at end
-        lines = self._generateLines('\n', chunkSize)
-        line = lines.next()
-        self.assertEqual(len(line), 1)
-        with self.assertRaises(StopIteration):
-            lines.next()
+def _testGenerateLinesMultipleLines(chunkSize):
+    """Test generateLines on input with multiple lines."""
+    lines = _generateLines('abc\ndef\n', chunkSize)
+    line = lines.next()
+    assert len(line) == 4
+    line = lines.next()
+    assert len(line) == 4
+    with pytest.raises(StopIteration):
+        lines.next()
 
-        # Without newline at end
-        lines = self._generateLines('', chunkSize)
-        with self.assertRaises(StopIteration):
-            lines.next()
+    lines = _generateLines('abc\ndef\nhijklmnop\n', chunkSize)
+    line = lines.next()
+    assert len(line) == 4
+    line = lines.next()
+    assert len(line) == 4
+    line = lines.next()
+    assert len(line) == 10
+    with pytest.raises(StopIteration):
+        lines.next()
 
-    def _testGenerateLinesSingleLine(self, chunkSize):
-        """Test generateLines on input with a single line."""
-        # With newline at end
-        lines = self._generateLines('abc\n', chunkSize)
-        line = lines.next()
-        self.assertEqual(len(line), 4)
-        with self.assertRaises(StopIteration):
-            lines.next()
+def _testGenerateLinesBlankLines(chunkSize):
+    """Test generateLines on input that contains blank lines."""
+    lines = _generateLines('abc\n\n', chunkSize)
+    line = lines.next()
+    assert len(line) == 4
+    line = lines.next()
+    assert len(line) == 1
+    with pytest.raises(StopIteration):
+        lines.next()
 
-        # Without newline at end
-        lines = self._generateLines('abc', chunkSize)
-        line = lines.next()
-        self.assertEqual(len(line), 3)
-        with self.assertRaises(StopIteration):
-            lines.next()
-
-    def _testGenerateLinesMultipleLines(self, chunkSize):
-        """Test generateLines on input with multiple lines."""
-        lines = self._generateLines('abc\ndef\n', chunkSize)
-        line = lines.next()
-        self.assertEqual(len(line), 4)
-        line = lines.next()
-        self.assertEqual(len(line), 4)
-        with self.assertRaises(StopIteration):
-            lines.next()
-
-        lines = self._generateLines('abc\ndef\nhijklmnop\n', chunkSize)
-        line = lines.next()
-        self.assertEqual(len(line), 4)
-        line = lines.next()
-        self.assertEqual(len(line), 4)
-        line = lines.next()
-        self.assertEqual(len(line), 10)
-        with self.assertRaises(StopIteration):
-            lines.next()
-
-    def _testGenerateLinesBlankLines(self, chunkSize):
-        """Test generateLines on input that contains blank lines."""
-        lines = self._generateLines('abc\n\n', chunkSize)
-        line = lines.next()
-        self.assertEqual(len(line), 4)
-        line = lines.next()
-        self.assertEqual(len(line), 1)
-        with self.assertRaises(StopIteration):
-            lines.next()
-
-        lines = self._generateLines('\nabc\n', chunkSize)
-        line = lines.next()
-        self.assertEqual(len(line), 1)
-        line = lines.next()
-        self.assertEqual(len(line), 4)
-        with self.assertRaises(StopIteration):
-            lines.next()
+    lines = _generateLines('\nabc\n', chunkSize)
+    line = lines.next()
+    assert len(line) == 1
+    line = lines.next()
+    assert len(line) == 4
+    with pytest.raises(StopIteration):
+        lines.next()
