@@ -25,7 +25,6 @@ import time
 from backports import csv
 import botocore
 import cherrypy
-from isic_archive_tasks import ingestBatchFromZipfile
 from natsort import natsorted
 import six
 
@@ -427,6 +426,8 @@ class Dataset(AccessControlledModel):
         - Delete the ZIP file from S3.
         - Ingest images from the ZIP file into the dataset.
         """
+        # avoid circular imports from the models __init__
+        from isic_archive_tasks import ingestBatchFromZipfile
         updateResult = Batch().collection.update_one(
             {
                 '_id': batch['_id'],

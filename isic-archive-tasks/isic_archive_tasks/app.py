@@ -1,7 +1,6 @@
 import os
 
 from celery import Celery, Task
-from celery.signals import worker_process_init
 import jsonpickle
 from kombu.serialization import register
 from requests_toolbelt.sessions import BaseUrlSession
@@ -9,6 +8,8 @@ from requests_toolbelt.sessions import BaseUrlSession
 from girder.constants import SettingKey, TokenScope
 from girder.models.setting import Setting
 from girder.models.token import Token
+
+from isic_archive.provision_utility import getAdminUser
 
 
 class CredentialedGirderTask(Task):
@@ -26,7 +27,6 @@ class CredentialedGirderTask(Task):
         The child class overrides run, so __call__ must be used to hook in before a task
         is executed.
         """
-        from isic_archive.provision_utility import getAdminUser
         # TODO: Revoke token in post task signal
         self.token = Token().createToken(user=getAdminUser(), days=1,
                                          scope=[TokenScope.DATA_READ, TokenScope.DATA_WRITE])
@@ -58,17 +58,6 @@ def setupPeriodicTasks(sender, **kwargs):
     from isic_archive_tasks.notification import maybeSendIngestionNotifications
     sender.add_periodic_task(30, maybeSendIngestionNotifications.s(),
                              name='Send any necessary notifications for ingested batches.')
-
-
-@worker_process_init.connect
-def fixGirderImports(sender, **kwargs):
-    from girder.utility.server import configureServer
-    configureServer(curConfig={
-        'server': {
-            'mode': 'production'
-        },
-        'cherrypy_server': False
-    })
 
 
 register('jsonpickle', jsonpickle.encode, jsonpickle.decode, content_type='application/json',

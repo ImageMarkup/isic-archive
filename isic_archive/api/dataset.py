@@ -20,7 +20,6 @@
 import mimetypes
 
 import cherrypy
-from isic_archive_tasks import ingestImage
 
 from girder.api import access
 from girder.api.describe import autoDescribeRoute, describeRoute, Description
@@ -257,6 +256,8 @@ class DatasetResource(IsicResource):
             signature=signature,
             user=user)
 
+        # avoid circular imports from models.__init__
+        from isic_archive_tasks import ingestImage
         ingestImage.delay(image['_id'])
 
         return Image().filter(image, user=user)

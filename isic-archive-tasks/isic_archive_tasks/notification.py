@@ -1,14 +1,15 @@
+from isic_archive.models import Dataset, Batch, Image
 from isic_archive_tasks import app
 import pymongo
 
 from girder.models.user import User
 from girder.utility import mail_utils
 
+from isic_archive.utility.mail_utils import sendEmail, sendEmailToGroup
+
 
 @app.task()
 def maybeSendIngestionNotifications():
-    from isic_archive.models.batch import Batch
-    from isic_archive.models.image import Image
     for batch in Batch().find({'ingestStatus': 'extracted'}):
         if not Batch().hasImagesPendingIngest(batch):
             # TODO: Move sorting to templating since it's a rendering concern?
@@ -37,9 +38,6 @@ def maybeSendIngestionNotifications():
 
 @app.task()
 def sendIngestionNotification(batchId, failedImages, skippedFilenames):
-    from isic_archive.models.batch import Batch
-    from isic_archive.models.dataset import Dataset
-    from isic_archive.utility.mail_utils import sendEmail, sendEmailToGroup
     batch = Batch().load(batchId)
     dataset = Dataset().load(batch['datasetId'], force=True)
     user = User().load(batch['creatorId'], force=True)
