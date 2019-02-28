@@ -106,9 +106,12 @@ class IsicArchive(GirderPlugin):
             'study.isic_archive',
         })
 
-        # register licenses for template usage
+        # register license and mail templates
         mail_utils.addTemplateDirectory(
             pkg_resources.resource_filename('isic_archive', 'license_templates'),
+            prepend=True)
+        mail_utils.addTemplateDirectory(
+            pkg_resources.resource_filename('isic_archive', 'mail_templates'),
             prepend=True)
 
         # create all necessary users, groups, collections, etc

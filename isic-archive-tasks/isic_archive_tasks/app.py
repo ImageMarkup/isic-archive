@@ -1,8 +1,11 @@
+from girder.utility import mail_utils
 import os
 
 from celery import Celery, Task
+from celery.signals import worker_process_init
 import jsonpickle
 from kombu.serialization import register
+import pkg_resources
 from requests_toolbelt.sessions import BaseUrlSession
 
 from girder.constants import SettingKey, TokenScope
@@ -61,6 +64,13 @@ def setupPeriodicTasks(sender, **kwargs):
     from isic_archive_tasks.notification import maybeSendIngestionNotifications
     sender.add_periodic_task(30, maybeSendIngestionNotifications.s(),
                              name='Send any necessary notifications for ingested batches.')
+
+
+@worker_process_init.connect
+def addMailTemplates(sender, **kwargs):
+    mail_utils.addTemplateDirectory(
+        pkg_resources.resource_filename('isic_archive', 'mail_templates'),
+        prepend=True)
 
 
 register('jsonpickle', jsonpickle.encode, jsonpickle.decode, content_type='application/json',
