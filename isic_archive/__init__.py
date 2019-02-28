@@ -25,7 +25,7 @@ import six
 
 from girder import events
 from girder.api.v1 import resource
-from girder.plugin import getPlugin, GirderPlugin, registerPluginWebroot
+from girder.plugin import getPlugin, GirderPlugin
 from girder.utility import mail_utils
 
 from isic_archive.models import Annotation, Batch, Dataset, Image, Segmentation, Study, User
@@ -110,21 +110,6 @@ class IsicArchive(GirderPlugin):
         mail_utils.addTemplateDirectory(
             pkg_resources.resource_filename('isic_archive', 'license_templates'),
             prepend=True)
-
-        # add static file serving
-        # info['config']['/uda'] = {
-        #     'tools.staticdir.on': 'True',
-        #     'tools.staticdir.dir': os.path.join(info['pluginRootDir'], 'custom')
-        # }
-
-        # add dynamic root routes
-        # root endpoints -> where a user may go and expect a UI
-        # class Root(object):
-        #     pass
-        # legacyWebroot = Root()
-        # legacyWebroot.segment = staticFile(
-        #     os.path.join(info['pluginRootDir'], 'custom', 'phase1.html'))
-        # registerPluginWebroot(legacyWebroot, 'markup')
 
         # create all necessary users, groups, collections, etc
         provisionDatabase()
