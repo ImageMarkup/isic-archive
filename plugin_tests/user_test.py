@@ -16,289 +16,274 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 ###############################################################################
-
 from girder.constants import AccessType
-from tests import base
+from girder.models.group import Group
+import pytest
 
-from .isic_base import IsicTestCase
+from isic_archive import provisionDatabase, IsicArchive
+from isic_archive.models import User
+from pytest_girder.assertions import assertStatus, assertStatusOk
+
+@pytest.fixture
+def provisionedServer(server):
+    provisionDatabase()
+    yield server
 
 
-def setUpModule():
-    base.enabledPlugins.append('isic_archive')
-    base.startServer()
+@pytest.mark.plugin('isic_archive', IsicArchive)
+def testBasicUser(provisionedServer):
+    # Create a basic user
+    resp = provisionedServer.request(path='/user', method='POST', params={
+        'email': 'test-user@isic-archive.com',
+        'login': 'test-user',
+        'firstName': 'test',
+        'lastName': 'user',
+        'password': 'password'
+    })
+    assertStatusOk(resp)
+    testUser = User().findOne({'login': 'test-user'})
+    assert testUser is not None
+
+    # Ensure creation returns permissions
+    negativePermissions = {
+        'acceptTerms': False,
+        'createDataset': False,
+        'reviewDataset': False,
+        'segmentationSkill': None,
+        'adminStudy': False
+    }
+    assert resp.json.get('permissions') == negativePermissions
+
+    # Ensure login returns permissions
+    resp = provisionedServer.request(path='/user/authentication', method='GET',
+                                     basicAuth='test-user:password')
+    assertStatusOk(resp)
+    assert resp.json['user'].get('permissions') == negativePermissions
+
+    # Ensure get user returns permissions
+    resp = provisionedServer.request(path='/user/me', method='GET', user=testUser)
+    assertStatusOk(resp)
+    assert resp.json.get('permissions') == negativePermissions
+
+    # Ensure get user for anonymous still succeeds
+    resp = provisionedServer.request(path='/user/me', method='GET')
+    assertStatusOk(resp)
+    assert resp.json is None
+
+    # Ensure user is private
+    resp = provisionedServer.request(path='/user/%s' % testUser['_id'], method='GET')
+    assertStatus(resp, 401)
+
+    # Ensure accept terms works
+    resp = provisionedServer.request(path='/user/acceptTerms', method='POST',
+                                     user=testUser)
+    assertStatusOk(resp)
+    assert resp.json.get('extra') == 'hasPermission'
+
+    resp = provisionedServer.request(path='/user/me', method='GET', user=testUser)
+    assertStatusOk(resp)
+    acceptedTermsPermissions = negativePermissions.copy()
+    acceptedTermsPermissions['acceptTerms'] = True
+    assert resp.json.get('permissions') == acceptedTermsPermissions
+
+    # Ensure accepting terms twice is idempotent
+    testUser = User().findOne({'login': 'test-user'})
+    uploaderUserAcceptTermsTime = testUser['acceptTerms']
+    resp = provisionedServer.request(path='/user/acceptTerms', method='POST',
+                                     user=testUser)
+    assertStatusOk(resp)
+    assert resp.json.get('extra') == 'hasPermission'
+    testUser = User().findOne({'login': 'test-user'})
+    assert testUser['acceptTerms'] == \
+                     uploaderUserAcceptTermsTime
 
 
-def tearDownModule():
-    base.stopServer()
+@pytest.mark.plugin('isic_archive', IsicArchive)
+def testUploaderUser(provisionedServer, smtp):
+    # Create an uploader admin
+    resp = provisionedServer.request(path='/user', method='POST', params={
+        'email': 'uploader-admin@isic-archive.com',
+        'login': 'uploader-admin',
+        'firstName': 'uploader',
+        'lastName': 'admin',
+        'password': 'password'
+    })
+    assertStatusOk(resp)
+    uploaderAdmin = User().findOne({'login': 'uploader-admin'})
+    assert uploaderAdmin is not None
+    contributorsGroup = Group().findOne({'name': 'Dataset Contributors'})
+    assert contributorsGroup is not None
+    Group().addUser(contributorsGroup, uploaderAdmin, level=AccessType.WRITE)
+
+    # Create an uploader user
+    resp = provisionedServer.request(path='/user', method='POST', params={
+        'email': 'uploader-user@isic-archive.com',
+        'login': 'uploader-user',
+        'firstName': 'uploader',
+        'lastName': 'user',
+        'password': 'password'
+    })
+    assertStatusOk(resp)
+    uploaderUser = User().findOne({'login': 'uploader-user'})
+    assert uploaderUser is not None
+
+    # TODO: check if a user can upload without agreeing to terms
+
+    # Ensure request create dataset permission works
+    resp = provisionedServer.request(path='/user/requestCreateDatasetPermission',
+                                     method='POST', user=uploaderUser)
+    assertStatusOk(resp)
+    assert smtp.waitForMail()
+    assert smtp.getMail()  # pop off the queue for later assertion that the queue is empty
+
+    # Ensure that the user can't create datasets yet
+    resp = provisionedServer.request(path='/user/me', method='GET', user=uploaderUser)
+    assertStatusOk(resp)
+    assert resp.json['permissions']['createDataset'] == False
+
+    # Ensure that a join request is pending
+    contributorsGroup = Group().findOne({'name': 'Dataset Contributors'})
+    joinRequestUserIds = [user['id'] for user in Group().getFullRequestList(contributorsGroup)]
+    assert uploaderUser['_id'] in joinRequestUserIds
+    assert smtp.isMailQueueEmpty()
+
+    # Add the user, then ensure they can create datasets
+    Group().inviteUser(contributorsGroup, uploaderUser, level=AccessType.READ)
+    resp = provisionedServer.request(path='/user/me', method='GET', user=uploaderUser)
+    assertStatusOk(resp)
+    assert resp.json['permissions']['createDataset'] == True
 
 
-class UserTestCase(IsicTestCase):
-    def testBasicUser(self):
-        User = self.model('user', 'isic_archive')
+@pytest.mark.plugin('isic_archive', IsicArchive)
+def testReviewerUser(provisionedServer):
+    # Create a reviewer user
+    resp = provisionedServer.request(path='/user', method='POST', params={
+        'email': 'reviewer-user@isic-archive.com',
+        'login': 'reviewer-user',
+        'firstName': 'reviewer',
+        'lastName': 'user',
+        'password': 'password'
+    })
+    assertStatusOk(resp)
+    reviewerUser = User().findOne({'login': 'reviewer-user'})
+    assert reviewerUser is not None
 
-        # Create a basic user
-        resp = self.request(path='/user', method='POST', params={
-            'email': 'test-user@isic-archive.com',
-            'login': 'test-user',
-            'firstName': 'test',
-            'lastName': 'user',
-            'password': 'password'
-        })
-        self.assertStatusOk(resp)
-        testUser = User.findOne({'login': 'test-user'})
-        self.assertIsNotNone(testUser)
+    # Add the user to the reviewers group
+    reviewersGroup = Group().findOne({'name': 'Dataset QC Reviewers'})
+    assert reviewersGroup is not None
+    Group().addUser(reviewersGroup, reviewerUser, level=AccessType.READ)
 
-        # Ensure creation returns permissions
-        negativePermissions = {
-            'acceptTerms': False,
-            'createDataset': False,
-            'reviewDataset': False,
-            'segmentationSkill': None,
-            'adminStudy': False
-        }
-        self.assertDictContainsSubset({
-            'permissions': negativePermissions
-        }, resp.json)
+    # Ensure they can review datasets
+    resp = provisionedServer.request(path='/user/me', method='GET', user=reviewerUser)
+    assertStatusOk(resp)
+    assert resp.json['permissions']['reviewDataset'] == True
 
-        # Ensure login returns permissions
-        resp = self.request(path='/user/authentication', method='GET',
-                            basicAuth='test-user:password')
-        self.assertStatusOk(resp)
-        self.assertDictContainsSubset({
-            'permissions': negativePermissions
-        }, resp.json['user'])
 
-        # Ensure get user returns permissions
-        resp = self.request(path='/user/me', method='GET', user=testUser)
-        self.assertStatusOk(resp)
-        self.assertDictContainsSubset({
-            'permissions': negativePermissions
-        }, resp.json)
+@pytest.mark.plugin('isic_archive', IsicArchive)
+def testStudyAdminUser(provisionedServer):
+    # Create a study admin user
+    resp = provisionedServer.request(path='/user', method='POST', params={
+        'email': 'study-admin-user@isic-archive.com',
+        'login': 'study-admin-user',
+        'firstName': 'study admin',
+        'lastName': 'user',
+        'password': 'password'
+    })
+    assertStatusOk(resp)
+    studyAdminUser = User().findOne({'login': 'study-admin-user'})
+    assert studyAdminUser is not None
 
-        # Ensure get user for anonymous still succeeds
-        resp = self.request(path='/user/me', method='GET')
-        self.assertStatusOk(resp)
-        self.assertIsNone(resp.json)
+    # Add the user to the study admins group
+    studyAdminsGroup = Group().findOne({'name': 'Study Administrators'})
+    assert studyAdminsGroup is not None
+    Group().addUser(studyAdminsGroup, studyAdminUser, level=AccessType.READ)
 
-        # Ensure user is private
-        resp = self.request(path='/user/%s' % testUser['_id'], method='GET')
-        self.assertStatus(resp, 401)
+    # Ensure they can admin studies
+    resp = provisionedServer.request(path='/user/me', method='GET', user=studyAdminUser)
+    assertStatusOk(resp)
+    assert resp.json['permissions']['adminStudy'] == True
 
-        # Ensure accept terms works
-        resp = self.request(path='/user/acceptTerms', method='POST',
-                            user=testUser)
-        self.assertStatusOk(resp)
-        self.assertDictContainsSubset({
-            'extra': 'hasPermission'
-        }, resp.json)
 
-        resp = self.request(path='/user/me', method='GET', user=testUser)
-        self.assertStatusOk(resp)
-        acceptedTermsPermissions = negativePermissions.copy()
-        acceptedTermsPermissions['acceptTerms'] = True
-        self.assertDictContainsSubset({
-            'permissions': acceptedTermsPermissions
-        }, resp.json)
+@pytest.mark.plugin('isic_archive', IsicArchive)
+def testInviteNewUser(provisionedServer, smtp):
+    # Create a study admin user
+    resp = provisionedServer.request(path='/user', method='POST', params={
+        'email': 'study-admin-user@isic-archive.com',
+        'login': 'study-admin-user',
+        'firstName': 'study admin',
+        'lastName': 'user',
+        'password': 'password'
+    })
+    assertStatusOk(resp)
+    studyAdminUser = User().findOne({'login': 'study-admin-user'})
+    assert studyAdminUser is not None
 
-        # Ensure accepting terms twice is idempotent
-        testUser = User.findOne({'login': 'test-user'})
-        uploaderUserAcceptTermsTime = testUser['acceptTerms']
-        resp = self.request(path='/user/acceptTerms', method='POST',
-                            user=testUser)
-        self.assertStatusOk(resp)
-        self.assertDictContainsSubset({
-            'extra': 'hasPermission'
-        }, resp.json)
-        testUser = User.findOne({'login': 'test-user'})
-        self.assertEqual(testUser['acceptTerms'],
-                         uploaderUserAcceptTermsTime)
+    # Ensure that user doesn't have permission to invite a new user, yet
+    resp = provisionedServer.request(path='/user/invite', method='POST', params={
+        'login': 'invited-user',
+        'email': 'invited-user@isic-archive.com',
+        'firstName': 'invited',
+        'lastName': 'user'
+    }, user=studyAdminUser)
+    assertStatus(resp, 403)
 
-    def testUploaderUser(self):
-        Group = self.model('group')
-        User = self.model('user', 'isic_archive')
+    # Add the user to the study admins group
+    studyAdminsGroup = Group().findOne({'name': 'Study Administrators'})
+    assert studyAdminsGroup is not None
+    Group().addUser(studyAdminsGroup, studyAdminUser, level=AccessType.READ)
 
-        # Create an uploader admin
-        resp = self.request(path='/user', method='POST', params={
-            'email': 'uploader-admin@isic-archive.com',
-            'login': 'uploader-admin',
-            'firstName': 'uploader',
-            'lastName': 'admin',
-            'password': 'password'
-        })
-        self.assertStatusOk(resp)
-        uploaderAdmin = User.findOne({'login': 'uploader-admin'})
-        self.assertIsNotNone(uploaderAdmin)
-        contributorsGroup = Group.findOne({'name': 'Dataset Contributors'})
-        self.assertIsNotNone(contributorsGroup)
-        Group.addUser(contributorsGroup, uploaderAdmin, level=AccessType.WRITE)
+    # Ensure that user can invite a new user
+    resp = provisionedServer.request(path='/user/invite', method='POST', params={
+        'login': 'invited-user',
+        'email': 'invited-user@isic-archive.com',
+        'firstName': 'invited',
+        'lastName': 'user'
+    }, user=studyAdminUser)
+    assertStatusOk(resp)
+    assert 'newUser' in resp.json
+    assert 'inviteUrl' in resp.json
+    for key in ('login', 'firstName', 'lastName', 'name'):
+        assert key in resp.json['newUser']
 
-        # Create an uploader user
-        resp = self.request(path='/user', method='POST', params={
-            'email': 'uploader-user@isic-archive.com',
-            'login': 'uploader-user',
-            'firstName': 'uploader',
-            'lastName': 'user',
-            'password': 'password'
-        })
-        self.assertStatusOk(resp)
-        uploaderUser = User.findOne({'login': 'uploader-user'})
-        self.assertIsNotNone(uploaderUser)
+    assert resp.json['newUser']['login'] == 'invited-user'
+    assert resp.json['newUser']['firstName'] == 'invited'
+    assert resp.json['newUser']['lastName'] == 'user'
+    assert resp.json['newUser']['name']
+    assert resp.json['inviteUrl']
 
-        # TODO: check if a user can upload without agreeing to terms
+    assert smtp.waitForMail()
+    assert smtp.getMail()  # pop off the queue for later assertion that the queue is empty
 
-        # Ensure request create dataset permission works
-        resp = self.request(path='/user/requestCreateDatasetPermission',
-                            method='POST', user=uploaderUser)
-        self.assertStatusOk(resp)
+    # Ensure that user can invite a new user and specify the validity period
+    resp = provisionedServer.request(path='/user/invite', method='POST', params={
+        'login': 'invited-user2',
+        'email': 'invited-user2@isic-archive.com',
+        'firstName': 'invited',
+        'lastName': 'user2',
+        'validityPeriod': 15.0
+    }, user=studyAdminUser)
+    assertStatusOk(resp)
+    assert 'newUser' in resp.json
+    assert 'inviteUrl' in resp.json
+    for key in ('login', 'firstName', 'lastName', 'name'):
+        assert key in resp.json['newUser']
+    assert resp.json['newUser']['login'] == 'invited-user2'
+    assert resp.json['newUser']['firstName'] == 'invited'
+    assert resp.json['newUser']['lastName'] == 'user2'
+    assert resp.json['newUser']['name']
+    assert resp.json['inviteUrl']
 
-        self.assertMails(count=1)
+    assert smtp.waitForMail()
+    assert smtp.getMail()  # pop off the queue for later assertion that the queue is empty
 
-        # Ensure that the user can't create datasets yet
-        resp = self.request(path='/user/me', method='GET', user=uploaderUser)
-        self.assertStatusOk(resp)
-        self.assertEqual(resp.json['permissions']['createDataset'], False)
-
-        # Ensure that a join request is pending
-        contributorsGroup = Group.findOne({'name': 'Dataset Contributors'})
-        for user in Group.getFullRequestList(contributorsGroup):
-            if user['id'] == uploaderUser['_id']:
-                break
-        else:
-            self.fail('Group join request not found.')
-
-        self.assertNoMail()
-
-        # Add the user, then ensure they can create datasets
-        Group.inviteUser(contributorsGroup, uploaderUser, level=AccessType.READ)
-        resp = self.request(path='/user/me', method='GET', user=uploaderUser)
-        self.assertStatusOk(resp)
-        self.assertEqual(resp.json['permissions']['createDataset'], True)
-
-    def testReviewerUser(self):
-        Group = self.model('group')
-        User = self.model('user', 'isic_archive')
-
-        # Create a reviewer user
-        resp = self.request(path='/user', method='POST', params={
-            'email': 'reviewer-user@isic-archive.com',
-            'login': 'reviewer-user',
-            'firstName': 'reviewer',
-            'lastName': 'user',
-            'password': 'password'
-        })
-        self.assertStatusOk(resp)
-        reviewerUser = User.findOne({'login': 'reviewer-user'})
-        self.assertIsNotNone(reviewerUser)
-
-        # Add the user to the reviewers group
-        reviewersGroup = Group.findOne({'name': 'Dataset QC Reviewers'})
-        self.assertIsNotNone(reviewersGroup)
-        Group.addUser(reviewersGroup, reviewerUser, level=AccessType.READ)
-
-        # Ensure they can review datasets
-        resp = self.request(path='/user/me', method='GET', user=reviewerUser)
-        self.assertStatusOk(resp)
-        self.assertEqual(resp.json['permissions']['reviewDataset'], True)
-
-    def testStudyAdminUser(self):
-        Group = self.model('group')
-        User = self.model('user', 'isic_archive')
-
-        # Create a study admin user
-        resp = self.request(path='/user', method='POST', params={
-            'email': 'study-admin-user@isic-archive.com',
-            'login': 'study-admin-user',
-            'firstName': 'study admin',
-            'lastName': 'user',
-            'password': 'password'
-        })
-        self.assertStatusOk(resp)
-        studyAdminUser = User.findOne({'login': 'study-admin-user'})
-        self.assertIsNotNone(studyAdminUser)
-
-        # Add the user to the study admins group
-        studyAdminsGroup = Group.findOne({'name': 'Study Administrators'})
-        self.assertIsNotNone(studyAdminsGroup)
-        Group.addUser(studyAdminsGroup, studyAdminUser, level=AccessType.READ)
-
-        # Ensure they can admin studies
-        resp = self.request(path='/user/me', method='GET', user=studyAdminUser)
-        self.assertStatusOk(resp)
-        self.assertEqual(resp.json['permissions']['adminStudy'], True)
-
-    def testInviteNewUser(self):
-        Group = self.model('group')
-        User = self.model('user', 'isic_archive')
-
-        # Create a study admin user
-        resp = self.request(path='/user', method='POST', params={
-            'email': 'study-admin-user@isic-archive.com',
-            'login': 'study-admin-user',
-            'firstName': 'study admin',
-            'lastName': 'user',
-            'password': 'password'
-        })
-        self.assertStatusOk(resp)
-        studyAdminUser = User.findOne({'login': 'study-admin-user'})
-        self.assertIsNotNone(studyAdminUser)
-
-        # Ensure that user doesn't have permission to invite a new user, yet
-        resp = self.request(path='/user/invite', method='POST', params={
-            'login': 'invited-user',
-            'email': 'invited-user@isic-archive.com',
-            'firstName': 'invited',
-            'lastName': 'user'
-        }, user=studyAdminUser)
-        self.assertStatus(resp, 403)
-
-        # Add the user to the study admins group
-        studyAdminsGroup = Group.findOne({'name': 'Study Administrators'})
-        self.assertIsNotNone(studyAdminsGroup)
-        Group.addUser(studyAdminsGroup, studyAdminUser, level=AccessType.READ)
-
-        # Ensure that user can invite a new user
-        resp = self.request(path='/user/invite', method='POST', params={
-            'login': 'invited-user',
-            'email': 'invited-user@isic-archive.com',
-            'firstName': 'invited',
-            'lastName': 'user'
-        }, user=studyAdminUser)
-        self.assertStatusOk(resp)
-        self.assertHasKeys(resp.json, ('newUser', 'inviteUrl'))
-        self.assertHasKeys(resp.json['newUser'], ('login', 'firstName', 'lastName', 'name'))
-        self.assertEqual(resp.json['newUser']['login'], 'invited-user')
-        self.assertEqual(resp.json['newUser']['firstName'], 'invited')
-        self.assertEqual(resp.json['newUser']['lastName'], 'user')
-        self.assertTrue(resp.json['newUser']['name'])
-        self.assertTrue(resp.json['inviteUrl'])
-
-        self.assertMails(count=1)
-
-        # Ensure that user can invite a new user and specify the validity period
-        resp = self.request(path='/user/invite', method='POST', params={
-            'login': 'invited-user2',
-            'email': 'invited-user2@isic-archive.com',
-            'firstName': 'invited',
-            'lastName': 'user2',
-            'validityPeriod': 15.0
-        }, user=studyAdminUser)
-        self.assertStatusOk(resp)
-        self.assertHasKeys(resp.json, ('newUser', 'inviteUrl'))
-        self.assertHasKeys(resp.json['newUser'], ('login', 'firstName', 'lastName', 'name'))
-        self.assertEqual(resp.json['newUser']['login'], 'invited-user2')
-        self.assertEqual(resp.json['newUser']['firstName'], 'invited')
-        self.assertEqual(resp.json['newUser']['lastName'], 'user2')
-        self.assertTrue(resp.json['newUser']['name'])
-        self.assertTrue(resp.json['inviteUrl'])
-
-        self.assertMails(count=1)
-
-        # Test sending an invalid value for the validity period
-        resp = self.request(path='/user/invite', method='POST', params={
-            'login': 'invited-user3',
-            'email': 'invited-user3@isic-archive.com',
-            'firstName': 'invited',
-            'lastName': 'user3',
-            'validityPeriod': 'invalid'
-        }, user=studyAdminUser)
-        self.assertValidationError(resp, field='validityPeriod')
+    # Test sending an invalid value for the validity period
+    resp = provisionedServer.request(path='/user/invite', method='POST', params={
+        'login': 'invited-user3',
+        'email': 'invited-user3@isic-archive.com',
+        'firstName': 'invited',
+        'lastName': 'user3',
+        'validityPeriod': 'invalid'
+    }, user=studyAdminUser)
+    assertStatus(resp, 400)
+    assert resp.json['type'] == 'validation'
+    assert resp.json.get('field') == 'validityPeriod'
