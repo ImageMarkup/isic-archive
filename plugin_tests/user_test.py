@@ -16,13 +16,15 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 ###############################################################################
+import pytest
+from pytest_girder.assertions import assertStatus, assertStatusOk
+
 from girder.constants import AccessType
 from girder.models.group import Group
-import pytest
 
-from isic_archive import provisionDatabase, IsicArchive
+from isic_archive import IsicArchive, provisionDatabase
 from isic_archive.models import User
-from pytest_girder.assertions import assertStatus, assertStatusOk
+
 
 @pytest.fixture
 def provisionedServer(server):
@@ -94,8 +96,7 @@ def testBasicUser(provisionedServer):
     assertStatusOk(resp)
     assert resp.json.get('extra') == 'hasPermission'
     testUser = User().findOne({'login': 'test-user'})
-    assert testUser['acceptTerms'] == \
-                     uploaderUserAcceptTermsTime
+    assert testUser['acceptTerms'] == uploaderUserAcceptTermsTime
 
 
 @pytest.mark.plugin('isic_archive', IsicArchive)
@@ -139,7 +140,7 @@ def testUploaderUser(provisionedServer, smtp):
     # Ensure that the user can't create datasets yet
     resp = provisionedServer.request(path='/user/me', method='GET', user=uploaderUser)
     assertStatusOk(resp)
-    assert resp.json['permissions']['createDataset'] == False
+    assert not resp.json['permissions']['createDataset']
 
     # Ensure that a join request is pending
     contributorsGroup = Group().findOne({'name': 'Dataset Contributors'})
@@ -151,7 +152,7 @@ def testUploaderUser(provisionedServer, smtp):
     Group().inviteUser(contributorsGroup, uploaderUser, level=AccessType.READ)
     resp = provisionedServer.request(path='/user/me', method='GET', user=uploaderUser)
     assertStatusOk(resp)
-    assert resp.json['permissions']['createDataset'] == True
+    assert resp.json['permissions']['createDataset']
 
 
 @pytest.mark.plugin('isic_archive', IsicArchive)
@@ -176,7 +177,7 @@ def testReviewerUser(provisionedServer):
     # Ensure they can review datasets
     resp = provisionedServer.request(path='/user/me', method='GET', user=reviewerUser)
     assertStatusOk(resp)
-    assert resp.json['permissions']['reviewDataset'] == True
+    assert resp.json['permissions']['reviewDataset']
 
 
 @pytest.mark.plugin('isic_archive', IsicArchive)
@@ -201,7 +202,7 @@ def testStudyAdminUser(provisionedServer):
     # Ensure they can admin studies
     resp = provisionedServer.request(path='/user/me', method='GET', user=studyAdminUser)
     assertStatusOk(resp)
-    assert resp.json['permissions']['adminStudy'] == True
+    assert resp.json['permissions']['adminStudy']
 
 
 @pytest.mark.plugin('isic_archive', IsicArchive)

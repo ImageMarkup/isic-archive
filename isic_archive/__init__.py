@@ -16,7 +16,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 ###############################################################################
-from girder.utility.model_importer import ModelImporter
 import os
 
 import pkg_resources
@@ -27,6 +26,7 @@ from girder import events
 from girder.api.v1 import resource
 from girder.plugin import getPlugin, GirderPlugin
 from girder.utility import mail_utils
+from girder.utility.model_importer import ModelImporter
 
 from isic_archive.models import Annotation, Batch, Dataset, Image, Segmentation, Study, User
 from . import api

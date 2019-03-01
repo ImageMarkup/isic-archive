@@ -41,6 +41,7 @@ def testOpenCVSegmentationHelper():
     _testEasyMaskToContour(OpenCVSegmentationHelper)
     _testHardMaskToContour(OpenCVSegmentationHelper)
 
+
 def testScikitSegmentationHelper():
     _testFloodFill(ScikitSegmentationHelper)
     _testSegment(ScikitSegmentationHelper)
@@ -60,6 +61,7 @@ def testScikitSegmentationHelper():
     _testEasyMaskToContour(ScikitSegmentationHelper)
     # TODO: this is broken, likely due to coordinate rounding issues
     # _testHardMaskToContour(ScikitSegmentationHelper)
+
 
 def _testFloodFill(SegmentationHelper):
     filledMask = SegmentationHelper._floodFill(
@@ -93,6 +95,7 @@ def _testFloodFill(SegmentationHelper):
 
     # TODO: Test RGB images, particularly with SciKit
 
+
 def _testSegment(SegmentationHelper):
     segmentedMask = SegmentationHelper.segment(
         testImage, (1, 1), 5)
@@ -109,6 +112,7 @@ def _testSegment(SegmentationHelper):
     assert numpy.array_equal(testImage, originalTestImage)
 
     # TODO: test tolerance more thoroughly
+
 
 def _testMaskToContour(SegmentationHelper, inputMask):
     originalInputMask = inputMask.copy()
@@ -127,10 +131,12 @@ def _testMaskToContour(SegmentationHelper, inputMask):
     assert numpy.array_equal(outputMask, inputMask)
     assert numpy.array_equal(contour, originalContour)
 
+
 def _testEasyMaskToContour(SegmentationHelper):
     inputMask = numpy.zeros((20, 20), dtype=numpy.uint8)
     inputMask[5:15, 5:15] = 255
     _testMaskToContour(SegmentationHelper, inputMask)
+
 
 def _testHardMaskToContour(SegmentationHelper):
     inputMask = SegmentationHelper.segment(

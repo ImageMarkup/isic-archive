@@ -1,11 +1,11 @@
-from isic_archive.models import Dataset, Batch, Image
-from isic_archive_tasks import app
 import pymongo
 
 from girder.models.user import User
 from girder.utility import mail_utils
 
+from isic_archive.models import Batch, Dataset, Image
 from isic_archive.utility.mail_utils import sendEmail, sendEmailToGroup
+from isic_archive_tasks import app
 
 
 @app.task()

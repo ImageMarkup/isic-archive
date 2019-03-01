@@ -4,7 +4,7 @@
 ###############################################################################
 #  Copyright Kitware Inc.
 #
-#  Licensed under the Apache License, Version 2.0 ( the "License" );
+#  Licensed under the Apache License, Version 2.0 (the "License" );
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
 #
@@ -18,13 +18,30 @@
 ###############################################################################
 import pytest
 
-from isic_archive.models.dataset_helpers.image_metadata import MetadataFieldException, \
-    AgeFieldParser, MetadataValueExistsException, BadFieldTypeException, SexFieldParser, \
-    MultipleFieldException, FamilyHxMmFieldParser, PersonalHxMmFieldParser, ClinicalSizeFieldParser, \
-    MelanocyticFieldParser, DiagnosisConfirmTypeFieldParser, BenignMalignantFieldParser, \
-    DiagnosisFieldParser, NevusTypeFieldParser, ImageTypeFieldParser, DermoscopicTypeFieldParser, \
-    MelThickMmFieldParser, MelClassFieldParser, MelTypeFieldParser, MelMitoticIndexFieldParser, \
-    MelUlcerFieldParser, GeneralAnatomicSiteFieldParser, addImageMetadata
+from isic_archive.models.dataset_helpers.image_metadata import (
+    addImageMetadata,
+    AgeFieldParser,
+    BadFieldTypeException,
+    BenignMalignantFieldParser,
+    ClinicalSizeFieldParser,
+    DermoscopicTypeFieldParser,
+    DiagnosisConfirmTypeFieldParser,
+    DiagnosisFieldParser,
+    FamilyHxMmFieldParser,
+    GeneralAnatomicSiteFieldParser,
+    ImageTypeFieldParser,
+    MelanocyticFieldParser,
+    MelClassFieldParser,
+    MelMitoticIndexFieldParser,
+    MelThickMmFieldParser,
+    MelTypeFieldParser,
+    MelUlcerFieldParser,
+    MetadataValueExistsException,
+    MultipleFieldException,
+    NevusTypeFieldParser,
+    PersonalHxMmFieldParser,
+    SexFieldParser,
+)
 
 unknownValues = [None, '', 'unknown', 'UNKNOWN']
 
@@ -42,25 +59,21 @@ def _createImage():
     }
     return image
 
-def _runParser( image, data, parser):
+
+def _runParser(image, data, parser):
     acquisition = image['meta']['acquisition']
     clinical = image['meta']['clinical']
     private = image['privateMeta']
     parser.run(data, acquisition, clinical, private)
 
-def assertRunParser( image, data, parser):
-    """Assert that the parser runs without raising a MetadataFieldException."""
-    try:
-        _runParser(image, data, parser)
-    except MetadataFieldException:
-        fail('Unexpected MetadataFieldException')
 
-def assertRunParserRaises( image, data, parser, exception):
+def assertRunParserRaises(image, data, parser, exception):
     """Assert that running the parser raises the specified exception type."""
     with pytest.raises(exception):
         _runParser(image, data, parser)
 
-def _testFieldNotFound( parser):
+
+def _testFieldNotFound(parser):
     """
     Test that a parser makes no changes if none of its allowed fields are given in the metadata.
 
@@ -68,12 +81,13 @@ def _testFieldNotFound( parser):
     """
     data = {'other': 'value'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {'other': 'value'} == data
     assert {} == image['meta']['acquisition']
     assert {} == image['meta']['clinical']
     assert {} == image['meta']['unstructured']
     assert {} == image['privateMeta']
+
 
 def testAgeFieldParser():
     parser = AgeFieldParser
@@ -81,7 +95,7 @@ def testAgeFieldParser():
     # Multiple of 5
     data = {'age': '25'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'age_approx': 25} == image['meta']['clinical']
@@ -90,7 +104,7 @@ def testAgeFieldParser():
     # Not a multiple of 5
     data = {'age': '38'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'age_approx': 40} == image['meta']['clinical']
@@ -99,7 +113,7 @@ def testAgeFieldParser():
     # Special maximum value
     data = {'age': '85+'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'age_approx': 85} == image['meta']['clinical']
@@ -108,7 +122,7 @@ def testAgeFieldParser():
     # Greater than maximum
     data = {'age': '86'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'age_approx': 85} == image['meta']['clinical']
@@ -117,7 +131,7 @@ def testAgeFieldParser():
     # Mixed case field name
     data = {'Age': '25'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'age_approx': 25} == image['meta']['clinical']
@@ -127,7 +141,7 @@ def testAgeFieldParser():
     for value in unknownValues:
         data = {'age': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'age_approx': None} == image['meta']['clinical']
@@ -138,7 +152,7 @@ def testAgeFieldParser():
     image = _createImage()
     image['meta']['clinical'] = {'age_approx': None}
     image['privateMeta']['age'] = None
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'age_approx': 25} == image['meta']['clinical']
@@ -149,7 +163,7 @@ def testAgeFieldParser():
     image = _createImage()
     image['meta']['clinical']['age_approx'] = 25
     image['privateMeta']['age'] = 25
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'age_approx': 25} == image['meta']['clinical']
@@ -177,13 +191,14 @@ def testAgeFieldParser():
     image = _createImage()
     assertRunParserRaises(image, data, parser, BadFieldTypeException)
 
+
 def testSexFieldParser():
     parser = SexFieldParser
 
     # Abbreviation, lowercase
     data = {'sex': 'f'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'sex': 'female'} == image['meta']['clinical']
@@ -192,7 +207,7 @@ def testSexFieldParser():
     # Abbreviation, uppercase
     data = {'sex': 'M'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'sex': 'male'} == image['meta']['clinical']
@@ -201,7 +216,7 @@ def testSexFieldParser():
     # Unabbreviated, mixed case
     data = {'sex': 'Female'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'sex': 'female'} == image['meta']['clinical']
@@ -210,7 +225,7 @@ def testSexFieldParser():
     # Alternative field name
     data = {'gender': 'f'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'sex': 'female'} == image['meta']['clinical']
@@ -219,7 +234,7 @@ def testSexFieldParser():
     # Mixed case field name
     data = {'Gender': 'f'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'sex': 'female'} == image['meta']['clinical']
@@ -229,7 +244,7 @@ def testSexFieldParser():
     for value in unknownValues:
         data = {'sex': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'sex': None} == image['meta']['clinical']
@@ -244,7 +259,7 @@ def testSexFieldParser():
     data = {'gender': 'f'}
     image = _createImage()
     image['meta']['clinical']['sex'] = None
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'sex': 'female'} == image['meta']['clinical']
@@ -254,7 +269,7 @@ def testSexFieldParser():
     data = {'gender': 'f'}
     image = _createImage()
     image['meta']['clinical']['sex'] = 'female'
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'sex': 'female'} == image['meta']['clinical']
@@ -280,13 +295,14 @@ def testSexFieldParser():
     image = _createImage()
     assertRunParserRaises(image, data, parser, BadFieldTypeException)
 
+
 def testFamilyHxMmFieldParser():
     parser = FamilyHxMmFieldParser
 
     # Standard field name
     data = {'family_hx_mm': 'true'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'family_hx_mm': True} == image['meta']['clinical']
@@ -295,7 +311,7 @@ def testFamilyHxMmFieldParser():
     # Alternative field name
     data = {'FamHxMM': 'true'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'family_hx_mm': True} == image['meta']['clinical']
@@ -305,7 +321,7 @@ def testFamilyHxMmFieldParser():
     for value in unknownValues:
         data = {'family_hx_mm': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'family_hx_mm': None} == image['meta']['clinical']
@@ -320,7 +336,7 @@ def testFamilyHxMmFieldParser():
     data = {'family_hx_mm': 'false'}
     image = _createImage()
     image['meta']['clinical']['family_hx_mm'] = None
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'family_hx_mm': False} == image['meta']['clinical']
@@ -330,7 +346,7 @@ def testFamilyHxMmFieldParser():
     data = {'family_hx_mm': 'false'}
     image = _createImage()
     image['meta']['clinical']['family_hx_mm'] = False
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'family_hx_mm': False} == image['meta']['clinical']
@@ -356,13 +372,14 @@ def testFamilyHxMmFieldParser():
     image = _createImage()
     assertRunParserRaises(image, data, parser, BadFieldTypeException)
 
+
 def testPersonalHxMmFieldParser():
     parser = PersonalHxMmFieldParser
 
     # Normal
     data = {'personal_hx_mm': 'true'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'personal_hx_mm': True} == image['meta']['clinical']
@@ -371,7 +388,7 @@ def testPersonalHxMmFieldParser():
     # Normal, alternative value representation
     data = {'personal_hx_mm': 'no'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'personal_hx_mm': False} == image['meta']['clinical']
@@ -381,7 +398,7 @@ def testPersonalHxMmFieldParser():
     for value in unknownValues:
         data = {'personal_hx_mm': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'personal_hx_mm': None} == image['meta']['clinical']
@@ -391,7 +408,7 @@ def testPersonalHxMmFieldParser():
     data = {'personal_hx_mm': 'false'}
     image = _createImage()
     image['meta']['clinical']['personal_hx_mm'] = None
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'personal_hx_mm': False} == image['meta']['clinical']
@@ -401,7 +418,7 @@ def testPersonalHxMmFieldParser():
     data = {'personal_hx_mm': 'false'}
     image = _createImage()
     image['meta']['clinical']['personal_hx_mm'] = False
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'personal_hx_mm': False} == image['meta']['clinical']
@@ -427,13 +444,14 @@ def testPersonalHxMmFieldParser():
     image = _createImage()
     assertRunParserRaises(image, data, parser, BadFieldTypeException)
 
+
 def testClinicalSizeFieldParser():
     parser = ClinicalSizeFieldParser
 
     # Normal, um
     data = {'clin_size_long_diam_mm': '1500.0 um'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'clin_size_long_diam_mm': 1.5} == image['meta']['clinical']
@@ -442,7 +460,7 @@ def testClinicalSizeFieldParser():
     # Normal, mm
     data = {'clin_size_long_diam_mm': '1.5 mm'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'clin_size_long_diam_mm': 1.5} == image['meta']['clinical']
@@ -451,7 +469,7 @@ def testClinicalSizeFieldParser():
     # Normal, cm
     data = {'clin_size_long_diam_mm': '1.5 cm'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'clin_size_long_diam_mm': 15.0} == image['meta']['clinical']
@@ -461,7 +479,7 @@ def testClinicalSizeFieldParser():
     for value in unknownValues:
         data = {'clin_size_long_diam_mm': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'clin_size_long_diam_mm': None} == image['meta']['clinical']
@@ -471,7 +489,7 @@ def testClinicalSizeFieldParser():
     data = {'clin_size_long_diam_mm': '1.5 mm'}
     image = _createImage()
     image['meta']['clinical']['clin_size_long_diam_mm'] = None
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'clin_size_long_diam_mm': 1.5} == image['meta']['clinical']
@@ -481,7 +499,7 @@ def testClinicalSizeFieldParser():
     data = {'clin_size_long_diam_mm': '1.5 mm'}
     image = _createImage()
     image['meta']['clinical']['clin_size_long_diam_mm'] = 1.5
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'clin_size_long_diam_mm': 1.5} == image['meta']['clinical']
@@ -519,13 +537,14 @@ def testClinicalSizeFieldParser():
     image = _createImage()
     assertRunParserRaises(image, data, parser, BadFieldTypeException)
 
+
 def testMelanocyticFieldParser():
     parser = MelanocyticFieldParser
 
     # Normal
     data = {'melanocytic': 'false'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'melanocytic': False} == image['meta']['clinical']
@@ -535,7 +554,7 @@ def testMelanocyticFieldParser():
     for value in unknownValues:
         data = {'melanocytic': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'melanocytic': None} == image['meta']['clinical']
@@ -545,7 +564,7 @@ def testMelanocyticFieldParser():
     data = {'melanocytic': 'true'}
     image = _createImage()
     image['meta']['clinical']['melanocytic'] = None
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'melanocytic': True} == image['meta']['clinical']
@@ -555,7 +574,7 @@ def testMelanocyticFieldParser():
     data = {'melanocytic': 'true'}
     image = _createImage()
     image['meta']['clinical']['melanocytic'] = True
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'melanocytic': True} == image['meta']['clinical']
@@ -581,6 +600,7 @@ def testMelanocyticFieldParser():
     image = _createImage()
     assertRunParserRaises(image, data, parser, BadFieldTypeException)
 
+
 def testDiagnosisConfirmTypeFieldParser():
     parser = DiagnosisConfirmTypeFieldParser
 
@@ -593,7 +613,7 @@ def testDiagnosisConfirmTypeFieldParser():
     ]:
         data = {'diagnosis_confirm_type': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'diagnosis_confirm_type': value.strip().lower()} == \
@@ -609,7 +629,7 @@ def testDiagnosisConfirmTypeFieldParser():
     for value in unknownValues:
         data = {'diagnosis_confirm_type': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'diagnosis_confirm_type': None} == image['meta']['clinical']
@@ -619,7 +639,7 @@ def testDiagnosisConfirmTypeFieldParser():
     data = {'diagnosis_confirm_type': 'histopathology'}
     image = _createImage()
     image['meta']['clinical']['diagnosis_confirm_type'] = None
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'diagnosis_confirm_type': 'histopathology'} == \
@@ -630,7 +650,7 @@ def testDiagnosisConfirmTypeFieldParser():
     data = {'diagnosis_confirm_type': 'histopathology'}
     image = _createImage()
     image['meta']['clinical']['diagnosis_confirm_type'] = 'histopathology'
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'diagnosis_confirm_type': 'histopathology'} == \
@@ -657,6 +677,7 @@ def testDiagnosisConfirmTypeFieldParser():
     image = _createImage()
     assertRunParserRaises(image, data, parser, BadFieldTypeException)
 
+
 def testBenignMalignantFieldParser():
     parser = BenignMalignantFieldParser
 
@@ -672,7 +693,7 @@ def testBenignMalignantFieldParser():
     ]:
         data = {'benign_malignant': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'benign_malignant': value.lower()} == image['meta']['clinical']
@@ -681,7 +702,7 @@ def testBenignMalignantFieldParser():
     # Autocorrected value
     data = {'benign_malignant': 'INDETERMINABLE'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'benign_malignant': 'indeterminate'} == image['meta']['clinical']
@@ -695,7 +716,7 @@ def testBenignMalignantFieldParser():
     # Alternative field name
     data = {'BEN_MAL': 'benign'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'benign_malignant': 'benign'} == image['meta']['clinical']
@@ -705,7 +726,7 @@ def testBenignMalignantFieldParser():
     for value in unknownValues:
         data = {'benign_malignant': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'benign_malignant': None} == image['meta']['clinical']
@@ -720,7 +741,7 @@ def testBenignMalignantFieldParser():
     data = {'benign_malignant': 'malignant'}
     image = _createImage()
     image['meta']['clinical']['benign_malignant'] = None
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'benign_malignant': 'malignant'} == image['meta']['clinical']
@@ -730,7 +751,7 @@ def testBenignMalignantFieldParser():
     data = {'benign_malignant': 'malignant'}
     image = _createImage()
     image['meta']['clinical']['benign_malignant'] = 'malignant'
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'benign_malignant': 'malignant'} == image['meta']['clinical']
@@ -756,6 +777,7 @@ def testBenignMalignantFieldParser():
     image = _createImage()
     assertRunParserRaises(image, data, parser, BadFieldTypeException)
 
+
 def testDiagnosisFieldParser():
     parser = DiagnosisFieldParser
 
@@ -772,7 +794,7 @@ def testDiagnosisFieldParser():
     ]:
         data = {'diagnosis': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'diagnosis': value.lower()} == image['meta']['clinical']
@@ -781,7 +803,7 @@ def testDiagnosisFieldParser():
     # Special case: AIMP
     data = {'diagnosis': 'AIMP'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'diagnosis': 'AIMP'} == image['meta']['clinical']
@@ -790,7 +812,7 @@ def testDiagnosisFieldParser():
     # Special case: lentigo NOS
     data = {'diagnosis': 'lentigo NOS'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'diagnosis': 'lentigo NOS'} == image['meta']['clinical']
@@ -799,7 +821,7 @@ def testDiagnosisFieldParser():
     # Special case: Cafe-au-lait
     data = {'diagnosis': u'caf\xe9-au-lait macule'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'diagnosis': 'cafe-au-lait macule'} == image['meta']['clinical']
@@ -808,7 +830,7 @@ def testDiagnosisFieldParser():
     # Alternative field name
     data = {'path_diagnosis': 'melanoma'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'diagnosis': 'melanoma'} == image['meta']['clinical']
@@ -823,7 +845,7 @@ def testDiagnosisFieldParser():
     for value in unknownValues:
         data = {'diagnosis': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'diagnosis': None} == image['meta']['clinical']
@@ -838,7 +860,7 @@ def testDiagnosisFieldParser():
     data = {'diagnosis': 'dermatofibroma'}
     image = _createImage()
     image['meta']['clinical']['diagnosis'] = None
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'diagnosis': 'dermatofibroma'} == image['meta']['clinical']
@@ -848,7 +870,7 @@ def testDiagnosisFieldParser():
     data = {'diagnosis': 'dermatofibroma'}
     image = _createImage()
     image['meta']['clinical']['diagnosis'] = 'dermatofibroma'
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'diagnosis': 'dermatofibroma'} == image['meta']['clinical']
@@ -874,6 +896,7 @@ def testDiagnosisFieldParser():
     image = _createImage()
     assertRunParserRaises(image, data, parser, BadFieldTypeException)
 
+
 def testNevusTypeFieldParser():
     parser = NevusTypeFieldParser
 
@@ -891,7 +914,7 @@ def testNevusTypeFieldParser():
     ]:
         data = {'nevus_type': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'nevus_type': value.lower()} == image['meta']['clinical']
@@ -900,7 +923,7 @@ def testNevusTypeFieldParser():
     # Special case: nevus NOS
     data = {'nevus_type': 'nevus NOS'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'nevus_type': 'nevus NOS'} == image['meta']['clinical']
@@ -915,7 +938,7 @@ def testNevusTypeFieldParser():
     for value in unknownValues:
         data = {'nevus_type': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'nevus_type': None} == image['meta']['clinical']
@@ -925,7 +948,7 @@ def testNevusTypeFieldParser():
     data = {'nevus_type': 'spitz'}
     image = _createImage()
     image['meta']['clinical']['nevus_type'] = None
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'nevus_type': 'spitz'} == image['meta']['clinical']
@@ -935,7 +958,7 @@ def testNevusTypeFieldParser():
     data = {'nevus_type': 'spitz'}
     image = _createImage()
     image['meta']['clinical']['nevus_type'] = 'spitz'
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'nevus_type': 'spitz'} == image['meta']['clinical']
@@ -961,6 +984,7 @@ def testNevusTypeFieldParser():
     image = _createImage()
     assertRunParserRaises(image, data, parser, BadFieldTypeException)
 
+
 def testImageTypeFieldParser():
     parser = ImageTypeFieldParser
 
@@ -972,7 +996,7 @@ def testImageTypeFieldParser():
     ]:
         data = {'image_type': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'image_type': value.lower()} == image['meta']['acquisition']
@@ -987,7 +1011,7 @@ def testImageTypeFieldParser():
     for value in unknownValues:
         data = {'image_type': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'image_type': None} == image['meta']['acquisition']
@@ -997,7 +1021,7 @@ def testImageTypeFieldParser():
     data = {'image_type': 'dermoscopic'}
     image = _createImage()
     image['meta']['acquisition']['image_type'] = None
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'image_type': 'dermoscopic'} == image['meta']['acquisition']
@@ -1007,7 +1031,7 @@ def testImageTypeFieldParser():
     data = {'image_type': 'dermoscopic'}
     image = _createImage()
     image['meta']['acquisition']['image_type'] = 'dermoscopic'
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'image_type': 'dermoscopic'} == image['meta']['acquisition']
@@ -1028,6 +1052,7 @@ def testImageTypeFieldParser():
     # Field not found
     _testFieldNotFound(parser)
 
+
 def testDermoscopicTypeFieldParser():
     parser = DermoscopicTypeFieldParser
 
@@ -1039,7 +1064,7 @@ def testDermoscopicTypeFieldParser():
     ]:
         data = {'dermoscopic_type': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'dermoscopic_type': value.lower()} == image['meta']['acquisition']
@@ -1048,20 +1073,18 @@ def testDermoscopicTypeFieldParser():
     # Special case
     data = {'dermoscopic_type': 'contact non polarized'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
-    assert {'dermoscopic_type': 'contact non-polarized'} == \
-                         image['meta']['acquisition']
+    assert {'dermoscopic_type': 'contact non-polarized'} == image['meta']['acquisition']
     assert {} == image['privateMeta']
 
     data = {'dermoscopic_type': 'non contact polarized'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
-    assert {'dermoscopic_type': 'non-contact polarized'} == \
-                         image['meta']['acquisition']
+    assert {'dermoscopic_type': 'non-contact polarized'} == image['meta']['acquisition']
     assert {} == image['privateMeta']
 
     # Invalid value
@@ -1073,7 +1096,7 @@ def testDermoscopicTypeFieldParser():
     for value in unknownValues:
         data = {'dermoscopic_type': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'dermoscopic_type': None} == image['meta']['acquisition']
@@ -1083,22 +1106,20 @@ def testDermoscopicTypeFieldParser():
     data = {'dermoscopic_type': 'contact polarized'}
     image = _createImage()
     image['meta']['acquisition']['dermoscopic_type'] = None
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
-    assert {'dermoscopic_type': 'contact polarized'} == \
-                         image['meta']['acquisition']
+    assert {'dermoscopic_type': 'contact polarized'} == image['meta']['acquisition']
     assert {} == image['privateMeta']
 
     # Update existing value with same value
     data = {'dermoscopic_type': 'contact polarized'}
     image = _createImage()
     image['meta']['acquisition']['dermoscopic_type'] = 'contact polarized'
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
-    assert {'dermoscopic_type': 'contact polarized'} == \
-                         image['meta']['acquisition']
+    assert {'dermoscopic_type': 'contact polarized'} == image['meta']['acquisition']
     assert {} == image['privateMeta']
 
     # Update existing value with null value
@@ -1116,6 +1137,7 @@ def testDermoscopicTypeFieldParser():
     # Field not found
     _testFieldNotFound(parser)
 
+
 def testMelThickMmFieldParser():
     parser = MelThickMmFieldParser
 
@@ -1123,7 +1145,7 @@ def testMelThickMmFieldParser():
     for value in ['1.23 mm', '1.23mm', '1.23']:
         data = {'mel_thick_mm': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'mel_thick_mm': 1.23} == image['meta']['clinical']
@@ -1132,7 +1154,7 @@ def testMelThickMmFieldParser():
     # Alternative field name
     data = {'mel_thick': '1.25 mm'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'mel_thick_mm': 1.25} == image['meta']['clinical']
@@ -1142,7 +1164,7 @@ def testMelThickMmFieldParser():
     for value in unknownValues:
         data = {'mel_thick_mm': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'mel_thick_mm': None} == image['meta']['clinical']
@@ -1152,7 +1174,7 @@ def testMelThickMmFieldParser():
     data = {'mel_thick_mm': '1.23 mm'}
     image = _createImage()
     image['meta']['clinical']['mel_thick_mm'] = None
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'mel_thick_mm': 1.23} == image['meta']['clinical']
@@ -1162,7 +1184,7 @@ def testMelThickMmFieldParser():
     data = {'mel_thick_mm': '1.23 mm'}
     image = _createImage()
     image['meta']['clinical']['mel_thick_mm'] = 1.23
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'mel_thick_mm': 1.23} == image['meta']['clinical']
@@ -1192,6 +1214,7 @@ def testMelThickMmFieldParser():
     image = _createImage()
     assertRunParserRaises(image, data, parser, BadFieldTypeException)
 
+
 def testMelClassFieldParser():
     parser = MelClassFieldParser
 
@@ -1204,7 +1227,7 @@ def testMelClassFieldParser():
     ]:
         data = {'mel_class': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'mel_class': value.lower()} == image['meta']['clinical']
@@ -1213,31 +1236,28 @@ def testMelClassFieldParser():
     # Special case
     data = {'mel_class': 'recurrent/persistent melanoma in situ'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
-    assert {'mel_class': 'recurrent/persistent melanoma, in situ'} == \
-                         image['meta']['clinical']
+    assert {'mel_class': 'recurrent/persistent melanoma, in situ'} == image['meta']['clinical']
     assert {} == image['privateMeta']
 
     # Special case
     data = {'mel_class': 'recurrent/persistent melanoma invasive'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
-    assert {'mel_class': 'recurrent/persistent melanoma, invasive'} == \
-                         image['meta']['clinical']
+    assert {'mel_class': 'recurrent/persistent melanoma, invasive'} == image['meta']['clinical']
     assert {} == image['privateMeta']
 
     # Special case
     data = {'mel_class': 'melanoma nos'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
-    assert {'mel_class': 'melanoma NOS'} == \
-                         image['meta']['clinical']
+    assert {'mel_class': 'melanoma NOS'} == image['meta']['clinical']
     assert {} == image['privateMeta']
 
     # Invalid value
@@ -1249,7 +1269,7 @@ def testMelClassFieldParser():
     for value in unknownValues:
         data = {'mel_class': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'mel_class': None} == image['meta']['clinical']
@@ -1259,22 +1279,20 @@ def testMelClassFieldParser():
     data = {'mel_class': 'melanoma in situ'}
     image = _createImage()
     image['meta']['clinical']['mel_class'] = None
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
-    assert {'mel_class': 'melanoma in situ'} == \
-                         image['meta']['clinical']
+    assert {'mel_class': 'melanoma in situ'} == image['meta']['clinical']
     assert {} == image['privateMeta']
 
     # Update existing value with same value
     data = {'mel_class': 'melanoma in situ'}
     image = _createImage()
     image['meta']['clinical']['mel_class'] = 'melanoma in situ'
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
-    assert {'mel_class': 'melanoma in situ'} == \
-                         image['meta']['clinical']
+    assert {'mel_class': 'melanoma in situ'} == image['meta']['clinical']
     assert {} == image['privateMeta']
 
     # Update existing value with null value
@@ -1292,6 +1310,7 @@ def testMelClassFieldParser():
     # Field not found
     _testFieldNotFound(parser)
 
+
 def testMelTypeFieldParser():
     parser = MelTypeFieldParser
 
@@ -1304,7 +1323,7 @@ def testMelTypeFieldParser():
     ]:
         data = {'mel_type': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'mel_type': value.lower()} == image['meta']['clinical']
@@ -1313,41 +1332,37 @@ def testMelTypeFieldParser():
     # Special case
     data = {'mel_type': 'ssm'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
-    assert {'mel_type': 'superficial spreading melanoma'} == \
-                         image['meta']['clinical']
+    assert {'mel_type': 'superficial spreading melanoma'} == image['meta']['clinical']
     assert {} == image['privateMeta']
 
     # Special case
     data = {'mel_type': 'lmm'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
-    assert {'mel_type': 'lentigo maligna melanoma'} == \
-                         image['meta']['clinical']
+    assert {'mel_type': 'lentigo maligna melanoma'} == image['meta']['clinical']
     assert {} == image['privateMeta']
 
     # Special case
     data = {'mel_type': 'alm'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
-    assert {'mel_type': 'acral lentiginous melanoma'} == \
-                         image['meta']['clinical']
+    assert {'mel_type': 'acral lentiginous melanoma'} == image['meta']['clinical']
     assert {} == image['privateMeta']
 
     # Special case
     data = {'mel_type': 'melanoma nos'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
-    assert {'mel_type': 'melanoma NOS'} == \
-                         image['meta']['clinical']
+    assert {'mel_type': 'melanoma NOS'} == image['meta']['clinical']
     assert {} == image['privateMeta']
 
     # Invalid value
@@ -1359,7 +1374,7 @@ def testMelTypeFieldParser():
     for value in unknownValues:
         data = {'mel_type': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'mel_type': None} == image['meta']['clinical']
@@ -1369,22 +1384,20 @@ def testMelTypeFieldParser():
     data = {'mel_type': 'nodular melanoma'}
     image = _createImage()
     image['meta']['clinical']['mel_type'] = None
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
-    assert {'mel_type': 'nodular melanoma'} == \
-                         image['meta']['clinical']
+    assert {'mel_type': 'nodular melanoma'} == image['meta']['clinical']
     assert {} == image['privateMeta']
 
     # Update existing value with same value
     data = {'mel_type': 'nodular melanoma'}
     image = _createImage()
     image['meta']['clinical']['mel_type'] = 'nodular melanoma'
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
-    assert {'mel_type': 'nodular melanoma'} == \
-                         image['meta']['clinical']
+    assert {'mel_type': 'nodular melanoma'} == image['meta']['clinical']
     assert {} == image['privateMeta']
 
     # Update existing value with null value
@@ -1402,6 +1415,7 @@ def testMelTypeFieldParser():
     # Field not found
     _testFieldNotFound(parser)
 
+
 def testMelMitoticIndexFieldParser():
     parser = MelMitoticIndexFieldParser
 
@@ -1417,7 +1431,7 @@ def testMelMitoticIndexFieldParser():
     ]:
         data = {'mel_mitotic_index': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'mel_mitotic_index': value.lower()} == image['meta']['clinical']
@@ -1426,7 +1440,7 @@ def testMelMitoticIndexFieldParser():
     # Valid value with non-standard units
     data = {'mel_mitotic_index': '2/mm2'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {'mel_mitotic_index': '2/mm^2'} == image['meta']['clinical']
 
     # Invalid value
@@ -1438,7 +1452,7 @@ def testMelMitoticIndexFieldParser():
     for value in unknownValues:
         data = {'mel_mitotic_index': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'mel_mitotic_index': None} == image['meta']['clinical']
@@ -1448,22 +1462,20 @@ def testMelMitoticIndexFieldParser():
     data = {'mel_mitotic_index': '1/mm^2'}
     image = _createImage()
     image['meta']['clinical']['mel_mitotic_index'] = None
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
-    assert {'mel_mitotic_index': '1/mm^2'} == \
-                         image['meta']['clinical']
+    assert {'mel_mitotic_index': '1/mm^2'} == image['meta']['clinical']
     assert {} == image['privateMeta']
 
     # Update existing value with same value
     data = {'mel_mitotic_index': '1/mm^2'}
     image = _createImage()
     image['meta']['clinical']['mel_mitotic_index'] = '1/mm^2'
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
-    assert {'mel_mitotic_index': '1/mm^2'} == \
-                         image['meta']['clinical']
+    assert {'mel_mitotic_index': '1/mm^2'} == image['meta']['clinical']
     assert {} == image['privateMeta']
 
     # Update existing value with null value
@@ -1481,13 +1493,14 @@ def testMelMitoticIndexFieldParser():
     # Field not found
     _testFieldNotFound(parser)
 
+
 def testMelUlcerFieldParser():
     parser = MelUlcerFieldParser
 
     # Normal
     data = {'mel_ulcer': 'false'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'mel_ulcer': False} == image['meta']['clinical']
@@ -1497,7 +1510,7 @@ def testMelUlcerFieldParser():
     for value in unknownValues:
         data = {'mel_ulcer': value}
         image = _createImage()
-        assertRunParser(image, data, parser)
+        _runParser(image, data, parser)
         assert {} == data
         assert {} == image['meta']['unstructured']
         assert {'mel_ulcer': None} == image['meta']['clinical']
@@ -1507,7 +1520,7 @@ def testMelUlcerFieldParser():
     data = {'mel_ulcer': 'true'}
     image = _createImage()
     image['meta']['clinical']['mel_ulcer'] = None
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'mel_ulcer': True} == image['meta']['clinical']
@@ -1517,7 +1530,7 @@ def testMelUlcerFieldParser():
     data = {'mel_ulcer': 'true'}
     image = _createImage()
     image['meta']['clinical']['mel_ulcer'] = True
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {} == data
     assert {} == image['meta']['unstructured']
     assert {'mel_ulcer': True} == image['meta']['clinical']
@@ -1542,13 +1555,15 @@ def testMelUlcerFieldParser():
     data = {'mel_ulcer': '1'}
     image = _createImage()
 
+
 def testGeneralAnatomicSiteFieldParser():
     parser = GeneralAnatomicSiteFieldParser
 
     data = {'anatom_site_general': 'head/neck'}
     image = _createImage()
-    assertRunParser(image, data, parser)
+    _runParser(image, data, parser)
     assert {'anatom_site_general': 'head/neck'} == image['meta']['clinical']
+
 
 def testAddImageClinicalMetadata():
     # Empty data
@@ -1633,6 +1648,7 @@ def testAddImageClinicalMetadata():
     assert "corrected inconsistent value for field 'melanocytic' based on field 'diagnosis' " \
         "(new value: True, 'diagnosis': u'melanoma')" in \
         warnings
+
 
 def testAddImageClinicalMetadataInterfieldValidation():
     # Valid cases
@@ -1768,6 +1784,7 @@ def testAddImageClinicalMetadataInterfieldValidation():
     assert [] == errors
     assert 1 == len(warnings)
 
+
 def testAddImageMetadataExif():
     data = {
         'exif_1': 'value1',
@@ -1780,6 +1797,7 @@ def testAddImageMetadataExif():
     assert 'value1' == image['meta']['unstructuredExif']['exif_1']
     assert 'value2' == image['meta']['unstructuredExif']['exif_2']
     assert 'value3' == image['meta']['unstructuredExif']['EXIF_3']
+
 
 def testMelanocyticValidation():
     # Test populating melanocytic field based on diagnosis

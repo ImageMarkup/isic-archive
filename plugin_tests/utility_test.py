@@ -16,10 +16,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 ###############################################################################
-
-from six.moves import range
-
 import pytest
+from six.moves import range
 
 from isic_archive.utility import generateLines
 
@@ -60,9 +58,11 @@ def testGenerateLines():
     for chunkSize in range(1, 21):
         _testGenerateLines(chunkSize)
 
+
 def _generateLines(data, chunkSize):
     """Return generateLines() on input data retrieved with a specified chunk size."""
     return generateLines(DataIterator(data, chunkSize))
+
 
 def _testGenerateLines(chunkSize):
     """Run all generateLines tests for the specified chunk size."""
@@ -70,6 +70,7 @@ def _testGenerateLines(chunkSize):
     _testGenerateLinesSingleLine(chunkSize)
     _testGenerateLinesMultipleLines(chunkSize)
     _testGenerateLinesBlankLines(chunkSize)
+
 
 def _testGenerateLinesEmpty(chunkSize):
     """Test generateLines on empty input."""
@@ -84,6 +85,7 @@ def _testGenerateLinesEmpty(chunkSize):
     lines = _generateLines('', chunkSize)
     with pytest.raises(StopIteration):
         lines.next()
+
 
 def _testGenerateLinesSingleLine(chunkSize):
     """Test generateLines on input with a single line."""
@@ -100,6 +102,7 @@ def _testGenerateLinesSingleLine(chunkSize):
     assert len(line) == 3
     with pytest.raises(StopIteration):
         lines.next()
+
 
 def _testGenerateLinesMultipleLines(chunkSize):
     """Test generateLines on input with multiple lines."""
@@ -120,6 +123,7 @@ def _testGenerateLinesMultipleLines(chunkSize):
     assert len(line) == 10
     with pytest.raises(StopIteration):
         lines.next()
+
 
 def _testGenerateLinesBlankLines(chunkSize):
     """Test generateLines on input that contains blank lines."""

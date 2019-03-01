@@ -1,4 +1,3 @@
-from girder.utility import mail_utils
 import os
 
 from celery import Celery, Task
@@ -11,6 +10,7 @@ from requests_toolbelt.sessions import BaseUrlSession
 from girder.constants import SettingKey, TokenScope
 from girder.models.setting import Setting
 from girder.models.token import Token
+from girder.utility import mail_utils
 
 from isic_archive.provision_utility import getAdminUser
 

@@ -17,19 +17,21 @@
 #  limitations under the License.
 ###############################################################################
 import re
-import six
 
 from isic_archive.models.dataset_helpers import matchFilenameRegex
+
 
 def assertMatch(originalFilename, csvFilename):
     """Assert that the filename in the CSV matches the original filename."""
     regex = matchFilenameRegex(csvFilename)
     assert re.match(regex, originalFilename) is not None
 
+
 def assertNotMatch(originalFilename, csvFilename):
     """Assert that the filename in the CSV doesn't match the original filename."""
     regex = matchFilenameRegex(csvFilename)
     assert re.match(regex, originalFilename) is None
+
 
 def testMatchFilenameRegex():
     """

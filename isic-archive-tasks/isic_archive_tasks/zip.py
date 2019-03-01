@@ -1,11 +1,7 @@
 import mimetypes
-
-from isic_archive.models import Batch, Dataset, Image
 import os
 
 from celery.utils.log import get_task_logger
-from isic_archive_tasks.app import app
-from isic_archive_tasks.image import ingestImage
 
 from girder.models.collection import Collection
 from girder.models.file import File
@@ -13,8 +9,11 @@ from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.user import User
 
+from isic_archive.models import Batch, Dataset, Image
 from isic_archive.upload import TempDir, ZipFileOpener
 from isic_archive.utility.boto import s3
+from isic_archive_tasks.app import app
+from isic_archive_tasks.image import ingestImage
 
 logger = get_task_logger(__name__)
 

@@ -6,12 +6,12 @@ import tempfile
 from bson import ObjectId
 from celery import chord
 from celery.utils.log import get_task_logger
-from isic_archive_tasks.app import app
 
 from girder.models.file import File
 
 from isic_archive import Image
 from isic_archive.models.segmentation_helpers import ScikitSegmentationHelper
+from isic_archive_tasks.app import app
 
 SUPERPIXEL_VERSION = 3.0
 logger = get_task_logger(__name__)

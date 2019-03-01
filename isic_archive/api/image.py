@@ -31,9 +31,9 @@ from girder.api.rest import loadmodel, setRawResponse, setResponseHeader
 from girder.constants import AccessType
 from girder.exceptions import GirderException, RestException, ValidationException
 from girder.models.file import File
-from large_image.exceptions import TileGeneralException
-from girder_large_image.models.image_item import ImageItem
 from girder.utility import mail_utils, ziputil
+from girder_large_image.models.image_item import ImageItem
+from large_image.exceptions import TileGeneralException
 
 from .base import IsicResource
 from ..models.dataset import Dataset
