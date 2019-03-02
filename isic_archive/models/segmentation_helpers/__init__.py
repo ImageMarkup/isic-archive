@@ -20,14 +20,7 @@
 # Deal with a bug where PEP257 crashes when parsing __all__
 # flake8: noqa
 
-try:
-    from .opencv import OpenCVSegmentationHelper
-except ImportError:
-    raise ImportError('Could not load OpenCV.')
-
-try:
-    from .scikit import ScikitSegmentationHelper
-except ImportError:
-    raise ImportError('Could not load Scikit-Image.')
+from .opencv import OpenCVSegmentationHelper
+from .scikit import ScikitSegmentationHelper
 
 __all__ = [OpenCVSegmentationHelper, ScikitSegmentationHelper]
