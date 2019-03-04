@@ -17,6 +17,9 @@ RUN npm install --global yarn \
     tk8.5-dev \
     python-tk \
     # Install isic_archive dependencies
-    p7zip-full
+    p7zip-full \
+    # Install testing dependencies
+    python3-pip \
+  && pip3 install tox
 
 USER circleci

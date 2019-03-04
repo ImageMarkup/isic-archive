@@ -52,11 +52,6 @@ jobs:
           name: Install isic_archive
           command: girder-install plugin girder/plugins/isic_archive
       - run:
-          name: Install isic-archive-tasks
-          command: |
-            pip install girder/plugins/isic_archive/isic-archive-tasks
-          working_directory: /home/circleci/project
-      - run:
           name: Install coverage client
           command: pip install --upgrade codecov
       - save_cache:
@@ -89,25 +84,16 @@ jobs:
     working_directory: /home/circleci/project
 
     steps:
-      - attach_workspace:
-          at: /home/circleci/project
-      - run:
-          name: Activate virtualenv
-          command: echo "source $CIRCLE_WORKING_DIRECTORY/girder_env/bin/activate" >> $BASH_ENV
-
-      - run:
-          name: Run CTest
-          command: ctest -VV -L 'girder_python|girder_coverage' -E js_coverage
-          working_directory: girder_build
+      - checkout:
+          path: /home/circleci/project
 
       - run:
           name: Run Tox
           command: tox
-          working_directory: girder/plugins/isic_archive
 
-      - run:
-          name: Upload coverage
-          command: codecov --disable search pycov gcov --root girder/plugins/isic_archive --file girder/build/test/coverage/py_coverage.xml
+#      - run:
+#          name: Upload coverage
+#          command: codecov --disable search pycov gcov --root girder/plugins/isic_archive --file girder/build/test/coverage/py_coverage.xml
 
   webBuild_webTest:
     docker:
@@ -167,9 +153,7 @@ workflows:
   test_all:
     jobs:
       - serverInstall
-      - serverTest:
-          requires:
-            - serverInstall
+      - serverTest
       - webBuild_webTest:
           requires:
             - serverInstall
