@@ -257,7 +257,7 @@ class DatasetResource(IsicResource):
             user=user)
 
         # avoid circular imports from models.__init__
-        from isic_archive_tasks import ingestImage
+        from isic_archive.tasks import ingestImage
         ingestImage.delay(image['_id'])
 
         return Image().filter(image, user=user)

@@ -51,12 +51,6 @@
         virtualenv: "{{ python_dist_path }}"
         editable: true
 
-    - name: Install isic-archive-tasks package
-      pip:
-        name: "{{ isic_archive_path }}/isic-archive-tasks"
-        virtualenv: "{{ python_dist_path }}"
-        editable: true
-
     # TODO: Remove when girder-worker stops depending on networkx
     - name: Install networkx==1.9.0
       pip:

@@ -47,3 +47,9 @@
       pip:
         name: tox
         virtualenv: "{{ python_dist_path }}"
+
+    - name: Activate virtualenv on login
+      lineinfile:
+        line: 'source {{ python_dist_path }}/bin/activate'
+        path: "{{ ansible_user_dir }}/.profile"
+        state: present

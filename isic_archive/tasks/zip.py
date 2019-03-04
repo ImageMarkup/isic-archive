@@ -10,10 +10,9 @@ from girder.models.item import Item
 from girder.models.user import User
 
 from isic_archive.models import Batch, Dataset, Image
+from isic_archive.tasks import app
 from isic_archive.upload import TempDir, ZipFileOpener
 from isic_archive.utility.boto import s3
-from isic_archive_tasks.app import app
-from isic_archive_tasks.image import ingestImage
 
 logger = get_task_logger(__name__)
 
@@ -68,6 +67,7 @@ def ingestBatchFromZipfile(self, batchId):
 
     The images are extracted to a "Pre-review" folder within the dataset folder.
     """
+    from isic_archive.tasks import ingestImage
     batch = Batch().load(batchId)
     dataset = Dataset().load(batch['datasetId'], force=True)
     user = User().load(batch['creatorId'], force=True)

@@ -1,10 +1,4 @@
 ---
-- name: Install isic-archive-tasks
-  pip:
-    name: "{{ isic_archive_path }}/isic-archive-tasks"
-    virtualenv: "{{ python_dist_path }}"
-  notify: Reload Celery
-
 - name: Install flower
   pip:
     name: flower

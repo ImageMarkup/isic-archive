@@ -427,7 +427,7 @@ class Dataset(AccessControlledModel):
         - Ingest images from the ZIP file into the dataset.
         """
         # avoid circular imports from the models __init__
-        from isic_archive_tasks import ingestBatchFromZipfile
+        from isic_archive.tasks import ingestBatchFromZipfile
         updateResult = Batch().collection.update_one(
             {
                 '_id': batch['_id'],

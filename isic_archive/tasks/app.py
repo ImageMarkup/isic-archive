@@ -61,7 +61,7 @@ app.config_from_object(CeleryAppConfig())
 
 @app.on_after_configure.connect
 def setupPeriodicTasks(sender, **kwargs):
-    from isic_archive_tasks.notification import maybeSendIngestionNotifications
+    from isic_archive.tasks import maybeSendIngestionNotifications
     sender.add_periodic_task(30, maybeSendIngestionNotifications.s(),
                              name='Send any necessary notifications for ingested batches.')
 
