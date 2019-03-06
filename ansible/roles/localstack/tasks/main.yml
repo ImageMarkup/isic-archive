@@ -21,6 +21,11 @@
     state: started
   become: true
 
+- name: Wait for localstack to be listening
+  wait_for:
+    port: 4572  # S3 port
+    timeout: 20
+
 - name: Create default bucket
   shell: |
     . {{ python_dist_path }}/bin/activate
