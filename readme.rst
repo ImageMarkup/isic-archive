@@ -69,7 +69,7 @@ Development
   ::
 
     # Girder's console output
-    tail -F /tmp/girder.std*
+    journalctl -f -u girder
 
     # Mongodb's console output
     tail -F /var/log/mongodb/mongod.log

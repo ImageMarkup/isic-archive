@@ -1,0 +1,13 @@
+[Unit]
+Description=Girder
+After=network.target
+
+[Service]
+User={{ ansible_user_id }}
+Group={{ ansible_user_id }}
+Restart=always
+Environment=DOTENV_PATH="{{ ansible_user_dir }}/.env"
+ExecStart={{ python_dist_path }}/bin/girder serve
+
+[Install]
+WantedBy=multi-user.target

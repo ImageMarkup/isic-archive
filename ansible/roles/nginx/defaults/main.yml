@@ -3,6 +3,5 @@
 ssl: false
 
 girder_port: 8080
-supervisor_port: 9999
 
 redirect_canonical: false

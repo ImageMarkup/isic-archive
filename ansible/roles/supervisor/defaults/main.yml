@@ -1,6 +1,0 @@
----
-
-girder_port: 8080
-supervisor_port: 9999
-
-python_dist_path: "{{ ansible_user_dir }}/env"

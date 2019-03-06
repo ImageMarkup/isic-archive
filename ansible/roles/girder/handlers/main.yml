@@ -1,8 +1,9 @@
 ---
 
 - listen: Restart Girder
-  supervisorctl:
+  systemd:
     name: girder
+    daemon_reload: true
     state: restarted
   become: yes
 - listen: Restart Girder
