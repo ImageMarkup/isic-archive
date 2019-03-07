@@ -19,7 +19,7 @@
 - name: Install isic-archive package
   pip:
     name: "{{ isic_archive_path }}"
-    editable: true
+    editable: "{{ isic_archive_editable }}"
     virtualenv: "{{ python_dist_path }}"
   notify:
     - Restart Girder

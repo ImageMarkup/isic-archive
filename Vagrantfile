@@ -37,6 +37,7 @@ Vagrant.configure('2') do |config|
       ansible.playbook = 'vagrant-webservers.yml'
       ansible.extra_vars = {
         bind_node_modules: bind_node_modules,
+        isic_archive_editable: true,
         webserver_ip: '172.16.0.10',
         broker_ip: '172.16.0.11'
       }

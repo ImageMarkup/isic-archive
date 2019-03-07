@@ -6,7 +6,7 @@ setup(
     description='The ISIC Archive API server.',
     url='https://github.com/ImageMarkup/isic-archive',
 
-    packages=find_packages(exclude=['plugin_tests']),
+    packages=find_packages(),
     package_data={
         '': ['mail_templates/*.mako'],
     },
