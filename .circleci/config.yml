@@ -16,10 +16,6 @@ jobs:
           name: Run Tox
           command: tox
 
-#      - run:
-#          name: Upload coverage
-#          command: codecov --disable search pycov gcov --root girder/plugins/isic_archive --file girder/build/test/coverage/py_coverage.xml
-
   webBuild_webTest:
     docker:
       - image: isic/isic_test:latest
