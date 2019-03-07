@@ -8,7 +8,9 @@ setup(
 
     packages=find_packages(),
     package_data={
-        '': ['mail_templates/*.mako'],
+        '': ['mail_templates/*.mako',
+             'license_templates/*.mako',
+             '*.mako'],
     },
 
     install_requires=[
