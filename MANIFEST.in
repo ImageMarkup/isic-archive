@@ -8,6 +8,7 @@ prune .circleci
 prune ansible
 prune custom
 prune isic-archive-gui
+include isic-archive-gui/src/masterFeatures.json
 prune scripts
 prune test
 

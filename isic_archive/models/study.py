@@ -17,6 +17,8 @@
 #  limitations under the License.
 ###############################################################################
 
+import json
+import sys
 import os
 
 import jsonschema
@@ -31,14 +33,12 @@ from .image import Image
 from .user import User
 
 
-_masterFeaturesPath = os.path.normpath(os.path.join(
-    os.path.dirname(__file__), '..', '..', 'isic-archive-gui', 'src', 'masterFeatures.json'
-))
-# with open(_masterFeaturesPath, 'rb') as _masterFeaturesStream:
-#     MASTER_FEATURES = [
-#         feature['id'] for feature in json.load(_masterFeaturesStream)
-#     ]
-MASTER_FEATURES = []
+_masterFeaturesPath = os.path.join(sys.prefix, 'share', 'isic_archive',
+                                   'masterFeatures.json')
+with open(_masterFeaturesPath, 'rb') as _masterFeaturesStream:
+    MASTER_FEATURES = [
+        feature['id'] for feature in json.load(_masterFeaturesStream)
+    ]
 
 
 class Study(Folder):
