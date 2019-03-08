@@ -18,6 +18,7 @@ setup(
         'celery[redis]',
         'geojson',
         'girder-large-image',
+        'girder-gravatar',
         'girder-oauth',
         'girder>=3.0.0a2',
         'jsonpickle',
