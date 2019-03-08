@@ -24,20 +24,6 @@
   notify:
     - Restart Girder
 
-# TODO: Remove when girder-worker stops depending on networkx
-- name: Install networkx==1.9.0
-  pip:
-    name: "networkx"
-    version: "1.9.0"
-    virtualenv: "{{ python_dist_path }}"
-
-# TODO: Remove when https://github.com/girder/girder_worker/issues/330 is resolved
-- name: Install celery==4.1.1
-  pip:
-    name: "celery"
-    version: "4.1.1"
-    virtualenv: "{{ python_dist_path }}"
-
 - name: Install ISIC GUI dependencies
   yarn:
     path: "{{ isic_archive_path }}/isic-archive-gui"
