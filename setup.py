@@ -35,14 +35,6 @@ setup(
         'sentry-sdk',
         'six',
     ],
-    extras_require={
-        'dev': [
-            'tox'
-        ]
-    },
-    dependency_links=[
-        'https://github.com/ImageMarkup/isic-archive/tarball/master#egg=girder'
-    ],
     entry_points={
         'girder.plugin': [
             'isic_archive = isic_archive:IsicArchive'
