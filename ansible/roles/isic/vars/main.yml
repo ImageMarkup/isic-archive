@@ -1,7 +1,5 @@
 ---
 
-girder_version: "master"
-large_image_version: "girder-3"
 python_dist_path: "{{ ansible_user_dir }}/env"
 
 girder_port: 8080
