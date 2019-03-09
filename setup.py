@@ -1,5 +1,3 @@
-import os
-
 from setuptools import find_packages, setup
 
 setup(
@@ -10,12 +8,11 @@ setup(
 
     packages=find_packages(),
     package_data={
-        '': ['mail_templates/*.mako',
-             'license_templates/*.mako',
-             '*.mako'],
+        'isic-archive': ['mail_templates/*.mako',
+                         'license_templates/*.mako',
+                         '*.mako',
+                         'models/masterFeatures.json'],
     },
-    data_files=[(os.path.join('share', 'isic_archive'),
-                 [os.path.join('isic-archive-gui', 'src', 'masterFeatures.json')])],
     install_requires=[
         'backports.csv',
         'celery[redis]',

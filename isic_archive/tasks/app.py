@@ -68,9 +68,7 @@ def setupPeriodicTasks(sender, **kwargs):
 
 @worker_process_init.connect
 def addMailTemplates(sender, **kwargs):
-    """
-    Perform the necessary steps from IsicArchive.load.
-    """
+    """Perform the necessary steps from IsicArchive.load."""
     mail_utils.addTemplateDirectory(
         pkg_resources.resource_filename('isic_archive', 'mail_templates'),
         prepend=True)
