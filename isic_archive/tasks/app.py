@@ -52,9 +52,6 @@ class CeleryAppConfig(object):
     # jsonpickle is used to support passing object ids between tasks
     task_serializer = 'jsonpickle'
 
-    # TODO: Remove when Celery version >= 4.3 since it then infers from env vars
-    result_backend = os.getenv('CELERY_RESULT_BACKEND')
-
 
 app.config_from_object(CeleryAppConfig())
 

@@ -112,7 +112,6 @@ def generateLargeImage(self, imageId):
     imageItem = Image().load(id=imageId, force=True)
     imageFile = Image().originalFile(imageItem)
 
-    # todo url
     try:
         originalFileStreamResponse = self.session.get(
             'file/%s/download' % imageFile['_id'], stream=True)
