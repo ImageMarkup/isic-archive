@@ -8,7 +8,7 @@ setup(
 
     packages=find_packages(),
     package_data={
-        'isic-archive': ['mail_templates/*.mako',
+        'isic_archive': ['mail_templates/*.mako',
                          'license_templates/*.mako',
                          '*.mako',
                          'models/masterFeatures.json'],
@@ -22,6 +22,7 @@ setup(
         'girder-oauth',
         'girder>=3.0.0a2',
         'jsonpickle',
+        'large-image-source-tiff[girder]',
         'natsort',
         'numpy',
         'opencv-python',
