@@ -33,7 +33,8 @@ from .user import User
 
 
 _masterFeaturesPath = 'masterFeatures.json'
-with open(os.path.join(os.path.dirname( __file__ ), _masterFeaturesPath), 'rb') as _masterFeaturesStream:
+with open(os.path.join(os.path.dirname(__file__),
+                       _masterFeaturesPath), 'rb') as _masterFeaturesStream:
     MASTER_FEATURES = [
         feature['id'] for feature in json.load(_masterFeaturesStream)
     ]
