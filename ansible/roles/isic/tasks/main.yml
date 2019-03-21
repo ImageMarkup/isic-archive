@@ -16,6 +16,11 @@
       - p7zip-full
   become: yes
 
+- name: Install numpy
+  pip:
+    name: numpy
+    virtualenv: "{{ python_dist_path }}"
+
 - name: Install isic-archive package
   pip:
     name: "{{ isic_archive_path }}"
