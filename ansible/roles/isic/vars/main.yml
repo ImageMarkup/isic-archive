@@ -1,8 +1,5 @@
 ---
 
-girder_version: "933096b33334bb9c30c3c7a659dbab32691cba3d"
-worker_version: "042a69d6ae7d472e32242d98f8b7acb3148980f9"
-large_image_version: "4dc82976d58b2a6e6542863e2e410628649a040c"
 python_dist_path: "{{ ansible_user_dir }}/env"
 
 girder_port: 8080

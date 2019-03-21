@@ -1,6 +1,6 @@
 CELERYD_NODES="w1"
 CELERY_BIN="{{ celery_bin }}"
-CELERY_APP="isic_archive_tasks"
+CELERY_APP="isic_archive.tasks"
 
 CELERYD_MULTI="multi"
 CELERYD_OPTS="--time-limit=7200 --concurrency={{ celery_concurrency }}"

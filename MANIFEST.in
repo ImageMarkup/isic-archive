@@ -1,0 +1,21 @@
+include setup.py
+include LICENSE
+include readme.rst
+
+graft isic_archive
+
+prune .circleci
+prune ansible
+prune custom
+prune isic-archive-gui
+prune scripts
+prune test
+
+exclude .codecov.yml
+exclude .editorconfig
+exclude .gitignore
+exclude Gruntfile.js
+exclude Vagrantfile
+exclude tox.ini
+
+global-exclude *.py[co] __pycache__

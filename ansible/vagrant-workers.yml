@@ -4,15 +4,10 @@
 
   vars:
     ansible_python_interpreter: "/usr/bin/python2.7"
-    build_girder: false
     celery_broker_url: "amqp://isicarchive:password@{{ broker_ip }}/isic-archive"
     celery_result_backend: "redis://:password@{{ broker_ip }}/0"
-    girder_path: "{{ ansible_user_dir }}/girder"
-    girder_version: "933096b33334bb9c30c3c7a659dbab32691cba3d"
     isic_archive_assetstore_path: "{{ ansible_user_dir }}/assetstores/default"
-    isic_archive_clone: false
     isic_archive_path: "{{ ansible_user_dir }}/isic_archive"
-    isic_archive_version: "master"
     python_dist_path: "{{ ansible_user_dir }}/env"
     sentry_dsn: ""
     sentry_environment: "development"
@@ -44,74 +39,41 @@
           - zlib1g-dev
       become: yes
 
-    - name: Download girder
-      git:
-        repo: "https://github.com/girder/girder.git"
-        dest: "{{ girder_path }}"
-        version: "{{ girder_version }}"
-        update: yes
-        force: yes
-      register: result
-
-    - name: Install Python package
-      pip:
-        name: "{{ girder_path }}"
-        #    editable: true
-        # TODO: The 'editable' option is broken until Ansible 2.4
-        # See: https://github.com/ansible/ansible/pull/19688
-        extra_args: '-e'
-        virtualenv: "{{ python_dist_path }}"
-      when: result.changed
-
-    - name: Download isic-archive
-      git:
-        repo: "https://github.com/ImageMarkup/isic-archive.git"
-        dest: "{{ isic_archive_path }}"
-        version: "{{ isic_archive_version }}"
-        clone: "{{ isic_archive_clone }}"
-        update: no
-        force: yes
-
     - name: Install package dependencies
       apt:
         name:
           - p7zip-full
       become: yes
 
-    - name: Install isic-archive-tasks package
+    - name: Install isic-archive package
       pip:
-        name: "{{ isic_archive_path }}/isic-archive-tasks"
+        name: "{{ isic_archive_path }}"
         virtualenv: "{{ python_dist_path }}"
-
+        editable: true
 
     - name: Configure mongo URI
       ini_file:
-        path: "{{ girder_path }}/girder/conf/girder.local.cfg"
+        path: "/etc/girder.cfg"
         section: database
         option: uri
         value: '"mongodb://{{ webserver_ip }}/girder"'
+      become: true
 
   roles:
+    - role: large_image
+      large_image_version: "girder-3"
+      large_image_virtualenv: "{{ python_dist_path }}"
+      large_image_tile_sources:
+        - tiff
+      large_image_include_vips: true
+
     - role: celery
       archive_api_url: "http://isic-archive.test/api/v1"
       celery_bin: "{{ python_dist_path }}/bin/celery"
       celery_concurrency: 1
       celery_user: vagrant
 
-    - role: large_image
-      large_image_virtualenv: "{{ python_dist_path }}"
-      large_image_tile_sources:
-        - tiff
-      large_image_include_vips: true
-
   post_tasks:
-    - name: Install large_image plugin
-      command: "{{ python_dist_path }}/bin/girder-install plugin --force --symlink {{ large_image_path }}"
-
-    - name: Install ISIC Archive
-      command: "{{ python_dist_path }}/bin/girder-install plugin --force --symlink {{ isic_archive_path }}"
-      notify: Reload Celery
-
     - name: Add hosts entry for isic-archive.test
       lineinfile:
         path: /etc/hosts
@@ -138,4 +100,3 @@
         line: 'source {{ python_dist_path }}/bin/activate'
         path: "{{ ansible_user_dir }}/.profile"
         state: present
-

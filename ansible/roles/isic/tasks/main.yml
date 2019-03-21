@@ -16,24 +16,13 @@
       - p7zip-full
   become: yes
 
-- name: Install isic-archive-tasks package
+- name: Install isic-archive package
   pip:
-    name: "{{ isic_archive_path }}/isic-archive-tasks"
+    name: "{{ isic_archive_path }}"
+    editable: "{{ isic_archive_editable }}"
     virtualenv: "{{ python_dist_path }}"
   notify:
     - Restart Girder
-
-- name: Install large_image plugin
-  command: "{{ python_dist_path }}/bin/girder-install plugin --force --symlink {{ large_image_path }}"
-  notify:
-    - Restart Girder
-    - Build Girder
-
-- name: Install ISIC Archive
-  command: "{{ python_dist_path }}/bin/girder-install plugin --force --symlink {{ isic_archive_path }}"
-  notify:
-    - Restart Girder
-    - Build Girder
 
 - name: Install ISIC GUI dependencies
   yarn:
@@ -100,6 +89,7 @@
     port: "{{ girder_port }}"
     plugins:
       - isic_archive
+      - large_image
       - worker
     state: present
   notify:

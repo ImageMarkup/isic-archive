@@ -12,5 +12,5 @@
     timeout: 20
 
 - listen: Build Girder
-  command: "{{ python_dist_path }}/bin/girder-install web"
+  command: "{{ python_dist_path }}/bin/girder build"
   when: build_girder

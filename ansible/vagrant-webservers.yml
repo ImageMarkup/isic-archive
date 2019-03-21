@@ -41,3 +41,15 @@
       isic_upload_bucket_name: "test-upload-bucket"
       isic_upload_role_arn: "fake-arn"
       localstack_data_dir: "{{ ansible_user_dir }}/localstack-data"
+
+  post_tasks:
+    - name: Install dev requirements
+      pip:
+        name: tox
+        virtualenv: "{{ python_dist_path }}"
+
+    - name: Activate virtualenv on login
+      lineinfile:
+        line: 'source {{ python_dist_path }}/bin/activate'
+        path: "{{ ansible_user_dir }}/.profile"
+        state: present

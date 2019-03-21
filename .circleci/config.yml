@@ -1,85 +1,5 @@
 version: 2
 jobs:
-  serverInstall:
-    docker:
-      - image: isic/isic_test:latest
-
-    working_directory: /home/circleci/project # as $CIRCLE_WORKING_DIRECTORY
-
-    environment:
-      - GIRDER_VERSION: 933096b33334bb9c30c3c7a659dbab32691cba3d
-      - LARGE_IMAGE_VERSION: 4dc82976d58b2a6e6542863e2e410628649a040c
-
-    steps:
-      # Apt package dependencies are built into Docker image
-      - run:
-          name: Clone Girder
-          #command: git clone --depth 1 --branch $GIRDER_VERSION -- https://github.com/girder/girder.git girder
-          command: |
-            git clone https://github.com/girder/girder.git girder
-            git -C girder checkout $GIRDER_VERSION
-      - run:
-          name: Clone large_image
-          #command: git clone --depth 1 --branch $LARGE_IMAGE_VERSION -- https://github.com/girder/large_image.git girder/plugins/large_image
-          command: |
-            git clone https://github.com/girder/large_image.git girder/plugins/large_image
-            git -C girder/plugins/large_image checkout $LARGE_IMAGE_VERSION
-      - checkout:
-          path: girder/plugins/isic_archive
-
-      - run:
-          name: Create and activate virtualenv
-          command: |
-            virtualenv girder_env
-            echo "source $CIRCLE_WORKING_DIRECTORY/girder_env/bin/activate" >> $BASH_ENV
-      - run:
-          name: Create cache key
-          command: cat girder/setup.py girder/requirements-dev.txt girder/plugins/large_image/setup.py girder/plugins/isic_archive/requirements.txt girder/plugins/isic_archive/isic-archive-tasks/setup.py | sha512sum > venv-req-hash.txt
-      - restore_cache:
-          key: venv-{{ arch }}-{{ checksum "venv-req-hash.txt" }}
-      - run:
-          name: Install Girder
-          command: |
-            pip install --upgrade --editable . --requirement requirements-dev.txt
-          # pytest_girder requires that install be run from this directory
-          working_directory: girder
-      - run:
-          name: Install large_image
-          command: |
-            pip install --upgrade 'numpy>=1.10.2'
-            girder-install plugin girder/plugins/large_image
-      - run:
-          name: Install isic_archive
-          command: girder-install plugin girder/plugins/isic_archive
-      - run:
-          name: Install isic-archive-tasks
-          command: |
-            pip install girder/plugins/isic_archive/isic-archive-tasks
-          working_directory: /home/circleci/project
-      - run:
-          name: Install coverage client
-          command: pip install --upgrade codecov
-      - save_cache:
-          paths: girder_env
-          key: venv-{{ arch }}-{{ checksum "venv-req-hash.txt" }}
-
-      - run:
-          name: Create Girder build directory
-          command: mkdir girder_build
-      - run:
-          name: Run CMake
-          command: |
-            cmake -DPYTHON_VERSION:STRING=2.7 -DRUN_CORE_TESTS:BOOL=OFF -DTEST_PLUGINS:STRING="isic_archive" $CIRCLE_WORKING_DIRECTORY/girder
-            make
-          working_directory: girder_build
-
-      - persist_to_workspace:
-          root: /home/circleci/project
-          paths:
-            - girder
-            - girder_build
-            - girder_env
-
   serverTest:
     docker:
       - image: isic/isic_test:latest
@@ -89,87 +9,47 @@ jobs:
     working_directory: /home/circleci/project
 
     steps:
-      - attach_workspace:
-          at: /home/circleci/project
-      - run:
-          name: Activate virtualenv
-          command: echo "source $CIRCLE_WORKING_DIRECTORY/girder_env/bin/activate" >> $BASH_ENV
-
-      - run:
-          name: Run CTest
-          command: ctest -VV -L 'girder_python|girder_coverage' -E js_coverage
-          working_directory: girder_build
+      - checkout:
+          path: /home/circleci/project
 
       - run:
           name: Run Tox
           command: tox
-          working_directory: girder/plugins/isic_archive
-
-      - run:
-          name: Upload coverage
-          command: codecov --disable search pycov gcov --root girder/plugins/isic_archive --file girder/build/test/coverage/py_coverage.xml
 
   webBuild_webTest:
     docker:
       - image: isic/isic_test:latest
-      #- image: circleci/mongo:3.6-ram
-      #  command: ["mongod", "--storageEngine", "ephemeralForTest", "--dbpath", "/dev/shm/mongo"]
 
     working_directory: /home/circleci/project
 
     steps:
-      - attach_workspace:
-          at: /home/circleci/project
-      - run:
-          name: Activate virtualenv
-          command: echo "source $CIRCLE_WORKING_DIRECTORY/girder_env/bin/activate" >> $BASH_ENV
-
+      - checkout:
+          path: /home/circleci/project
       - restore_cache:
-          key: npm-{{ arch }}-{{ checksum "girder/package.json" }}-{{ checksum "girder/plugins/isic_archive/plugin.json" }}
-      - run:
-          name: Build Girder web client
-          command: girder-install web --dev --plugins=isic_archive
-          environment:
-            - npm_config_cache: /home/circleci/project/npm_cache
-      - save_cache:
-          paths: npm_cache
-          key: npm-{{ arch }}-{{ checksum "girder/package.json" }}-{{ checksum "girder/plugins/isic_archive/plugin.json" }}
-
-      - run:
-          name: Run CTest
-          command: ctest -VV -L girder_browser -E js_coverage
-          working_directory: girder_build
-
-      - restore_cache:
-          key: yarn-{{ arch }}-{{ checksum "girder/plugins/isic_archive/isic-archive-gui/yarn.lock" }}
+          key: yarn-{{ arch }}-{{ checksum "isic-archive-gui/yarn.lock" }}
       - run:
           name: Install ISIC GUI dependencies
           command: yarn install
-          working_directory: girder/plugins/isic_archive/isic-archive-gui
+          working_directory: isic-archive-gui
       - run:
           name: Build ISIC Admin GUI
           command: yarn run build
-          working_directory: girder/plugins/isic_archive/isic-archive-gui
+          working_directory: isic-archive-gui
       - run:
           name: Build ISIC Integration GUI
           command: yarn run build:integration
-          working_directory: girder/plugins/isic_archive/isic-archive-gui
+          working_directory: isic-archive-gui
       - run:
           name: Lint ISIC GUI
           command: yarn run lint --no-fix
-          working_directory: girder/plugins/isic_archive/isic-archive-gui
+          working_directory: isic-archive-gui
       - save_cache:
           paths: /home/circleci/.cache/yarn
-          key: npm-{{ arch }}-{{ checksum "girder/package.json" }}-{{ checksum "girder/plugins/isic_archive/plugin.json" }}
+          key: yarn-{{ arch }}-{{ checksum "isic-archive-gui/yarn.lock" }}
 
 workflows:
   version: 2
   test_all:
     jobs:
-      - serverInstall
-      - serverTest:
-          requires:
-            - serverInstall
-      - webBuild_webTest:
-          requires:
-            - serverInstall
+      - serverTest
+      - webBuild_webTest
