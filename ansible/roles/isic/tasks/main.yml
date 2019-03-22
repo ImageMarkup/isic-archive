@@ -71,7 +71,6 @@
     owner: "{{ girder_user|default(ansible_user_id) }}"
     group: "{{ girder_user|default(ansible_user_id) }}"
     state: directory
-    recurse: yes
   become: yes
   become_user: root
 
