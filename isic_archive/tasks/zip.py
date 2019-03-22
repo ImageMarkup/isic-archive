@@ -1,3 +1,4 @@
+from functools import partial
 import mimetypes
 import os
 
@@ -38,11 +39,21 @@ def _uploadZipfileToGirder(requestSession, filePath, dataset):
                 'size': fileSize,
                 'mimeType': 'application/zip'
             },
-            data=fileStream,
         )
         uploadFileResponse.raise_for_status()
+        uploadId = uploadFileResponse.json()['_id']
 
-    uploadFile = File().load(uploadFileResponse.json()['_id'], force=True)
+        chunk_size = 1024 * 1024 * 50
+        offset = 0
+        for chunk in iter(partial(fileStream.read, chunk_size), b''):
+            uploadChunkResponse = requestSession.post('file/chunk',
+                                                      params={'offset': offset,
+                                                              'uploadId': uploadId},
+                                                      data=chunk)
+            uploadChunkResponse.raise_for_status()
+            offset += len(chunk)
+
+    uploadFile = File().load(uploadChunkResponse.json()['_id'], force=True)
     uploadItem = Item().load(uploadFile['itemId'], force=True)
 
     uploadFile['itemId'] = None
