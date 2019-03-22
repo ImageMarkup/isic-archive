@@ -16,8 +16,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 ###############################################################################
-import os
-
+from dotenv import load_dotenv
 import pkg_resources
 import sentry_sdk
 import six
@@ -79,7 +78,8 @@ class IsicArchive(GirderPlugin):
     DISPLAY_NAME = 'ISIC Archive'
 
     def load(self, info):
-        sentry_sdk.init(environment=os.getenv('SENTRY_ENVIRONMENT'))
+        load_dotenv()
+        sentry_sdk.init()
 
         getPlugin('oauth').load(info)
         getPlugin('large_image').load(info)
