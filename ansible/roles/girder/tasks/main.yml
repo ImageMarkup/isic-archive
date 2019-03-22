@@ -25,5 +25,5 @@
   template:
     src: "girder.local.cfg.j2"
     dest: "/etc/girder.cfg"
-  become: yes
+  become: true
   notify: Restart Girder

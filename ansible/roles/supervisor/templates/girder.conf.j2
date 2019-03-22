@@ -1,6 +1,0 @@
-[program:girder]
-user={{ ansible_user_id }}
-command={{ python_dist_path }}/bin/girder-server
-stderr_logfile = /tmp/girder.stderr.log
-stdout_logfile = /tmp/girder.stdout.log
-environment=DOTENV_PATH="{{ ansible_user_dir }}/.env"

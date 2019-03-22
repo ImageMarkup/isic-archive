@@ -51,6 +51,24 @@
         name: girder-client
   become: yes
 
+- name: Deploy Girder systemd service
+  template:
+    src: girder.service.j2
+    dest: "/etc/systemd/system/girder.service"
+    owner: root
+    group: root
+    mode: 0644
+  become: yes
+  notify: Restart Girder
+
+- name: Enable Girder service
+  systemd:
+    name: girder
+    daemon_reload: true
+    state: started
+    enabled: true
+  become: true
+
 - meta: flush_handlers
 
 - name: Create admin user
