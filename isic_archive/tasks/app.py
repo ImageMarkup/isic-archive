@@ -5,6 +5,8 @@ from celery.signals import worker_process_init
 import jsonpickle
 from kombu.serialization import register
 import pkg_resources
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 from requests_toolbelt.sessions import BaseUrlSession
 
 from girder.constants import SettingKey, TokenScope
@@ -42,6 +44,11 @@ class CredentialedGirderTask(Task):
             'Girder-Token': str(self.token['_id'])
         })
 
+        retry = Retry(total=10, read=10, connect=10, backoff_factor=.2,
+                      method_whitelist=False, status_forcelist=[500, 502, 503, 504])
+        adapter = HTTPAdapter(max_retries=retry)
+        self.session.mount('http://', adapter)
+        self.session.mount('https://', adapter)  #
         super(CredentialedGirderTask, self).__call__(*args, **kwargs)
 
 
