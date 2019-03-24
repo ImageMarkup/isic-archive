@@ -17,7 +17,7 @@
 #  limitations under the License.
 ###############################################################################
 
-from cStringIO import StringIO
+from io import StringIO
 import csv
 import functools
 import itertools

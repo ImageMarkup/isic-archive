@@ -76,69 +76,69 @@ def _testGenerateLinesEmpty(chunkSize):
     """Test generateLines on empty input."""
     # With newline at end
     lines = _generateLines('\n', chunkSize)
-    line = lines.next()
+    line = next(lines)
     assert len(line) == 1
     with pytest.raises(StopIteration):
-        lines.next()
+        next(lines)
 
     # Without newline at end
     lines = _generateLines('', chunkSize)
     with pytest.raises(StopIteration):
-        lines.next()
+        next(lines)
 
 
 def _testGenerateLinesSingleLine(chunkSize):
     """Test generateLines on input with a single line."""
     # With newline at end
     lines = _generateLines('abc\n', chunkSize)
-    line = lines.next()
+    line = next(lines)
     assert len(line) == 4
     with pytest.raises(StopIteration):
-        lines.next()
+        next(lines)
 
     # Without newline at end
     lines = _generateLines('abc', chunkSize)
-    line = lines.next()
+    line = next(lines)
     assert len(line) == 3
     with pytest.raises(StopIteration):
-        lines.next()
+        next(lines)
 
 
 def _testGenerateLinesMultipleLines(chunkSize):
     """Test generateLines on input with multiple lines."""
     lines = _generateLines('abc\ndef\n', chunkSize)
-    line = lines.next()
+    line = next(lines)
     assert len(line) == 4
-    line = lines.next()
+    line = next(lines)
     assert len(line) == 4
     with pytest.raises(StopIteration):
-        lines.next()
+        next(lines)
 
     lines = _generateLines('abc\ndef\nhijklmnop\n', chunkSize)
-    line = lines.next()
+    line = next(lines)
     assert len(line) == 4
-    line = lines.next()
+    line = next(lines)
     assert len(line) == 4
-    line = lines.next()
+    line = next(lines)
     assert len(line) == 10
     with pytest.raises(StopIteration):
-        lines.next()
+        next(lines)
 
 
 def _testGenerateLinesBlankLines(chunkSize):
     """Test generateLines on input that contains blank lines."""
     lines = _generateLines('abc\n\n', chunkSize)
-    line = lines.next()
+    line = next(lines)
     assert len(line) == 4
-    line = lines.next()
+    line = next(lines)
     assert len(line) == 1
     with pytest.raises(StopIteration):
-        lines.next()
+        next(lines)
 
     lines = _generateLines('\nabc\n', chunkSize)
-    line = lines.next()
+    line = next(lines)
     assert len(line) == 1
-    line = lines.next()
+    line = next(lines)
     assert len(line) == 4
     with pytest.raises(StopIteration):
-        lines.next()
+        next(lines)

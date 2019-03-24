@@ -819,7 +819,7 @@ def testDiagnosisFieldParser():
     assert {} == image['privateMeta']
 
     # Special case: Cafe-au-lait
-    data = {'diagnosis': u'caf\xe9-au-lait macule'}
+    data = {'diagnosis': 'caf\xe9-au-lait macule'}
     image = _createImage()
     _runParser(image, data, parser)
     assert {} == data
