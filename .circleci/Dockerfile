@@ -1,9 +1,15 @@
-FROM girder/girder_test:latest-py2
+FROM circleci/python:3.6
 
 USER root
 
+RUN apt-get update && \
+    apt-get install --assume-yes curl
+
+RUN curl --silent --location https://deb.nodesource.com/setup_10.x | bash - \
+  && apt-get install --assume-yes nodejs \
+  && npm install --global npm
+
 RUN npm install --global yarn \
-  && apt-get update \
   && apt-get install --assume-yes \
     # Install Pillow dependencies
     # https://pillow.readthedocs.org/en/latest/installation.html)
@@ -18,8 +24,6 @@ RUN npm install --global yarn \
     python-tk \
     # Install isic_archive dependencies
     p7zip-full \
-    # Install testing dependencies
-    python3-pip \
   && pip3 install tox
 
 USER circleci
