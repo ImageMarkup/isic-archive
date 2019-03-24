@@ -97,9 +97,7 @@ def _astToMongo_helper(ast):
             value = [cast(x, 'objectid') for x in value]
 
         if operator in ['in', 'not in']:
-            value = [None
-                    if x == '__null__'
-                    else x for x in value]
+            value = [None if x == '__null__' else x for x in value]
 
         if typename == 'boolean':
             value = [cast(x, 'boolean') if x is not None else x for x in value]

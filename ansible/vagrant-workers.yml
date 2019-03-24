@@ -3,7 +3,7 @@
   hosts: all
 
   vars:
-    ansible_python_interpreter: "/usr/bin/python2.7"
+    ansible_python_interpreter: "/usr/bin/python3.6"
     celery_broker_url: "amqp://isicarchive:password@{{ broker_ip }}/isic-archive"
     celery_result_backend: "redis://:password@{{ broker_ip }}/0"
     isic_archive_assetstore_path: "{{ ansible_user_dir }}/assetstores/default"
@@ -21,10 +21,14 @@
     - name: Install python, pip and virtualenv
       apt:
         name:
-          - python-dev
-          - python-pip
-          - python-virtualenv
+          - python3-dev
+          - python3-pip
+          - python3-venv
       become: true
+
+    - name: Create virtualenv
+      command: |
+        python3.6 -m venv {{ python_dist_path }}
 
     - name: Install build dependencies
       apt:

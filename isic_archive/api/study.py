@@ -17,9 +17,9 @@
 #  limitations under the License.
 ###############################################################################
 
-from io import StringIO
 import csv
 import functools
+from io import StringIO
 import itertools
 
 import cherrypy

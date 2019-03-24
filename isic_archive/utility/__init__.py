@@ -17,8 +17,6 @@
 #  limitations under the License.
 ###############################################################################
 
-import six
-
 
 def generateLines(stream):
     """
@@ -40,8 +38,8 @@ def generateLines(stream):
             lines = chunk.splitlines(keepends)
             lastLine = lines.pop()
             for line in lines:
-                yield six.text_type(line, encoding='utf-8-sig')
+                yield line
     except StopIteration:
         if lastLine is not None:
-            yield six.text_type(lastLine, encoding='utf-8-sig')
+            yield lastLine
         raise StopIteration

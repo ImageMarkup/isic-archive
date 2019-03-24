@@ -182,7 +182,7 @@ class Segmentation(Model):
         # Saving using native PIL is much faster than converting to a NumPy array to save with
         # ScikitSegmentationHelper
         if width is not None:
-            height = width * pilImageData.size[1] / pilImageData.size[0]
+            height = width * pilImageData.size[1] // pilImageData.size[0]
             pilImageData = pilImageData.resize(
                 size=(width, height),
                 # A PIL_Image.LANCZOS downsampling filter takes ~350ms to resize a 7k image to 700,

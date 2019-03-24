@@ -18,7 +18,6 @@
 ###############################################################################
 
 import collections
-import itertools
 import warnings
 
 import numpy

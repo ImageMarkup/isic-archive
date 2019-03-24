@@ -1634,10 +1634,10 @@ def testAddImageClinicalMetadata():
     image['meta']['clinical']['melanocytic'] = False
     errors, warnings = addImageMetadata(image, data)
     assert 5 == len(errors)
-    assert "value already exists for field 'sex' (old: 'male', new: u'female')" in \
+    assert "value already exists for field 'sex' (old: 'male', new: 'female')" in \
         errors
     assert "value is wrong type for field 'clin_size_long_diam_mm' " \
-        "(expected 'float with units (um, mm, or cm)', value: u'3.0+')" in \
+        "(expected 'float with units (um, mm, or cm)', value: '3.0+')" in \
         errors
     assert "value already exists for field 'melanocytic' (old: False, new: None)" in \
         errors
@@ -1646,7 +1646,7 @@ def testAddImageClinicalMetadata():
         errors
     assert 1 == len(warnings)
     assert "corrected inconsistent value for field 'melanocytic' based on field 'diagnosis' " \
-        "(new value: True, 'diagnosis': u'melanoma')" in \
+        "(new value: True, 'diagnosis': 'melanoma')" in \
         warnings
 
 
