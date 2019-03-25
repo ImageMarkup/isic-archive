@@ -25,7 +25,7 @@ Vagrant.configure('2') do |config|
   ISIC Archive is running at http://isic-archive.test/admin
   MailHog is running at http://isic-archive.test:8025
   Flower is running at http://isic-archive.test:5555
-  S3 (via localstack) is running at http://isic-archive.test:4572
+  S3 (via minio) is running at http://isic-archive.test:9000
     EOS
 
     web.vm.synced_folder '.', '/vagrant', disabled: true

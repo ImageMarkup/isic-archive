@@ -1,0 +1,14 @@
+[Unit]
+Description=minio
+After=network.target
+
+[Service]
+User={{ ansible_user }}
+Group={{ ansible_user }}
+Restart=always
+Environment=MINIO_ACCESS_KEY=accesskey
+Environment=MINIO_SECRET_KEY=secretkey
+ExecStart=/opt/minio server {{ ansible_user_dir }}/minio-data
+
+[Install]
+WantedBy=multi-user.target

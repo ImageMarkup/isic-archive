@@ -8,9 +8,9 @@ s3Kwargs = {}
 
 if developmentMode:
     s3Kwargs = {
-        'endpoint_url': 'http://172.16.0.10:4572',
-        'aws_access_key_id': 'foo',
-        'aws_secret_access_key': 'bar'
+        'endpoint_url': 'http://172.16.0.10:9000',
+        'aws_access_key_id': 'accesskey',
+        'aws_secret_access_key': 'secretkey'
     }
 
 session = Session()
@@ -22,8 +22,8 @@ if developmentMode:
         return {
             'Credentials':
                 {
-                    'AccessKeyId': 'foo',
-                    'SecretAccessKey': 'bar',
+                    'AccessKeyId': 'accesskey',
+                    'SecretAccessKey': 'secretkey',
                     'SessionToken': 'baz'
                 }
         }
