@@ -8,7 +8,7 @@ s3Kwargs = {}
 
 if developmentMode:
     s3Kwargs = {
-        'endpoint_url': 'http://172.16.0.10:9000',
+        'endpoint_url': 'http://minio:9000',
         'aws_access_key_id': 'accesskey',
         'aws_secret_access_key': 'secretkey'
     }
