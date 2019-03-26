@@ -6,8 +6,8 @@
     dest: "{{ isic_archive_path }}"
     version: "{{ isic_archive_version }}"
     clone: "{{ isic_archive_clone }}"
-    update: no
-    force: yes
+    update: "{{ isic_archive_update }}"
+    force: "{{ isic_archive_force }}"
   notify: Build Girder
 
 - name: Install package dependencies

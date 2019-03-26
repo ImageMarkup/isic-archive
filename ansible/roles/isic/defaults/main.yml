@@ -2,7 +2,9 @@
 
 isic_archive_path: "{{ ansible_user_dir }}/isic_archive"
 isic_archive_version: "master"
-isic_archive_clone: yes
+isic_archive_clone: true
+isic_archive_update: false
+isic_archive_force: false
 isic_archive_editable: false
 
 isic_archive_assetstore_path: "{{ ansible_user_dir }}/assetstores/default"
