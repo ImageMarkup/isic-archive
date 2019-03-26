@@ -98,7 +98,11 @@ class Image(Item):
         return image
 
     def originalFile(self, image):
-        return Image().childFiles(image, limit=1, sort=[('created', SortDir.ASCENDING)])[0]
+        if 'largeImage' in image:
+            return File().load(image['largeImage']['originalId'], force=True)
+        else:
+            # Fallback if no large image metadata exists, but this isn't accurate on some old images
+            return Image().childFiles(image, limit=1, sort=[('created', SortDir.ASCENDING)])[0]
 
     def superpixelsFile(self, image):
         return File().load(
