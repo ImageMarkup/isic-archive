@@ -235,6 +235,8 @@ class ImageResource(IsicResource):
         images = Image().filterResultsByPermission(
             Image().find(query, sort=[('name', 1)]),
             user=user, level=AccessType.READ, limit=0, offset=0)
+        # Prevent cursor timeouts by eagerly evaluating the whole query
+        images = list(images)
         imagesZipGenerator = self._imagesZipGenerator(downloadFileName, images, include)
 
         setResponseHeader('Content-Type', 'application/zip')
