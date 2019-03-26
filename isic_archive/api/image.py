@@ -70,7 +70,7 @@ class ImageResource(IsicResource):
         try:
             return querylang.astToMongo(filterParam)
         except (TypeError, ValueError) as e:
-            raise ValidationException('Could not parse filter:' % str(e), 'filter')
+            raise ValidationException('Could not parse filter: %s' % str(e), 'filter')
 
     def _parseImageIds(self, imageIdsParam):
         if isinstance(imageIdsParam, six.string_types):
