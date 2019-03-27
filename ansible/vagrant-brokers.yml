@@ -4,9 +4,10 @@
 
   roles:
     - role: rabbitmq
-      rabbitmq_vhost: "isic-archive"
-      rabbitmq_username: "isicarchive"
-      rabbitmq_password: "password"
+      vars:
+        rabbitmq_vhost: "isic-archive"
+        rabbitmq_username: "isicarchive"
+        rabbitmq_password: "password"
 
     - role: redis
       vars:
