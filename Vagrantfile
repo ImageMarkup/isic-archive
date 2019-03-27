@@ -16,8 +16,6 @@ Vagrant.configure('2') do |config|
     web.vm.provider 'virtualbox' do |virtualbox|
       virtualbox.name = 'isic-archive.test'
       virtualbox.memory = 2048
-      # Prevent 'xenial-16.04-cloudimg-console.log' from being created
-      virtualbox.customize ['modifyvm', :id, '--uartmode1', 'disconnected']
     end
 
     web.vm.network :private_network, ip: '172.16.0.10'
@@ -53,8 +51,6 @@ Vagrant.configure('2') do |config|
     worker.vm.provider 'virtualbox' do |virtualbox|
       virtualbox.name = 'isic-archive-worker'
       virtualbox.memory = 2048
-      # Prevent 'xenial-16.04-cloudimg-console.log' from being created
-      virtualbox.customize ['modifyvm', :id, '--uartmode1', 'disconnected']
     end
 
     worker.vm.network :private_network, ip: '172.16.0.11'
