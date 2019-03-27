@@ -66,17 +66,19 @@
 
   roles:
     - role: large_image
-      large_image_version: "girder-3"
-      large_image_virtualenv: "{{ python_dist_path }}"
-      large_image_tile_sources:
-        - tiff
-      large_image_include_vips: true
+      vars:
+        large_image_version: "girder-3"
+        large_image_virtualenv: "{{ python_dist_path }}"
+        large_image_tile_sources:
+          - tiff
+        large_image_include_vips: true
 
     - role: celery
-      archive_api_url: "http://isic-archive.test/api/v1"
-      celery_bin: "{{ python_dist_path }}/bin/celery"
-      celery_concurrency: 1
-      celery_user: vagrant
+      vars:
+        archive_api_url: "http://isic-archive.test/api/v1"
+        celery_bin: "{{ python_dist_path }}/bin/celery"
+        celery_concurrency: 1
+        celery_user: vagrant
 
   post_tasks:
     - name: Add hosts entry for isic-archive.test

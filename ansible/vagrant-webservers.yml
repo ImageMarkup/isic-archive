@@ -23,13 +23,14 @@
     - role: mailhog
 
     - role: isic
-      isic_archive_path: "{{ ansible_user_dir }}/isic_archive"
-      isic_email_host: "http://isic-archive.test"
-      isic_smtp_host: "{{ webserver_ip }}"
-      isic_smtp_port: "1025"
-      # S3 development is mocked with minio
-      isic_upload_bucket_name: "test-upload-bucket"
-      isic_upload_role_arn: "fake-arn"
+      vars:
+        isic_archive_path: "{{ ansible_user_dir }}/isic_archive"
+        isic_email_host: "http://isic-archive.test"
+        isic_smtp_host: "{{ webserver_ip }}"
+        isic_smtp_port: "1025"
+        # S3 development is mocked with minio
+        isic_upload_bucket_name: "test-upload-bucket"
+        isic_upload_role_arn: "fake-arn"
 
     - role: nginx
       vars:
@@ -38,8 +39,9 @@
         isic_integration_gui_dir: "{{ ansible_user_dir }}/isic_archive/isic-archive-gui/dist-integration"
 
     - role: minio
-      isic_upload_bucket_name: "test-upload-bucket"
-      isic_upload_role_arn: "fake-arn"
+      vars:
+        isic_upload_bucket_name: "test-upload-bucket"
+        isic_upload_role_arn: "fake-arn"
 
   post_tasks:
     - name: Install dev requirements
