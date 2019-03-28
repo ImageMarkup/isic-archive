@@ -750,7 +750,7 @@ class GeneralAnatomicSiteFieldParser(FieldParser):
                     'posterior torso',
                     'palms/soles',
                     'lateral torso',
-                    'genitalia',
+                    'oral/genital',
                 })
         return value
 
