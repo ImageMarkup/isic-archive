@@ -45,6 +45,12 @@
         isic_upload_role_arn: "fake-arn"
 
   post_tasks:
+    - name: Add hosts entry for minio
+      lineinfile:
+        path: /etc/hosts
+        line: "127.0.0.1 minio"
+      become: true
+
     - name: Install dev requirements
       pip:
         name: tox
