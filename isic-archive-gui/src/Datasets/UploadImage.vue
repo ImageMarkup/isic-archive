@@ -381,6 +381,7 @@ export default {
           { value: 'posterior torso', description: 'Posterior Torso' },
           { value: 'palms/soles', description: 'Palms/Soles' },
           { value: 'lateral torso', description: 'Lateral Torso' },
+          { value: 'genitalia', description: 'Genitalia' },
           { value: 'unknown', description: 'Unknown' },
         ],
       },
