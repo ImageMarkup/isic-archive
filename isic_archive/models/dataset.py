@@ -18,6 +18,7 @@
 ###############################################################################
 
 import datetime
+import io
 import itertools
 import json
 import time
@@ -44,7 +45,7 @@ from .dataset_helpers import matchFilenameRegex
 from .dataset_helpers.image_metadata import addImageMetadata
 from .user import User
 from ..settings import PluginSettings
-from ..utility import generateLines, mail_utils as isic_mail_utils
+from ..utility import mail_utils as isic_mail_utils
 from ..utility.boto import s3, sts
 
 
@@ -580,14 +581,16 @@ class Dataset(AccessControlledModel):
         # Avoid circular import
         from .image import Image
 
-        metadataFileStream = File().download(metadataFile, headers=False)()
+        metadataFileStream = io.BytesIO()
+        for chunk in File().download(metadataFile, headers=False)():
+            metadataFileStream.write(chunk)
 
         images = []
         metadataErrors = []
         metadataWarnings = set()
 
         try:
-            csvReader = csv.DictReader(generateLines(metadataFileStream))
+            csvReader = csv.DictReader(metadataFileStream.getvalue().decode('utf-8').splitlines())
 
             if not csvReader.fieldnames:
                 raise FileMetadataException(
