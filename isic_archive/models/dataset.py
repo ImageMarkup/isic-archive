@@ -17,13 +17,13 @@
 #  limitations under the License.
 ###############################################################################
 
+import csv
 import datetime
 import io
 import itertools
 import json
 import time
 
-from backports import csv
 import botocore
 import cherrypy
 from natsort import natsorted
