@@ -17,8 +17,6 @@
 #  limitations under the License.
 ###############################################################################
 
-import six
-
 from girder.exceptions import ValidationException
 from girder.utility import setting_utilities
 
@@ -58,7 +56,7 @@ def _defaultMaxIsicIdSetting():
     PluginSettings.UPLOAD_BUCKET_NAME
 })
 def _validateDataUploadSettings(doc):
-    if not isinstance(doc['value'], six.string_types):
+    if not isinstance(doc['value'], str):
         descriptions = {
             PluginSettings.UPLOAD_ROLE_ARN: 'role ARN',
             PluginSettings.UPLOAD_BUCKET_NAME: 'S3 bucket name'

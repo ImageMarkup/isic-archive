@@ -23,7 +23,6 @@ import os
 from bson import ObjectId
 from bson.errors import InvalidId
 import geojson
-import six
 
 from girder.api import access
 from girder.api.describe import autoDescribeRoute, describeRoute, Description
@@ -62,7 +61,7 @@ class ImageResource(IsicResource):
         self.route('POST', (':id', 'metadata'), self.applyMetadata)
 
     def _parseFilter(self, filterParam):
-        if isinstance(filterParam, six.string_types):
+        if isinstance(filterParam, str):
             try:
                 filterParam = json.loads(filterParam)
             except ValueError as e:
@@ -73,7 +72,7 @@ class ImageResource(IsicResource):
             raise ValidationException('Could not parse filter: %s' % str(e), 'filter')
 
     def _parseImageIds(self, imageIdsParam):
-        if isinstance(imageIdsParam, six.string_types):
+        if isinstance(imageIdsParam, str):
             try:
                 imageIdsParam = json.loads(imageIdsParam)
             except ValueError as e:
@@ -84,7 +83,7 @@ class ImageResource(IsicResource):
             raise ValidationException('"imageIds" may not contain more than 300 IDs.', 'imageIds')
         imageIds = []
         for imageId in imageIdsParam:
-            if not isinstance(imageId, six.string_types):
+            if not isinstance(imageId, str):
                 raise ValidationException('Each of "imageIds" must be a string.', 'imageIds')
             try:
                 imageId = ObjectId(imageId)
@@ -179,7 +178,7 @@ class ImageResource(IsicResource):
                         path=os.path.join(dataset['name'], '%s.json' % image['name'])):
                     yield data
 
-        for dataset in six.viewvalues(datasetCache):
+        for dataset in datasetCache.values():
             licenseText = mail_utils.renderTemplate(
                 'license_%s.mako' % dataset['license'])
             attributionText = mail_utils.renderTemplate(

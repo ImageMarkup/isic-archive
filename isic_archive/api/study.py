@@ -19,7 +19,7 @@
 
 import csv
 import functools
-from io import StringIO
+import io
 import itertools
 
 import cherrypy
@@ -127,7 +127,7 @@ class StudyResource(IsicResource):
             (question['id'] for question in study['meta']['questions'])
         ))
 
-        responseBody = StringIO()
+        responseBody = io.StringIO()
         csvWriter = csv.DictWriter(responseBody, csvFields, restval='')
 
         csvWriter.writeheader()

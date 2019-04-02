@@ -18,7 +18,6 @@
 ###############################################################################
 
 import requests
-from six.moves import input
 
 
 class ISICApi(object):
