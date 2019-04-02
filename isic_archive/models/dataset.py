@@ -584,13 +584,20 @@ class Dataset(AccessControlledModel):
         metadataFileStream = io.BytesIO()
         for chunk in File().download(metadataFile, headers=False)():
             metadataFileStream.write(chunk)
+        metadataFileStream.seek(0)
 
         images = []
         metadataErrors = []
         metadataWarnings = set()
 
         try:
-            csvReader = csv.DictReader(metadataFileStream.getvalue().decode('utf-8').splitlines())
+            csvReader = csv.DictReader(io.TextIOWrapper(
+                buffer=metadataFileStream,
+                # This will behave as 'utf-8' if no BOM is present
+                encoding='utf-8-sig',
+                # The CSV reader will parse newlines
+                newline='',
+            ))
 
             if not csvReader.fieldnames:
                 raise FileMetadataException(
