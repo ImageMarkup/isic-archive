@@ -13,8 +13,8 @@ setup(
                          '*.mako',
                          'models/masterFeatures.json'],
     },
+    python_requires='>=3.6',
     install_requires=[
-        'backports.csv',
         'celery[redis]',
         'geojson',
         'girder-large-image',

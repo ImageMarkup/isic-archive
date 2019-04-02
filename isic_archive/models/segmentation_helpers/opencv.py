@@ -204,7 +204,7 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         :param safe: Guarantee that the image_mask will not be modified. This is slower.
         :type safe: bool
         :return: An array of point pairs.
-        :rtype: numpy.ndarray
+        :rtype: list[numpy.ndarray]
         """
         if maskImage.dtype != numpy.uint8:
             raise TypeError('maskImage must be an array of uint8.')
@@ -230,14 +230,10 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
 
         # each contour initially looks like [ [[0,1]], [[0,2]] ], so squeeze it
         # note, don't use numpy.squeeze, as that will break singleton contours
-        contours = map(
-            lambda contour: contour[:, 0],
-            contours)
+        contours = [contour[:, 0] for contour in contours]
 
         # place a duplicate of the first value at the end
-        contours = map(
-            lambda contour: numpy.append(contour, contour[0:1], axis=0),
-            contours)
+        contours = [numpy.append(contour, contour[0:1], axis=0) for contour in contours]
 
         return contours
 

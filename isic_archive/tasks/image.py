@@ -124,7 +124,7 @@ def generateLargeImage(self, imageId):
 
             vips_tiffsave(inputFile.name, outputFile.name)
 
-            with open(outputFile.name) as vipsResultFile:
+            with open(outputFile.name, 'rb') as vipsResultFile:
                 uploadLargeImageResp = self.session.post(
                     'file',
                     params={

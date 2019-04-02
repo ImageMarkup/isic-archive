@@ -18,7 +18,6 @@
 ###############################################################################
 
 import collections
-import itertools
 import warnings
 
 import numpy
@@ -205,7 +204,7 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         collapsedCoords = [coords[0]]
         collapsedCoords.extend([
             coord
-            for prevCoord, coord, nextCoord in itertools.izip(
+            for prevCoord, coord, nextCoord in zip(
                 coords[0:], coords[1:], coords[2:])
             if numpy.cross(nextCoord - prevCoord, coord - prevCoord) != 0
         ])

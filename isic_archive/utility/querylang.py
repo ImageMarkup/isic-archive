@@ -94,18 +94,13 @@ def _astToMongo_helper(ast):
         value = operands[1]
 
         if typename == 'objectid':
-            value = map(lambda x: cast(x, 'objectid'), value)
+            value = [cast(x, 'objectid') for x in value]
 
         if operator in ['in', 'not in']:
-            value = map(
-                lambda x:
-                    None
-                    if x == '__null__'
-                    else x,
-                value)
+            value = [None if x == '__null__' else x for x in value]
 
         if typename == 'boolean':
-            value = map(lambda x: cast(x, 'boolean') if x is not None else x, value)
+            value = [cast(x, 'boolean') if x is not None else x for x in value]
 
         return {field: {_mongo_operators[operator]: value}}
 
@@ -121,11 +116,10 @@ def _invert(ast):
     elif operator in ['and', 'or']:
         # For and/or expressions, apply DeMorgan's laws.
         new_operator = 'and' if operator == 'or' else 'or'
-        new_operands = map(lambda x: {'operator': 'not', 'operands': x},
-                           operands)
+        new_operands = [{'operator': 'not', 'operands': x} for x in operands]
 
         return {'operator': new_operator,
-                'operands': map(_eliminate_not, new_operands)}
+                'operands': list(map(_eliminate_not, new_operands))}
     elif operator in ['in', 'not in']:
         # For inclusion operators, just switch the one that was being used.
         return {'operator': 'in' if operator == 'not in' else 'not in',
@@ -153,7 +147,7 @@ def _eliminate_not(ast):
         # And/or expressions have two boolean operands that must be processed
         # recursively.
         return {'operator': operator,
-                'operands': map(_eliminate_not, operands)}
+                'operands': list(map(_eliminate_not, operands))}
     elif operator in ['in', 'not in', '<=', '<', '>=', '>', '=', '!=']:
         # Operator expressions that work on constant values stay unchanged.
         return ast

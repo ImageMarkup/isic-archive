@@ -437,7 +437,7 @@ class DiagnosisFieldParser(FieldParser):
                     value = 'AIMP'
                 elif value == 'lentigo nos':
                     value = 'lentigo NOS'
-                elif value == u'caf\xe9-au-lait macule':
+                elif value == 'caf\xe9-au-lait macule':
                     # Deal with a possible unicode char in "cafe-au-lait macule"
                     # TODO: instead, actually use the unicode char here
                     value = 'cafe-au-lait macule'

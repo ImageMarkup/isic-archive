@@ -17,12 +17,13 @@
 #  limitations under the License.
 ###############################################################################
 
+import csv
 import datetime
+import io
 import itertools
 import json
 import time
 
-from backports import csv
 import botocore
 import cherrypy
 from natsort import natsorted
@@ -44,7 +45,7 @@ from .dataset_helpers import matchFilenameRegex
 from .dataset_helpers.image_metadata import addImageMetadata
 from .user import User
 from ..settings import PluginSettings
-from ..utility import generateLines, mail_utils as isic_mail_utils
+from ..utility import mail_utils as isic_mail_utils
 from ..utility.boto import s3, sts
 
 
@@ -580,14 +581,23 @@ class Dataset(AccessControlledModel):
         # Avoid circular import
         from .image import Image
 
-        metadataFileStream = File().download(metadataFile, headers=False)()
+        metadataFileStream = io.BytesIO()
+        for chunk in File().download(metadataFile, headers=False)():
+            metadataFileStream.write(chunk)
+        metadataFileStream.seek(0)
 
         images = []
         metadataErrors = []
         metadataWarnings = set()
 
         try:
-            csvReader = csv.DictReader(generateLines(metadataFileStream))
+            csvReader = csv.DictReader(io.TextIOWrapper(
+                buffer=metadataFileStream,
+                # This will behave as 'utf-8' if no BOM is present
+                encoding='utf-8-sig',
+                # The CSV reader will parse newlines
+                newline='',
+            ))
 
             if not csvReader.fieldnames:
                 raise FileMetadataException(
