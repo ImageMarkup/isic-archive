@@ -204,7 +204,7 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         :param safe: Guarantee that the image_mask will not be modified. This is slower.
         :type safe: bool
         :return: An array of point pairs.
-        :rtype: numpy.ndarray
+        :rtype: list[numpy.ndarray]
         """
         if maskImage.dtype != numpy.uint8:
             raise TypeError('maskImage must be an array of uint8.')
