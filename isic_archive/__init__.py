@@ -81,8 +81,14 @@ class IsicArchive(GirderPlugin):
         load_dotenv()
         sentry_sdk.init()
 
-        getPlugin('oauth').load(info)
         getPlugin('large_image').load(info)
+        oauth = getPlugin('oauth')
+        if oauth:
+            oauth.load(info)
+        isic_discourse_sso = getPlugin('isic_discourse_sso')
+        if isic_discourse_sso:
+            # If this plugin is enabled, ensure it loads first, so its API docs are cleared
+            isic_discourse_sso.load(info)
 
         # set the title of the HTML pages
         info['serverRoot'].updateHtmlVars({'title': 'ISIC Archive'})
