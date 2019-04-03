@@ -81,8 +81,10 @@ class IsicArchive(GirderPlugin):
         load_dotenv()
         sentry_sdk.init()
 
-        getPlugin('oauth').load(info)
         getPlugin('large_image').load(info)
+        oauth = getPlugin('oauth')
+        if oauth:
+            oauth.load(info)
 
         # set the title of the HTML pages
         info['serverRoot'].updateHtmlVars({'title': 'ISIC Archive'})
