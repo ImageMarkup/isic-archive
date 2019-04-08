@@ -26,8 +26,7 @@
     name: "{{ isic_archive_path }}"
     editable: "{{ isic_archive_editable }}"
     virtualenv: "{{ python_dist_path }}"
-  notify:
-    - Restart Girder
+  notify: Restart Girder
 
 - name: Install ISIC GUI dependencies
   yarn:
