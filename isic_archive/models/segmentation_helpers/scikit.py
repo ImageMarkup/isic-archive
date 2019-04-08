@@ -18,10 +18,10 @@
 ###############################################################################
 
 import collections
+import io
 import warnings
 
 import numpy
-import six
 import skimage.io
 import skimage.measure
 import skimage.morphology
@@ -62,7 +62,7 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
             factor = float(width) / image.shape[1]
             image = skimage.transform.rescale(image, factor)
 
-        imageStream = six.BytesIO()
+        imageStream = io.BytesIO()
         with warnings.catch_warnings():
             # Ignore warnings about low contrast images, as masks are often empty
             warnings.filterwarnings('ignore', r'^.* is a low contrast image$', UserWarning)

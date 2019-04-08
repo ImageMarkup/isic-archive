@@ -20,7 +20,6 @@
 import json
 
 import cherrypy
-import six
 
 from girder.api.rest import Resource
 from girder.exceptions import RestException
@@ -48,7 +47,7 @@ class IsicResource(Resource):
                 return param
 
             decodedParams = {}
-            for field, value in six.viewitems(params):
+            for field, value in params.items():
                 try:
                     # Decode parameter, parsing numbers as strings
                     decodedValue = json.loads(value, parse_float=passthrough, parse_int=passthrough)

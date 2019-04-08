@@ -18,11 +18,11 @@
 ###############################################################################
 
 import datetime
+import io
 
 from bson import ObjectId
 import numpy
 from PIL import Image as PIL_Image, ImageDraw as PIL_ImageDraw
-import six
 
 from girder import events
 from girder.constants import AccessType
@@ -174,7 +174,7 @@ class Segmentation(Model):
         )
         pilDraw = PIL_ImageDraw.Draw(pilImageData)
         pilDraw.line(
-            list(six.moves.map(tuple, contour)),
+            list(map(tuple, contour)),
             fill=(0, 255, 0),  # TODO: make color an option
             width=int(pilImageData.size[0] / 300.0)
         )
@@ -189,7 +189,7 @@ class Segmentation(Model):
                 # whereas default downsampling filter (nearest neighbor) is <1ms with minimal
                 # noticable difference in quality.
             )
-        imageStream = six.BytesIO()
+        imageStream = io.BytesIO()
         pilImageData.save(imageStream, format='jpeg')
         return imageStream
 
@@ -260,9 +260,9 @@ class Segmentation(Model):
 
     def validate(self, doc):
         try:
-            assert set(six.viewkeys(doc)) >= {
+            assert set(doc.keys()) >= {
                 'imageId', 'creatorId', 'created', 'maskId', 'reviews', 'meta'}
-            assert set(six.viewkeys(doc)) <= {
+            assert set(doc.keys()) <= {
                 '_id', 'imageId', 'creatorId', 'created', 'maskId', 'reviews',
                 'meta'}
 
@@ -280,7 +280,7 @@ class Segmentation(Model):
 
             assert isinstance(doc['reviews'], list)
             for review in doc['reviews']:
-                assert set(six.viewkeys(review)) == {
+                assert set(review.keys()) == {
                     'userId', 'skill', 'time', 'approved'}
                 assert isinstance(review['userId'], ObjectId)
                 assert User().find({'_id': review['userId']}).count()

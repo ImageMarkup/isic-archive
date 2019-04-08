@@ -18,8 +18,6 @@
 ###############################################################################
 from email.mime.text import MIMEText
 
-import six
-
 from girder import logger
 from girder.constants import SettingKey
 from girder.models.group import Group
@@ -28,13 +26,10 @@ from girder.utility import mail_utils
 
 
 def sendEmail(to, subject, text):
-    if isinstance(to, six.string_types):
+    if isinstance(to, str):
         to = (to,)
 
-    if isinstance(text, six.text_type):
-        text = text.encode('utf8')
-
-    msg = MIMEText(text, 'html', 'UTF-8')
+    msg = MIMEText(text, 'html')
     msg['Subject'] = subject or '[no subject]'
     msg['To'] = ', '.join(to)
     msg['From'] = Setting().get(SettingKey.EMAIL_FROM_ADDRESS)

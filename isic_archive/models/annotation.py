@@ -20,7 +20,6 @@
 from bson import ObjectId
 import jsonschema
 import numpy
-import six
 
 from girder.exceptions import ValidationException
 from girder.models.file import File
@@ -196,7 +195,7 @@ class Annotation(AccessControlMixin, Model):
                 'markups': {
                     featureId: markup['present']
                     for featureId, markup
-                    in six.viewitems(annotation['markups'])
+                    in annotation['markups'].items()
                 },
                 'log': annotation.get('log', [])
             })
@@ -213,7 +212,7 @@ class Annotation(AccessControlMixin, Model):
         }
 
     def remove(self, annotation, **kwargs):
-        for featureId in six.viewkeys(annotation['markups']):
+        for featureId in annotation['markups'].keys():
             File().remove(self.getMarkupFile(annotation, featureId))
 
         return super(Annotation, self).remove(annotation)

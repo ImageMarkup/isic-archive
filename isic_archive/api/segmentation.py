@@ -19,9 +19,9 @@
 
 import base64
 import datetime
+import io
 
 import numpy
-import six
 
 from girder.api import access
 from girder.api.describe import describeRoute, Description
@@ -168,7 +168,7 @@ class SegmentationResource(IsicResource):
                 meta=meta
             )
         elif 'mask' in params:
-            maskStream = six.BytesIO()
+            maskStream = io.BytesIO()
             maskStream.write(base64.b64decode(params['mask']))
             mask = ScikitSegmentationHelper.loadImage(maskStream)
 

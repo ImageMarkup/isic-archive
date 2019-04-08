@@ -27,7 +27,6 @@ import time
 import botocore
 import cherrypy
 from natsort import natsorted
-import six
 
 from girder.constants import AccessType
 from girder.exceptions import GirderException, ValidationException
@@ -252,7 +251,7 @@ class Dataset(AccessControlledModel):
 
     def validate(self, doc, **kwargs):
         # Name
-        assert isinstance(doc['name'], six.string_types)
+        assert isinstance(doc['name'], str)
         doc['name'] = doc['name'].strip()
         if not doc['name']:
             raise ValidationException('Name must not be empty.', 'name')
@@ -263,17 +262,17 @@ class Dataset(AccessControlledModel):
             raise ValidationException('Name must be unique.', 'name')
 
         # Description
-        assert isinstance(doc['description'], six.string_types)
+        assert isinstance(doc['description'], str)
         doc['description'] = doc['description'].strip()
 
         # License
-        assert isinstance(doc['license'], six.string_types)
+        assert isinstance(doc['license'], str)
         doc['license'] = doc['license'].strip()
         if doc['license'] not in {'CC-0', 'CC-BY', 'CC-BY-NC', 'CC-BY-NC-SA'}:
             raise ValidationException('Unknown license type.', 'license')
 
         # Attribution
-        assert isinstance(doc['attribution'], six.string_types)
+        assert isinstance(doc['attribution'], str)
         doc['attribution'] = doc['attribution'].strip()
         if not doc['attribution']:
             raise ValidationException('Attribution must not be empty.', 'attribution')
@@ -285,7 +284,7 @@ class Dataset(AccessControlledModel):
                 'attribution')
 
         # Owner
-        assert isinstance(doc['owner'], six.string_types)
+        assert isinstance(doc['owner'], str)
         doc['owner'] = doc['owner'].strip()
         if not doc['owner']:
             raise ValidationException('Owner must not be empty.', 'owner')

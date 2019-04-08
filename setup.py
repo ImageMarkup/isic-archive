@@ -33,7 +33,6 @@ setup(
         'scikit-image',
         'scipy',
         'sentry-sdk',
-        'six',
     ],
     entry_points={
         'girder.plugin': [

@@ -19,7 +19,6 @@
 from dotenv import load_dotenv
 import pkg_resources
 import sentry_sdk
-import six
 
 from girder import events
 from girder.api.v1 import resource
@@ -70,7 +69,7 @@ def clearRouteDocs():
 
     routes.clear()
 
-    for (routeResource, routePath, routeMethod), routeOperation in six.viewitems(savedRoutes):
+    for (routeResource, routePath, routeMethod), routeOperation in savedRoutes.items():
         routes[routeResource][routePath][routeMethod] = routeOperation
 
 

@@ -22,8 +22,6 @@ import functools
 import math
 import re
 
-import six
-
 
 class MetadataFieldException(Exception):
     """Base class for exceptions raised while parsing metadata fields."""
@@ -101,7 +99,7 @@ class FieldParser(object):
         A MetadataFieldNotFoundException is raised if none of the allowed fields are found.
         A MultipleFieldException is raised if more than one of the allowed fields are found.
         """
-        availableFields = six.viewkeys(data)
+        availableFields = data.keys()
         allowedFields = set(field.lower() for field in cls.allowedFields)
 
         foundFields = [field for field
@@ -117,9 +115,9 @@ class FieldParser(object):
         value = data.pop(field)
 
         if value is not None:
-            value = six.text_type(value)
+            value = str(value)
 
-        assert(value is None or isinstance(value, six.string_types))
+        assert(value is None or isinstance(value, str))
 
         return value
 
@@ -911,7 +909,7 @@ def _extractExifMetadata(data, unstructuredExif):
     :param unstructuredExif: The dictionary of unstructured EXIF metadata.
     :type unstructuredExif: dict
     """
-    for key in list(six.iterkeys(data)):
+    for key in list(data.keys()):
         if key.lower().startswith('exif_'):
             unstructuredExif[key] = data.pop(key)
 

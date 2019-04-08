@@ -21,7 +21,6 @@ import datetime
 
 import jsonschema
 import numpy
-import six
 
 from girder.api import access
 from girder.api.describe import describeRoute, Description
@@ -314,5 +313,5 @@ class AnnotationResource(IsicResource):
         annotation = Annotation().save(annotation)
 
         # Convert markup superpixels to masks and save
-        for featureId, superpixelValues in six.viewitems(bodyJson['markups']):
+        for featureId, superpixelValues in bodyJson['markups'].items():
             annotation = Annotation().saveSuperpixelMarkup(annotation, featureId, superpixelValues)
