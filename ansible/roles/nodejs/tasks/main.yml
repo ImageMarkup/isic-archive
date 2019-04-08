@@ -4,28 +4,28 @@
   apt_key:
     keyserver: "keyserver.ubuntu.com"
     id: "68576280"
-  become: yes
+  become: true
 
 - name: Add PPA
   apt_repository:
     repo: "deb https://deb.nodesource.com/node_8.x {{ ansible_distribution_release }} main"
-  become: yes
+  become: true
 
 - name: Install package
   apt:
     name: nodejs
-  become: yes
+  become: true
 
 - name: Upgrade npm
   npm:
     name: npm
-    global: yes
+    global: true
     state: latest
-  become: yes
+  become: true
 
 - name: Install Yarn
   npm:
     name: yarn
-    global: yes
+    global: true
     state: latest
-  become: yes
+  become: true

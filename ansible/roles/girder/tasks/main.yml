@@ -11,7 +11,7 @@
       - libjpeg-dev
       - libssl-dev
       - zlib1g-dev
-  become: yes
+  become: true
 
 - name: Install Python package
   pip:

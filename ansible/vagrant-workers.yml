@@ -41,13 +41,13 @@
           - libjpeg-dev
           - libssl-dev
           - zlib1g-dev
-      become: yes
+      become: true
 
     - name: Install package dependencies
       apt:
         name:
           - p7zip-full
-      become: yes
+      become: true
 
     - name: Install numpy
       pip:

@@ -4,4 +4,4 @@
   service:
     name: nginx
     state: restarted
-  become: yes
+  become: true
