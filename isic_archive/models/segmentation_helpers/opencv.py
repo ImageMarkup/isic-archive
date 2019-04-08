@@ -263,7 +263,7 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
             # TODO: use a better measure of region size than simply the number
             #   of defining points
             key=lambda contour: len(contour)
-        )
+        ) if contours else numpy.empty(shape=(0,), dtype=numpy.int32)
 
         return largestContour
 
