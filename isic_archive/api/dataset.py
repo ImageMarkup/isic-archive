@@ -458,7 +458,11 @@ class DatasetResource(IsicResource):
             for image in
             Image().find(
                 {'folderId': prereviewFolder['_id']},
-                limit=limit, sort=[('name', SortDir.ASCENDING)]
+                limit=limit,
+                sort=[
+                    ('meta.clinical.diagnosis', SortDir.ASCENDING),
+                    ('name', SortDir.ASCENDING)
+                ]
             )
         ]
 
