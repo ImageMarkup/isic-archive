@@ -7,7 +7,10 @@
 
 - name: Add PPA
   apt_repository:
-    repo: "deb https://repo.mongodb.org/apt/ubuntu {{ ansible_distribution_release }}/mongodb-org/4.0 multiverse"
+    repo: >-
+      deb https://repo.mongodb.org/apt/ubuntu
+      {{ ansible_distribution_release }}/mongodb-org/4.0
+      multiverse
     update_cache: true
   become: true
 
