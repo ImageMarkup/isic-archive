@@ -43,7 +43,7 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         :return: A Numpy array with the RGB image data.
         :rtype: numpy.ndarray
         """
-        imageData = skimage.io.imread(imageDataStream)
+        imageData = skimage.io.imread(imageDataStream, plugin='pil')
 
         if len(imageData.shape) == 1 and imageData.shape[0] > 1:
             # Some images seem to have a 2nd (or 3rd+) layer, which should be ignored
@@ -66,7 +66,9 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         with warnings.catch_warnings():
             # Ignore warnings about low contrast images, as masks are often empty
             warnings.filterwarnings('ignore', r'^.* is a low contrast image$', UserWarning)
-            skimage.io.imsave(imageStream, image, format_str=encoding)
+            # The 'pil' plugin is about 40% faster than the default 'imageio' plugin
+            # The 'pil' plugin uses 'format_str' as an argument, not 'format'
+            skimage.io.imsave(imageStream, image, plugin='pil', format_str=encoding)
         imageStream.seek(0)
         return imageStream
 
