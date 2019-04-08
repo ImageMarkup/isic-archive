@@ -24,21 +24,9 @@ from girder.utility import setting_utilities
 
 
 class PluginSettings(object):
-    DEMO_MODE = 'isic.demo_mode'
     MAX_ISIC_ID = 'isic.max_isic_id'
     UPLOAD_ROLE_ARN = 'isic.upload_role_arn'
     UPLOAD_BUCKET_NAME = 'isic.upload_bucket_name'
-
-
-@setting_utilities.validator(PluginSettings.DEMO_MODE)
-def _validateDemoModeSetting(doc):
-    if not isinstance(doc['value'], bool):
-        raise ValidationException('Demo mode must be provided as a boolean.', 'value')
-
-
-@setting_utilities.default(PluginSettings.DEMO_MODE)
-def _defaultDemoModeSetting():
-    return False
 
 
 @setting_utilities.validator(PluginSettings.MAX_ISIC_ID)
