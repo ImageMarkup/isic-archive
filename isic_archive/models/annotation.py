@@ -95,7 +95,7 @@ class Annotation(AccessControlMixin, Model):
     def _superpixelsToMaskMarkup(self, superpixelValues, image):
         possibleMask, definiteMask = self._superpixelsToMasks(superpixelValues, image)
 
-        markupMask = numpy.zeros(possibleMask.shape, dtype=numpy.uint)
+        markupMask = numpy.zeros(possibleMask.shape, dtype=numpy.uint8)
         markupMask[possibleMask] = 128
         markupMask[definiteMask] = 255
 
@@ -160,7 +160,7 @@ class Annotation(AccessControlMixin, Model):
                     image['meta']['acquisition']['pixelsY'],
                     image['meta']['acquisition']['pixelsX']
                 ),
-                dtype=numpy.uint
+                dtype=numpy.uint8
             )
 
         possibleMask = markupMask == 128
