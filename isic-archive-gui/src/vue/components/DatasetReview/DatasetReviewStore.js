@@ -71,13 +71,14 @@ export default {
 
             image.diagnosisStrings = [];
             [
-              'benign_malignant',
+              // 'benign_malignant',
               'diagnosis',
-              'diagnosis_confirm_type',
+              // 'diagnosis_confirm_type',
             ].forEach((key) => {
-              const value = image.meta.clinical[key] || image.meta.unstructured[key];
+              const value = image.meta.clinical[key];
               if (value) {
-                image.diagnosisStrings.push(`${key}: ${value}`);
+                // image.diagnosisStrings.push(`${key}: ${value}`);
+                image.diagnosisStrings.push(value);
               }
             });
 
