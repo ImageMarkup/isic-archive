@@ -32,7 +32,7 @@
     timeout: 20
 
 - name: Create default bucket
-  shell: >-
+  command: >-
     {{ python_dist_path }}/bin/aws
     --endpoint-url http://localhost:9000
     s3api create-bucket
