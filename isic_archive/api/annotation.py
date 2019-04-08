@@ -184,7 +184,7 @@ class AnnotationResource(IsicResource):
                     image['meta']['acquisition']['pixelsY'],
                     image['meta']['acquisition']['pixelsX']
                 ),
-                dtype=numpy.uint
+                dtype=numpy.uint8
             )
             markupMaskEncodedStream = ScikitSegmentationHelper.writeImage(markupMask, 'png')
             markupMaskEncodedData = markupMaskEncodedStream.getvalue()
