@@ -71,8 +71,7 @@ class AnnotationResource(IsicResource):
                required=False, dataType='boolean', default=False)
         .errorResponse()
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     def find(self, params):
         self.requireParams(['studyId'], params)
 
@@ -115,8 +114,7 @@ class AnnotationResource(IsicResource):
         .param('annotationId', 'The ID of the annotation to be fetched.', paramType='path')
         .errorResponse()
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
                level=AccessType.READ)
     def getAnnotation(self, annotation, params):
@@ -141,8 +139,7 @@ class AnnotationResource(IsicResource):
         .param('featureId', 'The feature ID for the markup.', paramType='path')
         .errorResponse()
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
                level=AccessType.READ)
     def getAnnotationMarkupSuperpixels(self, annotation, featureId, params):
@@ -165,8 +162,7 @@ class AnnotationResource(IsicResource):
         .produces('image/png')
         .errorResponse()
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
                level=AccessType.READ)
     def getAnnotationMarkupMask(self, annotation, featureId, params):
@@ -210,8 +206,7 @@ class AnnotationResource(IsicResource):
         .produces('image/jpeg')
         .errorResponse()
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
                level=AccessType.READ)
     def getAnnotationMarkupRendered(self, annotation, featureId, params):
