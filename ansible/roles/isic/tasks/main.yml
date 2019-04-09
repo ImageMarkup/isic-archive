@@ -14,7 +14,7 @@
   apt:
     name:
       - p7zip-full
-  become: yes
+  become: true
 
 - name: Install numpy
   pip:
@@ -26,8 +26,7 @@
     name: "{{ isic_archive_path }}"
     editable: "{{ isic_archive_editable }}"
     virtualenv: "{{ python_dist_path }}"
-  notify:
-    - Restart Girder
+  notify: Restart Girder
 
 - name: Install ISIC GUI dependencies
   yarn:
@@ -49,7 +48,7 @@
         name: python-pip
     - pip:
         name: girder-client
-  become: yes
+  become: true
 
 - name: Deploy Girder systemd service
   template:
@@ -58,7 +57,7 @@
     owner: root
     group: root
     mode: 0644
-  become: yes
+  become: true
   notify: Restart Girder
 
 - name: Enable Girder service
@@ -80,7 +79,7 @@
       login: "{{ girder_admin_username }}"
       password: "{{ girder_admin_password }}"
       email: "provision.admin@isic-archive.com"
-      admin: yes
+      admin: true
     state: present
 
 - name: Create Girder assetstore dir
@@ -89,7 +88,7 @@
     owner: "{{ girder_user|default(ansible_user_id) }}"
     group: "{{ girder_user|default(ansible_user_id) }}"
     state: directory
-  become: yes
+  become: true
   become_user: root
 
 - name: Create assetstore

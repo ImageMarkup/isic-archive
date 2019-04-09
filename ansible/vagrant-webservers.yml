@@ -3,13 +3,13 @@
   hosts: all
 
   vars:
-      ansible_python_interpreter: "/usr/bin/python3.6"
-      celery_broker_url: "amqp://isicarchive:password@{{ broker_ip }}/isic-archive"
-      celery_result_backend: "redis://:password@{{ broker_ip }}/0"
-      isic_archive_clone: false
-      mongo_bind_ip: 0.0.0.0
-      sentry_dsn: ""
-      sentry_environment: "development"
+    ansible_python_interpreter: "/usr/bin/python3.6"
+    celery_broker_url: "amqp://isicarchive:password@{{ broker_ip }}/isic-archive"
+    celery_result_backend: "redis://:password@{{ broker_ip }}/0"
+    isic_archive_clone: false
+    mongo_bind_ip: 0.0.0.0
+    sentry_dsn: ""
+    sentry_environment: "development"
 
   pre_tasks:
     - name: Install dotenv configuration file
@@ -36,7 +36,8 @@
       vars:
         site_hostname: isic-archive.test
         isic_gui_dir: "{{ ansible_user_dir }}/isic_archive/isic-archive-gui/dist"
-        isic_integration_gui_dir: "{{ ansible_user_dir }}/isic_archive/isic-archive-gui/dist-integration"
+        isic_integration_gui_dir:
+          "{{ ansible_user_dir }}/isic_archive/isic-archive-gui/dist-integration"
 
     - role: minio
       vars:

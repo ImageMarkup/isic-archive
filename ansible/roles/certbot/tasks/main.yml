@@ -3,19 +3,19 @@
   apt_key:
     id: "7BF576066ADA65728FC7E70A8C47BE8E75BCA694"
     keyserver: "keyserver.ubuntu.com"
-  become: yes
+  become: true
 
 - name: Add certbot PPA
   apt_repository:
     repo: ppa:certbot/certbot
-    update_cache: yes
-  become: yes
+    update_cache: true
+  become: true
   become_user: root
 
 - name: Install Certbot
   apt:
     name: python-certbot-nginx
-  become: yes
+  become: true
   become_user: root
 
 - name: Generate a certificate
@@ -23,7 +23,7 @@
     certbot --non-interactive --nginx certonly -d {{ domain }} --agree-tos -m {{ email }}
   args:
     creates: /etc/letsencrypt/live/{{ domain }}/fullchain.pem
-  become: yes
+  become: true
   become_user: root
 
 - name: Symlink certs
@@ -38,7 +38,7 @@
       dest: private/{{ domain }}.key
     - src: ssl-dhparams.pem
       dest: dhparams.pem
-  become: yes
+  become: true
   become_user: root
 
 - name: Add cron for renewal
@@ -47,5 +47,5 @@
     special_time: "daily"
     job: |
       sudo /usr/bin/certbot --non-interactive renew --nginx
-  become: yes
+  become: true
   become_user: root

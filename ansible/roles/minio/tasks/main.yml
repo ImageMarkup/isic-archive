@@ -32,10 +32,6 @@
     timeout: 20
 
 - name: Create default bucket
-  shell: |
-    . {{ python_dist_path }}/bin/activate
-    export AWS_ACCESS_KEY_ID=accesskey
-    export AWS_SECRET_ACCESS_KEY=secretkey
-    {{ python_dist_path }}/bin/aws --endpoint-url http://localhost:9000 s3api create-bucket --bucket {{ isic_upload_bucket_name }} && touch {{ ansible_user_dir }}/.bucket.created
-  args:
-    creates: "{{ ansible_user_dir }}/.bucket.created"
+  file:
+    path: "{{ ansible_user_dir }}/minio-data/{{ isic_upload_bucket_name }}"
+    state: directory
