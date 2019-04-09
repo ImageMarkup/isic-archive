@@ -104,8 +104,7 @@ class TaskResource(IsicResource):
         Description('Redirect to a QC review task.')
         .param('datasetId', 'An ID for the dataset to get a QC review task for.', required=True)
     )
-    @access.cookie
-    @access.user
+    @access.user(cookie=True)
     def redirectReviewTask(self, params):
         self.requireParams(['datasetId'], params)
 
@@ -320,8 +319,7 @@ class TaskResource(IsicResource):
         Description('Redirect to a random segmentation task.')
         .param('datasetId', 'An ID for the dataset to get a segmentation task for.', required=True)
     )
-    @access.cookie
-    @access.user
+    @access.user(cookie=True)
     def redirectSegmentationTask(self, params):
         nextResp = self.nextSegmentationTask(params)
         imageId = nextResp['_id']
@@ -393,8 +391,7 @@ class TaskResource(IsicResource):
         Description('Redirect to the next annotation task.')
         .param('studyId', 'An ID for the study to get an annotation task for.', required=True)
     )
-    @access.cookie
-    @access.user
+    @access.user(cookie=True)
     def redirectAnnotationTask(self, params):
         self.requireParams(['studyId'], params)
 

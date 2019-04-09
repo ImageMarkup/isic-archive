@@ -56,8 +56,7 @@ class SegmentationResource(IsicResource):
         .param('creatorId', 'The ID of the creator user.', required=False)
         .errorResponse('ID was invalid.')
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     def find(self, params):
         self.requireParams(['imageId'], params)
         limit, offset, sort = self.getPagingParameters(
@@ -190,8 +189,7 @@ class SegmentationResource(IsicResource):
         .param('id', 'The ID of the segmentation.', paramType='path')
         .errorResponse('ID was invalid.')
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     @loadmodel(model='segmentation', plugin='isic_archive')
     def getSegmentation(self, segmentation, params):
         # TODO: convert this to make Segmentation use an AccessControlMixin
@@ -215,8 +213,7 @@ class SegmentationResource(IsicResource):
         .produces('image/png')
         .errorResponse('ID was invalid.')
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     @loadmodel(model='segmentation', plugin='isic_archive')
     def mask(self, segmentation, params):
         contentDisp = params.get('contentDisposition', None)
@@ -245,8 +242,7 @@ class SegmentationResource(IsicResource):
         .produces('image/jpeg')
         .errorResponse('ID was invalid.')
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     @loadmodel(model='segmentation', plugin='isic_archive')
     def thumbnail(self, segmentation, params):
         contentDisp = params.get('contentDisposition', None)

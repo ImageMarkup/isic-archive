@@ -19,7 +19,7 @@ setup(
         'geojson',
         'girder-large-image',
         'girder-gravatar',
-        'girder>=3.0.0a2',
+        'girder>=3.0.0a6',
         'jsonpickle',
         'large-image-source-tiff[girder]',
         'natsort',
