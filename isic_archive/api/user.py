@@ -72,10 +72,10 @@ def onGetPasswordTemporaryId(event):
 def onSetCookie(event):
     cookie = cherrypy.response.cookie
     if 'girderToken' in cookie:
-        # Persist subdomain logins to the root domain
-        # TODO: This makes the cookie available to any other Girder instance subdomains
-        origin = cherrypy.request.headers.get('origin')
-        if origin and re.match(r'isic-archive\.com$', origin):
+        host = cherrypy.request.base
+        if re.search(r'://isic-archive\.com$', host):
+            # Persist subdomain logins to the root domain
+            # TODO: This makes the cookie available to any other Girder instance subdomains
             cookie['girderToken']['Domain'] = 'isic-archive.com'
 
 
