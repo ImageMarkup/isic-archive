@@ -77,8 +77,7 @@ class DatasetResource(IsicResource):
                required=False, dataType='boolean', default=False)
         .errorResponse()
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     def find(self, params):
         user = self.getCurrentUser()
         detail = self.boolParam('detail', params, default=False)
@@ -96,8 +95,7 @@ class DatasetResource(IsicResource):
         .param('id', 'The ID of the dataset.', paramType='path')
         .errorResponse('ID was invalid.')
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.READ)
     def getDataset(self, dataset, params):
         user = self.getCurrentUser()
@@ -458,7 +456,11 @@ class DatasetResource(IsicResource):
             for image in
             Image().find(
                 {'folderId': prereviewFolder['_id']},
-                limit=limit, sort=[('name', SortDir.ASCENDING)]
+                limit=limit,
+                sort=[
+                    ('meta.clinical.diagnosis', SortDir.ASCENDING),
+                    ('name', SortDir.ASCENDING)
+                ]
             )
         ]
 
@@ -586,8 +588,7 @@ class DatasetResource(IsicResource):
         .param('id', 'The ID of the dataset.', paramType='path')
         .param('metadataFileId', 'The ID of the .csv metadata file.', paramType='path')
     )
-    @access.cookie
-    @access.public(scope=TokenScope.DATA_READ)
+    @access.public(scope=TokenScope.DATA_READ, cookie=True)
     # File is attached to dataset, so access level refers to permission on dataset
     @loadmodel(model='file', map={'metadataFileId': 'metadataFile'}, level=AccessType.WRITE)
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)

@@ -112,8 +112,7 @@ class ImageResource(IsicResource):
                required=False)
         .errorResponse()
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     def find(self, params):
         user = self.getCurrentUser()
         detail = self.boolParam('detail', params, default=False)
@@ -210,8 +209,7 @@ class ImageResource(IsicResource):
         .produces('application/zip')
         .errorResponse()
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     def downloadMultiple(self, params):
         include = params.get('include', 'all')
         if include not in {'all', 'images', 'metadata'}:
@@ -247,8 +245,7 @@ class ImageResource(IsicResource):
         .param('filter', 'Filter the images by a PegJS-specified grammar.', required=False)
         .errorResponse()
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     def getHistogram(self, params):
         query = self._parseFilter(params['filter']) if 'filter' in params else None
         user = self.getCurrentUser()
@@ -259,8 +256,7 @@ class ImageResource(IsicResource):
         .param('id', 'The ID of the image.', paramType='path')
         .errorResponse('ID was invalid.')
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def getImage(self, image, params):
         user = self.getCurrentUser()
@@ -276,8 +272,7 @@ class ImageResource(IsicResource):
         .produces('image/jpeg')
         .errorResponse('ID was invalid.')
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def thumbnail(self, image, params):
         width = int(params.get('width', 256))
@@ -295,8 +290,7 @@ class ImageResource(IsicResource):
         .param('id', 'The ID of the image.', paramType='path')
         .errorResponse('ID was invalid.')
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def getTileInfo(self, image, params):
         # These endpoints should guarantee that large_image functionality works, so a
@@ -313,8 +307,7 @@ class ImageResource(IsicResource):
         .produces('image/jpeg')
         .errorResponse('ID was invalid.')
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def getTile(self, image, z, x, y, params):
         try:
@@ -340,8 +333,7 @@ class ImageResource(IsicResource):
         .produces(['image/jpeg', 'image/png', 'image/bmp'])
         .errorResponse('ID was invalid.')
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def download(self, image, params):
         contentDisp = params.get('contentDisposition', None)
@@ -359,8 +351,7 @@ class ImageResource(IsicResource):
         .produces('image/png')
         .errorResponse('ID was invalid.')
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     @loadmodel(model='image', plugin='isic_archive', level=AccessType.READ)
     def getSuperpixels(self, image, params):
         superpixelsFile = Image().superpixelsFile(image)

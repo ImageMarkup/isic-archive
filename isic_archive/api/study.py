@@ -65,8 +65,7 @@ class StudyResource(IsicResource):
                paramType='query', required=False)
         .errorResponse()
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     def find(self, params):
         currentUser = self.getCurrentUser()
         detail = self.boolParam('detail', params, default=False)
@@ -102,8 +101,7 @@ class StudyResource(IsicResource):
                enum=('csv', 'json'), default='json')
         .errorResponse()
     )
-    @access.cookie
-    @access.public
+    @access.public(cookie=True)
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
     def getStudy(self, study, params):
         if params.get('format') == 'csv':
