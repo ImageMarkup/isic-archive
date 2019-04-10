@@ -19,6 +19,8 @@
 
 import datetime
 
+import pymongo
+
 from girder.models.model_base import Model
 
 
@@ -57,3 +59,24 @@ class Batch(Model):
             'meta.batchId': batch['_id'],
             'ingested': False
         })
+
+    def imagesFailedIngest(self, batch):
+        from .image import Image
+        return Image().find({
+            'meta.batchId': batch['_id'],
+            '$or': [
+                {'ingestionState.largeImage': False},
+                {'ingestionState.superpixelMask': False}
+            ]
+        }, fields=['privateMeta.originalFilename']).sort(
+            'privateMeta.originalFilename', pymongo.ASCENDING
+        )
+
+    def imagesSkippedIngest(self, batch):
+        from .image import Image
+        return Image().find({
+            'meta.batchId': batch['_id'],
+            'readable': False
+        }, fields=['privateMeta.originalFilename']).sort(
+            'privateMeta.originalFilename', pymongo.ASCENDING
+        )
