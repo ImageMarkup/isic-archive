@@ -5,7 +5,7 @@ jobs:
     docker:
       - image: isic/isic_test:latest
       - image: circleci/mongo:3.6-ram
-        command: ["mongod", "--storageEngine", "ephemeralForTest"]
+        command: ["mongod", "--storageEngine", "ephemeralForTest", "--dbpath", "/dev/shm/mongo"]
 
     working_directory: /home/circleci/project
 
