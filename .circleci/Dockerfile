@@ -22,6 +22,7 @@ RUN npm install --global yarn \
     tcl8.5-dev \
     tk8.5-dev \
     python-tk \
+    libvips-tools \
     # Install isic_archive dependencies
     p7zip-full \
   && pip3 install tox
