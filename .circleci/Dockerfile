@@ -26,4 +26,7 @@ RUN npm install --global yarn \
     p7zip-full \
   && pip3 install tox
 
+RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash \
+    && apt-get install git-lfs
+
 USER circleci
