@@ -715,6 +715,34 @@ const FACET_SCHEMA = {
         title: 'Dermoscopic Type',
         collapsed: true
     },
+    'meta.acquisition.blurry': {
+        FacetView: ImagesFacetCategoricalView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Blurry',
+        collapsed: true
+    },
+    'meta.acquisition.color_tint': {
+        FacetView: ImagesFacetCategoricalView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Color Tint',
+        collapsed: true
+    },
+    'meta.acquisition.hairy': {
+        FacetView: ImagesFacetCategoricalView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Hairy',
+        collapsed: true
+    },
+    'meta.acquisition.marker_pen': {
+        FacetView: ImagesFacetCategoricalView,
+        FacetFilter: CategoricalFacetFilter,
+        coerceToType: 'string',
+        title: 'Pen Marker',
+        collapsed: true
+    },
     'meta.tags': {
         FacetView: ImagesFacetCategoricalTagsView,
         FacetFilter: TagsCategoricalFacetFilter,

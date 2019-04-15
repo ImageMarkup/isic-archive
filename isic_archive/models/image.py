@@ -237,7 +237,11 @@ class Image(Item):
             'meta.clinical.mel_ulcer',
             'meta.clinical.anatom_site_general',
             'meta.acquisition.image_type',
-            'meta.acquisition.dermoscopic_type'
+            'meta.acquisition.dermoscopic_type',
+            'meta.acquisition.blurry',
+            'meta.acquisition.color_tint',
+            'meta.acquisition.hairy',
+            'meta.acquisition.marker_pen'
         ]
         tagFacets = [
             'meta.tags'
