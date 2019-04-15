@@ -758,6 +758,94 @@ class GeneralAnatomicSiteFieldParser(FieldParser):
         clinical[cls.name] = value
 
 
+class BlurryFieldParser(FieldParser):
+    name = 'blurry'
+    allowedFields = {'blurry'}
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.lower()
+            if value in ['', 'unknown']:
+                value = None
+            else:
+                value = cls._coerceBool(value)
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(acquisition, cls.name, value)
+        acquisition[cls.name] = value
+
+
+class ColorTintFieldParser(FieldParser):
+    name = 'color_tint'
+    allowedFields = {'colot_tint'}
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.lower()
+            if value in ['', 'unknown']:
+                value = None
+            else:
+                cls._assertEnumerated(value, {
+                    'blue',
+                    'pink',
+                    'none',
+                })
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(acquisition, cls.name, value)
+        acquisition[cls.name] = value
+
+
+class HairyFieldParser(FieldParser):
+    name = 'hairy'
+    allowedFields = {'hairy'}
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.lower()
+            if value in ['', 'unknown']:
+                value = None
+            else:
+                value = cls._coerceBool(value)
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(acquisition, cls.name, value)
+        acquisition[cls.name] = value
+
+
+class MarkerPenFieldParser(FieldParser):
+    name = 'marker_pen'
+    allowedFields = {'marker_pen'}
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.lower()
+            if value in ['', 'unknown']:
+                value = None
+            else:
+                value = cls._coerceBool(value)
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(acquisition, cls.name, value)
+        acquisition[cls.name] = value
+
+
 def _populateMetadata(acquisition, clinical):
     """
     Populate empty metadata fields that can be determined based on other fields.
@@ -960,6 +1048,10 @@ def addImageMetadata(image, data):
         MelMitoticIndexFieldParser,
         MelUlcerFieldParser,
         GeneralAnatomicSiteFieldParser,
+        BlurryFieldParser,
+        ColorTintFieldParser,
+        HairyFieldParser,
+        MarkerPenFieldParser
     ]:
         acquisition = image['meta']['acquisition']
         clinical = image['meta']['clinical']
