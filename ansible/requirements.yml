@@ -3,6 +3,9 @@
 - src: girder.girder
   version: master
 
+- src: girder.mongodb
+  version: master
+
 - src: https://github.com/girder/ansible-role-large-image.git
   name: large_image
   version: master

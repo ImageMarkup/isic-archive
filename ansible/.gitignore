@@ -1,3 +1,4 @@
 roles/DigitalSlideArchive.vips/
 roles/girder.girder/
+roles/girder.mongodb/
 roles/large_image/

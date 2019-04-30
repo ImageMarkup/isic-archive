@@ -7,7 +7,6 @@
     celery_broker_url: "amqp://isicarchive:password@{{ broker_ip }}/isic-archive"
     celery_result_backend: "redis://:password@{{ broker_ip }}/0"
     isic_archive_clone: false
-    mongo_bind_ip: 0.0.0.0
     sentry_dsn: ""
     sentry_environment: "development"
 
@@ -21,6 +20,11 @@
   # TODO: set hostname
   roles:
     - role: mailhog
+
+    - role: girder.mongodb
+      vars:
+        mongodb_version: 4.0
+        mongodb_bind_public: true
 
     - role: isic
       vars:
