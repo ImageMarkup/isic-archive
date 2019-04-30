@@ -1,4 +1,0 @@
----
-
-mongo_data_path: "/var/lib/mongodb"
-mongo_bind_ip: "127.0.0.1"
