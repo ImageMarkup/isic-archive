@@ -91,6 +91,12 @@
         line: "{{ webserver_ip }} isic-archive.test"
       become: true
 
+    - name: Add hosts entry for minio
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ webserver_ip }} minio"
+      become: true
+
     # The celery user needs to be able to write to the assetstore via tasks
     - name: Add celery user to vagrant group
       user:

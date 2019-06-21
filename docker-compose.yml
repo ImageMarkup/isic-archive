@@ -1,0 +1,86 @@
+---
+version: '3'
+services:
+  girder:
+    build:
+      context: .
+      dockerfile: docker/girder/Dockerfile
+      args:
+        entrypoint: docker/girder/entrypoint.sh
+    environment:
+      DOTENV_PATH: /.env
+      GIRDER_MONGO_URI: mongodb://mongo/girder
+    volumes:
+      - .:/isic
+    ports:
+      - 8080:8080
+    networks:
+      - primary
+
+  celery:
+    build:
+      context: .
+      dockerfile: docker/girder/Dockerfile
+      args:
+        entrypoint: docker/celery/entrypoint.sh
+    environment:
+      DOTENV_PATH: /.env
+      GIRDER_MONGO_URI: mongodb://mongo/girder
+    volumes:
+      - .:/isic
+    networks:
+      - primary
+
+  celerybeat:
+    build:
+      context: .
+      dockerfile: docker/girder/Dockerfile
+      args:
+        entrypoint: docker/celerybeat/entrypoint.sh
+    environment:
+      DOTENV_PATH: /.env
+      GIRDER_MONGO_URI: mongodb://mongo/girder
+    volumes:
+      - .:/isic
+    networks:
+      - primary
+
+  mongo:
+    image: mongo:latest
+    restart: always
+    networks:
+      - primary
+
+  redis:
+    image: redis:latest
+    restart: always
+    networks:
+      - primary
+
+  rabbitmq:
+    image: rabbitmq:latest
+    restart: always
+    networks:
+      - primary
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    restart: always
+    ports:
+      - 8025:8025
+    networks:
+      - primary
+
+  minio:
+    image: minio/minio:latest
+    restart: always
+    entrypoint: sh
+    command: -c 'mkdir -p /minio-data/test-upload-bucket && /usr/bin/minio server /minio-data'
+    environment:
+      MINIO_ACCESS_KEY: accesskey
+      MINIO_SECRET_KEY: secretkey
+    networks:
+      - primary
+
+networks:
+  primary:
