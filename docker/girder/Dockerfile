@@ -34,7 +34,7 @@ RUN pip install -r /isic/requirements.txt
 COPY . /isic
 RUN cd /usr/local/lib/python3.6/site-packages && python /isic/setup.py develop
 
-RUN girder build --dev --static-root /static
+RUN girder build --dev
 
 ADD docker/girder/.env /.env
 ADD docker/girder/bootstrap-isic.py /bootstrap-isic.py

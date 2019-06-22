@@ -33,27 +33,6 @@ if not len(assetstores.json()):
     )
     assert set_assetstore.ok
 
-plugins_enabled = requests.get(
-    API_URL + "/system/setting",
-    params={"key": "core.plugins_enabled"},
-    headers={"Girder-Token": token},
-)
-assert plugins_enabled.ok
-
-if "isic_archive" not in plugins_enabled.json():
-    enabled_plugins = set(plugins_enabled.json()) | set(
-        ["isic_archive", "large_image", "worker"]
-    )
-    set_plugins = requests.put(
-        API_URL + "/system/setting",
-        data={
-            "key": "core.plugins_enabled",
-            "value": json.dumps(list(enabled_plugins)),
-        },
-        headers={"Girder-Token": token},
-    )
-    assert set_plugins.ok
-
 settings = requests.put(
     API_URL + "/system/setting",
     data={

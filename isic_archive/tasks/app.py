@@ -9,9 +9,10 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from requests_toolbelt.sessions import BaseUrlSession
 
-from girder.constants import SettingKey, TokenScope
+from girder.constants import TokenScope
 from girder.models.setting import Setting
 from girder.models.token import Token
+from girder.settings import SettingKey
 from girder.utility import mail_utils
 
 from isic_archive.provision_utility import getAdminUser
