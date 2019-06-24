@@ -29,7 +29,7 @@ import cherrypy
 from natsort import natsorted
 
 from girder.constants import AccessType
-from girder.exceptions import GirderException, ValidationException
+from girder.exceptions import GirderException, RestException, ValidationException
 from girder.models.collection import Collection
 from girder.models.file import File
 from girder.models.folder import Folder
@@ -438,7 +438,7 @@ class Dataset(AccessControlledModel):
             }
         )
         if updateResult.modified_count != 1:
-            raise GirderException('Trying to finalize a batch which isn\'t uploading')
+            raise RestException('Trying to finalize a batch which isn\'t uploading', code=409)
 
         # Ingest images from ZIP file into dataset
         ingestBatchFromZipfile.delay(batch['_id'])
