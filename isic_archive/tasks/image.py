@@ -169,11 +169,11 @@ def vips_tiffsave(infilename, outfilename):
     proc = subprocess.Popen(convert_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = proc.communicate()
 
-    if out.strip():
-        logger.info('stdout: ' + out)
+    if out.decode().strip():
+        logger.info(f'stdout: {out.decode()}')
 
     if err.strip():
-        logger.error('stderr: ' + err)
+        logger.error(f'stderr: {err.decode()}')
 
     if proc.returncode:
         raise Exception('VIPS command failed (rc=%d)' % proc.returncode)
