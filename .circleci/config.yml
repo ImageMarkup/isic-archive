@@ -48,39 +48,9 @@ jobs:
           paths: /home/circleci/.cache/yarn
           key: yarn-{{ arch }}-{{ checksum "isic-archive-gui/yarn.lock" }}
 
-  e2eTest:
-    machine: true
-    working_directory: /home/circleci/project
-
-    steps:
-      - run:
-          name: Install git-lfs
-          command: |
-            curl -s \
-              https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
-            sudo apt-get install git-lfs
-            git lfs install
-
-      - checkout:
-          path: /home/circleci/project
-
-      - run:
-          name: Build docker containers
-          command: docker-compose up -d
-
-      - run:
-          name: Run e2e tests
-          command: docker-compose exec girder tox -c /isic -e e2e
-
-      - run:
-          name: Grab service logs
-          command: docker-compose logs
-          when: on_fail
-
 workflows:
   version: 2
   test_all:
     jobs:
       - serverTest
       - webBuild_webTest
-      - e2eTest

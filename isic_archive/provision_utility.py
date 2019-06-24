@@ -17,11 +17,12 @@
 #  limitations under the License.
 ###############################################################################
 
-from girder.constants import AccessType, SettingKey
+from girder.constants import AccessType
 from girder.models.collection import Collection
 from girder.models.folder import Folder
 from girder.models.group import Group
 from girder.models.setting import Setting
+from girder.settings import SettingKey
 from girder_large_image.constants import PluginSettings as LargeImageSettings
 
 from .models.user import User
