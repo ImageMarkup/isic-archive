@@ -172,7 +172,7 @@ def vips_tiffsave(infilename, outfilename):
     if out.decode().strip():
         logger.info(f'stdout: {out.decode()}')
 
-    if err.strip():
+    if err.decode().strip():
         logger.error(f'stderr: {err.decode()}')
 
     if proc.returncode:
