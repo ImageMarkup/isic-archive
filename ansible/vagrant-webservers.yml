@@ -3,7 +3,7 @@
   hosts: all
 
   vars:
-    ansible_python_interpreter: "/usr/bin/python3.6"
+    ansible_python_interpreter: "/usr/bin/python3"
     celery_broker_url: "amqp://isicarchive:password@{{ broker_ip }}/isic-archive"
     celery_result_backend: "redis://:password@{{ broker_ip }}/0"
     isic_archive_clone: false
@@ -25,6 +25,11 @@
       vars:
         mongodb_version: 4.0
         mongodb_bind_public: true
+
+    - role: girder.girder
+      vars:
+        # This is behind Nginx, so enable proxy mode
+        girder_development_mode: false
 
     - role: isic
       vars:
@@ -58,10 +63,10 @@
     - name: Install dev requirements
       pip:
         name: tox
-        virtualenv: "{{ python_dist_path }}"
+        virtualenv: "{{ girder_virtualenv }}"
 
     - name: Activate virtualenv on login
       lineinfile:
-        line: 'source {{ python_dist_path }}/bin/activate'
+        line: 'source {{ girder_virtualenv }}/bin/activate'
         path: "{{ ansible_user_dir }}/.profile"
         state: present

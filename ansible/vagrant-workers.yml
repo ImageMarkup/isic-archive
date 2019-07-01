@@ -3,12 +3,12 @@
   hosts: all
 
   vars:
-    ansible_python_interpreter: "/usr/bin/python3.6"
+    ansible_python_interpreter: "/usr/bin/python3"
     celery_broker_url: "amqp://isicarchive:password@{{ broker_ip }}/isic-archive"
     celery_result_backend: "redis://:password@{{ broker_ip }}/0"
     isic_archive_assetstore_path: "{{ ansible_user_dir }}/assetstores/default"
     isic_archive_path: "{{ ansible_user_dir }}/isic_archive"
-    python_dist_path: "{{ ansible_user_dir }}/env"
+    girder_virtualenv: "{{ ansible_user_dir }}/.virtualenvs/girder"
     sentry_dsn: ""
     sentry_environment: "development"
 
@@ -28,7 +28,7 @@
 
     - name: Create virtualenv
       command: |
-        python3.6 -m venv {{ python_dist_path }}
+        python3.6 -m venv {{ girder_virtualenv }}
 
     - name: Install build dependencies
       apt:
@@ -52,27 +52,26 @@
     - name: Install numpy
       pip:
         name: numpy
-        virtualenv: "{{ python_dist_path }}"
+        virtualenv: "{{ girder_virtualenv }}"
+        # Implicitly create a Python 3 virtualenv if it doesn't exist
+        virtualenv_command: "/usr/bin/python3 -m venv"
 
     - name: Install isic-archive package
       pip:
         name: "{{ isic_archive_path }}"
-        virtualenv: "{{ python_dist_path }}"
+        virtualenv: "{{ girder_virtualenv }}"
         editable: true
 
-    - name: Configure mongo URI
-      ini_file:
-        path: "/etc/girder.cfg"
-        section: database
-        option: uri
-        value: '"mongodb://{{ webserver_ip }}/girder"'
-      become: true
-
   roles:
+    - role: girder.girder
+      vars:
+        girder_daemonize: false
+        girder_database_uri: "mongodb://{{ webserver_ip }}/girder"
+
     - role: large_image
       vars:
         large_image_version: "girder-3"
-        large_image_virtualenv: "{{ python_dist_path }}"
+        large_image_virtualenv: "{{ girder_virtualenv }}"
         large_image_tile_sources:
           - tiff
         large_image_include_vips: true
@@ -80,7 +79,7 @@
     - role: celery
       vars:
         archive_api_url: "http://isic-archive.test/api/v1"
-        celery_bin: "{{ python_dist_path }}/bin/celery"
+        celery_bin: "{{ girder_virtualenv }}/bin/celery"
         celery_concurrency: 1
         celery_user: vagrant
 
@@ -114,6 +113,6 @@
 
     - name: Activate virtualenv on login
       lineinfile:
-        line: 'source {{ python_dist_path }}/bin/activate'
+        line: 'source {{ girder_virtualenv }}/bin/activate'
         path: "{{ ansible_user_dir }}/.profile"
         state: present

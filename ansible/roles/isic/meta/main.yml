@@ -1,9 +1,8 @@
 ---
 
 dependencies:
-  - role: girder
   - role: large_image
-    large_image_virtualenv: "{{ python_dist_path }}"
+    large_image_virtualenv: "{{ girder_virtualenv }}"
     large_image_tile_sources:
       - tiff
     large_image_include_vips: true

@@ -2,7 +2,7 @@
 - name: Install flower
   pip:
     name: flower
-    virtualenv: "{{ python_dist_path }}"
+    virtualenv: "{{ girder_virtualenv }}"
 
 - name: Create conf.d
   file:

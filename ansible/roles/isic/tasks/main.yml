@@ -8,7 +8,7 @@
     clone: "{{ isic_archive_clone }}"
     update: "{{ isic_archive_update }}"
     force: "{{ isic_archive_force }}"
-  notify: Build Girder
+  notify: Build Girder web client
 
 - name: Install package dependencies
   apt:
@@ -19,14 +19,21 @@
 - name: Install numpy
   pip:
     name: numpy
-    virtualenv: "{{ python_dist_path }}"
+    virtualenv: "{{ girder_virtualenv }}"
 
 - name: Install isic-archive package
   pip:
     name: "{{ isic_archive_path }}"
     editable: "{{ isic_archive_editable }}"
-    virtualenv: "{{ python_dist_path }}"
+    virtualenv: "{{ girder_virtualenv }}"
   notify: Restart Girder
+
+- name: Install Yarn
+  npm:
+    name: yarn
+    global: true
+    state: latest
+  become: true
 
 - name: Install ISIC GUI dependencies
   yarn:
@@ -42,21 +49,12 @@
   args:
     chdir: "{{ isic_archive_path }}/isic-archive-gui"
 
-- name: Install Girder client for Girder Ansible module
-  block:
-    - apt:
-        name: python-pip
-    - pip:
-        name: girder-client
-  become: true
-
-- name: Deploy Girder systemd service
-  template:
-    src: girder.service.j2
-    dest: "/etc/systemd/system/girder.service"
-    owner: root
-    group: root
-    mode: 0644
+- name: Ensure Dotenv environment variable is passed to Girder service
+  lineinfile:
+    path: "/etc/systemd/system/girder.service"
+    regexp: "^ *Environment *= *DOTENV_PATH *="
+    insertafter: '^ *ExecStart *='
+    line: "Environment=DOTENV_PATH=\"{{ ansible_user_dir }}/.env\""
   become: true
   notify: Restart Girder
 
