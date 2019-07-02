@@ -42,6 +42,25 @@ def onDescribeResource(event):
     describeResponse['basePath'] = '/api/v1'
 
 
+def onUserCreate(event):
+    newUser = event.info
+
+    # If there are no other users, besides the Archive and Provision admins
+    if not User().collection.count_documents({
+        'email': {'$nin': [
+            'admin@isic-archive.com',
+            'provision.admin@isic-archive.com',
+        ]}
+    }):
+        # Make this user an admin
+        newUser['admin'] = True
+        User().update(
+            {'_id': newUser['_id']},
+            {'$set': {'admin': True}},
+            multi=False
+        )
+
+
 def clearRouteDocs():
     from girder.api.docs import routes
 
@@ -103,7 +122,9 @@ class IsicArchive(GirderPlugin):
 
         # add event listeners
         events.bind('rest.get.describe/:resource.after',
-                    'onDescribeResource', onDescribeResource)
+                    'isic.onDescribeResource', onDescribeResource)
+        events.bind('model.user.save.created',
+                    'isic.onUserCreate', onUserCreate)
 
         # add custom model searching
         resource.allowedSearchTypes.update({
