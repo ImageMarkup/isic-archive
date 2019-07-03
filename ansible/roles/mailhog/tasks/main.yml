@@ -20,8 +20,6 @@
   template:
     src: mailhog.service.j2
     dest: /etc/systemd/system/mailhog.service
-    owner: root
-    group: root
     mode: 0755
   become: true
 

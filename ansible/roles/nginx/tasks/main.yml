@@ -15,9 +15,6 @@
   template:
     src: "base.conf.j2"
     dest: "/etc/nginx/conf.d/base.conf"
-    owner: root
-    group: root
-    mode: 0644
   become: true
   notify: Restart Nginx
 
@@ -25,8 +22,5 @@
   template:
     src: girder.conf.j2
     dest: "/etc/nginx/conf.d/girder.conf"
-    owner: root
-    group: root
-    mode: 0644
   become: true
   notify: Restart Nginx
