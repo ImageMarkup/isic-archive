@@ -49,12 +49,16 @@
   args:
     chdir: "{{ isic_archive_path }}/isic-archive-gui"
 
-- name: Ensure Dotenv environment variable is passed to Girder service
-  lineinfile:
-    path: "/etc/systemd/system/girder.service"
-    regexp: "^ *Environment *= *DOTENV_PATH *="
-    insertafter: '^ *ExecStart *='
-    line: "Environment=DOTENV_PATH=\"{{ ansible_user_dir }}/.env\""
+- name: Create systemd drop-in unit directory for Girder
+  file:
+    path: "/etc/systemd/system/girder.service.d"
+    state: directory
+  become: true
+
+- name: Create a systemd drop-in unit file for Girder
+  template:
+    src: "girder.conf.j2"
+    dest: "/etc/systemd/system/girder.service.d/10-isic.conf"
   become: true
   notify: Restart Girder
 
