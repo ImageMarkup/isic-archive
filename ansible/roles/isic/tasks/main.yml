@@ -8,7 +8,7 @@
     clone: "{{ isic_archive_clone }}"
     update: "{{ isic_archive_update }}"
     force: "{{ isic_archive_force }}"
-  notify: Build Girder
+  notify: Build Girder web client
 
 - name: Install package dependencies
   apt:
@@ -19,14 +19,21 @@
 - name: Install numpy
   pip:
     name: numpy
-    virtualenv: "{{ python_dist_path }}"
+    virtualenv: "{{ girder_virtualenv }}"
 
 - name: Install isic-archive package
   pip:
     name: "{{ isic_archive_path }}"
     editable: "{{ isic_archive_editable }}"
-    virtualenv: "{{ python_dist_path }}"
+    virtualenv: "{{ girder_virtualenv }}"
   notify: Restart Girder
+
+- name: Install Yarn
+  npm:
+    name: yarn
+    global: true
+    state: latest
+  become: true
 
 - name: Install ISIC GUI dependencies
   yarn:
@@ -42,137 +49,21 @@
   args:
     chdir: "{{ isic_archive_path }}/isic-archive-gui"
 
-- name: Install Girder client for Girder Ansible module
-  block:
-    - apt:
-        name: python-pip
-    - pip:
-        name: girder-client
-  become: true
-
-- name: Deploy Girder systemd service
-  template:
-    src: girder.service.j2
-    dest: "/etc/systemd/system/girder.service"
-    owner: root
-    group: root
-    mode: 0644
-  become: true
-  notify: Restart Girder
-
-- name: Enable Girder service
-  systemd:
-    name: girder
-    daemon_reload: true
-    state: started
-    enabled: true
-  become: true
-
-- meta: flush_handlers
-
-- name: Create admin user
-  port: "{{ girder_port }}"
-  girder:
-    user:
-      firstName: "Provision"
-      lastName: "Admin"
-      login: "{{ girder_admin_username }}"
-      password: "{{ girder_admin_password }}"
-      email: "provision.admin@isic-archive.com"
-      admin: true
-    state: present
-
-- name: Create Girder assetstore dir
+- name: Create systemd drop-in unit directory for Girder
   file:
-    path: "{{ isic_archive_assetstore_path }}"
-    owner: "{{ girder_user|default(ansible_user_id) }}"
-    group: "{{ girder_user|default(ansible_user_id) }}"
+    path: "/etc/systemd/system/girder.service.d"
     state: directory
   become: true
-  become_user: root
 
-- name: Create assetstore
-  girder:
-    username: "{{ girder_admin_username }}"
-    password: "{{ girder_admin_password }}"
-    port: "{{ girder_port }}"
-    assetstore:
-      name: "Default"
-      type: "filesystem"
-      root: "{{ isic_archive_assetstore_path }}"
-      current: true
-    state: present
-
-- name: Enable isic_archive plugin
-  girder:
-    username: "{{ girder_admin_username }}"
-    password: "{{ girder_admin_password }}"
-    port: "{{ girder_port }}"
-    plugins:
-      - isic_archive
-      - large_image
-      - worker
-    state: present
-  notify:
-    - Restart Girder
-    - Build Girder
+- name: Create a systemd drop-in unit file for Girder
+  template:
+    src: "girder.conf.j2"
+    dest: "/etc/systemd/system/girder.service.d/10-isic.conf"
+  become: true
+  notify: Restart Girder
 
 - meta: flush_handlers
 
-- name: Set CORS settings
-  girder:
-    username: "{{ girder_admin_username }}"
-    password: "{{ girder_admin_password }}"
-    port: "{{ girder_port }}"
-    setting:
-      key: "{{ item.key }}"
-      value: "{{ item.value }}"
-    state: present
-  with_items:
-    - key: "core.cors.allow_origin"
-      value: "{{ isic_cors_allow_origin }}"
-    - key: "core.cors.allow_methods"
-      value: "{{ isic_cors_allow_methods }}"
-
-- name: Set ISIC settings
-  girder:
-    username: "{{ girder_admin_username }}"
-    password: "{{ girder_admin_password }}"
-    port: "{{ girder_port }}"
-    setting:
-      key: "{{ item.key }}"
-      value: "{{ item.value }}"
-    state: present
-  with_items:
-    - key: "core.email_host"
-      value: "{{ isic_email_host }}"
-    - key: "core.smtp_host"
-      value: "{{ isic_smtp_host }}"
-    - key: "core.smtp.port"
-      value: "{{ isic_smtp_port }}"
-    - key: "core.smtp.username"
-      value: "{{ isic_smtp_username }}"
-    - key: "core.smtp.password"
-      value: "{{ isic_smtp_password }}"
-    - key: "core.smtp.encryption"
-      value: "{{ isic_smtp_encryption }}"
-    - key: "core.email_verification"
-      value: "{{ isic_email_verification }}"
-    - key: "isic.upload_role_arn"
-      value: "{{ isic_upload_role_arn }}"
-    - key: "isic.upload_bucket_name"
-      value: "{{ isic_upload_bucket_name }}"
-
-- name: Remount webroots
-  girder:
-    username: "{{ girder_admin_username }}"
-    password: "{{ girder_admin_password }}"
-    port: "{{ girder_port }}"
-    setting:
-      key: "core.route_table"
-      value:
-        core_girder: "/girder"
-        core_static_root: "/static"
-        markup: "/markup"
-    state: present
-  notify: Restart Girder
+- include_tasks: bootstrap.yml
+  vars:
+    ansible_python_interpreter: "{{ girder_virtualenv }}/bin/python3"

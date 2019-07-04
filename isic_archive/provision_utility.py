@@ -29,7 +29,6 @@ from .models.user import User
 
 
 def getAdminUser():
-
     # TODO: cache this?
     adminUser = User().findOne({'login': 'isic-admin'})
     if not adminUser:

@@ -1,7 +1,3 @@
 ---
-
-python_dist_path: "{{ ansible_user_dir }}/env"
-
-girder_port: 8080
 girder_admin_username: "admin"
 girder_admin_password: "password"

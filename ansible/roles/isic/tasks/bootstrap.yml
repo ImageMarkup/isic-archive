@@ -1,0 +1,101 @@
+---
+- name: Install Girder client for Girder Ansible module
+  pip:
+    name: girder-client
+    virtualenv: "{{ girder_virtualenv }}"
+
+- name: Wait for Girder to be listening
+  wait_for:
+    port: 8080
+    host: "localhost"
+
+- name: Create admin user
+  port: 8080
+  girder:
+    user:
+      firstName: "Provision"
+      lastName: "Admin"
+      login: "{{ girder_admin_username }}"
+      password: "{{ girder_admin_password }}"
+      email: "provision.admin@isic-archive.com"
+      admin: true
+    state: present
+
+- name: Create Girder assetstore dir
+  file:
+    path: "{{ isic_archive_assetstore_path }}"
+    owner: "{{ girder_user|default(ansible_user_id) }}"
+    group: "{{ girder_user|default(ansible_user_id) }}"
+    state: directory
+  become: true
+  become_user: root
+
+- name: Create assetstore
+  girder:
+    username: "{{ girder_admin_username }}"
+    password: "{{ girder_admin_password }}"
+    port: 8080
+    assetstore:
+      name: "Default"
+      type: "filesystem"
+      root: "{{ isic_archive_assetstore_path }}"
+      current: true
+    state: present
+
+- name: Set CORS settings
+  girder:
+    username: "{{ girder_admin_username }}"
+    password: "{{ girder_admin_password }}"
+    port: 8080
+    setting:
+      key: "{{ item.key }}"
+      value: "{{ item.value }}"
+    state: present
+  with_items:
+    - key: "core.cors.allow_origin"
+      value: "{{ isic_cors_allow_origin }}"
+    - key: "core.cors.allow_methods"
+      value: "{{ isic_cors_allow_methods }}"
+
+- name: Set ISIC settings
+  girder:
+    username: "{{ girder_admin_username }}"
+    password: "{{ girder_admin_password }}"
+    port: 8080
+    setting:
+      key: "{{ item.key }}"
+      value: "{{ item.value }}"
+    state: present
+  with_items:
+    - key: "core.email_host"
+      value: "{{ isic_email_host }}"
+    - key: "core.smtp_host"
+      value: "{{ isic_smtp_host }}"
+    - key: "core.smtp.port"
+      value: "{{ isic_smtp_port }}"
+    - key: "core.smtp.username"
+      value: "{{ isic_smtp_username }}"
+    - key: "core.smtp.password"
+      value: "{{ isic_smtp_password }}"
+    - key: "core.smtp.encryption"
+      value: "{{ isic_smtp_encryption }}"
+    - key: "core.email_verification"
+      value: "{{ isic_email_verification }}"
+    - key: "isic.upload_role_arn"
+      value: "{{ isic_upload_role_arn }}"
+    - key: "isic.upload_bucket_name"
+      value: "{{ isic_upload_bucket_name }}"
+
+- name: Remount webroots
+  girder:
+    username: "{{ girder_admin_username }}"
+    password: "{{ girder_admin_password }}"
+    port: 8080
+    setting:
+      key: "core.route_table"
+      value:
+        core_girder: "/girder"
+        core_static_root: "/static"
+        markup: "/markup"
+    state: present
+  notify: Restart Girder

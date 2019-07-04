@@ -1,6 +1,0 @@
----
-
-girder_port: 8080
-girder_mode: development
-
-build_girder: true
