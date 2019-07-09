@@ -142,9 +142,11 @@ import CreateDatasetView from './Datasets/CreateDatasetView';
 router.route('dataset/create', 'createDataset', () => {
     navigateToIfCanCreateDataset(CreateDatasetView);
 });
-import UploadBatchView from './Datasets/UploadBatchView';
+import UploadBatch from './Datasets/UploadBatch.vue';
 router.route('dataset/upload/batch', 'uploadBatch', () => {
-    navigateToIfCanCreateDataset(UploadBatchView);
+    navigateToIfCanCreateDataset(VueComponentView, {
+        component: UploadBatch
+    });
 });
 import ApplyMetadataView from './Datasets/ApplyMetadataView';
 router.route('dataset/:id/metadata/apply', 'applyMetadata', (id) => {

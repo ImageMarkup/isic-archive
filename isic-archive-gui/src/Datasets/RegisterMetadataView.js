@@ -3,10 +3,11 @@ import _ from 'underscore';
 import View from '../view';
 import {showAlertDialog} from '../common/utilities';
 import router from '../router';
+import VueComponentView from '../vueComponentView';
+import DatasetInfoWidget from './DatasetInfoWidget.vue';
 
 import RegisterMetadataTemplate from './registerMetadata.pug';
 import './registerMetadata.styl';
-import './datasetInfoWidget.styl';
 
 const RegisterMetadataView = View.extend({
     events: {
@@ -34,14 +35,21 @@ const RegisterMetadataView = View.extend({
      */
     initialize: function (settings) {
         this.dataset = settings.dataset;
+        this.datasetInfoWidget = null;
 
         this.render();
     },
 
     render: function () {
-        this.$el.html(RegisterMetadataTemplate({
-            dataset: this.dataset
-        }));
+        this.$el.html(RegisterMetadataTemplate());
+        this.datasetInfoWidget = new VueComponentView({
+            el: this.$('.isic-dataset-info-widget'),
+            component: DatasetInfoWidget,
+            props: {
+                dataset: this.dataset,
+            },
+            parentView: this
+        });
 
         return this;
     },

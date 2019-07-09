@@ -15,23 +15,6 @@ const DatasetModel = AccessControlledModel.extend({
     },
 
     /**
-     * Upload a batch of images.
-     * @param [zipFileId] The ID of the .zip file.
-     * @param [signature] Signature of license agreement.
-     */
-    uploadBatch: function (zipFileId, signature) {
-        return restRequest({
-            url: `${this.resourceName}/${this.id}/zipBatch`,
-            method: 'POST',
-            data: {
-                zipFileId: zipFileId,
-                signature: signature
-            },
-            error: null
-        });
-    },
-
-    /**
      * Upload an image.
      * @param [filename] Image filename.
      * @param [signature] Signature of license agreement.
