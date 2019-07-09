@@ -47,9 +47,9 @@ Vagrant.configure('2') do |config|
 
   config.vm.define 'worker' do |worker|
     worker.vm.box = 'bento/ubuntu-18.04'
-    worker.vm.hostname = 'isic-worker'
+    worker.vm.hostname = 'worker.isic-archive.test'
     worker.vm.provider 'virtualbox' do |virtualbox|
-      virtualbox.name = 'isic-archive-worker'
+      virtualbox.name = 'worker.isic-archive.test'
       virtualbox.memory = 2048
     end
 
