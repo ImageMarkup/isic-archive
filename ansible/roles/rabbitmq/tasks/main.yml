@@ -1,6 +1,6 @@
 ---
 
-- name: Install rabbitmq
+- name: Install RabbitMQ
   apt:
     name: rabbitmq-server
   become: true
@@ -25,14 +25,14 @@
   register: users
   become: true
 
-- name: Create isic-archive rmq user
+- name: Create isic-archive RabbitMQ user
   command:
     rabbitmqctl add_user {{ rabbitmq_username }} {{ rabbitmq_password }}
   become: true
   when: users.stdout == "0"
 
-# TODO: Determine minimal set of permissions for rmq user
-- name: Set rmq user permissions
+# TODO: Determine minimal set of permissions for RabbitMQ user
+- name: Set RabbitMQ user permissions
   command:
     rabbitmqctl set_permissions -p {{ rabbitmq_vhost }} {{ rabbitmq_username }} ".*" ".*" ".*"
   become: true
