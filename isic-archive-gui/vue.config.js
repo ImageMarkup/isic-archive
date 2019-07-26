@@ -1,6 +1,7 @@
 const path = require('path');
 const process = require('process');
 const webpack = require('webpack'); // eslint-disable-line import/no-extraneous-dependencies
+const SentryWebpackPlugin = require('@sentry/webpack-plugin');
 
 module.exports = {
   publicPath: process.env.ISIC_INTEGRATION ? '/' : '/admin/',
@@ -16,6 +17,18 @@ module.exports = {
         changeOrigin: true,
       },
     },
+  },
+
+  configureWebpack: {
+    plugins: [
+      new SentryWebpackPlugin({
+        dryRun: process.env.NODE_ENV !== 'production',
+        include: './dist/js',
+        ignoreFile: '.sentrycliignore',
+        ignore: ['node_modules', 'vue.config.js'],
+        configFile: 'sentry.properties',
+      }),
+    ],
   },
 
   chainWebpack: (config) => {
