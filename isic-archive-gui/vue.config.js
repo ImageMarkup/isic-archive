@@ -2,6 +2,11 @@ const path = require('path');
 const process = require('process');
 const webpack = require('webpack'); // eslint-disable-line import/no-extraneous-dependencies
 const SentryWebpackPlugin = require('@sentry/webpack-plugin');
+const GitRevisionPlugin = require('git-revision-webpack-plugin');
+
+
+const gitRevisionPlugin = new GitRevisionPlugin();
+
 
 module.exports = {
   publicPath: process.env.ISIC_INTEGRATION ? '/' : '/admin/',
@@ -21,9 +26,13 @@ module.exports = {
 
   configureWebpack: {
     plugins: [
+      new webpack.DefinePlugin({
+        COMMITHASH: JSON.stringify(gitRevisionPlugin.commithash()),
+      }),
       new SentryWebpackPlugin({
         dryRun: process.env.NODE_ENV !== 'production',
         include: './dist/js',
+        release: gitRevisionPlugin.commithash(),
         ignoreFile: '.sentrycliignore',
         ignore: ['node_modules', 'vue.config.js'],
         configFile: 'sentry.properties',

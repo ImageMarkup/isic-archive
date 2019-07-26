@@ -38,6 +38,7 @@
     "bibtex-parse-js": "^0.0.24",
     "eslint": "^5.8.0",
     "eslint-plugin-vue": "^5.0.0-0",
+    "git-revision-webpack-plugin": "^3.0.3",
     "mathy-unicode-characters": "^0.9.3",
     "pegjs": "^0.10.0",
     "pegjs-loader": "^0.5.4",

@@ -7,7 +7,7 @@ import IsicApp from './app.js';
 
 const sentryDsn = process.env.VUE_APP_SENTRY_DSN;
 
-Sentry.init({ dsn: sentryDsn });
+Sentry.init({ dsn: sentryDsn, release: COMMITHASH });
 
 $(() => {
     events.trigger('g:appload.before');
