@@ -29,7 +29,24 @@ from isic_archive.models import User
 @pytest.fixture
 def provisionedServer(server):
     provisionDatabase()
+
+    # Create the first 'real' user, which will be auto-promoted to admin
+    User().createUser(
+        login='admin-user',
+        password='password',
+        firstName='Test',
+        lastName='Admin',
+        email='test-admin@isic-archive.com'
+    )
+
     yield server
+
+
+@pytest.mark.plugin('isic_archive', IsicArchive)
+def testFirstUserAdmin(provisionedServer):
+    # Ensure the first created user is auto-promoted to admin
+    adminUser = User().findOne({'login': 'admin-user'})
+    assert adminUser['admin'] is True
 
 
 @pytest.mark.plugin('isic_archive', IsicArchive)
@@ -45,6 +62,8 @@ def testBasicUser(provisionedServer):
     assertStatusOk(resp)
     testUser = User().findOne({'login': 'test-user'})
     assert testUser is not None
+    # Ensure this user is not auto-promoted
+    assert testUser['admin'] is False
 
     # Ensure creation returns permissions
     negativePermissions = {

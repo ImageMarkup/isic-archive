@@ -50,6 +50,8 @@ def onUserCreate(event):
         'email': {'$nin': [
             'admin@isic-archive.com',
             'provision.admin@isic-archive.com',
+            # The new user has already been saved, when 'model.user.save.created' is triggered
+            newUser['email'],
         ]}
     }):
         # Make this user an admin
