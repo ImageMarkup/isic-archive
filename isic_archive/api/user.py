@@ -102,9 +102,9 @@ def requestCreateDatasetPermission(self, params):
         groupName = 'Dataset Contributors'
         group = Group().findOne({'name': groupName})
         if not group:
-            raise RestException('Could not load group: %s' % groupName)
+            raise RestException(f'Could not load group: {groupName}')
         resp['message'] = 'Dataset Contributor access requested. An administrator may contact ' \
-                          'you via email (at %s) to process your request.' % currentUser['email']
+                          f'you via email (at {currentUser["email"]}) to process your request.'
 
         for request in Group().getFullRequestList(group):
             if request['id'] == currentUser['_id']:
@@ -158,10 +158,10 @@ def acceptTerms(self, params):
 @access.user
 @describeRoute(
     Description('Pre-create a new user and issue them an invite.')
-    .param('login', 'The user\'s requested login.')
-    .param('email', 'The user\'s email address.')
-    .param('firstName', 'The user\'s first name.')
-    .param('lastName', 'The user\'s last name.')
+    .param('login', "The user's requested login.")
+    .param('email', "The user's email address.")
+    .param('firstName', "The user's first name.")
+    .param('lastName', "The user's last name.")
     .param('validityPeriod', 'The number of days that the invite will remain valid.',
            required=False, dataType='float', default=60.0)
 )
@@ -192,8 +192,7 @@ def inviteUser(self, params):
         newUser, days=validityPeriod,
         scope=[TokenScope.TEMPORARY_USER_AUTH])
 
-    inviteUrl = '%s/#user/%s/rsvp/%s' % (
-        mail_utils.getEmailUrlPrefix(), newUser['_id'], token['_id'])
+    inviteUrl = f'{mail_utils.getEmailUrlPrefix()}/#user/{newUser["_id"]}/rsvp/{token["_id"]}'
 
     html = mail_utils.renderTemplate(
         'inviteUser.mako',

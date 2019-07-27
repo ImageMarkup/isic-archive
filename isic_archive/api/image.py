@@ -65,18 +65,18 @@ class ImageResource(IsicResource):
             try:
                 filterParam = json.loads(filterParam)
             except ValueError as e:
-                raise ValidationException('Could not decode JSON: %s' % str(e), 'filter')
+                raise ValidationException(f'Could not decode JSON: {str(e)}', 'filter')
         try:
             return querylang.astToMongo(filterParam)
         except (TypeError, ValueError, InvalidId) as e:
-            raise ValidationException('Could not parse filter: %s' % str(e), 'filter')
+            raise ValidationException(f'Could not parse filter: {str(e)}', 'filter')
 
     def _parseImageIds(self, imageIdsParam):
         if isinstance(imageIdsParam, str):
             try:
                 imageIdsParam = json.loads(imageIdsParam)
             except ValueError as e:
-                raise ValidationException('Could not decode JSON: %s' % str(e), 'imageIds')
+                raise ValidationException(f'Could not decode JSON: {str(e)}', 'imageIds')
         if not isinstance(imageIdsParam, list):
             raise ValidationException('"imageIds" must be a JSON-encoded array.', 'imageIds')
         if len(imageIdsParam) > 300:
@@ -174,14 +174,14 @@ class ImageResource(IsicResource):
                     })
                 for data in zipGenerator.addFile(
                         metadataGenerator,
-                        path=os.path.join(dataset['name'], '%s.json' % image['name'])):
+                        path=os.path.join(dataset['name'], f'{image["name"]}.json')):
                     yield data
 
         for dataset in datasetCache.values():
             licenseText = mail_utils.renderTemplate(
-                'license_%s.mako' % dataset['license'])
+                f'license_{dataset["license"]}.mako')
             attributionText = mail_utils.renderTemplate(
-                'attribution_%s.mako' % dataset['license'],
+                f'attribution_{dataset["license"]}.mako',
                 {
                     'work': dataset['name'],
                     'author': dataset['attribution']
@@ -237,7 +237,7 @@ class ImageResource(IsicResource):
         imagesZipGenerator = self._imagesZipGenerator(downloadFileName, images, include)
 
         setResponseHeader('Content-Type', 'application/zip')
-        setResponseHeader('Content-Disposition', 'attachment; filename="%s.zip"' % downloadFileName)
+        setResponseHeader('Content-Disposition', f'attachment; filename="{downloadFileName}.zip"')
         return lambda: imagesZipGenerator
 
     @describeRoute(
@@ -252,7 +252,7 @@ class ImageResource(IsicResource):
         return Image().getHistograms(query, user)
 
     @describeRoute(
-        Description('Return an image\'s details.')
+        Description("Return an image's details.")
         .param('id', 'The ID of the image.', paramType='path')
         .errorResponse('ID was invalid.')
     )
@@ -263,7 +263,7 @@ class ImageResource(IsicResource):
         return Image().filter(image, user)
 
     @describeRoute(
-        Description('Return an image\'s thumbnail.')
+        Description("Return an image's thumbnail.")
         .param('id', 'The ID of the image.', paramType='path')
         .param('width', 'The desired maximum width for the thumbnail.', paramType='query',
                required=False, default=256)
@@ -286,7 +286,7 @@ class ImageResource(IsicResource):
         return thumbData
 
     @describeRoute(
-        Description('Return an image\'s multiresolution tile information.')
+        Description("Return an image's multiresolution tile information.")
         .param('id', 'The ID of the image.', paramType='path')
         .errorResponse('ID was invalid.')
     )
@@ -319,13 +319,13 @@ class ImageResource(IsicResource):
         try:
             tileData, tileMime = ImageItem().getTile(image, x, y, z)
         except TileGeneralException as e:
-            raise RestException(e.message, code=404)
+            raise RestException(str(e), code=404)
         setResponseHeader('Content-Type', tileMime)
         setRawResponse()
         return tileData
 
     @describeRoute(
-        Description('Download an image\'s high-quality original binary data.')
+        Description("Download an image's high-quality original binary data.")
         .param('id', 'The ID of the image.', paramType='path')
         .param('contentDisposition',
                'Specify the Content-Disposition response header disposition-type value.',
@@ -338,7 +338,7 @@ class ImageResource(IsicResource):
     def download(self, image, params):
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
-            raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
+            raise ValidationException(f'Unallowed contentDisposition type "{contentDisp}".',
                                       'contentDisposition')
 
         originalFile = Image().originalFile(image)
@@ -373,9 +373,9 @@ class ImageResource(IsicResource):
         # validate parameters
         seedCoord = params['seed']
         if not (
-            isinstance(seedCoord, list) and
-            len(seedCoord) == 2 and
-            all(isinstance(value, int) for value in seedCoord)
+            isinstance(seedCoord, list)
+            and len(seedCoord) == 2
+            and all(isinstance(value, int) for value in seedCoord)
         ):
             raise ValidationException('Value must be a coordinate pair.', 'seed')
 
@@ -386,7 +386,7 @@ class ImageResource(IsicResource):
         try:
             contourCoords = Segmentation().doContourSegmentation(image, seedCoord, tolerance)
         except GirderException as e:
-            raise RestException(e.message)
+            raise RestException(str(e))
 
         contourFeature = geojson.Feature(
             geometry=geojson.Polygon(
@@ -434,7 +434,7 @@ class ImageResource(IsicResource):
                '- The values of two or more fields are inconsistent with one another\n'
                '- A value of a field already exists and cannot be safely overwritten\n'
                '\n'
-               'When there are no errors, the `warnings` list contains warnings that don\'t '
+               "When there are no errors, the `warnings` list contains warnings that don't "
                'prevent saving the metadata, but should be reviewed.')
         .modelParam('id', description='The ID of the image.', model=Image, destName='image',
                     level=AccessType.READ)

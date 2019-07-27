@@ -8,7 +8,7 @@ from isic_archive.models.image import Image
 
 
 def test_zip_ingestion(session, dataset_id):
-    r = session.post('dataset/%s/zip' % dataset_id, data={'signature': 'test'})
+    r = session.post(f'dataset/{dataset_id}/zip', data={'signature': 'test'})
     r.raise_for_status()
 
     s3 = boto3.client(
@@ -24,14 +24,14 @@ def test_zip_ingestion(session, dataset_id):
     batch_id = r.json()['batchId']
     batch = Batch().load(batch_id)
 
-    r = session.post('dataset/%s/zip/%s' % (dataset_id, batch_id))
+    r = session.post(f'dataset/{dataset_id}/zip/{batch_id}')
     r.raise_for_status()
 
     start = time.time()
     while batch['ingestStatus'] != 'notified':
         batch = Batch().load(batch_id)
         if time.time() - start > 120:
-            assert False, 'timed out'
+            raise AssertionError('timed out')
         sleep(10)
 
     assert list(Batch().imagesFailedIngest(batch)) == []

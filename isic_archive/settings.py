@@ -50,7 +50,7 @@ def _validateDataUploadSettings(doc):
             PluginSettings.UPLOAD_BUCKET_NAME: 'S3 bucket name'
         }
         description = descriptions[doc['key']]
-        raise ValidationException('Upload %s must be a string.' % description, 'value')
+        raise ValidationException(f'Upload {description} must be a string.', 'value')
 
 
 @setting_utilities.default({

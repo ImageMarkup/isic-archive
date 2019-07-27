@@ -80,7 +80,7 @@ class Study(Folder):
             )
         except ValidationException as e:
             # Reword the validation error message
-            if e.message == 'A folder with that name already exists here.':
+            if str(e) == 'A folder with that name already exists here.':
                 raise ValidationException('A study with that name already exists.', 'name')
             else:
                 raise
@@ -408,7 +408,7 @@ class Study(Folder):
             try:
                 jsonschema.validate(doc['meta'], metaSchema)
             except jsonschema.ValidationError as e:
-                raise ValidationException('Invalid study: ' + e.message)
+                raise ValidationException(f'Invalid study: {str(e)}')
 
         if 'name' not in doc:
             # This is a pre-validation

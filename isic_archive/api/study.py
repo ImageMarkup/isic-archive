@@ -107,7 +107,7 @@ class StudyResource(IsicResource):
         if params.get('format') == 'csv':
             setResponseHeader('Content-Type', 'text/csv')
             setResponseHeader('Content-Disposition',
-                              'attachment; filename="%s.csv"' % study['name'])
+                              f'attachment; filename="{study["name"]}.csv"')
             return functools.partial(self._getStudyCSVStream, study)
 
         else:
@@ -150,8 +150,7 @@ class StudyResource(IsicResource):
                 state=Study().State.COMPLETE
             ):
                 elapsedSeconds = \
-                    int((annotation['stopTime'] -
-                         annotation['startTime']).total_seconds())
+                    int((annotation['stopTime'] - annotation['startTime']).total_seconds())
 
                 filteredAnnotatorUser = User().filterSummary(annotatorUser, currentUser)
                 annotatorUserName = filteredAnnotatorUser['name']
@@ -234,7 +233,7 @@ class StudyResource(IsicResource):
                 annotatorUsers=annotatorUsers,
                 images=images)
         except ValidationException as e:
-            raise RestException(e.message)
+            raise RestException(str(e))
 
         return self.getStudy(id=study['_id'], params={})
 
@@ -243,7 +242,7 @@ class StudyResource(IsicResource):
         .param('id', 'The ID of the study.', paramType='path')
         .param('userIds', 'The user IDs to add, as a JSON array.', paramType='form')
         .errorResponse('ID was invalid.')
-        .errorResponse('You don\'t have permission to add a study annotator.', 403)
+        .errorResponse("You don't have permission to add a study annotator.", 403)
     )
     @access.user
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
@@ -282,7 +281,7 @@ class StudyResource(IsicResource):
         .param('id', 'The ID of the study.', paramType='path')
         .param('imageIds', 'The image IDs to add, as a JSON array.', paramType='form')
         .errorResponse('ID was invalid.')
-        .errorResponse('You don\'t have permission to add a study image.', 403)
+        .errorResponse("You don't have permission to add a study image.", 403)
     )
     @access.user
     @loadmodel(model='study', plugin='isic_archive', level=AccessType.READ)
@@ -332,13 +331,12 @@ class StudyResource(IsicResource):
 
         # Check if user already requested to participate in the study
         if Study().hasParticipationRequest(study, currentUser):
-            raise ValidationException('User "%s" already requested to participate in the study.' %
-                                      currentUser['_id'])
+            raise ValidationException(
+                f'User "{currentUser["_id"]}" already requested to participate in the study.')
 
         # Check if user is already an annotator in the study
         if Study().hasAnnotator(study, currentUser):
-            raise ValidationException('User "%s" is already part of the study.' %
-                                      currentUser['_id'])
+            raise ValidationException(f'User "{currentUser["_id"]}" is already part of the study.')
 
         Study().addParticipationRequest(study, currentUser)
 
@@ -395,7 +393,7 @@ class StudyResource(IsicResource):
 
         # Check if user is already an annotator in the study
         if not Study().hasAnnotator(study, annotatorUser):
-            raise ValidationException('User "%s" is not part of the study.' % annotatorUser['_id'])
+            raise ValidationException(f'User "{annotatorUser["_id"]}" is not part of the study.')
 
         Study().removeAnnotator(study, annotatorUser)
 
@@ -418,7 +416,7 @@ class StudyResource(IsicResource):
 
         # Check if user requested to participate in the study
         if not Study().hasParticipationRequest(study, otherUser):
-            raise ValidationException('User "%s" did not request to participate in the study.' %
-                                      otherUser['_id'])
+            raise ValidationException(
+                f'User "{otherUser["_id"]}" did not request to participate in the study.')
 
         Study().removeParticipationRequest(study, otherUser)

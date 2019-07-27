@@ -166,7 +166,7 @@ class FieldParser(object):
     @classmethod
     def _assertEnumerated(cls, value, allowed):
         if value not in allowed:
-            expected = 'one of %s' % str(sorted(allowed))
+            expected = f'one of {str(sorted(allowed))}'
             raise BadFieldTypeException(name=cls.name, fieldType=expected, value=value)
 
     @classmethod
@@ -1095,7 +1095,7 @@ def addImageMetadata(image, data):
     # Report warnings for unrecognized fields when there are no errors
     if not errors:
         warnings.extend([
-            'unrecognized field %r will be added to unstructured metadata' % (field)
+            f'unrecognized field {field!r} will be added to unstructured metadata'
             for field in data])
 
     return errors, warnings

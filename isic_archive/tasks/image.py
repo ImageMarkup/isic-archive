@@ -28,7 +28,7 @@ def ingestImage(self, imageId):
     try:
         imageFile = Image().originalFile(image)
         originalFileStreamResponse = self.session.get(
-            'file/%s/download' % imageFile['_id'])
+            f'file/{imageFile["_id"]}/download')
         originalFileStreamResponse.raise_for_status()
         originalFileStreamResponse = io.BytesIO(originalFileStreamResponse.content)
 
@@ -69,7 +69,7 @@ def generateSuperpixels(self, imageId):
         imageFile = Image().originalFile(image)
 
         originalFileStreamResponse = self.session.get(
-            'file/%s/download' % imageFile['_id'])
+            f'file/{imageFile["_id"]}/download')
         originalFileStreamResponse.raise_for_status()
         originalFileStreamResponse = io.BytesIO(originalFileStreamResponse.content)
 
@@ -83,7 +83,7 @@ def generateSuperpixels(self, imageId):
         uploadSuperpixelsResponse = self.session.post('file', params={
             'parentType': 'item',
             'parentId': imageId,
-            'name': '%s_superpixels_v%s.png' % (image['name'], SUPERPIXEL_VERSION),
+            'name': f'{image["name"]}_superpixels_v{SUPERPIXEL_VERSION}.png',
             'size': len(superpixelsEncodedStream.getvalue()),
             'mimeType': 'image/png'
         }, data=superpixelsEncodedStream.getvalue())
@@ -114,7 +114,7 @@ def generateLargeImage(self, imageId):
 
     try:
         originalFileStreamResponse = self.session.get(
-            'file/%s/download' % imageFile['_id'], stream=True)
+            f'file/{imageFile["_id"]}/download', stream=True)
         originalFileStreamResponse.raise_for_status()
 
         with tempfile.NamedTemporaryFile() as inputFile, \
@@ -130,7 +130,7 @@ def generateLargeImage(self, imageId):
                     params={
                         'parentType': 'item',
                         'parentId': imageId,
-                        'name': imageItem['name'] + '.tiff',
+                        'name': f'{imageItem["name"]}.tiff',
                         'size': os.path.getsize(outputFile.name)
                     }, data=vipsResultFile.read(),
                 )

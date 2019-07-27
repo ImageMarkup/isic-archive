@@ -91,7 +91,7 @@ class DatasetResource(IsicResource):
         ]
 
     @describeRoute(
-        Description('Return a lesion image dataset\'s details.')
+        Description("Return a lesion image dataset's details.")
         .param('id', 'The ID of the dataset.', paramType='path')
         .errorResponse('ID was invalid.')
     )
@@ -169,26 +169,26 @@ class DatasetResource(IsicResource):
                '[File](https://developer.mozilla.org/en-US/docs/Web/API/File) object, '
                'for example from an [&lt;input type="file"&gt;]'
                '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file) '
-               'element or a drag and drop operation\'s [DataTransfer]'
+               "element or a drag and drop operation's [DataTransfer]"
                '(https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer) object.\n\n'
                'Example using [XMLHttpRequest]'
                '(https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest):\n'
                '```\n'
                'var req = new XMLHttpRequest();\n'
-               'req.open(\'POST\', url, true); // url includes parameters\n'
+               "req.open('POST', url, true); // url includes parameters\n"
                'req.onload = function (event) {\n'
                '    // Uploaded\n'
                '};\n'
-               'req.setRequestHeader(\'Content-Type\', \'image/jpeg\');\n'
+               "req.setRequestHeader('Content-Type', 'image/jpeg');\n"
                'req.send(file);\n'
                '```\n\n'
                'Example using [jQuery.ajax()](http://api.jquery.com/jquery.ajax/):\n'
                '```\n'
                '$.ajax({\n'
                '     url: url, // url includes parameters\n'
-               '     method: \'POST\',\n'
+               "     method: 'POST',\n"
                '     data: file,\n'
-               '     contentType: \'image/jpeg\',\n'
+               "     contentType: 'image/jpeg',\n"
                '     processData: false,\n'
                '}).done(function (resp) {\n'
                '    // Uploaded\n'
@@ -197,15 +197,15 @@ class DatasetResource(IsicResource):
                'Example using [axios](https://github.com/axios/axios):\n'
                '```\n'
                'axios({\n'
-               '    method: \'post\',\n'
+               "    method: 'post',\n"
                '    url: url,\n'
                '    params: {\n'
-               '        filename: \'my_image.jpg\',\n'
-               '        signature: \'my signature\',\n'
+               "        filename: 'my_image.jpg',\n"
+               "        signature: 'my signature',\n"
                '    },\n'
                '    data: file,\n'
                '    headers: {\n'
-               '        \'Content-Type\': \'image/jpeg\',\n'
+               "        'Content-Type': 'image/jpeg',\n"
                '    }\n'
                '}).then(function (resp) {\n'
                '    // Uploaded\n'
@@ -213,7 +213,7 @@ class DatasetResource(IsicResource):
                '```\n\n'
                'Note that files uploaded in the request body are not supported by '
                '[OpenAPI 2.0](https://swagger.io/docs/specification/2-0/file-upload/), '
-               'so it\'s currently not possible to use this endpoint from the Swagger UI '
+               "so it's currently not possible to use this endpoint from the Swagger UI "
                'interface.')
         # Note: OpenAPI 3.0 supports files uploaded in the request body, but Swagger GUI may not
         # properly display the file upload UI. See:
@@ -297,7 +297,7 @@ class DatasetResource(IsicResource):
         .notes('This endpoint returns information that allows the client to upload a '
                'ZIP file of images directly to an Amazon Web Services (AWS) S3 bucket.'
                '\n\n'
-               'It\'s recommended that the client use an AWS SDK, such as '
+               "It's recommended that the client use an AWS SDK, such as "
                '[Boto 3](https://github.com/boto/boto3) or '
                '[AWS SDK for JavaScript](https://github.com/aws/aws-sdk-js), '
                'to simplify authenticating and uploading the file.'
@@ -320,21 +320,21 @@ class DatasetResource(IsicResource):
                '```\n'
                'import boto3\n'
                's3 = boto3.client(\n'
-               '    \'s3\',\n'
-               '    aws_access_key_id=response[\'accessKeyId\'],\n'
-               '    aws_secret_access_key=response[\'secretAccessKey\'],\n'
-               '    aws_session_token=response[\'sessionToken\']\n'
+               "    's3',\n"
+               "    aws_access_key_id=response['accessKeyId'],\n"
+               "    aws_secret_access_key=response['secretAccessKey'],\n"
+               "    aws_session_token=response['sessionToken']\n"
                ')\n'
                '\n'
-               'with open(\'images.zip\', \'rb\') as data:\n'
+               "with open('images.zip', 'rb') as data:\n"
                '    s3.upload_fileobj(\n'
                '        Fileobj=data,\n'
-               '        Bucket=response[\'bucketName\'],\n'
-               '        Key=response[\'objectKey\']\n'
+               "        Bucket=response['bucketName'],\n"
+               "        Key=response['objectKey']\n"
                '    )\n'
                '\n'
                '# Store batch identifier\n'
-               'batchId = response[\'batchId\']\n'
+               "batchId = response['batchId']\n"
                '```\n\n'
                '#### Example using AWS SDK for JavaScript\n'
                '```\n'
@@ -348,7 +348,7 @@ class DatasetResource(IsicResource):
                'var batchId = response.batchId;\n'
                '\n'
                'var s3 = new AWS.S3({\n'
-               '    apiVersion: \'2006-03-01\'\n'
+               "    apiVersion: '2006-03-01'\n"
                '});\n'
                '\n'
                'var params = {\n'
@@ -391,7 +391,7 @@ class DatasetResource(IsicResource):
         try:
             return Dataset().initiateZipUploadS3(dataset=dataset, signature=signature, user=user)
         except GirderException as e:
-            raise RestException(e.message)
+            raise RestException(str(e))
 
     @describeRoute(
         Description('Cancel a direct-to-S3 upload of a ZIP file of images.')
@@ -409,7 +409,7 @@ class DatasetResource(IsicResource):
         try:
             Dataset().cancelZipUploadS3(dataset=dataset, batch=batch, user=user)
         except GirderException as e:
-            raise RestException(e.message)
+            raise RestException(str(e))
 
     @describeRoute(
         Description('Finalize a direct-to-S3 upload of a ZIP file of images.')

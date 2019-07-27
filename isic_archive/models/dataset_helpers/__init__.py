@@ -61,7 +61,7 @@ def matchFilenameRegex(filename):
         extension = r'\.\w+'
 
     # Compile regular expression
-    pattern = '^%s%s$' % (root, extension)
+    pattern = f'^{root}{extension}$'
     regex = re.compile(pattern, re.IGNORECASE)
 
     return regex

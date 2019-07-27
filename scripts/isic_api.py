@@ -23,16 +23,16 @@ import requests
 class ISICApi(object):
     def __init__(self, hostname='https://isic-archive.com',
                  username=None, password=None):
-        self.baseUrl = '%s/api/v1' % hostname
+        self.baseUrl = f'{hostname}/api/v1'
         self.authToken = None
 
         if username is not None:
             if password is None:
-                password = input('Password for user "%s":' % username)
+                password = input(f'Password for user "{username}":')
             self.authToken = self._login(username, password)
 
     def _makeUrl(self, endpoint):
-        return '%s/%s' % (self.baseUrl, endpoint)
+        return f'{self.baseUrl}/{endpoint}'
 
     def _login(self, username, password):
         authResponse = requests.get(
@@ -40,7 +40,7 @@ class ISICApi(object):
             auth=(username, password)
         )
         if not authResponse.ok:
-            raise Exception('Login error: %s' % authResponse.json()['message'])
+            raise Exception(f'Login error: {authResponse.json()["message"]}')
 
         authToken = authResponse.json()['authToken']['token']
         return authToken
@@ -59,7 +59,7 @@ class ISICApi(object):
         offset = 0
         while True:
             resp = self.get(
-                '%slimit=%d&offset=%d' % (endpoint, LIMIT, offset)
+                f'{endpoint}limit={LIMIT:d}&offset={offset:d}'
             ).json()
             if not resp:
                 break

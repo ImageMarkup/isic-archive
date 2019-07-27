@@ -73,8 +73,8 @@ class Segmentation(Model):
 
         if not(
             # The imageData has a shape of (rows, cols), the seed is (x, y)
-            0.0 <= seedCoord[0] <= imageData.shape[1] and
-            0.0 <= seedCoord[1] <= imageData.shape[0]
+            0.0 <= seedCoord[0] <= imageData.shape[1]
+            and 0.0 <= seedCoord[1] <= imageData.shape[0]
         ):
             raise GirderException('seedCoord is out of bounds')
 
@@ -114,7 +114,7 @@ class Segmentation(Model):
             maskFile = Upload().uploadFromFile(
                 obj=maskOutputStream,
                 size=len(maskOutputStream.getvalue()),
-                name='%s_segmentation.png' % (image['name']),
+                name=f'{image["name"]}_segmentation.png',
                 # TODO: change this once a bug in upstream Girder is fixed
                 parentType='segmentation',
                 parent=segmentation,

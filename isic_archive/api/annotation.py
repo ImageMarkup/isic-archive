@@ -134,7 +134,7 @@ class AnnotationResource(IsicResource):
             raise RestException('Only complete annotations have markup.')
 
     @describeRoute(
-        Description('Return an annotation\'s markup as a raw superpixel array.')
+        Description("Return an annotation's markup as a raw superpixel array.")
         .param('annotationId', 'The ID of the annotation.', paramType='path')
         .param('featureId', 'The feature ID for the markup.', paramType='path')
         .errorResponse()
@@ -156,7 +156,7 @@ class AnnotationResource(IsicResource):
             return [0.0] * (maxSuperpixel + 1)
 
     @describeRoute(
-        Description('Return an annotation\'s markup as a mask.')
+        Description("Return an annotation's markup as a mask.")
         .param('annotationId', 'The ID of the annotation.', paramType='path')
         .param('featureId', 'The feature ID for the markup.', paramType='path')
         .produces('image/png')
@@ -191,13 +191,13 @@ class AnnotationResource(IsicResource):
                 # Rename features to ensure the file is downloadable on Windows
                 featureId.replace(' : ', ' ; ').replace('/', ',')
             )
-            setResponseHeader('Content-Disposition', 'inline; filename="%s"' % contentName)
-            setResponseHeader('Content-Length', len(markupMaskEncodedData))
+            setResponseHeader('Content-Disposition', f'inline; filename="{contentName}"')
+            setResponseHeader('Content-Length', str(len(markupMaskEncodedData)))
 
             return markupMaskEncodedData
 
     @describeRoute(
-        Description('Render an annotation\'s markup, overlaid on its image.')
+        Description("Render an annotation's markup, overlaid on its image.")
         .param('annotationId', 'The ID of the annotation to be rendered.', paramType='path')
         .param('featureId', 'The feature ID for the markup.', paramType='path')
         .param('contentDisposition',
@@ -212,7 +212,7 @@ class AnnotationResource(IsicResource):
     def getAnnotationMarkupRendered(self, annotation, featureId, params):
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
-            raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
+            raise ValidationException(f'Unallowed contentDisposition type "{contentDisp}".',
                                       'contentDisposition')
 
         self._ensureMarkup(annotation, featureId)
@@ -233,12 +233,12 @@ class AnnotationResource(IsicResource):
         if contentDisp == 'inline':
             setResponseHeader(
                 'Content-Disposition',
-                'inline; filename="%s"' % contentName)
+                f'inline; filename="{contentName}"')
         else:
             setResponseHeader(
                 'Content-Disposition',
-                'attachment; filename="%s"' % contentName)
-        setResponseHeader('Content-Length', len(renderEncodedData))
+                f'attachment; filename="{contentName}"')
+        setResponseHeader('Content-Length', str(len(renderEncodedData)))
 
         return renderEncodedData
 
@@ -302,7 +302,7 @@ class AnnotationResource(IsicResource):
                 }
             )
         except jsonschema.ValidationError as e:
-            raise ValidationException('Invalid markups: ' + e.message)
+            raise ValidationException(f'Invalid markups: {str(e)}')
 
         # Everything has passed input validation, so save
         annotation = Annotation().save(annotation)

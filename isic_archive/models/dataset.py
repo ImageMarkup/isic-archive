@@ -280,7 +280,7 @@ class Dataset(AccessControlledModel):
             doc['attribution'] = 'Anonymous'
         if doc['attribution'] == 'Anonymous' and doc['license'] != 'CC-0':
             raise ValidationException(
-                'Attribution may not be anonymous with a %s license.' % doc['license'],
+                f'Attribution may not be anonymous with a {doc["license"]} license.',
                 'attribution')
 
         # Owner
@@ -343,17 +343,17 @@ class Dataset(AccessControlledModel):
             signature=signature)
 
         # Add policy that restricts uploads to only the specific key
-        s3BucketArn = 'arn:aws:s3:::%s' % s3BucketName
-        s3ObjectKey = 'zip-uploads/%s' % batch['_id']
+        s3BucketArn = f'arn:aws:s3:::{s3BucketName}'
+        s3ObjectKey = f'zip-uploads/{batch["_id"]}'
         s3BucketPutObjectInKeyPolicy = {
-            "Version": "2012-10-17",
-            "Statement": [
+            'Version': '2012-10-17',
+            'Statement': [
                 {
-                    "Effect": "Allow",
-                    "Action": [
-                        "s3:PutObject",
+                    'Effect': 'Allow',
+                    'Action': [
+                        's3:PutObject',
                     ],
-                    "Resource": "%s/%s" % (s3BucketArn, s3ObjectKey)
+                    'Resource': f'{s3BucketArn}/{s3ObjectKey}'
                 }
             ]
         }
@@ -370,8 +370,8 @@ class Dataset(AccessControlledModel):
                 DurationSeconds=12 * 60 * 60
             )
         except botocore.exceptions.ClientError as e:
-            raise GirderException('Error acquiring temporary security credentials: %s' %
-                                  e.response['Error']['Message'])
+            raise GirderException(
+                f'Error acquiring temporary security credentials: {e.response["Error"]["Message"]}')
 
         # TODO: Could store assumed role user ARN on batch for use as principal in a bucket policy
         # that effectively revokes the temporary security credentials, before they expire,
@@ -413,7 +413,7 @@ class Dataset(AccessControlledModel):
                 Key=s3ObjectKey
             )
         except botocore.exceptions.ClientError as e:
-            raise GirderException('Error deleting object: %s' % e.response['Error']['Message'])
+            raise GirderException(f'Error deleting object: {e.response["Error"]["Message"]}')
 
         Batch().remove(batch)
 
@@ -438,7 +438,7 @@ class Dataset(AccessControlledModel):
             }
         )
         if updateResult.modified_count != 1:
-            raise RestException('Trying to finalize a batch which isn\'t uploading', code=409)
+            raise RestException("Trying to finalize a batch which isn't uploading", code=409)
 
         # Ingest images from ZIP file into dataset
         ingestBatchFromZipfile.delay(batch['_id'])
@@ -464,7 +464,7 @@ class Dataset(AccessControlledModel):
         for image in itertools.chain(acceptedImages, flaggedImages):
             if image['folderId'] != prereviewFolder['_id']:
                 raise ValidationException(
-                    'Image %s is not in Pre-review.' % image['_id'])
+                    f'Image {image["_id"]} is not in Pre-review.')
 
         now = datetime.datetime.utcnow()
 
@@ -506,8 +506,7 @@ class Dataset(AccessControlledModel):
                 Image().move(image, flaggedFolder)
 
         # Remove an empty Pre-review folder
-        if (Folder().countItems(prereviewFolder) +
-                Folder().countFolders(prereviewFolder)) == 0:
+        if (Folder().countItems(prereviewFolder) + Folder().countFolders(prereviewFolder)) == 0:
             Folder().remove(prereviewFolder)
 
     def registerMetadata(self, dataset, metadataDataStream, filename, user, sendMail=False):
@@ -614,7 +613,8 @@ class Dataset(AccessControlledModel):
 
                     # Add row information to validation error strings
                     validationErrors = [
-                        'on CSV row %s: %s' % (rowNum, error) for error in validationErrors]
+                        f'on CSV row {rowNum}: {error}'
+                        for error in validationErrors]
                     metadataErrors.extend(validationErrors)
 
                     # Update global collection of warnings
@@ -623,16 +623,16 @@ class Dataset(AccessControlledModel):
                     # Add updated image to list of images to potentially save
                     images.append(image)
                 except RowMetadataWarning as e:
-                    metadataWarnings.add('on CSV row %d: %s' % (rowNum, str(e)))
+                    metadataWarnings.add(f'on CSV row {rowNum:d}: {str(e)}')
                 except RowMetadataError as e:
-                    metadataErrors.append('on CSV row %d: %s' % (rowNum, str(e)))
+                    metadataErrors.append(f'on CSV row {rowNum:d}: {str(e)}')
         except FileMetadataException as e:
             metadataErrors.append(str(e))
         except csv.Error as e:
-            metadataErrors.append('parsing CSV: %s' % str(e))
+            metadataErrors.append(f'parsing CSV: {str(e)}')
         except UnicodeDecodeError as e:
-            metadataErrors.append('CSV is not UTF-8 encoded (%s at position %d in %r)' %
-                                  (e.reason, e.start, e.object))
+            metadataErrors.append(
+                f'CSV is not UTF-8 encoded ({e.reason} at position {e.start:d} in {e.object!r})')
 
         # Save updated metadata to images
         if not metadataErrors and save:
@@ -654,7 +654,7 @@ class Dataset(AccessControlledModel):
             isicIdField = None
         if (not originalNameField) and (not isicIdField):
             raise FileMetadataException(
-                'no \'filename\' or \'isic_id\' field found in CSV')
+                "no 'filename' or 'isic_id' field found in CSV")
         return originalNameField, isicIdField
 
     def _getImageForMetadataCsvRow(self, dataset, csvRow, originalNameField,
@@ -692,21 +692,19 @@ class Dataset(AccessControlledModel):
         numImages = images.count()
         if numImages != 1:
             if originalNameField and isicIdField:
-                errorStr = 'that match both %r: %r and %r: %r' % (
-                    originalNameField, originalName, isicIdField, isicId)
+                errorStr = f'that match both {originalNameField!r}: ' \
+                    f'{originalName!r} and {isicIdField!r}: {isicId!r}'
             elif originalNameField:
-                errorStr = 'that match %r: %r' % (
-                    originalNameField, originalName)
+                errorStr = f'that match {originalNameField!r}: {originalName!r}'
             else:  # isicIdField
-                errorStr = 'that match %r: %r' % (
-                    isicIdField, isicId)
+                errorStr = f'that match {isicIdField!r}: {isicId!r}'
 
             # No images found
             if numImages == 0:
-                raise RowMetadataWarning('%s %s' % ('no images found', errorStr))
+                raise RowMetadataWarning(f'no images found {errorStr}')
 
             # More than one images found
-            raise RowMetadataError('%s %s' % ('multiple images found', errorStr))
+            raise RowMetadataError(f'multiple images found {errorStr}')
 
         image = next(iter(images))
         return image

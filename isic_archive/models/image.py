@@ -285,22 +285,22 @@ class Image(Item):
         for facetName in categorialFacets:
             facetId = facetName.replace('.', '__')
             facetStages[facetId] = [
-                {'$sortByCount': '$' + facetName}
+                {'$sortByCount': f'${facetName}'}
             ]
         for facetName in tagFacets:
             facetId = facetName.replace('.', '__')
             facetStages[facetId] = [
                 {'$unwind': {
-                    'path': '$' + facetName,
+                    'path': f'${facetName}',
                     'preserveNullAndEmptyArrays': True
                 }},
-                {'$sortByCount': '$' + facetName}
+                {'$sortByCount': f'${facetName}'}
             ]
         for facetName, boundaries in ordinalFacets:
             facetId = facetName.replace('.', '__')
             facetStages[facetId] = [
                 {'$bucket': {
-                    'groupBy': '$' + facetName,
+                    'groupBy': f'${facetName}',
                     'boundaries': boundaries,
                     'default': None
                 }}
@@ -331,7 +331,7 @@ class Image(Item):
         for facetName, boundaries in ordinalFacets:
             boundariesMap = {
                 lowBound: {
-                    'label': '[%s - %s)' % (lowBound, highBound),
+                    'label': f'[{lowBound} - {highBound})',
                     'lowBound': lowBound,
                     'highBound': highBound,
                 }

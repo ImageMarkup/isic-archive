@@ -60,7 +60,7 @@ def sendEmailToGroup(groupName, templateFilename, templateParams, subject=None):
     """
     group = Group().findOne({'name': groupName})
     if not group:
-        raise Exception('Could not load group: %s.' % groupName)
+        raise Exception(f'Could not load group: {groupName}.')
     emails = [member['email'] for member in Group().listMembers(group)]
     if emails:
         html = mail_utils.renderTemplate(templateFilename, templateParams)

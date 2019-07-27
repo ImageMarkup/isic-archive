@@ -61,7 +61,7 @@ class User(GirderUser):
         obfuscatedId = base64.b32encode(
             hashlib.sha256(user['login'].encode('utf8')).digest()
         ).decode('ascii')[:4]
-        obfuscatedName = 'User %s' % obfuscatedId
+        obfuscatedName = f'User {obfuscatedId}'
         return obfuscatedName
 
     def filterSummary(self, user, accessorUser):
@@ -81,7 +81,7 @@ class User(GirderUser):
             return True
         group = Group().findOne({'name': groupName})
         if not group:
-            raise ValidationException('Could not load group: %s' % groupName)
+            raise ValidationException(f'Could not load group: {groupName}')
         return group['_id'] in user['groups']
 
     def canAcceptTerms(self, user):

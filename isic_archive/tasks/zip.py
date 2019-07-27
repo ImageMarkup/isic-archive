@@ -103,7 +103,7 @@ def ingestBatchFromZipfile(self, batchId):
     # Move file from S3 to the assetstore, attached to the dataset
     with TempDir() as tempDir:
         # Download file from S3 as upload user
-        filePath = os.path.join(tempDir, str(batch['_id']) + '.zip')
+        filePath = os.path.join(tempDir, f'{batch["_id"]}.zip')
         s3.download_file(
             Bucket=s3BucketName,
             Key=s3ObjectKey,

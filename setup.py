@@ -21,6 +21,7 @@ setup(
         'girder-gravatar',
         'girder>=3.0.0a6',
         'jsonpickle',
+        'jsonschema',
         'large-image-source-tiff[girder]',
         'natsort',
         'numpy',
