@@ -12,10 +12,17 @@ jobs:
     steps:
       - checkout:
           path: /home/circleci/project
-
       - run:
           name: Run Tox
           command: tox
+      - run:
+          name: Collect test reports
+          command: |
+            mkdir -p /home/circleci/test-reports/pytest
+            cp .tox/py36/log/junit.xml /home/circleci/test-reports/pytest/results.xml
+          when: always
+      - store_test_results:
+          path: /home/circleci/test-reports
 
   webBuild_webTest:
     docker:
