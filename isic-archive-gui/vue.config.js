@@ -14,6 +14,21 @@ module.exports = {
         // Girder API must be running here in development
         target: process.env.API_HOST || 'http://127.0.0.1:8080',
         changeOrigin: true,
+        onProxyRes: (proxyRes) => {
+          // Fix cookies to work with proxy API
+          const scHeaders = proxyRes.headers['set-cookie'];
+          if (Array.isArray(scHeaders)) {
+            // eslint-disable-next-line no-param-reassign
+            proxyRes.headers['set-cookie'] = scHeaders.map(scHeader => (
+              scHeader.split(';')
+                // Remove "Secure" attribute
+                .filter(v => v.trim().toLowerCase() !== 'secure')
+                // Remove "Domain" attribute, so domain will default to "localhost:8081"
+                .filter(v => !v.trim().toLowerCase().startsWith('domain='))
+                .join('; ')
+            ));
+          }
+        },
       },
     },
   },
