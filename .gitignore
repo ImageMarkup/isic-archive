@@ -19,8 +19,9 @@ var/
 .installed.cfg
 *.egg
 
-# Tox
+# Testing
 *.tox
+.mypy_cache
 
 # Editor directories and files
 .idea

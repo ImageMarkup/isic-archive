@@ -17,17 +17,14 @@
 #  limitations under the License.
 ###############################################################################
 
-# Deal with a bug where PEP257 crashes when parsing __all__
-# flake8: noqa
+from .annotation import AnnotationResource  # noqa:F401
+from .dataset import DatasetResource  # noqa:F401
+from .image import ImageResource  # noqa:F401
+from .redirects import RedirectsResource  # noqa:F401
+from .segmentation import SegmentationResource  # noqa:F401
+from .study import StudyResource  # noqa:F401
+from .task import TaskResource  # noqa:F401
+from .user import attachUserApi  # noqa:F401
 
-from .annotation import AnnotationResource
-from .dataset import DatasetResource
-from .image import ImageResource
-from .redirects import RedirectsResource
-from .segmentation import SegmentationResource
-from .study import StudyResource
-from .task import TaskResource
-from .user import attachUserApi
-
-__all__ = [AnnotationResource, DatasetResource, ImageResource,
-           SegmentationResource, StudyResource, TaskResource, attachUserApi]
+__all__ = ['AnnotationResource', 'DatasetResource', 'ImageResource',
+           'SegmentationResource', 'StudyResource', 'TaskResource', 'attachUserApi']

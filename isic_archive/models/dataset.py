@@ -23,6 +23,7 @@ import io
 import itertools
 import json
 import time
+from typing import List, Tuple
 
 import botocore
 import cherrypy
@@ -567,14 +568,13 @@ class Dataset(AccessControlledModel):
                                        if registration['fileId'] != metadataFile['_id']]
         return dataset
 
-    def applyMetadata(self, dataset, metadataFile, save):
+    def applyMetadata(self, dataset, metadataFile, save) -> Tuple[List[str], List[str]]:
         """
         Apply metadata in a .csv file to a dataset.
 
         :return: Tuple of:
             - List of strings describing parsing or validation errors.
             - List of strings describing metadata warnings.
-        :rtype: tuple(list, list)
         """
         # Avoid circular import
         from .image import Image

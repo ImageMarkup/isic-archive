@@ -16,6 +16,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 ###############################################################################
+import io
+from typing import BinaryIO, List, Tuple, Union
 
 import cv2
 import numpy
@@ -25,23 +27,19 @@ from .base import BaseSegmentationHelper
 
 class OpenCVSegmentationHelper(BaseSegmentationHelper):
     @classmethod
-    def loadImage(cls, imageDataStream):
+    def loadImage(cls, imageDataStream: Union[BinaryIO, io.BytesIO]) -> numpy.ndarray:
         """
         Load an image into an RGB array.
 
         :param imageDataStream: A file-like object containing the encoded
         (JPEG, etc.) image data.
-        :type imageDataStream: file-like object
         :return: A Numpy array with the RGB image data.
-        :rtype: numpy.ndarray
         """
-        if hasattr(imageDataStream, 'getvalue'):
+        if isinstance(imageDataStream, io.BytesIO):
             # This is more efficient for BytesIO objects
             imageDataBytes = imageDataStream.getvalue()
-        elif hasattr(imageDataStream, 'read'):
-            imageDataBytes = imageDataStream.read()
         else:
-            raise ValueError('imageDataStream must be a file-like object.')
+            imageDataBytes = imageDataStream.read()
 
         imageDataArray = numpy.fromstring(imageDataBytes, dtype=numpy.uint8)
         del imageDataBytes
@@ -59,18 +57,15 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         raise NotImplementedError()
 
     @classmethod
-    def segment(cls, image, seedCoord, tolerance):
+    def segment(cls, image: numpy.ndarray, seedCoord: Tuple[int, int], tolerance: int
+                ) -> numpy.ndarray:
         """
         Do a flood-fill segmentation of an image, yielding a single contiguous region with no holes.
 
         :param image: A Numpy array with the image to be segmented.
-        :type image: numpy.ndarray
         :param seedCoord: (X, Y) coordinates of the segmentation seed point.
-        :type seedCoord: tuple[int]
         :param tolerance: The intensity tolerance value for the segmentation.
-        :type tolerance: int
         :return: The mask image of the segmented region, with values 0 or 255.
-        :rtype: numpy.ndarray
         """
         maskImage = cls._floodFill(
             image,
@@ -98,30 +93,24 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         return maskImage
 
     @classmethod
-    def _floodFill(cls, image, seedCoord, tolerance, connectivity=8,
-                   padOutput=False):
+    def _floodFill(cls, image: numpy.ndarray, seedCoord: Tuple[int, int], tolerance: int,
+                   connectivity: int = 8, padOutput: bool = False) -> numpy.ndarray:
         """
         Segment an image into a region connected to a seed point, using OpenCV.
 
         :param image: The image to be segmented.
-        :type image: numpy.ndarray
         :param seedCoord: The point inside the connected region where the
         segmentation will start.
-        :type seedCoord: tuple[int]
         :param tolerance: The maximum color/intensity difference between the
         seed point and a point in the connected region.
-        :type tolerance: int
         :param connectivity: (optional) The number of allowed connectivity
         propagation directions. Allowed values are:
           * 4 for edge pixels
           * 8 for edge and corner pixels
-        :type connectivity: int
         :param padOutput: (optional)  Return the output with a 1-pixel wide
         padded border.
-        :type padOutput: bool
         :returns: A binary label mask, with an extra 1-pixel wide padded border.
         The values are either ``0`` or ``fillValue``.
-        :rtype: numpy.ndarray
         """
         # create padded mask to store output
         maskImage = numpy.zeros(
@@ -193,18 +182,16 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         return morphedImage
 
     @classmethod
-    def _maskToContours(cls, maskImage, paddedInput=False, safe=True):
+    def _maskToContours(cls, maskImage: numpy.ndarray, paddedInput: bool = False, safe: bool = True
+                        ) -> List[numpy.ndarray]:
         """
         Extract the contour lines within a segmented label mask, using OpenCV.
 
-        :param maskImage: A binary label mask. Values are considered as only 0 or non-0.
-        :type maskImage: numpy.ndarray of numpy.uint8
+        :param maskImage: A binary label mask of numpy.uint8.
+                          Values are considered as only 0 or non-0.
         :param paddedInput: Whether the mask_image already includes a 1-pixel wide padded border.
-        :type paddedInput: bool
         :param safe: Guarantee that the image_mask will not be modified. This is slower.
-        :type safe: bool
         :return: An array of point pairs.
-        :rtype: list[numpy.ndarray]
         """
         if maskImage.dtype != numpy.uint8:
             raise TypeError('maskImage must be an array of uint8.')
@@ -238,18 +225,15 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         return contours
 
     @classmethod
-    def maskToContour(cls, maskImage, paddedInput=False, safe=True):
+    def maskToContour(cls, maskImage: numpy.ndarray, paddedInput: bool = False, safe: bool = True
+                      ) -> numpy.ndarray:
         """
         Extract the longest contour line within a segmented label mask, using OpenCV.
 
-        :param maskImage: A binary label mask.
-        :type maskImage: numpy.ndarray of numpy.uint8
+        :param maskImage: A binary label mask of numpy.uint8.
         :param paddedInput: Whether the mask_image already includes a 1-pixel wide padded border.
-        :type paddedInput: bool
         :param safe: Guarantee that the image_mask will not be modified. This is slower.
-        :type safe: bool
         :return: An array of point pairs.
-        :rtype: numpy.ndarray
         """
         contours = cls._maskToContours(maskImage, paddedInput, safe)
 
@@ -268,16 +252,13 @@ class OpenCVSegmentationHelper(BaseSegmentationHelper):
         return largestContour
 
     @classmethod
-    def contourToMask(cls, imageShape, coords):
+    def contourToMask(cls, imageShape: Tuple[int, int], coords: numpy.ndarray) -> numpy.ndarray:
         """
         Convert a contour line to a label mask.
 
         :param imageShape: The [Y, X] shape of the image.
-        :type imageShape: tuple[int]
         :param coords: An array of point pairs.
-        :type coords: numpy.ndarray
-        :return: A binary label mask.
-        :rtype: numpy.ndarray of numpy.uint8
+        :return: A binary label mask of numpy.uint8.
         """
         maskImage = numpy.zeros(imageShape, dtype=numpy.uint8)
         cv2.drawContours(

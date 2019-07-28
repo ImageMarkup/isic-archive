@@ -19,6 +19,7 @@
 
 import collections
 import io
+from typing import BinaryIO, Tuple, Union
 import warnings
 
 import numpy
@@ -33,15 +34,13 @@ from .base import BaseSegmentationHelper
 
 class ScikitSegmentationHelper(BaseSegmentationHelper):
     @classmethod
-    def loadImage(cls, imageDataStream):
+    def loadImage(cls, imageDataStream: Union[BinaryIO, str]) -> numpy.ndarray:
         """
         Load an image into an RGB array.
 
         :param imageDataStream: A file-like object containing the encoded
         (JPEG, etc.) image data or a file path.
-        :type imageDataStream: file-like object or str
         :return: A Numpy array with the RGB image data.
-        :rtype: numpy.ndarray
         """
         imageData = skimage.io.imread(imageDataStream, plugin='pil')
 
@@ -73,18 +72,15 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         return imageStream
 
     @classmethod
-    def segment(cls, image, seedCoord, tolerance):
+    def segment(cls, image: numpy.ndarray, seedCoord: Tuple[int, int], tolerance: int
+                ) -> numpy.ndarray:
         """
         Do a flood-fill segmentation of an image, yielding a single contiguous region with no holes.
 
         :param image: A Numpy array with the image to be segmented.
-        :type image: numpy.ndarray
         :param seedCoord: (X, Y) coordinates of the segmentation seed point.
-        :type seedCoord: tuple[int]
         :param tolerance: The intensity tolerance value for the segmentation.
-        :type tolerance: int
         :return: The mask image of the segmented region, with values 0 or 255.
-        :rtype: numpy.ndarray
         """
         maskImage = cls._floodFill(
             image,
@@ -117,29 +113,23 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         return newArray.clip(typeInfo.min, typeInfo.max).astype(array.dtype)
 
     @classmethod
-    def _floodFill(cls, image, seedCoord, tolerance, connectivity=8):
+    def _floodFill(
+            cls, image: numpy.ndarray, seedCoord: Tuple[int, int], tolerance: int,
+            connectivity: int = 8) -> numpy.ndarray:
         """
         Segment an image into a region connected to a seed point, using OpenCV.
 
         :param image: The image to be segmented.
-        :type image: numpy.ndarray
         :param seedCoord: The point inside the connected region where the
         segmentation will start.
-        :type seedCoord: tuple[int]
         :param tolerance: The maximum color/intensity difference between the
         seed point and a point in the connected region.
-        :type tolerance: int
         :param connectivity: (optional) The number of allowed connectivity
         propagation directions. Allowed values are:
           * 4 for edge pixels
           * 8 for edge and corner pixels
-        :type connectivity: int
-        :param padOutput: (optional)  Return the output with a 1-pixel wide
-        padded border.
-        :type padOutput: bool
         :returns: A binary label mask, with an extra 1-pixel wide padded border.
         The values are either ``0`` or ``fillValue``.
-        :rtype: numpy.ndarray
         """
         seedValue = image[seedCoord[1], seedCoord[0]]
         seedValueMin = cls._clippedAdd(seedValue, -tolerance)
@@ -215,14 +205,12 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         return collapsedCoords
 
     @classmethod
-    def maskToContour(cls, maskImage):
+    def maskToContour(cls, maskImage: numpy.ndarray) -> numpy.ndarray:
         """
         Extract the contour line within a segmented label mask, using Scikit-Image.
 
-        :param maskImage: A binary label mask.
-        :type maskImage: numpy.ndarray of numpy.uint8
+        :param maskImage: A binary label mask of numpy.uint8.
         :return: An array of point pairs.
-        :rtype: numpy.ndarray
         """
         if maskImage.dtype != numpy.uint8:
             raise TypeError('maskImage must be an array of uint8.')
@@ -239,16 +227,13 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         return coords
 
     @classmethod
-    def contourToMask(cls, imageShape, coords):
+    def contourToMask(cls, imageShape: Tuple[int, int], coords: numpy.ndarray) -> numpy.ndarray:
         """
         Convert a contour line to a label mask.
 
         :param imageShape: The [Y, X] shape of the image.
-        :type imageShape: tuple[int]
         :param coords: An array of point pairs.
-        :type coords: numpy.ndarray
-        :return: A binary label mask.
-        :rtype: numpy.ndarray of numpy.uint8
+        :return: A binary label mask of numpy.uint8.
         """
         maskImage = skimage.measure.grid_points_in_poly(
             shape=imageShape,
@@ -303,12 +288,12 @@ class ScikitSegmentationHelper(BaseSegmentationHelper):
         ))
 
     @classmethod
-    def _RGBTounit64(cls, val):
+    def _RGBTounit64(cls, val: numpy.ndarray) -> numpy.ndarray:
         """
         Decode an RGB representation of a superpixel label into its native scalar value.
 
         :param val: A single pixel, or a 3-channel image.
-        :type val: numpy.ndarray of uint8, with a shape [3] or [n, m, 3]
+                    This is an numpy.ndarray of uint8, with a shape [3] or [n, m, 3].
         """
         return \
             (val[..., 0].astype(numpy.uint64)) + \

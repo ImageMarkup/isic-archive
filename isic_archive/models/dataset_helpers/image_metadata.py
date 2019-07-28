@@ -21,6 +21,7 @@ import copy
 import functools
 import math
 import re
+from typing import Dict, List, Set, Tuple
 
 
 class MetadataFieldException(Exception):
@@ -77,7 +78,7 @@ class InconsistentValuesException(MetadataFieldException):
 
 class FieldParser(object):
     name = ''
-    allowedFields = {}
+    allowedFields: Set[str] = set()
 
     @classmethod
     def run(cls, data, acquisition, clinical, private):
@@ -988,21 +989,19 @@ def _checkMetadataWarnings(clinical):
     return warnings
 
 
-def _extractExifMetadata(data, unstructuredExif):
+def _extractExifMetadata(data: Dict, unstructuredExif: Dict):
     """
     Add EXIF-related metadata to its own unstructured field.
 
     :param data: The image metadata.
-    :type data: dict
     :param unstructuredExif: The dictionary of unstructured EXIF metadata.
-    :type unstructuredExif: dict
     """
     for key in list(data.keys()):
         if key.lower().startswith('exif_'):
             unstructuredExif[key] = data.pop(key)
 
 
-def addImageMetadata(image, data):
+def addImageMetadata(image: Dict, data: Dict) -> Tuple[List[str], List[str]]:
     """
     Add acquisition and clinical metadata to an image.
 
@@ -1017,17 +1016,14 @@ def addImageMetadata(image, data):
       populated only when there are no errors.
 
     :param image: The image.
-    :type image: dict
     :param data: The image metadata.
-    :type data: dict
     :return: Tuple of (errors, warnings)
-    :rtype: tuple(list of strings, list of strings)
     """
     # Operate on copy of image metadata
     data = copy.deepcopy(data)
 
-    errors = []
-    warnings = []
+    errors: List[str] = []
+    warnings: List[str] = []
 
     for parser in [
         AgeFieldParser,
