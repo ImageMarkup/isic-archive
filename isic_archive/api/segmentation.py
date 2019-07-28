@@ -139,9 +139,9 @@ class SegmentationResource(IsicResource):
                 # by the client.
                 seedCoord = meta['seedPoint']
                 if not (
-                    isinstance(seedCoord, list) and
-                    len(seedCoord) == 2 and
-                    all(isinstance(value, int) for value in seedCoord)
+                    isinstance(seedCoord, list)
+                    and len(seedCoord) == 2
+                    and all(isinstance(value, int) for value in seedCoord)
                 ):
                     raise ValidationException('Value must be a coordinate pair.', 'seedPoint')
 
@@ -218,7 +218,7 @@ class SegmentationResource(IsicResource):
     def mask(self, segmentation, params):
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
-            raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
+            raise ValidationException(f'Unallowed contentDisposition type "{contentDisp}".',
                                       'contentDisposition')
 
         # TODO: convert this to make Segmentation use an AccessControlMixin
@@ -247,7 +247,7 @@ class SegmentationResource(IsicResource):
     def thumbnail(self, segmentation, params):
         contentDisp = params.get('contentDisposition', None)
         if contentDisp is not None and contentDisp not in {'inline', 'attachment'}:
-            raise ValidationException('Unallowed contentDisposition type "%s".' % contentDisp,
+            raise ValidationException(f'Unallowed contentDisposition type "{contentDisp}".',
                                       'contentDisposition')
 
         # TODO: convert this to make Segmentation use an AccessControlMixin
@@ -265,11 +265,11 @@ class SegmentationResource(IsicResource):
         # earlier
         setRawResponse()
         setResponseHeader('Content-Type', 'image/jpeg')
-        contentName = '%s_segmentation_thumbnail.jpg' % image['name']
+        contentName = f'{image["name"]}_segmentation_thumbnail.jpg'
         if contentDisp == 'inline':
-            setResponseHeader('Content-Disposition', 'inline; filename="%s"' % contentName)
+            setResponseHeader('Content-Disposition', f'inline; filename="{contentName}"')
         else:
-            setResponseHeader('Content-Disposition', 'attachment; filename="%s"' % contentName)
+            setResponseHeader('Content-Disposition', f'attachment; filename="{contentName}"')
         setResponseHeader('Content-Length', len(thumbnailImageData))
 
         return thumbnailImageData

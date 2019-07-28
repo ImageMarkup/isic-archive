@@ -220,7 +220,7 @@ class Annotation(AccessControlMixin, Model):
     def validate(self, doc):  # noqa C901
         for field in ['studyId', 'userId', 'imageId']:
             if not isinstance(doc.get(field), ObjectId):
-                raise ValidationException('Annotation field "%s" must be an ObjectId' % field)
+                raise ValidationException(f'Annotation field "{field}" must be an ObjectId')
 
         study = Study().load(doc['studyId'], force=True, exc=False)
         if not study:
@@ -301,6 +301,6 @@ class Annotation(AccessControlMixin, Model):
             try:
                 jsonschema.validate(doc, schema)
             except jsonschema.ValidationError as e:
-                raise ValidationException('Invalid annotation: ' + e.message)
+                raise ValidationException(f'Invalid annotation: {str(e)}')
 
         return doc

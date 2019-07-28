@@ -61,7 +61,7 @@ class TaskResource(IsicResource):
         raise exc
 
     @describeRoute(
-        Description('Get the current user\'s QC review tasks.')
+        Description("Get the current user's QC review tasks.")
         .responseClass('Task')
     )
     @access.user
@@ -84,7 +84,7 @@ class TaskResource(IsicResource):
             dataset = Dataset().findOne({'folderId': prereviewFolder['parentId']})
             if not dataset:
                 raise GirderException(
-                    'No dataset for pre-review folder: %s' % prereviewFolder['_id'])
+                    f'No dataset for pre-review folder: {prereviewFolder["_id"]}')
             if not Dataset().hasAccess(dataset, user=user, level=AccessType.WRITE):
                 # This should not typically occur
                 continue
@@ -114,15 +114,15 @@ class TaskResource(IsicResource):
         dataset = Dataset().load(params['datasetId'], user=user, level=AccessType.WRITE, exc=True)
 
         prereviewFolder = Dataset().prereviewFolder(dataset)
-        if not (prereviewFolder and
-                Folder().hasAccess(prereviewFolder, user=user, level=AccessType.READ)):
+        if not (prereviewFolder
+                and Folder().hasAccess(prereviewFolder, user=user, level=AccessType.READ)):
             raise AccessException(
                 'User does not have access to any Pre-review images for this dataset.')
 
         if not Image().find({'folderId': prereviewFolder['_id']}).count():
             raise RestException('No Pre-review images are available for this dataset.')
 
-        reviewUrl = '/#tasks/review/%s' % dataset['_id']
+        reviewUrl = f'/#tasks/review/{dataset["_id"]}'
         self._doRedirect(reviewUrl)
 
     def _pipeline1AllImages(self, user):
@@ -244,7 +244,7 @@ class TaskResource(IsicResource):
         ]
 
     @describeRoute(
-        Description('Get the current user\'s segmentation tasks.')
+        Description("Get the current user's segmentation tasks.")
         .responseClass('Task')
         .param('details', 'Whether a full listing of images is returned, or just counts.',
                dataType='boolean', default=False)
@@ -324,11 +324,11 @@ class TaskResource(IsicResource):
         nextResp = self.nextSegmentationTask(params)
         imageId = nextResp['_id']
 
-        segmentUrl = '/markup/segment#/%s' % imageId
+        segmentUrl = f'/markup/segment#/{imageId}'
         self._doRedirect(segmentUrl)
 
     @describeRoute(
-        Description('Get the current user\'s annotation tasks.')
+        Description("Get the current user's annotation tasks.")
         .responseClass('Task')
     )
     @access.user
@@ -395,5 +395,5 @@ class TaskResource(IsicResource):
     def redirectAnnotationTask(self, params):
         self.requireParams(['studyId'], params)
 
-        url = '/#tasks/annotate/%s' % str(params['studyId'])
+        url = f'/#tasks/annotate/{str(params["studyId"])}'
         self._doRedirect(url)

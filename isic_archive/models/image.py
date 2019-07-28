@@ -20,6 +20,9 @@
 import itertools
 import mimetypes
 import os
+from typing import List, Tuple
+
+import numpy
 
 from girder.constants import AccessType, SortDir
 from girder.exceptions import AccessException
@@ -114,22 +117,14 @@ class Image(Item):
         data = ScikitSegmentationHelper.loadImage(filePath)
         return data
 
-    def imageData(self, image):
-        """
-        Return the RGB image data associated with this image.
-
-        :rtype: numpy.ndarray
-        """
+    def imageData(self, image) -> numpy.ndarray:
+        """Return the RGB image data associated with this image."""
         imageFile = self.originalFile(image)
         imageData = self._decodeDataFromFile(imageFile)
         return imageData
 
-    def superpixelsData(self, image):
-        """
-        Return the superpixel label data associated with this image.
-
-        :rtype: numpy.ndarray
-        """
+    def superpixelsData(self, image) -> numpy.ndarray:
+        """Return the superpixel label data associated with this image."""
         superpixelsFile = self.superpixelsFile(image)
         superpixelsRGBData = self._decodeDataFromFile(superpixelsFile)
         superpixelsLabelData = ScikitSegmentationHelper._RGBTounit64(
@@ -285,22 +280,22 @@ class Image(Item):
         for facetName in categorialFacets:
             facetId = facetName.replace('.', '__')
             facetStages[facetId] = [
-                {'$sortByCount': '$' + facetName}
+                {'$sortByCount': f'${facetName}'}
             ]
         for facetName in tagFacets:
             facetId = facetName.replace('.', '__')
             facetStages[facetId] = [
                 {'$unwind': {
-                    'path': '$' + facetName,
+                    'path': f'${facetName}',
                     'preserveNullAndEmptyArrays': True
                 }},
-                {'$sortByCount': '$' + facetName}
+                {'$sortByCount': f'${facetName}'}
             ]
         for facetName, boundaries in ordinalFacets:
             facetId = facetName.replace('.', '__')
             facetStages[facetId] = [
                 {'$bucket': {
-                    'groupBy': '$' + facetName,
+                    'groupBy': f'${facetName}',
                     'boundaries': boundaries,
                     'default': None
                 }}
@@ -331,7 +326,7 @@ class Image(Item):
         for facetName, boundaries in ordinalFacets:
             boundariesMap = {
                 lowBound: {
-                    'label': '[%s - %s)' % (lowBound, highBound),
+                    'label': f'[{lowBound} - {highBound})',
                     'lowBound': lowBound,
                     'highBound': highBound,
                 }
@@ -364,7 +359,7 @@ class Image(Item):
         # TODO: implement
         return super(Image, self).validate(doc)
 
-    def applyMetadata(self, image, metadata, save):
+    def applyMetadata(self, image, metadata, save) -> Tuple[List[str], List[str]]:
         """
         Apply metadata to an image.
 
@@ -374,7 +369,6 @@ class Image(Item):
         :return: Tuple of:
             - List of strings describing validation errors.
             - List of strings describing metadata warnings.
-        :rtype: tuple(list, list)
         """
         errors, warnings = addImageMetadata(image, metadata)
 

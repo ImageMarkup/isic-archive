@@ -17,10 +17,7 @@
 #  limitations under the License.
 ###############################################################################
 
-# Deal with a bug where PEP257 crashes when parsing __all__
-# flake8: noqa
+from .opencv import OpenCVSegmentationHelper  # noqa:F401
+from .scikit import ScikitSegmentationHelper  # noqa:F401
 
-from .opencv import OpenCVSegmentationHelper
-from .scikit import ScikitSegmentationHelper
-
-__all__ = [OpenCVSegmentationHelper, ScikitSegmentationHelper]
+__all__ = ['OpenCVSegmentationHelper', 'ScikitSegmentationHelper']

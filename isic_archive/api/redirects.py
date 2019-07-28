@@ -52,8 +52,8 @@ class RedirectsResource(IsicResource):
 
     @access.public
     def redirectRegisterMetadata(self, params):
-        self._doRedirect('/#dataset/%s/metadata/register' % str(params.get('datasetId', '')))
+        self._doRedirect(f'/#dataset/{str(params.get("datasetId", ""))}/metadata/register')
 
     @access.public
     def redirectApplyMetadata(self, params):
-        self._doRedirect('/#dataset/%s/metadata/apply' % str(params.get('datasetId', '')))
+        self._doRedirect(f'/#dataset/{str(params.get("datasetId", ""))}/metadata/apply')

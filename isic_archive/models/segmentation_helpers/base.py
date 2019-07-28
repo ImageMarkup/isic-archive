@@ -16,19 +16,21 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 ###############################################################################
+from io import BytesIO
+from typing import BinaryIO, Union
+
+import numpy
 
 
 class BaseSegmentationHelper(object):
     @classmethod
-    def loadImage(cls, imageDataStream):
+    def loadImage(cls, imageDataStream: Union[BinaryIO, BytesIO]) -> numpy.ndarray:
         """
         Load an image into an RGB array.
 
         :param imageDataStream: A file-like object containing the encoded
         (JPEG, etc.) image data.
-        :type imageDataStream: file-like object
         :return: A Numpy array with the RGB image data.
-        :rtype: numpy.ndarray
         """
         raise NotImplementedError()
 

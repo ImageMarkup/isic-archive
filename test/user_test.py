@@ -73,7 +73,7 @@ def testBasicUser(provisionedServer):
     assert resp.json is None
 
     # Ensure user is private
-    resp = provisionedServer.request(path='/user/%s' % testUser['_id'], method='GET')
+    resp = provisionedServer.request(path=f'/user/{testUser["_id"]}', method='GET')
     assertStatus(resp, 401)
 
     # Ensure accept terms works

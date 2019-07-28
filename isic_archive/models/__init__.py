@@ -17,15 +17,12 @@
 #  limitations under the License.
 ###############################################################################
 
-# Deal with a bug where PEP257 crashes when parsing __all__
-# flake8: noqa
+from .annotation import Annotation  # noqa:F401
+from .batch import Batch  # noqa:F401
+from .dataset import Dataset  # noqa:F401
+from .image import Image  # noqa:F401
+from .segmentation import Segmentation  # noqa:F401
+from .study import Study  # noqa:F401
+from .user import User  # noqa:F401
 
-from .annotation import Annotation
-from .batch import Batch
-from .dataset import Dataset
-from .image import Image
-from .segmentation import Segmentation
-from .study import Study
-from .user import User
-
-__all__ = [Annotation, Batch, Dataset, Image, Segmentation, Study, User]
+__all__ = ['Annotation', 'Batch', 'Dataset', 'Image', 'Segmentation', 'Study', 'User']

@@ -14,7 +14,7 @@ from isic_archive.models.image import Image
 def test_single_image_ingestion(session, dataset_id, filename, readable):
     with open(f'test/data/{filename}', 'rb') as infile:
         r = session.post(
-            'dataset/%s/image' % dataset_id,
+            f'dataset/{dataset_id}/image',
             params={'signature': 'test', 'filename': filename},
             data=infile.read(),
         )
@@ -25,7 +25,7 @@ def test_single_image_ingestion(session, dataset_id, filename, readable):
     while not image['ingested']:
         image = Image().load(r.json()['_id'], force=True)
         if time.time() - start > 120:
-            assert False, 'timed out'
+            raise AssertionError('timed out')
         sleep(10)
 
     assert image['readable'] == readable

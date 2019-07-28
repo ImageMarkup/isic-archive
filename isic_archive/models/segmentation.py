@@ -19,6 +19,7 @@
 
 import datetime
 import io
+from typing import Dict, Tuple
 
 from bson import ObjectId
 import numpy
@@ -57,24 +58,22 @@ class Segmentation(Model):
                     'isic_archive.gc_segmentation',
                     self._onDeleteItem)
 
-    def doSegmentation(self, image, seedCoord, tolerance):
+    def doSegmentation(self, image: Dict, seedCoord: Tuple[int, int], tolerance: int
+                       ) -> numpy.ndarray:
         """
         Run a lesion segmentation.
 
         :param image: A Girder Image item.
         :param seedCoord: (X, Y) coordinates of the segmentation seed point.
-        :type seedCoord: tuple[int]
         :param tolerance: The intensity tolerance value for the segmentation.
-        :type tolerance: int
         :return: The lesion segmentation, as a mask.
-        :rtype: numpy.ndarray
         """
         imageData = Image().imageData(image)
 
         if not(
             # The imageData has a shape of (rows, cols), the seed is (x, y)
-            0.0 <= seedCoord[0] <= imageData.shape[1] and
-            0.0 <= seedCoord[1] <= imageData.shape[0]
+            0.0 <= seedCoord[0] <= imageData.shape[1]
+            and 0.0 <= seedCoord[1] <= imageData.shape[0]
         ):
             raise GirderException('seedCoord is out of bounds')
 
@@ -114,7 +113,7 @@ class Segmentation(Model):
             maskFile = Upload().uploadFromFile(
                 obj=maskOutputStream,
                 size=len(maskOutputStream.getvalue()),
-                name='%s_segmentation.png' % (image['name']),
+                name=f'{image["name"]}_segmentation.png',
                 # TODO: change this once a bug in upstream Girder is fixed
                 parentType='segmentation',
                 parent=segmentation,
@@ -142,12 +141,8 @@ class Segmentation(Model):
             return None
         return File().load(segmentation['maskId'], force=True, exc=True)
 
-    def maskData(self, segmentation):
-        """
-        Return the mask data associated with this segmentation.
-
-        :rtype: numpy.ndarray
-        """
+    def maskData(self, segmentation) -> numpy.ndarray:
+        """Return the mask data associated with this segmentation."""
         maskFile = self.maskFile(segmentation)
         if maskFile is None:
             return None

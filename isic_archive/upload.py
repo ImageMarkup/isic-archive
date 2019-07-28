@@ -108,7 +108,7 @@ class ZipFileOpener(object):
             '7z',
             'x',
             '-y',
-            '-o%s' % self.tempDir,
+            f'-o{self.tempDir}',
             self.zipFilePath
         )
         try:

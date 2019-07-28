@@ -18,6 +18,7 @@
 ###############################################################################
 
 import json
+from typing import Dict
 
 import cherrypy
 
@@ -26,16 +27,14 @@ from girder.exceptions import RestException
 
 
 class IsicResource(Resource):
-    def _decodeParams(self, params):
+    def _decodeParams(self, params: Dict) -> Dict:
         """
         Decode POSTed or PUTed JSON parameters.
 
         Supports either "application/x-www-form-urlencoded" or "application/json" bodies.
 
         :param params: The "params" parameter from a Resource route handler.
-        :type params: dict
         :return: The decoded parameters.
-        :rtype: dict
         """
         if cherrypy.request.headers.get('Content-Type', '').split(';')[0] == 'application/json':
             decodedParams = self.getBodyJson()

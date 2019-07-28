@@ -50,7 +50,7 @@ def cast(value, typename):
             return dateutil.parser.parse(
                 value, default=datetime.datetime.fromtimestamp(0))
     else:
-        raise ValueError('Illegal value for argument "typename": %s' % typename)
+        raise ValueError(f'Illegal value for argument "typename": {typename}')
 
 
 _mongo_operators = {

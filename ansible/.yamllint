@@ -3,6 +3,9 @@ extends: default
 
 ignore: |
   node_modules
+  ansible/roles/girder.girder/
+  ansible/roles/girder.mongodb/
+  ansible/roles/large_image/
 
 rules:
   line-length:

@@ -1,10 +1,12 @@
+from typing import Dict
+
 from boto3.session import Session
 
 from girder.utility.config import getConfig
 
 developmentMode = getConfig()['server']['mode'] == 'development'
 
-s3Kwargs = {}
+s3Kwargs: Dict[str, str] = {}
 
 if developmentMode:
     s3Kwargs = {
