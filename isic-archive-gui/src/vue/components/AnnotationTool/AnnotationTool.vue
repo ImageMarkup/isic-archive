@@ -136,8 +136,9 @@ export default {
         this.$refs.viewer.clear();
 
         // Reset state, preserving study
+        const existingStudy = this.study;
         this.resetState();
-        this.setStudy(this.study);
+        this.setStudy(existingStudy);
 
         this.getNextAnnotation({ studyId: this.studyId });
       } else if (newState === SubmissionState.FINISHED) {

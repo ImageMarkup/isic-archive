@@ -45,6 +45,7 @@ export default {
           url: `image/${newImage._id}/tiles`,
           method: 'GET',
         }).done((resp) => {
+          // TODO: Disable feature selection buttons until this is loaded
           this.initializeMap(resp);
         });
       }
