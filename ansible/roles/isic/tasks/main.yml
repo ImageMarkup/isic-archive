@@ -1,4 +1,15 @@
 ---
+# An accurate hostname allows Sentry to pick it up
+- name: Set system hostname
+  hostname:
+    name: "{{ inventory_hostname }}"
+  become: true
+
+- name: Set system hostname file
+  copy:
+    content: "{{ inventory_hostname }}"
+    dest: /etc/hostname
+  become: true
 
 - name: Download
   git:

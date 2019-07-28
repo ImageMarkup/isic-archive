@@ -1,5 +1,5 @@
 ---
-- name: Install flower
+- name: Install Flower
   pip:
     name: flower
     virtualenv: "{{ girder_virtualenv }}"
@@ -10,7 +10,7 @@
     state: "directory"
   become: true
 
-- name: Copy celery configurations and service files
+- name: Copy Celery configurations and service files
   template:
     src: "etc/{{ item }}.j2"
     dest: "/etc/{{ item }}"
@@ -23,7 +23,7 @@
     - "systemd/system/celerybeat.service"
     - "systemd/system/flower.service"
 
-- name: Create celery user
+- name: Create Celery user
   user:
     name: "{{ celery_user }}"
     state: present
@@ -42,7 +42,7 @@
   become: true
   when: tmpfiles.changed
 
-- name: Enable/start celery(beat)
+- name: Enable/start Celery(beat)
   systemd:
     daemon_reload: true
     name: "{{ item }}"

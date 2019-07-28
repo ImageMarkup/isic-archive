@@ -18,7 +18,7 @@
         src: "vagrant.env.j2"
         dest: "{{ ansible_user_dir }}/.env"
 
-    - name: Install python, pip and virtualenv
+    - name: Install Python, pip and virtualenv
       apt:
         name:
           - python3-dev
