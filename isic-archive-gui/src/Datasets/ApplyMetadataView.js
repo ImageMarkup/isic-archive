@@ -13,11 +13,12 @@ import UserModel from '../models/UserModel';
 import View from '../view';
 import {showAlertDialog} from '../common/utilities';
 import router from '../router';
+import VueComponentView from '../vueComponentView';
+import DatasetInfoWidget from './DatasetInfoWidget.vue';
 
 import ApplyMetadataSelectFilePageTemplate from './applyMetadataSelectFilePage.pug';
 import ApplyMetadataPageTemplate from './applyMetadataPage.pug';
 import './applyMetadataPage.styl';
-import './datasetInfoWidget.styl';
 import ApplyMetadataValidationPageTemplate from './applyMetadataValidationPage.pug';
 import './applyMetadataValidationPage.styl';
 
@@ -184,6 +185,7 @@ const ApplyMetadataView = View.extend({
      */
     initialize: function (settings) {
         this.dataset = settings.dataset;
+        this.datasetInfoWidget = null;
 
         // Registered metadata files
         this.files = new MetadataFileCollection();
@@ -243,9 +245,15 @@ const ApplyMetadataView = View.extend({
     },
 
     render: function () {
-        this.$el.html(ApplyMetadataPageTemplate({
-            dataset: this.dataset
-        }));
+        this.$el.html(ApplyMetadataPageTemplate());
+        this.datasetInfoWidget = new VueComponentView({
+            el: this.$('.isic-dataset-info-widget'),
+            component: DatasetInfoWidget,
+            props: {
+                dataset: this.dataset,
+            },
+            parentView: this
+        });
 
         this.selectFileView.setElement(
             this.$('#isic-apply-metadata-select-file-container')).render();

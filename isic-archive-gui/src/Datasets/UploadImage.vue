@@ -6,25 +6,17 @@
         h2 Upload image to dataset
     .row
       .col-lg-3
-        vue-dropzone#image-dropzone(
-          ref='imageDropzone',
-          @vdropzone-file-added='onFileAdded',
-          @vdropzone-removed-file='onFileRemoved',
-          @vdropzone-thumbnail='onThumbnailGenerated',
-          @vdropzone-max-files-exceeded='onMaxFilesExceeded',
-          :options='dropzoneOptions')
-        button#remove-file-button.btn.btn-default.btn-md(
-          @click='removeFile', :disabled='!hasImageFile || submitted') Remove File
+        FileSelect(v-model='imageFile', accept='image/*', thumbnail)
       .col-lg-9
         form.form-horizontal(@submit.prevent='submit')
           .form-group
             label.control-label.col-sm-2 Dataset
             .col-sm-10
-              select-dataset(v-model='dataset', :datasets='datasets')
+              SelectDataset(v-model='dataset', :accessLevel='AccessType.WRITE')
           .form-group
             label.control-label.col-sm-2 Filename
             .col-sm-10
-              input.form-control(v-model='filename', type='text', readonly)
+              input.form-control(:value='imageFile ? imageFile.name: ""', type='text', readonly)
           .form-group
             label.control-label.col-sm-2 Electronic Signature
             .col-sm-10
@@ -180,33 +172,27 @@
 <script>
 import $ from 'jquery';
 import _ from 'underscore';
-import vue2Dropzone from 'vue2-dropzone';
-import 'vue2-dropzone/dist/vue2Dropzone.css';
 
 import { AccessType } from '@girder/core/constants';
 
 import router from '../router';
 import { showAlertDialog } from '../common/utilities';
 
-import SelectDataset from './SelectDataset.vue';
-import DatasetCollection from '../collections/DatasetCollection';
+import FileSelect from './FileSelect.vue';
 import ImageModel from '../models/ImageModel';
+import SelectDataset from './SelectDataset.vue';
 
 export default {
   components: {
-    // TODO: global component registration?
+    FileSelect,
     SelectDataset,
-    vueDropzone: vue2Dropzone,
   },
   data() {
     return {
-      // Array of datasets
-      datasets: [],
-
       // Image data
+      imageFile: null,
       image: null,
       dataset: null,
-      filename: null,
       signature: null,
       age: null,
       sex: null,
@@ -386,22 +372,11 @@ export default {
         ],
       },
 
-      // Dropzone configuration
-      dropzoneOptions: {
-        url: '/',
-        maxFiles: 1,
-        autoProcessQueue: false,
-        thumbnailWidth: 250,
-        thumbnailHeight: null,
-        acceptedFiles: 'image/*',
-        dictDefaultMessage: '<i class="icon-upload-cloud" style="font-size: 100px"></i><p>Drag and Drop File or Click Here</p>',
-      },
+      // Constants
+      AccessType,
     };
   },
   computed: {
-    hasImageFile() {
-      return !_.isEmpty(this.filename);
-    },
     dermoscopicImage() {
       return this.imageType === 'dermoscopic';
     },
@@ -535,48 +510,12 @@ export default {
       },
     },
   },
-  created() {
-    // Fetch datasets for which the user has write access
-    const datasets = new DatasetCollection();
-    datasets
-      .fetch({
-        limit: 0,
-      })
-      .done(() => {
-        this.datasets = datasets.filter(dataset => dataset.get('_accessLevel') >= AccessType.WRITE);
-      })
-      .fail((resp) => {
-        showAlertDialog({
-          text: `<h4>Error fetching datasets</h4><br>${_.escape(resp.responseJSON.message)}`,
-          escapedHtml: true,
-        });
-      });
-  },
   methods: {
-    onFileAdded(file) {
-      this.filename = file.name;
-      this.$refs.imageDropzone.dropzone.emit('complete', file);
-    },
-    onFileRemoved() {
-      if (this.$refs.imageDropzone.getAcceptedFiles().length === 0) {
-        this.filename = null;
-      }
-    },
-    onThumbnailGenerated(file) {
-      $(file.previewElement).last().find('img').attr({ width: '100%' });
-    },
-    onMaxFilesExceeded(file) {
-      this.$refs.imageDropzone.removeFile(file);
-    },
-    removeFile() {
-      this.$refs.imageDropzone.removeAllFiles();
-    },
     uploadImage() {
       if (this.image) {
         return $.Deferred().resolve(this.image).promise();
       }
-      const imageFile = this.$refs.imageDropzone.getAcceptedFiles()[0];
-      return this.dataset.uploadImage(this.filename, this.signature, imageFile)
+      return this.dataset.uploadImage(this.imageFile.name, this.signature, this.imageFile)
         .then((resp) => {
           this.image = new ImageModel({ _id: resp._id });
           return this.image;
@@ -622,7 +561,7 @@ export default {
     submit() {
       // Check required fields
       let missingField = null;
-      if (!this.hasImageFile) {
+      if (!this.imageFile) {
         missingField = 'Image';
       } else if (!this.dataset) {
         missingField = 'Dataset';
@@ -679,23 +618,4 @@ export default {
 form
   label
     font-weight normal
-
-#image-dropzone
-  border 2px dashed #dddddd
-  border-radius 8px
-  padding 0
-
-  // Use >>> combinator so that scoped style in this component affects the child dropzone component
-  >>> .dz-preview
-    transition none
-    &:hover
-      .dz-details
-        display none
-      .dz-image
-        img
-          transform none
-          filter none
-
-#remove-file-button
-  margin-top 10px
 </style>

@@ -1,36 +1,77 @@
-<template lang="pug">
-div
-  select.form-control.input(v-model='dataset', @change.prevent='onChange')
-    option(selected, disabled, value='null') Select a dataset...
-    option(v-for='dataset in datasets', :value='dataset') {{ dataset.name() }}
-  .create-dataset(v-if='canCreateDataset')
-    a(href='#dataset/create') Create a new dataset
+<template>
+  <div>
+    <!-- TODO: This can be a v-autocomplete, to replace Select2 functionality -->
+    <select
+      class="form-control input"
+      @input="selected"
+    >
+      <option
+        selected
+        disabled
+        :value="null"
+      >
+        Select a dataset...
+        {{ accessableDatasets.length ? ` (${accessableDatasets.length} available)` : '' }}
+      </option>
+      <option
+        v-for="dataset in accessableDatasets"
+        :key="dataset.id"
+        :value="dataset.id"
+      >
+        {{ dataset.name() }}
+      </option>
+    </select>
+    <div
+      v-if="canCreateDataset"
+      class="create-dataset"
+    >
+      Or
+      <a href="#dataset/create">
+        Create a new dataset
+      </a>
+    </div>
+  </div>
 </template>
 
 <script>
+import { AccessType } from '@girder/core/constants';
+
+import DatasetCollection from '../collections/DatasetCollection';
 import DatasetModel from '../models/DatasetModel';
 
 export default {
+  name: 'SelectDataset',
+  model: {
+    prop: 'dataset',
+  },
   props: {
-    // Array of DatasetModel
-    datasets: {
-      type: Array,
-      required: true,
+    accessLevel: {
+      type: Number,
+      default: AccessType.READ,
     },
   },
   data() {
     return {
-      dataset: null,
+      datasets: new DatasetCollection(),
     };
   },
   computed: {
     canCreateDataset() {
       return DatasetModel.canCreate();
     },
+    accessableDatasets() {
+      return this.datasets.filter(dataset => dataset.get('_accessLevel') >= this.accessLevel);
+    },
+  },
+  async created() {
+    this.datasets.pageLimit = Number.MAX_SAFE_INTEGER;
+    await this.datasets.fetch({ limit: 0 });
   },
   methods: {
-    onChange() {
-      this.$emit('input', this.dataset);
+    selected(event) {
+      const selectedDatasetId = event.target.value;
+      const selectedDataset = this.datasets.get(selectedDatasetId);
+      this.$emit('input', selectedDataset);
     },
   },
 };

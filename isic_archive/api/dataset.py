@@ -39,7 +39,6 @@ class DatasetResource(IsicResource):
         self.route('PUT', (':id', 'access'), self.setDatasetAccess)
         self.route('POST', (), self.createDataset)
         self.route('POST', (':id', 'image'), self.addImage)
-        self.route('POST', (':id', 'zipBatch'), self.addZipBatch)
         self.route('POST', (':id', 'zip'), self.initiateZipUploadToS3)
         self.route('DELETE', (':id', 'zip', ':batchId'), self.cancelZipUploadToS3)
         self.route('POST', (':id', 'zip', ':batchId'), self.finalizeZipUploadToS3)
@@ -240,38 +239,6 @@ class DatasetResource(IsicResource):
         ingestImage.delay(image['_id'])
 
         return Image().filter(image, user=user)
-
-    @describeRoute(
-        Description('Upload a batch of ZIP images to a dataset.')
-        .param('id', 'The ID of the dataset.', paramType='path')
-        .param('zipFileId', 'The ID of the .zip file of images.', paramType='form')
-        .param('signature', 'Signature of license agreement.', paramType='form')
-    )
-    @access.user
-    @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
-    def addZipBatch(self, dataset, params):
-        params = self._decodeParams(params)
-        self.requireParams(['zipFileId', 'signature'], params)
-
-        user = self.getCurrentUser()
-        User().requireCreateDataset(user)
-
-        zipFileId = params['zipFileId']
-        if not zipFileId:
-            raise ValidationException('No file was uploaded.', 'zipFileId')
-        zipFile = File().load(zipFileId, user=user, level=AccessType.WRITE, exc=False)
-        if not zipFile:
-            raise ValidationException('Invalid upload file ID.', 'zipFileId')
-        if not self._checkFileFormat(zipFile, ZIP_FORMATS):
-            raise ValidationException('File must be in .zip format.', 'zipFileId')
-
-        signature = params['signature'].strip()
-        if not signature:
-            raise ValidationException('Signature must be specified.', 'owner')
-
-        # TODO: make this return something
-        Dataset().addZipBatch(
-            dataset=dataset, zipFile=zipFile, signature=signature, user=user, sendMail=True)
 
     @describeRoute(
         Description('Initiate a direct-to-S3 upload of a ZIP file of images.')
