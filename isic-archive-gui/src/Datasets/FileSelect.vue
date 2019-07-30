@@ -56,6 +56,8 @@ export default {
         createImageThumbnails: this.thumbnail,
         maxFiles: 1,
         acceptedFiles: this.accept,
+        // No maximum size
+        maxFilesize: null,
 
         thumbnailWidth: 250,
         thumbnailHeight: null,
