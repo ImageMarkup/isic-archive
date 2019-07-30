@@ -17,11 +17,11 @@ def sendEmail(to, subject, text):
     msg['From'] = Setting().get(SettingKey.EMAIL_FROM_ADDRESS)
     recipients = list(set(to))
     smtp = mail_utils._SMTPConnection(
-        host=Setting().get(SettingKey.SMTP_HOST, 'localhost'),
-        port=Setting().get(SettingKey.SMTP_PORT, None),
-        encryption=Setting().get(SettingKey.SMTP_ENCRYPTION, 'none'),
-        username=Setting().get(SettingKey.SMTP_USERNAME, None),
-        password=Setting().get(SettingKey.SMTP_PASSWORD, None)
+        host=Setting().get(SettingKey.SMTP_HOST),
+        port=Setting().get(SettingKey.SMTP_PORT),
+        encryption=Setting().get(SettingKey.SMTP_ENCRYPTION),
+        username=Setting().get(SettingKey.SMTP_USERNAME),
+        password=Setting().get(SettingKey.SMTP_PASSWORD)
     )
 
     logger.info('Sending email to %s through %s', ', '.join(recipients), smtp.host)
