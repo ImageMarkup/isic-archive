@@ -51,7 +51,6 @@
     - role: minio
       vars:
         isic_upload_bucket_name: "test-upload-bucket"
-        isic_upload_role_arn: "fake-arn"
 
   post_tasks:
     - name: Add hosts entry for minio
