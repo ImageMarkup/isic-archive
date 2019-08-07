@@ -3,7 +3,7 @@ from girder.utility import mail_utils
 
 from isic_archive.models import Batch, Dataset
 from isic_archive.tasks import app
-from isic_archive.utility.mail_utils import sendEmail, sendEmailToGroup
+from isic_archive.utility.mail_utils import sendEmailToGroup
 
 
 @app.task()
@@ -41,7 +41,7 @@ def sendIngestionNotification(batchId, failedImages, skippedFilenames):
 
     # Mail user
     html = mail_utils.renderTemplate(templateFilename, params)
-    sendEmail(to=user['email'], subject=subject, text=html)
+    mail_utils.sendMailSync(subject, html, user['email'])
 
     # Mail 'Dataset QC Reviewers' group
     params['isOriginalUploader'] = False
@@ -49,4 +49,5 @@ def sendIngestionNotification(batchId, failedImages, skippedFilenames):
         groupName='Dataset QC Reviewers',
         templateFilename=templateFilename,
         templateParams=params,
-        subject=subject)
+        subject=subject,
+        asynchronous=False)
