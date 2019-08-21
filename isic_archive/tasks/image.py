@@ -43,6 +43,40 @@ def ingestImage(self, imageId):
         Image().save(image)
         return
 
+    # Store the image stripped of exif metadata
+    try:
+        originalFileStreamResponse.seek(0)
+
+        with tempfile.NamedTemporaryFile('wb', delete=False) as exifFile:
+            exifFile.write(originalFileStreamResponse.read())
+
+        subprocess.check_call(['exiftool', '-All=', exifFile.name])
+
+        base, ext = os.path.splitext(imageFile['name'])
+        resp = self.session.post(
+            'file',
+            params={
+                'parentType': 'item',
+                'parentId': image['_id'],
+                'name': f'{base}.stripped{ext}',
+                'size': os.path.getsize(exifFile.name),
+                'mimeType': imageFile['mimeType'],
+            },
+            data=open(exifFile.name, 'rb').read(),
+        )
+        resp.raise_for_status()
+
+        strippedFile = File().load(resp.json()['_id'], force=True)
+        strippedFile['stripped'] = True
+        File().updateFile(strippedFile)
+        os.unlink(exifFile.name + '_original')
+    except Exception:
+        logger.exception('Failed to strip EXIF metadata from image')
+        image['readable'] = False
+        image['ingested'] = True
+        Image().save(image)
+        return
+
     image['readable'] = True
     image['ingestionState'] = {
         'largeImage': None,
@@ -110,7 +144,7 @@ def generateSuperpixels(self, imageId):
 @app.task(bind=True)
 def generateLargeImage(self, imageId):
     imageItem = Image().load(id=imageId, force=True)
-    imageFile = Image().originalFile(imageItem)
+    imageFile = Image().strippedFile(imageItem)
 
     try:
         originalFileStreamResponse = self.session.get(
