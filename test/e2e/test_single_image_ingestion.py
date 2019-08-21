@@ -8,8 +8,12 @@ from isic_archive.models.image import Image
 
 @pytest.mark.parametrize(
     'filename,readable',
-    [['should-pass.jpg', True], ['should-skip', False]],
-    ids=['readable-image', 'unreadable-text-file'],
+    [
+        ['should-pass.jpg', True],
+        ['should-skip', False],
+        ['should-pass-has-exif-orientation.jpg', True],
+    ],
+    ids=['readable-image', 'unreadable-text-file', 'should-pass-has-exif-orientation'],
 )
 def test_single_image_ingestion(session, dataset_id, filename, readable):
     with open(f'test/data/{filename}', 'rb') as infile:
@@ -29,3 +33,7 @@ def test_single_image_ingestion(session, dataset_id, filename, readable):
         sleep(10)
 
     assert image['readable'] == readable
+
+    if readable:
+        r = session.get(f'item/{image["_id"]}/tiles')
+        assert r.ok, r.json()
