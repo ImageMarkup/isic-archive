@@ -111,10 +111,10 @@ def requestCreateDatasetPermission(self, params):
                         'group': group,
                         'host': host,
                     })
-                mail_utils.sendEmail(
-                    to=groupModeratorEmails,
-                    subject='ISIC Archive: Dataset Contributor Request',
-                    text=html)
+                mail_utils.sendMail(
+                    'ISIC Archive: Dataset Contributor Request',
+                    html,
+                    groupModeratorEmails)
 
     return resp
 
@@ -181,10 +181,10 @@ def inviteUser(self, params):
             'newUser': newUser,
             'inviteUrl': inviteUrl,
         })
-    mail_utils.sendEmail(
-        to=newUser['email'],
-        subject='ISIC Archive: Invitation',
-        text=html)
+    mail_utils.sendMail(
+        'ISIC Archive: Invitation',
+        html,
+        [newUser['email']])
 
     return {
         'newUser': User().filterSummary(newUser, currentUser),

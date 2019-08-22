@@ -9,9 +9,9 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "@girder/core": "^3.0.0-alpha.0.2",
-    "@girder/gravatar": "^3.0.0-alpha.1",
-    "@girder/oauth": "^3.0.0-alpha.1",
+    "@girder/core": "^3.0.2",
+    "@girder/gravatar": "^3.0.2",
+    "@girder/oauth": "^3.0.2",
     "aws-sdk": "^2.501.0",
     "backbone.select": "^2.1.0",
     "d3": "3.5.17",

@@ -1,36 +1,8 @@
-from email.mime.text import MIMEText
-
-from girder import logger
 from girder.models.group import Group
-from girder.models.setting import Setting
-from girder.settings import SettingKey
 from girder.utility import mail_utils
 
 
-def sendEmail(to, subject, text):
-    if isinstance(to, str):
-        to = (to,)
-
-    msg = MIMEText(text, 'html')
-    msg['Subject'] = subject or '[no subject]'
-    msg['To'] = ', '.join(to)
-    msg['From'] = Setting().get(SettingKey.EMAIL_FROM_ADDRESS)
-    recipients = list(set(to))
-    smtp = mail_utils._SMTPConnection(
-        host=Setting().get(SettingKey.SMTP_HOST),
-        port=Setting().get(SettingKey.SMTP_PORT),
-        encryption=Setting().get(SettingKey.SMTP_ENCRYPTION),
-        username=Setting().get(SettingKey.SMTP_USERNAME),
-        password=Setting().get(SettingKey.SMTP_PASSWORD)
-    )
-
-    logger.info('Sending email to %s through %s', ', '.join(recipients), smtp.host)
-
-    with smtp:
-        smtp.send(msg['From'], recipients, msg.as_string())
-
-
-def sendEmailToGroup(groupName, templateFilename, templateParams, subject=None):
+def sendEmailToGroup(groupName, templateFilename, templateParams, subject=None, asynchronous=True):
     """
     Send a single email with all members of a group as the recipients.
 
@@ -39,6 +11,7 @@ def sendEmailToGroup(groupName, templateFilename, templateParams, subject=None):
         the email.
     :param templateParams: The parameters with which to render the template.
     :param subject: The subject line of the email.
+    :param asynchronous: If False, bypass Girder's event system.
     """
     group = Group().findOne({'name': groupName})
     if not group:
@@ -46,4 +19,7 @@ def sendEmailToGroup(groupName, templateFilename, templateParams, subject=None):
     emails = [member['email'] for member in Group().listMembers(group)]
     if emails:
         html = mail_utils.renderTemplate(templateFilename, templateParams)
-        sendEmail(to=emails, subject=subject, text=html)
+        if asynchronous:
+            mail_utils.sendMail(subject, html, emails)
+        else:
+            mail_utils.sendMailSync(subject, html, emails)
