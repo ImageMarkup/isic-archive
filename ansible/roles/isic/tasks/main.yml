@@ -12,6 +12,7 @@
 - name: Install package dependencies
   apt:
     name:
+      - exiftool
       - p7zip-full
   become: true
 

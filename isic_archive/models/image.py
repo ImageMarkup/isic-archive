@@ -88,6 +88,10 @@ class Image(Item):
             # Fallback if no large image metadata exists, but this isn't accurate on some old images
             return Image().childFiles(image, limit=1, sort=[('created', SortDir.ASCENDING)])[0]
 
+    def strippedFile(self, image):
+        return File().findOne({'itemId': image['_id'],
+                               'stripped': True}, limit=1)
+
     def superpixelsFile(self, image):
         return File().load(
             image['superpixelsId'], force=True, exc=True)
