@@ -23,6 +23,22 @@ class Batch(Model):
         })
         return batch
 
+    def reingest(self, batch):
+        from isic_archive.tasks import ingestImage
+        from .image import Image
+        # mark images as ingested=False, this needs to be done first
+        # to avoid sending notifications about a batch which is "complete"
+        Image().update({'meta.batchId': batch['_id']},
+                       {'$set': {'ingested': False,
+                                 'ingestionState': {'largeImage': None,
+                                                    'superpixelMask': None}}})
+
+        batch['ingestStatus'] = 'extracted'
+        self.save(batch)
+
+        for image in Image().find({'meta.batchId': batch['_id']}):
+            ingestImage.delay(image['_id'])
+
     def remove(self, batch, **kwargs):
         # TODO: Remove the associated ZIP file, if one exists
         return super(Batch, self).remove(batch)
