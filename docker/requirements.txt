@@ -60,7 +60,7 @@ opencv-python==4.1.0.25
 packaging==19.0
 passlib==1.7.1
 pbr==5.3.1
-Pillow==6.0.0
+Pillow==6.2.0
 pluggy==0.12.0
 portend==2.5
 psutil==5.6.3
