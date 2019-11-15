@@ -156,8 +156,6 @@ class Image(Item):
             'meta': {
                 'acquisition': image['meta']['acquisition'],
                 'clinical': image['meta']['clinical'],
-                'unstructured': image['meta']['unstructured'],
-                'unstructuredExif': image['meta']['unstructuredExif']
             },
             'notes': {
                 'reviewed': image['meta'].get('reviewed', None),
@@ -165,6 +163,8 @@ class Image(Item):
             }
         }
         if User().canReviewDataset(user):
+            output['meta']['unstructured'] = image['meta']['unstructured'],
+            output['meta']['unstructuredExif'] = image['meta']['unstructuredExif']
             output['meta']['private'] = image['privateMeta']
 
         return output
