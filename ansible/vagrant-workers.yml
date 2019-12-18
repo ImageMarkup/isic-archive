@@ -81,7 +81,6 @@
         archive_api_url: "http://isic-archive.test/api/v1"
         celery_bin: "{{ girder_virtualenv }}/bin/celery"
         celery_concurrency: 1
-        celery_user: vagrant
 
   post_tasks:
     - name: Add hosts entry for isic-archive.test

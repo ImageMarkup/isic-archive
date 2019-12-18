@@ -4,8 +4,8 @@ After=syslog.target network.target
 
 [Service]
 Type=simple
-User={{ ansible_user }}
-Group={{ ansible_user }}
+User={{ ansible_user_id }}
+Group={{ ansible_user_id }}
 Environment=MH_API_BIND_ADDR=0.0.0.0:8025
 Environment=MH_UI_BIND_ADDR=0.0.0.0:8025
 Environment=MH_SMTP_BIND_ADDR=0.0.0.0:1025

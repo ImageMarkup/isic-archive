@@ -3,8 +3,8 @@ Description=minio
 After=network.target
 
 [Service]
-User={{ ansible_user }}
-Group={{ ansible_user }}
+User={{ ansible_user_id }}
+Group={{ ansible_user_id }}
 Restart=always
 Environment=MINIO_ACCESS_KEY=accesskey
 Environment=MINIO_SECRET_KEY=secretkey
