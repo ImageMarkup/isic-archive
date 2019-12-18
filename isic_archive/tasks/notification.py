@@ -1,8 +1,8 @@
 from girder.models.user import User
 from girder.utility import mail_utils
 
+from isic_archive.celery import app
 from isic_archive.models import Batch, Dataset
-from isic_archive.tasks import app
 from isic_archive.utility.mail_utils import sendEmailToGroup
 
 

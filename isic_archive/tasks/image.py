@@ -10,8 +10,8 @@ from celery.utils.log import get_task_logger
 from girder.models.file import File
 
 from isic_archive import Image
+from isic_archive.celery import app
 from isic_archive.models.segmentation_helpers import ScikitSegmentationHelper
-from isic_archive.tasks import app
 
 SUPERPIXEL_VERSION = 3.0
 logger = get_task_logger(__name__)
