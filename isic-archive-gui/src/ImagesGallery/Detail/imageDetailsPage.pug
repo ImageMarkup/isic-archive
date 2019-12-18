@@ -41,7 +41,7 @@
             td= key
             td= value
 
-      if !_.isEmpty(meta.unstructured)
+      if _.has(meta, 'unstructured')
         tr
           td.isic-image-details-table-section-header(colspan=2) Unstructured Attributes
         each value, key in meta.unstructured
@@ -49,7 +49,7 @@
             td= key
             td= value
 
-      if !_.isEmpty(meta.unstructuredExif)
+      if _.has(meta, 'unstructuredExif') && !_.isEmpty(meta.unstructuredExif)
         tr
           td.isic-image-details-table-section-header(colspan=2) Unstructured EXIF Attributes
         each value, key in meta.unstructuredExif
