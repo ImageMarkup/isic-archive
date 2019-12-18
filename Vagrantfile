@@ -8,8 +8,6 @@ def true?(obj)
 end
 
 Vagrant.configure('2') do |config|
-  bind_node_modules = true?(ENV.fetch('BIND_NODE_MODULES', Vagrant::Util::Platform.windows?))
-
   config.vm.define 'web' do |web|
     web.vm.box = 'bento/ubuntu-18.04'
     web.vm.hostname = 'isic-archive.test'
@@ -34,7 +32,6 @@ Vagrant.configure('2') do |config|
       ansible.galaxy_role_file = 'requirements.yml'
       ansible.playbook = 'vagrant-webservers.yml'
       ansible.extra_vars = {
-        bind_node_modules: bind_node_modules,
         isic_archive_editable: true,
         webserver_ip: '172.16.0.10',
         broker_ip: '172.16.0.11'
@@ -63,7 +60,6 @@ Vagrant.configure('2') do |config|
       ansible.galaxy_role_file = 'requirements.yml'
       ansible.playbook = 'vagrant-brokers.yml'
       ansible.extra_vars = {
-        bind_node_modules: bind_node_modules,
         webserver_ip: '172.16.0.10',
         broker_ip: '172.16.0.11'
       }
@@ -74,7 +70,6 @@ Vagrant.configure('2') do |config|
       ansible.galaxy_role_file = 'requirements.yml'
       ansible.playbook = 'vagrant-workers.yml'
       ansible.extra_vars = {
-        bind_node_modules: bind_node_modules,
         webserver_ip: '172.16.0.10',
         broker_ip: '172.16.0.11'
       }
