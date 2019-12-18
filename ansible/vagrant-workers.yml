@@ -78,7 +78,6 @@
 
     - role: celery
       vars:
-        archive_api_url: "http://isic-archive.test/api/v1"
         celery_bin: "{{ girder_virtualenv }}/bin/celery"
         celery_concurrency: 1
 

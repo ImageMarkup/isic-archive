@@ -4,26 +4,26 @@
     name: flower
     virtualenv: "{{ girder_virtualenv }}"
 
-- name: Create conf.d
+- name: Ensure conf.d directory
   file:
     path: "/etc/conf.d"
-    state: "directory"
+    state: directory
   become: true
 
-- name: Copy Celery configurations and service files
+- name: Install Celery configurations and service files
   template:
     src: "etc/{{ item }}.j2"
     dest: "/etc/{{ item }}"
   become: true
   notify: Reload Celery
-  with_items:
+  loop:
     - "conf.d/celery"
     - "conf.d/celerybeat"
     - "systemd/system/celery.service"
     - "systemd/system/celerybeat.service"
     - "systemd/system/flower.service"
 
-- name: Copy tmpfiles.d configuration
+- name: Install tmpfiles.d configuration files
   template:
     src: "etc/tmpfiles.d/celery.conf.j2"
     dest: "/etc/tmpfiles.d/celery.conf"
@@ -31,19 +31,18 @@
   register: tmpfiles
 
 - name: Create tmpfiles
-  command: |
-    systemd-tmpfiles --create
+  command: systemd-tmpfiles --create
   become: true
   when: tmpfiles.changed
 
-- name: Enable/start Celery(beat)
+- name: Enable/start Celery services
   systemd:
     daemon_reload: true
     name: "{{ item }}"
     state: started
     enabled: true
   become: true
-  with_items:
+  loop:
     - celery
     - celerybeat
     - flower
