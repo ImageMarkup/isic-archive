@@ -23,12 +23,6 @@
     - "systemd/system/celerybeat.service"
     - "systemd/system/flower.service"
 
-- name: Create Celery user
-  user:
-    name: "{{ celery_user }}"
-    state: present
-  become: true
-
 - name: Copy tmpfiles.d configuration
   template:
     src: "etc/tmpfiles.d/celery.conf.j2"

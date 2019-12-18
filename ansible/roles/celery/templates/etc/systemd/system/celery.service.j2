@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 Type=forking
-User={{ celery_user }}
-Group={{ celery_user }}
+User={{ ansible_user_id }}
+Group={{ ansible_user_id }}
 EnvironmentFile=/etc/conf.d/celery
 Environment=DOTENV_PATH=/home/{{ celery_user }}/.env
 ExecStart=/bin/sh -c '${CELERY_BIN} multi start ${CELERYD_NODES} \

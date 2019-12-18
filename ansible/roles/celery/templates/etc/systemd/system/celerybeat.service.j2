@@ -3,8 +3,8 @@ Description=Celery Beat Service
 After=network.target
 
 [Service]
-User={{ celery_user }}
-Group={{ celery_user }}
+User={{ ansible_user_id }}
+Group={{ ansible_user_id }}
 EnvironmentFile=/etc/conf.d/celerybeat
 Environment=DOTENV_PATH=/home/{{ celery_user }}/.env
 ExecStart=/bin/sh -c '${CELERY_BIN} beat -A ${CELERY_APP} --pidfile=${CELERYBEAT_PID_FILE} \
