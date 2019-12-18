@@ -2,12 +2,14 @@ import os
 
 from celery import Celery, Task
 from celery.signals import worker_process_init
+from dotenv import load_dotenv
 import jsonpickle
 from kombu.serialization import register
 import pkg_resources
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from requests_toolbelt.sessions import BaseUrlSession
+import sentry_sdk
 
 from girder.constants import TokenScope
 from girder.models.setting import Setting
@@ -16,6 +18,9 @@ from girder.settings import SettingKey
 from girder.utility import mail_utils
 
 from isic_archive.provision_utility import getAdminUser
+
+load_dotenv()
+sentry_sdk.init()
 
 
 class CredentialedGirderTask(Task):

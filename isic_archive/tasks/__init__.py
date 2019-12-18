@@ -1,9 +1,15 @@
-from dotenv import load_dotenv
+from isic_archive.tasks.image import generateLargeImage, generateSuperpixels, \
+    ingestImage, markImageIngested
+from isic_archive.tasks.notification import maybeSendIngestionNotifications, \
+    sendIngestionNotification
+from isic_archive.tasks.zip import ingestBatchFromZipfile
 
-load_dotenv()
-
-import isic_archive.tasks.sentry  # noqa
-from isic_archive.tasks.app import app  # noqa
-from isic_archive.tasks.zip import ingestBatchFromZipfile  # noqa
-from isic_archive.tasks.image import ingestImage, markImageIngested, generateLargeImage, generateSuperpixels  # noqa
-from isic_archive.tasks.notification import sendIngestionNotification, maybeSendIngestionNotifications  # noqa
+__all__ = [
+    'generateLargeImage',
+    'generateSuperpixels',
+    'ingestBatchFromZipfile',
+    'ingestImage',
+    'markImageIngested',
+    'maybeSendIngestionNotifications',
+    'sendIngestionNotification',
+]

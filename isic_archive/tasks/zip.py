@@ -10,8 +10,8 @@ from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.user import User
 
+from isic_archive.celery import app
 from isic_archive.models import Batch, Dataset, Image
-from isic_archive.tasks import app
 from isic_archive.upload import TempDir, ZipFileOpener
 from isic_archive.utility.boto import s3
 
