@@ -1,4 +1,3 @@
-from dotenv import load_dotenv
 import pkg_resources
 import sentry_sdk
 
@@ -80,7 +79,6 @@ class IsicArchive(GirderPlugin):
     DISPLAY_NAME = 'ISIC Archive'
 
     def load(self, info):
-        load_dotenv()
         sentry_sdk.init()
 
         getPlugin('large_image').load(info)

@@ -36,7 +36,7 @@ RUN cd /usr/local/lib/python3.6/site-packages && python /isic/setup.py develop
 
 RUN girder build --dev
 
-ADD docker/girder/.env /.env
+ADD docker/girder/.env /root/.girder/.env
 ADD docker/girder/bootstrap-isic.py /bootstrap-isic.py
 
 ARG entrypoint

@@ -8,7 +8,6 @@ services:
       args:
         entrypoint: docker/girder/entrypoint.sh
     environment:
-      DOTENV_PATH: /.env
       GIRDER_MONGO_URI: mongodb://mongo/girder
     volumes:
       - .:/isic
@@ -20,7 +19,6 @@ services:
       context: .
       dockerfile: docker/girder/Dockerfile
     environment:
-      DOTENV_PATH: /.env
       GIRDER_MONGO_URI: mongodb://mongo/girder
     volumes:
       - .:/isic
@@ -31,7 +29,6 @@ services:
       context: .
       dockerfile: docker/girder/Dockerfile
     environment:
-      DOTENV_PATH: /.env
       GIRDER_MONGO_URI: mongodb://mongo/girder
     volumes:
       - .:/isic

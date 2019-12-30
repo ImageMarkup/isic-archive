@@ -7,7 +7,6 @@ Type=simple
 User={{ ansible_user_id }}
 Group={{ ansible_user_id }}
 EnvironmentFile=/etc/conf.d/celerybeat
-Environment=DOTENV_PATH=/home/{{ celery_user }}/.env
 ExecStart=/bin/sh -c '{{ celery_bin }} beat \
   --app isic_archive.celery \
   --schedule /var/run/celery/celerybeat.schedule \

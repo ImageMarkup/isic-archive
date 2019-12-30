@@ -13,11 +13,6 @@
     sentry_environment: "development"
 
   pre_tasks:
-    - name: Install dotenv configuration file
-      template:
-        src: "vagrant.env.j2"
-        dest: "{{ ansible_user_dir }}/.env"
-
     - name: Install Python, pip and virtualenv
       apt:
         name:

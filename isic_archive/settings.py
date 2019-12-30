@@ -1,5 +1,14 @@
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
 from girder.exceptions import ValidationException
 from girder.utility import setting_utilities
+
+
+_dotenvPath = Path.home() / '.girder' / '.env'
+load_dotenv(_dotenvPath)
 
 
 class PluginSettings(object):

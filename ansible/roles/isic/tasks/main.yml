@@ -28,6 +28,16 @@
     virtualenv: "{{ girder_virtualenv }}"
   notify: Restart Girder
 
+- name: Ensure Girder configuration directory exists
+  file:
+    path: "{{ ansible_user_dir }}/.girder"
+    state: directory
+
+- name: Install ISIC dotenv configuration file
+  template:
+    src: "dotenv.j2"
+    dest: "{{ ansible_user_dir }}/.girder/.env"
+
 - name: Install Yarn
   npm:
     name: yarn
