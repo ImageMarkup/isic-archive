@@ -19,25 +19,23 @@ services:
     build:
       context: .
       dockerfile: docker/girder/Dockerfile
-      args:
-        entrypoint: docker/celery/entrypoint.sh
     environment:
       DOTENV_PATH: /.env
       GIRDER_MONGO_URI: mongodb://mongo/girder
     volumes:
       - .:/isic
+    command: ["celery", "worker", "--app", "isic_archive.celery", "--loglevel", "info"]
 
   celerybeat:
     build:
       context: .
       dockerfile: docker/girder/Dockerfile
-      args:
-        entrypoint: docker/celerybeat/entrypoint.sh
     environment:
       DOTENV_PATH: /.env
       GIRDER_MONGO_URI: mongodb://mongo/girder
     volumes:
       - .:/isic
+    command: ["celery", "beat", "--app", "isic_archive.celery", "--loglevel", "info"]
 
   mongo:
     image: mongo:latest

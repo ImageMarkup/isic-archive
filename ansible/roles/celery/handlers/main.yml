@@ -4,7 +4,7 @@
   systemd:
     name: celery
     daemon_reload: true
-    state: reloaded
+    state: restarted
   become: true
 
 # Celerybeat can't be reloaded

@@ -1,12 +1,13 @@
 [Unit]
-Description=Flower Service
+Description=Celery Flower Service
+After=network.target
 
 [Service]
+Type=simple
 User={{ ansible_user_id }}
 Group={{ ansible_user_id }}
-ExecStart={{ girder_virtualenv }}/bin/flower --port=5555 --loglevel=info -A isic_archive.tasks
-Restart=on-failure
-Type=simple
+ExecStart=/bin/sh -c '{{ celery_bin }} flower \
+  --app isic_archive.celery'
 
 [Install]
 WantedBy=multi-user.target

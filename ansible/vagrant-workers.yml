@@ -79,7 +79,6 @@
     - role: celery
       vars:
         celery_bin: "{{ girder_virtualenv }}/bin/celery"
-        celery_concurrency: 1
 
   post_tasks:
     - name: Add hosts entry for isic-archive.test
