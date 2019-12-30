@@ -1,3 +1,2 @@
 ---
-girder_admin_username: "admin"
-girder_admin_password: "password"
+isic_repo_path: "{{ ansible_user_dir }}/isic_archive"

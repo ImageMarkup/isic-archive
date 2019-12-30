@@ -17,15 +17,14 @@ from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.group import Group
 from girder.models.model_base import AccessControlledModel
-from girder.models.setting import Setting
 from girder.models.upload import Upload
 from girder.utility import mail_utils
 
+from isic_archive import settings
 from .batch import Batch
 from .dataset_helpers import matchFilenameRegex
 from .dataset_helpers.image_metadata import addImageMetadata
 from .user import User
-from ..settings import PluginSettings
 from ..utility import mail_utils as isic_mail_utils
 from ..utility.boto import s3, sts
 
@@ -310,14 +309,6 @@ class Dataset(AccessControlledModel):
 
     def initiateZipUploadS3(self, dataset, signature, user):
         """Initiate a direct-to-S3 upload of a ZIP file of images."""  # noqa: D401
-        # Get upload settings
-        s3BucketName = Setting().get(
-            PluginSettings.UPLOAD_BUCKET_NAME)
-        uploadRoleArn = Setting().get(
-            PluginSettings.UPLOAD_ROLE_ARN)
-        if not all([s3BucketName, uploadRoleArn]):
-            raise GirderException('Upload not configured.')
-
         # Create new batch
         batch = Batch().createBatch(
             dataset=dataset,
@@ -325,7 +316,7 @@ class Dataset(AccessControlledModel):
             signature=signature)
 
         # Add policy that restricts uploads to only the specific key
-        s3BucketArn = f'arn:aws:s3:::{s3BucketName}'
+        s3BucketArn = f'arn:aws:s3:::{settings.ISIC_UPLOAD_BUCKET_NAME}'
         s3ObjectKey = f'zip-uploads/{batch["_id"]}'
         s3BucketPutObjectInKeyPolicy = {
             'Version': '2012-10-17',
@@ -345,7 +336,7 @@ class Dataset(AccessControlledModel):
         # the credentials when the machine assumes the upload role.
         try:
             resp = sts.assume_role(
-                RoleArn=uploadRoleArn,
+                RoleArn=settings.ISIC_UPLOAD_ROLE_ARN,
                 RoleSessionName='ZipUploadSession-%d' % int(time.time()),
                 Policy=json.dumps(s3BucketPutObjectInKeyPolicy),
                 # 12 hours, also limited by the MaxSessionDuration of the role
@@ -365,7 +356,7 @@ class Dataset(AccessControlledModel):
 
         # Store upload information on batch
         batch.update({
-            's3BucketName': s3BucketName,
+            's3BucketName': settings.ISIC_UPLOAD_BUCKET_NAME,
             's3ObjectKey': s3ObjectKey,
             'ingestStatus': 'uploading'
         })
@@ -375,7 +366,7 @@ class Dataset(AccessControlledModel):
             'accessKeyId': credentials['AccessKeyId'],
             'secretAccessKey': credentials['SecretAccessKey'],
             'sessionToken': credentials['SessionToken'],
-            'bucketName': s3BucketName,
+            'bucketName': settings.ISIC_UPLOAD_BUCKET_NAME,
             'objectKey': s3ObjectKey,
             'batchId': batch['_id']
         }

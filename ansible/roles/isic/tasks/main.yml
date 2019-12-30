@@ -2,12 +2,13 @@
 - name: Download
   git:
     repo: "https://github.com/ImageMarkup/isic-archive.git"
-    dest: "{{ isic_archive_path }}"
-    version: "{{ isic_archive_version }}"
-    clone: "{{ isic_archive_clone }}"
-    update: "{{ isic_archive_update }}"
-    force: "{{ isic_archive_force }}"
-  notify: Build Girder web client
+    dest: "{{ isic_repo_path }}"
+    version: "{{ isic_repo_version }}"
+    clone: "{{ isic_repo_clone }}"
+    update: "{{ isic_repo_update }}"
+    force: "{{ isic_repo_force }}"
+  notify:
+    - Build ISIC web client
 
 - name: Install package dependencies
   apt:
@@ -16,64 +17,24 @@
       - p7zip-full
   become: true
 
-- name: Install numpy
-  pip:
-    name: numpy
-    virtualenv: "{{ girder_virtualenv }}"
-
 - name: Install isic-archive package
   pip:
-    name: "{{ isic_archive_path }}"
-    editable: "{{ isic_archive_editable }}"
+    name: "{{ isic_repo_path }}"
+    editable: "{{ isic_install_editable }}"
     virtualenv: "{{ girder_virtualenv }}"
-  notify: Restart Girder
-
-- name: Ensure Girder configuration directory exists
-  file:
-    path: "{{ ansible_user_dir }}/.girder"
-    state: directory
+  notify:
+    - Restart Girder
+    - Build Girder web client
 
 - name: Install ISIC dotenv configuration file
   template:
     src: "dotenv.j2"
     dest: "{{ ansible_user_dir }}/.girder/.env"
+  notify:
+    - Restart Girder
 
-- name: Install Yarn
-  npm:
-    name: yarn
-    global: true
-    state: latest
-  become: true
+- import_tasks: worker.yml
+  when: isic_worker|bool
 
-- name: Install ISIC GUI dependencies
-  yarn:
-    path: "{{ isic_archive_path }}/isic-archive-gui"
-
-- name: Build ISIC Admin GUI
-  command: yarn run build
-  args:
-    chdir: "{{ isic_archive_path }}/isic-archive-gui"
-
-- name: Build ISIC Integration GUI
-  command: yarn run build:integration
-  args:
-    chdir: "{{ isic_archive_path }}/isic-archive-gui"
-
-- name: Create systemd drop-in unit directory for Girder
-  file:
-    path: "/etc/systemd/system/girder.service.d"
-    state: directory
-  become: true
-
-- name: Create a systemd drop-in unit file for Girder
-  template:
-    src: "girder.conf.j2"
-    dest: "/etc/systemd/system/girder.service.d/10-isic.conf"
-  become: true
-  notify: Restart Girder
-
-- meta: flush_handlers
-
-- include_tasks: bootstrap.yml
-  vars:
-    ansible_python_interpreter: "{{ girder_virtualenv }}/bin/python3"
+- import_tasks: web.yml
+  when: isic_web|bool

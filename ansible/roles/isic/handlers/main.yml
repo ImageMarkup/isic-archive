@@ -1,0 +1,47 @@
+---
+- name: Restart Celery
+  listen:
+    - Restart Girder
+  systemd:
+    name: celery
+    daemon_reload: true
+    state: restarted
+  become: true
+  when: isic_worker|bool
+
+- name: Restart Celerybeat
+  listen:
+    - Restart Girder
+    - Restart Celery
+  systemd:
+    name: celerybeat
+    daemon_reload: true
+    state: restarted
+  become: true
+  when: isic_worker|bool
+
+- name: Install ISIC GUI dependencies
+  yarn:
+    path: "{{ isic_repo_path }}/isic-archive-gui"
+  listen:
+    - Build Girder web client
+    - Build ISIC web client
+  when: isic_web|bool
+
+- name: Build ISIC Admin GUI
+  listen:
+    - Build Girder web client
+    - Build ISIC web client
+  command: yarn run build
+  args:
+    chdir: "{{ isic_repo_path }}/isic-archive-gui"
+  when: isic_web|bool
+
+- name: Build ISIC Integration GUI
+  listen:
+    - Build Girder web client
+    - Build ISIC web client
+  command: yarn run build:integration
+  args:
+    chdir: "{{ isic_repo_path }}/isic-archive-gui"
+  when: isic_web|bool

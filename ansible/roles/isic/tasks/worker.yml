@@ -1,0 +1,21 @@
+---
+- name: Install Celery services
+  template:
+    src: "services/{{ item }}.j2"
+    dest: "/etc/systemd/system/{{ item }}"
+  loop:
+    - "celery.service"
+    - "celerybeat.service"
+  become: true
+  notify:
+    - Restart Celery
+
+- name: Enable Celery services
+  systemd:
+    name: "{{ item }}"
+    daemon_reload: true
+    enabled: true
+  loop:
+    - celery
+    - celerybeat
+  become: true

@@ -3,7 +3,7 @@
 - name: Install awscli
   pip:
     name: awscli
-    virtualenv: "{{ girder_virtualenv }}"
+    virtualenv: "{{ minio_virtualenv }}"
 
 - name: Download minio
   get_url:

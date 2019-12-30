@@ -1,8 +1,5 @@
-import os
-
 from celery import Celery, Task
 from celery.signals import worker_process_init
-from dotenv import load_dotenv
 import jsonpickle
 from kombu.serialization import register
 import pkg_resources
@@ -12,14 +9,12 @@ from requests_toolbelt.sessions import BaseUrlSession
 import sentry_sdk
 
 from girder.constants import TokenScope
-from girder.models.setting import Setting
 from girder.models.token import Token
-from girder.settings import SettingKey
 from girder.utility import mail_utils
 
+from isic_archive import settings
 from isic_archive.provision_utility import getAdminUser
 
-load_dotenv()
 sentry_sdk.init()
 
 
@@ -41,11 +36,7 @@ class CredentialedGirderTask(Task):
         # TODO: Revoke token in post task signal
         self.token = Token().createToken(user=getAdminUser(), days=1,
                                          scope=[TokenScope.DATA_READ, TokenScope.DATA_WRITE])
-        self.session = BaseUrlSession(
-            os.getenv(
-                'ARCHIVE_API_URL',
-                Setting().get(SettingKey.SERVER_ROOT)
-            ).rstrip('/') + '/')
+        self.session = BaseUrlSession(settings.ISIC_API_URL)
         self.session.headers.update({
             'Girder-Token': str(self.token['_id'])
         })
@@ -58,15 +49,18 @@ class CredentialedGirderTask(Task):
         super(CredentialedGirderTask, self).__call__(*args, **kwargs)
 
 
-app = Celery(task_cls=CredentialedGirderTask)
-
-
 class CeleryAppConfig(object):
     # jsonpickle is used to support passing object ids between tasks
     task_serializer = 'jsonpickle'
+    worker_concurrency = 1
+    task_time_limit = 7200
+    # Necessary for task monitoring with Flower
+    worker_sent_task_events = True
+    # Prefetching is only necessary with high-latency brokers, and apparently can cause problems
+    worker_prefetch_multiplier = 1
 
 
-app.config_from_object(CeleryAppConfig())
+app = Celery(task_cls=CredentialedGirderTask, config_source=CeleryAppConfig)
 
 
 @app.on_after_configure.connect

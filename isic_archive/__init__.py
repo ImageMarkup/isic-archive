@@ -26,11 +26,10 @@ def onDescribeResource(event):
 def onUserCreate(event):
     newUser = event.info
 
-    # If there are no other users, besides the Archive and Provision admins
+    # If there are no other users, besides the Archive admin
     if not User().collection.count_documents({
         'email': {'$nin': [
             'admin@isic-archive.com',
-            'provision.admin@isic-archive.com',
             # The new user has already been saved, when 'model.user.save.created' is triggered
             newUser['email'],
         ]}
