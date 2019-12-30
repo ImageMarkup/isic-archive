@@ -14,8 +14,6 @@ services:
       - .:/isic
     ports:
       - 8080:8080
-    networks:
-      - primary
 
   celery:
     build:
@@ -28,8 +26,6 @@ services:
       GIRDER_MONGO_URI: mongodb://mongo/girder
     volumes:
       - .:/isic
-    networks:
-      - primary
 
   celerybeat:
     build:
@@ -42,34 +38,30 @@ services:
       GIRDER_MONGO_URI: mongodb://mongo/girder
     volumes:
       - .:/isic
-    networks:
-      - primary
 
   mongo:
     image: mongo:latest
     restart: always
-    networks:
-      - primary
+    ports:
+      - 27017:27017
 
   redis:
     image: redis:latest
     restart: always
-    networks:
-      - primary
+    ports:
+      - 6379:6379
 
   rabbitmq:
     image: rabbitmq:latest
     restart: always
-    networks:
-      - primary
+    ports:
+      - 5672:5672
 
   mailhog:
     image: mailhog/mailhog:latest
     restart: always
     ports:
       - 8025:8025
-    networks:
-      - primary
 
   minio:
     image: minio/minio:latest
@@ -79,8 +71,3 @@ services:
     environment:
       MINIO_ACCESS_KEY: accesskey
       MINIO_SECRET_KEY: secretkey
-    networks:
-      - primary
-
-networks:
-  primary:
