@@ -33,11 +33,9 @@ RUN pip install numpy
 RUN pip install -r /isic/requirements.txt
 COPY . /isic
 RUN cd /usr/local/lib/python3.6/site-packages && python /isic/setup.py develop
+ADD docker/girder/.env /root/.girder/.env
 
 RUN girder build --dev
-
-ADD docker/girder/.env /.env
-ADD docker/girder/bootstrap-isic.py /bootstrap-isic.py
 
 ARG entrypoint
 ADD $entrypoint ./entrypoint.sh

@@ -3,6 +3,7 @@ from time import sleep
 
 import boto3
 
+from isic_archive import settings
 from isic_archive.models.batch import Batch
 from isic_archive.models.image import Image
 
@@ -15,7 +16,7 @@ def test_zip_ingestion(session, dataset_id):
         's3',
         aws_access_key_id=r.json()['accessKeyId'],
         aws_secret_access_key=r.json()['secretAccessKey'],
-        endpoint_url='http://minio:9000',
+        endpoint_url=settings.ISIC_UPLOAD_S3_URL,
     )
 
     with open('test/data/minimal-2-valid-1-skipped.zip', 'rb') as data:

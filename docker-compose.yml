@@ -8,68 +8,55 @@ services:
       args:
         entrypoint: docker/girder/entrypoint.sh
     environment:
-      DOTENV_PATH: /.env
       GIRDER_MONGO_URI: mongodb://mongo/girder
     volumes:
       - .:/isic
     ports:
       - 8080:8080
-    networks:
-      - primary
 
   celery:
     build:
       context: .
       dockerfile: docker/girder/Dockerfile
-      args:
-        entrypoint: docker/celery/entrypoint.sh
     environment:
-      DOTENV_PATH: /.env
       GIRDER_MONGO_URI: mongodb://mongo/girder
     volumes:
       - .:/isic
-    networks:
-      - primary
+    command: ["celery", "worker", "--app", "isic_archive.celery", "--loglevel", "info"]
 
   celerybeat:
     build:
       context: .
       dockerfile: docker/girder/Dockerfile
-      args:
-        entrypoint: docker/celerybeat/entrypoint.sh
     environment:
-      DOTENV_PATH: /.env
       GIRDER_MONGO_URI: mongodb://mongo/girder
     volumes:
       - .:/isic
-    networks:
-      - primary
+    command: ["celery", "beat", "--app", "isic_archive.celery", "--loglevel", "info"]
 
   mongo:
     image: mongo:latest
     restart: always
-    networks:
-      - primary
+    ports:
+      - 27017:27017
 
   redis:
     image: redis:latest
     restart: always
-    networks:
-      - primary
+    ports:
+      - 6379:6379
 
   rabbitmq:
     image: rabbitmq:latest
     restart: always
-    networks:
-      - primary
+    ports:
+      - 5672:5672
 
   mailhog:
     image: mailhog/mailhog:latest
     restart: always
     ports:
       - 8025:8025
-    networks:
-      - primary
 
   minio:
     image: minio/minio:latest
@@ -79,8 +66,3 @@ services:
     environment:
       MINIO_ACCESS_KEY: accesskey
       MINIO_SECRET_KEY: secretkey
-    networks:
-      - primary
-
-networks:
-  primary:

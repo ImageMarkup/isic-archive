@@ -1,0 +1,19 @@
+[Unit]
+Description=Celery Beat Service
+After=network.target
+
+[Service]
+User={{ ansible_user_id }}
+Group={{ ansible_user_id }}
+StateDirectory=celerybeat
+Environment=LC_ALL=C.UTF-8
+Environment=LANG=C.UTF-8
+ExecStart=/bin/sh -c '{{ girder_virtualenv }}/bin/celery \
+  beat \
+  --app isic_archive.celery \
+  --schedule $STATE_DIRECTORY/celerybeat-schedule.db \
+  --loglevel info'
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

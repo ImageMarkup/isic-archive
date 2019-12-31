@@ -1,0 +1,78 @@
+---
+- name: vagrant setup
+  hosts: all
+
+  vars:
+    ansible_python_interpreter: "/usr/bin/python3"
+
+  pre_tasks:
+  # TODO: setup SSH reverse lookup
+  # TODO: set hostname
+  roles:
+    - role: mailhog
+
+    - role: girder.mongodb
+      vars:
+        mongodb_version: 4.0
+        mongodb_bind_public: true
+
+    - role: rabbitmq
+      vars:
+        rabbitmq_vhost: "isic-archive"
+        rabbitmq_username: "isicarchive"
+        rabbitmq_password: "password"
+
+    - role: redis
+      vars:
+        redis_bind_all_interfaces: true
+        redis_password: "password"
+
+    - role: isic
+      vars:
+        isic_repo_clone: false
+        isic_server: true
+        isic_web: true
+        isic_worker: true
+        isic_env:
+          ISIC_ADMIN_PASSWORD: "password"
+          ISIC_API_URL: "http://isic-archive.test/api/v1"
+          ISIC_SITE_URL: "http://isic-archive.test/"
+          ISIC_ASSETSTORE_PATH: "{{ ansible_user_dir }}/assetstores/default"
+          # S3 URL will be used by the web client, so it must be an externally resolvable host
+          ISIC_UPLOAD_S3_URL: "http://isic-archive.test:9000"
+          ISIC_UPLOAD_BUCKET_NAME: "test-upload-bucket"
+          ISIC_UPLOAD_ROLE_ARN: "fake-arn"
+          ISIC_SMTP_HOST: "localhost"
+          ISIC_SMTP_PORT: "1025"
+          CELERY_BROKER_URL: "amqp://isicarchive:password@localhost/isic-archive"
+          CELERY_RESULT_BACKEND: "redis://:password@localhost/0"
+        isic_install_editable: true
+
+    - role: nginx
+      vars:
+        site_hostname: isic-archive.test
+        isic_gui_dir: "{{ isic_repo_path }}/isic-archive-gui/dist"
+        isic_integration_gui_dir: "{{ isic_repo_path }}/isic-archive-gui/dist-integration"
+
+    - role: minio
+      vars:
+        minio_virtualenv: "{{ girder_virtualenv }}"
+        isic_upload_bucket_name: "test-upload-bucket"
+
+  post_tasks:
+    - name: Add hosts entry for minio
+      lineinfile:
+        path: /etc/hosts
+        line: "127.0.0.1 minio"
+      become: true
+
+    - name: Install dev requirements
+      pip:
+        name: tox
+        virtualenv: "{{ girder_virtualenv }}"
+
+    - name: Activate virtualenv on login
+      lineinfile:
+        line: 'source {{ girder_virtualenv }}/bin/activate'
+        path: "{{ ansible_user_dir }}/.profile"
+        state: present

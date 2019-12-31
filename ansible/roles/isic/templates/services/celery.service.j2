@@ -1,0 +1,20 @@
+[Unit]
+Description=Celery Service
+After=network.target
+
+[Service]
+User={{ ansible_user_id }}
+Group={{ ansible_user_id }}
+Environment=LC_ALL=C.UTF-8
+Environment=LANG=C.UTF-8
+ExecStart=/bin/sh -c '{{ girder_virtualenv }}/bin/celery \
+  worker \
+  --app isic_archive.celery \
+  --loglevel info'
+# Only SIGTERM the main process
+KillMode=mixed
+TimeoutStopSec=90s
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
