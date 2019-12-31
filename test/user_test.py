@@ -1,3 +1,5 @@
+import functools
+
 import pytest
 from pytest_girder.assertions import assertStatus, assertStatusOk
 
@@ -11,6 +13,9 @@ from isic_archive.models import User
 @pytest.fixture
 def provisionedServer(server):
     provisionDatabase()
+    # When the Girder app is mounted at '/', requests to '/api' are able to be routed to the API app
+    # Since ISIC mounts the Girder app at `/girder`, requests must be made to the API app directly
+    server.request = functools.partial(server.request, appPrefix='/api')
 
     # Create the first 'real' user, which will be auto-promoted to admin
     User().createUser(
