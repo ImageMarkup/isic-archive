@@ -23,7 +23,7 @@ ISIC_CORS_ORIGINS: List[str] = list(filter(
         os.environ.get('ISIC_CORS_ORIGINS', '').split(',')
     )
 ))
-ISIC_UPLOAD_S3_URL: Optional[str] = os.environ['ISIC_UPLOAD_S3_URL']
+ISIC_UPLOAD_S3_URL: Optional[str] = os.environ.get('ISIC_UPLOAD_S3_URL')
 ISIC_UPLOAD_BUCKET_NAME: str = os.environ['ISIC_UPLOAD_BUCKET_NAME']
 ISIC_UPLOAD_ROLE_ARN: str = os.environ['ISIC_UPLOAD_ROLE_ARN']
 # SMTP config
