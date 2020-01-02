@@ -5,34 +5,21 @@
     name: rabbitmq-server
   become: true
 
-- name: Get existing rabbitmq_vhosts
-  shell:
-    rabbitmqctl list_vhosts | grep  "{{ rabbitmq_vhost }}" | wc -l
-  changed_when: false
-  register: rabbitmq_vhosts
+- name: Create RabbitMQ virtual host
+  rabbitmq_vhost:
+    name: "{{ rabbitmq_vhost }}"
   become: true
 
-- name: Create isic-archive rabbitmq_vhost
-  command:
-    rabbitmqctl add_vhost {{ rabbitmq_vhost }}
-  become: true
-  when: rabbitmq_vhosts.stdout == "0"
-
-- name: Get existing users
-  shell:
-    rabbitmqctl list_users | awk '$1 == "{{ rabbitmq_username }}"' | wc -l
-  changed_when: false
-  register: users
-  become: true
-
-- name: Create isic-archive RabbitMQ user
-  command:
-    rabbitmqctl add_user {{ rabbitmq_username }} {{ rabbitmq_password }}
-  become: true
-  when: users.stdout == "0"
-
-# TODO: Determine minimal set of permissions for RabbitMQ user
-- name: Set RabbitMQ user permissions
-  command:
-    rabbitmqctl set_permissions -p {{ rabbitmq_vhost }} {{ rabbitmq_username }} ".*" ".*" ".*"
+- name: Create RabbitMQ user
+  rabbitmq_user:
+    user: "{{ rabbitmq_username }}"
+    password: "{{ rabbitmq_password }}"
+    update_password: always
+    vhost:
+    permissions:
+      - vhost: "{{ rabbitmq_vhost }}"
+        # TODO: Determine minimal set of permissions for RabbitMQ user
+        configure_priv: ".*"
+        read_priv: ".*"
+        write_priv: ".*"
   become: true
