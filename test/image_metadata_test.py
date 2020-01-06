@@ -12,6 +12,7 @@ from isic_archive.models.dataset_helpers.image_metadata import (
     FamilyHxMmFieldParser,
     GeneralAnatomicSiteFieldParser,
     ImageTypeFieldParser,
+    LesionIdFieldParser,
     MelanocyticFieldParser,
     MelClassFieldParser,
     MelMitoticIndexFieldParser,
@@ -21,6 +22,7 @@ from isic_archive.models.dataset_helpers.image_metadata import (
     MetadataValueExistsException,
     MultipleFieldException,
     NevusTypeFieldParser,
+    PatientIdFieldParser,
     PersonalHxMmFieldParser,
     SexFieldParser,
 )
@@ -1545,6 +1547,24 @@ def testGeneralAnatomicSiteFieldParser():
     image = _createImage()
     _runParser(image, data, parser)
     assert {'anatom_site_general': 'head/neck'} == image['meta']['clinical']
+
+
+def testPatientIdFieldParser():
+    parser = PatientIdFieldParser
+
+    data = {'patient_id': 'ip_0123456 '}
+    image = _createImage()
+    _runParser(image, data, parser)
+    assert {'patient_id': 'IP_0123456'} == image['meta']['clinical']
+
+
+def testLesionIdFieldParser():
+    parser = LesionIdFieldParser
+
+    data = {'lesion_id': 'il_0123456 '}
+    image = _createImage()
+    _runParser(image, data, parser)
+    assert {'lesion_id': 'IL_0123456'} == image['meta']['clinical']
 
 
 def testAddImageClinicalMetadata():
