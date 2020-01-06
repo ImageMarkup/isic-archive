@@ -828,6 +828,46 @@ class MarkerPenFieldParser(FieldParser):
         acquisition[cls.name] = value
 
 
+class PatientIdFieldParser(FieldParser):
+    name = 'patient_id'
+    allowedFields = {'patient_id'}
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.upper()
+            if not re.match('^IP_[0-9]{7}$', value):
+                raise BadFieldTypeException(
+                    name=cls.name, fieldType='of the form IP_1234567', value=value)
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(clinical, cls.name, value)
+        clinical[cls.name] = value
+
+
+class LesionIdFieldParser(FieldParser):
+    name = 'lesion_id'
+    allowedFields = {'lesion_id'}
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.upper()
+            if not re.match('^IL_[0-9]{7}$', value):
+                raise BadFieldTypeException(
+                    name=cls.name, fieldType='of the form IP_1234567', value=value)
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(clinical, cls.name, value)
+        clinical[cls.name] = value
+
+
 def _populateMetadata(acquisition, clinical):
     """
     Populate empty metadata fields that can be determined based on other fields.
@@ -1028,7 +1068,9 @@ def addImageMetadata(image: Dict, data: Dict) -> Tuple[List[str], List[str]]:
         BlurryFieldParser,
         ColorTintFieldParser,
         HairyFieldParser,
-        MarkerPenFieldParser
+        MarkerPenFieldParser,
+        PatientIdFieldParser,
+        LesionIdFieldParser,
     ]:
         acquisition = image['meta']['acquisition']
         clinical = image['meta']['clinical']
