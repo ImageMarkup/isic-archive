@@ -139,7 +139,10 @@ def ingestBatchFromZipfile(self, batchId):
                         resp = self.session.post('file', params={
                             'parentType': 'item',
                             'parentId': image['_id'],
-                            'name': originalFileName,
+                            'name': '%s%s' % (
+                                image['name'],
+                                os.path.splitext(originalFileName)[1].lower()
+                            ),
                             'size': os.path.getsize(originalFilePath),
                             'mimeType': mimetypes.guess_type(originalFileName)[0]
                         }, data=originalFileStream)
