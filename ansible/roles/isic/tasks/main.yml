@@ -16,8 +16,9 @@
 
 - name: Install isic-archive package
   pip:
-    # TODO: Ansible will always mark this task as changed
-    name: "{{ isic_repo_path }}"
+    # prefixing with "git+" causes Ansible to use the output of "pip list" to determine whether
+    # this step is changed (even though a reinstall is always done)
+    name: "git+file://{{ isic_repo_path }}#egg=isic-archive"
     # 'forcereinstall' will reinstall all packages, not just the named one, which is good for
     # making this operation as stateless as possible (i.e. new installs will end up with the same
     # package versions as existing installs)
