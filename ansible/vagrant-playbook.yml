@@ -29,7 +29,7 @@
 
     - role: isic
       vars:
-        isic_repo_clone: false
+        isic_repo_local: true
         isic_server: true
         isic_web: true
         isic_worker: true
@@ -46,7 +46,6 @@
           ISIC_SMTP_PORT: "1025"
           CELERY_BROKER_URL: "amqp://isicarchive:password@localhost/isic-archive"
           CELERY_RESULT_BACKEND: "redis://:password@localhost/0"
-        isic_install_editable: true
 
     - role: nginx
       vars:

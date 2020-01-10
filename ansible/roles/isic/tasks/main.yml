@@ -1,14 +1,11 @@
 ---
-- name: Download
+- name: Download ISIC repo
   git:
     repo: "https://github.com/ImageMarkup/isic-archive.git"
     dest: "{{ isic_repo_path }}"
-    version: "{{ isic_repo_version }}"
-    clone: "{{ isic_repo_clone }}"
-    update: "{{ isic_repo_update }}"
-    force: "{{ isic_repo_force }}"
   notify:
     - Build ISIC web client
+  when: not isic_repo_local
 
 - name: Install package dependencies
   apt:
@@ -19,8 +16,14 @@
 
 - name: Install isic-archive package
   pip:
+    # TODO: Ansible will always mark this task as changed
     name: "{{ isic_repo_path }}"
-    editable: "{{ isic_install_editable }}"
+    # 'forcereinstall' will reinstall all packages, not just the named one, which is good for
+    # making this operation as stateless as possible (i.e. new installs will end up with the same
+    # package versions as existing installs)
+    # 'latest' actually always reinstalls the named package, but only triggers changed
+    state: "{{ 'forcereinstall' if not isic_repo_local else 'present' }}"
+    editable: "{{ isic_repo_local }}"
     virtualenv: "{{ girder_virtualenv }}"
   notify:
     - Restart Girder

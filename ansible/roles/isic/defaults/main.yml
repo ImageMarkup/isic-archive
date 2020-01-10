@@ -1,9 +1,5 @@
 ---
-isic_repo_version: "master"
-isic_repo_clone: true
-isic_repo_update: false
-isic_repo_force: false
+isic_repo_local: false
 isic_server: false
 isic_web: false
 isic_worker: false
-isic_install_editable: false
