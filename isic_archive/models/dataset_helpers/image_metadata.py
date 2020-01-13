@@ -872,6 +872,27 @@ class LesionIdFieldParser(FieldParser):
         clinical[cls.name] = value
 
 
+class AcquisitionDayFieldParser(FieldParser):
+    name = 'acquisition_day'
+    allowedFields = {'acquisition_day'}
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.lower()
+            if value in ['', 'unknown']:
+                value = None
+            else:
+                value = cls._coerceInt(value)
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(acquisition, cls.name, value)
+        acquisition[cls.name] = value
+
+
 def _populateMetadata(acquisition, clinical):
     """
     Populate empty metadata fields that can be determined based on other fields.
@@ -1075,6 +1096,7 @@ def addImageMetadata(image: Dict, data: Dict) -> Tuple[List[str], List[str]]:
         MarkerPenFieldParser,
         PatientIdFieldParser,
         LesionIdFieldParser,
+        AcquisitionDayFieldParser,
     ]:
         acquisition = image['meta']['acquisition']
         clinical = image['meta']['clinical']
