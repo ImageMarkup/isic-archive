@@ -837,7 +837,9 @@ class PatientIdFieldParser(FieldParser):
         if value is not None:
             value = value.strip()
             value = value.upper()
-            if not re.match('^IP_[0-9]{7}$', value):
+            if value in ['', 'UNKNOWN']:
+                value = None
+            elif not re.match('^IP_[0-9]{7}$', value):
                 raise BadFieldTypeException(
                     name=cls.name, fieldType='of the form IP_1234567', value=value)
         return value
@@ -857,7 +859,9 @@ class LesionIdFieldParser(FieldParser):
         if value is not None:
             value = value.strip()
             value = value.upper()
-            if not re.match('^IL_[0-9]{7}$', value):
+            if value in ['', 'UNKNOWN']:
+                value = None
+            elif not re.match('^IL_[0-9]{7}$', value):
                 raise BadFieldTypeException(
                     name=cls.name, fieldType='of the form IL_1234567', value=value)
         return value
