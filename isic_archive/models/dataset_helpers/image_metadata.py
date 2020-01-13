@@ -837,7 +837,9 @@ class PatientIdFieldParser(FieldParser):
         if value is not None:
             value = value.strip()
             value = value.upper()
-            if not re.match('^IP_[0-9]{7}$', value):
+            if value in ['', 'UNKNOWN']:
+                value = None
+            elif not re.match('^IP_[0-9]{7}$', value):
                 raise BadFieldTypeException(
                     name=cls.name, fieldType='of the form IP_1234567', value=value)
         return value
@@ -857,7 +859,9 @@ class LesionIdFieldParser(FieldParser):
         if value is not None:
             value = value.strip()
             value = value.upper()
-            if not re.match('^IL_[0-9]{7}$', value):
+            if value in ['', 'UNKNOWN']:
+                value = None
+            elif not re.match('^IL_[0-9]{7}$', value):
                 raise BadFieldTypeException(
                     name=cls.name, fieldType='of the form IL_1234567', value=value)
         return value
@@ -866,6 +870,27 @@ class LesionIdFieldParser(FieldParser):
     def load(cls, value, acquisition, clinical, private):
         cls._checkWrite(clinical, cls.name, value)
         clinical[cls.name] = value
+
+
+class AcquisitionDayFieldParser(FieldParser):
+    name = 'acquisition_day'
+    allowedFields = {'acquisition_day'}
+
+    @classmethod
+    def transform(cls, value):
+        if value is not None:
+            value = value.strip()
+            value = value.lower()
+            if value in ['', 'unknown']:
+                value = None
+            else:
+                value = cls._coerceInt(value)
+        return value
+
+    @classmethod
+    def load(cls, value, acquisition, clinical, private):
+        cls._checkWrite(acquisition, cls.name, value)
+        acquisition[cls.name] = value
 
 
 def _populateMetadata(acquisition, clinical):
@@ -1071,6 +1096,7 @@ def addImageMetadata(image: Dict, data: Dict) -> Tuple[List[str], List[str]]:
         MarkerPenFieldParser,
         PatientIdFieldParser,
         LesionIdFieldParser,
+        AcquisitionDayFieldParser,
     ]:
         acquisition = image['meta']['acquisition']
         clinical = image['meta']['clinical']
