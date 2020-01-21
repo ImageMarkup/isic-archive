@@ -9,12 +9,15 @@ StateDirectory=celerybeat
 RuntimeDirectory=celerybeat
 Environment=LC_ALL=C.UTF-8
 Environment=LANG=C.UTF-8
-ExecStart=/bin/sh -c '{{ girder_virtualenv }}/bin/celery \
+# TODO: systemd<240 does not provide STATE_DIRECTORY and RUNTIME_DIRECTORY automatically
+Environment=STATE_DIRECTORY=/var/lib/celerybeat
+Environment=RUNTIME_DIRECTORY=/run/celerybeat
+ExecStart={{ girder_virtualenv }}/bin/celery \
   beat \
   --app isic_archive.celery \
-  --schedule $STATE_DIRECTORY/celerybeat-schedule.db \
-  --pidfile $RUNTIME_DIRECTORY/celerybeat.pid \
-  --loglevel info'
+  --schedule ${STATE_DIRECTORY}/celerybeat-schedule.db \
+  --pidfile ${RUNTIME_DIRECTORY}/celerybeat.pid \
+  --loglevel info
 Restart=always
 
 [Install]
