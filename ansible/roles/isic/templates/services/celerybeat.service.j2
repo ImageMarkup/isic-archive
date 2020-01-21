@@ -6,12 +6,14 @@ After=network.target
 User={{ ansible_user_id }}
 Group={{ ansible_user_id }}
 StateDirectory=celerybeat
+RuntimeDirectory=celerybeat
 Environment=LC_ALL=C.UTF-8
 Environment=LANG=C.UTF-8
 ExecStart=/bin/sh -c '{{ girder_virtualenv }}/bin/celery \
   beat \
   --app isic_archive.celery \
   --schedule $STATE_DIRECTORY/celerybeat-schedule.db \
+  --pidfile $RUNTIME_DIRECTORY/celerybeat.pid \
   --loglevel info'
 Restart=always
 
