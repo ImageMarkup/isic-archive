@@ -5,8 +5,9 @@ USER root
 RUN apt-get update \
   && apt-get install --assume-yes \
     # Install isic_archive dependencies
-    p7zip-full
+    p7zip-full \
+  && rm --recursive --force /var/lib/apt/lists/*
 
-RUN pip3 install tox
+RUN pip3 --no-cache-dir install tox
 
 USER circleci
