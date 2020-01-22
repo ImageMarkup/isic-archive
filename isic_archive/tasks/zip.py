@@ -39,6 +39,7 @@ def _uploadZipfileToGirder(requestSession, filePath, dataset):
                 'size': fileSize,
                 'mimeType': 'application/zip'
             },
+            allow_redirects=False,
         )
         uploadFileResponse.raise_for_status()
         uploadId = uploadFileResponse.json()['_id']
@@ -46,10 +47,15 @@ def _uploadZipfileToGirder(requestSession, filePath, dataset):
         chunk_size = 1024 * 1024 * 50
         offset = 0
         for chunk in iter(partial(fileStream.read, chunk_size), b''):
-            uploadChunkResponse = requestSession.post('file/chunk',
-                                                      params={'offset': offset,
-                                                              'uploadId': uploadId},
-                                                      data=chunk)
+            uploadChunkResponse = requestSession.post(
+                'file/chunk',
+                params={
+                    'offset': offset,
+                    'uploadId': uploadId
+                },
+                data=chunk,
+                allow_redirects=False,
+            )
             uploadChunkResponse.raise_for_status()
             offset += len(chunk)
 
@@ -136,16 +142,21 @@ def ingestBatchFromZipfile(self, batchId):
                     )
 
                     try:
-                        resp = self.session.post('file', params={
-                            'parentType': 'item',
-                            'parentId': image['_id'],
-                            'name': '%s%s' % (
-                                image['name'],
-                                os.path.splitext(originalFileName)[1].lower()
-                            ),
-                            'size': os.path.getsize(originalFilePath),
-                            'mimeType': mimetypes.guess_type(originalFileName)[0]
-                        }, data=originalFileStream)
+                        resp = self.session.post(
+                            'file',
+                            params={
+                                'parentType': 'item',
+                                'parentId': image['_id'],
+                                'name': '%s%s' % (
+                                    image['name'],
+                                    os.path.splitext(originalFileName)[1].lower()
+                                ),
+                                'size': os.path.getsize(originalFilePath),
+                                'mimeType': mimetypes.guess_type(originalFileName)[0]
+                            },
+                            data=originalFileStream,
+                            allow_redirects=False,
+                        )
                         resp.raise_for_status()
                     except Exception:
                         logger.exception('An individual image failed to be extracted')

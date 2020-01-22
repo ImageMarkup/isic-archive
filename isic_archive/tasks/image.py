@@ -28,7 +28,9 @@ def ingestImage(self, imageId):
     try:
         imageFile = Image().originalFile(image)
         originalFileStreamResponse = self.session.get(
-            f'file/{imageFile["_id"]}/download')
+            f'file/{imageFile["_id"]}/download',
+            allow_redirects=False,
+        )
         originalFileStreamResponse.raise_for_status()
         originalFileStreamResponse = io.BytesIO(originalFileStreamResponse.content)
 
@@ -63,6 +65,7 @@ def ingestImage(self, imageId):
                 'mimeType': imageFile['mimeType'],
             },
             data=open(exifFile.name, 'rb').read(),
+            allow_redirects=False,
         )
         resp.raise_for_status()
 
@@ -103,7 +106,9 @@ def generateSuperpixels(self, imageId):
         imageFile = Image().originalFile(image)
 
         originalFileStreamResponse = self.session.get(
-            f'file/{imageFile["_id"]}/download')
+            f'file/{imageFile["_id"]}/download',
+            allow_redirects=False,
+        )
         originalFileStreamResponse.raise_for_status()
         originalFileStreamResponse = io.BytesIO(originalFileStreamResponse.content)
 
@@ -114,13 +119,18 @@ def generateSuperpixels(self, imageId):
         superpixelsEncodedStream = ScikitSegmentationHelper.writeImage(
             superpixelsData, 'png')
 
-        uploadSuperpixelsResponse = self.session.post('file', params={
-            'parentType': 'item',
-            'parentId': imageId,
-            'name': f'{image["name"]}_superpixels_v{SUPERPIXEL_VERSION}.png',
-            'size': len(superpixelsEncodedStream.getvalue()),
-            'mimeType': 'image/png'
-        }, data=superpixelsEncodedStream.getvalue())
+        uploadSuperpixelsResponse = self.session.post(
+            'file',
+            params={
+                'parentType': 'item',
+                'parentId': imageId,
+                'name': f'{image["name"]}_superpixels_v{SUPERPIXEL_VERSION}.png',
+                'size': len(superpixelsEncodedStream.getvalue()),
+                'mimeType': 'image/png'
+            },
+            data=superpixelsEncodedStream.getvalue(),
+            allow_redirects=False,
+        )
         uploadSuperpixelsResponse.raise_for_status()
 
         superpixelsFile = File().load(uploadSuperpixelsResponse.json()['_id'], force=True)
@@ -148,7 +158,10 @@ def generateLargeImage(self, imageId):
 
     try:
         originalFileStreamResponse = self.session.get(
-            f'file/{imageFile["_id"]}/download', stream=True)
+            f'file/{imageFile["_id"]}/download',
+            allow_redirects=False,
+            stream=True,
+        )
         originalFileStreamResponse.raise_for_status()
 
         with tempfile.NamedTemporaryFile() as inputFile, \
@@ -166,7 +179,9 @@ def generateLargeImage(self, imageId):
                         'parentId': imageId,
                         'name': f'{imageItem["name"]}.tiff',
                         'size': os.path.getsize(outputFile.name)
-                    }, data=vipsResultFile.read(),
+                    },
+                    data=vipsResultFile.read(),
+                    allow_redirects=False,
                 )
                 uploadLargeImageResp.raise_for_status()
     except Exception:
