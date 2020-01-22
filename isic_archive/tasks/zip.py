@@ -28,6 +28,7 @@ def _uploadZipfileToGirder(requestSession, filePath, dataset):
         'baseParentId': uploadCollection['_id']
     })
 
+    originalFileName = os.path.basename(filePath)
     fileSize = os.path.getsize(filePath)
     with open(filePath, 'rb') as fileStream:
         uploadFileResponse = requestSession.post(
@@ -35,7 +36,7 @@ def _uploadZipfileToGirder(requestSession, filePath, dataset):
             params={
                 'parentType': 'folder',
                 'parentId': uploadFolder['_id'],
-                'name': filePath,
+                'name': originalFileName,
                 'size': fileSize,
                 'mimeType': 'application/zip'
             },
