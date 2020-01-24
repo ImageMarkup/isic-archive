@@ -53,6 +53,7 @@ class CeleryAppConfig(object):
     # jsonpickle is used to support passing object ids between tasks
     task_serializer = 'jsonpickle'
     worker_concurrency = 1
+    task_ignore_result = True
     task_time_limit = 7200
     # Necessary for task monitoring with Flower
     worker_sent_task_events = True

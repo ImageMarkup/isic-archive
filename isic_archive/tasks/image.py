@@ -87,13 +87,21 @@ def ingestImage(self, imageId):
     }
     Image().save(image)
 
-    callback = markImageIngested.s(image['_id'])
-    chord([generateSuperpixels.s(image['_id']),
-           generateLargeImage.s(image['_id'])])(callback)
+    chordHeader = [
+        generateSuperpixels.signature(args=(image['_id'],), ignore_result=False),
+        generateLargeImage.signature(args=(image['_id'],), ignore_result=False),
+    ]
+    # make the callback signature immutable, so header results are not passed as an arg
+    chordCallback = markImageIngested.signature(
+        args=(image['_id'],),
+        ignore_result=False,
+        immutable=True
+    )
+    chord(chordHeader)(chordCallback)
 
 
 @app.task()
-def markImageIngested(results, imageId):
+def markImageIngested(imageId):
     image = Image().load(imageId, force=True)
     image['ingested'] = True
     Image().save(image)
