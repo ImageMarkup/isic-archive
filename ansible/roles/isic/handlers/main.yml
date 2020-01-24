@@ -24,13 +24,11 @@
   yarn:
     path: "{{ isic_repo_path }}/isic-archive-gui"
   listen:
-    - Build Girder web client
     - Build ISIC web client
   when: isic_web|bool
 
 - name: Build ISIC Admin GUI
   listen:
-    - Build Girder web client
     - Build ISIC web client
   command: yarn run build
   args:
@@ -39,7 +37,6 @@
 
 - name: Build ISIC Integration GUI
   listen:
-    - Build Girder web client
     - Build ISIC web client
   command: yarn run build:integration
   args:
