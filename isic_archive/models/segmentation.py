@@ -145,28 +145,27 @@ class Segmentation(Model):
         contour = OpenCVSegmentationHelper.maskToContour(
             mask, paddedInput=False)
 
-        pilImageData = PIL_Image.open(
-            File().getLocalFilePath(Image().originalFile(image))
-        )
-        pilDraw = PIL_ImageDraw.Draw(pilImageData)
-        pilDraw.line(
-            list(map(tuple, contour)),
-            fill=(0, 255, 0),  # TODO: make color an option
-            width=int(pilImageData.size[0] / 300.0)
-        )
-
-        # Saving using native PIL is much faster than converting to a NumPy array to save with
-        # ScikitSegmentationHelper
-        if width is not None:
-            height = width * pilImageData.size[1] // pilImageData.size[0]
-            pilImageData = pilImageData.resize(
-                size=(width, height),
-                # A PIL_Image.LANCZOS downsampling filter takes ~350ms to resize a 7k image to 700,
-                # whereas default downsampling filter (nearest neighbor) is <1ms with minimal
-                # noticable difference in quality.
+        originalFilePath = File().getLocalFilePath(Image().originalFile(image))
+        with PIL_Image.open(originalFilePath) as pilImageData:
+            pilDraw = PIL_ImageDraw.Draw(pilImageData)
+            pilDraw.line(
+                list(map(tuple, contour)),
+                fill=(0, 255, 0),  # TODO: make color an option
+                width=int(pilImageData.size[0] / 300.0)
             )
-        imageStream = io.BytesIO()
-        pilImageData.save(imageStream, format='jpeg')
+
+            # Saving using native PIL is much faster than converting to a NumPy array to save with
+            # ScikitSegmentationHelper
+            if width is not None:
+                height = width * pilImageData.size[1] // pilImageData.size[0]
+                pilImageData = pilImageData.resize(
+                    size=(width, height),
+                    # A PIL_Image.LANCZOS downsampling filter takes ~350ms to resize a 7k image to
+                    # 700, whereas default downsampling filter (nearest neighbor) is <1ms with
+                    # minimal noticeable difference in quality.
+                )
+            imageStream = io.BytesIO()
+            pilImageData.save(imageStream, format='jpeg')
         return imageStream
 
     def review(self, segmentation, approved, user, time=None):
