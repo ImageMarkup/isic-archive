@@ -4,6 +4,7 @@ dependencies:
     vars:
       girder_daemonize: "{{ isic_server }}"
       girder_web: "{{ isic_web }}"
+      girder_version: "release"
 
   - role: large_image
     vars:
