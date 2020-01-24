@@ -27,7 +27,7 @@
     virtualenv: "{{ girder_virtualenv }}"
   notify:
     - Restart Girder
-    - Build Girder web client
+    - Build ISIC web client
 
 - name: Install ISIC dotenv configuration file
   template:
