@@ -7,26 +7,37 @@
     group: root
     mode: 0755
   become: true
+  notify:
+    - Restart MailHog
 
 - name: Add MailHog basic authentication file
   copy:
-    content: |
-      {{ mailhog_username }}:{{ mailhog_password_bcrypt }}
+    content: "{{ mailhog_username }}:{{ mailhog_password|password_hash('bcrypt') }}"
     dest: /etc/mailhog-auth
-  when: mailhog_username is defined and mailhog_password_bcrypt is defined
+  when: mailhog_username is defined and mailhog_password is defined
   become: true
+  notify:
+    - Restart MailHog
 
-- name: Copy mailhog systemd unit file into place (for systemd systems).
+- name: Deploy MailHog environment file
+  template:
+    src: mailhog.env.j2
+    dest: /etc/mailhog.env
+  become: true
+  notify:
+    - Restart MailHog
+
+- name: Install MailHog service
   template:
     src: mailhog.service.j2
     dest: /etc/systemd/system/mailhog.service
-    mode: 0755
   become: true
+  notify:
+    - Restart MailHog
 
-- name: Start/enable mailhog
+- name: Start/enable MailHog
   systemd:
     name: mailhog
     daemon_reload: true
-    state: started
     enabled: true
   become: true

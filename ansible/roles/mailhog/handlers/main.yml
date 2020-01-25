@@ -1,8 +1,7 @@
 ---
-- listen: Restart Redis
+- name: Restart MailHog
   systemd:
-    name: redis
+    name: mailhog
     daemon_reload: true
     state: restarted
   become: true
-  become_user: root
