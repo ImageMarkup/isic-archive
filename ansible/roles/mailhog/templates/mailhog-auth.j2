@@ -1,3 +1,8 @@
+{# This is a workaround to deal with the fact that bcrypt requires a 22 character salt, where the
+   last character is one of the set '.Oeu'; this probably needs additional strengthening if it's
+   reused for passwords that actually need to be kept secure.
+#}
+{% set salt = 65534 | random(seed=inventory_hostname) | string | hash('sha1') | truncate(21, end='') + 'e' %}
 {% for credential in mailhog_credentials %}
-{{ credential.username }}:{{ credential.password|password_hash('bcrypt') }}
+{{ credential.username }}:{{ credential.password | password_hash('bcrypt', salt) }}
 {% endfor %}
