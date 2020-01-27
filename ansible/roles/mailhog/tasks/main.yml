@@ -11,10 +11,11 @@
     - Restart MailHog
 
 - name: Add MailHog basic authentication file
-  copy:
-    content: "{{ mailhog_username }}:{{ mailhog_password|password_hash('bcrypt') }}"
+  template:
+    # This content requires the Python "passlib" package on the provisioner machine
+    src: mailhog-auth.j2
     dest: /etc/mailhog-auth
-  when: mailhog_username is defined and mailhog_password is defined
+  when: mailhog_credentials is defined
   become: true
   notify:
     - Restart MailHog

@@ -1,0 +1,3 @@
+{% for credential in mailhog_credentials %}
+{{ credential.username }}:{{ credential.password|password_hash('bcrypt') }}
+{% endfor %}
