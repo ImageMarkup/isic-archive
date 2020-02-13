@@ -768,10 +768,10 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@girder/core@^3.0.2":
-  version "3.0.7"
-  resolved "https://registry.yarnpkg.com/@girder/core/-/core-3.0.7.tgz#cf5c9a8b596cb428aaaf78d2f2f3a7e0b5c3cad8"
-  integrity sha512-+nCu2JWmtvKXYe1d0ALTSFwleKRj4F3IDRyGtnpTwJ3icg49p+O0t38lUPZJBVCLyutIV5djvGXiuSBiw2meRQ==
+"@girder/core@3.0.9":
+  version "3.0.9"
+  resolved "https://registry.yarnpkg.com/@girder/core/-/core-3.0.9.tgz#17947b65d9c7d1857a21232ff436de4ee848e507"
+  integrity sha512-hbBO9QSM90cLUxQLkg0/C4uFcr+dggKqW2vvrMPyGTgUy0eR0PXxfL0VSkeXC88t5Op/2eU/K/ynyrBBxzB8Yg==
   dependencies:
     "@girder/fontello" "*"
     as-jqplot "~1.0.8"
@@ -792,19 +792,19 @@
     url-otpauth "~2.0.0"
 
 "@girder/fontello@*":
-  version "3.0.8"
-  resolved "https://registry.yarnpkg.com/@girder/fontello/-/fontello-3.0.8.tgz#2cb95012bbaf8e2f9d15b0819d03b92c9941429d"
-  integrity sha512-0SK/xyOvd2RUqQQQ0cfJfkr20GyyWtb25cv2jSD2u1TqRWePsRRgXNS+9VGJtYv4oEX7s+dzQbbxJudBiXOpRg==
+  version "3.0.9"
+  resolved "https://registry.yarnpkg.com/@girder/fontello/-/fontello-3.0.9.tgz#18ecb7a40a3c6103e350c3aefde945e3668cae6c"
+  integrity sha512-ucqXVJjJPKxCEVYUcuhx+gh0q7SPBN3FWQhsE9MTjDYqDo/yGJGj7Z6jAzc5L0qyj7wIgTXfUT0tpUy5V4qAzg==
 
 "@girder/gravatar@^3.0.2":
-  version "3.0.7"
-  resolved "https://registry.yarnpkg.com/@girder/gravatar/-/gravatar-3.0.7.tgz#f79d24709a84335d56a4bfc10421d86ca840a08b"
-  integrity sha512-t4bHrEx3AgPHDZHjQ6/BQ8A0uJ5/jknJ7CKRRuhNCg/NZ04rSPWL2QWCdH73wIHxn6w5NxLX+gZfQ4KfnGP9Bw==
+  version "3.0.9"
+  resolved "https://registry.yarnpkg.com/@girder/gravatar/-/gravatar-3.0.9.tgz#ba4667302708621433b1e0ae6de7af29ee920e63"
+  integrity sha512-K9+JhM8ySQ+3SDi8K3TerMQmTUwzZv32ttH+8Db/0VbgaR6gXXzrA94F8kQ2Y0+mrpCzqSIijS6SLo/iOPvyQQ==
 
 "@girder/oauth@^3.0.2":
-  version "3.0.7"
-  resolved "https://registry.yarnpkg.com/@girder/oauth/-/oauth-3.0.7.tgz#d42b15e442db5b6bb4c95f41c462b4da664f6512"
-  integrity sha512-IiDW6oRs8pkgvICad1CUpEAGVXteCj+oQ3qtr5Y+hVtQVr3LaK/IW7BEFgSsPoVdYhlxB8JMaxhsoAPu/IXLKA==
+  version "3.0.9"
+  resolved "https://registry.yarnpkg.com/@girder/oauth/-/oauth-3.0.9.tgz#f230296da3c5a6f00dfd9126e87fbf14ddac06b7"
+  integrity sha512-9JORC6KxJ/erjiSQAe1nfEOEDweVErIYaTFeCaknrL5L1S2s+V4FBu41Xb2RwkzrWjBsVnMmAZmC1XiEydJJog==
 
 "@hapi/address@2.x.x":
   version "2.1.4"
