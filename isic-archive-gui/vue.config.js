@@ -12,7 +12,7 @@ module.exports = {
     proxy: {
       '/api/v1': {
         // Girder API must be running here in development
-        target: process.env.API_HOST || 'http://127.0.0.1:8080',
+        target: process.env.PROXY_API_HOST || 'http://127.0.0.1:8080',
         changeOrigin: true,
         onProxyRes: (proxyRes) => {
           // Fix cookies to work with proxy API

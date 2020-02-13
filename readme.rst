@@ -62,7 +62,7 @@ Development
 * To proxy all API calls to an external instance during front-end development, run:
   ::
 
-    export API_HOST=https://isic-archive.com
+    export PROXY_API_HOST=https://isic-archive.com
     yarn run serve
 
 * To inspect various logs:
