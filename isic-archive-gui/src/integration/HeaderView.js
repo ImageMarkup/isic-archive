@@ -12,7 +12,8 @@ const LayoutHeaderView = View.extend({
 
     render: function () {
         this.$el.html(LayoutHeaderTemplate({
-            currentUser: getCurrentUser()
+            currentUser: getCurrentUser(),
+            isicApiRoot: process.env.VUE_APP_ISIC_API_ROOT,
         }));
 
         return this;

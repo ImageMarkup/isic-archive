@@ -10,7 +10,9 @@ const FrontPageView = View.extend({
     },
 
     render: function () {
-        this.$el.html(FrontPageTemplate());
+        this.$el.html(FrontPageTemplate({
+            isicApiRoot: process.env.VUE_APP_ISIC_API_ROOT,
+        }));
 
         return this;
     }
