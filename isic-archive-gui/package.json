@@ -14,6 +14,7 @@
     "@girder/oauth": "^3.0.2",
     "aws-sdk": "^2.501.0",
     "backbone.select": "^2.1.0",
+    "core-js": "^3.6.4",
     "d3": "3.5.17",
     "geojs": "0.15.2",
     "jquery": "~3.2.1",
@@ -29,14 +30,15 @@
     "vuex": "^3.0.1"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "^3.2.0",
-    "@vue/cli-plugin-eslint": "^3.2.1",
-    "@vue/cli-service": "^3.2.0",
-    "@vue/eslint-config-airbnb": "^4.0.0",
-    "babel-eslint": "^10.0.1",
+    "@vue/cli-plugin-babel": "^4.2.2",
+    "@vue/cli-plugin-eslint": "^4.2.2",
+    "@vue/cli-service": "^4.2.2",
+    "@vue/eslint-config-airbnb": "^5.0.2",
+    "babel-eslint": "^10.0.3",
     "bibtex-parse-js": "^0.0.24",
-    "eslint": "^5.8.0",
-    "eslint-plugin-vue": "^5.0.0-0",
+    "eslint": "^6.7.2",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-vue": "^6.1.2",
     "mathy-unicode-characters": "^0.9.3",
     "pegjs": "^0.10.0",
     "pegjs-loader": "^0.5.4",
@@ -79,6 +81,16 @@
       "parser": "babel-eslint"
     }
   },
+  "postcss": {
+    "plugins": {
+      "autoprefixer": {}
+    }
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not ie <= 8"
+  ],
   "eslintIgnore": [
     "src/*.js",
     "src/collections/**/*.js",
@@ -95,15 +107,5 @@
     "src/StudyResults/**/*.js",
     "src/Tasks/**/*.js",
     "src/User/**/*.js"
-  ],
-  "postcss": {
-    "plugins": {
-      "autoprefixer": {}
-    }
-  },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not ie <= 8"
   ]
 }

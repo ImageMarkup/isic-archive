@@ -107,20 +107,22 @@ export default {
   data() {
     return {};
   },
-  computed: Object.assign({
-  }, mapState([
-    'study',
-    'image',
-    'flagStatus',
-    'showReview',
-    'responses',
-    'markups',
-    'activeFeatureId',
-    'submissionState',
-  ]), mapGetters([
-    'questions',
-    'features',
-  ])),
+  computed: {
+    ...mapState([
+      'study',
+      'image',
+      'flagStatus',
+      'showReview',
+      'responses',
+      'markups',
+      'activeFeatureId',
+      'submissionState',
+    ]),
+    ...mapGetters([
+      'questions',
+      'features',
+    ]),
+  },
   watch: {
     questions() {
       this.resetResponses();
@@ -158,7 +160,7 @@ export default {
     this.getStudy({ id: this.studyId });
     this.getNextAnnotation({ studyId: this.studyId });
   },
-  methods: Object.assign({
+  methods: {
     reset() {
       if (this.activeFeatureId) {
         this.deactivateFeature(this.activeFeatureId);
@@ -172,8 +174,8 @@ export default {
       this.resetMarkups();
     },
     deactivateFeature(featureId) {
-      // Save feature markup
-      // Optimization: freeze array so that it isn't reactive
+    // Save feature markup
+    // Optimization: freeze array so that it isn't reactive
       const values = this.$refs.viewer.getActiveValues();
       this.setMarkup({
         featureId,
@@ -191,7 +193,7 @@ export default {
 
       let markup = null;
       if (Object.prototype.hasOwnProperty.call(this.markups, featureId)) {
-        // Copy frozen array to allow editing
+      // Copy frozen array to allow editing
         markup = this.markups[featureId].slice(0);
       }
       this.$refs.viewer.activate(markup);
@@ -217,21 +219,23 @@ export default {
         values: null,
       });
     },
-  }, mapMutations([
-    'resetState',
-    'setStudy',
-    'setFlagStatus',
-    'setShowReview',
-    'setMarkupState',
-    'setMarkup',
-    'setActiveFeatureId',
-  ]), mapActions([
-    'getNextAnnotation',
-    'getStudy',
-    'resetResponses',
-    'resetMarkups',
-    'submitAnnotation',
-  ])),
+    ...mapMutations([
+      'resetState',
+      'setStudy',
+      'setFlagStatus',
+      'setShowReview',
+      'setMarkupState',
+      'setMarkup',
+      'setActiveFeatureId',
+    ]),
+    ...mapActions([
+      'getNextAnnotation',
+      'getStudy',
+      'resetResponses',
+      'resetMarkups',
+      'submitAnnotation',
+    ]),
+  },
 };
 </script>
 

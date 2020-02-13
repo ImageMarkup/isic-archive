@@ -89,12 +89,12 @@ export default {
   data() {
     return {};
   },
-  computed: Object.assign({
+  computed: {
     anyActive() {
       return this.activeFeatureId !== null;
     },
     markedupFeatures() {
-      return this.features.filter(feature => this.markedupFeatureIds.includes(feature.id));
+      return this.features.filter((feature) => this.markedupFeatureIds.includes(feature.id));
     },
     certainty: {
       get() {
@@ -104,14 +104,16 @@ export default {
         this.setMarkupState(value);
       },
     },
-  }, mapState([
-    'showReview',
-    'markupState',
-  ]), mapGetters([
-    'features',
-    'markedupFeatureIds',
-  ])),
-  methods: Object.assign({
+    ...mapState([
+      'showReview',
+      'markupState',
+    ]),
+    ...mapGetters([
+      'features',
+      'markedupFeatureIds',
+    ]),
+  },
+  methods: {
     isActive(featureId) {
       return this.activeFeatureId === featureId;
     },
@@ -131,9 +133,10 @@ export default {
     onDelete(featureId) {
       this.$emit('deleteFeature', featureId);
     },
-  }, mapMutations([
-    'setMarkupState',
-  ])),
+    ...mapMutations([
+      'setMarkupState',
+    ]),
+  },
 };
 </script>
 

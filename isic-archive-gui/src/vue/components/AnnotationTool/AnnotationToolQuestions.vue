@@ -40,14 +40,16 @@ export default {
   data() {
     return {};
   },
-  computed: Object.assign({
-  }, mapState([
-    'showReview',
-    'responses',
-  ]), mapGetters([
-    'questions',
-  ])),
-  methods: Object.assign({
+  computed: {
+    ...mapState([
+      'showReview',
+      'responses',
+    ]),
+    ...mapGetters([
+      'questions',
+    ]),
+  },
+  methods: {
     selectedResponseName(question) {
       if (!_.has(this.responses, question.id)) {
         return null;
@@ -62,9 +64,10 @@ export default {
         });
       }
     },
-  }, mapMutations([
-    'setResponse',
-  ])),
+    ...mapMutations([
+      'setResponse',
+    ]),
+  },
 };
 </script>
 

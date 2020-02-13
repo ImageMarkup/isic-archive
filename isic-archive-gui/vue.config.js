@@ -19,12 +19,12 @@ module.exports = {
           const scHeaders = proxyRes.headers['set-cookie'];
           if (Array.isArray(scHeaders)) {
             // eslint-disable-next-line no-param-reassign
-            proxyRes.headers['set-cookie'] = scHeaders.map(scHeader => (
+            proxyRes.headers['set-cookie'] = scHeaders.map((scHeader) => (
               scHeader.split(';')
                 // Remove "Secure" attribute
-                .filter(v => v.trim().toLowerCase() !== 'secure')
+                .filter((v) => v.trim().toLowerCase() !== 'secure')
                 // Remove "Domain" attribute, so domain will default to "localhost:8081"
-                .filter(v => !v.trim().toLowerCase().startsWith('domain='))
+                .filter((v) => !v.trim().toLowerCase().startsWith('domain='))
                 .join('; ')
             ));
           }

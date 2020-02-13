@@ -26,10 +26,10 @@ export default {
   },
   getters: {
     acceptedImages(state) {
-      return state.images.filter(image => !image.flagged);
+      return state.images.filter((image) => !image.flagged);
     },
     flaggedImages(state) {
-      return state.images.filter(image => image.flagged);
+      return state.images.filter((image) => image.flagged);
     },
   },
   mutations: {
