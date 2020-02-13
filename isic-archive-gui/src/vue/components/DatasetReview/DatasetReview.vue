@@ -58,14 +58,16 @@ export default {
   data() {
     return {};
   },
-  computed: Object.assign({
-  }, mapState([
-    'dataset',
-    'images',
-    'submissionState',
-  ]), mapGetters([
-    'flaggedImages',
-  ])),
+  computed: {
+    ...mapState([
+      'dataset',
+      'images',
+      'submissionState',
+    ]),
+    ...mapGetters([
+      'flaggedImages',
+    ]),
+  },
   watch: {
     submissionState(newState) {
       if (newState === SubmissionState.SUBMITTED) {
@@ -79,13 +81,15 @@ export default {
   mounted() {
     this.loadDataset({ id: this.datasetId });
   },
-  methods: Object.assign({
-  }, mapMutations([
-    'toggleFlagged',
-  ]), mapActions([
-    'loadDataset',
-    'submitReview',
-  ])),
+  methods: {
+    ...mapMutations([
+      'toggleFlagged',
+    ]),
+    ...mapActions([
+      'loadDataset',
+      'submitReview',
+    ]),
+  },
 };
 </script>
 

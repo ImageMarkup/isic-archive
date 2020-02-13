@@ -156,11 +156,11 @@ export default {
     },
     getStudy({ commit }, { id }) {
       StudyService.get(id)
-        .done(resp => commit('setStudy', resp));
+        .done((resp) => commit('setStudy', resp));
     },
     getImage({ commit }, { id }) {
       ImageService.get(id)
-        .done(resp => commit('setImage', resp));
+        .done((resp) => commit('setImage', resp));
     },
     resetResponses({ state, commit }) {
       _.each(state.responses, (response, questionId) => {
@@ -183,7 +183,7 @@ export default {
       commit('setStopTime', new Date());
 
       // Submit only responses to questions that user answered
-      const responses = _.omit(state.responses, value => _.isNull(value));
+      const responses = _.omit(state.responses, (value) => _.isNull(value));
 
       const annotation = {
         status: state.flagStatus,

@@ -582,7 +582,7 @@ export default {
       // TODO: busy indicator
 
       this.uploadImage()
-        .then(image => this.applyMetadata(image))
+        .then((image) => this.applyMetadata(image))
         .done((resp) => {
           const errorStrings = _.pluck(resp.errors, 'description');
           if (errorStrings.length > 0) {

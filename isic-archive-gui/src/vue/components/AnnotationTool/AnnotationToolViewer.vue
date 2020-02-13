@@ -26,10 +26,11 @@ export default {
     return {
     };
   },
-  computed: Object.assign({
-  }, mapState([
-    'markupState',
-  ])),
+  computed: {
+    ...mapState([
+      'markupState',
+    ]),
+  },
   watch: {
     image(newImage) {
       if (this.viewer) {

@@ -60,7 +60,7 @@ export default {
       return DatasetModel.canCreate();
     },
     accessableDatasets() {
-      return this.datasets.filter(dataset => dataset.get('_accessLevel') >= this.accessLevel);
+      return this.datasets.filter((dataset) => dataset.get('_accessLevel') >= this.accessLevel);
     },
   },
   async created() {

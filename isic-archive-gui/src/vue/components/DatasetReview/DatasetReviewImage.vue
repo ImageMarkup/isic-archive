@@ -30,15 +30,16 @@ export default {
   data() {
     return {};
   },
-  computed: Object.assign({
+  computed: {
     imageStyle() {
       return {
         width: `${this.thumbnailWidth}px`,
       };
     },
-  }, mapState([
-    'thumbnailWidth',
-  ])),
+    ...mapState([
+      'thumbnailWidth',
+    ]),
+  },
   methods: {
     toggleFlagged() {
       this.$emit('toggleFlagged');

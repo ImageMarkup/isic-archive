@@ -98,7 +98,7 @@ export default {
       thumbnailWidth: 768,
     };
   },
-  computed: Object.assign({
+  computed: {
     loading() {
       return !(this.dataset && this.image);
     },
@@ -107,7 +107,7 @@ export default {
                    || this.workflowState === WorkflowState.LOADING;
     },
     allowSubmit() {
-      // Allow submitting when the image has no segmentations
+    // Allow submitting when the image has no segmentations
       if (!this.waiting && !this.segmentations.length) {
         return true;
       }
@@ -157,15 +157,17 @@ export default {
       return `${getApiRoot()}/segmentation/${this.activeSegmentation._id}`
                    + `/thumbnail?contentDisposition=inline&width=${this.thumbnailWidth}`;
     },
-  }, mapState([
-    'dataset',
-    'image',
-    'segmentations',
-    'activeSegmentationIndex',
-    'workflowState',
-  ]), mapGetters([
-    'activeSegmentation',
-  ])),
+    ...mapState([
+      'dataset',
+      'image',
+      'segmentations',
+      'activeSegmentationIndex',
+      'workflowState',
+    ]),
+    ...mapGetters([
+      'activeSegmentation',
+    ]),
+  },
   watch: {
     workflowState(newState) {
       if (newState === WorkflowState.IDLE) {
@@ -192,9 +194,9 @@ export default {
   beforeDestroy() {
     window.removeEventListener('keydown', this.onKeyDown);
   },
-  methods: Object.assign({
+  methods: {
     showKeyboardShortcuts() {
-      // TODO: Support Vue-based modal in Backbone app?
+    // TODO: Support Vue-based modal in Backbone app?
       showAlertDialog({
         text: '<h4>Keyboard Shortcuts</h4>'
                       + '<table>'
@@ -267,12 +269,14 @@ export default {
           break;
       }
     },
-  }, mapMutations([
-  ]), mapActions([
-    'loadDataset',
-    'loadNextImage',
-    'submitReview',
-  ])),
+    ...mapMutations([
+    ]),
+    ...mapActions([
+      'loadDataset',
+      'loadNextImage',
+      'submitReview',
+    ]),
+  },
 };
 </script>
 
