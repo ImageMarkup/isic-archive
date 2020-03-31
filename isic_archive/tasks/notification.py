@@ -12,13 +12,14 @@ def maybeSendIngestionNotifications():
         if not Batch().hasImagesPendingIngest(batch):
             failedImages = list(Batch().imagesFailedIngest(batch))
             skippedFilenames = list(Batch().imagesSkippedIngest(batch))
-            sendIngestionNotification.delay(batch['_id'], failedImages, skippedFilenames)
+            numImages = Batch().images(batch).count()
+            sendIngestionNotification.delay(batch['_id'], failedImages, skippedFilenames, numImages)
             batch['ingestStatus'] = 'notified'
             Batch().save(batch)
 
 
 @app.task()
-def sendIngestionNotification(batchId, failedImages, skippedFilenames):
+def sendIngestionNotification(batchId, failedImages, skippedFilenames, numImages):
     batch = Batch().load(batchId)
     dataset = Dataset().load(batch['datasetId'], force=True)
     user = User().load(batch['creatorId'], force=True)
@@ -34,7 +35,8 @@ def sendIngestionNotification(batchId, failedImages, skippedFilenames):
         'user': user,
         'batch': batch,
         'failedImages': failedImages,
-        'skippedFilenames': skippedFilenames
+        'skippedFilenames': skippedFilenames,
+        'numImages': numImages,
     }
     subject = 'ISIC Archive: Dataset Upload Confirmation'
     templateFilename = 'ingestDatasetConfirmation.mako'
