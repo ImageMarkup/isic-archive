@@ -47,6 +47,12 @@ class Batch(Model):
         # TODO: implement
         return doc
 
+    def images(self, batch):
+        from .image import Image
+        return Image().find({
+            'meta.batchId': batch['_id'],
+        })
+
     def hasImagesPendingIngest(self, batch):
         return self.imagesPendingIngest(batch).count() > 0
 

@@ -52,15 +52,15 @@ Thank you for contributing a ZIP image batch to the ISIC Archive.
 </table>
 
 % if skippedFilenames:
-    <h4>Skipped Files</h4>
+    <h4>Skipped Files (${len(skippedFilenames)}/${numImages})</h4>
     Some files within your dataset were skipped. If you think this is a mistake, contact admin@isic-archive.com:<br>
     % for skippedFilename in skippedFilenames:
-        ${skippedFilename['privateMeta']['originalFilename']}
+        ${skippedFilename['privateMeta']['originalFilename']}<br />
     % endfor
 % endif
 
 % if failedImages:
-    <h4>Failures</h4>
+    <h4>Failures (${len(failedImages)}/${numImages})</h4>
     <br>Some files within your dataset failed to be completely imported into the archive:<br>
     % for failedImage in failedImages:
         ${failedImage['privateMeta']['originalFilename']}<br>
