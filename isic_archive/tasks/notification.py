@@ -36,7 +36,7 @@ def sendIngestionNotification(batchId, failedImages, skippedFilenames):
         'failedImages': failedImages,
         'skippedFilenames': skippedFilenames
     }
-    subject = 'ISIC Archive: Dataset Upload Confirmation'
+    subject = f'ISIC Archive: Dataset Upload Confirmation - {dataset["name"]}'
     templateFilename = 'ingestDatasetConfirmation.mako'
 
     # Mail user
