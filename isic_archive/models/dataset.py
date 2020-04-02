@@ -521,7 +521,7 @@ class Dataset(AccessControlledModel):
                     'metadataFile': metadataFile,
                     'date': now.replace(microsecond=0)
                 },
-                subject='ISIC Archive: Dataset Metadata Notification')
+                subject=f'ISIC Archive: Dataset Metadata Notification - {dataset["name"]}')
 
         return dataset
 
