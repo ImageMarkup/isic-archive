@@ -119,12 +119,6 @@ def ingestBatchFromZipfile(self, batchId):
 
         uploadFile = _uploadZipfileToGirder(self.session, filePath, dataset)
 
-        # Delete file from S3 as upload user
-        s3.delete_object(
-            Bucket=s3BucketName,
-            Key=s3ObjectKey
-        )
-
         batch['ingestStatus'] = 'extracting'
         batch['uploadFileId'] = uploadFile['_id']
         batch = Batch().save(batch)
@@ -166,8 +160,4 @@ def ingestBatchFromZipfile(self, batchId):
                 ingestImage.delay(image['_id'])
 
         batch['ingestStatus'] = 'extracted'
-
-        # Remove upload information from batch
-        del batch['s3BucketName']
-        del batch['s3ObjectKey']
         Batch().save(batch)
