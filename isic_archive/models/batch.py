@@ -10,7 +10,7 @@ class Batch(Model):
         self.name = 'batch'
         # TODO: add indexes
 
-    def createBatch(self, dataset, creator, signature):
+    def createBatch(self, dataset, creator, signature, filename=None):
         now = datetime.datetime.utcnow()
 
         batch = self.save({
@@ -19,7 +19,8 @@ class Batch(Model):
             'creatorId': creator['_id'],
             'signature': signature,
             'ingestStatus': None,
-            'uploadFileId': None
+            'uploadFileId': None,
+            'originalFilename': filename,
         })
         return batch
 

@@ -322,6 +322,7 @@ class DatasetResource(IsicResource):
                )
         .param('id', 'The ID of the dataset.', paramType='path')
         .param('signature', 'Signature of license agreement.', paramType='form')
+        .param('filename', 'The filename of the ZIP upload.', paramType='form')
     )
     @access.user
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.WRITE)
@@ -332,12 +333,14 @@ class DatasetResource(IsicResource):
         user = self.getCurrentUser()
         User().requireCreateDataset(user)
 
+        filename = params.get('filename', None)
         signature = params['signature'].strip()
         if not signature:
             raise ValidationException('Signature must be specified.', 'signature')
 
         try:
-            return Dataset().initiateZipUploadS3(dataset=dataset, signature=signature, user=user)
+            return Dataset().initiateZipUploadS3(dataset=dataset, signature=signature, user=user,
+                                                 filename=filename)
         except GirderException as e:
             raise RestException(str(e))
 
