@@ -551,8 +551,6 @@ class DatasetResource(IsicResource):
         Description('Apply registered metadata to a dataset.')
         .param('id', 'The ID of the dataset.', paramType='path')
         .param('metadataFileId', 'The ID of the .csv metadata file.', paramType='path')
-        .param('save', 'Whether to save the metadata to the dataset if validation succeeds.',
-               dataType='boolean', default=False, paramType='form')
     )
     @access.user
     # File is attached to dataset, so access level refers to permission on dataset
@@ -560,15 +558,9 @@ class DatasetResource(IsicResource):
     @loadmodel(model='dataset', plugin='isic_archive', level=AccessType.ADMIN)
     def applyMetadata(self, dataset, metadataFile, params):
         params = self._decodeParams(params)
-        self.requireParams('save', params)
-        save = self.boolParam('save', params)
 
-        errors, warnings = Dataset().applyMetadata(
-            dataset=dataset, metadataFile=metadataFile, save=save)
-        return {
-            'errors': [{'description': description} for description in errors],
-            'warnings': [{'description': description} for description in warnings]
-        }
+        from isic_archive.tasks import applyMetadata as applyMetadata_
+        applyMetadata_.delay(dataset['_id'], metadataFile['_id'], self.getCurrentUser()['_id'])
 
     def _requireMetadataFile(self, dataset, metadataFile):
         """Raise a ValidationException if the metadata file is not registered with the dataset."""

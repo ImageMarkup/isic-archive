@@ -19,8 +19,6 @@ import DatasetInfoWidget from './DatasetInfoWidget.vue';
 import ApplyMetadataSelectFilePageTemplate from './applyMetadataSelectFilePage.pug';
 import ApplyMetadataPageTemplate from './applyMetadataPage.pug';
 import './applyMetadataPage.styl';
-import ApplyMetadataValidationPageTemplate from './applyMetadataValidationPage.pug';
-import './applyMetadataValidationPage.styl';
 
 // Model for a metadata file
 const MetadataFileModel = Model.extend({
@@ -49,52 +47,6 @@ const MetadataFileCollection = Collection.extend({
             item._id = item.file.id;
         });
         return data;
-    }
-});
-
-// Model for a single metadata error or warning
-const MetadataResultModel = Backbone.Model.extend({
-    description: function () {
-        return this.get('description');
-    }
-});
-
-// Collection of metadata results, i.e. errors or warnings. The 'field' property
-// should be set to the name of the field to parse in the response from the server.
-// The list of items in the collection is meaningful only when initialized() is true.
-// When the collection is in the process of being populated, pending() is true.
-const MetadataResultModelCollection = Backbone.Collection.extend({
-    initialize: function (models, options) {
-        this._field = options.field;
-    },
-
-    model: MetadataResultModel,
-
-    _initialized: false,
-    _pending: false,
-
-    parse: function (resp) {
-        this._pending = false;
-        this._initialized = true;
-        return resp[this._field];
-    },
-
-    initialized: function () {
-        return this._initialized;
-    },
-
-    uninitialize: function () {
-        this._initialized = false;
-        this.reset();
-    },
-
-    setPending: function () {
-        this._pending = true;
-        this.uninitialize();
-    },
-
-    pending: function () {
-        return this._pending;
     }
 });
 
@@ -153,31 +105,10 @@ const ApplyMetadataView = View.extend({
             this.dataset.downloadMetadata(this.file.id);
         },
 
-        'click #isic-apply-metadata-validate-button': function () {
+        'click #isic-apply-metadata-apply-button': function () {
             this.setButtonsEnabled(false);
-            this.validateMetadata();
+            this.applyMetadata();
         },
-
-        'click #isic-apply-metadata-save': function () {
-            // Show confirmation dialog
-            confirm({
-                text: '<h4>Really save metadata?</h4>',
-                escapedHtml: true,
-                yesText: 'Save',
-                yesClass: 'btn-primary',
-                confirmCallback: () => {
-                    // Ensure dialog is hidden before continuing. Otherwise,
-                    // when validateMetadata() displays its modal alert dialog,
-                    // the Bootstrap-created element with class "modal-backdrop"
-                    // is erroneously not removed.
-                    $('#g-dialog-container').on('hidden.bs.modal', () => {
-                        this.saving = true;
-                        this.setButtonsEnabled(false);
-                        this.validateMetadata();
-                    });
-                }
-            });
-        }
     },
 
     /**
@@ -197,21 +128,12 @@ const ApplyMetadataView = View.extend({
         this.saving = false;
         this.saved = false;
 
-        // Errors and warnings in the selected metadata file
-        this.errors = new MetadataResultModelCollection(null, {'field': 'errors'});
-        this.warnings = new MetadataResultModelCollection(null, {'field': 'warnings'});
-
         this.selectFileView = new ApplyMetadataSelectFileView({
             collection: this.files,
             parentView: this
         });
 
         this.listenTo(this.selectFileView, 'changed', this.fileChanged);
-
-        // Observe only warnings, not errors. This avoids redundant updates, because
-        // both collections are always updated when validation is run, and warnings
-        // are updated last.
-        this.listenTo(this.warnings, 'reset', this.resultsChanged);
 
         this.dataset
             .getRegisteredMetadata()
@@ -224,24 +146,9 @@ const ApplyMetadataView = View.extend({
 
     fileChanged: function (fileId) {
         this.file = this.files.get(fileId);
-        this.errors.uninitialize();
-        this.warnings.uninitialize();
 
         // Enable action buttons
-        this.$('#isic-apply-metadata-download-button, #isic-apply-metadata-validate-button').girderEnable(true);
-    },
-
-    resultsChanged: function () {
-        // Render validation container, fading out first if it's already shown
-        const container = this.$('.isic-apply-metadata-validation-result-container');
-        if (container.length) {
-            container.fadeOut('fast', () => {
-                this.renderValidationContainer();
-            });
-            return;
-        }
-
-        this.renderValidationContainer();
+        this.$('#isic-apply-metadata-download-button, #isic-apply-metadata-apply-button').girderEnable(true);
     },
 
     render: function () {
@@ -258,53 +165,23 @@ const ApplyMetadataView = View.extend({
         this.selectFileView.setElement(
             this.$('#isic-apply-metadata-select-file-container')).render();
 
-        this.renderValidationContainer();
-
         return this;
     },
 
-    renderValidationContainer: function () {
-        this.$('#isic-apply-metadata-validation-container').html(
-            ApplyMetadataValidationPageTemplate({
-                errors: this.errors,
-                warnings: this.warnings,
-                file: this.file,
-                saving: this.saving,
-                saved: this.saved
-            }));
-
-        this.$('.isic-apply-metadata-validation-result-container').fadeIn('fast');
-
-        const allowSave =
-            !this.saving &&
-            this.errors.initialized() && this.errors.isEmpty();
-        this.$('#isic-apply-metadata-save').toggleClass('hidden', !allowSave);
-
-        return this;
-    },
-
-    validateMetadata: function () {
-        this.errors.setPending();
-        this.warnings.setPending();
-
+    applyMetadata: function () {
         this.dataset
             .applyMetadata(this.file.id, this.saving)
             .done((resp) => {
                 this.saved = this.saving;
 
                 if (this.saving) {
-                    this.errors.reset();
-                    this.warnings.reset();
                     showAlertDialog({
-                        text: '<h4>Metadata saved.</h4>',
+                        text: '<h4>Metadata applying.</h4>',
                         escapedHtml: true,
                         callback: () => {
                             router.navigate('', {trigger: true});
                         }
                     });
-                } else {
-                    this.errors.reset(resp, {parse: true});
-                    this.warnings.reset(resp, {parse: true});
                 }
             })
             .fail((err) => {
@@ -317,7 +194,7 @@ const ApplyMetadataView = View.extend({
     },
 
     setButtonsEnabled: function (enabled) {
-        this.$('#isic-apply-metadata-validate-button, #isic-apply-metadata-save-button').girderEnable(enabled);
+        this.$('#isic-apply-metadata-apply-button').girderEnable(enabled);
     }
 });
 
