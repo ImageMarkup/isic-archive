@@ -32,10 +32,12 @@ def ingestImage(self, imageId):
             allow_redirects=False,
         )
         originalFileStreamResponse.raise_for_status()
-        originalFileStreamResponse = io.BytesIO(originalFileStreamResponse.content)
 
         # Scikit-Image is ~70ms faster at decoding image data
-        imageData = ScikitSegmentationHelper.loadImage(originalFileStreamResponse)
+        # Note: scikit-image takes custody over the file handle and will close it
+        imageData = ScikitSegmentationHelper.loadImage(
+            io.BytesIO(originalFileStreamResponse.content)
+        )
         image['meta']['acquisition']['pixelsY'] = imageData.shape[0]
         image['meta']['acquisition']['pixelsX'] = imageData.shape[1]
     except Exception:
@@ -47,10 +49,8 @@ def ingestImage(self, imageId):
 
     # Store the image stripped of exif metadata
     try:
-        originalFileStreamResponse.seek(0)
-
         with tempfile.NamedTemporaryFile('wb', delete=False) as exifFile:
-            exifFile.write(originalFileStreamResponse.read())
+            exifFile.write(originalFileStreamResponse.content)
 
         subprocess.check_call(['exiftool', '-All=', exifFile.name])
 
