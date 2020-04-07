@@ -130,7 +130,6 @@ export default {
         url: `dataset/${this.dataset.id}/zip`,
         data: {
           signature: this.signature,
-          // TODO: implement a filename parameter on the server
           filename: this.zipFile.name,
         },
       });

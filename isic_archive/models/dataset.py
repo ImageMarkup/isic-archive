@@ -307,13 +307,14 @@ class Dataset(AccessControlledModel):
 
         return image
 
-    def initiateZipUploadS3(self, dataset, signature, user):
+    def initiateZipUploadS3(self, dataset, signature, user, filename=None):
         """Initiate a direct-to-S3 upload of a ZIP file of images."""  # noqa: D401
         # Create new batch
         batch = Batch().createBatch(
             dataset=dataset,
             creator=user,
-            signature=signature)
+            signature=signature,
+            filename=filename)
 
         # Add policy that restricts uploads to only the specific key
         s3BucketArn = f'arn:aws:s3:::{settings.ISIC_UPLOAD_BUCKET_NAME}'
