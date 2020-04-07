@@ -1,6 +1,7 @@
+import io
+
 from celery.utils.log import get_task_logger
 
-from girder.models.file import File
 from girder.utility import mail_utils
 
 from isic_archive.celery import app
@@ -13,9 +14,13 @@ logger = get_task_logger(__name__)
 def applyMetadata(self, datasetId, metadataFileId, userId):
     user = User().load(userId, force=True)
     dataset = Dataset().load(datasetId, force=True)
-    metadataFile = File().load(metadataFileId, force=True)
+    metadataFileResponse = self.session.get(
+        f'file/{metadataFileId}/download',
+        allow_redirects=False,
+    )
+    metadataFileResponse.raise_for_status()
     errors, warnings = Dataset().applyMetadata(
-        dataset=dataset, metadataFile=metadataFile, save=True
+        dataset=dataset, metadataFileStream=io.BytesIO(metadataFileResponse.content), save=True
     )
 
     # metadata is saved even with warnings
