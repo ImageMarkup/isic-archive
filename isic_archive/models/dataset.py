@@ -541,7 +541,8 @@ class Dataset(AccessControlledModel):
                                        if registration['fileId'] != metadataFile['_id']]
         return dataset
 
-    def applyMetadata(self, dataset, metadataFile, save) -> Tuple[List[str], List[str]]:
+    def applyMetadata(self, dataset, metadataFileStream: io.BytesIO,
+                      save) -> Tuple[List[str], List[str]]:
         """
         Apply metadata in a .csv file to a dataset.
 
@@ -551,11 +552,6 @@ class Dataset(AccessControlledModel):
         """
         # Avoid circular import
         from .image import Image
-
-        metadataFileStream = io.BytesIO()
-        for chunk in File().download(metadataFile, headers=False)():
-            metadataFileStream.write(chunk)
-        metadataFileStream.seek(0)
 
         images = []
         metadataErrors = []
