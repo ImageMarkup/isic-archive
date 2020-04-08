@@ -112,6 +112,11 @@ def markImageIngested(imageId):
 
 @app.task(bind=True)
 def generateSuperpixels(self, imageId):
+    # Temporarily disable superpixel generation for performance
+    image = Image().load(imageId, force=True)
+    image['ingestionState']['superpixelMask'] = True
+    Image().save(image)
+
     try:
         image = Image().load(imageId, force=True)
         imageFile = Image().originalFile(image)
