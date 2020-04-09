@@ -116,6 +116,7 @@ def generateSuperpixels(self, imageId):
     image = Image().load(imageId, force=True)
     image['ingestionState']['superpixelMask'] = True
     Image().save(image)
+    return
 
     try:
         image = Image().load(imageId, force=True)
