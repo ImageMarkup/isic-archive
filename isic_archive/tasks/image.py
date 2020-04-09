@@ -72,16 +72,20 @@ def ingestImage(self, imageId):
         strippedFile = File().load(resp.json()['_id'], force=True)
         strippedFile['stripped'] = True
         File().updateFile(strippedFile)
-
-        # _original will only exist if there was EXIF metadata
-        if os.path.exists(f'{exifFile.name}_original'):
-            os.unlink(f'{exifFile.name}_original')
     except Exception:
         logger.exception('Failed to strip EXIF metadata from image')
         image['readable'] = False
         image['ingested'] = True
         Image().save(image)
         return
+    finally:
+        # it's possible the file couldn't be created
+        if os.path.exists(exifFile.name):
+            os.unlink(exifFile.name)
+
+        # _original will only exist if there was EXIF metadata
+        if os.path.exists(f'{exifFile.name}_original'):
+            os.unlink(f'{exifFile.name}_original')
 
     image['readable'] = True
     image['ingestionState'] = {
