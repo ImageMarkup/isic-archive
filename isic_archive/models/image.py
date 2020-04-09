@@ -1,6 +1,7 @@
 import itertools
 import mimetypes
 import os
+import secrets
 from typing import List, Tuple
 
 import numpy
@@ -10,14 +11,12 @@ from girder.exceptions import AccessException
 from girder.models.collection import Collection
 from girder.models.file import File
 from girder.models.item import Item
-from girder.models.setting import Setting
 from girder.models.upload import Upload
 
 from .dataset import Dataset
 from .dataset_helpers.image_metadata import addImageMetadata
 from .segmentation_helpers import ScikitSegmentationHelper
 from .user import User
-from ..settings import PluginSettings
 
 
 class Image(Item):
@@ -29,16 +28,27 @@ class Image(Item):
 
         self.prefixSearchFields = ['lowerName', 'name']
 
+    @staticmethod
+    def generateIsicId():
+        taken = True
+        id_: int = 0
+
+        while taken:
+            id_ = secrets.randbelow(10**7)
+            isicId = f'ISIC_{id_:07d}'
+            taken = Image().find({'name': isicId}).count() > 0
+
+        return isicId
+
     def createEmptyImage(self, originalFileRelpath, parentFolder, creator, dataset,
                          batch):
-        newIsicId = Setting().get(PluginSettings.MAX_ISIC_ID) + 1
+        newIsicId = self.generateIsicId()
         image = self.createItem(
-            name='ISIC_%07d' % newIsicId,
+            name=newIsicId,
             creator=creator,
             folder=parentFolder,
             description=''
         )
-        Setting().set(PluginSettings.MAX_ISIC_ID, newIsicId)
 
         image['privateMeta'] = {
             'originalFilename': os.path.basename(originalFileRelpath),

@@ -4,9 +4,6 @@ from typing import List, Optional
 
 from dotenv import load_dotenv
 
-from girder.exceptions import ValidationException
-from girder.utility import setting_utilities
-
 
 _dotenvPath = Path.home() / '.girder' / '.env'
 if _dotenvPath.is_file():
@@ -41,19 +38,3 @@ assert os.environ['CELERY_RESULT_BACKEND']
 # These are picked up automatically by Sentry's config, and optional
 if os.environ.get('SENTRY_DSN'):
     assert os.environ['SENTRY_ENVIRONMENT']
-
-
-class PluginSettings(object):
-    MAX_ISIC_ID = 'isic.max_isic_id'
-
-
-@setting_utilities.validator(PluginSettings.MAX_ISIC_ID)
-def _validateMaxIsicIdSetting(doc):
-    # TODO: can we disable this from being set via the HTTP API?
-    if not isinstance(doc['value'], int):
-        raise ValidationException('Maximum ISIC ID must be provided as an integer.', 'value')
-
-
-@setting_utilities.default(PluginSettings.MAX_ISIC_ID)
-def _defaultMaxIsicIdSetting():
-    return -1
