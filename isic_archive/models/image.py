@@ -56,6 +56,16 @@ class Image(Item):
 
         return isicId
 
+    def renameImage(self, image, newName):
+        # assumes newName is of the format "ISIC_0123456"
+        oldName = image['name']
+        image['name'] = newName
+        for childFile in self.childFiles(image):
+            childFile['name'] = childFile['name'].replace(oldName, newName)
+            File().save(childFile)
+
+        return Image().save(image)
+
     def createEmptyImage(self, originalFileRelpath, parentFolder, creator, dataset,
                          batch):
         newIsicId = self.generateIsicId()
