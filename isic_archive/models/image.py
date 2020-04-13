@@ -20,6 +20,22 @@ from .user import User
 
 
 class Image(Item):
+
+    imageDefaults = {
+        'ingested': False,
+        'readable': None,
+        'ingestionState': {
+            'largeImage': None,
+            'superpixelMask': None
+        },
+        'largeImage': {
+            'sourceName': None,
+            'originalId': None,
+            'fileId': None
+        },
+        'superpixelsId': None,
+    }
+
     def initialize(self):
         super(Image, self).initialize()
 
@@ -63,10 +79,24 @@ class Image(Item):
             'datasetId': dataset['_id'],
             'batchId': batch['_id']
         }
-        image['ingested'] = False
+        image.update(self.imageDefaults)
         image = Image().save(image)
 
         return image
+
+    def resetImageForIngest(self, image):
+        originalFile = self.originalFile(image)
+        originalFileId = originalFile['_id'] if originalFile else None
+
+        for childFile in self.childFiles(image):
+            if originalFileId and childFile['_id'] == originalFileId:
+                continue
+            else:
+                File().remove(childFile)
+
+        image.update(self.imageDefaults)
+
+        return Image().save(image)
 
     def createImage(self, imageDataStream, imageDataSize, originalFileRelpath,
                     parentFolder, creator, dataset, batch):
@@ -92,7 +122,7 @@ class Image(Item):
         return image
 
     def originalFile(self, image):
-        if 'largeImage' in image:
+        if 'largeImage' in image and image['largeImage'].get('originalId'):
             return File().load(image['largeImage']['originalId'], force=True)
         else:
             # Fallback if no large image metadata exists, but this isn't accurate on some old images
