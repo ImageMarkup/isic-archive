@@ -6,7 +6,7 @@ from typing import List, Tuple
 
 import numpy
 
-from girder.constants import AccessType, SortDir
+from girder.constants import AccessType
 from girder.exceptions import AccessException
 from girder.models.collection import Collection
 from girder.models.file import File
@@ -132,11 +132,12 @@ class Image(Item):
         return image
 
     def originalFile(self, image):
-        if 'largeImage' in image and image['largeImage'].get('originalId'):
-            return File().load(image['largeImage']['originalId'], force=True)
-        else:
-            # Fallback if no large image metadata exists, but this isn't accurate on some old images
-            return Image().childFiles(image, limit=1, sort=[('created', SortDir.ASCENDING)])[0]
+        original = File().findOne({
+            'itemId': image['_id'],
+            'imageRole': 'original'
+        })
+
+        return File().load(original['_id'], force=True)
 
     def strippedFile(self, image):
         return File().findOne({'itemId': image['_id'],

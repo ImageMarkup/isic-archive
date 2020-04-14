@@ -71,6 +71,7 @@ def ingestImage(self, imageId):
 
         strippedFile = File().load(resp.json()['_id'], force=True)
         strippedFile['stripped'] = True
+        strippedFile['imageRole'] = 'exif'
         File().updateFile(strippedFile)
     except Exception:
         logger.exception('Failed to strip EXIF metadata from image')
@@ -158,6 +159,7 @@ def generateSuperpixels(self, imageId):
         image = Image().load(imageId, force=True, exc=False)
 
         superpixelsFile['superpixelVersion'] = SUPERPIXEL_VERSION
+        superpixelsFile['imageRole'] = 'superpixel'
         # Work around an upstream Girder bug where "File().validate" sets
         #   superpixelsFile['exts'] = ['0', 'png']
         superpixelsFile['exts'] = ['png']
@@ -175,7 +177,7 @@ def generateSuperpixels(self, imageId):
 @app.task(bind=True)
 def generateLargeImage(self, imageId):
     imageItem = Image().load(id=imageId, force=True)
-    imageFile = Image().strippedFile(imageItem)
+    imageFile = Image().originalFile(imageItem)
 
     try:
         originalFileStreamResponse = self.session.get(
@@ -210,6 +212,10 @@ def generateLargeImage(self, imageId):
         imageItem['ingestionState']['largeImage'] = False
         Image().save(imageItem)
         return
+
+    largeImageFile = File().load(uploadLargeImageResp.json()['_id'], force=True)
+    largeImageFile['imageRole'] = 'large_image'
+    File().updateFile(largeImageFile)
 
     imageItem['largeImage'] = {
         'sourceName': 'tiff',
