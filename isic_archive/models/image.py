@@ -29,6 +29,7 @@ class Image(Item):
             'superpixelMask': None
         },
         'largeImage': {
+            'expected': True,
             'sourceName': None,
             'originalId': None,
             'fileId': None
