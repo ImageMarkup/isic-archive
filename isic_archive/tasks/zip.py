@@ -157,9 +157,9 @@ def ingestBatchFromZipfile(self, batchId):
                         logger.exception('An individual image failed to be extracted')
                         continue
 
-                    file_ = File().load(resp.json()['_id'], force=True)
-                    file_['imageRole'] = 'original'
-                    File().updateFile(file_)
+                    originalFile = File().load(resp.json()['_id'], force=True)
+                    originalFile['imageRole'] = 'original'
+                    File().updateFile(originalFile)
 
                 ingestImage.delay(image['_id'])
 
