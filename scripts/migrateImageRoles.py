@@ -19,6 +19,10 @@ for image in Item().find(
     files = list(File().find({'itemId': image['_id']}))
     taken_file_ids = set()
 
+    # already migrated
+    if [f for f in files if 'imageRole' in f]:
+        continue
+
     superpixel_file_ids = [
         f['_id']
         for f in files
@@ -28,14 +32,21 @@ for image in Item().find(
     ]
     taken_file_ids = taken_file_ids.union(set(superpixel_file_ids))
 
-    exif_file_ids = [
-        f['_id']
+    exif_files = [
+        f
         for f in files
         if '.stripped.' in f['name']
         and f['size'] > 0
         and f['_id'] not in taken_file_ids
     ]
-    taken_file_ids = taken_file_ids.union(set(exif_file_ids))
+    taken_file_ids = taken_file_ids.union(set([x['_id'] for x in exif_files]))
+
+    exif_file_id = None
+    if len(exif_files) == 1:
+        exif_file_id = exif_files[0]['_id']
+    elif len(exif_files) > 1:
+        if len(set([x['sha512'] for x in exif_files])) == 1:
+            exif_file_id = exif_files[0]['_id']
 
     large_image_file_id = (
         image['largeImage']['fileId'] if 'largeImage' in image else None
@@ -52,10 +63,15 @@ for image in Item().find(
     ]
 
     def guess_original(files):
-        if len(files) == 2 and set([x['mimeType'] for x in files]) == set(
+        mimetypes = set([x['mimeType'] for x in files])
+        if mimetypes == set(
             ['image/jpeg', 'image/tiff']
-        ):
-            return [x for x in files if x['mimeType'] == 'image/jpeg'][0]['_id']
+        ) or mimetypes == set(['image/jpeg', 'application/octet-stream']):
+            jpeg_files = [x for x in files if x['mimeType'] == 'image/jpeg']
+
+            # assuming jpegs are identical, pick one
+            if len(set([x['sha512'] for x in jpeg_files])) == 1:
+                return jpeg_files[0]['_id']
 
     # this happens with the VSHR dataset
     if len(original_files) > 1:
@@ -77,7 +93,7 @@ for image in Item().find(
         elif large_image_file_id and file_['_id'] == large_image_file_id:
             role = 'large_image'
         elif (
-            exif_file_ids and file_['_id'] in exif_file_ids
+            exif_file_id and file_['_id'] == exif_file_id
         ):  # certain MSK images have duplicate exif files
             role = 'exif'
         elif file_['_id'] == original_file_id:
