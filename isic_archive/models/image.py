@@ -2,7 +2,7 @@ import itertools
 import mimetypes
 import os
 import secrets
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import numpy
 
@@ -95,13 +95,8 @@ class Image(Item):
         return image
 
     def resetImageForIngest(self, image):
-        originalFile = self.originalFile(image)
-        originalFileId = originalFile['_id'] if originalFile else None
-
         for childFile in self.childFiles(image):
-            if originalFileId and childFile['_id'] == originalFileId:
-                continue
-            else:
+            if childFile['imageRole'] != 'original':
                 File().remove(childFile)
 
         image.update(self.imageDefaults)
@@ -131,13 +126,11 @@ class Image(Item):
         # TODO: copy license from dataset to image
         return image
 
-    def originalFile(self, image):
-        original = File().findOne({
+    def originalFile(self, image) -> Optional[dict]:
+        return File().findOne({
             'itemId': image['_id'],
             'imageRole': 'original'
         })
-
-        return File().load(original['_id'], force=True)
 
     def strippedFile(self, image):
         return File().findOne({'itemId': image['_id'],
