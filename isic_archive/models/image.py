@@ -2,11 +2,11 @@ import itertools
 import mimetypes
 import os
 import secrets
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import numpy
 
-from girder.constants import AccessType, SortDir
+from girder.constants import AccessType
 from girder.exceptions import AccessException
 from girder.models.collection import Collection
 from girder.models.file import File
@@ -20,6 +20,22 @@ from .user import User
 
 
 class Image(Item):
+
+    imageDefaults = {
+        'ingested': False,
+        'readable': None,
+        'ingestionState': {
+            'largeImage': None,
+            'superpixelMask': None
+        },
+        'largeImage': {
+            'sourceName': None,
+            'originalId': None,
+            'fileId': None
+        },
+        'superpixelsId': None,
+    }
+
     def initialize(self):
         super(Image, self).initialize()
 
@@ -39,6 +55,16 @@ class Image(Item):
             taken = Image().find({'name': isicId}).count() > 0
 
         return isicId
+
+    def renameImage(self, image, newName):
+        # assumes newName is of the format "ISIC_0123456"
+        oldName = image['name']
+        image['name'] = newName
+        for childFile in self.childFiles(image):
+            childFile['name'] = childFile['name'].replace(oldName, newName)
+            File().save(childFile)
+
+        return Image().save(image)
 
     def createEmptyImage(self, originalFileRelpath, parentFolder, creator, dataset,
                          batch):
@@ -63,10 +89,19 @@ class Image(Item):
             'datasetId': dataset['_id'],
             'batchId': batch['_id']
         }
-        image['ingested'] = False
+        image.update(self.imageDefaults)
         image = Image().save(image)
 
         return image
+
+    def resetImageForIngest(self, image):
+        for childFile in self.childFiles(image):
+            if childFile['imageRole'] != 'original':
+                File().remove(childFile)
+
+        image.update(self.imageDefaults)
+
+        return Image().save(image)
 
     def createImage(self, imageDataStream, imageDataSize, originalFileRelpath,
                     parentFolder, creator, dataset, batch):
@@ -91,12 +126,11 @@ class Image(Item):
         # TODO: copy license from dataset to image
         return image
 
-    def originalFile(self, image):
-        if 'largeImage' in image:
-            return File().load(image['largeImage']['originalId'], force=True)
-        else:
-            # Fallback if no large image metadata exists, but this isn't accurate on some old images
-            return Image().childFiles(image, limit=1, sort=[('created', SortDir.ASCENDING)])[0]
+    def originalFile(self, image) -> Optional[dict]:
+        return File().findOne({
+            'itemId': image['_id'],
+            'imageRole': 'original'
+        })
 
     def strippedFile(self, image):
         return File().findOne({'itemId': image['_id'],
