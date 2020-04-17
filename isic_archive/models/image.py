@@ -103,6 +103,14 @@ class Image(Item):
 
         return Image().save(image)
 
+    def resetMetadata(self, image):
+        image['meta']['acquisition'] = {}
+        image['meta']['clinical'] = {}
+        image['meta']['unstructured'] = {}
+        image['meta']['unstructuredExif'] = {}
+        image = Image().save(image)
+        return image
+
     def createImage(self, imageDataStream, imageDataSize, originalFileRelpath,
                     parentFolder, creator, dataset, batch):
         image = self.createEmptyImage(originalFileRelpath, parentFolder, creator, dataset, batch)
