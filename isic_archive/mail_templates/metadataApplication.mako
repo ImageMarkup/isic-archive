@@ -7,7 +7,7 @@ Dear <b>${user['firstName']} ${user['lastName']}</b>,
 <p>
 % if not errors and warnings:
 Your application of metadata to ${dataset['name']} succeeded, with warnings.
-% elif not warnings:
+% elif not errors and not warnings:
 Your application of metadata to ${dataset['name']} succeeded.
 % else:
 Your application of metadata to ${dataset['name']} failed for the reasons below.
