@@ -5,9 +5,9 @@ Dear <b>${user['firstName']} ${user['lastName']}</b>,
 </p>
 
 <p>
-% if status == 'succeeded' and warnings:
+% if not errors and warnings:
 Your application of metadata to ${dataset['name']} succeeded, with warnings.
-% elif status == 'succeeded':
+% elif not errors and not warnings:
 Your application of metadata to ${dataset['name']} succeeded.
 % else:
 Your application of metadata to ${dataset['name']} failed for the reasons below.
