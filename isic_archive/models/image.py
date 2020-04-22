@@ -108,6 +108,10 @@ class Image(Item):
         image['meta']['clinical'] = {}
         image['meta']['unstructured'] = {}
         image['meta']['unstructuredExif'] = {}
+
+        if 'privateMeta' in image and 'age' in image['privateMeta']:
+            del image['privateMeta']['age']
+
         image = Image().save(image)
         return image
 
