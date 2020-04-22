@@ -67,11 +67,10 @@
 
     - name: Install python dev tools
       pip:
-        name: "{{ item }}"
+        name:
+          - "tox"
+          - "ipython"
         virtualenv: "{{ girder_virtualenv }}"
-      loop:
-        - "tox"
-        - "ipython"
 
     - name: Install mongodb-shell
       apt:
