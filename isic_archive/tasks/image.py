@@ -117,12 +117,6 @@ def markImageIngested(imageId):
 
 @app.task(bind=True)
 def generateSuperpixels(self, imageId):
-    # Temporarily disable superpixel generation for performance
-    image = Image().load(imageId, force=True)
-    image['ingestionState']['superpixelMask'] = True
-    Image().save(image)
-    return
-
     try:
         image = Image().load(imageId, force=True)
         imageFile = Image().originalFile(image)
@@ -167,10 +161,10 @@ def generateSuperpixels(self, imageId):
 
         image['superpixelsId'] = superpixelsFile['_id']
         image['ingestionState']['superpixelMask'] = True
-        Image().save(image)
     except Exception:
         logger.exception('Failed to generate superpixel mask')
         image['ingestionState']['superpixelMask'] = False
+    finally:
         Image().save(image)
 
 
