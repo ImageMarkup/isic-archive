@@ -104,12 +104,15 @@ class Image(Item):
         return Image().save(image)
 
     def resetMetadata(self, image):
-        image['meta']['acquisition'] = {}
+        image['meta']['acquisition'] = {
+            'pixelsX': image['meta']['acquisition']['pixelsX'],
+            'pixelsY': image['meta']['acquisition']['pixelsY']
+        }
         image['meta']['clinical'] = {}
         image['meta']['unstructured'] = {}
         image['meta']['unstructuredExif'] = {}
 
-        if 'privateMeta' in image and 'age' in image['privateMeta']:
+        if 'age' in image['privateMeta']:
             del image['privateMeta']['age']
 
         image = Image().save(image)
