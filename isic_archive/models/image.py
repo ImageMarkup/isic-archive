@@ -104,10 +104,13 @@ class Image(Item):
         return Image().save(image)
 
     def resetMetadata(self, image):
-        image['meta']['acquisition'] = {
-            'pixelsX': image['meta']['acquisition']['pixelsX'],
-            'pixelsY': image['meta']['acquisition']['pixelsY']
-        }
+        if 'pixelsX' in image['meta']['acquisition']:
+            image['meta']['acquisition'] = {
+                'pixelsX': image['meta']['acquisition']['pixelsX'],
+                'pixelsY': image['meta']['acquisition']['pixelsY']
+            }
+        else:
+            image['meta']['acquisition'] = {}
         image['meta']['clinical'] = {}
         image['meta']['unstructured'] = {}
         image['meta']['unstructuredExif'] = {}
