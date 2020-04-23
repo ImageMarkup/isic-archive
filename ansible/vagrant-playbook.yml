@@ -65,10 +65,17 @@
         line: "127.0.0.1 minio"
       become: true
 
-    - name: Install dev requirements
+    - name: Install python dev tools
       pip:
-        name: tox
+        name:
+          - "tox"
+          - "ipython"
         virtualenv: "{{ girder_virtualenv }}"
+
+    - name: Install mongodb-shell
+      apt:
+        name: mongodb-org-shell
+      become: true
 
     - name: Activate virtualenv on login
       lineinfile:
