@@ -60,7 +60,7 @@ def _provisionAdminUser():
             password=None,
             firstName='ISIC Archive',
             lastName='Admin',
-            email='admin@isic-archive.com',
+            email='admin@isic-archive.test',
             admin=True,
             public=False,
         )
