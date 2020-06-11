@@ -29,7 +29,7 @@ def onUserCreate(event):
     # If there are no other users, besides the Archive admin
     if not User().collection.count_documents({
         'email': {'$nin': [
-            'admin@isic-archive.com',
+            'admin@isic-archive.test',
             # The new user has already been saved, when 'model.user.save.created' is triggered
             newUser['email'],
         ]}

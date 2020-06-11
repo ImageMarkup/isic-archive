@@ -25,7 +25,7 @@ def provisionedServer(server):
         password='password',
         firstName='Test',
         lastName='Admin',
-        email='test-admin@isic-archive.com'
+        email='test-admin@isic-archive.test'
     )
 
     yield server

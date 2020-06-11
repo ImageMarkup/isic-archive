@@ -20,7 +20,7 @@ def testFirstUserAdmin(provisionedServer):
 def testBasicUser(provisionedServer):
     # Create a basic user
     resp = provisionedServer.request(path='/user', method='POST', params={
-        'email': 'test-user@isic-archive.com',
+        'email': 'test-user@isic-archive.test',
         'login': 'test-user',
         'firstName': 'test',
         'lastName': 'user',
@@ -89,7 +89,7 @@ def testBasicUser(provisionedServer):
 def testUploaderUser(provisionedServer, smtp):
     # Create an uploader admin
     resp = provisionedServer.request(path='/user', method='POST', params={
-        'email': 'uploader-admin@isic-archive.com',
+        'email': 'uploader-admin@isic-archive.test',
         'login': 'uploader-admin',
         'firstName': 'uploader',
         'lastName': 'admin',
@@ -104,7 +104,7 @@ def testUploaderUser(provisionedServer, smtp):
 
     # Create an uploader user
     resp = provisionedServer.request(path='/user', method='POST', params={
-        'email': 'uploader-user@isic-archive.com',
+        'email': 'uploader-user@isic-archive.test',
         'login': 'uploader-user',
         'firstName': 'uploader',
         'lastName': 'user',
@@ -145,7 +145,7 @@ def testUploaderUser(provisionedServer, smtp):
 def testReviewerUser(provisionedServer):
     # Create a reviewer user
     resp = provisionedServer.request(path='/user', method='POST', params={
-        'email': 'reviewer-user@isic-archive.com',
+        'email': 'reviewer-user@isic-archive.test',
         'login': 'reviewer-user',
         'firstName': 'reviewer',
         'lastName': 'user',
@@ -170,7 +170,7 @@ def testReviewerUser(provisionedServer):
 def testStudyAdminUser(provisionedServer):
     # Create a study admin user
     resp = provisionedServer.request(path='/user', method='POST', params={
-        'email': 'study-admin-user@isic-archive.com',
+        'email': 'study-admin-user@isic-archive.test',
         'login': 'study-admin-user',
         'firstName': 'study admin',
         'lastName': 'user',
@@ -195,7 +195,7 @@ def testStudyAdminUser(provisionedServer):
 def testInviteNewUser(provisionedServer, smtp):
     # Create a study admin user
     resp = provisionedServer.request(path='/user', method='POST', params={
-        'email': 'study-admin-user@isic-archive.com',
+        'email': 'study-admin-user@isic-archive.test',
         'login': 'study-admin-user',
         'firstName': 'study admin',
         'lastName': 'user',
@@ -208,7 +208,7 @@ def testInviteNewUser(provisionedServer, smtp):
     # Ensure that user doesn't have permission to invite a new user, yet
     resp = provisionedServer.request(path='/user/invite', method='POST', params={
         'login': 'invited-user',
-        'email': 'invited-user@isic-archive.com',
+        'email': 'invited-user@isic-archive.test',
         'firstName': 'invited',
         'lastName': 'user'
     }, user=studyAdminUser)
@@ -222,7 +222,7 @@ def testInviteNewUser(provisionedServer, smtp):
     # Ensure that user can invite a new user
     resp = provisionedServer.request(path='/user/invite', method='POST', params={
         'login': 'invited-user',
-        'email': 'invited-user@isic-archive.com',
+        'email': 'invited-user@isic-archive.test',
         'firstName': 'invited',
         'lastName': 'user'
     }, user=studyAdminUser)
@@ -244,7 +244,7 @@ def testInviteNewUser(provisionedServer, smtp):
     # Ensure that user can invite a new user and specify the validity period
     resp = provisionedServer.request(path='/user/invite', method='POST', params={
         'login': 'invited-user2',
-        'email': 'invited-user2@isic-archive.com',
+        'email': 'invited-user2@isic-archive.test',
         'firstName': 'invited',
         'lastName': 'user2',
         'validityPeriod': 15.0
@@ -266,7 +266,7 @@ def testInviteNewUser(provisionedServer, smtp):
     # Test sending an invalid value for the validity period
     resp = provisionedServer.request(path='/user/invite', method='POST', params={
         'login': 'invited-user3',
-        'email': 'invited-user3@isic-archive.com',
+        'email': 'invited-user3@isic-archive.test',
         'firstName': 'invited',
         'lastName': 'user3',
         'validityPeriod': 'invalid'
