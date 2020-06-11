@@ -40,6 +40,8 @@
           ISIC_ASSETSTORE_PATH: "{{ ansible_user_dir }}/assetstores/default"
           # S3 URL will be used by the web client, so it must be an externally resolvable host
           ISIC_UPLOAD_S3_URL: "http://isic-archive.test:9000"
+          ISIC_UPLOAD_ACCESS_KEY: "minioAdminAccessKey"
+          ISIC_UPLOAD_SECRET_KEY: "minioAdminSecretKey"
           ISIC_UPLOAD_BUCKET_NAME: "test-upload-bucket"
           ISIC_UPLOAD_ROLE_ARN: "fake-arn"
           ISIC_SMTP_HOST: "localhost"
