@@ -21,6 +21,11 @@ ISIC_CORS_ORIGINS: List[str] = list(filter(
     )
 ))
 ISIC_UPLOAD_S3_URL: Optional[str] = os.environ.get('ISIC_UPLOAD_S3_URL')
+ISIC_UPLOAD_ACCESS_KEY: Optional[str] = os.environ.get('ISIC_UPLOAD_ACCESS_KEY')
+ISIC_UPLOAD_SECRET_KEY: Optional[str] = os.environ.get('ISIC_UPLOAD_SECRET_KEY')
+if ISIC_UPLOAD_S3_URL:
+    assert ISIC_UPLOAD_ACCESS_KEY
+    assert ISIC_UPLOAD_SECRET_KEY
 ISIC_UPLOAD_BUCKET_NAME: str = os.environ['ISIC_UPLOAD_BUCKET_NAME']
 ISIC_UPLOAD_ROLE_ARN: str = os.environ['ISIC_UPLOAD_ROLE_ARN']
 # SMTP config

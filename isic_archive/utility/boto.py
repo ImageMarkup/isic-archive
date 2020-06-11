@@ -7,10 +7,12 @@ from isic_archive import settings
 s3Kwargs: Dict[str, str] = {}
 
 if settings.ISIC_UPLOAD_S3_URL:
+    assert settings.ISIC_UPLOAD_ACCESS_KEY
+    assert settings.ISIC_UPLOAD_SECRET_KEY
     s3Kwargs = {
         'endpoint_url': settings.ISIC_UPLOAD_S3_URL,
-        'aws_access_key_id': 'accesskey',
-        'aws_secret_access_key': 'secretkey'
+        'aws_access_key_id': settings.ISIC_UPLOAD_ACCESS_KEY,
+        'aws_secret_access_key': settings.ISIC_UPLOAD_SECRET_KEY,
     }
 
 session = Session()
@@ -22,8 +24,8 @@ if settings.ISIC_UPLOAD_S3_URL:
         return {
             'Credentials':
                 {
-                    'AccessKeyId': 'accesskey',
-                    'SecretAccessKey': 'secretkey',
+                    'AccessKeyId': settings.ISIC_UPLOAD_ACCESS_KEY,
+                    'SecretAccessKey': settings.ISIC_UPLOAD_SECRET_KEY,
                     'SessionToken': 'baz'
                 }
         }
