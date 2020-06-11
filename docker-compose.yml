@@ -1,68 +1,88 @@
 ---
 version: '3'
 services:
-  girder:
+  web:
     build:
       context: .
-      dockerfile: docker/girder/Dockerfile
-      args:
-        entrypoint: docker/girder/entrypoint.sh
-    environment:
-      GIRDER_MONGO_URI: mongodb://mongo/girder
+      dockerfile: ./dev/Dockerfile
+    command: [
+      "girder", "serve",
+      "--host", "0.0.0.0"]
+    env_file: ./dev/.env.docker-compose
     volumes:
-      - .:/isic
+      - .:/opt/isic-archive
+      - /assetstore
     ports:
       - 8080:8080
+    depends_on:
+      - mongo
+      - redis
+      - rabbitmq
+      - mailhog
+      - minio
 
-  celery:
+  worker:
     build:
       context: .
-      dockerfile: docker/girder/Dockerfile
-    environment:
-      GIRDER_MONGO_URI: mongodb://mongo/girder
+      dockerfile: ./dev/Dockerfile
+    command: [
+      "celery", "worker",
+      "--app", "isic_archive.celery",
+      "--loglevel", "info"]
+    env_file: ./dev/.env.docker-compose
     volumes:
-      - .:/isic
-    command: ["celery", "worker", "--app", "isic_archive.celery", "--loglevel", "info"]
+      - .:/opt/isic-archive
+    depends_on:
+      - mongo
+      - redis
+      - rabbitmq
+      - mailhog
+      - minio
 
   celerybeat:
     build:
       context: .
-      dockerfile: docker/girder/Dockerfile
-    environment:
-      GIRDER_MONGO_URI: mongodb://mongo/girder
+      dockerfile: ./dev/Dockerfile
+    command: [
+      "celery", "beat",
+      "--app", "isic_archive.celery",
+      "--schedule", "/tmp/celerybeat-schedule.db",
+      "--pidfile", "/tmp/celerybeat.pid",
+      "--loglevel", "info"]
+    env_file: ./dev/.env.docker-compose
     volumes:
-      - .:/isic
-    command: ["celery", "beat", "--app", "isic_archive.celery", "--loglevel", "info"]
+      - .:/opt/isic-archive
+    depends_on:
+      - mongo
+      - redis
+      - rabbitmq
+      - mailhog
+      - minio
 
   mongo:
     image: mongo:latest
-    restart: always
     ports:
       - 27017:27017
 
   redis:
     image: redis:latest
-    restart: always
-    ports:
-      - 6379:6379
 
   rabbitmq:
     image: rabbitmq:latest
-    restart: always
-    ports:
-      - 5672:5672
 
   mailhog:
     image: mailhog/mailhog:latest
-    restart: always
     ports:
       - 8025:8025
 
   minio:
     image: minio/minio:latest
-    restart: always
     entrypoint: sh
     command: -c 'mkdir -p /minio-data/test-upload-bucket && /usr/bin/minio server /minio-data'
     environment:
-      MINIO_ACCESS_KEY: accesskey
-      MINIO_SECRET_KEY: secretkey
+      MINIO_ACCESS_KEY: minioAdminAccessKey
+      MINIO_SECRET_KEY: minioAdminSecretKey
+    volumes:
+      - /data
+    ports:
+      - 9000:9000
