@@ -50,7 +50,7 @@ class Study(Folder):
         self.validate({'meta': studyMeta})
 
         try:
-            study = self.createFolder(
+            study = Folder().createFolder(
                 parent=self.loadStudyCollection(),
                 name=name,
                 description='',
