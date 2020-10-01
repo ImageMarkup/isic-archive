@@ -32,7 +32,7 @@ def _setGirderSettings():
     Setting().set(SettingKey.CORS_ALLOW_ORIGIN, ','.join(settings.ISIC_CORS_ORIGINS))
     Setting().set(SettingKey.CORS_ALLOW_METHODS, 'HEAD, GET, POST, PUT, DELETE')
 
-    Setting().set(SettingKey.EMAIL_HOST, settings.ISIC_SITE_URL)
+    Setting().set(SettingKey.EMAIL_HOST, settings.ISIC_GIRDER_SITE_URL)
 
     for isicSettingValue, girderSettingKey in [
         (settings.ISIC_SMTP_HOST, SettingKey.SMTP_HOST),
