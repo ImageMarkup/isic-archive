@@ -25,7 +25,7 @@ setup(
         'large-image-source-tiff[girder]',
         'natsort',
         'numpy',
-        'opencv-python',
+        'opencv-python==4.2.*',
         'pillow',
         'python-dateutil',
         'python-dotenv',
