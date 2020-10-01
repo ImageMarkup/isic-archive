@@ -11,7 +11,7 @@ if _dotenvPath.is_file():
 
 ISIC_ADMIN_PASSWORD: Optional[str] = os.environ.get('ISIC_ADMIN_PASSWORD')
 ISIC_API_URL: str = os.environ['ISIC_API_URL'].rstrip('/') + '/'
-ISIC_SITE_URL: str = os.environ['ISIC_SITE_URL']
+ISIC_GIRDER_SITE_URL: str = os.environ['ISIC_GIRDER_SITE_URL']
 ISIC_ASSETSTORE_PATH: Path = Path(os.environ['ISIC_ASSETSTORE_PATH'])
 ISIC_CORS_ORIGINS: List[str] = list(filter(
     None,
