@@ -15,7 +15,7 @@ setup(
     },
     python_requires='>=3.6',
     install_requires=[
-        'celery[redis]',
+        'celery[redis]<5',
         'geojson',
         'girder-large-image',
         'girder-gravatar',
