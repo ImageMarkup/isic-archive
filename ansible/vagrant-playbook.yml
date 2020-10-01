@@ -36,7 +36,7 @@
         isic_env:
           ISIC_ADMIN_PASSWORD: "password"
           ISIC_API_URL: "http://isic-archive.test/api/v1"
-          ISIC_GIRDER_SITE_URL: "http://isic-archive.test/girder/"
+          ISIC_GIRDER_SITE_URL: "http://isic-archive.test/girder"
           ISIC_ASSETSTORE_PATH: "{{ ansible_user_dir }}/assetstores/default"
           # S3 URL will be used by the web client, so it must be an externally resolvable host
           ISIC_UPLOAD_S3_URL: "http://isic-archive.test:9000"
