@@ -16,6 +16,8 @@ setup(
     python_requires='>=3.6',
     install_requires=[
         'celery[redis]<5',
+        # The latest cheroot suffers from https://github.com/cherrypy/cheroot/issues/317
+        'cheroot==8.3.0',
         'geojson',
         'girder-large-image',
         'girder-gravatar',
