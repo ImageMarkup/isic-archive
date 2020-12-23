@@ -1,6 +1,3 @@
-import datetime
-
-import jsonschema
 import numpy
 
 from girder.api import access
@@ -31,7 +28,6 @@ class AnnotationResource(IsicResource):
                    self.getAnnotationMarkupRendered)
         self.route('GET', (':annotationId', 'markup', ':featureId', 'superpixels'),
                    self.getAnnotationMarkupSuperpixels)
-        self.route('PUT', (':annotationId',), self.submitAnnotation)
 
         # TODO: These are all deprecated
         self.route('GET', (':annotationId', ':featureId'),
@@ -222,72 +218,3 @@ class AnnotationResource(IsicResource):
         setResponseHeader('Content-Length', str(len(renderEncodedData)))
 
         return renderEncodedData
-
-    @describeRoute(
-        Description('Submit a completed annotation.')
-        .param('annotationId', 'The ID of the annotation to be submitted.', paramType='path')
-        .param('body', 'JSON containing the annotation parameters.',
-               paramType='body', required=True)
-        .errorResponse()
-    )
-    @access.user
-    @loadmodel(map={'annotationId': 'annotation'}, model='annotation', plugin='isic_archive',
-               level=AccessType.READ)
-    def submitAnnotation(self, annotation, params):
-        if annotation['userId'] != self.getCurrentUser()['_id']:
-            raise RestException('Current user does not own this annotation.')
-
-        if annotation.get('stopTime'):
-            raise RestException('Annotation is already complete.')
-
-        bodyJson = self.getBodyJson()
-        self.requireParams(
-            ['status', 'startTime', 'stopTime', 'responses', 'markups', 'log'], bodyJson)
-
-        annotation['status'] = bodyJson['status']
-        annotation['startTime'] = datetime.datetime.utcfromtimestamp(
-            bodyJson['startTime'] / 1000.0)
-        annotation['stopTime'] = datetime.datetime.utcfromtimestamp(
-            bodyJson['stopTime'] / 1000.0)
-        annotation['responses'] = bodyJson['responses']
-        annotation['log'] = bodyJson['log']
-
-        # Before anything is saved, validate all the other (non-'markups') fields
-        Annotation().validate(annotation)
-
-        # Validate superpixel markups
-        study = Study().load(annotation['studyId'], force=True, exc=True)
-        image = Image().load(annotation['imageId'], force=True, exc=True)
-        superpixelsData = Image().superpixelsData(image)
-        maxSuperpixel = int(superpixelsData.max())
-        try:
-            jsonschema.validate(
-                bodyJson['markups'],
-                {
-                    # '$schema': 'http://json-schema.org/draft-07/schema#',
-                    'type': 'object',
-                    'properties': {
-                        feature['id']: {
-                            'type': 'array',
-                            'items': {
-                                'type': 'number',
-                                'enum': [0.0, 0.5, 1.0]
-
-                            },
-                            'minItems': maxSuperpixel + 1,
-                            'maxItems': maxSuperpixel + 1
-                        }
-                        for feature in study['meta']['features']
-                    },
-                    'additionalProperties': False
-                }
-            )
-        except jsonschema.ValidationError as e:
-            raise ValidationException(f'Invalid markups: {str(e)}')
-
-        # Everything has passed input validation, so save
-        annotation = Annotation().save(annotation)
-
-        # Convert markup superpixels to masks and save
-        for featureId, superpixelValues in bodyJson['markups'].items():
-            annotation = Annotation().saveSuperpixelMarkup(annotation, featureId, superpixelValues)
