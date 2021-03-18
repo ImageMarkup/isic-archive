@@ -120,8 +120,8 @@ class ImageResource(IsicResource):
 
         filterFunc = Image().filter if detail else Image().filterSummary
 
-        if sort not in ['id', 'name', 'created']:
-            raise RestException('Sort may only be done on "id", "name", or "created" fields.')
+        if sort not in ['_id', 'name', 'created']:
+            raise RestException('Sort may only be done on "_id", "name", or "created" fields.')
 
         return [
             filterFunc(image, user)
