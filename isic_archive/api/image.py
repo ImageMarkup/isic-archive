@@ -103,7 +103,10 @@ class ImageResource(IsicResource):
 
         if sum(option in params for option in {'name', 'filter', 'imageIds'}) > 1:
             raise RestException('Only one of "name", "filter", or "imageIds" may be specified.')
-
+        
+        if ('sort' in params) and (params['sort'] not in {'_id', 'name', 'created'}):
+            raise RestException('Sort may only be done on "_id", "name", or "created" fields.')
+            
         if 'name' in params:
             query = {'name': params['name']}
         elif 'filter' in params:
@@ -119,10 +122,7 @@ class ImageResource(IsicResource):
         })
 
         filterFunc = Image().filter if detail else Image().filterSummary
-
-        if sort not in ['_id', 'name', 'created']:
-            raise RestException('Sort may only be done on "_id", "name", or "created" fields.')
-
+        
         return [
             filterFunc(image, user)
             for image in
