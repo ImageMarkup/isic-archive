@@ -1,4 +1,4 @@
-ISIC Archive |build-status| |coverage-badge| |license-badge|
+ISIC Archive |license-badge|
 ===========================================
 International Skin Imaging Collaboration: Melanoma Project
 ----------------------------------------------------------
@@ -73,14 +73,6 @@ Development
 
     # Mongodb's console output
     tail -F /var/log/mongodb/mongod.log
-
-.. |build-status| image:: https://img.shields.io/circleci/project/github/ImageMarkup/isic-archive/master.svg
-    :target: https://circleci.com/gh/ImageMarkup/isic-archive
-    :alt: Build Status
-
-.. |coverage-badge| image:: https://codecov.io/gh/ImageMarkup/isic-archive/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/ImageMarkup/isic-archive
-    :alt: Code Coverage
 
 .. |license-badge| image:: https://img.shields.io/github/license/ImageMarkup/isic-archive.svg
     :target: https://raw.githubusercontent.com/ImageMarkup/isic-archive/master/LICENSE
