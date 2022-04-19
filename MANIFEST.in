@@ -4,7 +4,6 @@ include readme.rst
 
 graft isic_archive
 
-prune .circleci
 prune ansible
 prune custom
 prune isic-archive-gui
